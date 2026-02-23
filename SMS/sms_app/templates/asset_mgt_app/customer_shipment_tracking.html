@@ -1,0 +1,363 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Shipment #{{ trip.tr_tripnumber }} | BVM Transport</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --accent: #f093fb;
+            --dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            touch-action: manipulation;
+        }
+
+        a,
+        button,
+        input[type="submit"],
+        .btn {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .back-nav {
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .back-link {
+            color: #94a3b8;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        .tracking-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .trip-id {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--secondary);
+            margin-bottom: 2rem;
+            display: block;
+        }
+
+        /* Progress Bar */
+        .tracking-timeline {
+            position: relative;
+            padding: 2rem 0;
+            margin-bottom: 3rem;
+        }
+
+        .progress-container {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            position: relative;
+            border-radius: 2px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 2px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            width: 50%;
+            /* Dynamic */
+        }
+
+        .dots {
+            display: flex;
+            justify-content: space-between;
+            position: absolute;
+            top: -13px;
+            width: 100%;
+        }
+
+        .dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #1e293b;
+            border: 3px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            border-color: var(--primary);
+            background: var(--dark);
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        .dot.completed {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: var(--dark);
+        }
+
+        .dot-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+
+        .label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            text-align: center;
+            width: 80px;
+        }
+
+        .label.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Map Placeholder */
+        .map-box {
+            height: 400px;
+            background: #1e293b;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--glass-border);
+        }
+
+        .pulsating-dot {
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            position: relative;
+            z-index: 5;
+            box-shadow: 0 0 20px var(--primary);
+        }
+
+        .pulsating-dot::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+
+        /* Side Info */
+        .info-group {
+            margin-bottom: 2rem;
+        }
+
+        .info-label {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .driver-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .driver-img {
+            width: 50px;
+            height: 50px;
+            background: #334155;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .tracking-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-nav">
+            <a href="{% url 'customer_dashboard' %}" class="back-link"><i class="fas fa-arrow-left"></i> Back to
+                Dashboard</a>
+            <div class="status-pill"
+                style="padding: 0.5rem 1rem; background: rgba(0, 242, 254, 0.1); color: var(--primary); border-radius: 20px; font-weight: 600;">
+                {{ trip.tc_financestatus.status }}
+            </div>
+        </div>
+
+        <div class="tracking-grid">
+            <div class="main-tracking">
+                <div class="card">
+                    <h1>Shipment Status</h1>
+                    <span class="trip-id">TRIP ID: {{ trip.tr_tripnumber }}</span>
+
+                    <div class="tracking-timeline">
+                        <div class="progress-container">
+                            <!-- Progress Width Calculation (example) -->
+                            {% with status=trip.tc_financestatus_id %}
+                            <div class="progress-bar"
+                                style="--p-width: {% if status == 1 %}50%{% elif status == 2 or status == 7 %}100%{% else %}25%{% endif %}; width: var(--p-width);">
+                            </div>
+                            {% endwith %}
+                        </div>
+                        <div class="dots">
+                            <div class="dot completed"><i class="fas fa-check"></i></div>
+                            <div class="dot {% if trip.tc_financestatus_id >= 1 %}completed{% else %}active{% endif %}">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="dot {% if trip.tc_financestatus_id >= 2 %}completed{% else %}active{% endif %}">
+                                <i class="fas fa-house-chimney"></i>
+                            </div>
+                        </div>
+                        <div class="dot-labels">
+                            <div class="label active">Booked<br><small>{{ trip.tr_created_at|date:"d M" }}</small></div>
+                            <div class="label {% if trip.tc_financestatus_id >= 1 %}active{% endif %}">
+                                In-Transit<br><small>{{ trip.tr_loading_time|date:"d M" }}</small></div>
+                            <div class="label {% if trip.tc_financestatus_id >= 2 %}active{% endif %}">
+                                Delivered<br><small>{{ trip.tr_reporteddate|date:"d M" }}</small></div>
+                        </div>
+                    </div>
+
+                    <h3>Live Movement Tracking</h3>
+                    <div class="map-box">
+                        <!-- Pseudo-Map Grid -->
+                        <div
+                            style="position: absolute; width: 100%; height: 100%; opacity: 0.05; background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 20px 20px;">
+                        </div>
+                        <div class="pulsating-dot"></div>
+                        <p style="position: absolute; bottom: 20px; left: 20px; font-size: 0.8rem; color: #94a3b8;">GPS
+                            Feed Active: Last updated 2 mins ago</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="side-info">
+                <div class="card">
+                    <div class="info-group">
+                        <span class="info-label">Current Location</span>
+                        <div class="info-value">{{ trip.tr_reportedlocation|default:"Processing Hub" }}</div>
+                    </div>
+
+                    <div class="info-group">
+                        <span class="info-label">Estimated Delivery</span>
+                        <div class="info-value" style="color: var(--primary);">{{
+                            trip.tr_enquirynumber.en_pickupdatetime|date:"d M Y" }} (Next Day)</div>
+                    </div>
+
+                    <div class="info-group">
+                        <span class="info-label">Vehicle Details</span>
+                        <div class="info-value">{{ trip.tr_vehiclenumber }}</div>
+                        <div style="color: #94a3b8; font-size: 0.9rem;">{{ trip.tr_vehicletype }}</div>
+                    </div>
+
+                    <div class="info-group">
+                        <span class="info-label">Operator Details</span>
+                        <div class="driver-card">
+                            <div class="driver-img"><i class="fas fa-user-tie"></i></div>
+                            <div>
+                                <div class="info-value">{{ trip.tr_drivername|default:"Assigned Driver" }}</div>
+                                <div style="color: var(--primary); font-size: 0.9rem;">{{ trip.tr_drivernumber }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1rem; border-top: 1px solid var(--glass-border); padding-top: 1.5rem;">
+                        <a href="#" class="btn-primary" style="width: 100%; justify-content: center;">
+                            <i class="fas fa-headset"></i> Contact BVM Team
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

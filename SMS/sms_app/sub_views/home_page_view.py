@@ -10,6 +10,7 @@ from datetime import timedelta
 
 from ..sub_models.DG_cargo_checklist_mod import DGcargovalueInfo
 from ..sub_models.maintenance_mod import MaintenanceInfo
+from ..sub_models.pk_needassessment_mod import PkneedassessmentInfo
 from ..sub_models.wh_highvaluecheck_info_mod import HighvalueInfo
 
 
@@ -50,9 +51,9 @@ def home_page(request):
         Q(hc_value__gt=2500000) ) & Q(hc_approval_status__id=3)
     ).count()
     checklist_count = TripHighvalueInfo.objects.filter(thc_approval_status=2).count()
-    manager_listcount =MaintenanceInfo.objects.filter(approval_status=1).count()
-    finance_listcount =MaintenanceInfo.objects.filter(approval_status=2).count()
-
+    manager_listcount =MaintenanceInfo.objects.filter(mi_approval_status_id=1).count()
+    finance_listcount =MaintenanceInfo.objects.filter(mi_approval_status_id=2).count()
+    need_assessment_count= PkneedassessmentInfo.objects.filter(na_status_id=5).count()
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
                'count_ass_asset': AssetInfo.objects.filter(asset_assignedto__isnull=False).count(),
@@ -88,6 +89,7 @@ def home_page(request):
                'approval_count_wms1':approval_count_wms1,
                'approval_count_wms2':approval_count_wms2,
                'DG_cargo_count':DG_cargo_count,
+               'need_assessment_count': need_assessment_count,
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
 
@@ -213,3 +215,4 @@ def customer_contract_rate_dues_list(request):
         'first_name': first_name,
     }
     return render(request, "asset_mgt_app/customer_contract_rate_due_days_list.html", context)
+

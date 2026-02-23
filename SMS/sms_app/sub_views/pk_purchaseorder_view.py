@@ -28,11 +28,18 @@ def purchaseorder_add(request, purchaseorder_id=0):
             purchaseorder = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
             form = PkpurchaseorderForm(instance=purchaseorder)
             po_dimension_list = POdimension.objects.filter(pod_po_num=purchaseorder_id)
+            # Safely get assessment num ID (handle None case)
+            na_id = purchaseorder.po_assessment_num.id if purchaseorder.po_assessment_num else None
+            
+            # Set session variables for dimension insert/update
+            request.session['ses_na_id'] = na_id
+            request.session['purchaseorder_id'] = purchaseorder.id
+            
             context = {
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
-                'na_id': purchaseorder.po_assessment_num.id,
+                'na_id': na_id,
                 'po_dimension_list': po_dimension_list,
                 'role': role,
                 'role_id': role_id,
@@ -65,6 +72,11 @@ def purchaseorder_add(request, purchaseorder_id=0):
                     next_num = str(last_num + 1).zfill(4)
                     instance.sales_order_num = f"25-26-MP-SO-{next_num}"
                     instance.save()
+                    
+                    # Set session variables for dimension insert/update after add
+                    request.session['ses_na_id'] = instance.po_assessment_num.id if instance.po_assessment_num else None
+                    request.session['purchaseorder_id'] = instance.id
+                    
                     messages.success(request, 'Purchase Order Added Successfully')
                 else:
                     messages.error(request, 'Please enter a Unique PO Number.')
@@ -81,6 +93,11 @@ def purchaseorder_add(request, purchaseorder_id=0):
                 # Do NOT regenerate sales_order_num when editing
                 instance.sales_order_num = purchaseorder.sales_order_num
                 instance.save()
+                
+                # Set session variables for dimension insert/update after edit
+                request.session['ses_na_id'] = instance.po_assessment_num.id if instance.po_assessment_num else None
+                request.session['purchaseorder_id'] = instance.id
+                
                 messages.success(request, 'Purchase Order Updated Successfully')
             else:
                 print("FORM ERRORS:", form.errors.as_json())
@@ -151,6 +168,9 @@ def pk_get_customer(request):
         'customer_id': customer_id,
         'quotation_num_id': quotation_num_id,
     }
+
+    # Update session with the selected assessment ID so dimension form gets it
+    request.session['ses_na_id'] = assessment_id
 
     return JsonResponse(data)
 

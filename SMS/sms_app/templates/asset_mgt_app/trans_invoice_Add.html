@@ -2,6 +2,14 @@
 {% load widget_tweaks %}
 {% block content %}
 
+<style>
+  /* Ensure conditional fields flow naturally in the grid */
+  .cond-field {
+    /* No special styling needed if using col classes directly, 
+       but we use this class for JS targeting */
+  }
+</style>
+
 <form method="POST">
   {% csrf_token %}
 
@@ -12,7 +20,7 @@
       <div class="card-header text-center position-relative">
         <h3 class="mb-0">Add / Update Transport Invoice</h3>
         {% if invoice %}
-        <a href="{% url 'trans_invoice_list_woh' invoice.ti_customer.id %}"
+        <a href="{% url 'trans_invoice_list_woh' invoice.ti_customer.id %}?invoice_id={{ invoice.id }}"
           class="btn btn-light btn-sm position-absolute" style="right: 20px; top: 50%; transform: translateY(-50%);">
           <i class="fas fa-list"></i> Trans Invoice List
         </a>
@@ -20,7 +28,7 @@
       </div>
 
       <!-- ================= BODY ================= -->
-      <div class="card-body bg-light">
+      <div class="card-body bg-light text-dark">
         <div class="row">
 
           <!-- ================= COLUMN 1 ================= -->
@@ -42,14 +50,14 @@
 
             <div class="input-group input-group-sm mb-3">
               <div class="input-group-prepend">
-                <span class="input-group-text">Customer Short Name</span>
+                <span class="input-group-text">Customer</span>
               </div>
               {% render_field form.ti_customer class="form-control" %}
             </div>
 
             <div class="input-group input-group-sm mb-3">
               <div class="input-group-prepend">
-                <span class="input-group-text">Customer </span>
+                <span class="input-group-text">Customer Short Name</span>
               </div>
               {% render_field form.ti_customer_short_name class="form-control" readonly="readonly" %}
             </div>
@@ -60,6 +68,39 @@
               </div>
               {% render_field form.ti_gst_in class="form-control" readonly="readonly" %}
             </div>
+
+            <!-- 🔹 CONDITIONAL MANUAL ENTRY FIELDS (Below Customer) -->
+
+            <!-- AAI SNO (DSV only) -->
+            <div class="cond-field cond-DSV" style="display: none;">
+              <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">AAI SNO</span>
+                </div>
+                {% render_field form.ti_aai_sno class="form-control" %}
+              </div>
+            </div>
+
+            <!-- Type of Rate (DBS only) -->
+            <div class="cond-field cond-DBS" style="display: none;">
+              <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">Adhoc Rate /Contracted Rate</span>
+                </div>
+                {% render_field form.ti_type_of_rate class="form-control" %}
+              </div>
+            </div>
+
+            <!-- SOW (EIPL only) -->
+            <div class="cond-field cond-EIPL" style="display: none;">
+              <div class="input-group input-group-sm mb-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">Billing SOW/Non BillingSOW</span>
+                </div>
+                {% render_field form.ti_sow class="form-control" %}
+              </div>
+            </div>
+
 
           </div>
 
@@ -94,6 +135,9 @@
               {% render_field form.ti_toll_charges class="form-control charge" %}
             </div>
 
+
+
+
           </div>
 
           <!-- ================= COLUMN 3 ================= -->
@@ -127,12 +171,15 @@
               {% render_field form.ti_halting_charges class="form-control charge" %}
             </div>
 
+
+
+
           </div>
 
           <!-- ================= COLUMN 4 ================= -->
           <div class="col-12 col-md-3">
 
-            <div class="input-group input-group-sm mb-3">
+            <div class="input-group input-group-sm mb-3" style="display:none;">
               <div class="input-group-prepend">
                 <span class="input-group-text">Docket Charges</span>
               </div>
@@ -170,13 +217,13 @@
             </div>
 
 
+
+
           </div>
 
         </div>
 
         <!-- ================= ACTION BUTTONS ================= -->
-
-
         {% if not saved %}
         <button type="submit" class="btn btn-success">
           <i class="fas fa-check"></i> Save
@@ -190,19 +237,10 @@
           <i class="fas fa-times"></i> Cancel
         </a>
 
-
-
-
       </div>
     </div>
   </div>
 </form>
-
-
-<!--{% if show_list %}
-<hr>
-{% include "asset_mgt_app/trans_invoice_list_WOH.html" %}
-{% endif %}-->
 
 <!--================ AFTER SAVE LIST =================-->
 <hr>
@@ -214,50 +252,30 @@
 
         <thead class="thead-dark">
           <tr>
-            <!--<th>INV DATE</th>
-            <th>Customer Name</th>
-            <th>GST IN</th>
-            <th>State</th>
-            <th>Pincode</th>-->
-            <!--<th>INV NO</th>-->
-
             <th>Branch</th>
-            <!-- <th>Vehicle Source</th>-->
             <th>Customer Short Name</th>
-            <!--<th>Tally Veh No</th>-->
             <th>Planning Date</th>
-
             <th>Cnote No</th>
             <th>From</th>
             <th>To</th>
             <th>Dept</th>
-
             <th>Veh No</th>
             <th>Veh Type</th>
-
-            <!--<th>Veh Placed Date & Time</th>
-            <th>Veh Released Date & Time</th>
-            <th>Veh Arrived Date & Time</th>
-            <th>Veh Dispatched Date & Time</th>-->
-
             <th>Consignee</th>
             <th>Reference No</th>
             <th>HAWB No</th>
-
             <th>No. of Pcs</th>
             <th>Weight</th>
-
             <th>Transportation Charges</th>
             <th>Toll Charges</th>
             <th>Parking Charges</th>
             <th>Loading Charges</th>
             <th>Unloading Charges</th>
             <th>Halting Charges</th>
-            <th>Docket Charges</th>
+            <th style="display:none;">Docket Charges</th>
             <th>Weighment Charges</th>
             <th>Handling Charges</th>
             <th>Cancellation Charges</th>
-
             <th>TOTAL</th>
           </tr>
         </thead>
@@ -265,131 +283,48 @@
         <tbody>
           {% for inv in invoice_list %}
           <tr>
-
-            <!-- Branch -->
-            <td>
-              {{ inv.ti_trip.tr_enquirynumber.en_customerdepartment|default:"-" }}
-            </td>
-
-            <!-- Customer Short Name -->
-            <td>
-              {{ inv.ti_customer_short_name|default:"-" }}
-            </td>
-
-            <!-- Planning Date -->
-            <td>
-              {{ inv.ti_trip.tr_created_at|date:"Y-m-d" }}
-            </td>
-
-            <!-- Cnote No -->
-            <td>
-              {% if inv.ti_consignment %}
-              {{ inv.ti_consignment.co_consignmentnumber }}
-              {% else %}
-              <span class="text-muted">—</span>
-              {% endif %}
-            </td>
-
-            <!-- From -->
+            <td>{{ inv.ti_trip.tr_enquirynumber.en_customerdepartment|default:"-" }}</td>
+            <td>{{ inv.ti_customer_short_name|default:"-" }}</td>
+            <td>{{ inv.ti_trip.tr_enquirynumber.en_pickupdatetime|date:"d/m/Y" }}</td>
+            <td>{% if inv.ti_consignment %}{{ inv.ti_consignment.co_consignmentnumber }}{% else %}<span
+                class="text-muted">—</span>{% endif %}</td>
             <td>{{ inv.ti_trip.tr_departedlocation|default:"-" }}</td>
-
-            <!-- To -->
             <td>{{ inv.ti_trip.tr_reportedlocation|default:"-" }}</td>
-
-            <!-- Dept -->
-            <td>
-              {{ inv.ti_department|default:"-" }}
-            </td>
-
-            <!-- Vehicle No -->
+            <td>{{ inv.ti_department|default:"-" }}</td>
             <td>{{ inv.ti_trip.tr_vehiclenumber|default:"-" }}</td>
-
-            <!-- Vehicle Type -->
             <td>{{ inv.ti_trip.tr_vehicletype|default:"-" }}</td>
-
             {% with goods=inv.ti_goods %}
-
-            <!-- Consignee -->
-            <td>
-              {% if goods %}
-              {{ goods.cg_consignee }}
-              {% else %}
-              <span class="text-muted">—</span>
-              {% endif %}
-            </td>
-
-            <!-- Reference No -->
-            <td>
-              {% if inv.ti_consignment %}
-              {{ inv.ti_consignment.co_cusrefnum }}
-              {% else %}
-              <span class="text-muted">—</span>
-              {% endif %}
-            </td>
-
-            <!-- HAWB No -->
-            <td>
-              {% if goods %}
-              {{ goods.cg_hawbno }}
-              {% else %}
-              <span class="text-muted">—</span>
-              {% endif %}
-            </td>
-
-            <!-- No of Pcs -->
-            <td>
-              {% if goods %}
-              {{ goods.cg_qty }}
-              {% else %}
-              <span class="text-muted">0</span>
-              {% endif %}
-            </td>
-
-            <!-- Weight -->
-            <td>
-              {% if goods %}
-              {{ goods.cg_weight }}
-              {% else %}
-              <span class="text-muted">0.0</span>
-              {% endif %}
-            </td>
-
+            <td>{% if goods %}{{ goods.cg_consignee }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            <td>{% if inv.ti_consignment %}{{ inv.ti_consignment.co_cusrefnum }}{% else %}<span
+                class="text-muted">—</span>{% endif %}</td>
+            <td>{% if goods %}{{ goods.cg_hawbno }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            <td>{% if goods %}{{ goods.cg_qty }}{% else %}<span class="text-muted">0</span>{% endif %}</td>
+            <td>{% if goods %}{{ goods.cg_weight }}{% else %}<span class="text-muted">0.0</span>{% endif %}</td>
             {% endwith %}
-
-            <!-- Charges (FROM TRIP AS REQUESTED) -->
             <td>{{ inv.ti_trip.tc_tripcost }}</td>
             <td>{{ inv.ti_trip.tc_tollcost }}</td>
             <td>{{ inv.ti_trip.tc_parkingcost }}</td>
             <td>{{ inv.ti_trip.tc_loadingcost }}</td>
             <td>{{ inv.ti_trip.tc_unloadingcost }}</td>
             <td>{{ inv.ti_trip.tc_haltingcost }}</td>
-            <td>{{ inv.ti_trip.tc_rtocost }}</td>
+            <td style="display:none;">{{ inv.ti_trip.tc_rtocost }}</td>
             <td>{{ inv.ti_trip.tc_weighmentcost }}</td>
             <td>{{ inv.ti_trip.tc_handlingcost }}</td>
             <td>{{ inv.ti_trip.tc_cancellation }}</td>
-
-            <!-- TOTAL -->
-            <td>
-              <strong>
-                {{ inv.trip_total|floatformat:2 }}
-              </strong>
-            </td>
-
-
+            <td><strong>{{ inv.trip_total|floatformat:2 }}</strong></td>
           </tr>
           {% endfor %}
         </tbody>
-
-
-
 
       </table>
 
     </div>
   </div>
 </div>
+
 <script>
   $(document).ready(function () {
+    // CALC TOTAL
     $('.charge').on('input', function () {
       let total = 0;
       $('.charge').each(function () {
@@ -398,23 +333,16 @@
       });
       $('#id_ti_total').val(total.toFixed(2));
     });
-  });
-</script>
 
-
-
-<!-- ================= JS ================= -->
-<script>
-  $(document).ready(function () {
-
+    // CUSTOMER CHANGE LOGIC
     $('#id_ti_customer').change(function () {
       const customerId = $(this).val();
 
       if (!customerId) {
         $('#id_ti_gst_in').val('');
         $('#id_ti_customer_short_name').val('');
-        $('#id_branch_display').val('');
         $('#id_ti_state').val('');
+        $('.cond-field').hide();
         return;
       }
 
@@ -422,39 +350,46 @@
         url: "{% url 'fetch_customer_details' %}",
         data: { customer_id: customerId },
         success: function (data) {
-
+          // Standard fields
           $('#id_ti_gst_in').val(data.gstin);
           $('#id_ti_customer_short_name').val(data.customer_short_name);
-
-          // 🔥 AUTO SET BRANCH
-          $('#id_branch_display').val(data.branch);
-
-          // 🔥 AUTO SET STATE (READ-ONLY)
           $('#id_ti_state').val(data.state);
+
+          const custName = data.customer_name;
+
+          // Reset visibility - hide all conditional fields
+          $('.cond-field').hide();
+
+          // Show only manual entry fields based on customer
+          if (custName.includes('DSV')) {
+            $('.cond-DSV').show();  // AAI SNO
+          }
+          else if (custName.includes('DBS')) {
+            $('.cond-DBS').show();  // Type of Rate
+          }
+          else if (custName.includes('EIPL')) {
+            $('.cond-EIPL').show();  // SOW
+          }
+          // APM and CEVA don't have manual fields in the form
         }
       });
     });
 
-  });
-</script>
+    // Trigger change on page load if customer is selected (edit mode)
+    if ($('#id_ti_customer').val()) {
+      $('#id_ti_customer').trigger('change');
+    }
 
-<script>
-  $(document).ready(function () {
+    // DATATABLE
     $('#trans_invoice_table').DataTable({
       scrollX: true,
       responsive: true,
       dom: 'lBfrtip',
-      buttons: [
-        'copy',
-        'csv',
-        'excel',
-        'print'
-      ],
+      buttons: ['copy', 'csv', 'excel', 'print'],
       pageLength: 10,
       lengthMenu: [5, 10, 25, 50]
     });
   });
 </script>
-
 
 {% endblock content %}

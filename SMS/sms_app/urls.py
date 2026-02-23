@@ -2,28 +2,29 @@ from django.urls import path
 from django.views.generic import TemplateView
 
 from . import views
-from django.contrib.auth import views as auth_views #import this
-
-
+from django.contrib.auth import views as auth_views  # import this
 
 urlpatterns = [
     path('print_pdf', views.print_pdf, name='print_pdf'),  # Print PDF
     path('asset_qr_id/<int:asset_qr_id>', views.qr_code_asset, name='asset_qr_id'),  # qr_code
     path('goods_qr_id/<int:goods_qr_id>', views.qr_code_goods, name='goods_qr_id'),  # goods qr_code
     path('registration_page', views.registration_page, name='registration_page'),  # Registration_page
-    path('login_page', views.login_page,name='login_page'),#Login_page
-    path('logout_page', views.logout_page,name='logout_page'),#Logout_page
-    path('home_page', views.home_page,name='home_page'),#Home_page
-    path('asset_insert', views.assetinfo_add,name='asset_insert'),#Add Asset
-    path('asset_update/<int:asset_id>/', views.assetinfo_add,name='asset_update'),#Update asset
-    path('asset_delete/<int:asset_id>/',views.asset_delete,name='asset_delete'), #Delete asset
-    path('asset_list/',views.asset_list,name='asset_list'), #List Asset
-    path('user_list/', views.user_list, name='user_list'), # List user,
-    path('user_insert', views.user_add,name='user_insert'),#Add user
+    path('login_page', views.login_page, name='login_page'),  # Login_page
+    path('logout_page', views.logout_page, name='logout_page'),  # Logout_page
+    path('driver/login/', views.driver_login, name='driver_login'),
+    path('driver/logout/', views.driver_logout, name='driver_logout'),
+    path('driver/dashboard/', views.driver_dashboard, name='driver_dashboard'),
+    path('home_page', views.home_page, name='home_page'),  # Home_page
+    path('asset_insert', views.assetinfo_add, name='asset_insert'),  # Add Asset
+    path('asset_update/<int:asset_id>/', views.assetinfo_add, name='asset_update'),  # Update asset
+    path('asset_delete/<int:asset_id>/', views.asset_delete, name='asset_delete'),  # Delete asset
+    path('asset_list/', views.asset_list, name='asset_list'),  # List Asset
+    path('user_list/', views.user_list, name='user_list'),  # List user,
+    path('user_insert', views.user_add, name='user_insert'),  # Add user
     path('user_update/<int:user_id>/', views.user_add, name='user_update'),  # Update User
     path('user_delete/<int:user_id>/', views.user_delete, name='user_delete'),  # Delete User
-    path('vendor_list/', views.vendor_list, name='vendor_list'), # List vendor,
-    path('vendor_insert', views.vendor_add,name='vendor_insert'),#Add vendor
+    path('vendor_list/', views.vendor_list, name='vendor_list'),  # List vendor,
+    path('vendor_insert', views.vendor_add, name='vendor_insert'),  # Add vendor
     path('vendor_update/<int:vendor_id>/', views.vendor_add, name='vendor_update'),  # Update Vendor
     path('vendor_delete/<int:vendor_id>/', views.vendor_delete, name='vendor_delete'),  # Delete Vendor
     path('location_list/', views.location_list, name='location_list'),  # List location,
@@ -33,15 +34,18 @@ urlpatterns = [
     path('department_list/', views.department_list, name='department_list'),  # List department,
     path('department_insert', views.department_add, name='department_insert'),  # Add department
     path('department_update/<int:department_id>/', views.department_add, name='department_update'),  # Update department
-    path('department_delete/<int:department_id>/', views.department_delete, name='department_delete'),  # Delete department
+    path('department_delete/<int:department_id>/', views.department_delete, name='department_delete'),
+    # Delete department
     path('product_list/', views.product_list, name='product_list'),  # List product,
     path('product_insert', views.product_add, name='product_insert'),  # Add product
     path('product_update/<int:product_id>/', views.product_add, name='product_update'),  # Update product
     path('product_delete/<int:product_id>/', views.product_delete, name='product_delete'),  # Delete product
     path('producttype_list/', views.producttype_list, name='producttype_list'),  # List producttype,
     path('producttype_insert', views.producttype_add, name='producttype_insert'),  # Add producttype
-    path('producttype_update/<int:producttype_id>/', views.producttype_add, name='producttype_update'),  # Update producttype
-    path('producttype_delete/<int:producttype_id>/', views.producttype_delete, name='producttype_delete'),  # Delete producttype
+    path('producttype_update/<int:producttype_id>/', views.producttype_add, name='producttype_update'),
+    # Update producttype
+    path('producttype_delete/<int:producttype_id>/', views.producttype_delete, name='producttype_delete'),
+    # Delete producttype
     path('country_list/', views.country_list, name='country_list'),  # List country,
     path('country_insert', views.country_add, name='country_insert'),  # Add country
     path('country_update/<int:country_id>/', views.country_add, name='country_update'),  # Update country
@@ -60,8 +64,10 @@ urlpatterns = [
     path('insurance_delete/<int:insurance_id>/', views.insurance_delete, name='insurance_delete'),  # Delete insurance
     path('insurancetype_list/', views.insurancetype_list, name='insurancetype_list'),  # List insurancetype,
     path('insurancetype_insert', views.insurancetype_add, name='insurancetype_insert'),  # Add insurancetype
-    path('insurancetype_update/<int:insurancetype_id>/', views.insurancetype_add, name='insurancetype_update'),  # Update insurancetype
-    path('insurancetype_delete/<int:insurancetype_id>/', views.insurancetype_delete, name='insurancetype_delete'),  # Delete insurancetype
+    path('insurancetype_update/<int:insurancetype_id>/', views.insurancetype_add, name='insurancetype_update'),
+    # Update insurancetype
+    path('insurancetype_delete/<int:insurancetype_id>/', views.insurancetype_delete, name='insurancetype_delete'),
+    # Delete insurancetype
     path('service_list/', views.service_list, name='service_list'),  # List service,
     path('service_insert', views.service_add, name='service_insert'),  # Add service
     path('service_update/<int:service_id>/', views.service_add, name='service_update'),  # Update service
@@ -70,12 +76,16 @@ urlpatterns = [
     path('goods_insert', views.goods_add, name='goods_insert'),  # Add goods
     path('goods_update/<int:goods_id>/', views.goods_add, name='goods_update'),  # Update goods
     path('goods_delete/<int:goods_id>/', views.goods_delete, name='goods_delete'),  # Delete goods
-    path('assign_asset_list/<int:user_id>/', views.assign_asset_list_new, name='assign_asset_list'),  # List assign_asset,
+    path('assign_asset_list/<int:user_id>/', views.assign_asset_list_new, name='assign_asset_list'),
+    # List assign_asset,
     path('assign_asset_insert', views.assign_asset_add, name='assign_asset_insert'),  # Add assign_asset
     path('assign_asset_search', views.asset_search, name='assign_asset_search'),  # search assign_asset
-    path('unassigned_asset_list', views.un_assigned_asset_list, name='unassigned_asset_list'),  # search unassigned_asset_list
-    path('assign_asset_update/<int:assign_asset_id>/', views.assign_asset_add, name='assign_asset_update'),  # Update assign_asset
-    path('assign_asset_delete/<int:assign_asset_id>/', views.assign_asset_delete, name='assign_asset_delete'),  # Delete assign_asset
+    path('unassigned_asset_list', views.un_assigned_asset_list, name='unassigned_asset_list'),
+    # search unassigned_asset_list
+    path('assign_asset_update/<int:assign_asset_id>/', views.assign_asset_add, name='assign_asset_update'),
+    # Update assign_asset
+    path('assign_asset_delete/<int:assign_asset_id>/', views.assign_asset_delete, name='assign_asset_delete'),
+    # Delete assign_asset
     path('stock_list/', views.stock_list, name='stock_list'),  # List stock,
     path('stock_insert', views.stock_add, name='stock_insert'),  # Add stock
     path('stock_update/<int:stock_id>/', views.stock_add, name='stock_update'),  # Update stock
@@ -96,11 +106,14 @@ urlpatterns = [
     path('damage_delete/<int:damage_id>/', views.damage_delete, name='damage_delete'),  # Delete damage
     path('damagereport_list/', views.damagereport_list, name='damagereport_list'),  # List damagereport,
     path('damagereport_insert', views.damagereport_add, name='damagereport_insert'),  # Add damagereport
-    path('damagereport_update/<int:damagereport_id>/', views.damagereport_add, name='damagereport_update'),  # Update damagereport
+    path('damagereport_update/<int:damagereport_id>/', views.damagereport_add, name='damagereport_update'),
+    # Update damagereport
     path('locationmaster_list/', views.locationmaster_list, name='locationmaster_list'),  # List locationmaster,
     path('locationmaster_insert', views.locationmaster_add, name='locationmaster_insert'),  # Add locationmaster
-    path('locationmaster_update/<int:locationmaster_id>/', views.locationmaster_add, name='locationmaster_update'),  # Update locationmaster
-    path('locationmaster_delete/<int:locationmaster_id>/', views.locationmaster_delete, name='locationmaster_delete'),  # Delete locationmaster
+    path('locationmaster_update/<int:locationmaster_id>/', views.locationmaster_add, name='locationmaster_update'),
+    # Update locationmaster
+    path('locationmaster_delete/<int:locationmaster_id>/', views.locationmaster_delete, name='locationmaster_delete'),
+    # Delete locationmaster
     path('emp_list/', views.emp_list, name='emp_list'),  # List employee,
     path('emp_insert', views.emp_add, name='emp_insert'),  # Add employee
     path('emp_update/<int:emp_id>/', views.emp_add, name='emp_update'),  # Update employee
@@ -119,39 +132,55 @@ urlpatterns = [
     path('status_delete/<int:status_id>/', views.status_delete, name='status_delete'),  # Delete status
     path('customertype_list/', views.customertype_list, name='customertype_list'),  # List customertype
     path('customertype_insert', views.customertype_add, name='customertype_insert'),  # Add customertype
-    path('customertype_update/<int:customertype_id>/', views.customertype_add, name='customertype_update'),  # Update customertype
-    path('customertype_delete/<int:customertype_id>/', views.customertype_delete, name='customertype_delete'),  # Delete customertype
+    path('customertype_update/<int:customertype_id>/', views.customertype_add, name='customertype_update'),
+    # Update customertype
+    path('customertype_delete/<int:customertype_id>/', views.customertype_delete, name='customertype_delete'),
+    # Delete customertype
     path('whratemaster_list/', views.whratemaster_list, name='whratemaster_list'),  # List whratemaster,
     path('whratemaster_insert', views.whratemaster_add, name='whratemaster_insert'),  # Add whratemaster
-    path('whratemaster_update/<int:whratemaster_id>/', views.whratemaster_add, name='whratemaster_update'),  # Update whratemaster
-    path('whratemaster_delete/<int:whratemaster_id>/', views.whratemaster_delete, name='whratemaster_delete'),  # Delete whratemaster
+    path('whratemaster_update/<int:whratemaster_id>/', views.whratemaster_add, name='whratemaster_update'),
+    # Update whratemaster
+    path('whratemaster_delete/<int:whratemaster_id>/', views.whratemaster_delete, name='whratemaster_delete'),
+    # Delete whratemaster
     path('designation_list/', views.designation_list, name='designation_list'),  # List designation,
     path('designation_insert', views.designation_add, name='designation_insert'),  # Add designation
-    path('designation_update/<int:designation_id>/', views.designation_add, name='designation_update'),  # Update designation
-    path('designation_delete/<int:designation_id>/', views.designation_delete, name='designation_delete'),  # Delete designation
+    path('designation_update/<int:designation_id>/', views.designation_add, name='designation_update'),
+    # Update designation
+    path('designation_delete/<int:designation_id>/', views.designation_delete, name='designation_delete'),
+    # Delete designation
     path('whstoragetype_list/', views.whstoragetype_list, name='whstoragetype_list'),  # List whstoragetype,
     path('whstoragetype_insert', views.whstoragetype_add, name='whstoragetype_insert'),  # Add whstoragetype
-    path('whstoragetype_update/<int:whstoragetype_id>/', views.whstoragetype_add, name='whstoragetype_update'),  # Update whstoragetype
-    path('whstoragetype_delete/<int:whstoragetype_id>/', views.whstoragetype_delete, name='whstoragetype_delete'),  # Delete whstoragetype
+    path('whstoragetype_update/<int:whstoragetype_id>/', views.whstoragetype_add, name='whstoragetype_update'),
+    # Update whstoragetype
+    path('whstoragetype_delete/<int:whstoragetype_id>/', views.whstoragetype_delete, name='whstoragetype_delete'),
+    # Delete whstoragetype
     path('role_list/', views.role_list, name='role_list'),  # List role,
     path('role_insert', views.role_add, name='role_insert'),  # Add role
     path('role_update/<int:role_id>/', views.role_add, name='role_update'),  # Update role
     path('role_delete/<int:role_id>/', views.role_delete, name='role_delete'),  # Delete role
     path('password_reset/', views.password_reset_request, name='password_reset'),
-    path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(template_name="password/password_reset_done.html"), name='password_reset_done'),  # Password Reset
-    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name="password/password_reset_confirm.html"), name='password_reset_confirm'),# Password Reset
-    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='password/password_reset_complete.html'), name='password_reset_complete'),# Password Reset
+    path('password_reset/done/',
+         auth_views.PasswordResetDoneView.as_view(template_name="password/password_reset_done.html"),
+         name='password_reset_done'),  # Password Reset
+    path('reset/<uidb64>/<token>/',
+         auth_views.PasswordResetConfirmView.as_view(template_name="password/password_reset_confirm.html"),
+         name='password_reset_confirm'),  # Password Reset
+    path('reset/done/',
+         auth_views.PasswordResetCompleteView.as_view(template_name='password/password_reset_complete.html'),
+         name='password_reset_complete'),  # Password Reset
     path('gatein_insert', views.gatein_add, name='gatein_insert'),  # gatein add
     path('gatein_list/', views.gatein_list, name='gatein_list'),  # List gatein,
-    path('gatein_update/<int:gatein_id>/', views.gatein_add, name='gatein_update'), # Update gatein
-    path('gatein_delete/<int:gatein_id>/', views.gatein_delete, name='gatein_delete'), # Delete gatein
+    path('gatein_update/<int:gatein_id>/', views.gatein_add, name='gatein_update'),  # Update gatein
+    path('gatein_delete/<int:gatein_id>/', views.gatein_delete, name='gatein_delete'),  # Delete gatein
     path('gatein_pre_insert', views.gatein_pre_add, name='gatein_pre_insert'),  # gatein Pre add
     path('gatein_pre_list/', views.gatein_pre_list, name='gatein_pre_list'),  # List gatein pre,
     path('gatein_pre_update/<int:gatein_pre_id>/', views.gatein_pre_add, name='gatein_pre_update'),  # Update gatein pre
-    path('gatein_pre_delete/<int:gatein_pre_id>/', views.gatein_pre_delete, name='gatein_pre_delete'),  # Delete gatein pre
+    path('gatein_pre_delete/<int:gatein_pre_id>/', views.gatein_pre_delete, name='gatein_pre_delete'),
+    # Delete gatein pre
     path('loadingbay_update/<int:loadingbay_id>/', views.loadingbay_add, name='loadingbay_update'),  # loadingbay update
     path('loadingbay_insert', views.loadingbay_add, name='loadingbay_insert'),  # loadingbay insert
-    path('load_currency_value/', views.load_currency_value, name='load_currency_value'), #Load currency coversion value
+    path('load_currency_value/', views.load_currency_value, name='load_currency_value'),
+    # Load currency coversion value
     path('wh_job_insert', views.wh_job_add, name='wh_job_insert'),  # wh Job insert
     path('wh_job_update/<int:gatein_id>/', views.wh_job_add, name='wh_job_update'),  # wh_job update
     path('wh_job_list', views.wh_job_list, name='wh_job_list'),  # wh Job list
@@ -162,6 +191,7 @@ urlpatterns = [
     path('enquirynote_delete/<int:enquirynote_id>/', views.enquirynote_delete, name='enquirynote_delete'),  # Delete enquirynote
     path('consignmentdetail_enquiry/<int:enquiry_id>/<str:consignment_number>/', views.consignmentdetail_enquiry, name='consignmentdetail_enquiry'),  # List consignmentdetail,
     path('consignmentdetail_list/', views.consignmentdetail_list, name='consignmentdetail_list'),  # List consignmentdetail,
+    path('consignmentdetail_list_ajax/', views.consignmentdetail_list_ajax, name='consignmentdetail_list_ajax'),  # AJAX data for consignmentdetail
     path('consignmentdetail_insert', views.consignmentdetail_add, name='consignmentdetail_insert'),  # Add consignmentdetail
     path('consignmentdetail_update/<int:consignmentdetail_id>/', views.consignmentdetail_add, name='consignmentdetail_update'),  # Update consignmentdetail
     path('consignmentdetail_nav/<int:consignmentdetail_id>/', views.consignmentdetail_nav, name='consignmentdetail_nav'),  # Update consignmentdetail
@@ -186,6 +216,7 @@ urlpatterns = [
     path('vehicletype_delete/<int:vehicletype_id>/', views.vehicletype_delete, name='vehicletype_delete'),  # Delete vehicletype
     path('tripdetail_enquiry/<int:enquiry_id>/<str:trip_num>/', views.tripdetail_enquiry, name='tripdetail_enquiry'),  # tripdetail_enquiry,
     path('tripdetail_list/', views.tripdetail_list, name='tripdetail_list'),  # List tripdetail,
+    path('tripdetail_list_ajax/', views.tripdetail_list_ajax, name='tripdetail_list_ajax'),  # AJAX data for tripdetail
     path('tripdetail_insert', views.tripdetail_add, name='tripdetail_insert'),  # Add tripdetail
     path('tripdetail_update/<int:tripdetail_id>/', views.tripdetail_add, name='tripdetail_update'),  # Update tripdetail
     path('tripdetail_nav/<int:tripdetail_id>/', views.tripdetail_nav, name='tripdetail_nav'),  # Navigate tripdetail
@@ -201,6 +232,7 @@ urlpatterns = [
     path('trbusinesstype_update/<int:trbusinesstype_id>/', views.trbusinesstype_add, name='trbusinesstype_update'),  # Update trbusinesstype
     path('trbusinesstype_delete/<int:trbusinesstype_id>/', views.trbusinesstype_delete, name='trbusinesstype_delete'),  # Delete trbusinesstype
     path('tripclosure_list/', views.tripclosure_list, name='tripclosure_list'),  # List tripclosure,
+    path('tripclosure_list_ajax/', views.tripclosure_list_ajax, name='tripclosure_list_ajax'),  # AJAX data for tripclosure
     path('tripclosure_insert', views.tripclosure_add, name='tripclosure_insert'),  # Add tripclosure
     path('tripclosure_update/<int:tripclosure_id>/', views.tripclosure_add, name='tripclosure_update'),  # Update tripclosure
     path('tripclosure_nav/<int:tripclosure_id>/', views.tripclosure_nav, name='tripclosure_nav'),  # Nav tripclosure
@@ -240,202 +272,273 @@ urlpatterns = [
     path('permittype_delete/<int:permittype_id>/', views.permittype_delete, name='permittype_delete'),  # Delete permittype
     path('vehiclemaster_list/', views.vehiclemaster_list, name='vehiclemaster_list'),  # List vehiclemaster,
     path('vehiclemaster_insert', views.vehiclemaster_add, name='vehiclemaster_insert'),  # Add vehiclemaster
-    path('vehiclemaster_update/<int:vehiclemaster_id>/', views.vehiclemaster_add, name='vehiclemaster_update'),  # Update vehiclemaster
-    path('vehiclemaster_delete/<int:vehiclemaster_id>/', views.vehiclemaster_delete, name='vehiclemaster_delete'),  # Delete vehiclemaster
+    path('vehiclemaster_update/<int:vehiclemaster_id>/', views.vehiclemaster_add, name='vehiclemaster_update'),
+    # Update vehiclemaster
+    path('vehiclemaster_delete/<int:vehiclemaster_id>/', views.vehiclemaster_delete, name='vehiclemaster_delete'),
+    # Delete vehiclemaster
     path('rtratemaster_list/', views.rtratemaster_list, name='rtratemaster_list'),  # List rtratemaster,
     path('rtratemaster_insert', views.rtratemaster_add, name='rtratemaster_insert'),  # Add rtratemaster
-    path('rtratemaster_update/<int:rtratemaster_id>/', views.rtratemaster_add, name='rtratemaster_update'),  # Update rtratemaster
-    path('rtratemaster_delete/<int:rtratemaster_id>/', views.rtratemaster_delete, name='rtratemaster_delete'),  # Delete rtratemaster
+    path('rtratemaster_update/<int:rtratemaster_id>/', views.rtratemaster_add, name='rtratemaster_update'),
+    # Update rtratemaster
+    path('rtratemaster_delete/<int:rtratemaster_id>/', views.rtratemaster_delete, name='rtratemaster_delete'),
+    # Delete rtratemaster
     path('gstexcepmtion_list/', views.gstexcepmtion_list, name='gstexcepmtion_list'),  # List gstexcepmtion,
     path('gstexcepmtion_insert', views.gstexcepmtion_add, name='gstexcepmtion_insert'),  # Add gstexcepmtion
-    path('gstexcepmtion_update/<int:gstexcepmtion_id>/', views.gstexcepmtion_add, name='gstexcepmtion_update'),  # Update gstexcepmtion
-    path('gstexcepmtion_delete/<int:gstexcepmtion_id>/', views.gstexcepmtion_delete, name='gstexcepmtion_delete'),  # Delete gstexcepmtion
+    path('gstexcepmtion_update/<int:gstexcepmtion_id>/', views.gstexcepmtion_add, name='gstexcepmtion_update'),
+    # Update gstexcepmtion
+    path('gstexcepmtion_delete/<int:gstexcepmtion_id>/', views.gstexcepmtion_delete, name='gstexcepmtion_delete'),
+    # Delete gstexcepmtion
     path('gstmodel_list/', views.gstmodel_list, name='gstmodel_list'),  # List gstmodel,
     path('gstmodel_insert', views.gstmodel_add, name='gstmodel_insert'),  # Add gstmodel
     path('gstmodel_update/<int:gstmodel_id>/', views.gstmodel_add, name='gstmodel_update'),  # Update gstmodel
     path('gstmodel_delete/<int:gstmodel_id>/', views.gstmodel_delete, name='gstmodel_delete'),  # Delete gstmodel
     path('paymenttype_list/', views.paymenttype_list, name='paymenttype_list'),  # List paymenttype,
     path('paymenttype_insert', views.paymenttype_add, name='paymenttype_insert'),  # Add paymenttype
-    path('paymenttype_update/<int:paymenttype_id>/', views.paymenttype_add, name='paymenttype_update'),  # Update paymenttype
-    path('paymenttype_delete/<int:paymenttype_id>/', views.paymenttype_delete, name='paymenttype_delete'),  # Delete paymenttype
+    path('paymenttype_update/<int:paymenttype_id>/', views.paymenttype_add, name='paymenttype_update'),
+    # Update paymenttype
+    path('paymenttype_delete/<int:paymenttype_id>/', views.paymenttype_delete, name='paymenttype_delete'),
+    # Delete paymenttype
     path('crcountfrom_list/', views.crcountfrom_list, name='crcountfrom_list'),  # List crcountfrom,
     path('crcountfrom_insert', views.crcountfrom_add, name='crcountfrom_insert'),  # Add crcountfrom
-    path('crcountfrom_update/<int:crcountfrom_id>/', views.crcountfrom_add, name='crcountfrom_update'),  # Update crcountfrom
-    path('crcountfrom_delete/<int:crcountfrom_id>/', views.crcountfrom_delete, name='crcountfrom_delete'),  # Delete crcountfrom
+    path('crcountfrom_update/<int:crcountfrom_id>/', views.crcountfrom_add, name='crcountfrom_update'),
+    # Update crcountfrom
+    path('crcountfrom_delete/<int:crcountfrom_id>/', views.crcountfrom_delete, name='crcountfrom_delete'),
+    # Delete crcountfrom
     path('customer_list/', views.customer_list, name='customer_list'),  # List customer,
     path('customer_insert', views.customer_add, name='customer_insert'),  # Add customer
     path('customer_update/<int:customer_id>/', views.customer_add, name='customer_update'),  # Update customer
     path('customer_delete/<int:customer_id>/', views.customer_delete, name='customer_delete'),  # Delete customer
-    path('damagereport_update/<int:damagereport_id>/', views.damagereport_add, name='damagereport_update'),  # damagereport update
+    path('damagereport_update/<int:damagereport_id>/', views.damagereport_add, name='damagereport_update'),
+    # damagereport update
     path('damagereport_insert', views.damagereport_add, name='damagereport_insert'),  # damagereport insert
-    path('materialhandling_list/', views.materialhandling_list, name='materialhandling_list'),  # List Material Handling,
-    path('materialhandling_insert', views.materialhandling_add, name='materialhandling_insert'),  # Add Material Handling
-    path('materialhandling_update/<int:material_id>/', views.materialhandling_add, name='materialhandling_update'),  # Update Material Handling
-    path('materialhandling_delete/<int:material_id>/', views.materialhandling_delete, name='materialhandling_delete'),  # Delete Material Handling
+    path('materialhandling_list/', views.materialhandling_list, name='materialhandling_list'),
+    # List Material Handling,
+    path('materialhandling_insert', views.materialhandling_add, name='materialhandling_insert'),
+    # Add Material Handling
+    path('materialhandling_update/<int:material_id>/', views.materialhandling_add, name='materialhandling_update'),
+    # Update Material Handling
+    path('materialhandling_delete/<int:material_id>/', views.materialhandling_delete, name='materialhandling_delete'),
+    # Delete Material Handling
     path('packagetype_list/', views.packagetype_list, name='packagetype_list'),  # List packagetype ,
     path('packagetype_insert', views.packagetype_add, name='packagetype_insert'),  # Add packagetype
-    path('packagetype_update/<int:packagetype_id>/', views.packagetype_add, name='packagetype_update'),  # Update packagetype
-    path('packagetype_delete/<int:packagetype_id>/', views.packagetype_delete, name='packagetype_delete'),  # Delete packagetype
+    path('packagetype_update/<int:packagetype_id>/', views.packagetype_add, name='packagetype_update'),
+    # Update packagetype
+    path('packagetype_delete/<int:packagetype_id>/', views.packagetype_delete, name='packagetype_delete'),
+    # Delete packagetype
     path('currencytype_list/', views.currencytype_list, name='currencytype_list'),  # List currencytype ,
     path('currencytype_insert', views.currencytype_add, name='currencytype_insert'),  # Add currencytype
-    path('currencytype_update/<int:currencytype_id>/', views.currencytype_add, name='currencytype_update'),  # Update currencytype
-    path('currencytype_delete/<int:currencytype_id>/', views.currencytype_delete, name='currencytype_delete'),  # Delete currencytype
+    path('currencytype_update/<int:currencytype_id>/', views.currencytype_add, name='currencytype_update'),
+    # Update currencytype
+    path('currencytype_delete/<int:currencytype_id>/', views.currencytype_delete, name='currencytype_delete'),
+    # Delete currencytype
     path('stocktype_list/', views.stocktype_list, name='stocktype_list'),  # List stocktype ,
     path('stocktype_insert', views.stocktype_add, name='stocktype_insert'),  # Add stocktype
     path('stocktype_update/<int:stocktype_id>/', views.stocktype_add, name='stocktype_update'),  # Update stocktype
-    path('stocktype_delete/<int:stocktype_id>/', views.stocktype_delete, name='stocktype_delete'),  # Delete currencytype
+    path('stocktype_delete/<int:stocktype_id>/', views.stocktype_delete, name='stocktype_delete'),
+    # Delete currencytype
     path('load_units/', views.load_units, name='load_units'),
     path('load_units_origin/', views.load_units_origin, name='load_units_origin'),
     path('load_bays/', views.load_bays, name='load_bays'),
     path('load_bays_origin/', views.load_bays_origin, name='load_bays_origin'),
     path('warehousein_insert', views.warehousein_add, name='warehousein_insert'),  # Add warehousein
-    path('warehousein_update/<int:warehousein_id>/', views.warehousein_add, name='warehousein_update'),  # Update warehousein
-    path('warehouseout_update/<int:warehouseout_id>/', views.warehouseout_add, name='warehouseout_update'),  # Update warehouseout
+    path('warehousein_update/<int:warehousein_id>/', views.warehousein_add, name='warehousein_update'),
+    # Update warehousein
+    path('warehouseout_update/<int:warehouseout_id>/', views.warehouseout_add, name='warehouseout_update'),
+    # Update warehouseout
     path('warehouseout_cancel/', views.warehouseout_cancel, name='warehouseout_cancel'),  # Cancel warehouseout
     path('storage_list/', views.storage_list, name='storage_list'),  # List Storage
     path('load_customer_model/', views.load_customer_model, name='load_customer_model'),
     path('dispatch_list/', views.dispatch_list, name='dispatch_list'),  # List currencytype ,
     path('dispatch_insert', views.dispatch_add, name='dispatch_insert'),  # Add dispatch
-    path('dispatch_update/<int:dispatch_id>/', views.dispatch_add, name='dispatch_update'),# Update dispatch
-    path('dispatch_delete/<int:dispatch_id>/', views.dispatch_delete, name='dispatch_delete'),# Delete dispatch
+    path('dispatch_update/<int:dispatch_id>/', views.dispatch_add, name='dispatch_update'),  # Update dispatch
+    path('dispatch_delete/<int:dispatch_id>/', views.dispatch_delete, name='dispatch_delete'),  # Delete dispatch
     # path('dispatch_goods_list/<int:dispatch_id>/', views.dispatch_goods_list, name='dispatch_goods_list'),# Dispatch Goods List
-    path('dispatch_goods_list/', views.dispatch_goods_list, name='dispatch_goods_list'),# Dispatch Goods List
-    path('dispatch_remove_goods/', views.dispatch_remove_goods, name='dispatch_remove_goods'),# Remove Dispatch Goods
-    path('dispatch_add_goods/', views.dispatch_add_goods, name='dispatch_add_goods'),# Add Dispatch Goods
-    path('dispatch_goods_back/', views.dispatch_goods_back, name='dispatch_goods_back'),# back Dispatch Goods
-    path('qr_dispatch_decoder/<int:dispatch_id>', views.qr_dispatch_decoder, name='qr_dispatch_decoder'), # qr_dispatch_decoder
-    path('message_test/',views.message_test,name='message_test'),
-    path('load_area_volume/',views.load_area_volume,name='load_area_volume'),
+    path('dispatch_goods_list/', views.dispatch_goods_list, name='dispatch_goods_list'),  # Dispatch Goods List
+    path('dispatch_remove_goods/', views.dispatch_remove_goods, name='dispatch_remove_goods'),  # Remove Dispatch Goods
+    path('dispatch_add_goods/', views.dispatch_add_goods, name='dispatch_add_goods'),  # Add Dispatch Goods
+    path('dispatch_goods_back/', views.dispatch_goods_back, name='dispatch_goods_back'),  # back Dispatch Goods
+    path('qr_dispatch_decoder/<int:dispatch_id>', views.qr_dispatch_decoder, name='qr_dispatch_decoder'),
+    # qr_dispatch_decoder
+    path('message_test/', views.message_test, name='message_test'),
+    path('load_area_volume/', views.load_area_volume, name='load_area_volume'),
     # path("get_available_pre_gateins/", views.get_available_pre_gateins, name="get_available_pre_gateins"),
-    path('load_pre_gate_in/',views.load_pre_gate_in,name='load_pre_gate_in'),
-    path('load_pre_gate_in_truck_details/',views.load_pre_gate_in_truck_details,name='load_pre_gate_in_truck_details'),
-    path('invoice_list/',views.invoice_list,name='invoice_list'), # List invoice
-    path('invoice_report/',views.invoice_report,name='invoice_report'), # List invoice report
-    path('invoice_insert/',views.invoice_add,name='invoice_insert'), # Add invoice
-    path('invoice_update/<int:invoice_id>',views.invoice_add,name='invoice_update'), # update invoice
-    path('invoice_delete/<int:invoice_id>',views.invoice_delete,name='invoice_delete'), # delete invoice
-    path('warehouse_reports/',views.warehouse_reports,name='warehouse_reports'),
-    path('transport_reports/',views.transport_reports,name='transport_reports'),
-    path('space_utilization_reports/',views.space_utilization_reports,name='space_utilization_reports'),
-    path('space_availability_reports/',views.space_availability_reports,name='space_availability_reports'),
-    path('stock_value_report/',views.stock_value_reports,name='stock_value_report'),
-    path('damage_report_list/',views.damage_reports_list,name='damage_report_list'),
-    path('deviation_report/',views.deviation_report,name='deviation_report'),
-    path('shipperinvoice_list/<int:voucher_id>', views.shipper_invoice_list, name='shipperinvoice_list'),  # List invoice
-    path('shipper_invoice_goods_add/', views.shipper_invoice_goods_add, name='shipper_invoice_goods_add'),  # add shipper invoice to voucher list
-    path('shipper_invoice_goods_remove/', views.shipper_invoice_goods_remove, name='shipper_invoice_goods_remove'),  # remove shipper invoice to voucher list
+    path('load_pre_gate_in/', views.load_pre_gate_in, name='load_pre_gate_in'),
+    path('load_pre_gate_in_truck_details/', views.load_pre_gate_in_truck_details,
+         name='load_pre_gate_in_truck_details'),
+    path('invoice_list/', views.invoice_list, name='invoice_list'),  # List invoice
+    path('invoice_report/', views.invoice_report, name='invoice_report'),  # List invoice report
+    path('invoice_insert/', views.invoice_add, name='invoice_insert'),  # Add invoice
+    path('invoice_update/<int:invoice_id>', views.invoice_add, name='invoice_update'),  # update invoice
+    path('invoice_delete/<int:invoice_id>', views.invoice_delete, name='invoice_delete'),  # delete invoice
+    path('warehouse_reports/', views.warehouse_reports, name='warehouse_reports'),
+    path('transport_reports/', views.transport_reports, name='transport_reports'),
+    path('space_utilization_reports/', views.space_utilization_reports, name='space_utilization_reports'),
+    path('space_availability_reports/', views.space_availability_reports, name='space_availability_reports'),
+    path('stock_value_report/', views.stock_value_reports, name='stock_value_report'),
+    path('damage_report_list/', views.damage_reports_list, name='damage_report_list'),
+    path('deviation_report/', views.deviation_report, name='deviation_report'),
+    path('shipperinvoice_list/<int:voucher_id>', views.shipper_invoice_list, name='shipperinvoice_list'),
+    # List invoice
+    path('shipper_invoice_goods_add/', views.shipper_invoice_goods_add, name='shipper_invoice_goods_add'),
+    # add shipper invoice to voucher list
+    path('shipper_invoice_goods_remove/', views.shipper_invoice_goods_remove, name='shipper_invoice_goods_remove'),
+    # remove shipper invoice to voucher list
     path('load_whrate_model/', views.load_whrate_model, name='load_whrate_model'),  # load WH rate
-    path('expense_list/',views.expense_list,name='expense_list'), # List expense
-    path('expense_insert/',views.expense_add,name='expense_insert'), # Add expense
-    path('expense_update/<int:expense_id>',views.expense_add,name='expense_update'), # update expense
-    path('expense_delete/<int:expense_id>',views.expense_delete,name='expense_delete'), # delete expense
-    path('expense_search/',views.expense_search,name='expense_search'), # search expense
-    path('case_to_case_open_invoice/',views.case_to_case_invoice_list_open,name='case_to_case_open_invoice'), # case to case Open invoice list
-    path('exclusive_open_invoice/',views.exclusive_invoice_list_open,name='exclusive_open_invoice'), # exclusive Open invoice list
-    path('dedicated_open_invoice/',views.dedicated_invoice_list_open,name='dedicated_open_invoice'), # dedicated Open invoice list
-    path('sales_list/',views.sales_list,name='sales_list'), # List sales
-    path('sales_insert/',views.sales_add,name='sales_insert'), # Add sales
-    path('sales_update/<int:sales_id>',views.sales_add,name='sales_update'), # update sales
-    path('sales_delete/<int:sales_id>',views.sales_delete,name='sales_delete'), # delete sales
+    path('expense_list/', views.expense_list, name='expense_list'),  # List expense
+    path('expense_insert/', views.expense_add, name='expense_insert'),  # Add expense
+    path('expense_update/<int:expense_id>', views.expense_add, name='expense_update'),  # update expense
+    path('expense_delete/<int:expense_id>', views.expense_delete, name='expense_delete'),  # delete expense
+    path('expense_search/', views.expense_search, name='expense_search'),  # search expense
+    path('case_to_case_open_invoice/', views.case_to_case_invoice_list_open, name='case_to_case_open_invoice'),
+    # case to case Open invoice list
+    path('exclusive_open_invoice/', views.exclusive_invoice_list_open, name='exclusive_open_invoice'),
+    # exclusive Open invoice list
+    path('dedicated_open_invoice/', views.dedicated_invoice_list_open, name='dedicated_open_invoice'),
+    # dedicated Open invoice list
+    path('sales_list/', views.sales_list, name='sales_list'),  # List sales
+    path('sales_insert/', views.sales_add, name='sales_insert'),  # Add sales
+    path('sales_update/<int:sales_id>', views.sales_add, name='sales_update'),  # update sales
+    path('sales_delete/<int:sales_id>', views.sales_delete, name='sales_delete'),  # delete sales
     path('sales_comments_list/', views.sales_comments_list, name='sales_comments_list'),  # List sales comments
     path('sales_comments_insert/', views.sales_comments_add, name='sales_comments_insert'),  # Add sales comments
-    path('sales_comments_update/<int:sales_comments_id>', views.sales_comments_add, name='sales_comments_update'),  # update sales comments
-    path('sales_comments_delete/<int:sales_comments_id>', views.sales_comments_delete, name='sales_comments_delete'),  # delete sales comments
-    path('ininspectreport_list/',views.ininspectreport_list,name='ininspectreport_list'), # List ininspectreport
-    path('ininspectreport_insert/',views.ininspectreport_add,name='ininspectreport_insert'), # Add ininspectreport
-    path('ininspectreport_update/<int:ininspectreport_id>',views.ininspectreport_add,name='ininspectreport_update'), # update ininspectreport
-    path('ininspectreport_delete/<int:ininspectreport_id>',views.ininspectreport_delete,name='ininspectreport_delete'), # delete ininspectreport
-    path('ouinspectreport_list/',views.ouinspectreport_list,name='ouinspectreport_list'), # List ouinspectreport
-    path('ouinspectreport_insert/',views.ouinspectreport_add,name='ouinspectreport_insert'), # Add ouinspectreport
-    path('ouinspectreport_update/<int:ouinspectreport_id>',views.ouinspectreport_add,name='ouinspectreport_update'), # update ouinspectreport
-    path('ouinspectreport_delete/<int:ouinspectreport_id>',views.ouinspectreport_delete,name='ouinspectreport_delete'), # delete ouinspectreport
-    path('materialstock_list/',views.materialstock_list,name='materialstock_list'), # List materialstock
-    path('materialstock_insert/',views.materialstock_add,name='materialstock_insert'), # Add materialstock
-    path('materialstock_update/<int:materialstock_id>',views.materialstock_add,name='materialstock_update'), # update materialstock
-    path('materialstock_delete/<int:materialstock_id>',views.materialstock_delete,name='materialstock_delete'), # delete materialstock
-    path('packingjobs_list/',views.packingjobs_list,name='packingjobs_list'), # List packingjobs
-    path('packingjobs_insert/',views.packingjobs_add,name='packingjobs_insert'), # Add packingjobs
-    path('packingjobs_update/<int:packingjobs_id>',views.packingjobs_add,name='packingjobs_update'), # update packingjobs
-    path('packingjobs_delete/<int:packingjobs_id>',views.packingjobs_delete,name='packingjobs_delete'), # delete packingjobs
+    path('sales_comments_update/<int:sales_comments_id>', views.sales_comments_add, name='sales_comments_update'),
+    # update sales comments
+    path('sales_comments_delete/<int:sales_comments_id>', views.sales_comments_delete, name='sales_comments_delete'),
+    # delete sales comments
+    path('ininspectreport_list/', views.ininspectreport_list, name='ininspectreport_list'),  # List ininspectreport
+    path('ininspectreport_insert/', views.ininspectreport_add, name='ininspectreport_insert'),  # Add ininspectreport
+    path('ininspectreport_update/<int:ininspectreport_id>', views.ininspectreport_add, name='ininspectreport_update'),
+    # update ininspectreport
+    path('ininspectreport_delete/<int:ininspectreport_id>', views.ininspectreport_delete,
+         name='ininspectreport_delete'),  # delete ininspectreport
+    path('ouinspectreport_list/', views.ouinspectreport_list, name='ouinspectreport_list'),  # List ouinspectreport
+    path('ouinspectreport_insert/', views.ouinspectreport_add, name='ouinspectreport_insert'),  # Add ouinspectreport
+    path('ouinspectreport_update/<int:ouinspectreport_id>', views.ouinspectreport_add, name='ouinspectreport_update'),
+    # update ouinspectreport
+    path('ouinspectreport_delete/<int:ouinspectreport_id>', views.ouinspectreport_delete,
+         name='ouinspectreport_delete'),  # delete ouinspectreport
+    path('materialstock_list/', views.materialstock_list, name='materialstock_list'),  # List materialstock
+    path('materialstock_insert/', views.materialstock_add, name='materialstock_insert'),  # Add materialstock
+    path('materialstock_update/<int:materialstock_id>', views.materialstock_add, name='materialstock_update'),
+    # update materialstock
+    path('materialstock_delete/<int:materialstock_id>', views.materialstock_delete, name='materialstock_delete'),
+    # delete materialstock
+    path('packingjobs_list/', views.packingjobs_list, name='packingjobs_list'),  # List packingjobs
+    path('packingjobs_insert/', views.packingjobs_add, name='packingjobs_insert'),  # Add packingjobs
+    path('packingjobs_update/<int:packingjobs_id>', views.packingjobs_add, name='packingjobs_update'),
+    # update packingjobs
+    path('packingjobs_delete/<int:packingjobs_id>', views.packingjobs_delete, name='packingjobs_delete'),
+    # delete packingjobs
     path('ar_list/', views.ar_list, name='ar_list'),  # List ar
     path('ar_insert/', views.ar_add, name='ar_insert'),  # Add ar
-    path('ar_update/<int:ar_id>', views.ar_add, name='ar_update'),# update ar
-    path('ar_delete/<int:ar_id>', views.ar_delete, name='ar_delete'),# delete ar
+    path('ar_update/<int:ar_id>', views.ar_add, name='ar_update'),  # update ar
+    path('ar_delete/<int:ar_id>', views.ar_delete, name='ar_delete'),  # delete ar
     path('sales_target_list/', views.sales_target_list, name='sales_target_list'),  # List sales
     path('sales_target_insert/', views.sales_target_add, name='sales_target_insert'),  # Add sale
-    path('sales_target_update/<int:sales_target_id>', views.sales_target_add, name='sales_target_update'),  # update sales
-    path('sales_target_delete/<int:sales_target_id>', views.sales_target_delete, name='sales_target_delete'),  # delete sales
+    path('sales_target_update/<int:sales_target_id>', views.sales_target_add, name='sales_target_update'),
+    # update sales
+    path('sales_target_delete/<int:sales_target_id>', views.sales_target_delete, name='sales_target_delete'),
+    # delete sales
     path('ar_comments_list/', views.arcomments_list, name='ar_comments_list'),  # List ar_comments
     path('ar_comments_insert/', views.arcomments_add, name='ar_comments_insert'),  # Add ar_comments
-    path('ar_comments_update/<int:arcomments_id>', views.arcomments_add, name='ar_comments_update'),  # update ar_comments
-    path('ar_comments_delete/<int:arcomments_id>', views.arcomments_delete, name='ar_comments_delete'),  # delete ar_comments
-    path('open_requirements_list/', views.open_requirements_list, name='open_requirements_list'),  # open List requirements
+    path('ar_comments_update/<int:arcomments_id>', views.arcomments_add, name='ar_comments_update'),
+    # update ar_comments
+    path('ar_comments_delete/<int:arcomments_id>', views.arcomments_delete, name='ar_comments_delete'),
+    # delete ar_comments
+    path('open_requirements_list/', views.open_requirements_list, name='open_requirements_list'),
+    # open List requirements
     path('requirements_list/', views.requirements_list, name='requirements_list'),  # List requirements
     path('requirements_insert/', views.requirements_add, name='requirements_insert'),  # Add requirements
-    path('requirements_update/<int:requirements_id>', views.requirements_add, name='requirements_update'),# update requirements
-    path('requirements_delete/<int:requirements_id>', views.requirements_delete, name='requirements_delete'),# delete requirements
-    path('requirements_search/', views.requirements_search, name='requirements_search'),# search requirements
+    path('requirements_update/<int:requirements_id>', views.requirements_add, name='requirements_update'),
+    # update requirements
+    path('requirements_delete/<int:requirements_id>', views.requirements_delete, name='requirements_delete'),
+    # delete requirements
+    path('requirements_search/', views.requirements_search, name='requirements_search'),  # search requirements
     path('needassessment_list/', views.needassessment_list, name='needassessment_list'),  # List needassessment
     path('needassessment_insert/', views.needassessment_add, name='needassessment_insert'),  # Add needassessment
-    path('needassessment_update/<int:needassessment_id>', views.needassessment_add, name='needassessment_update'),# update needassessment
-    path('needassessment_delete/<int:needassessment_id>', views.needassessment_delete, name='needassessment_delete'),# delete needassessment
+    path('needassessment_update/<int:needassessment_id>', views.needassessment_add, name='needassessment_update'),
+    # update needassessment
+    path('needassessment_delete/<int:needassessment_id>', views.needassessment_delete, name='needassessment_delete'),
+    # delete needassessment
     path('openingstock_list/', views.openingstock_list, name='openingstock_list'),  # List openingstock
     path('openingstock_insert/', views.openingstock_add, name='openingstock_insert'),  # Add openingstock
-    path('openingstock_update/<int:openingstock_id>', views.openingstock_add, name='openingstock_update'),  # update openingstock
-    path('openingstock_delete/<int:openingstock_id>', views.openingstock_delete, name='openingstock_delete'),  # delete openingstock
+    path('openingstock_update/<int:openingstock_id>', views.openingstock_add, name='openingstock_update'),
+    # update openingstock
+    path('openingstock_delete/<int:openingstock_id>', views.openingstock_delete, name='openingstock_delete'),
+    # delete openingstock
     path('stockpurchases_list/', views.stockpurchases_list, name='stockpurchases_list'),  # List stockpurchases
     path('stockpurchases_cancel/', views.stockpurchases_cancel, name='stockpurchases_cancel'),  # Cancel stockpurchases
     path('stockpurchases_insert/', views.stockpurchases_add, name='stockpurchases_insert'),  # Add stockpurchases
-    path('stockpurchases_update/<int:stockpurchases_id>', views.stockpurchases_add, name='stockpurchases_update'),  # update stockpurchases
-    path('stockpurchases_delete/<int:stockpurchases_id>', views.stockpurchases_delete, name='stockpurchases_delete'),  # delete stockpurchases
+    path('stockpurchases_update/<int:stockpurchases_id>', views.stockpurchases_add, name='stockpurchases_update'),
+    # update stockpurchases
+    path('stockpurchases_delete/<int:stockpurchases_id>', views.stockpurchases_delete, name='stockpurchases_delete'),
+    # delete stockpurchases
     path('purchaseorder_list/', views.purchaseorder_list, name='purchaseorder_list'),  # List purchaseorder
     path('purchaseorder_insert/', views.purchaseorder_add, name='purchaseorder_insert'),  # Add purchaseorder
-    path('purchaseorder_update/<int:purchaseorder_id>', views.purchaseorder_add, name='purchaseorder_update'),# update purchaseorder
-    path('purchaseorder_delete/<int:purchaseorder_id>', views.purchaseorder_delete, name='purchaseorder_delete'),# delete purchaseorder
+    path('purchaseorder_update/<int:purchaseorder_id>', views.purchaseorder_add, name='purchaseorder_update'),
+    # update purchaseorder
+    path('purchaseorder_delete/<int:purchaseorder_id>', views.purchaseorder_delete, name='purchaseorder_delete'),
+    # delete purchaseorder
     path('na_dimension_list/', views.na_dimension_list, name='na_dimension_list'),  # List Na Dimension
     path('na_dimension_insert/', views.na_dimension_add, name='na_dimension_insert'),  # Add Na Dimension
-    path('na_dimension_update/<int:na_dimension_id>', views.na_dimension_add, name='na_dimension_update'),  # update Na Dimension
-    path('na_dimension_delete/<int:na_dimension_id>', views.na_dimension_delete, name='na_dimension_delete'),  # delete Na Dimension
+    path('na_dimension_update/<int:na_dimension_id>', views.na_dimension_add, name='na_dimension_update'),
+    # update Na Dimension
+    path('na_dimension_delete/<int:na_dimension_id>', views.na_dimension_delete, name='na_dimension_delete'),
+    # delete Na Dimension
     path('na_dimension_cancel', views.na_dimension_cancel, name='na_dimension_cancel'),  # cancel Na Dimension
     path('quotes_list/', views.quotes_list, name='quotes_list'),  # List quotes
     path('quotes_insert/', views.quotes_add, name='quotes_insert'),  # Add quotes
-    path('quotes_update/<int:quotes_id>', views.quotes_add, name='quotes_update'),# update quotes
-    path('quotes_delete/<int:quotes_id>', views.quotes_delete, name='quotes_delete'),# delete quotes
-    path('export_costingreport/', views.export_cost_assessment_to_excel, name='export_costingreport'),# export stock value report
+    path('quotes_update/<int:quotes_id>', views.quotes_add, name='quotes_update'),  # update quotes
+    path('quotes_delete/<int:quotes_id>', views.quotes_delete, name='quotes_delete'),  # delete quotes
+    path('export_costingreport/', views.export_cost_assessment_to_excel, name='export_costingreport'),
+    # export stock value report
     path('costing_list/', views.costing_list, name='costing_list'),  # List costing
     path('costing_insert/', views.costing_add, name='costing_insert'),  # Add costing
     path('costing_update/<int:costing_id>', views.costing_add, name='costing_update'),  # update costing
     path('costing_delete/<int:costing_id>', views.costing_delete, name='costing_delete'),  # delete costing
     path('costing_cancel/', views.costing_cancel, name='costing_cancel'),  # cancel costing
     path('pk_item_search_page/', views.pk_item_search_page, name='pk_item_search_page'),  # pk_item_search_page
-    path('pk_item_search_page_costing/', views.pk_item_search_page_costing, name='pk_item_search_page_costing'),  # pk_item_search_page_costing
+    path('pk_item_search_page_costing/', views.pk_item_search_page_costing, name='pk_item_search_page_costing'),
+    # pk_item_search_page_costing
     path('costingsummary_list/', views.costingsummary_list, name='costingsummary_list'),  # List costingsummary
     path('costingsummary_insert/', views.costingsummary_add, name='costingsummary_insert'),  # Add costingsummary
-    path('costingsummary_update/<int:costingsummary_id>', views.costingsummary_add, name='costingsummary_update'),  # update costingsummary
-    path('costingsummary_delete/<int:costingsummary_id>', views.costingsummary_delete, name='costingsummary_delete'),  # delete costingsummary
-    path('pk_costing_summary_check_unique_field/', views.pk_costing_summary_check_unique_field, name='pk_costing_summary_check_unique_field'),  # costing_summary_check_unique_field
-    path('pk_costing_get_customer/', views.pk_costing_get_customer, name='pk_costing_get_customer'),  # costing_summary_check_unique_field
+    path('costingsummary_update/<int:costingsummary_id>', views.costingsummary_add, name='costingsummary_update'),
+    # update costingsummary
+    path('costingsummary_delete/<int:costingsummary_id>', views.costingsummary_delete, name='costingsummary_delete'),
+    # delete costingsummary
+    path('pk_costing_summary_check_unique_field/', views.pk_costing_summary_check_unique_field,
+         name='pk_costing_summary_check_unique_field'),  # costing_summary_check_unique_field
+    path('pk_costing_get_customer/', views.pk_costing_get_customer, name='pk_costing_get_customer'),
+    # costing_summary_check_unique_field
     path('vehicle_allotment_list/', views.vehicle_allotment_list, name='vehicle_allotment_list'),
-    path('vehicle_allotment_insert/<int:enquiry_id>/',views.vehicle_allotment_add,name='vehicle_allotment_insert'),
-    path('vehicle_allotment_update/<int:vehicle_allotment_id>/',views.vehicle_allotment_add,name='vehicle_allotment_update'),
-    path('vehicle_allotment_update_enquiry/<int:enquiry_id>/<str:vehicle_number>/',views.vehicle_allotment_enquiry,name='vehicle_allotment_update_enquiry'),
-    path('vehicle_allotment_delete/<int:vehicle_allotment_id>/',views.vehicle_allotment_delete,name='vehicle_allotment_delete'),
-    path('vehicle_allotment_nav/<int:vehicle_allotment_id>/',views.vehicle_allotment_nav,name='vehicle_allotment_nav'),
+    path('vehicle_allotment_insert/<int:enquiry_id>/', views.vehicle_allotment_add, name='vehicle_allotment_insert'),
+    path('vehicle_allotment_update/<int:vehicle_allotment_id>/', views.vehicle_allotment_add,
+         name='vehicle_allotment_update'),
+    path('vehicle_allotment_update_enquiry/<int:enquiry_id>/<str:vehicle_number>/', views.vehicle_allotment_enquiry,
+         name='vehicle_allotment_update_enquiry'),
+    path('vehicle_allotment_delete/<int:vehicle_allotment_id>/', views.vehicle_allotment_delete,
+         name='vehicle_allotment_delete'),
+    path('vehicle_allotment_nav/<int:vehicle_allotment_id>/', views.vehicle_allotment_nav,
+         name='vehicle_allotment_nav'),
     path('search/', views.get_queryset, name='search'),  # View Gate-in search
     path('pre_gatein_search/', views.pre_gatein_search, name='pre_gatein_search'),  # View pre Gate-in search
     path('partcode_search/', views.partcode_search, name='partcode_search'),  # View pre Gate-in search
     path('sales_search/', views.sales_search, name='sales_search'),  # View pre Sales search
-    path('sales_comments_search/', views.sales_comments_search, name='sales_comments_search'),  # View pre Sales comments search
+    path('sales_comments_search/', views.sales_comments_search, name='sales_comments_search'),
+    # View pre Sales comments search
     path('dispatch_search/', views.dispatch_search, name='dispatch_search'),  # View dispatch search
-    path('load_stock_description/', views.load_stock_description, name='load_stock_description'),  # Load stock description
+    path('load_stock_description/', views.load_stock_description, name='load_stock_description'),
+    # Load stock description
     path('load_vehicle_source/', views.load_vehicle_source, name='load_vehicle_source'),  # Load vehicle_source
     path('load_vehicle_number/', views.load_vehicle_number, name='load_vehicle_number'),  # Load vehicle_details
     path('load_driver_details/', views.load_driver_details, name='load_driver_details'),  # Load driver_details
     path('load_vehicle_details/', views.load_vehicle_details, name='load_vehicle_details'),  # Load vehicle_details
     path('fuelfilling_list/', views.fuelfilling_list, name='fuelfilling_list'),  # List fuelfilling
     path('fuelfilling_insert/', views.fuelfilling_add, name='fuelfilling_insert'),  # Add fuelfilling
-    path('fuelfilling_update/<int:fuelfilling_id>', views.fuelfilling_add, name='fuelfilling_update'),  # update fuelfilling
-    path('fuelfilling_delete/<int:fuelfilling_id>', views.fuelfilling_delete, name='fuelfilling_delete'),  # delete fuelfilling
+    path('fuelfilling_update/<int:fuelfilling_id>', views.fuelfilling_add, name='fuelfilling_update'),
+    # update fuelfilling
+    path('fuelfilling_delete/<int:fuelfilling_id>', views.fuelfilling_delete, name='fuelfilling_delete'),
+    # delete fuelfilling
     path('bunkname_list/', views.bunkname_list, name='bunkname_list'),  # List bunkname
     path('bunkname_insert/', views.bunkname_add, name='bunkname_insert'),  # Add bunkname
     path('bunkname_update/<int:bunkname_id>', views.bunkname_add, name='bunkname_update'),  # update bunkname
@@ -444,88 +547,127 @@ urlpatterns = [
     path('places_insert/', views.places_add, name='places_insert'),  # Add places
     path('places_update/<int:places_id>', views.places_add, name='places_update'),  # update places
     path('places_delete/<int:places_id>', views.places_delete, name='places_delete'),  # delete places
-    path('enquirynotevehicle_list/', views.enquirynotevehicle_list, name='enquirynotevehicle_list'),  # List enquirynotevehicle
-    path('enquirynotevehicle_insert/', views.enquirynotevehicle_add, name='enquirynotevehicle_insert'),  # Add enquirynotevehicle
-    path('enquirynotevehicle_update/<int:enquirynotevehicle_id>', views.enquirynotevehicle_add, name='enquirynotevehicle_update'),  # update enquirynotevehicle
-    path('enquirynotevehicle_delete/<int:enquirynotevehicle_id>', views.enquirynotevehicle_delete, name='enquirynotevehicle_delete'),  # delete enquirynotevehicle
-    path('enquirynotevehicle_cancel/', views.enquirynotevehicle_cancel, name='enquirynotevehicle_cancel'),  # Cancel enquirynotevehicle
+    path('enquirynotevehicle_list/', views.enquirynotevehicle_list, name='enquirynotevehicle_list'),
+    # List enquirynotevehicle
+    path('enquirynotevehicle_insert/', views.enquirynotevehicle_add, name='enquirynotevehicle_insert'),
+    # Add enquirynotevehicle
+    path('enquirynotevehicle_update/<int:enquirynotevehicle_id>', views.enquirynotevehicle_add,
+         name='enquirynotevehicle_update'),  # update enquirynotevehicle
+    path('enquirynotevehicle_delete/<int:enquirynotevehicle_id>', views.enquirynotevehicle_delete,
+         name='enquirynotevehicle_delete'),  # delete enquirynotevehicle
+    path('enquirynotevehicle_cancel/', views.enquirynotevehicle_cancel, name='enquirynotevehicle_cancel'),
+    # Cancel enquirynotevehicle
     path('consignmentgoods_list/', views.consignmentgoods_list, name='consignmentgoods_list'),  # List consignmentgoods
-    path('consignmentgoods_insert/', views.consignmentgoods_add, name='consignmentgoods_insert'),  # Add consignmentgoods
-    path('consignmentgoods_update/<int:consignmentgoods_id>', views.consignmentgoods_add, name='consignmentgoods_update'),  # update consignmentgoods
-    path('consignmentgoods_delete/<int:consignmentgoods_id>', views.consignmentgoods_delete, name='consignmentgoods_delete'),  # delete consignmentgoods
-    path('consignmentgoods_nav/<int:consignmentdetails_id>', views.consignmentgoods_nav, name='consignmentgoods_nav'),  # nav consignmentgoods
+    path('consignmentgoods_insert/', views.consignmentgoods_add, name='consignmentgoods_insert'),
+    # Add consignmentgoods
+    path('consignmentgoods_update/<int:consignmentgoods_id>', views.consignmentgoods_add,
+         name='consignmentgoods_update'),  # update consignmentgoods
+    path('consignmentgoods_delete/<int:consignmentgoods_id>', views.consignmentgoods_delete,
+         name='consignmentgoods_delete'),  # delete consignmentgoods
+    path('consignmentgoods_nav/<int:consignmentdetails_id>', views.consignmentgoods_nav, name='consignmentgoods_nav'),
+    # nav consignmentgoods
     # path('transport_nav/', views.transport_nav, name='transport_nav'),  # nav transport
-    path('transport_nav/', TemplateView.as_view(template_name='asset_mgt_app/transport_nav.html'), name='transport_nav'),
-    path('consignmentgoods_cancel/', views.consignmentgoods_cancel, name='consignmentgoods_cancel'),  # Cancel consignmentgoods
-    path('consignmentgoods_back/', views.consignmentgoods_back, name='consignmentgoods_back'),  # Cancel consignmentgoods
+    path('transport_nav/', TemplateView.as_view(template_name='asset_mgt_app/transport_nav.html'),
+         name='transport_nav'),
+    path('consignmentgoods_cancel/', views.consignmentgoods_cancel, name='consignmentgoods_cancel'),
+    # Cancel consignmentgoods
+    path('consignmentgoods_back/', views.consignmentgoods_back, name='consignmentgoods_back'),
+    # Cancel consignmentgoods
     path('load_location/', views.load_location, name='load_location'),
-    path('export_stockreport/', views.export_stockreport_to_csv, name='export_stockreport'),# export stock value report
-    path('dispatch_stock_list/', views.dispatch_stock_list, name='dispatch_stock_list'),# dispatch_stock_list
-    path('wh_e_way_bill_list/', views.wh_e_way_bill_list, name='wh_e_way_bill_list'),# wh_e_way_bill_list
-    path('edit_wh_e_way_bill_list/<int:wh_job_id>', views.edit_wh_e_way_bill_list, name='edit_wh_e_way_bill_list'),# edit_wh_e_way_bill_list
+    path('export_stockreport/', views.export_stockreport_to_csv, name='export_stockreport'),
+    # export stock value report
+    path('dispatch_stock_list/', views.dispatch_stock_list, name='dispatch_stock_list'),  # dispatch_stock_list
+    path('wh_e_way_bill_list/', views.wh_e_way_bill_list, name='wh_e_way_bill_list'),  # wh_e_way_bill_list
+    path('edit_wh_e_way_bill_list/<int:wh_job_id>', views.edit_wh_e_way_bill_list, name='edit_wh_e_way_bill_list'),
+    # edit_wh_e_way_bill_list
     path('pregateintruck_list/', views.pregateintruck_list, name='pregateintruck_list'),  # List pregateintruck
     path('pregateintruck_insert/', views.pregateintruck_add, name='pregateintruck_insert'),  # Add pregateintruck
-    path('pregateintruck_update/<int:pregateintruck_id>', views.pregateintruck_add, name='pregateintruck_update'),  # update pregateintruck
-    path('pregateintruck_delete/<int:pregateintruck_id>', views.pregateintruck_delete, name='pregateintruck_delete'),  # delete pregateintruck
+    path('pregateintruck_update/<int:pregateintruck_id>', views.pregateintruck_add, name='pregateintruck_update'),
+    # update pregateintruck
+    path('pregateintruck_delete/<int:pregateintruck_id>', views.pregateintruck_delete, name='pregateintruck_delete'),
+    # delete pregateintruck
     path('pregateintruck_cancel/', views.pregateintruck_cancel, name='pregateintruck_cancel'),  # cancel pregateintruck
-    path('dispatch_gatepass_pdf/<int:dispatch_id>', views.dispatch_gatepass_pdf, name='dispatch_gatepass_pdf'),  # dispatch_gatepass_pdf
-    path('revenue_report/', views.revenue_report, name='revenue_report'), #Revenue Report
-    path('expense_report/', views.expense_report, name='expense_report'), #Expense Report
+    path('dispatch_gatepass_pdf/<int:dispatch_id>', views.dispatch_gatepass_pdf, name='dispatch_gatepass_pdf'),
+    # dispatch_gatepass_pdf
+    path('revenue_report/', views.revenue_report, name='revenue_report'),  # Revenue Report
+    path('expense_report/', views.expense_report, name='expense_report'),  # Expense Report
     path('consignment_note_pdf/<int:consignment_note_id>/', views.consignment_note_pdf, name='consignment_note_pdf'),
-    path('goods_in_out_reports_list/', views.goods_in_out_reports_list, name='goods_in_out_reports_list'),  # List pregateintruck
+    path('goods_in_out_reports_list/', views.goods_in_out_reports_list, name='goods_in_out_reports_list'),
+    # List pregateintruck
     path('pk_stock_vendor_list/', views.pk_stock_vendor_list, name='pk_stock_vendor_list'),  # List pk_stock_vendor
     path('pk_stock_vendor_insert/', views.pk_stock_vendor_add, name='pk_stock_vendor_insert'),  # Add pk_stock_vendor
-    path('pk_stock_vendor_update/<int:stock_vendor_id>', views.pk_stock_vendor_add, name='pk_stock_vendor_update'),  # update pk_stock_vendor
-    path('pk_stock_vendor_delete/<int:stock_vendor_id>', views.pk_stock_vendor_delete, name='pk_stock_vendor_delete'),  # delete pk_stock_vendor
+    path('pk_stock_vendor_update/<int:stock_vendor_id>', views.pk_stock_vendor_add, name='pk_stock_vendor_update'),
+    # update pk_stock_vendor
+    path('pk_stock_vendor_delete/<int:stock_vendor_id>', views.pk_stock_vendor_delete, name='pk_stock_vendor_delete'),
+    # delete pk_stock_vendor
     path('pk_quotation_list/', views.pk_quotation_list, name='pk_quotation_list'),  # List quotation
     path('pk_quotation_insert/', views.pk_quotation_add, name='pk_quotation_insert'),  # Add quotation
-    path('pk_quotation_update/<int:quotation_id>', views.pk_quotation_add, name='pk_quotation_update'),  # update quotation
-    path('pk_quotation_delete/<int:quotation_id>', views.pk_quotation_delete, name='pk_quotation_delete'),  # delete quotation
+    path('pk_quotation_update/<int:quotation_id>', views.pk_quotation_add, name='pk_quotation_update'),
+    # update quotation
+    path('pk_quotation_delete/<int:quotation_id>', views.pk_quotation_delete, name='pk_quotation_delete'),
+    # delete quotation
     path('pk_quotation_cancel/', views.pK_quotation_cancel, name='pk_quotation_cancel'),  # cancel quotation
     path('pk_quotationsummary_list/', views.pk_quotationsummary_list, name='pk_quotationsummary_list'),
-    path('pk_quotationsummary_clone/<int:pk_quotationsummary_id>/', views.pk_quotationsummary_clone, name='pk_quotationsummary_clone'),
-    path('pk_quotationsummary_insert/', views.pk_quotationsummary_add, name='pk_quotationsummary_insert'),  # Add pk_quotationsummary
-    path('pk_quotationsummary_update/<int:pk_quotationsummary_id>', views.pk_quotationsummary_add, name='pk_quotationsummary_update'),  # update pk_quotationsummary
-    path('pk_quotationsummary_delete/<int:pk_quotationsummary_id>', views.pk_quotationsummary_delete, name='pk_quotationsummary_delete'),  # delete pk_quotationsummary
-    path('pk_quotation_summary_check_unique_field/', views.pk_quotation_summary_check_unique_field, name='pk_quotation_summary_check_unique_field'),  # pk_quotation_summary_check_unique_field
-    path('transport_calculate_trip_charges/', views.transport_calculate_trip_charges, name='transport_calculate_trip_charges'),   # transport_calculate_trip_charges
-    path('iou_get_full_name/', views.get_full_name_iou, name='iou_get_full_name'),   # iou_get_full_name
+    path('pk_quotationsummary_clone/<int:pk_quotationsummary_id>/', views.pk_quotationsummary_clone,
+         name='pk_quotationsummary_clone'),
+    path('pk_quotationsummary_insert/', views.pk_quotationsummary_add, name='pk_quotationsummary_insert'),
+    # Add pk_quotationsummary
+    path('pk_quotationsummary_update/<int:pk_quotationsummary_id>', views.pk_quotationsummary_add,
+         name='pk_quotationsummary_update'),  # update pk_quotationsummary
+    path('pk_quotationsummary_delete/<int:pk_quotationsummary_id>', views.pk_quotationsummary_delete,
+         name='pk_quotationsummary_delete'),  # delete pk_quotationsummary
+    path('pk_quotation_summary_check_unique_field/', views.pk_quotation_summary_check_unique_field,
+         name='pk_quotation_summary_check_unique_field'),  # pk_quotation_summary_check_unique_field
+    path('transport_calculate_trip_charges/', views.transport_calculate_trip_charges,
+         name='transport_calculate_trip_charges'),  # transport_calculate_trip_charges
+    path('iou_get_full_name/', views.get_full_name_iou, name='iou_get_full_name'),  # iou_get_full_name
     path('iou_list/', views.iou_list, name='iou_list'),  # List IOU
     path('iou_insert/', views.iou_add, name='iou_insert'),  # Add IOU
     path('iou_update/<int:iou_id>', views.iou_add, name='iou_update'),  # update IOU
     path('iou_delete/<int:iou_id>', views.iou_delete, name='iou_delete'),  # delete IOU
-    path('modify_dimensions_view/', views.modify_dimensions_view, name='modify_dimensions_view'),  # modify_dimensions_view
+    path('modify_dimensions_view/', views.modify_dimensions_view, name='modify_dimensions_view'),
+    # modify_dimensions_view
     path('pk_return_list/', views.pk_return_list, name='pk_return_list'),  # List retrival
     path('pk_retrival_list/', views.pk_retrival_list, name='pk_retrival_list'),  # List retrival
     path('pk_retrival_insert/', views.pk_retrival_add, name='pk_retrival_insert'),  # Add retrival
-    path('pk_retrival_update/<int:retrival_id>', views.pk_retrival_add, name='pk_retrival_update'),# update retrival
-    path('pk_retrival_delete/<int:retrival_id>', views.pk_retrival_delete, name='pk_retrival_delete'),# delete retrival
+    path('pk_retrival_update/<int:retrival_id>', views.pk_retrival_add, name='pk_retrival_update'),  # update retrival
+    path('pk_retrival_delete/<int:retrival_id>', views.pk_retrival_delete, name='pk_retrival_delete'),
+    # delete retrival
     path('pk_retrival_cancel/', views.pK_retrival_cancel, name='pk_retrival_cancel'),  # cancel retrival
     path('pk_acceptance_list/', views.pk_acceptance_list, name='pk_acceptance_list'),  # List acceptance
-    path('pk_acceptance_update/<int:retrival_id>', views.pk_acceptance_add, name='pk_acceptance_update'),# update acceptance
+    path('pk_acceptance_update/<int:retrival_id>', views.pk_acceptance_add, name='pk_acceptance_update'),
+    # update acceptance
     path('comments_list/', views.comments_list, name='comments_list'),  # List comments
     path('comments_insert/', views.comments_add, name='comments_insert'),  # Add comments
     path('comments_update/<int:comments_id>', views.comments_add, name='comments_update'),  # update comments
-    path('comments_delete/<int:comments_id>', views.comments_delete, name='comments_delete'),# delete comments
-    path('comments_cancel/', views.comments_cancel, name='comments_cancel'),# cancel comments
-    path('pk_get_item_description/', views.pk_get_item_description, name='pk_get_item_description'),# get item_description
-    path('pk_get_customer/', views.pk_get_customer, name='pk_get_customer'),# pk_get_customer
-    path('pk_get_po_requirement_type/', views.pk_get_po_requirement_type, name='pk_get_po_requirement_type'),# pk_get_po_requirement_type
-    path('pk_get_pk_requirement_type/', views.pk_get_pk_requirement_type, name='pk_get_pk_requirement_type'),# pk_get_pk_requirement_type
-    path('pk_bvm_quotation_pdf/', views.pk_bvm_quotation_pdf, name='bvm_quotation_pdf'),# bvm_quotation_pdf
-    path('pk_bvm_invoice_pdf/', views.pk_bvm_invoice_pdf, name='pk_bvm_invoice_pdf'),# pk_bvm_invoice_pdf
-    path('pk_bvm_invoice_excel/', views.pk_bvm_invoice_excel, name='pk_bvm_invoice_excel'),# pk_bvm_invoice_excel
-    path('pk_store_po_dimension_id/', views.pk_store_po_dimension_id, name='pk_store_po_dimension_id'),# pk_store_po_dimension_id
-    path('pk_store_na_dimension_id/', views.pk_store_na_dimension_id, name='pk_store_na_dimension_id'),# pk_store_na_dimension_id
+    path('comments_delete/<int:comments_id>', views.comments_delete, name='comments_delete'),  # delete comments
+    path('comments_cancel/', views.comments_cancel, name='comments_cancel'),  # cancel comments
+    path('pk_get_item_description/', views.pk_get_item_description, name='pk_get_item_description'),
+    # get item_description
+    path('pk_get_customer/', views.pk_get_customer, name='pk_get_customer'),  # pk_get_customer
+    path('pk_get_po_requirement_type/', views.pk_get_po_requirement_type, name='pk_get_po_requirement_type'),
+    # pk_get_po_requirement_type
+    path('pk_get_pk_requirement_type/', views.pk_get_pk_requirement_type, name='pk_get_pk_requirement_type'),
+    # pk_get_pk_requirement_type
+    path('pk_bvm_quotation_pdf/', views.pk_bvm_quotation_pdf, name='bvm_quotation_pdf'),  # bvm_quotation_pdf
+    path('pk_bvm_invoice_pdf/', views.pk_bvm_invoice_pdf, name='pk_bvm_invoice_pdf'),  # pk_bvm_invoice_pdf
+    path('pk_bvm_invoice_excel/', views.pk_bvm_invoice_excel, name='pk_bvm_invoice_excel'),  # pk_bvm_invoice_excel
+    path('pk_store_po_dimension_id/', views.pk_store_po_dimension_id, name='pk_store_po_dimension_id'),
+    # pk_store_po_dimension_id
+    path('pk_store_na_dimension_id/', views.pk_store_na_dimension_id, name='pk_store_na_dimension_id'),
+    # pk_store_na_dimension_id
     path('fetch_part_code_details/', views.fetch_part_code_details, name='fetch_part_code_details'),
     path('po_dimension_list/', views.po_dimension_list, name='po_dimension_list'),  # List po_dimension
     path('po_dimension_insert/', views.po_dimension_add, name='po_dimension_insert'),  # Add po_dimension
-    path('po_dimension_update/<int:po_dimension_id>', views.po_dimension_add, name='po_dimension_update'),  # update po_dimension
-    path('po_dimension_delete/<int:po_dimension_id>', views.po_dimension_delete, name='po_dimension_delete'),# delete po_dimension
+    path('po_dimension_update/<int:po_dimension_id>', views.po_dimension_add, name='po_dimension_update'),
+    # update po_dimension
+    path('po_dimension_delete/<int:po_dimension_id>', views.po_dimension_delete, name='po_dimension_delete'),
+    # delete po_dimension
     path('po_dimension_cancel/', views.po_dimension_cancel, name='po_dimension_cancel'),  # cancel po_dimension
     path('bar_chart_data/', views.bar_chart_data, name='bar_chart_data'),
     path('bar_chart/', views.bar_chart, name='bar_chart'),
-    path('get_requirement_description/', views.get_requirement_description, name='get_requirement_description'),  # List task
+    path('get_requirement_description/', views.get_requirement_description, name='get_requirement_description'),
+    # List task
     path('task_list/', views.task_list, name='task_list'),  # List task
     path('task_insert/', views.task_add, name='task_insert'),  # Add task
     path('task_update/<int:task_id>', views.task_add, name='task_update'),  # update task
@@ -540,10 +682,13 @@ urlpatterns = [
     path('ml_product_list', views.ml_product_list, name='ml_product_list'),  # multi select
     path('ml_product_delete/<int:product_id>', views.ml_product_delete, name='ml_product_delete'),  # multi select
     path('business_revenue_list/', views.business_revenue_list, name='business_revenue_list'),  # List business_revenue
-    path('business_revenue_insert/', views.business_revenue_add, name='business_revenue_insert'),   # Add business_revenue
-    path('business_revenue_update/<int:business_id>', views.business_revenue_add, name='business_revenue_update'),    # update business_revenue
-    path('business_revenue_delete/<int:business_id>', views.business_revenue_delete, name='business_revenue_delete'),    # delete business_revenue
-    path('warehouse_send_email/', views.warehouse_send_email_view, name='warehouse_send_email'), #send emails
+    path('business_revenue_insert/', views.business_revenue_add, name='business_revenue_insert'),
+    # Add business_revenue
+    path('business_revenue_update/<int:business_id>', views.business_revenue_add, name='business_revenue_update'),
+    # update business_revenue
+    path('business_revenue_delete/<int:business_id>', views.business_revenue_delete, name='business_revenue_delete'),
+    # delete business_revenue
+    path('warehouse_send_email/', views.warehouse_send_email_view, name='warehouse_send_email'),  # send emails
     path('picture/', views.picture_add, name='picture_add'),
     path('picture_list/', views.picture_list, name='picture_list'),
     path('picture_update/<int:picture_id>/', views.picture_add, name='picture_add'),
@@ -556,10 +701,13 @@ urlpatterns = [
     path('customer_attachment_add/', views.customer_attach_add, name='customer_attachment_add'),
     path('customer_attachment_list/', views.customer_attach_list, name='customer_attachment_list'),
     path('customer_attachment_update/<int:attach_id>/', views.customer_attach_add, name='customer_attachment_update'),
-    path('customer_attachment_delete/<int:attach_id>/', views.customer_attach_delete, name='customer_attachment_delete'),
+    path('customer_attachment_delete/<int:attach_id>/', views.customer_attach_delete,
+         name='customer_attachment_delete'),
     path('customer_attachment_cancel/', views.customer_attach_cancel, name='customer_attachment_cancel'),
-    path('customer_contract_rate_dues_list/', views.customer_contract_rate_dues_list, name='customer_contract_rate_dues_list'),
-    path('customer_contract_rate_due_days/', views.customer_contract_rate_due_days, name='customer_contract_rate_due_days'),
+    path('customer_contract_rate_dues_list/', views.customer_contract_rate_dues_list,
+         name='customer_contract_rate_dues_list'),
+    path('customer_contract_rate_due_days/', views.customer_contract_rate_due_days,
+         name='customer_contract_rate_due_days'),
     path('packing_delivery/', views.delivery_challan_add, name='packing_delivery'),
     path('packing_delivery_list/', views.delivery_challan_list, name='packing_delivery_list'),
     path('packing_delivery_update/<int:delivery_id>/', views.delivery_challan_add, name='packing_delivery_update'),
@@ -589,12 +737,14 @@ urlpatterns = [
     path('gate_out_send_email/', views.gate_out_email, name='gate_out_send_email'),
     path('profit_loss_report/', views.profit_loss_report, name='profit_loss_report'),
     path('gate_in_send_email/', views.gate_in_email, name='gate_in_send_email'),
-    path('dispatch_gatepass_pdf_download/<int:dispatch_id>', views.dispatch_gatepass_pdf_download, name='dispatch_gatepass_pdf_download'),
+    path('dispatch_gatepass_pdf_download/<int:dispatch_id>', views.dispatch_gatepass_pdf_download,
+         name='dispatch_gatepass_pdf_download'),
     path('sales_reports/', views.sales_reports, name='sales_reports'),
     path('sales_call_report/', views.sales_call_report, name='sales_call_report'),
     path('salesperson_chart/', views.salesperson_chart, name='salesperson_chart'),
     path('monthly_summary/', views.monthly_summary, name='monthly_summary'),
-    path('salesperson_productivity_performance/', views.salesperson_productivity_performance, name='salesperson_productivity_performance'),
+    path('salesperson_productivity_performance/', views.salesperson_productivity_performance,
+         name='salesperson_productivity_performance'),
     path('salescalls_details/', views.salescalls_details, name='salescalls_details'),
     path('target_actuals/', views.targets_actuals, name='targets_actuals'),
     path('warehouse_jobs_add/', views.warehouse_jobs_add, name='warehouse_jobs_add'),
@@ -611,12 +761,13 @@ urlpatterns = [
     path('ar_due_reports/', views.ar_due_reports, name='ar_due_reports'),
     path('budget_expense_report/', views.budget_expense, name='budget_expense'),
     path('budget_expense_mis/', views.budget_expense_mis, name='budget_expense_mis'),
-    path('vehicle_availability/',views.vehicle_availability_list, name='vehicle_availability'),
+    path('vehicle_availability/', views.vehicle_availability_list, name='vehicle_availability'),
     path('get_customer_details/', views.get_customer_details, name='get_customer_details'),
     path('vehicle_procurement_add/', views.vehicle_procurement_add, name='vehicle_procurement_add'),
     path('vehicle_procurement_list/', views.vehicle_procurement_list, name='vehicle_procurement_list'),
     path('vehicle_procurement_update/<int:vp_id>/', views.vehicle_procurement_add, name='vehicle_procurement_update'),
-    path('vehicle_procurement_delete/<int:vp_id>/', views.vehicle_procurement_delete,name='vehicle_procurement_delete'),
+    path('vehicle_procurement_delete/<int:vp_id>/', views.vehicle_procurement_delete,
+         name='vehicle_procurement_delete'),
     path('stock_value_send_email_view/', views.stock_value_send_email_view, name='stock_value_send_email_view'),
     path('gate_meeting_add/', views.gatemeeting_add, name='gate_meeting_add'),
     path('gate_meeting_list/', views.gatemeeting_list, name='gate_meeting_list'),
@@ -634,14 +785,18 @@ urlpatterns = [
     path('wh_space_utilization_report/', views.wh_space_utilization_report, name='wh_space_utilization_report'),
     path('performance_audit_add/', views.performanceaudit_add, name='performance_audit_add'),
     path('performance_audit_list/', views.performanceaudit_list, name='performance_audit_list'),
-    path('performance_audit_update/<int:perform_audit_id>/', views.performanceaudit_add, name='performance_audit_update'),
-    path('performance_audit_delete/<int:perform_audit_id>/', views.performanceaudit_delete, name='performance_audit_delete'),
+    path('performance_audit_update/<int:perform_audit_id>/', views.performanceaudit_add,
+         name='performance_audit_update'),
+    path('performance_audit_delete/<int:perform_audit_id>/', views.performanceaudit_delete,
+         name='performance_audit_delete'),
     path('send_performance_audit_email/', views.send_performance_audit_email, name='send_performance_audit_email'),
     path('salesperson_wise_table/', views.salesperson_wise_table, name='salesperson_wise_table'),
     path('sales_multiple_item_add/', views.sales_multiple_item_add, name='sales_multiple_item_add'),
     path('sales_multiple_item_list/', views.sales_multiple_item_list, name='sales_multiple_item_list'),
-    path('sales_multiple_item_update/<int:sales_multiple_id>/', views.sales_multiple_item_add, name='sales_multiple_item_update'),
-    path('sales_multiple_item_delete/<int:sales_multiple_id>/', views.sales_multiple_item_delete,name='sales_multiple_item_delete'),
+    path('sales_multiple_item_update/<int:sales_multiple_id>/', views.sales_multiple_item_add,
+         name='sales_multiple_item_update'),
+    path('sales_multiple_item_delete/<int:sales_multiple_id>/', views.sales_multiple_item_delete,
+         name='sales_multiple_item_delete'),
     path('sales_multiple_item_cancel/', views.sales_multiple_item_cancel, name='sales_multiple_item_cancel'),
     path('part_code_add/', views.part_code_add, name='part_code_add'),
     path('part_code_add/<int:pc_id>/', views.part_code_add, name='part_code_edit'),
@@ -661,14 +816,17 @@ urlpatterns = [
     path("trans_fastag/", views.fastag_enquiry_view, name="trans_fastag"),
     path('track_vehicle_position/', views.track_vehicle_position, name='track_vehicle_position'),
     path("get_vehicle_data/", views.get_vehicle_data, name="get_vehicle_data"),
-    path('get_remaining_quantity/<int:enquiry_id>/<int:vehicle_type_id>/', views.get_remaining_quantity,name='get_remaining_quantity'),
+    path('get_remaining_quantity/<int:enquiry_id>/<int:vehicle_type_id>/', views.get_remaining_quantity,
+         name='get_remaining_quantity'),
     path('get_vehicle_type/<str:vehicle_id>/', views.get_vehicle_type, name='get_vehicle_type'),
     path('add-description/', views.add_description, name='add_description'),
     path('fleet_management_view/', views.fleet_management_view, name='fleet_management_view'),
     path('vendorratemaster_list/', views.vendorratemaster_list, name='vendorratemaster_list'),
     path('vendorratemaster_insert', views.vendorratemaster_add, name='vendorratemaster_insert'),
-    path('vendorratemaster_update/<int:vendorratemaster_id>/', views.vendorratemaster_add, name='vendorratemaster_update'),
-    path('vendorratemaster_delete/<int:vendorratemaster_id>/', views.vendorratemaster_delete, name='vendorratemaster_delete'),
+    path('vendorratemaster_update/<int:vendorratemaster_id>/', views.vendorratemaster_add,
+         name='vendorratemaster_update'),
+    path('vendorratemaster_delete/<int:vendorratemaster_id>/', views.vendorratemaster_delete,
+         name='vendorratemaster_delete'),
     path('get_vendor_buy_rate/', views.get_vendor_buy_rate, name='get_vendor_buy_rate'),
     path('get_vendor_sale_rate/', views.get_vendor_sale_rate, name='get_vendor_sale_rate'),
     path('consignment_pdf_download/', views.consignment_pdf_download, name='consignment_pdf_download'),
@@ -691,12 +849,14 @@ urlpatterns = [
     path('get_sim_tracking_data/', views.get_sim_tracking_data, name='get_sim_tracking_data'),
     path('backfill-preview/', views.backfill_preview, name='backfill_preview'),
     path('backfill-one/', views.backfill_one_record, name='backfill_one_record'),
-    path('backfill-all/',  views.backfill_all_records, name='backfill_all_records'),
+    path('backfill-all/', views.backfill_all_records, name='backfill_all_records'),
     path('backfill_weight/', views.backfill_goods_weight, name='backfill_goods_weight'),
     path('get_fastag_toll_cost_ajax/', views.get_fastag_toll_cost_ajax, name='get_fastag_toll_cost_ajax'),
     path('vendor_filter/', views.vendor_filter, name='vendor_filter'),
-    path('consignmentgoods/<int:pk>/upload/<str:att_type>/', views.consignmentgoods_upload_attachment, name='consignmentgoods_upload_attachment'),
-    path('consignmentgoods/delete-attachment/<int:pk>/<str:att_type>/', views.consignmentgoods_delete_attachment, name='consignmentgoods_delete_attachment'),
+    path('consignmentgoods/<int:pk>/upload/<str:att_type>/', views.consignmentgoods_upload_attachment,
+         name='consignmentgoods_upload_attachment'),
+    path('consignmentgoods/delete-attachment/<int:pk>/<str:att_type>/', views.consignmentgoods_delete_attachment,
+         name='consignmentgoods_delete_attachment'),
     path('incident_add/', views.incident_add, name='incident_add'),
     path('incident_list/', views.incident_list, name='incident_list'),
     path('incident_update/<int:incident_id>/', views.incident_add, name='incident_update'),
@@ -708,18 +868,22 @@ urlpatterns = [
     path('wrong_labelling_add/', views.wrong_labelling_add, name='wrong_labelling_add'),
     path('wrong_labelling_list/', views.wrong_labelling_list, name='wrong_labelling_list'),
     path('wrong_labelling_update/<int:wrong_labelling_id>/', views.wrong_labelling_add, name='wrong_labelling_update'),
-    path('wrong_labelling_delete/<int:wrong_labelling_id>/', views.wrong_labelling_delete, name='wrong_labelling_delete'),
+    path('wrong_labelling_delete/<int:wrong_labelling_id>/', views.wrong_labelling_delete,
+         name='wrong_labelling_delete'),
     path('add_transporter/', views.add_transporter, name='add_transporter'),
     path('pregatein_gatepass/<int:pregatein_id>/', views.pregatein_gatepass_pdf, name='pregatein_gatepass_pdf'),
-    path('pregatein_gatepass_pdf_download/<int:pregatein_id>/', views.pregatein_gatepass_pdf_download,name='pregatein_gatepass_pdf_download'),
+    path('pregatein_gatepass_pdf_download/<int:pregatein_id>/', views.pregatein_gatepass_pdf_download,
+         name='pregatein_gatepass_pdf_download'),
     path('get_units/', views.get_units_for_user, name='get_units_for_user'),
     path("get_shippers/", views.get_shippers, name="get_shippers"),
     path("get_consignees/", views.get_consignees, name="get_consignees"),
     path('gatein/<int:gatein_id>/pdf/', views.gatein_pdf_download, name='gatein_pdf_download'),
     path("highvalue/approval/", views.highvalue_approval_view, name="highvalue_approval_view"),
-    path("highvalue/approval/update/<int:highvalue_id>/", views.update_highvalue_approval,name="update_highvalue_approval"),
+    path("highvalue/approval/update/<int:highvalue_id>/", views.update_highvalue_approval,
+         name="update_highvalue_approval"),
     path("highvalue/approval2/", views.highvalue_approval2_view, name="highvalue_approval2_view"),
-    path("highvalue/approval2/update/<int:highvalue_id>/", views.update_highvalue_approval2,name="update_highvalue_approval2"),
+    path("highvalue/approval2/update/<int:highvalue_id>/", views.update_highvalue_approval2,
+         name="update_highvalue_approval2"),
     path("gatein/upload/<int:pk>/", views.gatein_upload_attachment, name="gatein_upload_attachment"),
     path('gatein/<int:pk>/upload/<str:att_type>/', views.gatein_upload_attachment, name='gatein_upload_attachment'),
     path('gatein/<int:pk>/delete/<str:att_type>/', views.gatein_delete_attachment, name='gatein_delete_attachment'),
@@ -754,7 +918,8 @@ urlpatterns = [
     path('trip_settlement_view/', views.trip_settlement_view, name='trip_settlement_view'),
     path('trip_settlement/edit/<int:trip_id>/', views.trip_settlement_edit, name='trip_settlement_edit'),
     path("trip_finance_approval_view/", views.trip_finance_approval_view, name="trip_finance_approval_view"),
-    path("trip_finance_approval/update/<int:trip_id>/", views.update_trip_finance_approval, name="update_trip_finance_approval"),
+    path("trip_finance_approval/update/<int:trip_id>/", views.update_trip_finance_approval,
+         name="update_trip_finance_approval"),
     path('halting_charges/<int:halting_id>/', views.halting_charges_add, name='halting_charges'),
     path('halting_charges_add/', views.halting_charges_add, name='halting_charges_add'),
     path('halting_list/', views.halting_list, name='halting_list'),
@@ -766,10 +931,10 @@ urlpatterns = [
     path("email_delete/<int:record_id>/", views.email_delete, name="email_delete"),  # Delete record
     path('get_halting_charge/', views.get_halting_charge, name='get_halting_charge'),
     path('get_route_rate/', views.get_vendor_buy_rate, name='get_route_rate'),
-    path('driver_expense_add/',views.driver_expense_add,name='driver_expense_add'),
-    path('driver_expense_list/',views.driver_expense_list,name='driver_expense_list'),
-    path('driver_expense_add/<int:expense_id>/',views.driver_expense_add,name='driver_expense_add'),
-    path( 'driver_expense_delete/<int:expense_id>/',views.driver_expense_delete,name='driver_expense_delete'),
+    path('driver_expense_add/', views.driver_expense_add, name='driver_expense_add'),
+    path('driver_expense_list/', views.driver_expense_list, name='driver_expense_list'),
+    path('driver_expense_add/<int:expense_id>/', views.driver_expense_add, name='driver_expense_add'),
+    path('driver_expense_delete/<int:expense_id>/', views.driver_expense_delete, name='driver_expense_delete'),
     # path('driver-expense-by-driver/', views.driver_expense_by_driver,name='driver_expense_by_driver'),
     # path('get-driver-name-by-staff-id/', views.get_driver_name_by_staff_id, name='get_driver_name_by_staff_id'),
     # path('get-driver-details/', views.get_driver_details, name='get_driver_details' ),
@@ -778,27 +943,51 @@ urlpatterns = [
     path('driver_edit/<int:driver_id>/', views.driver_add, name='driver_edit'),
     path('driver_list/', views.driver_list, name='driver_list'),
     path('driver_delete/<int:driver_id>/', views.driver_delete, name='driver_delete'),
-    path('ajax/get-driver-details/',views.get_driver_details_from_master,name='get_driver_details_from_master'),
-    path( 'get-dmr-email-details/',views.get_dmr_email_details,name='get_dmr_email_details'),
-    path('ajax/get-employee-driver/',views.get_employee_driver_details,name='get_employee_driver_details'),
-    path('ajax/get-trip-charges/',views.get_trip_charges,name='get_trip_charges'),
+    path('ajax/get-driver-details/', views.get_driver_details_from_master, name='get_driver_details_from_master'),
+    path('get-dmr-email-details/', views.get_dmr_email_details, name='get_dmr_email_details'),
+    path('ajax/get-employee-driver/', views.get_employee_driver_details, name='get_employee_driver_details'),
+    path('ajax/get-trip-charges/', views.get_trip_charges, name='get_trip_charges'),
     path('driver-autocomplete/', views.driver_autocomplete, name='driver_autocomplete'),
     path("get_last_reported_km/", views.get_last_reported_km, name="get_last_reported_km"),
-    path('trans_invoice_add/',views.trans_invoice_add,name='trans_invoice_add'),
-    path('trans_invoice_edit/<int:invoice_id>/',views.trans_invoice_edit,name='trans_invoice_edit'),
-    path('trans_invoice_list/',views.trans_invoice_list,name='trans_invoice_list' ),
-    path('trans_invoice_list_woh/<int:customer_id>/',views.trans_invoice_list_woh,name='trans_invoice_list_woh'),
-    path('trans_invoice_delete/<int:invoice_id>/',views.trans_invoice_delete,name='trans_invoice_delete'),
-    path('fetch_customer_details/',views.fetch_customer_details,name='fetch_customer_details'),
-    path('trans_invoice_remove_woh/',views.trans_invoice_remove_woh,name='trans_invoice_remove_woh'),
+    path('trans_invoice_add/', views.trans_invoice_add, name='trans_invoice_add'),
+    path('trans_invoice_edit/<int:invoice_id>/', views.trans_invoice_edit, name='trans_invoice_edit'),
+    path('trans_invoice_list/', views.trans_invoice_list, name='trans_invoice_list'),
+    path('trans_invoice_list_woh/<int:customer_id>/', views.trans_invoice_list_woh, name='trans_invoice_list_woh'),
+    path('trans_invoice_delete/<int:invoice_id>/', views.trans_invoice_delete, name='trans_invoice_delete'),
+    path('fetch_customer_details/', views.fetch_customer_details, name='fetch_customer_details'),
+    path('trans_invoice_remove_woh/', views.trans_invoice_remove_woh, name='trans_invoice_remove_woh'),
     path('trans_invoice_add_woh/', views.trans_invoice_add_woh, name='trans_invoice_add_woh'),
-    path('maintenance_add/',views.maintenance_add, name='maintenance_add'),
+    path('maintenance_add/', views.maintenance_add, name='maintenance_add'),
     path('fetch_vehicle_details/', views.fetch_vehicle_details, name='fetch_vehicle_details'),
     path('maintenance_edit/<int:id>/', views.maintenance_edit, name='maintenance_edit'),
     path('maintenance_delete/<int:id>/', views.maintenance_delete, name='maintenance_delete'),
     path('maintenance_list/', views.maintenance_list, name='maintenance_list'),
-    path('shipper_invoice_export_excel/<int:invoice_id>/',views.shipper_invoice_export_excel,name='shipper_invoice_export_excel'),
-    path('ajax/filter-trips-by-date/',views.filter_trips_by_date,name='filter_trips_by_date'),
+    path('shipper_invoice_export_excel/<int:invoice_id>/', views.shipper_invoice_export_excel,
+         name='shipper_invoice_export_excel'),
+
+    # Customer Registration URLs
+    path('customer_register/<int:business_id>/', views.customer_register, name='customer_register'),
+    path('customer_registration_list/', views.customer_registration_list, name='customer_registration_list'),
+    path('customer_registration_approve/<int:registration_id>/', views.customer_registration_approve,
+         name='customer_registration_approve'),
+    path('customer_registration_reject/<int:registration_id>/', views.customer_registration_reject,
+         name='customer_registration_reject'),
+    path('customer_login/<int:business_id>/', views.customer_login, name='customer_login'),
+
+    # Customer Enquiry URLs
+    path('SMS/customer_enquiry_add/', views.customer_enquiry_add, name='customer_enquiry_add'),
+    path('SMS/customer_enquiry_edit/<int:enquiry_id>/', views.customer_enquiry_edit, name='customer_enquiry_edit'),
+    path('SMS/customer_enquiry_list/', views.customer_enquiry_list, name='customer_enquiry_list'),
+    path('SMS/customer_track_vehicle/', views.customer_track_vehicle, name='customer_track_vehicle'),
+    path('ajax/search-customers/', views.ajax_search_customers, name='ajax_search_customers'),
+    path('ajax/check-customer-code/', views.ajax_check_customer_code, name='ajax_check_customer_code'),
+    path('ajax/get-customer-departments/', views.ajax_get_customer_departments, name='ajax_get_customer_departments'),
+    path('ajax/get-vehicle-types/', views.ajax_get_vehicle_types, name='ajax_get_vehicle_types'),
+    path('SMS/customer_dashboard/', views.customer_dashboard, name='customer_dashboard'),
+    path('SMS/customer_tracking/<int:trip_id>/', views.customer_shipment_tracking, name='customer_tracking'),
+    path('SMS/download_pod/<int:trip_id>/', views.download_pod, name='download_pod'),
+    path('SMS/download_dmr/<int:trip_id>/', views.download_dmr, name='download_dmr'),
+    path('ajax/filter-trips-by-date/', views.filter_trips_by_date, name='filter_trips_by_date'),
     path('insurance_renewal_report/', views.insurance_renewal_report_view, name='insurance_renewal_report'),
     path('diesel_vs_revenue_report/', views.diesel_vs_revenue_report_view, name='diesel_vs_revenue_report'),
     path('own_v_mkt_sales/', views.own_vs_market_sales_report_view, name='own_v_mkt_sales'),
@@ -838,9 +1027,10 @@ urlpatterns = [
     path('market_bill/list/', views.market_bill_list, name='market_bill_list'),
     path('market_bill/<int:id>/edit/', views.market_bill_edit, name='market_bill_edit'),
     path('market_bill/<int:id>/delete/', views.market_bill_delete, name='market_bill_delete'),
+    path('ajax/get_trips_by_vehicle/', views.get_trips_by_vendor, name='get_trips_by_vehicle'),
     path('ajax/get_vehicles_by_vendor/', views.get_vehicles_by_vendor, name='get_vehicles_by_vendor'),
-    path('ajax/get_trips_by_vehicle/', views.get_trips_by_vehicle, name='get_trips_by_vehicle'),
 ]
+
 
 
 

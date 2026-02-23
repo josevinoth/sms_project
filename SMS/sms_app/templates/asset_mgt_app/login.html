@@ -6,179 +6,190 @@
 <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Montserrat:wght@900&display=swap" rel="stylesheet">
 -->
 
-<style>@import url('https://fonts.googleapis.com/css2?family=Monoton&family=Montserrat:wght@900&family=Poppins:wght@400;600&display=swap');
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Monoton&family=Montserrat:wght@900&family=Poppins:wght@400;600&display=swap');
 
-body {
-  background: url("/media/warehouse_bw.png") no-repeat center center fixed;
-  background-size: cover;
-  font-family: 'Poppins', sans-serif;
-  min-height: 100vh;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
+  body {
+    background: url("/media/warehouse_bw.png") no-repeat center center fixed;
+    background-size: cover;
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
 
-body::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(0px);
-  z-index: 0;
-}
+  body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(0px);
+    z-index: 0;
+  }
 
-.login-container {
-  z-index: 1;
-  max-width: 900px;
-  width: 90%;
-  margin: auto;
-  display: flex;
-  border-radius: 1rem;
-  overflow: hidden;
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-}
-
-.login-left {
-  background: linear-gradient(to bottom, white 10%, #0D2F3F 80%, #0D2F3F 100%);
-  color: white;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  padding: 2rem;
-  text-align: center;
-}
-
-.login-left img {
-  width: 120px;
-  margin-bottom: 20px;
-}
-
-.bvm-logo-text .montserrat-bold {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 900;
-  color: #FF0000;
-  margin: 10px 5px;
-  text-transform: uppercase;
-  font-size: 2rem;
-  letter-spacing: 1px;
-}
-
-.login-left h3, .login-left h2, .login-left h6 {
-  margin: 5px 0;
-}
-
-.login-right {
-  flex: 1;
-  color: white;
-  background: transparent;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.login-right h4 {
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-.login-right form .form-group {
-  margin-bottom: 1rem;
-}
-
-.login-right form input {
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: 10px;
-  padding: 12px;
-  width: 100%;
-  font-size: 1rem;
-}
-
-.login-right form input:focus {
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.7);
-  outline: none;
-}
-.btn-primary {
-  background: #237fb7;
-  background-size: 200% auto;
-  color: white;
-  border: none;
-  padding: 12px;
-  width: 200px;             /* Fixed width */
-  transition: all 0.3s ease;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 1rem;
-  display: block;           /* Block for centering */
-  margin: 0 auto;           /* Center horizontally */
-  text-align: center;       /* Center text inside */
-}
-
-.btn-primary:hover {
-  background-position: right center;
-  color: #fff;
-  text-decoration: none;
-}
-
-
-.login-footer {
-  text-align: center;
-  margin-top: 1rem;
-  font-size: 0.9rem;
-}
-
-.login-footer a {
-  color: #00BCD4;
-  text-decoration: none;
-}
-
-@media (max-width: 768px) {
   .login-container {
+    z-index: 1;
+    max-width: 900px;
+    width: 90%;
+    margin: auto;
+    display: flex;
+    border-radius: 1rem;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  }
+
+  .login-left {
+    background: linear-gradient(to bottom, white 10%, #0D2F3F 80%, #0D2F3F 100%);
+    color: white;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-direction: column;
+    padding: 2rem;
+    text-align: center;
   }
 
   .login-left img {
-    width: 100px;
+    width: 120px;
+    margin-bottom: 20px;
   }
 
   .bvm-logo-text .montserrat-bold {
-    font-size: 1.5rem;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 900;
+    color: #FF0000;
+    margin: 10px 5px;
+    text-transform: uppercase;
+    font-size: 2rem;
+    letter-spacing: 1px;
   }
-}
+
+  .login-left h3,
+  .login-left h2,
+  .login-left h6 {
+    margin: 5px 0;
+  }
+
+  .login-right {
+    flex: 1;
+    color: white;
+    background: transparent;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .login-right h4 {
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .login-right form .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .login-right form input {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  .login-right form input:focus {
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.7);
+    outline: none;
+  }
+
+  .btn-primary {
+    background: #237fb7;
+    background-size: 200% auto;
+    color: white;
+    border: none;
+    padding: 12px;
+    width: 200px;
+    /* Fixed width */
+    transition: all 0.3s ease;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1rem;
+    display: block;
+    /* Block for centering */
+    margin: 0 auto;
+    /* Center horizontally */
+    text-align: center;
+    /* Center text inside */
+  }
+
+  .btn-primary:hover {
+    background-position: right center;
+    color: #fff;
+    text-decoration: none;
+  }
+
+
+  .login-footer {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .login-footer a {
+    color: #00BCD4;
+    text-decoration: none;
+  }
+
+  @media (max-width: 768px) {
+    .login-container {
+      flex-direction: column;
+    }
+
+    .login-left img {
+      width: 100px;
+    }
+
+    .bvm-logo-text .montserrat-bold {
+      font-size: 1.5rem;
+    }
+  }
 </style>
 
 <div class="login-container">
-    <!-- Left section -->
-    <div class="login-left text-center">
-        <img src="/media/logo4.0.png" alt="Logo" style="margin-bottom:20px; height:100%;width:100%;">
+  <!-- Left section -->
+  <div class="login-left text-center">
+    <img src="/media/logo4.0.png" alt="Logo" style="margin-bottom:20px; height:100%;width:100%;">
 
-        <!-- Stylized Header -->
-        <div class="bvm-logo-text">
-            <h3>Welcome to</h3>
-            <span class="montserrat-bold">The BVM Group</span>
-        </div>
-        <h6>WAREHOUSE | TRANSPORTATION | PACKAGING</h6>
+    <!-- Stylized Header -->
+    <div class="bvm-logo-text">
+      <h3>Welcome to</h3>
+      <span class="montserrat-bold">The BVM Group</span>
     </div>
+    <h6>WAREHOUSE | TRANSPORTATION | PACKAGING</h6>
+  </div>
 
-    <!-- Right section -->
-    <div class="login-right">
-        <h4 class="mb-4"> Sign In</h4>
-       <form method="POST" id="loginForm">
+  <!-- Right section -->
+  <div class="login-right">
+    <h4 class="mb-4"> Sign In</h4>
+    <form method="POST" id="loginForm">
       {% csrf_token %}
       <div class="form-group">
         <label for="username">User ID</label>
         <div class="input-group">
-          <input type="text" class="form-control" id="username" placeholder="Enter your ID" name="username" required value="{{ username|default:'' }}">
+          <input type="text" class="form-control" id="username" placeholder="Enter your ID" name="username" required
+            value="{{ username|default:'' }}">
         </div>
       </div>
 
@@ -194,7 +205,8 @@ body::before {
 
       <div class="form-group">
         <label for="password">Password</label>
-        <input type="password" class="form-control" id="password" placeholder="Enter your password" name="password" required>
+        <input type="password" class="form-control" id="password" placeholder="Enter your password" name="password"
+          required>
       </div>
 
       <button class="btn btn-primary btn-block mt-3" type="submit">
@@ -207,6 +219,9 @@ body::before {
       <small class="text-danger">{{ message }}</small>
       {% endfor %}
     </div>
+
+
+
 
     <div class="login-footer text-center mt-3">
       Don't have an account? <a href="{% url 'registration_page' %}"><b>Sign Up</b></a><br>

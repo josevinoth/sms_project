@@ -17,20 +17,24 @@
 <br>
 
 <form method="GET" action="{% url 'vehicle_utilization_report' %}"
-      class="row g-3 align-items-end justify-content-center">
+    class="row g-3 align-items-end justify-content-center">
 
     {% csrf_token %}
-   <div class="col-md-3">
-    <label class="form-label fw-bold">Vehicle Number</label>
-<select name="vehicle_search" id="vehicle_number" class="form-control select2">
-        <option value="">Search Vehicle...</option>
-        {% for v in all_vehicles %}
-            <option value="{{ v.vm_registrationnumber }}"
-                {% if vehicle_search == v.vm_registrationnumber %}selected{% endif %}>{{ v.vm_registrationnumber }}
+    <div class="col-md-3">
+        <label class="form-label fw-bold">Vehicle Number</label>
+        <select name="vehicle_search" id="vehicle_number" class="form-control select2">
+            <option value="">Search Vehicle...</option>
+            {% for v in all_vehicles %}
+            <option value="{{ v.vm_registrationnumber }}" {% if vehicle_search == v.vm_registrationnumber %}selected{% endif %}>{{ v.vm_registrationnumber }}
             </option>
-        {% endfor %}
-    </select>
-</div>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Branch</label>
+        {% render_field form.branch class="form-control" value=selected_branch %}
+    </div>
 
     <div class="col-md-2">
         <label class="form-label fw-bold">Month</label>

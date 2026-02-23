@@ -1,0 +1,351 @@
+{% extends "asset_mgt_app/header_1.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Monoton&family=Montserrat:wght@900&family=Poppins:wght@400;600&display=swap');
+
+    body {
+        background: url('/media/warehouse_bw.png') no-repeat center center fixed;
+        background-size: cover;
+    }
+
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 0;
+    }
+
+    .auth-card {
+        z-index: 1;
+        max-width: 650px;
+        margin: 2rem auto;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        border-radius: 16px;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 2.5rem;
+        color: #fff;
+    }
+
+    .registration-logo {
+        width: 250px;
+        height: auto;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .auth-card {
+            margin: 1rem;
+            padding: 1.5rem 1rem;
+            max-width: calc(100% - 2rem);
+        }
+
+        .form-row {
+            flex-direction: column;
+            gap: 0 !important;
+        }
+
+        .form-row>.form-group {
+            flex: none !important;
+            width: 100% !important;
+        }
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .auth-header h2 {
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-header p {
+        color: #ccc;
+        font-size: 0.9rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #ddd;
+        font-weight: 500;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.8rem;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #237fb7;
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Ensure dropdown options are readable */
+    option {
+        color: #333;
+        background: #fff;
+    }
+
+    .btn-primary {
+        width: 100%;
+        padding: 0.8rem;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #237fb7, #1a5c85);
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #2cafeb, #237fb7);
+        transform: translateY(-2px);
+    }
+
+    .small-note {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: #bbb;
+        font-size: 0.9rem;
+    }
+
+    .small-note a {
+        color: #5bc0de;
+        text-decoration: none;
+    }
+
+    .small-note a:hover {
+        text-decoration: underline;
+    }
+
+    .error-msg {
+        color: #ff6b6b;
+        font-size: 0.85rem;
+        margin-top: 0.4rem;
+        font-weight: 500;
+    }
+
+    .alert-box {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-success {
+        background: rgba(40, 167, 69, 0.2);
+        border: 1px solid rgba(40, 167, 69, 0.4);
+        color: #a7f3b8;
+    }
+
+    .alert-error {
+        background: rgba(220, 53, 69, 0.2);
+        border: 1px solid rgba(220, 53, 69, 0.4);
+        color: #ffb8b8;
+    }
+</style>
+
+<div class="auth-card">
+    <div class="auth-header">
+        <img src="/media/logo4.0.png" alt="BVM Logo" class="registration-logo">
+        <div style="font-size: 1.3rem; color: #fff; margin-bottom: 0.1rem; font-weight: 300;">Welcome to</div>
+        <div
+            style="font-size: 2rem; font-weight: 900; color: #FF0000; text-transform: uppercase; margin-bottom: 0.6rem; letter-spacing: 1px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">
+            THE BVM GROUP</div>
+        <div
+            style="font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; opacity: 0.9; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+            Customer Registration Portal</div>
+    </div>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert-box {% if message.tags == 'success' %}alert-success{% else %}alert-error{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if form.non_field_errors %}
+    <div class="alert-box alert-error">
+        {% for error in form.non_field_errors %}
+        <div><i class="fa fa-exclamation-circle"></i> {{ error }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">Username</label>
+            {{ form.username }}
+            <small style="color: #aaa; font-size: 0.8rem;">For AISATS collaboration, please end username with
+                <strong>_lp</strong></small>
+            {% if form.username.errors %}
+            <div class="error-msg">{{ form.username.errors|first }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.email.id_for_label }}">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+            <div class="error-msg">{{ form.email.errors|first }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.customer_code.id_for_label }}">Customer Code</label>
+            {{ form.customer_code }}
+            {% if form.customer_code.errors %}
+            <div class="error-msg">{{ form.customer_code.errors|first }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group" style="position: relative;">
+            <label for="{{ form.company_name.id_for_label }}">Company Name</label>
+            {{ form.company_name }}
+            <small style="color: #aaa; font-size: 0.8rem;">Type at least 5 letters to search your company.</small>
+            <div id="companySuggestions"
+                style="display: none; position: absolute; width: 100%; background: #2d3748; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; z-index: 1000; margin-top: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); max-height: 220px; overflow-y: auto;">
+            </div>
+            {% if form.company_name.errors %}
+            <div class="error-msg">{{ form.company_name.errors|first }}</div>
+            {% endif %}
+        </div>
+
+
+
+        <div class="form-row" style="display: flex; gap: 1rem;">
+            <div class="form-group" style="flex: 1;">
+                <label for="{{ form.contact_number.id_for_label }}">Contact Number</label>
+                {{ form.contact_number }}
+                {% if form.contact_number.errors %}
+                <div class="error-msg">{{ form.contact_number.errors|first }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-row" style="display: flex; gap: 1rem;">
+            <div class="form-group" style="flex: 1;">
+                <label for="{{ form.password.id_for_label }}">Password</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                <div class="error-msg">{{ form.password.errors|first }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="{{ form.confirm_password.id_for_label }}">Confirm Password</label>
+                {{ form.confirm_password }}
+                {% if form.confirm_password.errors %}
+                <div class="error-msg">{{ form.confirm_password.errors|first }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <button type="submit" class="btn-primary">Register</button>
+    </form>
+
+    <a href="{% url 'customer_login' business_id %}"
+        style="display: block; width: 100%; text-align: center; margin-top: 1rem; padding: 0.7rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #5bc0de; text-decoration: none; font-weight: 600; transition: all 0.3s;">
+        <i class="fa fa-arrow-left" style="margin-right: 8px;"></i> Back to Sign In
+    </a>
+
+    <script>
+        const companyInput = document.getElementById('id_company_name');
+        const suggestionsDiv = document.getElementById('companySuggestions');
+        const customerCodeInput = document.getElementById('id_customer_code');
+        let debounceTimer;
+
+        // Auto-fill company name based on customer code
+        if (customerCodeInput) {
+            customerCodeInput.addEventListener('blur', function () {
+                const code = this.value.trim();
+                if (code) {
+                    fetch('/SMS/ajax/check-customer-code/?code=' + encodeURIComponent(code))
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.found) {
+                                companyInput.value = data.name;
+                                // Hide suggestions if they were open
+                                suggestionsDiv.style.display = 'none';
+                            }
+                        });
+                }
+            });
+        }
+
+        companyInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            const query = this.value.trim();
+            if (query.length >= 5) {
+                debounceTimer = setTimeout(() => {
+                    fetch(`/SMS/ajax/search-customers/?q=${encodeURIComponent(query)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            suggestionsDiv.innerHTML = '';
+                            if (data.length > 0) {
+                                data.forEach(item => {
+                                    const div = document.createElement('div');
+                                    div.textContent = item.name;
+                                    div.style.padding = '10px 15px';
+                                    div.style.cursor = 'pointer';
+                                    div.style.color = '#e2e8f0';
+                                    div.style.fontSize = '0.95rem';
+                                    div.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+                                    div.addEventListener('mouseover', () => div.style.background = 'rgba(255,255,255,0.08)');
+                                    div.addEventListener('mouseout', () => div.style.background = 'transparent');
+                                    div.addEventListener('click', () => {
+                                        companyInput.value = item.name;
+                                        suggestionsDiv.style.display = 'none';
+                                    });
+                                    suggestionsDiv.appendChild(div);
+                                });
+                                suggestionsDiv.style.display = 'block';
+                            } else {
+                                const noResult = document.createElement('div');
+                                noResult.textContent = 'No matching company found';
+                                noResult.style.padding = '10px 15px';
+                                noResult.style.color = '#a0aec0';
+                                noResult.style.fontSize = '0.9rem';
+                                suggestionsDiv.appendChild(noResult);
+                                suggestionsDiv.style.display = 'block';
+                            }
+                        });
+                }, 300);
+            } else {
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            if (e.target !== companyInput) {
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+    </script>
+</div>
+{% endblock content %}

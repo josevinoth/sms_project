@@ -17,7 +17,7 @@
 							</a>
 
 							<a href="{% url 'tripdetail_insert' %}?vehicle_allotment_id={{ va.id }}&enquiry_num_id={{ enquiry_num_id }}"
-								class="btn btn-warning ml-2 {% if va.va_status.status_title != 'Completed' %}disable_a_href{% endif %}">
+								class="btn btn-warning ml-2 {% if va.va_status.replacement_status != 'Vehicle Assigned' %}disable_a_href{% endif %}">
 								<i class="fas fa-truck-loading"></i> Business Empty / Empty Trip
 							</a>
 

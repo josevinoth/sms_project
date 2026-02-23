@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
+from django.db.models import Q
 from io import BytesIO
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl import Workbook
@@ -169,12 +170,19 @@ DMR_TEMPLATES = {
         "HBL WISE SPLIT COST", "LOADING/UNLOADING CHARGES", "HALTING CHARGES",
         "TRANSPORT COST", "TOTAL COST", "VENDOR CODE", "REMARK", "BVM JOB NO", "POD STATUS"
     ],
-    "DSV": [
-        "DATE", "BVM JOB NO", "BVM LR NO", "USER NAME", "SHIPPER NAME", "HBL NO/REFERENCE NO",
+    "DSVAIRSEA(T)MAA": [
+        "S.NO", "DATE", "BVM JOB NO", "BVM LR NO", "USER NAME", "SHIPPER NAME", "HBL NO/REFERENCE NO",
         "TRANSPORT BILL TO", "VEHICLE NO", "VEHICLE TYPE", "DRIVER NAME", "DRIVER NAMBER", "FROM",
         "TO", "DIVISION", "SUM OF PIECES", "WEIGHT", "HALTING CHARGES", "LOADING CHARGES",
         "UNLOADING CHARGES", "WEIGHMENT CHARGES", "AAI S.NO.", "AAI CHARGES", "TRIP COST",
-        "TOTAL COST", "E-WAY BILL", "BVM INVOICE", "SEEL NO", "REMARK", "POD", "C NOTE"
+        "TOTAL COST", "E-WAY BILL", "BVM INVOICE", "SEAL NO", "REMARK", "POD", "C NOTE"
+    ],
+    "DSV": [
+        "S.NO", "DATE", "BVM JOB NO", "BVM LR NO", "USER NAME", "SHIPPER NAME", "HBL NO/REFERENCE NO",
+        "TRANSPORT BILL TO", "VEHICLE NO", "VEHICLE TYPE", "DRIVER NAME", "DRIVER NAMBER", "FROM",
+        "TO", "DIVISION", "SUM OF PIECES", "WEIGHT", "HALTING CHARGES", "LOADING CHARGES",
+        "UNLOADING CHARGES", "WEIGHMENT CHARGES", "AAI S.NO.", "AAI CHARGES", "TRIP COST",
+        "TOTAL COST", "E-WAY BILL", "BVM INVOICE", "SEAL NO", "REMARK", "POD", "C NOTE"
     ],
     "DSV DD REPORT": [
         "DATE", "TRIP SHEET NO", "VEHICLE NO", "STARTING TIME", "CLOSING TIME", "STARTING KM",
@@ -190,6 +198,33 @@ DMR_TEMPLATES = {
         "UNLOADING  TIME", "DLV OUT  DATE", "DLV OUT TIME", "HALTING STATUS   (YES / NO)",
         "NO OF DAYS  HALTING", "ADDITIONAL CHARGES", "CANCELLING CHARGES", "HALTING CHARGES",
         "CHARGES", "WEIGHMENT PASS", "PARKING CHARGES", "TOTAL CHARGES", "REMARKS"
+    ],
+    "EIPL Sea Export": [
+        "S.NO", "DEPARTMENT NAME", "PICKUP DATE", "SHIPPER NAME", "PICKUP LOCATION",
+        "CONSIGNEE NAME", "DELIVERY LOCATION", "CS NAME", "PLANNING RECEIVED DATE",
+        "PLANNING RECEIVED TIME", "VEHICLE PLACED TIME", "HAWB #", "BOE NUMBER # / EWAYBILL #",
+        "REFERENCE NUMBER ( MASTER INVOICE # / FILE # )", "TRUCK NO", "TRUCK TYPE", "VENDOR",
+        "DRIVER NAME", "DRIVER MOBILE", "DRIVER DL #", "PICKUP POINT IN DATE",
+        "PICKUP POINT IN TIME", "PICKUP POINT OUT DATE", "PICKUP POINT OUT TIME",
+        "NO OF PIECES", "ACTUAL WEIGHT", "CHARGEABLE WEIGHT", "CBM", "SHIPPER SEAL #",
+        "UNLOADING POINT IN DATE", "UNLOADING POINT IN TIME", "UNLOADING POINT",
+        "UNLOADING POINT OUT DATE", "UNLOADING POINT OUT TIME", "NO OF DAYS HALTING",
+        "ADDITIONAL CHARGES", "CANCELLATION CHARGES", "HALTING CHARGES", "CHARGES",
+        "WEIGHTMENT CHARGES", "UNLOADING CHARGES", "TOTAL CHARGES", "REMARKS"
+    ],
+    "EIPL Sea Import": [
+        "S.NO", "JOB NO", "DEPARTMENT NAME", "PICKUP DATE", "SHIPPER NAME", "PICKUP LOCATION",
+        "CONSIGNEE NAME", "DELIVERY LOCATION", "CS NAME", "PLANNING RECEIVED DATE",
+        "PLANNING RECEIVED TIME", "HAWB #", "BOE NUMBER # / EWAYBILL #",
+        "REFERENCE NUMBER ( MASTER INVOICE # / FILE # )", "TRUCK NO", "TRUCK TYPE", "VENDOR",
+        "CHA NAME", "LLR NO", "DRIVER NAME", "DRIVER MOBILE", "DRIVER DL #",
+        "PICKUP POINT IN DATE", "PICKUP POINT IN TIME", "PICKUP POINT OUT DATE",
+        "PICKUP POINT OUT TIME", "NO OF PIECES", "ACTUAL WEIGHT (KGS)", "CHARGEABLE WEIGHT",
+        "CAPACITY", "SHIPPER SEAL #", "UNLOADING POINT IN DATE", "UNLOADING POINT IN TIME",
+        "UNLOADING POINT", "UNLOADING POINT OUT DATE", "UNLOADING POINT OUT TIME",
+        "HALTING STATUS (YES / NO)", "NO OF DAYS HALTING", "ADDITIONAL CHARGES",
+        "CANCELLATION CHARGES", "HALTING CHARGES", "CHARGES", "PARKING / UNLOADING CHARGES",
+        "TOTAL CHARGES", "REMARKS"
     ],
     "DHL Other": [
         "DATE", "BVM JOB NO", "CONSIGNEE NAME", "HBL NO", "PKGS", "G WEIGHT", "CBM",
@@ -250,14 +285,19 @@ CUSTOMER_DMR_TEMPLATES = {
     "EIPL": {
         "Air Export": DMR_TEMPLATES["Air Export"],
         "Air Import": DMR_TEMPLATES["Air Import"],
-        "Sea Import": DMR_TEMPLATES["Sea Import"],
-        "Sea Export": DMR_TEMPLATES["Sea Export"],
+        "Sea Import": DMR_TEMPLATES["EIPL Sea Import"],
+        "Ocean Import": DMR_TEMPLATES["EIPL Sea Import"],
+        "Sea Export": DMR_TEMPLATES["EIPL Sea Export"],
+        "Ocean Export": DMR_TEMPLATES["EIPL Sea Export"],
         "Order Management": DMR_TEMPLATES["Order Management"],
         "CHB": DMR_TEMPLATES["CHB"],
         "TCS Local": DMR_TEMPLATES["TCS Local"],
         "TCS Outstation": DMR_TEMPLATES["TCS Outstation"],
         "TCS Reefer": DMR_TEMPLATES["TCS Reefer"],
         "Hub Movement": DMR_TEMPLATES["Hub Movement"],  # Added for EIPL
+        "Transcon": DMR_TEMPLATES["TCS Local"],  # Added Transcon using TCS Local template
+        "Nagalkeni Airport": DMR_TEMPLATES["EIPL Nagalkeni To Airport"],
+        "Nagalkeni To Airport": DMR_TEMPLATES["EIPL Nagalkeni To Airport"],
     },
     "TVS": {
         "Hub Movement": DMR_TEMPLATES["Hub Movement"],
@@ -330,6 +370,14 @@ CUSTOMER_DMR_TEMPLATES = {
         "Sea Export": DMR_TEMPLATES["GEODIS BLR"],
         "Sea Import": DMR_TEMPLATES["GEODIS BLR"],
         "Transport": DMR_TEMPLATES["GEODIS BLR"],
+    },
+    "DSVAIRSEA(T)MAA": {
+        "DSVAIRSEA(T)MAA": DMR_TEMPLATES["DSVAIRSEA(T)MAA"],
+        "Air Export": DMR_TEMPLATES["DSVAIRSEA(T)MAA"],
+        "Air Import": DMR_TEMPLATES["DSVAIRSEA(T)MAA"],
+        "Sea Export": DMR_TEMPLATES["DSVAIRSEA(T)MAA"],
+        "Sea Import": DMR_TEMPLATES["DSVAIRSEA(T)MAA"],
+        "Transport": DMR_TEMPLATES["DSVAIRSEA(T)MAA"],
     },
 }
 
@@ -537,43 +585,77 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
             if hh in ("s.no", "sr. no.", "so no", "se.no"):
                 row.append(idx); continue
             
-            # --- DATES & TIMES ---
-            # 1. Generic Trip Dates (Start of Trip)
-            if hh in ("trip date", "indent date", "date", "ofd date"):
-                # Anchor 'Date' to the arrival at shipper (start of the operation)
-                row.append(trip.tr_loading_time.strftime("%d-%m-%Y") if trip.tr_loading_time else (trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else "")); continue
             
-            # 2. Pickup Point (Arrival at Shipper - IN)
-            if hh in ("pickup date", "pickup point in date", "in date", "airport/bvm gate in date", "loading date"):
-                row.append(trip.tr_loading_time.strftime("%d-%m-%Y") if trip.tr_loading_time else ""); continue
-            if hh in ("pickup point in time", "in time", "airport/bvm gate in time", "loading time", "veh reported time @ loading point"):
-                row.append(trip.tr_loading_time.strftime("%H:%M") if trip.tr_loading_time else ""); continue
+            # 2. Pickup Point (Arrival at Shipper - IN) OR Generic Pickup/Loading Date
+            if hh in ("pickup date", "pickup point in date", "in date", "airport/bvm gate in date"):
+                # Strict: For specific "IN" labels
+                val = trip.tr_departeddate_pickup or trip.tr_loading_time
+                row.append(val.strftime("%d-%m-%Y") if val else ""); continue
+            if hh in ("loading date",):
+                # Broader fallback for generic "loading date"
+                val = trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_departeddate or trip.tr_created_at
+                row.append(val.strftime("%d-%m-%Y") if val else ""); continue
+            if hh in ("pickup point in time", "in time", "airport/bvm gate in time"):
+                # Strict: For specific "IN" labels
+                val = trip.tr_departeddate_pickup or trip.tr_loading_time
+                row.append(val.strftime("%H:%M") if val else ""); continue
+            if hh in ("loading time", "veh reported time @ loading point"):
+                # Broader fallback for generic "loading time"
+                val = trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_departeddate
+                row.append(val.strftime("%H:%M") if val else ""); continue
 
-            # 3. Pickup Point (Departure from Shipper - OUT)
-            if hh in ("pickup point out date", "out date"):
-                row.append(trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else ""); continue
-            if hh in ("pickup point out time", "out time", "starting time", "closing time"):
-                row.append(trip.tr_departeddate.strftime("%H:%M") if trip.tr_departeddate else ""); continue
+            # 3. Pickup Point (Departure from Shipper - OUT) OR Generic Trip Date
+            if hh in ("pickup point out date", "out date", "ofd date"):
+                # Strict: For specific "OUT" labels
+                val = trip.tr_departeddate or trip.tr_dock_in_time
+                row.append(val.strftime("%d-%m-%Y") if val else ""); continue
+            if hh in ("trip date", "indent date", "date"):
+                # Broader fallback for generic "date" / "trip date"
+                val = trip.tr_departeddate or trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_created_at
+                row.append(val.strftime("%d-%m-%Y") if val else ""); continue
+            if hh in ("pickup point out time", "out time"):
+                # Strict: For specific "OUT" labels
+                val = trip.tr_departeddate or trip.tr_dock_in_time
+                row.append(val.strftime("%H:%M") if val else ""); continue
+            if hh in ("starting time",):
+                # Broader fallback for generic "starting time"
+                val = trip.tr_departeddate or trip.tr_loading_time or trip.tr_departeddate_pickup
+                row.append(val.strftime("%H:%M") if val else ""); continue
 
             # 4. Unloading Point (Arrival at Destination - IN)
             if hh in ("unloading point in date", "gate in date", "reached plant", "reached cfs", "reached", "cfs reached date", "closing place", "closing time"):
-                # Handling 'Today > Tomorrow' logic: Always pull from the specific event timestamp
+                # tr_reporteddate labels: "Vehicle Reported Date & Time" (Unloading Section)
+                # tr_departeddate_delivery labels: "Dock-In Time" (Unloading Section)
+                val = trip.tr_reporteddate or trip.tr_departeddate_delivery
                 if "time" in hh:
-                    row.append(trip.tr_reporteddate.strftime("%H:%M") if trip.tr_reporteddate else ""); continue
-                row.append(trip.tr_reporteddate.strftime("%d-%m-%Y") if trip.tr_reporteddate else ""); continue
+                    row.append(val.strftime("%H:%M") if val else ""); continue
+                row.append(val.strftime("%d-%m-%Y") if val else ""); continue
             
             if hh in ("unloading point in time", "in time @ unloading point", "gate in time", "cfs reached time", "closing time"):
-                row.append(trip.tr_reporteddate.strftime("%H:%M") if trip.tr_reporteddate else ""); continue
+                val = trip.tr_reporteddate or trip.tr_departeddate_delivery
+                row.append(val.strftime("%H:%M") if val else ""); continue
 
-            # 5. Unloading Point (Departure from Destination - OUT)
-            if hh in ("unloading point out date", "dlv out date", "delivery date", "released date", "vehicle released date"):
-                row.append(trip.tr_unloading_time.strftime("%d-%m-%Y") if trip.tr_unloading_time else ""); continue
-            if hh in ("dlv out time", "unloading time", "unloading point out time", "released time", "vehicle released time"):
-                row.append(trip.tr_unloading_time.strftime("%H:%M") if trip.tr_unloading_time else ""); continue
+            # 5. Unloading Point (Departure from Destination - OUT) OR Generic Delivery Date
+            if hh in ("unloading point out date", "dlv out date", "released date", "vehicle released date"):
+                # Strict: For specific "OUT" labels
+                val = trip.tr_reporteddate_pickup or trip.tr_unloading_time
+                row.append(val.strftime("%d-%m-%Y") if val else ""); continue
+            if hh in ("delivery date",):
+                # Broader fallback for generic "delivery date"
+                val = trip.tr_unloading_time or trip.tr_reporteddate_pickup or trip.tr_reporteddate or trip.tr_departeddate_delivery
+                row.append(val.strftime("%d-%m-%Y") if val else ""); continue
+            if hh in ("dlv out time", "unloading point out time", "released time", "vehicle released time"):
+                # Strict: For specific "OUT" labels
+                val = trip.tr_reporteddate_pickup or trip.tr_unloading_time
+                row.append(val.strftime("%H:%M") if val else ""); continue
+            if hh in ("unloading time",):
+                # Broader fallback for generic "unloading time"
+                val = trip.tr_unloading_time or trip.tr_reporteddate_pickup or trip.tr_reporteddate
+                row.append(val.strftime("%H:%M") if val else ""); continue
 
             if hh == "bvm in":
                 # Special handler for 'BVM IN' which refers to arrival at hub/warehouse
-                v = trip.tr_reporteddate # BVM Hub Arrival is modeled as tr_reporteddate in most templates
+                v = trip.tr_reporteddate_pickup or trip.tr_reporteddate
                 if not v: row.append(""); continue
                 fmt = "%d-%m-%Y" if "date" in hh else "%H:%M" if "time" in hh else "%d-%m-%Y %H:%M"
                 row.append(v.strftime(fmt)); continue
@@ -586,6 +668,10 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 row.append(safe_str(trip.tr_enquirynumber.en_customername)); continue
             if hh == "customer dept":
                 row.append(safe_str(trip.tr_enquirynumber.en_customerdepartment)); continue
+            if hh == "user name":
+                row.append(safe_str(trip.tr_enquirynumber.en_assignedto)); continue
+            if hh == "transport bill to":
+                row.append(safe_str(trip.tr_enquirynumber.en_customername)); continue
             if hh in ("tripcost", "trip cost"):
                 row.append(safe_num(trip.tc_tripcost)); continue
             if hh in ("job no", "bvm job no", "bvm job number", "ceva job no", "bvm job"):
@@ -628,12 +714,12 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 row.append(safe_str(trip.tr_enquirynumber.en_assignedto)); continue
 
             # --- SHIPPER / CONSIGNEE ---
-            if "shipper seal #" in hh or hh == "seel no" or hh == "seal no":
+            if "shipper seal #" in hh or hh == "seal no" or hh == "seal no":
                 val = (cons_detail.co_seal_number or cons_detail.co_smart_lock_number) if cons_detail else ""
                 row.append(safe_str(val)); continue
             if "shipper" in hh or hh == "consignor":
                 row.append(safe_str(cons_goods.cg_consigner) if cons_goods else ""); continue
-            if "llr no" in hh or "lr no" in hh:
+            if "llr no" in hh or "lr no" in hh or hh == "bvm lr no":
                 row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else ""); continue
             if "consignee" in hh:
                 row.append(safe_str(cons_goods.cg_consignee) if cons_goods else ""); continue
@@ -696,7 +782,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
             if "driver name" in hh:
                 val = trip.tr_drivername or (va.va_drivername if va else "") or (va.va_driver.dm_name if va and va.va_driver else "")
                 row.append(safe_str(val)); continue
-            if "driver mobile" in hh or "driver number" in hh or hh == "driver no.":
+            if "driver mobile" in hh or "driver number" in hh or hh == "driver no." or hh == "driver namber":
                 val = trip.tr_drivernumber or (va.va_drivernumber if va else "") or (va.va_driver.dm_drivernumber if va and va.va_driver else "")
                 row.append(safe_str(val)); continue
             if "driver dl" in hh:
@@ -754,6 +840,10 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
             if hh in ("delivery status", "update status", "pod status", "pod"):
                 status_val = str(trip.tc_financestatus.status if trip.tc_financestatus else "PENDING")
                 row.append(status_val); continue
+            if hh == "c note":
+                row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else ""); continue
+            if hh == "aai s.no.":
+                row.append(""); continue
             if hh == "delay&ontime":
                 row.append(""); continue # No direct field, could calculate later if needed
 
@@ -822,14 +912,20 @@ def trip_report(request):
     if dept_id:
         trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
     if selected_month and selected_year:
-        selected_month = int(selected_month)
-        selected_year = int(selected_year)
-        first_day = date(selected_year, selected_month, 1)
-        last_day = date(selected_year, selected_month, calendar.monthrange(selected_year, selected_month)[1])
-        trips = trips.filter(
-            tr_departeddate__date__gte=first_day,
-            tr_departeddate__date__lte=last_day
-        )
+        try:
+            selected_month = int(selected_month)
+            selected_year = int(selected_year)
+            # Validate month is in valid range
+            if 1 <= selected_month <= 12:
+                first_day = date(selected_year, selected_month, 1)
+                last_day = date(selected_year, selected_month, calendar.monthrange(selected_year, selected_month)[1])
+                trips = trips.filter(
+                    Q(tr_departeddate_pickup__date__range=[first_day, last_day]) |
+                    Q(tr_departeddate__date__range=[first_day, last_day])
+                )
+        except (ValueError, TypeError):
+            # Invalid month/year values, skip date filtering
+            pass
     if from_loc:
         trips = trips.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
     if to_loc:
@@ -935,10 +1031,16 @@ def trip_send_email(request):
     if month and year:
         try:
             m, y = int(month), int(year)
-            first_day = date(y, m, 1)
-            last_day = date(y, m, calendar.monthrange(y, m)[1])
-            qs = qs.filter(tr_departeddate__date__gte=first_day, tr_departeddate__date__lte=last_day)
-        except: pass
+            # Validate month is in valid range
+            if 1 <= m <= 12:
+                first_day = date(y, m, 1)
+                last_day = date(y, m, calendar.monthrange(y, m)[1])
+                qs = qs.filter(
+                    Q(tr_departeddate_pickup__date__range=[first_day, last_day]) |
+                    Q(tr_departeddate__date__range=[first_day, last_day])
+                )
+        except (ValueError, TypeError):
+            pass
 
     if from_loc: qs = qs.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
     if to_loc: qs = qs.filter(tr_enquirynumber__en_tolocation_id=to_loc)

@@ -1,0 +1,336 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Enquiry | BVM Transport</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --accent: #f093fb;
+            --dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            touch-action: manipulation;
+        }
+
+        a,
+        button,
+        input[type="submit"],
+        .btn {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .back-link {
+            color: #94a3b8;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        .form-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+            color: #f8fafc;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            appearance: none;
+        }
+
+        /* Fix for dropdown options visibility */
+        select option {
+            background-color: #1e293b;
+            color: #f8fafc;
+        }
+
+        /* Modern Arrow for Select */
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 15px -5px rgba(0, 242, 254, 0.3);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: var(--dark);
+            padding: 1.25rem;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px -5px rgba(0, 242, 254, 0.5);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="{% url 'customer_dashboard' %}" class="back-link"><i class="fas fa-arrow-left"></i> Back to
+            Dashboard</a>
+
+        <div class="form-card">
+            <h1>{% if edit_mode %}Edit Shipment{% else %}Request Shipment{% endif %}</h1>
+            {% if edit_mode %}
+            <p style="color: #94a3b8; margin-bottom: 2rem; font-size: 0.9rem;">Update the details for this enquiry.</p>
+            {% else %}
+            <p style="color: #94a3b8; margin-bottom: 2rem; font-size: 0.9rem;">Fill in the details below to generate a
+                new movement request.</p>
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <!-- Customer & Agent Info -->
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Customer Name</label>
+                        <input type="text" value="{{ customer.cu_name }}" disabled
+                            style="background: rgba(255, 255, 255, 0.05); cursor: not-allowed; border-color: rgba(255, 255, 255, 0.1);">
+                    </div>
+                    <div class="form-group">
+                        <label>Customer Department</label>
+                        <select name="customer_department" id="customer_department">
+                            <option value="">Select Department</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.ct_customerdepartment }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    {% if is_lp %}
+                    <div class="form-group">
+                        <label>Agent / Associate</label>
+                        <input type="text" name="agent_name" placeholder="Enter Agent (e.g. EIPL, DHL)"
+                            value="{{ enquiry.en_agent_name|default:'' }}" required>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Scheduling -->
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Vehicle Required Date</label>
+                        <input type="date" name="pickup_date"
+                            value="{{ enquiry.en_pickupdatetime|date:'Y-m-d'|default:'' }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Required Time</label>
+                        <input type="time" name="req_time"
+                            value="{{ enquiry.en_vehicle_req_time|time:'H:i'|default:'' }}" required>
+                    </div>
+                </div>
+
+                <!-- Route -->
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Origin</label>
+                        <select name="from_location" id="from_location" required>
+                            <option value="">Select Origin</option>
+                            {% for place in places %}
+                            <option value="{{ place.id }}">{{ place.place_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Destination</label>
+                        <select name="to_location" id="to_location" required>
+                            <option value="">Select Destination</option>
+                            {% for place in places %}
+                            <option value="{{ place.id }}">{{ place.place_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Vehicle Details -->
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Vehicle Category</label>
+                        <select name="vehicle_category" id="vehicle_category" required>
+                            <option value="">Select Category</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.vc_vehiclecategory }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Type</label>
+                        <select name="vehicle_type" id="vehicle_type" required>
+                            <option value="">Select Type</option>
+                            {% for vt in types %}
+                            <option value="{{ vt.id }}">{{ vt.vt_vehicletype }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>No. of Vehicles</label>
+                        <input type="number" name="no_of_veh" value="{{ enquiry.en_no_of_vehicles|default:'1' }}"
+                            min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Cargo Details (Optional)</label>
+                        <input type="text" name="cargo_details" placeholder="Specific cargo info if any"
+                            value="{{ enquiry.en_consignmentdetails|default:'' }}">
+                    </div>
+                </div>
+
+                <!-- Cargo Specs -->
+                <div class="grid-2" style="grid-template-columns: 1fr 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Pieces</label>
+                        <input type="number" name="no_of_pcs" placeholder="0"
+                            value="{{ enquiry.en_no_of_pcs|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Weight (Kg)</label>
+                        <input type="text" name="weight" placeholder="e.g. 5000"
+                            value="{{ enquiry.en_weight|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>CBM</label>
+                        <input type="text" name="cbm" placeholder="e.g. 24.5" value="{{ enquiry.en_cbm|default:'' }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Dimensions & Special Requirements</label>
+                    <textarea name="dimensions" rows="2"
+                        placeholder="LxWxH in mm or any special instructions...">{{ enquiry.en_dimensions|default:'' }}</textarea>
+                </div>
+
+                {% if edit_mode %}
+                <button type="submit" class="btn-submit">Update Enquiry</button>
+                {% else %}
+                <button type="submit" class="btn-submit">Submit Enquiry</button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+    <script>
+        var deptId = "{{ department.id|default:'' }}";
+        if (deptId) {
+            var sel = document.getElementById('customer_department');
+            if (sel) sel.value = deptId;
+        }
+        // Pre-select dropdowns in edit mode
+        var fromId = "{{ enquiry.en_fromlocaion_id|default:'' }}";
+        var toId = "{{ enquiry.en_tolocation_id|default:'' }}";
+        var catId = "{{ env.env_vehiclecategory_id|default:'' }}";
+        var typeId = "{{ env.env_vehicletype_id|default:'' }}";
+        if (fromId) document.getElementById('from_location').value = fromId;
+        if (toId) document.getElementById('to_location').value = toId;
+        if (catId) document.getElementById('vehicle_category').value = catId;
+        if (typeId) document.getElementById('vehicle_type').value = typeId;
+    </script>
+</body>
+
+</html>

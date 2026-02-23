@@ -45,7 +45,11 @@ class Gatein_info(models.Model):
     gatein_date_mail_received= models.DateTimeField(blank=True, null=True)
     gatein_CHA = models.CharField(blank=True, null=True, max_length=500)
     gatein_customer_service_name = models.CharField(blank=True, null=True, max_length=500)
-
+    gatein_no_of_pcs = models.IntegerField(blank=True, null=True)
+    gatein_HSC = models.IntegerField(blank=True, null=True)
+    gatein_GST = models.CharField(blank=True, null=True)
+    gatein_GST_percent = models.FloatField(blank=True, null=True)
+    gatein_so_number = models.IntegerField(blank=True, null=True)
     class Meta:
         ordering = ["gatein_job_no"]
 

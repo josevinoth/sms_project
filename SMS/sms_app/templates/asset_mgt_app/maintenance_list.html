@@ -74,14 +74,14 @@
                     <td>{{ m.mi_technician }}</td>
                     <td>{{ m.mi_est_delivery|date:"d-m-Y H:i" }}</td>
                     <td>{{ m.mi_work_area }}</td>
-                    <td>{{ m.mi_complaint }}</td>
+                    <td>{{ m.mi_complaint.complaint_type }}</td>
                     <td>{{ m.mi_description }}</td>
                     <td>{{ m.mi_remarks }}</td>
                     <td>{{ m.mi_job_card_creator }}</td>
                     <td>{{ m.mi_job_card_created_on|date:"d-m-Y H:i" }}</td>
                     <td>{{ m.mi_updated_by }}</td>
                     <td><!-- approval status label -->
-                        {{ m.get_mi_approval_status_display }}
+                        {{ m.mi_approval_status.approval_name }}
                     </td>
                     <!-- EDIT -->
                     <td class="text-center">

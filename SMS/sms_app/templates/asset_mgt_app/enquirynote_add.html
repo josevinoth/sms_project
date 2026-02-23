@@ -53,6 +53,12 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Requestor</span>
+									</div>
+									{% render_field form.en_requestor id="en_requestor" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Business Type</span>
 									</div>
 									{% render_field form.en_business_type id="en_business_type" class="form-control " %}
@@ -157,11 +163,12 @@
 	</div>
 </form>
 <div class="accordion container-fluid">
-	<div class="card" >
+	<div class="card">
 		<div class="card-header bg-info" id="headingOne">
 			<div class="d-flex align-items-center">
 				<h2 class="mb-0">
-					<button class="btn btn-link text-left text-white" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+					<button class="btn btn-link text-left text-white" type="button" data-toggle="collapse"
+						data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
 						Add/Update Vehicle Details <i class="fas fa-angle-down"></i>
 					</button>
 				</h2>
@@ -180,86 +187,86 @@
 </div>
 <script>
 	$(document).ready(function () {
-    $('#enquirynotevehicle_list').DataTable({
-        order: [0, 'asc'],
-        dom: 'Bfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ]
-    });
+		$('#enquirynotevehicle_list').DataTable({
+			order: [0, 'asc'],
+			dom: 'Bfrtip',
+			buttons: [
+				'copy', 'csv', 'excel', 'print'
+			]
+		});
 
-    document.getElementById("en_updated_by").value = '{{user_id}}';
-    document.getElementById("en_assignedto").value = '{{user_id}}';
+		document.getElementById("en_updated_by").value = '{{user_id}}';
+		document.getElementById("en_assignedto").value = '{{user_id}}';
 
-    var enquiry_num_id_val = document.getElementById("env_enquirynumber").value;
-    var x = '{{enquiry_num_id}}';
+		var enquiry_num_id_val = document.getElementById("env_enquirynumber").value;
+		var x = '{{enquiry_num_id}}';
 
-    if (enquiry_num_id_val == "") {
-        document.getElementById("env_enquirynumber").value = '{{enquiry_num_id}}';
-    } else {
-        document.getElementById("env_enquirynumber").value = enquiry_num_id_val;
-    }
+		if (enquiry_num_id_val == "") {
+			document.getElementById("env_enquirynumber").value = '{{enquiry_num_id}}';
+		} else {
+			document.getElementById("env_enquirynumber").value = enquiry_num_id_val;
+		}
 
-    var enquiry_num = document.getElementById("en_enquirynumber").value;
+		var enquiry_num = document.getElementById("en_enquirynumber").value;
 
-    if (enquiry_num == "") {
-        $('#vehicledetails').addClass('disable_a_href');
-    } else {
-        $('#vehicledetails').removeClass('disable_a_href');
-    }
-});
+		if (enquiry_num == "") {
+			$('#vehicledetails').addClass('disable_a_href');
+		} else {
+			$('#vehicledetails').removeClass('disable_a_href');
+		}
+	});
 </script>
 
 <script>
 	function fetchCustomerDetails() {
-        var customerId = $("#en_customername").val();  // Get selected customer ID
+		var customerId = $("#en_customername").val();  // Get selected customer ID
 		if (customerId == 210) {
-            $('#en_customer_new_name').removeClass('disable_a_href');
-        } else {
-            $('#en_customer_new_name').addClass('disable_a_href');
-            document.getElementById("en_customer_new_name").value = "";
-        }
-        if (customerId) {
-            $.ajax({
-                url: "{% url 'get_customer_details' %}",  // Django URL to fetch customer details
-                type: "GET",
-                data: { customer_id: customerId },
-                success: function(response) {
-                    $("#en_contactno").val(response.customer_contact);
-                    $("#en_email").val(response.customer_email);
-                },
-                error: function(xhr, status, error) {
-                    console.log("Error fetching customer details:", error);
-                }
-            });
-        }
-    }
+			$('#en_customer_new_name').removeClass('disable_a_href');
+		} else {
+			$('#en_customer_new_name').addClass('disable_a_href');
+			document.getElementById("en_customer_new_name").value = "";
+		}
+		if (customerId) {
+			$.ajax({
+				url: "{% url 'get_customer_details' %}",  // Django URL to fetch customer details
+				type: "GET",
+				data: { customer_id: customerId },
+				success: function (response) {
+					$("#en_contactno").val(response.customer_contact);
+					$("#en_email").val(response.customer_email);
+				},
+				error: function (xhr, status, error) {
+					console.log("Error fetching customer details:", error);
+				}
+			});
+		}
+	}
 </script>
 <script>
-		$("#en_customername").select2({
-			width: 'resolve'
-		});
-    $("#en_fromlocaion").select2({
-    	width: 'resolve'
-    });
-    $("#en_touchpoint").select2({
-    	width: 'resolve'
-    });
-    $("#en_touchpoint1").select2({
-    	width: 'resolve'
-    });
-    $("#en_touchpoint2").select2({
-    	width: 'resolve'
-    });
-    $("#en_touchpoint3").select2({
-    	width: 'resolve'
-    });
-    $("#en_touchpoint4").select2({
-    	width: 'resolve'
-    });
-    $("#en_tolocation").select2({
-    	width: 'resolve'
-    });
+	$("#en_customername").select2({
+		width: 'resolve'
+	});
+	$("#en_fromlocaion").select2({
+		width: 'resolve'
+	});
+	$("#en_touchpoint").select2({
+		width: 'resolve'
+	});
+	$("#en_touchpoint1").select2({
+		width: 'resolve'
+	});
+	$("#en_touchpoint2").select2({
+		width: 'resolve'
+	});
+	$("#en_touchpoint3").select2({
+		width: 'resolve'
+	});
+	$("#en_touchpoint4").select2({
+		width: 'resolve'
+	});
+	$("#en_tolocation").select2({
+		width: 'resolve'
+	});
 </script>
 
 {% endblock content %}

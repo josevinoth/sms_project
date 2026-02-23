@@ -1,7 +1,8 @@
 from datetime import datetime
 import calendar
 from django import forms
-from ..models import CustomerInfo, CustomerdepartmentInfo, Places
+from django.db.models import Q
+from ..models import CustomerInfo, CustomerdepartmentInfo, Places, Trip_category_info, Location_info
 
 
 class DmrForm(forms.Form):
@@ -26,15 +27,14 @@ class DmrForm(forms.Form):
     )
 
     current_year = datetime.now().year
-    default_year = 2026
 
     year = forms.ChoiceField(
         choices=[(0, '---')] + [
-            (y, y) for y in range(2020, max(current_year, default_year) + 1)
+            (y, y) for y in range(2020, current_year + 1)
         ],
         required=False,
         label="Year",
-        initial=default_year
+        initial=current_year
     )
 
     vehicle_number = forms.CharField(
@@ -57,3 +57,32 @@ class DmrForm(forms.Form):
         required=False,
         label="To Location"
     )
+
+    from_date = forms.DateField(
+        required=False,
+        label="From Date",
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
+
+    to_date = forms.DateField(
+        required=False,
+        label="To Date",
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
+    
+    trip_category = forms.ModelChoiceField(
+        queryset=Trip_category_info.objects.all(),
+        required=False,
+        label="Trip Category"
+    )
+
+    branch = forms.ModelChoiceField(
+        queryset=Location_info.objects.filter(Q(loc_name__icontains='MAA') | Q(loc_name__icontains='BLR')),
+        required=False,
+        label="Branch"
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(DmrForm, self).__init__(*args, **kwargs)
+        if 'branch' in self.fields:
+            self.fields['branch'].label_from_instance = lambda obj: obj.loc_name.replace("BVM ", "")

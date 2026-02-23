@@ -39,6 +39,30 @@
         {% render_field form.year class="form-control" value=selected_year %}
     </div>
 
+    <!-- Branch -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Branch</label>
+        <select name="branch" class="form-control">
+            <option value="">Select Branch</option>
+            {% for b in all_branches %}
+            <option value="{{ b.id }}" {% if b.id == selected_branch %}selected{% endif %}>{{ b.loc_name|cut:"BVM " }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Vehicle Source -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Vehicle Source</label>
+        <select name="vehicle_source" class="form-control">
+            <option value="">Select Source</option>
+            {% for vs in vehicle_sources %}
+            <option value="{{ vs.id }}" {% if vs.id == selected_source %}selected{% endif %}>{{ vs.ow_ownership }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
     <div class="col-md-2">
         <button type="submit" class="btn btn-primary mt-3">Filter</button>
     </div>

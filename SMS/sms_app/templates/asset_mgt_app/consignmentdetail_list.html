@@ -27,7 +27,8 @@
                             <select name="customer" id="customer" class="form-control select2">
                                 <option value="">-- All Customers --</option>
                                 {% for cust in customers %}
-                                <option value="{{ cust.id }}" {% if selected_customer == cust.id %}selected{% endif %}>{{ cust.cu_name }}</option>
+                                <option value="{{ cust.id }}" {% if selected_customer == cust.id %}selected{% endif %}>{{
+                                    cust.cu_name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -35,7 +36,7 @@
                             <label for="branch" class="font-weight-bold">Branch</label>
                             <select name="branch" id="branch" class="form-control select2">
                                 <option value="">-- All Branches --</option>
-                                <option value="MAA" {% if branch == 'MAA' %}selected{% endif %}>MAA</option>
+                                <option value="MAA" {% if brancMh == 'AA' %}selected{% endif %}>MAA</option>
                                 <option value="BLR" {% if branch == 'BLR' %}selected{% endif %}>BLR</option>
                             </select>
                         </div>
@@ -108,86 +109,101 @@
             </tr>
         </thead>
         <tbody>
-            {% for consignmentdetailinfo in consignmentdetail_list %}
-            <tr style="white-space: nowrap;">
-                <td> {{consignmentdetailinfo.id}}</td>
-                <td> {{consignmentdetailinfo.co_created_at|date:"d-m-Y"}}</td>
-                <td> {{consignmentdetailinfo.co_enquirynumber}}</td>
-                <td> {{consignmentdetailinfo.co_consignmentnumber}}</td>
-                <td> {{consignmentdetailinfo.co_consignmentdate|date:"d-m-Y"}}</td>
-                <td> {{consignmentdetailinfo.co_vehicelnumber}}</td>
-                <td> {{consignmentdetailinfo.display_from_location}}</td>
-                <td> {{consignmentdetailinfo.display_to_location}}</td>
-                <td> {{consignmentdetailinfo.co_consigner}}</td>
-                <td> {{consignmentdetailinfo.co_consignee}}</td>
-                <td> {{consignmentdetailinfo.co_consignerinvoice}}</td>
-                <td> {{consignmentdetailinfo.co_consignervalue}}</td>
-                <td> {{consignmentdetailinfo.co_valueininr}}</td>
-                <td> {{consignmentdetailinfo.co_noofpieces}}</td>
-                <td> {{consignmentdetailinfo.co_weight}}</td>
-                <td> {{consignmentdetailinfo.co_ebillno}}</td>
-                <td> {{consignmentdetailinfo.co_dateofissue|date:"d-m-Y"}}</td>
-                <td> {{consignmentdetailinfo.co_dateofvalidity|date:"d-m-Y"}}</td>
-                <td> {{consignmentdetailinfo.co_containerdescription}}</td>
-                <td> {{consignmentdetailinfo.co_dimension}}</td>
-                <td> {{consignmentdetailinfo.co_movement}}</td>
-                <td> {{consignmentdetailinfo.co_status}}</td>
-                <td> {{consignmentdetailinfo.co_updated_at|date:"d-m-Y"}}</td>
-                <td> {{consignmentdetailinfo.co_lastmodifiedby}}</td>
-                <td>
-                    <a class="btn btn-primary" href="{% url 'consignmentdetail_update' consignmentdetailinfo.id %}">
-                        <i class="far fa-edit"></i>
-                    </a>
-                </td>
-                <td>
-                    <form action="{% url 'consignmentdetail_delete' consignmentdetailinfo.id %}" method="post"
-                        onclick="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
         </tbody>
     </table>
-    <div class="pagination mt-3">
-        <span class="step-links">
-            {% if page_obj.has_previous %}
-            <a class="btn btn-warning"
-                href="?page=1{% if selected_customer %}&customer={{ selected_customer }}{% endif %}{% if branch %}&branch={{ branch }}{% endif %}{% if selected_updated_by %}&updated_by={{ selected_updated_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">First</a>
-            <a class="btn btn-primary"
-                href="?page={{ page_obj.previous_page_number }}{% if selected_customer %}&customer={{ selected_customer }}{% endif %}{% if branch %}&branch={{ branch }}{% endif %}{% if selected_updated_by %}&updated_by={{ selected_updated_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Previous</a>
-            {% endif %}
-
-            <span class="current">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-            </span>
-
-            {% if page_obj.has_next %}
-            <a class="btn btn-primary"
-                href="?page={{ page_obj.next_page_number }}{% if selected_customer %}&customer={{ selected_customer }}{% endif %}{% if branch %}&branch={{ branch }}{% endif %}{% if selected_updated_by %}&updated_by={{ selected_updated_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Next</a>
-            <a class="btn btn-warning"
-                href="?page={{ page_obj.paginator.num_pages }}{% if selected_customer %}&customer={{ selected_customer }}{% endif %}{% if branch %}&branch={{ branch }}{% endif %}{% if selected_updated_by %}&updated_by={{ selected_updated_by }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Last</a>
-            {% endif %}
-        </span>
-    </div>
 </div>
 
-
 <script>
-    $(document).ready(function () {
+    document.addEventListener("DOMContentLoaded", function () {
+        var params = new URLSearchParams(window.location.search);
+
         $('#consignmentdetail_list').DataTable({
+            processing: true,
+            serverSide: true,
             scrollX: true,
-            order: [0, 'desc'],
+            ajax: {
+                url: "{% url 'consignmentdetail_list_ajax' %}",
+                data: function (d) {
+                    d.customer = params.get('customer') || '';
+                    d.branch = params.get('branch') || '';
+                    d.updated_by = params.get('updated_by') || '';
+                    d.date_from = params.get('date_from') || '';
+                    d.date_to = params.get('date_to') || '';
+                },
+                error: function (xhr, error, thrown) {
+                    console.error("DataTables Ajax Error:", thrown);
+                    alert("An error occurred while loading the data. If 'All' is selected, the dataset might be too large for a single request. Try using filters or a smaller page size.");
+                }
+            },
+            order: [[0, 'desc']],
+            pageLength: 50,
+            lengthMenu: [
+                [10, 25, 50, 100, -1],
+                [10, 25, 50, 100, "All"]
+            ],
+            columns: [
+                { title: "ID" },
+                { title: "Created On" },
+                { title: "Enquiry Number" },
+                { title: "Consignment Number" },
+                { title: "Consignment Date" },
+                { title: "Vehicle Number" },
+                { title: "From Location" },
+                { title: "To Location" },
+                { title: "Consigner" },
+                { title: "Consignee" },
+                { title: "Consigner Invoice" },
+                { title: "Value" },
+                { title: "Value in INR" },
+                { title: "No. of Pieces" },
+                { title: "Weight" },
+                { title: "Eway-Bill No." },
+                { title: "Date of Issue" },
+                { title: "Date of Validity" },
+                { title: "Container Description" },
+                { title: "Dimension" },
+                { title: "Movement" },
+                { title: "Status" },
+                { title: "Updated On" },
+                { title: "Updated By" },
+                { title: "Edit", orderable: false, searchable: false },
+                { title: "Delete", orderable: false, searchable: false }
+            ],
+            columnDefs: [
+                {
+                    targets: 24,
+                    render: function (data, type, row) {
+                        return '<a class="btn btn-primary" href="/SMS/consignmentdetail_update/' + data + '/"><i class="far fa-edit"></i></a>';
+                    }
+                },
+                {
+                    targets: 25,
+                    render: function (data, type, row) {
+                        return '<form action="/SMS/consignmentdetail_delete/' + data + '/" method="post" onsubmit="return confirm(\'Are you sure?\');">' +
+                            '<input type="hidden" name="csrfmiddlewaretoken" value="' + getCookie('csrftoken') + '">' +
+                            '<button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button></form>';
+                    }
+                }
+            ],
             dom: 'lBfrtip',
-            pageLength: 100,
-            buttons: [
-                'copy', 'csv', 'excel', 'print'
-            ]
+            buttons: ['copy', 'csv', 'excel', 'print']
         });
     });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 </script>
 
 {% endblock content %}

@@ -16,6 +16,10 @@ class User_extInfo(models.Model):
     emp_DOB = models.CharField(max_length=100, null=True,blank=True)
     emp_DOJ = models.CharField(max_length=100, null=True,blank=True)
     emp_organisation = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE, null=True,blank=True)
+    
+    # External Customer Links
+    linked_customer = models.ForeignKey('CustomerInfo', on_delete=models.SET_NULL, null=True, blank=True)
+    is_lp_customer = models.BooleanField(default=False)
 
 
     def __str__(self):

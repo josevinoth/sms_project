@@ -85,16 +85,6 @@
             <input type="hidden" name="date_from" value="{{ date_from }}">
             <input type="hidden" name="date_to" value="{{ date_to }}">
 
-            <label>
-                Show
-                <select name="per_page" onchange="this.form.submit()" class="form-select d-inline w-auto">
-                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
-                    <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
-                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
-                    <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
-                </select>
-                entries
-            </label>
         </form>
 
 
@@ -106,9 +96,9 @@
                 <td>{{ trip.tr_tripnumber }}</td>
                 <td>{{ trip.tr_enquirynumber.en_customername }}</td>
                 <td>{{ trip.tr_vehiclenumber }}</td>
-                <td>{{ trip.tr_departeddate_pickup }}</td>
+                <td>{{ trip.tr_departedlocation }}</td>
                 <td>{{ trip.tr_reportedlocation }}</td>
-                <td>{{ trip.tr_departeddate|date:"d-m-Y" }}</td>
+                <td>{{ trip.tr_departeddate_pickup|date:"d-m-Y" }}</td>
 
                 <td>{{ trip.tc_tripcost }}</td>
                 <td>{{ trip.tc_parkingcost }}</td>
@@ -130,48 +120,25 @@
             {% endfor %}
         </tbody>
     </table>
-    <div class="text-muted mb-2">
-        Showing {{ page_obj.start_index }} – {{ page_obj.end_index }} of {{ total_count }} entries
-    </div>
 
 </div>
-<div class="pagination mt-3">
-    <span class="step-links">
-
-        {% if page_obj.has_previous %}
-        <a class="btn btn-warning"
-            href="?page=1{% if veh_no %}&veh_no={{ veh_no }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">First</a>
-        <a class="btn btn-primary"
-            href="?page={{ page_obj.previous_page_number }}{% if veh_no %}&veh_no={{ veh_no }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">Previous</a>
-        {% endif %}
-
-        <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-        </span>
-
-        {% if page_obj.has_next %}
-        <a class="btn btn-primary"
-            href="?page={{ page_obj.next_page_number }}{% if veh_no %}&veh_no={{ veh_no }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">Next</a>
-        <a class="btn btn-warning"
-            href="?page={{ page_obj.paginator.num_pages }}{% if veh_no %}&veh_no={{ veh_no }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">Last</a>
-        {% endif %}
-
-    </span>
-</div>
-
 <script>
-    $(document).ready(function () {
-        $('#tripsettlement_list').DataTable({
-            paging: false,     // Django handles pages
-            info: false,       // ❌ Removes “Showing 1 to 10 of 10 entries”
-            searching: false, // Django handles filtering
-            scrollX: true,
-            order: [0, 'desc'],
-            dom: 'Bfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print']
-        });
-    });
+document.addEventListener("DOMContentLoaded", function () {
+    $('#tripsettlement_list').DataTable({
+        order: [[2, 'desc']],
+        scrollCollapse: true,
 
+        pageLength: 10,   // default page size
+
+        lengthMenu: [
+            [10, 25, 50, 100, -1],   // values
+            [10, 25, 50, 100, "All"] // labels
+        ],
+
+        dom: 'lBfrtip',
+        buttons: ['copy', 'csv', 'excel', 'print']
+    });
+});
 </script>
 
 {% endblock content %}

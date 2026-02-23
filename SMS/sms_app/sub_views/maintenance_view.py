@@ -8,6 +8,7 @@ from django.db.models import Max
 
 from ..sub_forms.maintenance_form import MaintenanceForm
 from ..sub_models.maintenance_mod import MaintenanceInfo
+from ..sub_models.maintenance_status_mod import Maintenance_status
 from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
 
 from django.views.decorators.http import require_POST
@@ -50,12 +51,8 @@ def maintenance_add(request):
             obj.mi_job_card_created_on = timezone.now()
 
             # ensure approval_status has the model default (defensive)
-            try:
-                obj.mi_approval_status = (
-                    MaintenanceInfo._meta.get_field('mi_approval_status').default
-                )
-            except Exception:
-                obj.mi_approval_status = 1
+            # Use _id for foreign key assignment
+            obj.mi_approval_status_id = 1
 
             # ===============================
             # AUTO GENERATE JOB CARD NUMBER
@@ -90,11 +87,10 @@ def maintenance_add(request):
     else:
         form = MaintenanceForm()
 
-    # compute approval status label for a new form (model default)
+    # compute approval status label for a new form (default=1: Awaiting Manager Approval)
     try:
-        field = MaintenanceInfo._meta.get_field('mi_approval_status')
-        default_val = field.default
-        approval_status_label = next((label for val, label in field.choices if val == default_val), str(default_val))
+        status_obj = Maintenance_status.objects.filter(id=1).first()
+        approval_status_label = status_obj.approval_name if status_obj else ''
     except Exception:
         approval_status_label = ''
 
@@ -164,7 +160,7 @@ def maintenance_edit(request, id):
         )
 
     # approval label from instance
-    approval_status_label = (getattr(record, 'get_mi_approval_status_display', lambda: '')() if record else '')
+    approval_status_label = record.mi_approval_status.approval_name if record and record.mi_approval_status else ''
 
     return render(
         request,
@@ -279,7 +275,7 @@ def maintenance_pdf(request, id):
 @login_required(login_url='login_page')
 def manager_approval_list(request):
     # Show only records awaiting manager approval (mi_approval_status == 1)
-    records = MaintenanceInfo.objects.filter(mi_approval_status=1).order_by('-mi_job_card_created_on')
+    records = MaintenanceInfo.objects.filter(mi_approval_status_id=1).order_by('-mi_job_card_created_on')
 
     return render(
         request,
@@ -294,8 +290,8 @@ def manager_approval_list(request):
 def manager_approve(request, id):
     record = get_object_or_404(MaintenanceInfo, id=id)
 
-    if record.mi_approval_status == 1:
-        record.mi_approval_status = 2
+    if record.mi_approval_status_id == 1:
+        record.mi_approval_status_id = 2
         record.save()
 
         messages.success(
@@ -310,7 +306,7 @@ def manager_approve(request, id):
 @login_required(login_url='login_page')
 def finance_approval_list(request):
     records = MaintenanceInfo.objects.filter(
-        mi_approval_status=2
+        mi_approval_status_id=2
     ).order_by('-mi_job_card_created_on')
 
     return render(
@@ -326,8 +322,8 @@ def finance_approval_list(request):
 def finance_approve(request, id):
     record = get_object_or_404(MaintenanceInfo, id=id)
 
-    if record.mi_approval_status == 2:
-        record.mi_approval_status = 3  # Finance Approved
+    if record.mi_approval_status_id == 2:
+        record.mi_approval_status_id = 3  # Finance Approved
         record.save()
         messages.success(request, f"Job card {record.mi_job_card_no} finance approved.")
     else:

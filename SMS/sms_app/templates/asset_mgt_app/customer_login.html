@@ -1,0 +1,344 @@
+{% extends "asset_mgt_app/header_1.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Monoton&family=Montserrat:wght@900&family=Poppins:wght@400;600&display=swap');
+
+  body {
+    background: url('/media/warehouse_bw.png') no-repeat center center fixed;
+    background-size: cover;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 0;
+  }
+
+  .auth-card {
+    z-index: 1;
+    max-width: 900px;
+    margin: 1rem auto;
+    display: flex;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    overflow: hidden;
+    backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .auth-left {
+    flex: 1;
+    background: linear-gradient(to bottom, white 10%, #0D2F3F 80%, #0D2F3F 100%);
+    color: #fff;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .auth-left .logo-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .auth-left img.logo-small {
+    width: 250px;
+    height: auto;
+    object-fit: contain;
+    margin-bottom: 2rem;
+  }
+
+  .welcome-text {
+    font-size: 1.4rem;
+    color: #fff;
+    margin-bottom: 0.2rem;
+    font-weight: 400;
+  }
+
+  .bvm-brand {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #FF0000;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .service-line {
+    font-size: 0.85rem;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.9;
+  }
+
+  .auth-left h2 {
+    margin: 0.5rem 0;
+    font-weight: 700;
+    color: #FF0000
+  }
+
+  .auth-right {
+    flex: 1;
+    background: transparent;
+    padding: 2.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem
+  }
+
+  .form-control {
+    padding: 0.7rem;
+    border-radius: 8px;
+    border: none;
+  }
+
+  .form-control::placeholder {
+    color: #666
+  }
+
+  .btn-primary {
+    background: #237fb7;
+    color: #fff;
+    border: none;
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .btn-primary:hover {
+    background: #2cafeb;
+    transform: translateY(-2px);
+  }
+
+  .message small {
+    color: #ffdddd
+  }
+
+  .small-note {
+    font-size: 0.9rem;
+    color: #eee
+  }
+
+  .register-link {
+    margin-top: 1.5rem;
+    text-align: center;
+    color: #ccc;
+    font-size: 0.9rem;
+  }
+
+  .register-link a {
+    color: #5bc0de;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .register-link a:hover {
+    text-decoration: underline;
+    color: #fff;
+  }
+
+  .btn-driver {
+    display: block;
+    width: 100%;
+    padding: 0.8rem 1rem;
+    margin-top: 1.2rem;
+    background: linear-gradient(135deg, #1a3a4a, #0D2F3F);
+    color: #5bc0de;
+    border: 1px solid #5bc0de;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+
+  .btn-driver:hover {
+    background: #5bc0de;
+    color: #0D2F3F;
+  }
+
+  @media (max-width: 992px) {
+    .auth-card {
+      max-width: 95%;
+      margin: 2rem auto;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .auth-card {
+      flex-direction: column;
+      margin: 0.5rem;
+      max-width: calc(100% - 1rem);
+    }
+
+    .auth-left {
+      padding: 1.5rem 1rem;
+    }
+
+    .auth-left .logo-small {
+      width: 140px;
+      margin-bottom: 0.8rem;
+    }
+
+    .auth-right {
+      padding: 1.5rem 1rem;
+    }
+
+    .auth-left h2 {
+      font-size: 1.2rem;
+    }
+
+    .bvm-brand {
+      font-size: 1.8rem;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .welcome-text {
+      font-size: 1rem;
+    }
+
+    .service-line {
+      font-size: 0.75rem;
+      letter-spacing: 1.5px;
+    }
+
+    .form-control {
+      font-size: 16px;
+      padding: 0.75rem;
+    }
+
+    .btn-primary {
+      font-size: 1rem;
+      padding: 0.85rem;
+    }
+
+    .btn-driver {
+      font-size: 0.9rem;
+      padding: 0.7rem;
+    }
+
+    .register-link {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+    }
+  }
+</style>
+
+<div class="auth-card">
+  <div class="auth-left text-center">
+    <div class="logo-row">
+      <img src="/media/logo4.0.png" alt="BVM Logo" class="logo-small">
+    </div>
+    <div class="welcome-text">Welcome to</div>
+    <div class="bvm-brand">THE BVM GROUP</div>
+    <div class="service-line">WAREHOUSE | TRANSPORTATION | PACKAGING</div>
+  </div>
+
+  <div class="auth-right">
+    <h3
+      style="color: #fff; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
+      Sign In</h3>
+
+    <form method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="mode" value="customer">
+      <div class="form-group">
+        <label style="color:#ddd; margin-bottom: 0.5rem; display: block;">User ID</label>
+        <input name="customer_id" id="login_user_id" class="form-control" placeholder="Enter your ID" required
+          value="{{ prefill.customer_id }}">
+      </div>
+      <div id="dept_selection_group" class="form-group" style="display: none;">
+        <label style="color:#ddd; margin-bottom: 0.5rem; display: block;">Select Department</label>
+        <select name="customer_department" id="login_department" class="form-control"
+          style="background: #fff; color: #000; font-size: 0.85rem; font-weight: 500;">
+          <option value="">Select Department</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label style="color:#ddd; margin-bottom: 0.5rem; display: block;">Password</label>
+        <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+      </div>
+      <button class="btn-primary" type="submit">
+        <i class="fa fa-thumbs-up"></i> Login
+      </button>
+    </form>
+
+    <div class="message" style="margin-top:1rem;">
+      {% for message in messages %}
+      <div
+        style="background: rgba(255,0,0,0.2); border: 1px solid rgba(255,100,100,0.3); padding: 0.6rem; border-radius: 6px; margin-bottom: 0.5rem;">
+        <small>{{ message }}</small>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="register-link">
+      Don't have an account? <a href="{% url 'customer_register' business_id %}">Sign Up</a>
+    </div>
+
+    <div style="margin-top:1rem; text-align: center;" class="small-note">
+      <a href="{% url 'password_reset' %}" style="color: #bbb; text-decoration: none; font-size: 0.85rem;">Forgot
+        password?</a>
+    </div>
+
+    <a href="{% url 'driver_login' %}" class="btn-driver">
+      <i class="fa fa-truck" style="margin-right: 8px;"></i> Driver Login
+    </a>
+  </div>
+  <script>
+    const userIdInput = document.getElementById('login_user_id');
+    const deptGroup = document.getElementById('dept_selection_group');
+    const deptSelect = document.getElementById('login_department');
+
+    let deptLoaded = false;
+
+    function checkUserType() {
+      const val = userIdInput.value;
+      if (val && !val.endsWith('_lp')) {
+        // Regular customer - show and populate departments once
+        deptGroup.style.display = 'block';
+        if (!deptLoaded) {
+          deptLoaded = true;
+          fetch('/SMS/ajax/get-customer-departments/')
+            .then(res => res.json())
+            .then(data => {
+              data.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = item.ct_customerdepartment;
+                deptSelect.appendChild(opt);
+              });
+            });
+        }
+      } else {
+        deptGroup.style.display = 'none';
+      }
+    }
+
+    userIdInput.addEventListener('input', checkUserType);
+    window.addEventListener('load', checkUserType);
+  </script>
+</div>
+
+{% endblock content %}

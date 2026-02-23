@@ -4,8 +4,9 @@ from django.contrib import messages
 from django.db.models import Q, Sum, Count
 from django.http import JsonResponse
 
-from ..forms import ConsignmentdetailaddForm,EnquirynoteaddForm,EnquirynotevehicleForm
-from ..models import Vehicle_allotmentInfo,User_extInfo,TripdetailInfo,ConsignmentdetailInfo,EnquirynoteInfo,Enquirynotevehicle
+from ..forms import ConsignmentdetailaddForm, EnquirynoteaddForm, EnquirynotevehicleForm
+from ..models import Vehicle_allotmentInfo, User_extInfo, TripdetailInfo, ConsignmentdetailInfo, EnquirynoteInfo, \
+    Enquirynotevehicle
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 
@@ -14,7 +15,7 @@ from ..sub_models.location_info_mod import Location_info
 
 
 @login_required(login_url='login_page')
-def enquirynote_nav(request,enquirynote_id=0,enquirynotevehicle_id=0):
+def enquirynote_nav(request, enquirynote_id=0, enquirynotevehicle_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     if enquirynote_id == 0:
@@ -42,8 +43,10 @@ def enquirynote_nav(request,enquirynote_id=0,enquirynotevehicle_id=0):
             'enquirynote_id': enquirynote_id,
         }
     return render(request, "asset_mgt_app/enquirynote_add.html", context)
+
+
 @login_required(login_url='login_page')
-def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
+def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     if request.method == "GET":
@@ -59,7 +62,7 @@ def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
             }
         else:
             print("I am inside get edit Enuirynote")
-            enquirynote=EnquirynoteInfo.objects.get(pk=enquirynote_id)
+            enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
             enquiry_num_id = EnquirynoteInfo.objects.get(pk=enquirynote_id).id
             request.session['enquiry_num_id'] = enquiry_num_id
             tr_enqiury_id = EnquirynoteInfo.objects.get(pk=enquirynote_id).en_enquirynumber
@@ -67,8 +70,8 @@ def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
             form = EnquirynoteaddForm(instance=enquirynote)
             # enquirynotevehicle = Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
             enquiryvechicle_form = EnquirynotevehicleForm()
-            enquirynotevehicle_list=Enquirynotevehicle.objects.filter(env_enquirynumber=enquirynote_id)
-            context={
+            enquirynotevehicle_list = Enquirynotevehicle.objects.filter(env_enquirynumber=enquirynote_id)
+            context = {
                 'user_id': user_id,
                 'form': form,
                 'enquiryvechicle_form': enquiryvechicle_form,
@@ -76,7 +79,7 @@ def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
                 'enquirynotevehicle_list': enquirynotevehicle_list,
                 'enquiry_num_id': enquiry_num_id,
             }
-        return render(request, "asset_mgt_app/enquirynote_add.html",context)
+        return render(request, "asset_mgt_app/enquirynote_add.html", context)
     else:
         if enquirynote_id == 0:
             print("I am inside post add Enuirynote")
@@ -117,7 +120,7 @@ def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
         else:
             print("I am inside post edit Enquirynote")
             enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
-            form = EnquirynoteaddForm(request.POST,instance=enquirynote)
+            form = EnquirynoteaddForm(request.POST, instance=enquirynote)
             if form.is_valid():
                 form.save()
                 print("Enquiry Main Form Saved")
@@ -129,7 +132,9 @@ def enquirynote_add(request,enquirynote_id=0,enquirynotevehicle_id=0):
                 return redirect(request.META['HTTP_REFERER'])
             # return redirect('/SMS/enquirynote_list')
 
+
 from django.db.models import Q
+
 
 @login_required(login_url='login_page')
 def enquirynote_list(request):
@@ -202,7 +207,6 @@ def enquirynote_list(request):
         va_enquirynumber__in=enquiry_ids
     ).values_list('va_enquirynumber', 'va_vehiclenumber__vm_registrationnumber', 'va_vehiclenumber_mkt')
 
-
     trip_data = TripdetailInfo.objects.filter(
         tr_enquirynumber_id__in=enquiry_ids
     ).values_list(
@@ -218,7 +222,7 @@ def enquirynote_list(request):
     consignment_dict = {}
     for consignment in consignment_data:
         consignment_dict.setdefault(consignment.co_enquirynumber_id, []).append(consignment)
-    
+
     # Pre-build consignment count dict for limit checking
     consignment_count_dict = {enq_id: len(cons_list) for enq_id, cons_list in consignment_dict.items()}
 
@@ -233,14 +237,14 @@ def enquirynote_list(request):
     for enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category in trip_data:
         # Check category safely
         cat_lower = trip_category.strip().lower() if trip_category else ""
-        
+
         # If category is "Business", show consignment number; otherwise show category name
         # Added "bussiness" to handle potential typos in the database
         if cat_lower in ["business", "bussiness"]:
             display_text = trip_cons if trip_cons else "No Consignment"
         else:
             display_text = trip_category if trip_category else "No Category"
-        
+
         trip_dict.setdefault(enq_id, []).append(
             (display_text, trip_num or "No Trip", trip_status or "", trip_status_id)
         )
@@ -297,20 +301,21 @@ def enquirynote_list(request):
     }
     return render(request, "asset_mgt_app/enquirynote_list.html", context)
 
+
 # Connect to consignemnt Note
 @login_required(login_url='login_page')
-def consignment_note_connect(request,enquirynote_id):
+def consignment_note_connect(request, enquirynote_id):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    enquiry_num=EnquirynoteInfo.objects.get(pk=enquirynote_id).en_enquirynumber
-    request.session['ses_enquiry_note']=enquiry_num
+    enquiry_num = EnquirynoteInfo.objects.get(pk=enquirynote_id).en_enquirynumber
+    request.session['ses_enquiry_note'] = enquiry_num
     try:
-        consignment_num=ConsignmentdetailInfo.objects.get(co_enquirynumber=enquiry_num).co_consignmentnumber
+        consignment_num = ConsignmentdetailInfo.objects.get(co_enquirynumber=enquiry_num).co_consignmentnumber
     except ObjectDoesNotExist:
-        consignment_num=None
+        consignment_num = None
 
     if request.method == "GET":
-        if consignment_num==None:
+        if consignment_num == None:
             print("I am inside Get add consignmentdetails")
             con_det_form = ConsignmentdetailaddForm()
         else:
@@ -329,7 +334,7 @@ def consignment_note_connect(request,enquirynote_id):
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
     else:
-        if consignment_num==None:
+        if consignment_num == None:
             print("I am inside post add consignmentdetails")
             con_det_form = ConsignmentdetailaddForm(request.POST)
         else:
@@ -346,22 +351,28 @@ def consignment_note_connect(request,enquirynote_id):
             print("con_det_form Form is not Valid")
 
         return redirect('/SMS/enquirynote_list')
-#Delete enquirynote
+
+
+# Delete enquirynote
 @login_required(login_url='login_page')
-def enquirynote_delete(request,enquirynote_id):
+def enquirynote_delete(request, enquirynote_id):
     enquiry_num = EnquirynoteInfo.objects.get(pk=enquirynote_id).en_enquirynumber
     enquiry_num_id = EnquirynoteInfo.objects.get(pk=enquirynote_id).id
-    consignment_num_list = list(ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id).values_list('co_consignmentnumber',flat=True))
-    tripdetails_list=list(TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id).values_list('tr_tripnumber',flat=True))
+    consignment_num_list = list(
+        ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id).values_list('co_consignmentnumber',
+                                                                                          flat=True))
+    tripdetails_list = list(
+        TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id).values_list('tr_tripnumber', flat=True))
     for i in consignment_num_list:
-        consignment_note=ConsignmentdetailInfo.objects.get(co_consignmentnumber=i)
+        consignment_note = ConsignmentdetailInfo.objects.get(co_consignmentnumber=i)
         consignment_note.delete()
     for j in tripdetails_list:
-        tripdetails_note=TripdetailInfo.objects.get(tr_tripnumber=j)
+        tripdetails_note = TripdetailInfo.objects.get(tr_tripnumber=j)
         tripdetails_note.delete()
     enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
     enquirynote.delete()
     return redirect('/SMS/enquirynote_list')
+
 
 @login_required(login_url='login_page')
 def get_customer_details(request):
@@ -377,6 +388,8 @@ def get_customer_details(request):
         return JsonResponse(data)
     except CustomerInfo.DoesNotExist:
         return JsonResponse({'error': 'Customer not found'}, status=404)
+
+
 @login_required(login_url='login_page')
 def fetch_enquiry_locations(request):
     enquiry_number = request.GET.get('enquiry_number', '').strip()
