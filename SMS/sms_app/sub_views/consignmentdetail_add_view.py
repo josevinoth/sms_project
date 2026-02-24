@@ -255,11 +255,11 @@ def consignmentdetail_list_ajax(request):
             Q(co_vehicelnumber__icontains=search_value) |
             Q(co_customer__cu_name__icontains=search_value) |
             Q(co_enquirynumber__en_enquirynumber__icontains=search_value) |
-            Q(co_status__status__icontains=search_value) |
+            Q(co_status__status_title__icontains=search_value) |
             Q(co_lastmodifiedby__first_name__icontains=search_value) |
             Q(co_lastmodifiedby__last_name__icontains=search_value) |
-            Q(co_fromlocaion__loc_name__icontains=search_value) |
-            Q(co_tolocation__loc_name__icontains=search_value) |
+            Q(co_fromlocaion__place_name__icontains=search_value) |
+            Q(co_tolocation__place_name__icontains=search_value) |
             Q(cg_consignmentnumber__cg_consigner__consigner_name__icontains=search_value) |
             Q(cg_consignmentnumber__cg_consignee__consignee_name__icontains=search_value) |
             Q(cg_consignmentnumber__cg_consignerinvoice__icontains=search_value) |
@@ -278,8 +278,8 @@ def consignmentdetail_list_ajax(request):
         3: 'co_consignmentnumber',
         4: 'co_consignmentdate',
         5: 'co_vehicelnumber',
-        6: 'co_fromlocaion__loc_name',
-        7: 'co_tolocation__loc_name',
+        6: 'co_fromlocaion__place_name',
+        7: 'co_tolocation__place_name',
         8: 'cg_consignmentnumber__cg_consigner__consigner_name',
         9: 'cg_consignmentnumber__cg_consignee__consignee_name',
         10: 'cg_consignmentnumber__cg_consignerinvoice',
@@ -291,8 +291,8 @@ def consignmentdetail_list_ajax(request):
         16: 'cg_consignmentnumber__cg_consignerinvoice_date',
         17: 'cg_consignmentnumber__cg_dateofvalidity',
         18: 'co_containerdescription',
-        20: 'co_enquirynumber__en_movement_type__movement_type',
-        21: 'co_status__status',
+        20: 'co_enquirynumber__en_movement_type__mt_movementtype',
+        21: 'co_status__status_title',
         22: 'co_updated_at',
         23: 'co_lastmodifiedby__first_name',
     }
