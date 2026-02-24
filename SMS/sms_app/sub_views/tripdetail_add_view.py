@@ -598,6 +598,11 @@ def tripdetail_list_ajax(request):
 
     data = []
     for t in qs:
+        # Format Dates (remove seconds and +00:00)
+        departed_dt = timezone.localtime(t.tr_departeddate).strftime('%Y-%m-%d %H:%M') if t.tr_departeddate else ''
+        reported_dt = timezone.localtime(t.tr_reporteddate).strftime('%Y-%m-%d %H:%M') if t.tr_reporteddate else ''
+        updated_at = timezone.localtime(t.tr_updated_at).strftime('%Y-%m-%d %H:%M') if t.tr_updated_at else ''
+
         data.append([
             t.tr_created_at.strftime('%Y-%m-%d') if t.tr_created_at else '',
             str(t.tr_enquirynumber) if t.tr_enquirynumber else '',
@@ -606,14 +611,14 @@ def tripdetail_list_ajax(request):
             t.tr_vehiclenumber or '',
             str(t.tr_departedlocation) if t.tr_departedlocation else '',
             str(t.tr_departedkm) if t.tr_departedkm is not None else '0',
-            str(t.tr_departeddate) if t.tr_departeddate else '',
+            departed_dt,
             str(t.tr_reportedlocation) if t.tr_reportedlocation else '',
             str(t.tr_reportedkm) if t.tr_reportedkm is not None else '0',
-            str(t.tr_reporteddate) if t.tr_reporteddate else '',
+            reported_dt,
             t.tr_track_link or '',
             str(t.tc_financestatus) if t.tc_financestatus else '',
             str(t.tr_updated_by) if t.tr_updated_by else '',
-            str(t.tr_updated_at) if t.tr_updated_at else '',
+            updated_at,
             t.id,  # for edit URL (index 15)
             t.id,  # for delete URL (index 16)
         ])

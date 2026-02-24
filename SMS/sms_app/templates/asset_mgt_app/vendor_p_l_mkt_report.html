@@ -1,13 +1,20 @@
-{% extends "asset_mgt_app/base.html" %}
+﻿{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% load static %}
 {% block content %}
 
+<!-- Select2/Styling dependencies -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"
+    rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <div class="container-fluid d-flex justify-content-center py-3">
     <div class="rounded text-center bg-info shadow-box px-4 py-2">
-        <h3>Vendor P & L (MKT) Report</h3>
+        <h3>Vendor P & L (MARKET) Report</h3>
     </div>
 </div>
+
 <br>
 <div class="row">
     <div class="col-2"></div>
@@ -19,46 +26,66 @@
     <div class="col-2"></div>
 </div>
 
-<form method="POST" action="{% url 'vendor_p_l_mkt_report' %}" class="row g-3 align-items-end">
+<form method="POST" action="{% url 'vendor_p_l_mkt_report' %}" class="row g-3 align-items-end" id="report-filter-form">
     {% csrf_token %}
 
-    <!-- Customer -->
+    <!-- Column 1: Customer -->
     <div class="col-md-2">
         <label class="form-label fw-bold">Customer Name</label>
-        {% render_field form.dmr_customer class="form-control" value=customer_id %}
+        {% render_field form.dmr_customer class="form-control select2" value=customer_id %}
     </div>
 
-    <!-- Department -->
+    <!-- Column 2: Department -->
     <div class="col-md-2">
         <label class="form-label fw-bold">Department</label>
-        {% render_field form.customer_department class="form-control" value=dept_id %}
+        {% render_field form.customer_department class="form-control select2" value=dept_id %}
     </div>
 
-    <!-- Month -->
+    <!-- Column 3: Vendor -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Vendor Name</label>
+        <select name="vendor_id" id="vendor_select" class="form-control select2">
+            <option value="">Select Vendor</option>
+            {% for v in all_vendors %}
+            <option value="{{ v.id }}" {% if v.id == vendor_id %}selected{% endif %}>{{ v.vend_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Column 4: Vehicle No -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Vehicle No</label>
+        <select name="veh_no" id="vehicle_number" class="form-control select2">
+            <option value="">Select Vehicle</option>
+            {% for v in vehicle_numbers %}
+            <option value="{{ v }}" {% if v == veh_no %}selected{% endif %}>{{ v }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Column 5: Month -->
     <div class="col-md-2">
         <label class="form-label fw-bold">Month</label>
         {% render_field form.month class="form-control" value=selected_month %}
     </div>
 
-    <!-- Year -->
+    <!-- Column 6: Year -->
     <div class="col-md-2">
         <label class="form-label fw-bold">Year</label>
         {% render_field form.year class="form-control" value=selected_year %}
     </div>
 
-    <!-- From Location -->
+    <!-- Row 2 -->
     <div class="col-md-2">
         <label class="form-label fw-bold">From Location</label>
-        {% render_field form.from_location class="form-control" value=from_loc_id %}
+        {% render_field form.from_location class="form-control select2" value=from_loc_id %}
     </div>
 
-    <!-- To Location -->
     <div class="col-md-2">
         <label class="form-label fw-bold">To Location</label>
-        {% render_field form.to_location class="form-control" value=to_loc_id %}
+        {% render_field form.to_location class="form-control select2" value=to_loc_id %}
     </div>
 
-    <!-- Branch -->
     <div class="col-md-2">
         <label class="form-label fw-bold">Branch</label>
         <select name="branch" class="form-control select2">
@@ -68,23 +95,15 @@
         </select>
     </div>
 
-    <!-- Vendor -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Vendor Name</label>
-        <select name="vendor_id" class="form-control select2">
-            <option value="">-- All --</option>
-            {% for v in all_vendors %}
-            <option value="{{ v.id }}" {% if v.id == vendor_id %}selected{% endif %}>{{ v.vend_name }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
     <div class="col-md-2">
         <button type="submit" class="btn btn-primary mt-3">Filter</button>
+        <a href="{% url 'vendor_p_l_mkt_report' %}" class="btn btn-secondary mt-3">
+             <i class="fas fa-redo"></i> Clear
+        </a>
     </div>
 </form>
-<br>
-<br>
+
+<br><br>
 
 <div class="row">
     <div class="col-auto">
@@ -100,18 +119,16 @@
     <table id="vendor_p_l_report_table" class="table table-striped table-bordered">
         <thead class="thead-dark">
             <tr>
-                <!-- DYNAMIC HEADERS -->
                 {% for h in headers %}
-                <th>{{ h }}</th>
+                <th class="text-nowrap">{{ h }}</th>
                 {% endfor %}
             </tr>
         </thead>
         <tbody>
-            <!-- DYNAMIC ROWS -->
             {% for row in data_rows %}
             <tr>
                 {% for cell in row %}
-                <td>{{ cell }}</td>
+                <td class="text-nowrap">{{ cell }}</td>
                 {% endfor %}
             </tr>
             {% endfor %}
@@ -119,110 +136,47 @@
     </table>
 </div>
 
+<style>
+    .shadow-box-table {
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 5px;
+        padding: 10px;
+        background: #fff;
+    }
+    .text-nowrap { white-space: nowrap; }
+</style>
 
 <script>
-$(document).ready(function () {
+    $(document).ready(function () {
+        // Initialize Select2
+        $('.select2').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            allowClear: true,
+            placeholder: 'Search...'
+        });
 
-    $('#vendor_p_l_report_table').DataTable({
-        scrollX: true,
-        dom: 'lBfrtip',
+        // DataTable
+        $('#vendor_p_l_report_table').DataTable({
+            scrollX: true,
+            dom: 'lBfrtip',
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            pageLength: 10,
+            buttons: [
+                'copy', 'csv',
+                { extend: 'excelHtml5', text: 'Excel', title: 'Vendor P & L (MARKET) Report' },
+                { extend: 'pdfHtml5', orientation: 'landscape', pageSize: 'A4', title: 'Vendor P & L (MARKET) Report' },
+                { extend: 'print', title: 'Vendor P & L (MARKET) Report' }
+            ],
+            order: [[0, 'asc']]
+        });
 
-        lengthMenu: [
-            [10, 25, 50, 100, -1],
-            [10, 25, 50, 100, "All"]
-        ],
-
-        pageLength: 10,
-
-        buttons: [
-            'copy',
-            'csv',
-
-            // =========================
-            // EXCEL EXPORT
-            // =========================
-            {
-                extend: 'excelHtml5',
-                text: 'Excel',
-                title: 'Vendor P & L (MKT) Report',
-
-                customize: function (xlsx) {
-
-                    let sheet = xlsx.xl.worksheets['sheet1.xml'];
-                    let styles = xlsx.xl['styles.xml'];
-
-                    // FONT
-                    let fonts = $('fonts', styles);
-                    fonts.append(`
-                        <font>
-                            <sz val="11"/>
-                            <color rgb="FFFFFFFF"/>
-                            <name val="Calibri"/>
-                            <b/>
-                        </font>
-                    `);
-                    let fontId = fonts.children().length - 1;
-
-                    // FILL (BLUE)
-                    let fills = $('fills', styles);
-                    fills.append(`
-                        <fill>
-                            <patternFill patternType="solid">
-                                <fgColor rgb="FF0A3278"/>
-                                <bgColor indexed="64"/>
-                            </patternFill>
-                        </fill>
-                    `);
-                    let fillId = fills.children().length - 1;
-
-                    // STYLE
-                    let cellXfs = $('cellXfs', styles);
-                    cellXfs.append(`
-                        <xf xfId="0" fontId="${fontId}" fillId="${fillId}"
-                            borderId="0" applyFont="1" applyFill="1"/>
-                    `);
-                    let styleId = cellXfs.children().length - 1;
-
-                    // APPLY STYLE TO HEADER ROW
-                    $('row:eq(1) c', sheet).attr('s', styleId);
-                }
-            },
-
-            // =========================
-            // PDF EXPORT
-            // =========================
-            {
-                extend: 'pdfHtml5',
-                orientation: 'landscape',
-                pageSize: 'A4',
-                title: 'Vendor P & L (MKT) Report',
-
-                customize: function (doc) {
-                    doc.styles.tableHeader.fillColor = '#0A3278';
-                    doc.styles.tableHeader.color = 'white';
-                    doc.styles.tableHeader.bold = true;
-                }
-            },
-
-            // =========================
-            // PRINT
-            // =========================
-            {
-                extend: 'print',
-                title: 'Vendor P & L (MKT) Report',
-
-                customize: function (win) {
-                    $(win.document.body).find('thead th')
-                        .css('background-color', '#0A3278')
-                        .css('color', 'white')
-                        .css('font-weight', 'bold');
-                }
-            }
-        ],
-
-        order: [[0, 'asc']]
+        // Auto-submit on vendor change
+        $('#vendor_select').on('change', function () {
+            // Reset vehicle selection
+            $('#vehicle_number').val('').trigger('change');
+            $('#report-filter-form').submit();
+        });
     });
-
-});
 </script>
-{% endblock content %}
+{% endblock %}

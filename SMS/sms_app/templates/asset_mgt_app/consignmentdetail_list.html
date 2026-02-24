@@ -27,8 +27,7 @@
                             <select name="customer" id="customer" class="form-control select2">
                                 <option value="">-- All Customers --</option>
                                 {% for cust in customers %}
-                                <option value="{{ cust.id }}" {% if selected_customer == cust.id %}selected{% endif %}>{{
-                                    cust.cu_name }}</option>
+                                <option value="{{ cust.id }}" {% if selected_customer == cust.id %}selected{% endif %}>{{ cust.cu_name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -36,7 +35,7 @@
                             <label for="branch" class="font-weight-bold">Branch</label>
                             <select name="branch" id="branch" class="form-control select2">
                                 <option value="">-- All Branches --</option>
-                                <option value="MAA" {% if brancMh == 'AA' %}selected{% endif %}>MAA</option>
+                                <option value="MAA" {% if branch == 'MAA' %}selected{% endif %}>MAA</option>
                                 <option value="BLR" {% if branch == 'BLR' %}selected{% endif %}>BLR</option>
                             </select>
                         </div>

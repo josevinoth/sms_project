@@ -271,14 +271,16 @@ DMR_TEMPLATES = {
 }
 
 DEFAULT_HEADERS = [
-    "SR. NO.", "TRIP DATE", "CONSIGNMENT NOTE NO", "CUSTOMER NAME", "CUSTOMER DEPT",
-    "SHIPPER", "FROM", "TO", "VEH NO", "VEH TYPE", "TRIPCOST", "AAI CHARGES",
-    "UNLOADING CHARGES", "LOADING CHARGES", "HALTING CHARGE", "HANDLING CHARGES",
-    "SUPERVISOR CHARGES", "TOTAL CHARGES", "REFERENCE # (JOB ID/HAWB)",
-    "VEH REPORTED KM @ LOADING POINT", "VEH REPORTED TIME @ LOADING POINT",
-    "LOADING DATE", "LOADING TIME", "VEH REPORTED KM @ UNLOADING POINT",
-    "VEH REPORTED TIME @ UNLOADING POINT", "UNLOADING DATE", "UNLOADING TIME",
-    "NO OF HALTING DAYS"
+    "S.NO", "PICKUP LOCATION", "DELIVERY LOCATION", "DEPARTMENT", "SHIPPER NAME",
+    "Reference No", "TRUCK NO", "TRUCK TYPE", "No.of PKGS", "ACTUAL WEIGHT",
+    "SEAL No", "DRIVER MOBILE", "Pickup Date",
+    "VEHICLE Reported Date &Time at Loading Point",
+    "VEHICLE Started Date &Time at Loading Point",
+    "VEHICLE Reported Date &Time at UnLoading Point",
+    "VEHICLE Started Date &Time at UnLoading Point",
+    "NO OF HALTING Days", "Trip Charges", "Parking Charges",
+    "Loading Charges", "Unloading Charges", "WEIGHTMENT CHARGES",
+    "Halting Charges", "Handling/Additional Charges", "TOTAL CHARGES", "REMARKS"
 ]
 
 CUSTOMER_DMR_TEMPLATES = {
@@ -382,14 +384,14 @@ CUSTOMER_DMR_TEMPLATES = {
 }
 
 COMMON_DMR_MAP = {
-    "Air Export": DMR_TEMPLATES.get("Air Export", DEFAULT_HEADERS),
-    "Air Import": DMR_TEMPLATES.get("Air Import", DEFAULT_HEADERS),
-    "Sea Export": DMR_TEMPLATES.get("Sea Export", DEFAULT_HEADERS),
-    "Sea Import": DMR_TEMPLATES.get("Sea Import", DEFAULT_HEADERS),
-    "CHB": DMR_TEMPLATES.get("CHB", DEFAULT_HEADERS),
+    "Air Export": DEFAULT_HEADERS,
+    "Air Import": DEFAULT_HEADERS,
+    "Sea Export": DEFAULT_HEADERS,
+    "Sea Import": DEFAULT_HEADERS,
+    "CHB": DEFAULT_HEADERS,
     "Transcon": DEFAULT_HEADERS,
-    "Order Management": DMR_TEMPLATES.get("Order Management", DEFAULT_HEADERS),
-    "APMT": DMR_TEMPLATES.get("APMT", DEFAULT_HEADERS),
+    "Order Management": DEFAULT_HEADERS,
+    "APMT": DEFAULT_HEADERS,
 }
 
 ADDITIONAL_CUSTOMERS = [
@@ -517,10 +519,18 @@ def get_dmr_headers(customer_name, dept_name, from_loc_id, to_loc_id):
     elif n_dept:
         n_combined = n_dept
 
-    template_key = None
+    SPECIFIED_CUSTOMERS = [
+        "EIPL", "TVS", "FORD", "CEVA", "DHL", "DSV", "APMT", "UPS", "FEDEX", "GEODIS"
+    ]
+    is_specified = any(_norm(sc) in cust_value for sc in SPECIFIED_CUSTOMERS)
+    
     headers = DEFAULT_HEADERS
+    template_key = None
 
-    # Search Logic
+    if not is_specified:
+        return headers, template_key
+
+    # Search Logic for Specified Customers
     for cust_key, dept_map in CUSTOMER_DMR_TEMPLATES.items():
         if _norm(cust_key) in cust_value:
             matches = []
@@ -599,9 +609,11 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 # Strict: For specific "IN" labels
                 val = trip.tr_departeddate_pickup or trip.tr_loading_time
                 row.append(val.strftime("%H:%M") if val else ""); continue
-            if hh in ("loading time", "veh reported time @ loading point"):
+            if hh in ("loading time", "veh reported time @ loading point", "vehicle reported date &time at loading point"):
                 # Broader fallback for generic "loading time"
                 val = trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_departeddate
+                if hh == "vehicle reported date &time at loading point":
+                    row.append(val.strftime("%d-%m-%Y %H:%M") if val else ""); continue
                 row.append(val.strftime("%H:%M") if val else ""); continue
 
             # 3. Pickup Point (Departure from Shipper - OUT) OR Generic Trip Date
@@ -617,16 +629,20 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 # Strict: For specific "OUT" labels
                 val = trip.tr_departeddate or trip.tr_dock_in_time
                 row.append(val.strftime("%H:%M") if val else ""); continue
-            if hh in ("starting time",):
+            if hh in ("starting time", "vehicle started date &time at loading point"):
                 # Broader fallback for generic "starting time"
                 val = trip.tr_departeddate or trip.tr_loading_time or trip.tr_departeddate_pickup
+                if hh == "vehicle started date &time at loading point":
+                     row.append(val.strftime("%d-%m-%Y %H:%M") if val else ""); continue
                 row.append(val.strftime("%H:%M") if val else ""); continue
 
             # 4. Unloading Point (Arrival at Destination - IN)
-            if hh in ("unloading point in date", "gate in date", "reached plant", "reached cfs", "reached", "cfs reached date", "closing place", "closing time"):
+            if hh in ("unloading point in date", "gate in date", "reached plant", "reached cfs", "reached", "cfs reached date", "closing place", "closing time", "vehicle reported date &time at unloading point"):
                 # tr_reporteddate labels: "Vehicle Reported Date & Time" (Unloading Section)
                 # tr_departeddate_delivery labels: "Dock-In Time" (Unloading Section)
                 val = trip.tr_reporteddate or trip.tr_departeddate_delivery
+                if hh == "vehicle reported date &time at unloading point":
+                    row.append(val.strftime("%d-%m-%Y %H:%M") if val else ""); continue
                 if "time" in hh:
                     row.append(val.strftime("%H:%M") if val else ""); continue
                 row.append(val.strftime("%d-%m-%Y") if val else ""); continue
@@ -648,9 +664,11 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 # Strict: For specific "OUT" labels
                 val = trip.tr_reporteddate_pickup or trip.tr_unloading_time
                 row.append(val.strftime("%H:%M") if val else ""); continue
-            if hh in ("unloading time",):
+            if hh in ("unloading time", "vehicle started date &time at unloading point"):
                 # Broader fallback for generic "unloading time"
                 val = trip.tr_unloading_time or trip.tr_reporteddate_pickup or trip.tr_reporteddate
+                if hh == "vehicle started date &time at unloading point":
+                    row.append(val.strftime("%d-%m-%Y %H:%M") if val else ""); continue
                 row.append(val.strftime("%H:%M") if val else ""); continue
 
             if hh == "bvm in":
@@ -672,11 +690,11 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 row.append(safe_str(trip.tr_enquirynumber.en_assignedto)); continue
             if hh == "transport bill to":
                 row.append(safe_str(trip.tr_enquirynumber.en_customername)); continue
-            if hh in ("tripcost", "trip cost"):
+            if hh in ("tripcost", "trip cost", "trip charges"):
                 row.append(safe_num(trip.tc_tripcost)); continue
             if hh in ("job no", "bvm job no", "bvm job number", "ceva job no", "bvm job"):
                 row.append(safe_str(trip.tr_tripnumber)); continue
-            if "department name" in hh or hh == "dept" or hh == "air air import &air air export & ocean air export & dom" or hh == "division":
+            if "department name" in hh or hh in ("dept", "department", "air air import &air air export & ocean air export & dom", "division"):
                 row.append(safe_str(trip.tr_enquirynumber.en_customerdepartment)); continue
 
             if hh in ("veh reported km @ loading point", "starting km"):
@@ -790,7 +808,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 row.append(safe_str(val)); continue
             if hh in ("trip number", "bvm job", "bvm job no", "bvm job number"):
                 row.append(safe_str(trip.tr_tripnumber)); continue
-            if "no of pieces" in hh or hh in ("pcs", "no pkg", "pkgs", "sum of pieces"):
+            if "no of pieces" in hh or hh in ("pcs", "no pkg", "pkgs", "sum of pieces", "no.of pkgs"):
                 qty = cons_goods.cg_loaded_qty if cons_goods and cons_goods.cg_loaded_qty else (cons_goods.cg_qty if cons_goods else "")
                 row.append(safe_str(qty)); continue
             if "actual weight" in hh or "invoice weight" in hh or "gross weight" in hh or "cargo weight" in hh or hh in ("weight", "g weight", "actual weight (kgs)"):
@@ -813,7 +831,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
             # --- CHARGES ---
             if "no of days halting" in hh:
                 row.append(safe_num(trip.tc_no_of_days_halting)); continue
-            if "additional charges" in hh:
+            if "additional charges" in hh or hh == "handling/additional charges":
                 row.append(safe_num(trip.tc_handlingcost)); continue
             if "cancellation charges" in hh or "cancelling charges" in hh:
                 row.append(safe_num(trip.tc_cancellation)); continue
