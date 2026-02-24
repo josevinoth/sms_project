@@ -416,9 +416,10 @@
                             <td>{{ doc.date|date:"d M Y" }}</td>
                             <td><span class="doc-badge"><i class="fas fa-file-pdf"></i> {{ doc.doc_type }}</span></td>
                             <td>
-                                <a href="{% url 'download_pod' doc.trip.id %}" class="download-btn">
+                                <button onclick="openDownload('{% url 'download_pod' doc.trip.id %}')"
+                                    class="download-btn">
                                     <i class="fas fa-download"></i> Download
-                                </a>
+                                </button>
                             </td>
                         </tr>
                         {% empty %}
@@ -447,6 +448,14 @@
             document.getElementById('sidebar').classList.remove('active');
             document.getElementById('sidebarOverlay').classList.remove('active');
             document.body.style.overflow = '';
+        }
+        function openDownload(url) {
+            // '_system' opens in Android system browser (supports downloads)
+            // Falls back to '_blank' for regular desktop browsers
+            var opened = window.open(url, '_system');
+            if (!opened) {
+                window.open(url, '_blank');
+            }
         }
     </script>
 </body>
