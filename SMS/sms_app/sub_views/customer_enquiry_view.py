@@ -64,17 +64,15 @@ def customer_dashboard(request):
     if department:
         all_trips = all_trips.filter(tr_enquirynumber__en_customerdepartment=department)
     
-    # Completed status IDs (delivered, cancelled, etc.)
+    # Completed status IDs (delivered, cancelled, returned, etc.)
     completed_statuses = [2, 3, 4, 5, 7, 9]
     
-    # Active enquiries: exclude those with trips having completed statuses
-    completed_enquiry_ids = all_trips.filter(
+    # Active enquiries: only those that have at least one trip with a non-completed status
+    active_trip_enquiry_ids = all_trips.exclude(
         tc_financestatus_id__in=completed_statuses
-    ).values_list('tr_enquirynumber_id', flat=True)
-    active_enquiries = enquiry_qs.exclude(
-        en_status__status_title__iexact='Cancelled'
-    ).exclude(
-        id__in=completed_enquiry_ids
+    ).values_list('tr_enquirynumber_id', flat=True).distinct()
+    active_enquiries = enquiry_qs.filter(
+        id__in=active_trip_enquiry_ids
     ).count()
     
     in_transit = all_trips.filter(tc_financestatus_id=1).count()
