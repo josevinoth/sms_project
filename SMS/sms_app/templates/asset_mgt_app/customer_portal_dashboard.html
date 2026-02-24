@@ -92,6 +92,113 @@
             color: var(--primary);
         }
 
+        .hamburger {
+            display: none;
+            font-size: 1.5rem;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .hamburger:hover {
+            color: var(--primary);
+        }
+
+        /* Sidebar */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            border-right: 1px solid var(--glass-border);
+            z-index: 2000;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .sidebar-header .logo {
+            font-size: 1.2rem;
+        }
+
+        .sidebar-close {
+            color: #94a3b8;
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 0.3rem;
+            transition: color 0.3s;
+        }
+
+        .sidebar-close:hover {
+            color: #ef4444;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 1rem 0;
+        }
+
+        .sidebar-menu li a {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background: var(--glass);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+
+        .sidebar-menu li a i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .hamburger {
+                display: block;
+            }
+        }
+
         .user-profile {
             display: flex;
             align-items: center;
@@ -420,13 +527,38 @@
 </head>
 
 <body>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">BVM</div>
+            <span class="sidebar-close" onclick="closeSidebar()"><i class="fas fa-times"></i></span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="{% url 'customer_dashboard' %}" class="active"><i class="fas fa-tachometer-alt"></i>
+                    Dashboard</a></li>
+            <li><a href="{% url 'customer_enquiry_list' %}"><i class="fas fa-shipping-fast"></i> My Shipments</a></li>
+            <li><a href="{% url 'customer_documents' %}"><i class="fas fa-file-alt"></i> Documents</a></li>
+            <li><a href="#"><i class="fas fa-headset"></i> Support</a></li>
+            <li><a href="#"><i class="fas fa-user-circle"></i> Profile</a></li>
+            <li><a href="{% url 'logout_page' %}?business_id={{ customer.cu_business_sol.id }}"
+                    style="color: #ef4444;"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </div>
+
     <nav>
-        <div class="logo">BVM TRANSPORT</div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></span>
+            <div class="logo">BVM TRANSPORT</div>
+        </div>
         <ul class="nav-links">
             <li><a href="{% url 'customer_dashboard' %}" class="active">Dashboard</a></li>
             <li><a href="{% url 'customer_enquiry_list' %}">My Shipments</a></li>
-            <li><a href="#">Documents</a></li>
+            <li><a href="{% url 'customer_documents' %}">Documents</a></li>
             <li><a href="#">Support</a></li>
+            <li><a href="#">Profile</a></li>
         </ul>
         <div class="user-profile">
             <span id="currentTime" style="color: #94a3b8; font-size: 0.9rem; margin-right: 15px;"></span>
@@ -468,34 +600,42 @@
         {% endif %}
 
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon icon-blue">
-                    <i class="fas fa-clock"></i>
+            <a href="{% url 'customer_enquiry_list' %}" style="text-decoration: none; color: inherit;">
+                <div class="stat-card" style="cursor: pointer;">
+                    <div class="stat-icon icon-blue">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-value">{{ active_enquiries }}</div>
+                    <div class="stat-label">Active Enquiries</div>
                 </div>
-                <div class="stat-value">{{ active_enquiries }}</div>
-                <div class="stat-label">Active Enquiries</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon icon-orange">
-                    <i class="fas fa-truck-fast"></i>
+            </a>
+            <a href="{% url 'customer_enquiry_list' %}?status=transit" style="text-decoration: none; color: inherit;">
+                <div class="stat-card" style="cursor: pointer;">
+                    <div class="stat-icon icon-orange">
+                        <i class="fas fa-truck-fast"></i>
+                    </div>
+                    <div class="stat-value">{{ in_transit }}</div>
+                    <div class="stat-label">In-Transit</div>
                 </div>
-                <div class="stat-value">{{ in_transit }}</div>
-                <div class="stat-label">In-Transit</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon icon-green">
-                    <i class="fas fa-check-double"></i>
+            </a>
+            <a href="{% url 'customer_enquiry_list' %}?status=delivered" style="text-decoration: none; color: inherit;">
+                <div class="stat-card" style="cursor: pointer;">
+                    <div class="stat-icon icon-green">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <div class="stat-value">{{ delivered }}</div>
+                    <div class="stat-label">Delivered (MTD)</div>
                 </div>
-                <div class="stat-value">{{ delivered }}</div>
-                <div class="stat-label">Delivered (MTD)</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon icon-pink">
-                    <i class="fas fa-ban"></i>
+            </a>
+            <a href="{% url 'customer_enquiry_list' %}?status=cancelled" style="text-decoration: none; color: inherit;">
+                <div class="stat-card" style="cursor: pointer;">
+                    <div class="stat-icon icon-pink">
+                        <i class="fas fa-ban"></i>
+                    </div>
+                    <div class="stat-value">{{ cancelled }}</div>
+                    <div class="stat-label">Cancelled</div>
                 </div>
-                <div class="stat-value">{{ cancelled }}</div>
-                <div class="stat-label">Cancelled</div>
-            </div>
+            </a>
         </div>
 
         <div class="section-header">
@@ -563,6 +703,18 @@
         }
         setInterval(updateTime, 1000);
         updateTime();
+
+        // Sidebar functions
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('active');
+            document.getElementById('sidebarOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
     </script>
 </body>
 

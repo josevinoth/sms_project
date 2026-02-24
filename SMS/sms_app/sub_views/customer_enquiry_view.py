@@ -6,7 +6,7 @@ from django.db.models import Count, Q
 from ..sub_models.enquirynote_mod import EnquirynoteInfo
 from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.user_ext_mod import User_extInfo
-from ..sub_models.tripdetail_mod import TripdetailInfo
+from ..sub_models.tripdetail_mod import TripdetailInfo, Trip_closure_files_Info
 from ..sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
 from ..models import Location_info, StatusList, MyUser, CustomerdepartmentInfo, Places, VehiclecategoryInfo, VehicletypeInfo, VehiclemasterInfo
@@ -59,13 +59,23 @@ def customer_dashboard(request):
     if department:
         enquiry_qs = enquiry_qs.filter(en_customerdepartment=department)
 
-    # Summary Stats
-    active_enquiries = enquiry_qs.exclude(en_status__status_title__iexact='Cancelled').count()
-    
     # Shipment stats based on TripdetailInfo
     all_trips = TripdetailInfo.objects.filter(tr_enquirynumber__en_customername=customer)
     if department:
         all_trips = all_trips.filter(tr_enquirynumber__en_customerdepartment=department)
+    
+    # Completed status IDs (delivered, cancelled, etc.)
+    completed_statuses = [2, 3, 4, 5, 7, 9]
+    
+    # Active enquiries: exclude those with trips having completed statuses
+    completed_enquiry_ids = all_trips.filter(
+        tc_financestatus_id__in=completed_statuses
+    ).values_list('tr_enquirynumber_id', flat=True)
+    active_enquiries = enquiry_qs.exclude(
+        en_status__status_title__iexact='Cancelled'
+    ).exclude(
+        id__in=completed_enquiry_ids
+    ).count()
     
     in_transit = all_trips.filter(tc_financestatus_id=1).count()
     delivered = all_trips.filter(tc_financestatus_id__in=[2, 7]).count()
@@ -99,11 +109,28 @@ def customer_enquiry_add(request):
         type_id = request.POST.get('vehicle_type')
         
         cargo_details = request.POST.get('cargo_details', '') # Still capture for fallback/legacy
-        pickup_date = request.POST.get('pickup_date')
+        
+        # Combined datetime-local field
+        pickup_datetime_str = request.POST.get('pickup_datetime', '')
+        pickup_date = None
+        req_time = None
+        if pickup_datetime_str:
+            try:
+                # datetime-local format: "2026-02-22T10:30"
+                parts = pickup_datetime_str.split('T')
+                pickup_date = parts[0]
+                req_time = parts[1] if len(parts) > 1 else None
+            except Exception:
+                pickup_date = pickup_datetime_str
+        
+        # Fallback: check old separate fields
+        if not pickup_date:
+            pickup_date = request.POST.get('pickup_date')
+        if not req_time:
+            req_time = request.POST.get('req_time')
         
         # New fields for LP/Agent
         agent_name = request.POST.get('agent_name')
-        req_time = request.POST.get('req_time')
         no_of_veh = request.POST.get('no_of_veh', 0)
         no_of_pcs = request.POST.get('no_of_pcs', 0)
         weight = request.POST.get('weight')
@@ -322,9 +349,14 @@ def customer_enquiry_list(request):
 
     search_query = request.GET.get('q', '')
     
-    # Get enquiries with their related data
+    # Get enquiries with optimized queries using select_related
     enquiries_qs = EnquirynoteInfo.objects.filter(
         en_customername=customer
+    ).select_related(
+        'en_customername',
+        'en_fromlocaion',
+        'en_tolocation',
+        'en_customerdepartment'
     ).prefetch_related(
         'tripdetailinfo_set',
         'vehicle_allotmentinfo_set',
@@ -339,12 +371,35 @@ def customer_enquiry_list(request):
             Q(tripdetailinfo__tr_tripnumber__icontains=search_query)
         ).distinct()
 
+    # Status filter from dashboard cards
+    status_filter = request.GET.get('status', '')
+    if status_filter == 'transit':
+        enquiries_qs = enquiries_qs.filter(tripdetailinfo__tc_financestatus_id=1).distinct()
+    elif status_filter == 'delivered':
+        enquiries_qs = enquiries_qs.filter(tripdetailinfo__tc_financestatus_id__in=[2, 7]).distinct()
+    elif status_filter == 'cancelled':
+        enquiries_qs = enquiries_qs.filter(tripdetailinfo__tc_financestatus_id=3).distinct()
+
     enquiries_qs = enquiries_qs.order_by('-en_created_at')
+
+    # Pagination - 50 items per page
+    from django.core.paginator import Paginator
+    paginator = Paginator(enquiries_qs, 50)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
 
     # Build enriched data for template
     enquiry_list = []
-    for enq in enquiries_qs:
-        trip = enq.tripdetailinfo_set.first()
+    for enq in page_obj:
+        # When status filter is active, pick the matching trip
+        if status_filter == 'transit':
+            trip = enq.tripdetailinfo_set.filter(tc_financestatus_id=1).first()
+        elif status_filter == 'delivered':
+            trip = enq.tripdetailinfo_set.filter(tc_financestatus_id__in=[2, 7]).first()
+        elif status_filter == 'cancelled':
+            trip = enq.tripdetailinfo_set.filter(tc_financestatus_id=3).first()
+        else:
+            trip = enq.tripdetailinfo_set.first()
         va = enq.vehicle_allotmentinfo_set.first()
         cn = enq.consignmentdetailinfo_set.first()
 
@@ -375,10 +430,22 @@ def customer_enquiry_list(request):
         if vehicle_no and vehicle_no != '-':
             track_link = f'/SMS/SMS/customer_track_vehicle/?vehicle={vehicle_no}'
 
-        # POD download
+        # POD download - only show if file actually exists
+        import os
+        from django.conf import settings
         pod_trip_id = None
         if trip and trip.tc_financestatus_id in [2, 7]:
-            pod_trip_id = trip.id
+            # Check closure files
+            closure = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip.tr_tripnumber).first()
+            if closure and closure.tcf_pod:
+                fpath = os.path.join(settings.MEDIA_ROOT, str(closure.tcf_pod))
+                if os.path.exists(fpath):
+                    pod_trip_id = trip.id
+            # Check trip attachment
+            if not pod_trip_id and trip.tc_pod_attachment:
+                fpath = os.path.join(settings.MEDIA_ROOT, str(trip.tc_pod_attachment))
+                if os.path.exists(fpath):
+                    pod_trip_id = trip.id
 
         enquiry_list.append({
             'enq': enq,
@@ -391,7 +458,9 @@ def customer_enquiry_list(request):
     
     return render(request, 'asset_mgt_app/customer_enquiry_list.html', {
         'enquiry_list': enquiry_list,
-        'search_query': search_query
+        'search_query': search_query,
+        'page_obj': page_obj,
+        'status_filter': status_filter,
     })
 
 @login_required
@@ -419,17 +488,24 @@ def customer_shipment_tracking(request, trip_id):
 @login_required
 def download_pod(request, trip_id):
     """View to download the POD attachment for a trip."""
+    import os
+    from django.conf import settings
+    
     customer, _, is_lp = get_customer_context(request)
     trip = get_object_or_404(TripdetailInfo, id=trip_id, tr_enquirynumber__en_customername=customer)
     
     # Try finding in closure files first
     closure = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip.tr_tripnumber).first()
     if closure and closure.tcf_pod:
-        return redirect(closure.tcf_pod.url)
+        file_path = os.path.join(settings.MEDIA_ROOT, str(closure.tcf_pod))
+        if os.path.exists(file_path):
+            return redirect(closure.tcf_pod.url)
     
     # Fallback to trip attachment
     if trip.tc_pod_attachment:
-        return redirect(trip.tc_pod_attachment.url)
+        file_path = os.path.join(settings.MEDIA_ROOT, str(trip.tc_pod_attachment))
+        if os.path.exists(file_path):
+            return redirect(trip.tc_pod_attachment.url)
     
     messages.error(request, "POD document not found for this shipment yet.")
     return redirect(request.META.get('HTTP_REFERER', 'customer_dashboard'))
@@ -464,3 +540,64 @@ def download_dmr(request, trip_id):
     response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename="DMR_{trip.tr_tripnumber}.xlsx"'
     return response
+
+@login_required
+def customer_documents(request):
+    """Documents page showing all PODs and documents for the customer."""
+    customer, department, is_lp = get_customer_context(request)
+    if not customer:
+        return redirect('customer_dashboard')
+    
+    # Get all trips for this customer
+    trips_qs = TripdetailInfo.objects.filter(
+        tr_enquirynumber__en_customername=customer
+    ).select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_fromlocaion',
+        'tr_enquirynumber__en_tolocation',
+        'tc_financestatus'
+    )
+    if department:
+        trips_qs = trips_qs.filter(tr_enquirynumber__en_customerdepartment=department)
+    
+    trips_qs = trips_qs.order_by('-tr_created_at')
+    
+    # Build document list
+    import os
+    from django.conf import settings
+    documents = []
+    for trip in trips_qs:
+        # Check closure files for POD
+        closure = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip.tr_tripnumber).first()
+        has_pod = False
+        pod_source = ''
+        
+        if closure and closure.tcf_pod:
+            file_path = os.path.join(settings.MEDIA_ROOT, str(closure.tcf_pod))
+            if os.path.exists(file_path):
+                has_pod = True
+                pod_source = 'closure'
+        if not has_pod and trip.tc_pod_attachment:
+            file_path = os.path.join(settings.MEDIA_ROOT, str(trip.tc_pod_attachment))
+            if os.path.exists(file_path):
+                has_pod = True
+                pod_source = 'trip'
+        
+        if has_pod:
+            documents.append({
+                'trip': trip,
+                'trip_number': trip.tr_tripnumber,
+                'from_location': trip.tr_enquirynumber.en_fromlocaion.place_name if trip.tr_enquirynumber.en_fromlocaion else '-',
+                'to_location': trip.tr_enquirynumber.en_tolocation.place_name if trip.tr_enquirynumber.en_tolocation else '-',
+                'vehicle_no': trip.tr_vehiclenumber or '-',
+                'status': trip.tc_financestatus.status if trip.tc_financestatus else '-',
+                'date': trip.tr_created_at,
+                'doc_type': 'POD',
+                'pod_source': pod_source,
+            })
+    
+    return render(request, 'asset_mgt_app/customer_documents.html', {
+        'customer': customer,
+        'department': department,
+        'documents': documents,
+    })
