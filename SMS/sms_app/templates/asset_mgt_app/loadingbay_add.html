@@ -84,6 +84,18 @@
 									</div>
 									{% render_field loadingbay_form.lb_invoice id="lb_invoice"  class="form-control disable_a_href" %}
 								</div>
+								{% with gatein_list.0.gatein_customer.cu_name|upper as cname %}
+								{% if "GEODIS(H&M)" in cname %}
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Shipper Invoice Date</span>
+									</div>
+									{% render_field loadingbay_form.lb_invoice_date id="lb_invoice_date"  type="datetime-local" class="form-control" %}
+								</div>
+								{% endif %}
+								{% endwith %}
+
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Shipper Invoice Value</span>
