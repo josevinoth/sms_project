@@ -1,4 +1,4 @@
-{% extends "asset_mgt_app/base.html" %}
+﻿{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% load static %}
 {% block content %}
@@ -135,7 +135,6 @@
 </div>
 
 <style>
-    /* REMOVED CUSTOM BG-INFO OVERRIDE TO RESTORE ORIGINAL DESIGN */
     .shadow-box-table {
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         border-radius: 5px;
@@ -145,86 +144,34 @@
 </style>
 
 <script>
-    $(document).ready(function () {
-        // Initialize Select2
-        $('.select2').select2({
-            theme: 'bootstrap4',
-            width: '100%',
-            allowClear: true,
-            placeholder: 'Search...'
-        });
-
-        // DataTable Initialization
-        const table = $('#vendor_p_l_report_table').DataTable({
-            scrollX: true,
-            dom: 'lBfrtip',
-            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-            pageLength: 10,
-            buttons: [
-                'copy', 'csv',
-                {
-                    extend: 'excelHtml5',
-                    text: 'Excel',
-                    title: 'Vendor P & L (ATTACHED) Report'
-                },
-                {
-                    extend: 'pdfHtml5',
-                    orientation: 'landscape',
-                    pageSize: 'A4',
-                    title: 'Vendor P & L (ATTACHED) Report'
-                },
-                {
-                    extend: 'print',
-                    title: 'Vendor P & L (ATTACHED) Report'
-                }
-            ],
-            order: [[0, 'asc']]
-        });
-</script>
-<script>
 $(document).ready(function () {
 
-    // Select2
     $('.select2').select2({
         theme: 'bootstrap4',
         width: '100%'
     });
 
-    // Vendor → Vehicle dependent dropdown
+    // Auto submit when vendor changes
     $('#vendor_select').on('change', function () {
+        $('#vehicle_number').val('');
+        $('#report-filter-form').submit();
+    });
 
-        let vendorId = $(this).val();
-        let $vehSelect = $('#vehicle_number');
+    // Auto submit when vehicle changes
+    $('#vehicle_number').on('change', function () {
+        $('#report-filter-form').submit();
+    });
 
-        $vehSelect.empty().append('<option value="">Select Vehicle</option>');
+    // Auto submit when month/year changes (optional)
+    $('select[name="month"], select[name="year"]').on('change', function () {
+        $('#report-filter-form').submit();
+    });
 
-        if (!vendorId) {
-            $vehSelect.trigger('change.select2');
-            return;
-        }
-
-        $.ajax({
-            url: "{% url 'get_vehicles_by_vendor' %}",
-            type: "GET",
-            data: {
-                vendor_id: vendorId
-            },
-            success: function (data) {
-
-                console.log("Vendor ID sent:", vendorId);
-                console.log("Vehicles returned:", data);
-
-                data.forEach(function (regNo) {
-                    $vehSelect.append(new Option(regNo, regNo));
-                });
-
-                $vehSelect.trigger('change.select2');
-            },
-            error: function (err) {
-                console.log("AJAX Error:", err);
-            }
-        });
-
+    $('#vendor_p_l_report_table').DataTable({
+        scrollX: true,
+        dom: 'lBfrtip',
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+        pageLength: 10
     });
 
 });
