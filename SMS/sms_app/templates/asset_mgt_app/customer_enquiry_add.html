@@ -4,10 +4,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Enquiry | BVM Transport</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% if edit_mode %}Edit Enquiry{% else %}New Enquiry{% endif %} | BVM Transport</title>
     <link
-        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -18,6 +18,7 @@
             --dark: #0f172a;
             --glass: rgba(255, 255, 255, 0.05);
             --glass-border: rgba(255, 255, 255, 0.1);
+            --success: #10b981;
         }
 
         * {
@@ -45,55 +46,292 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 4rem 2rem;
-        }
-
-        .back-link {
-            color: #94a3b8;
-            text-decoration: none;
+        /* Navbar */
+        nav {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 2rem;
-            transition: color 0.3s ease;
-        }
-
-        .back-link:hover {
-            color: var(--primary);
-        }
-
-        .form-card {
+            padding: 1rem 1.5rem;
             background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 3rem;
             backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 2rem;
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
             background: linear-gradient(to right, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .form-group {
+        .hamburger {
+            display: none;
+            font-size: 1.5rem;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .hamburger:hover {
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary);
+        }
+
+        /* Sidebar */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            border-right: 1px solid var(--glass-border);
+            z-index: 2000;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .sidebar-header .logo {
+            font-size: 1.2rem;
+        }
+
+        .sidebar-close {
+            color: #94a3b8;
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 0.3rem;
+            transition: color 0.3s;
+        }
+
+        .sidebar-close:hover {
+            color: #ef4444;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 1rem 0;
+        }
+
+        .sidebar-menu li a {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background: var(--glass);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+
+        .sidebar-menu li a i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 1.5rem;
+        }
+
+        .page-header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: var(--primary);
+            color: var(--dark);
+            border-color: var(--primary);
+        }
+
+        .page-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 2px;
+        }
+
+        /* Section Cards */
+        .form-section {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(10px);
+            transition: border-color 0.3s;
+        }
+
+        .form-section:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .section-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: white;
+        }
+
+        .section-icon.blue {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+
+        .section-icon.purple {
+            background: linear-gradient(135deg, #a78bfa, #f093fb);
+        }
+
+        .section-icon.green {
+            background: linear-gradient(135deg, #10b981, #34d399);
+        }
+
+        .section-icon.orange {
+            background: linear-gradient(135deg, #f97316, #fb923c);
+        }
+
+        .section-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
         }
 
         label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             color: #94a3b8;
             font-weight: 500;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
 
         input,
@@ -102,26 +340,24 @@
             width: 100%;
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 1rem;
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
             color: #f8fafc;
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: all 0.3s ease;
             appearance: none;
         }
 
-        /* Fix for dropdown options visibility */
         select option {
             background-color: #1e293b;
             color: #f8fafc;
         }
 
-        /* Modern Arrow for Select */
         select {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 1.5em;
+            background-position: right 0.8rem center;
+            background-size: 1.2em;
             padding-right: 2.5rem;
         }
 
@@ -130,69 +366,200 @@
         textarea:focus {
             outline: none;
             border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.05);
-            box-shadow: 0 0 15px -5px rgba(0, 242, 254, 0.3);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.1);
         }
 
+        input:disabled {
+            background: rgba(255, 255, 255, 0.02);
+            cursor: not-allowed;
+            color: #64748b;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* Submit Button */
         .btn-submit {
             width: 100%;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: var(--dark);
-            padding: 1.25rem;
+            padding: 1rem;
             border-radius: 12px;
             border: none;
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             cursor: pointer;
-            margin-top: 2rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-top: 0.5rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .btn-submit:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px -5px rgba(0, 242, 254, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 242, 254, 0.4);
         }
 
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
+        .btn-submit:active {
+            transform: translateY(0);
         }
 
-        @media (max-width: 640px) {
-            .grid-2 {
+        /* Messages */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hamburger {
+                display: block;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .page-title {
+                font-size: 1.3rem;
+            }
+
+            .form-section {
+                padding: 1.25rem;
+                border-radius: 14px;
+            }
+
+            .form-grid,
+            .form-grid-3 {
                 grid-template-columns: 1fr;
+            }
+
+            .section-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 0.8rem;
+            }
+
+            .section-label {
+                font-size: 0.9rem;
+            }
+
+            label {
+                font-size: 0.75rem;
+            }
+
+            input,
+            select,
+            textarea {
+                padding: 0.75rem 0.85rem;
+                font-size: 16px;
+                border-radius: 10px;
+            }
+
+            .btn-submit {
+                padding: 0.9rem;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
             }
         }
     </style>
 </head>
 
 <body>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">BVM</div>
+            <span class="sidebar-close" onclick="closeSidebar()"><i class="fas fa-times"></i></span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="{% url 'customer_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="{% url 'customer_enquiry_list' %}"><i class="fas fa-shipping-fast"></i> My Shipments</a></li>
+            <li><a href="{% url 'customer_documents' %}"><i class="fas fa-file-alt"></i> Documents</a></li>
+            <li><a href="#"><i class="fas fa-headset"></i> Support</a></li>
+            <li><a href="#"><i class="fas fa-user-circle"></i> Profile</a></li>
+            <li><a href="{% url 'logout_page' %}?business_id=2" style="color: #ef4444;"><i
+                        class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </div>
+
+    <nav>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></span>
+            <div class="logo">BVM TRANSPORT</div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="{% url 'customer_dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'customer_enquiry_list' %}">My Shipments</a></li>
+            <li><a href="{% url 'customer_documents' %}">Documents</a></li>
+            <li><a href="#">Support</a></li>
+            <li><a href="#">Profile</a></li>
+        </ul>
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+            <div
+                style="width: 36px; height: 36px; background: linear-gradient(var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--dark); font-size: 0.85rem;">
+                {{ request.user.username|make_list|first|upper }}
+            </div>
+            <a href="{% url 'logout_page' %}?business_id=2" title="Logout"
+                style="color: #94a3b8; text-decoration: none; font-size: 1.1rem;"><i
+                    class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </nav>
+
     <div class="container">
-        <a href="{% url 'customer_dashboard' %}" class="back-link"><i class="fas fa-arrow-left"></i> Back to
-            Dashboard</a>
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-header-left">
+                <a href="{% url 'customer_dashboard' %}" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+                <div>
+                    <div class="page-title">{% if edit_mode %}Edit Shipment{% else %}Request Shipment{% endif %}</div>
+                    <div class="page-subtitle">{% if edit_mode %}Update the details below{% else %}Fill in the details
+                        to create a new movement request{% endif %}</div>
+                </div>
+            </div>
+        </div>
 
-        <div class="form-card">
-            <h1>{% if edit_mode %}Edit Shipment{% else %}Request Shipment{% endif %}</h1>
-            {% if edit_mode %}
-            <p style="color: #94a3b8; margin-bottom: 2rem; font-size: 0.9rem;">Update the details for this enquiry.</p>
-            {% else %}
-            <p style="color: #94a3b8; margin-bottom: 2rem; font-size: 0.9rem;">Fill in the details below to generate a
-                new movement request.</p>
-            {% endif %}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
 
-            <form method="POST">
-                {% csrf_token %}
+        <form method="POST">
+            {% csrf_token %}
 
-                <!-- Customer & Agent Info -->
-                <div class="grid-2">
+            <!-- Section 1: Customer Info -->
+            <div class="form-section">
+                <div class="form-grid">
                     <div class="form-group">
                         <label>Customer Name</label>
-                        <input type="text" value="{{ customer.cu_name }}" disabled
-                            style="background: rgba(255, 255, 255, 0.05); cursor: not-allowed; border-color: rgba(255, 255, 255, 0.1);">
+                        <input type="text" value="{{ customer.cu_name }}" disabled>
                     </div>
                     <div class="form-group">
-                        <label>Customer Department</label>
+                        <label>Department</label>
                         <select name="customer_department" id="customer_department">
                             <option value="">Select Department</option>
                             {% for dept in departments %}
@@ -200,36 +567,32 @@
                             {% endfor %}
                         </select>
                     </div>
-                </div>
-
-                <div class="grid-2">
                     {% if is_lp %}
                     <div class="form-group">
                         <label>Agent / Associate</label>
-                        <input type="text" name="agent_name" placeholder="Enter Agent (e.g. EIPL, DHL)"
+                        <input type="text" name="agent_name" placeholder="e.g. EIPL, DHL"
                             value="{{ enquiry.en_agent_name|default:'' }}" required>
                     </div>
                     {% endif %}
                 </div>
+            </div>
 
-                <!-- Scheduling -->
-                <div class="grid-2">
+            <!-- Section 2: Schedule -->
+            <div class="form-section">
+                <div class="form-grid">
                     <div class="form-group">
-                        <label>Vehicle Required Date</label>
-                        <input type="date" name="pickup_date"
-                            value="{{ enquiry.en_pickupdatetime|date:'Y-m-d'|default:'' }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Required Time</label>
-                        <input type="time" name="req_time"
-                            value="{{ enquiry.en_vehicle_req_time|time:'H:i'|default:'' }}" required>
+                        <label>Vehicle Required Date & Time</label>
+                        <input type="datetime-local" name="pickup_datetime" id="pickup_datetime" required>
                     </div>
                 </div>
+            </div>
 
-                <!-- Route -->
-                <div class="grid-2">
+            <!-- Section 3: Route -->
+            <div class="form-section">
+                <div class="form-grid">
                     <div class="form-group">
-                        <label>Origin</label>
+                        <label><i class="fas fa-map-marker-alt" style="color: var(--success); margin-right: 4px;"></i>
+                            Origin</label>
                         <select name="from_location" id="from_location" required>
                             <option value="">Select Origin</option>
                             {% for place in places %}
@@ -238,7 +601,8 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Destination</label>
+                        <label><i class="fas fa-map-marker-alt" style="color: #ef4444; margin-right: 4px;"></i>
+                            Destination</label>
                         <select name="to_location" id="to_location" required>
                             <option value="">Select Destination</option>
                             {% for place in places %}
@@ -247,9 +611,11 @@
                         </select>
                     </div>
                 </div>
+            </div>
 
-                <!-- Vehicle Details -->
-                <div class="grid-2">
+            <!-- Section 4: Vehicle -->
+            <div class="form-section">
+                <div class="form-grid">
                     <div class="form-group">
                         <label>Vehicle Category</label>
                         <select name="vehicle_category" id="vehicle_category" required>
@@ -268,9 +634,6 @@
                             {% endfor %}
                         </select>
                     </div>
-                </div>
-
-                <div class="grid-2">
                     <div class="form-group">
                         <label>No. of Vehicles</label>
                         <input type="number" name="no_of_veh" value="{{ enquiry.en_no_of_vehicles|default:'1' }}"
@@ -278,13 +641,12 @@
                     </div>
                     <div class="form-group">
                         <label>Cargo Details (Optional)</label>
-                        <input type="text" name="cargo_details" placeholder="Specific cargo info if any"
+                        <input type="text" name="cargo_details" placeholder="Specific cargo info"
                             value="{{ enquiry.en_consignmentdetails|default:'' }}">
                     </div>
                 </div>
 
-                <!-- Cargo Specs -->
-                <div class="grid-2" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="form-grid-3" style="margin-top: 1rem;">
                     <div class="form-group">
                         <label>Pieces</label>
                         <input type="number" name="no_of_pcs" placeholder="0"
@@ -301,25 +663,36 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group full-width" style="margin-top: 1rem;">
                     <label>Dimensions & Special Requirements</label>
                     <textarea name="dimensions" rows="2"
                         placeholder="LxWxH in mm or any special instructions...">{{ enquiry.en_dimensions|default:'' }}</textarea>
                 </div>
+            </div>
 
-                {% if edit_mode %}
-                <button type="submit" class="btn-submit">Update Enquiry</button>
-                {% else %}
-                <button type="submit" class="btn-submit">Submit Enquiry</button>
-                {% endif %}
-            </form>
-        </div>
+            <!-- Submit -->
+            {% if edit_mode %}
+            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Update Enquiry</button>
+            {% else %}
+            <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Submit Enquiry</button>
+            {% endif %}
+        </form>
     </div>
+
     <script>
+        // Pre-select department
         var deptId = "{{ department.id|default:'' }}";
         if (deptId) {
             var sel = document.getElementById('customer_department');
             if (sel) sel.value = deptId;
+        }
+        // Pre-fill datetime-local in edit mode
+        var pickupDate = "{{ enquiry.en_pickupdatetime|date:'Y-m-d'|default:'' }}";
+        var pickupTime = "{{ enquiry.en_vehicle_req_time|time:'H:i'|default:'' }}";
+        if (pickupDate && pickupTime) {
+            document.getElementById('pickup_datetime').value = pickupDate + 'T' + pickupTime;
+        } else if (pickupDate) {
+            document.getElementById('pickup_datetime').value = pickupDate + 'T00:00';
         }
         // Pre-select dropdowns in edit mode
         var fromId = "{{ enquiry.en_fromlocaion_id|default:'' }}";
@@ -330,6 +703,18 @@
         if (toId) document.getElementById('to_location').value = toId;
         if (catId) document.getElementById('vehicle_category').value = catId;
         if (typeId) document.getElementById('vehicle_type').value = typeId;
+
+        // Sidebar
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('active');
+            document.getElementById('sidebarOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
     </script>
 </body>
 
