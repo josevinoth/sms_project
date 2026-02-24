@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
+from django.db.models import Q
 from django.contrib import messages
 
 from ..sub_forms.market_bill_form import MarketBillForm
@@ -180,13 +181,20 @@ def get_trips_by_vendor(request):
     if not vendor_id:
         return JsonResponse({'trips': []})
 
-    # Get all vehicles for this vendor
-    vendor_vehicles = VehiclemasterInfo.objects.filter(
-        vm_vendor_id=vendor_id
+    settled_status_id = 7
+    market_ownership_id = 3
+
+    # Option 1: Get vehicles from master (if any are assigned to this vendor)
+    vendor_master_vehicles = VehiclemasterInfo.objects.filter(
+        vm_vendor_id=vendor_id,
+        vm_ownership_id=market_ownership_id
     ).values_list('vm_registrationnumber', flat=True)
-    
-    if not vendor_vehicles:
-        return JsonResponse({'trips': []})
+
+    # Option 2: Get enquiries allotted to this vendor
+    allotted_enquiry_ids = Vehicle_allotmentInfo.objects.filter(
+        va_vendor_id=vendor_id,
+        va_vehiclesource_id=market_ownership_id
+    ).values_list('va_enquirynumber_id', flat=True)
 
     # Get all already billed trip IDs from all MarketBillInfo records
     billed_trip_ids = set()
@@ -200,13 +208,14 @@ def get_trips_by_vendor(request):
             # If any non-integer values slip in, fallback to string-based set
             billed_trip_ids.update([tid.strip() for tid in bill.mb_selected_trips.split(',') if tid.strip()])
 
-    # Filter trips for ANY vehicle of this vendor that are not billed
-    # Only show trips that are in settled financial status (single ID)
-    # Use Tripstatusinfo id 7 as the 'settled' status per request
-    settled_status_id = 7
+    # Filter trips for ANY vehicle or enquiry of this vendor that are not billed
+    # Only show trips that are in settled financial status (ID 7)
+    # Plus double check that the trip record itself is marked as 'Market' source
     trips = TripdetailInfo.objects.filter(
-        tr_vehiclenumber__in=list(vendor_vehicles),
-        tc_financestatus_id=settled_status_id
+        (Q(tr_vehiclenumber__in=list(vendor_master_vehicles)) | 
+         Q(tr_enquirynumber_id__in=list(allotted_enquiry_ids))),
+        tc_financestatus_id=settled_status_id,
+        tr_vehiclesource_id=market_ownership_id
     )
     # Exclude already billed trip ids (if any)
     if billed_trip_ids:

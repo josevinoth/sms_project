@@ -333,7 +333,7 @@
             return;
         }
 
-        fetch(`/SMS/ajax/get_trips_by_vendor/?vendor_id=${vendorId}`)
+        fetch("{% url 'get_trips_by_vendor' %}?vendor_id=" + vendorId)
             .then(res => res.json())
             .then(data => {
                 const availableTrips = data.trips.filter(t => !selectedTripIds.has(t.id.toString()));
@@ -479,5 +479,3 @@
 </script>
 
 {% endblock %}
-
-

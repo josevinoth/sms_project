@@ -65,6 +65,104 @@ def format_dt_excel(dt):
     return local_dt.replace(tzinfo=None)
 
 
+def format_dt_no_seconds(dt):
+    """
+    Return a string date/time without seconds for DAMCO exports.
+    If dt is falsy, return an empty string.
+    Uses local timezone and produces YYYY-MM-DD HH:MM (no seconds) so Excel shows no trailing :00.
+    """
+    if not dt:
+        return ""
+    local_dt = timezone.localtime(dt)
+    # Year-month-day hour:minute (24h), no seconds
+    return local_dt.strftime("%Y-%m-%d %H:%M")
+
+
+def format_carton_no_from_qty(qty):
+    """
+    Given a quantity (possibly float or None), return a carton no string like '1-30'.
+    If qty is falsy or zero, return an empty string.
+    """
+    try:
+        if qty is None:
+            return ""
+        # if qty is float but represents an integer, cast to int to avoid trailing .0
+        if isinstance(qty, float) and qty.is_integer():
+            qty_val = int(qty)
+        else:
+            qty_val = qty
+        if not qty_val:
+            return ""
+        return f"1-{qty_val}"
+    except Exception:
+        return ""
+
+
+def format_storage_days_if_over_7(days):
+    """
+    If 'days' is provided and greater than 7, return it as a string (no trailing .0 for whole floats).
+    Otherwise return empty string.
+    """
+    try:
+        if days is None:
+            return ""
+        if isinstance(days, float) and days.is_integer():
+            days_val = int(days)
+        else:
+            days_val = days
+        if not days_val:
+            return ""
+        return str(days_val) if days_val > 7 else ""
+    except Exception:
+        return ""
+
+
+def compute_cargo_condition_for_job(job_no):
+    """
+    Return cargo condition string for the given job number.
+    - If there's no DamagereportInfo for this job, return 'Good'.
+    - If there is a damage/deviation indicated (any of the related fields are set), return dam_comments if present, otherwise 'Damaged'.
+    - If there is no damage/deviation, return 'Good'.
+    """
+    try:
+        dr = DamagereportInfo.objects.filter(dam_wh_job_num=job_no).first()
+        if not dr:
+            return "Good"
+
+        # Check for damage/deviation presence
+        has_issue = False
+
+        # Many-to-many fields
+        try:
+            if getattr(dr, 'dam_damages1', None) and dr.dam_damages1.exists():
+                has_issue = True
+        except Exception:
+            pass
+
+        try:
+            if getattr(dr, 'dam_deviation1', None) and dr.dam_deviation1.exists():
+                has_issue = True
+        except Exception:
+            pass
+
+        # Single FK fields that could indicate damage
+        if getattr(dr, 'dam_damages', None):
+            # default value in model is 6 for 'no damage'; treat non-null as issue
+            has_issue = True
+
+        # Additional optional fields that may imply deviation/damage
+        if getattr(dr, 'dam_damage_type', None):
+            has_issue = True
+
+        if not has_issue:
+            return "Good"
+
+        # If issue exists, prefer comments text
+        return (dr.dam_comments.strip() if dr.dam_comments else "Damaged")
+    except Exception:
+        return "Good"
+
+
 @login_required(login_url='login_page')
 def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject=None):
     print('Entering dsr_send_email_view')
@@ -140,7 +238,7 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                 "WH WEIGHT","L CMS",
                 "B CMS", "H CMS", "Cartons","Volume weight","LOCATION","Documents received with goods","E-Way Bill", "E-Way Bill Validity",
                 "Job Number", "Stock Number", "REMARKS"]
-        elif "GEODIS" in customer_name_str or "H&M" in customer_name_str:
+        elif "GEODIS(H&M)" in customer_name_str:
             headers = [
                 "Ageing", "SL NO", "Origin", "No of ctns", "No of Pcs", "Supplier",
                 "cargo rcvd date", "WMS JOB NUMBER", "Invoice #", "invoice date", "Po numbers",
@@ -153,7 +251,7 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
         elif "DAMCO" in customer_name_str:
             headers = [
                 "S.No","STORAGE > 7 Days in BVM","DATE","Truck reporting at Warehouse (Time)","Truck into unloading bay","Dock outtime from unloading bay","TRUCK NO","Shipper","Invoice Number",
-                "PO NO","SO NUMBER","DESTINATION","Total No of Cartons","QTY AS PER INV","CBM","INVOICE WEIGHT","WH WEIGHT","L cms","W cms","H cms","Cartons","Volume weight","Location","Carton No.","DOCS RECEIVED WITH GOODS","Cargo Condition","OTL NO","REMARKS"
+                "PO NO","SO NUMBER","DESTINATION","Total No of Cartons","QTY AS PER INV","CBM","INVOICE WEIGHT","WH WEIGHT","L cms","W cms","H cms","Cartons","Volume weight","Location","Carton No.","DOCS RECEIVED WITH GOODS","Cargo Condition","OTL NO","REMARKS","Warehouse Job Number",
             ]
 
         else:
@@ -182,9 +280,29 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
             stock_values = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id__in=list(gate_in_ids))
 
         if stock_values is not None:
-            stock_values = stock_values.filter(wh_check_in_out="1").order_by('-wh_gate_injob_no_id__gatein_arrival_date')
+            stock_values = stock_values.filter(
+                wh_check_in_out="1"
+            ).order_by('-wh_gate_injob_no_id__gatein_arrival_date')
 
-            for i, stock_value in enumerate(stock_values):
+            # 👇 ADD HERE
+            print("Total stock rows:", stock_values.count())
+            print("Unique jobs:", stock_values.values('wh_job_no').distinct().count())
+
+            seen_jobs = set()
+            row_index = 0
+
+            for stock_value in stock_values:
+
+                # Determine if this customer requires job-level grouping
+                is_grouped_cust = any(k in customer_name_str for k in ["GEODIS(H&M)", "DAMCO"])
+
+                if is_grouped_cust:
+                    if stock_value.wh_job_no in seen_jobs:
+                        continue
+                    seen_jobs.add(stock_value.wh_job_no)
+
+                i = row_index
+                row_index += 1
 
                 if "DHL" in customer_name_str:
                     damage_report = DamagereportInfo.objects.filter(dam_wh_job_num=stock_value.wh_job_no).first()
@@ -385,111 +503,186 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         stock_value.wh_qr_rand_num,
                         stock_value.wh_comments,
                     ]
-                elif "GEODIS" in customer_name_str or "H&M" in customer_name_str:
+                elif "GEODIS(H&M)" in customer_name_str:
 
                     gate = stock_value.wh_gate_injob_no_id
                     lb = stock_value.wh_lb_job_no_id
 
+                    # Get all rows for same Job Number
+                    same_job_rows = stock_values.filter(
+                        wh_job_no=stock_value.wh_job_no
+                    )
+
+                    dimensions = []
+                    
+                    # Aggregation variables
+                    total_ctns = 0
+                    total_invoice_wt = 0
+                    total_wh_wt = 0
+                    total_inv_value_inr = 0
+                    
+                    highest_vol = -1
+                    best_pkg = stock_value
+
+                    # collect unique dimensions, aggregate weights/values, and find highest dimension pkg
+                    for pkg in same_job_rows:
+                        # Dimensions mapping
+                        l = pkg.wh_goods_length or 0.0
+                        w = pkg.wh_goods_width or 0.0
+                        h = pkg.wh_goods_height or 0.0
+                        pcs = pkg.wh_goods_pieces or 0.0
+
+                        if l and w and h:
+                            dim_string = f"{l} x {w} x {h}"
+                            if dim_string not in dimensions:
+                                dimensions.append(dim_string)
+                                
+                        # Aggregate sums
+                        total_ctns += pcs
+                        total_invoice_wt += (pkg.wh_invoice_weight_unit or 0.0)
+                        total_wh_wt += (pkg.wh_gross_weight or 0.0)
+                        total_inv_value_inr += (pkg.wh_invoice_amount_inr or 0.0)
+                        
+                        # Find highest dimension set
+                        current_vol = l * w * h
+                        if current_vol > highest_vol:
+                            highest_vol = current_vol
+                            best_pkg = pkg
+
+                    # Assign up to 5 dimension columns
+                    dim1 = dimensions[0] if len(dimensions) > 0 else ""
+                    dim2 = dimensions[1] if len(dimensions) > 1 else ""
+                    dim3 = dimensions[2] if len(dimensions) > 2 else ""
+                    dim4 = dimensions[3] if len(dimensions) > 3 else ""
+                    dim5 = dimensions[4] if len(dimensions) > 4 else ""
+
+                    # Use highest dimension package for CBM and Vol Wt
+                    bl = best_pkg.wh_goods_length or 0.0
+                    bw = best_pkg.wh_goods_width or 0.0
+                    bh = best_pkg.wh_goods_height or 0.0
+                    bpcs = best_pkg.wh_goods_pieces or 0.0
+
+                    # Compute CBM: (L*W*H*total_ctns)/1000000
+                    try:
+                        cbm_cell = (bl * bw * bh * total_ctns) / 1000000.0
+                    except Exception:
+                        cbm_cell = 0.0
+
+                    # Compute New Volume Weight: (L*W*H/27000)*7*total_ctns
+                    try:
+                        vol_cell = round(((bl * bw * bh) / 27000.0) * 7.0 * total_ctns, 2)
+                    except Exception:
+                        vol_cell = 0.0
+
+                    char_cell = vol_cell
+
+                    # Commodity/Description fix
+                    commodity_str = ""
+                    if gate and gate.gatein_comodity:
+                        commodity_str = str(gate.gatein_comodity.stock_type)
+
                     row = [
-                        stock_value.wh_storage_time,  # Ageing
-                        i + 1,  # SL NO
-                        getattr(gate, "gatein_destination", ""),  # Origin (mapped)
-                        stock_value.wh_goods_pieces,  # No of ctns
-                        stock_value.wh_total_qty,  # No of pcs
-                        stock_value.wh_consigner,  # Supplier
-                        format_dt_excel(gate.gatein_arrival_date),  # cargo rcvd date
-                        stock_value.wh_job_no,  # WMS job number
-                        getattr(gate, "gatein_invoice", ""),  # Invoice #
-                        format_dt_excel(gate.gatein_arrival_date),  # invoice date (reuse)
-                        stock_value.wh_po_num,  # PO
+                        stock_value.wh_storage_time,
+                        i + 1,
+                        getattr(gate, "gatein_destination", ""),
+                        total_ctns,  # Aggregated
+                        getattr(gate, "gatein_no_of_pcs", ""),
+                        stock_value.wh_consigner,
+                        format_dt_excel(gate.gatein_arrival_date),
+                        stock_value.wh_job_no,
+                        getattr(gate, "gatein_invoice", ""),
+                        format_dt_excel(getattr(lb, "lb_invoice_date", None)),
+                        stock_value.wh_po_num,
+                        getattr(gate, "gatein_HSC", ""),
+                        getattr(gate, "gatein_GST", ""),
+                        getattr(gate, "gatein_GST_percent", ""),
 
-                        "", "", "",  # HSN / GST / GST% (not in model)
+                        total_inv_value_inr,  # Aggregated
+                        total_invoice_wt,     # Aggregated
+                        total_wh_wt,          # Aggregated
 
-                        stock_value.wh_invoice_amount_inr,
-                        stock_value.wh_invoice_weight_unit,
-                        stock_value.wh_gross_weight,
-                        stock_value.wh_chargeable_weight,
-                        stock_value.wh_chargeable_weight,
-                        stock_value.wh_cbm,
+                        vol_cell,
+                        char_cell,
+                        cbm_cell,
 
-                        stock_value.wh_goods_length,
-                        stock_value.wh_goods_width,
-                        stock_value.wh_goods_height,
-                        "", "",
+                        dim1,
+                        dim2,
+                        dim3,
+                        dim4,
+                        dim5,
+
                         stock_value.wh_comments,
-
                         getattr(lb, "lb_eway_bill", ""),
                         format_dt_excel(getattr(lb, "lb_validity_date", None)),
                         getattr(gate, "gatein_truck_number", ""),
-                        str(getattr(stock_value, "wh_goods_package_type", "")),
-                        stock_value.wh_total_qty,
+                        commodity_str,  # Fixed: commodity name
+                        getattr(lb, "lb_packing_list", ""),
                     ]
 
 
                 elif "DAMCO" in customer_name_str:
 
                     gate = stock_value.wh_gate_injob_no_id
-
                     lb = stock_value.wh_lb_job_no_id
 
+                    # aggregate total pieces for the job
+                    same_job_rows = stock_values.filter(wh_job_no=stock_value.wh_job_no)
+                    try:
+                        total_pieces_for_job = sum((pkg.wh_goods_pieces or 0) for pkg in same_job_rows)
+                    except Exception:
+                        total_pieces_for_job = stock_value.wh_goods_pieces or 0
+
+                    # Standardized CBM and Volume Weight calculation
+                    try:
+                        l_val = float(stock_value.wh_goods_length) if stock_value.wh_goods_length is not None else 0.0
+                        w_val = float(stock_value.wh_goods_width) if stock_value.wh_goods_width is not None else 0.0
+                        h_val = float(stock_value.wh_goods_height) if stock_value.wh_goods_height is not None else 0.0
+                    except Exception:
+                        l_val = w_val = h_val = 0.0
+
+                    try:
+                        cbm_calc = (l_val * w_val * h_val * float(total_pieces_for_job)) / 1000000.0
+                    except Exception:
+                        cbm_calc = 0.0
+
+                    try:
+                        vol_wt_calc = round((l_val * w_val * h_val * float(total_pieces_for_job)) / 6000.0, 2)
+                    except Exception:
+                        vol_wt_calc = 0.0
+
+                    # compute cargo condition from damage report
+                    cargo_condition = compute_cargo_condition_for_job(stock_value.wh_job_no)
+
                     row = [
-
                         i + 1,
-
-                        "YES" if stock_value.wh_storage_time and stock_value.wh_storage_time > 7 else "",
-
-                        format_dt_excel(gate.gatein_arrival_date),
-
-                        format_dt_excel(gate.gatein_arrival_date),  # truck reporting time (reuse safe)
-
-                        format_dt_excel(lb.lb_stock_unloading_start_time),
-
-                        format_dt_excel(lb.lb_stock_unloading_end_time),
-
+                        format_storage_days_if_over_7(stock_value.wh_storage_time),
+                        format_dt_no_seconds(getattr(gate, 'gatein_arrival_date', None)),
+                        format_dt_no_seconds(getattr(gate, 'gatein_arrival_date', None)),  # truck reporting time
+                        format_dt_no_seconds(getattr(lb, 'lb_stock_unloading_start_time', None)),
+                        format_dt_no_seconds(getattr(lb, 'lb_stock_unloading_end_time', None)),
                         getattr(gate, "gatein_truck_number", ""),
-
                         stock_value.wh_consigner,
-
                         getattr(gate, "gatein_invoice", ""),
-
                         stock_value.wh_po_num,
-
-                        "",  # SO number not available
-
+                        getattr(gate, "gatein_so_number", ""),
                         getattr(gate, "gatein_destination", ""),
-
                         stock_value.wh_goods_pieces,
-
-                        stock_value.wh_total_qty,
-
-                        stock_value.wh_cbm,
-
+                        getattr(gate, "gatein_no_of_pcs", ""),
+                        cbm_calc,
                         stock_value.wh_invoice_weight_unit,
-
                         stock_value.wh_gross_weight,
-
                         stock_value.wh_goods_length,
-
                         stock_value.wh_goods_width,
-
                         stock_value.wh_goods_height,
-
                         stock_value.wh_goods_pieces,
-
-                        stock_value.wh_chargeable_weight,
-
-                        f"{stock_value.wh_branch}-{stock_value.wh_unit}-{stock_value.wh_bay}",
-
-                        "",  # carton no not available
-
+                        vol_wt_calc,
+                        stock_value.wh_bay,
+                        format_carton_no_from_qty(total_pieces_for_job),
                         getattr(lb, "lb_packing_list", ""),
-
-                        "",  # cargo condition not in model
-
+                        cargo_condition,
                         getattr(gate, "gatein_otl", ""),
-
                         stock_value.wh_comments,
-
+                        getattr(gate, "gatein_job_no", "")
                     ]
 
                 else:
