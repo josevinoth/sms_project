@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POD - {{ trip_number }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #f8fafc;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #00f2fe;
+        }
+
+        .sub {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .viewer {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .pod-image {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .pdf-frame {
+            width: 100%;
+            height: calc(100vh - 100px);
+            border: none;
+            border-radius: 8px;
+        }
+
+        .save-hint {
+            margin-top: 1rem;
+            padding: 0.8rem 1.2rem;
+            background: rgba(0, 242, 254, 0.1);
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .save-hint strong {
+            color: #00f2fe;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <a href="javascript:history.back()" class="back-btn">&#8592; Back</a>
+        <div>
+            <h1>Proof of Delivery</h1>
+            <div class="sub">Trip: {{ trip_number }} &nbsp;|&nbsp; {{ file_name }}</div>
+        </div>
+    </div>
+
+    <div class="viewer">
+        {% if is_pdf %}
+        <iframe src="{{ file_url }}" class="pdf-frame"></iframe>
+        {% else %}
+        <img src="{{ file_url }}" alt="POD Document" class="pod-image">
+        <div class="save-hint">
+            💡 <strong>To save:</strong> Long-press the image and tap "Save image"
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>
