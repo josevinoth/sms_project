@@ -1027,8 +1027,7 @@ urlpatterns = [
     path('market_bill/list/', views.market_bill_list, name='market_bill_list'),
     path('market_bill/<int:id>/edit/', views.market_bill_edit, name='market_bill_edit'),
     path('market_bill/<int:id>/delete/', views.market_bill_delete, name='market_bill_delete'),
-    path('ajax/get_trips_by_vehicle/', views.get_trips_by_vendor, name='get_trips_by_vehicle'),
-    path('ajax/get_vehicles_by_vendor/', views.get_vehicles_by_vendor, name='get_vehicles_by_vendor'),
+    path('ajax/get_trips_by_vendor/', views.get_trips_by_vendor, name='get_trips_by_vendor'),
 ]
 
 
