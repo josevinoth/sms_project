@@ -6,7 +6,7 @@ from .unit_of_measure_mod import Unitofmeasure
 from .my_user_mod import MyUser
 
 class StockMaintenance(models.Model):
-    sm_stock_type = models.ForeignKey(Stock_type_maintenance, on_delete=models.CASCADE, null=False, blank=False)
+    sm_stock_type = models.ForeignKey(Stock_type_maintenance, on_delete=models.CASCADE, null=True, blank=True)
     sm_invoice_date = models.DateField(null=True, blank=True)
     sm_invoice_no = models.CharField(max_length=100, null=True, blank=True)
     sm_partcode = models.ForeignKey(PkpartcodeInfo, on_delete=models.CASCADE, null=True, blank=True)
