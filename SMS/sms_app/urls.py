@@ -987,6 +987,7 @@ urlpatterns = [
     path('SMS/customer_tracking/<int:trip_id>/', views.customer_shipment_tracking, name='customer_tracking'),
     path('SMS/download_pod/<int:trip_id>/', views.download_pod, name='download_pod'),
     path('SMS/download_dmr/<int:trip_id>/', views.download_dmr, name='download_dmr'),
+    path('SMS/customer_documents/', views.customer_documents, name='customer_documents'),
     path('ajax/filter-trips-by-date/', views.filter_trips_by_date, name='filter_trips_by_date'),
     path('insurance_renewal_report/', views.insurance_renewal_report_view, name='insurance_renewal_report'),
     path('diesel_vs_revenue_report/', views.diesel_vs_revenue_report_view, name='diesel_vs_revenue_report'),
@@ -1027,8 +1028,7 @@ urlpatterns = [
     path('market_bill/list/', views.market_bill_list, name='market_bill_list'),
     path('market_bill/<int:id>/edit/', views.market_bill_edit, name='market_bill_edit'),
     path('market_bill/<int:id>/delete/', views.market_bill_delete, name='market_bill_delete'),
-    path('ajax/get_trips_by_vehicle/', views.get_trips_by_vendor, name='get_trips_by_vehicle'),
-    path('ajax/get_vehicles_by_vendor/', views.get_vehicles_by_vendor, name='get_vehicles_by_vendor'),
+    path('ajax/get_trips_by_vendor/', views.get_trips_by_vendor, name='get_trips_by_vendor'),
 ]
 
 

@@ -1,0 +1,463 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Documents | BVM Transport</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            touch-action: manipulation;
+        }
+
+        a,
+        button {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hamburger {
+            display: none;
+            font-size: 1.5rem;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .hamburger:hover {
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary);
+        }
+
+        /* Sidebar */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            border-right: 1px solid var(--glass-border);
+            z-index: 2000;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .sidebar-header .logo {
+            font-size: 1.2rem;
+        }
+
+        .sidebar-close {
+            color: #94a3b8;
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 0.3rem;
+            transition: color 0.3s;
+        }
+
+        .sidebar-close:hover {
+            color: #ef4444;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 1rem 0;
+        }
+
+        .sidebar-menu li a {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background: var(--glass);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+
+        .sidebar-menu li a i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: var(--primary);
+            color: var(--dark);
+            border-color: var(--primary);
+        }
+
+        .page-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glass-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 1rem;
+            border-top: 1px solid var(--glass-border);
+            font-size: 0.9rem;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .doc-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            color: #475569;
+        }
+
+        @media (max-width: 768px) {
+            .hamburger {
+                display: block;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .page-title {
+                font-size: 1.3rem;
+            }
+
+            th {
+                font-size: 0.7rem;
+                padding: 0.6rem;
+            }
+
+            td {
+                font-size: 0.8rem;
+                padding: 0.7rem;
+            }
+
+            .download-btn {
+                padding: 0.4rem 0.7rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">BVM</div>
+            <span class="sidebar-close" onclick="closeSidebar()"><i class="fas fa-times"></i></span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="{% url 'customer_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="{% url 'customer_enquiry_list' %}"><i class="fas fa-shipping-fast"></i> My Shipments</a></li>
+            <li><a href="{% url 'customer_documents' %}" class="active"><i class="fas fa-file-alt"></i> Documents</a>
+            </li>
+            <li><a href="#"><i class="fas fa-headset"></i> Support</a></li>
+            <li><a href="#"><i class="fas fa-user-circle"></i> Profile</a></li>
+            <li><a href="{% url 'logout_page' %}?business_id=2" style="color: #ef4444;"><i
+                        class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </div>
+
+    <nav>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></span>
+            <div class="logo">BVM TRANSPORT</div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="{% url 'customer_dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'customer_enquiry_list' %}">My Shipments</a></li>
+            <li><a href="{% url 'customer_documents' %}" class="active">Documents</a></li>
+            <li><a href="#">Support</a></li>
+            <li><a href="#">Profile</a></li>
+        </ul>
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+            <div
+                style="width: 36px; height: 36px; background: linear-gradient(var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--dark); font-size: 0.85rem;">
+                {{ request.user.username|make_list|first|upper }}
+            </div>
+            <a href="{% url 'logout_page' %}?business_id=2" title="Logout"
+                style="color: #94a3b8; text-decoration: none;"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <a href="{% url 'customer_dashboard' %}" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+            <div>
+                <div class="page-title">Documents</div>
+                <div style="color: #64748b; font-size: 0.85rem; margin-top: 2px;">POD and shipment documents</div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Trip #</th>
+                            <th>Vehicle</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in documents %}
+                        <tr>
+                            <td>{{ doc.trip_number }}</td>
+                            <td>{{ doc.vehicle_no }}</td>
+                            <td>{{ doc.from_location }}</td>
+                            <td>{{ doc.to_location }}</td>
+                            <td>{{ doc.date|date:"d M Y" }}</td>
+                            <td><span class="doc-badge"><i class="fas fa-file-pdf"></i> {{ doc.doc_type }}</span></td>
+                            <td>
+                                <button onclick="openDownload('{% url 'download_pod' doc.trip.id %}')"
+                                    class="download-btn">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <i class="fas fa-folder-open"></i>
+                                    No documents available yet. PODs will appear here once drivers upload them.
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('active');
+            document.getElementById('sidebarOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        function openDownload(url) {
+            // '_system' opens in Android system browser (supports downloads)
+            // Falls back to '_blank' for regular desktop browsers
+            var opened = window.open(url, '_system');
+            if (!opened) {
+                window.open(url, '_blank');
+            }
+        }
+    </script>
+</body>
+
+</html>
