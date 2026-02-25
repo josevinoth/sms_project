@@ -6,7 +6,7 @@ from django.http import JsonResponse
 
 from ..forms import ConsignmentdetailaddForm, EnquirynoteaddForm, EnquirynotevehicleForm
 from ..models import Vehicle_allotmentInfo, User_extInfo, TripdetailInfo, ConsignmentdetailInfo, EnquirynoteInfo, \
-    Enquirynotevehicle
+    Enquirynotevehicle, VehiclemasterInfo, Tripstatusinfo
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 
@@ -292,12 +292,106 @@ def enquirynote_list(request):
             'consignment_limit_reached': consignment_limit_reached,
         })
 
+    # -----------------------------
+    # LIVE FLEET SUMMARY CALCULATION
+    # -----------------------------
+    in_trip_status_ids = list(Tripstatusinfo.objects.filter(
+        status__in=['Trip Started', 'Open', 'Started', 'Loading Reported', 'Unloading Reported']
+    ).values_list('id', flat=True))
+
+    def normalize_reg(num):
+        return num.strip().upper().replace(" ", "").replace("-", "") if num else ""
+
+    active_trips_reg_nums = set(
+        normalize_reg(num) for num in TripdetailInfo.objects.filter(
+            tc_financestatus_id__in=in_trip_status_ids
+        ).values_list('tr_vehiclenumber', flat=True)
+    )
+
+    all_v = VehiclemasterInfo.objects.select_related(
+        'vm_ownership', 'vm_vehicletype', 'vm_vendor__vend_branch'
+    )
+
+    vehicle_summary = {
+        'Own': {'total': 0, 'branches': {}},
+        'Attached': {'total': 0, 'branches': {}}
+    }
+
+    for v in all_v:
+        # Categorize: Own vs Attached
+        ownership_str = str(v.vm_ownership).lower()
+        cat = 'Own' if 'own' in ownership_str else 'Attached'
+
+        # Branch determination logic to match user request:
+        # Own -> MAA, BLR
+        # Attached -> MAA
+        raw_branch = "GENERAL"
+        if v.vm_vendor and v.vm_vendor.vend_branch:
+            raw_branch = v.vm_vendor.vend_branch.loc_name
+        
+        branch = None
+        reg = (v.vm_registrationnumber or "").upper().strip()
+        
+        if cat == 'Own':
+            if 'MAA' in raw_branch:
+                branch = 'MAA'
+            elif 'BLR' in raw_branch:
+                branch = 'BLR'
+            elif raw_branch == 'HO': 
+                branch = 'MAA'
+            else:
+                # Fallback to registration number prefix for Own vehicles
+                if reg.startswith('TN'):
+                    branch = 'MAA'
+                elif reg.startswith('KA'):
+                    branch = 'BLR'
+        else: # Attached
+            if 'MAA' in raw_branch:
+                branch = 'MAA'
+            elif reg.startswith('TN'): # Fallback for attached too
+                branch = 'MAA'
+        
+        # If the branch doesn't match the required filters for the category, skip it.
+        if not branch:
+            continue
+
+        v_type = str(v.vm_vehicletype) or "Unknown"
+        reg_norm = normalize_reg(v.vm_registrationnumber)
+
+        # Structure init
+        if branch not in vehicle_summary[cat]['branches']:
+            # Create a safe slug for HTML IDs
+            branch_slug = branch.replace(" ", "_").replace("-", "_").replace(".", "_").replace("/", "_")
+            vehicle_summary[cat]['branches'][branch] = {
+                'total': 0,
+                'types': {},
+                'slug': branch_slug
+            }
+
+        if v_type not in vehicle_summary[cat]['branches'][branch]['types']:
+            vehicle_summary[cat]['branches'][branch]['types'][v_type] = {'total': 0, 'avail': 0, 'trip': 0}
+
+        # Counters
+        vehicle_summary[cat]['total'] += 1
+        vehicle_summary[cat]['branches'][branch]['total'] += 1
+        vehicle_summary[cat]['branches'][branch]['types'][v_type]['total'] += 1
+
+        if reg_norm and reg_norm in active_trips_reg_nums:
+            vehicle_summary[cat]['branches'][branch]['types'][v_type]['trip'] += 1
+        else:
+            vehicle_summary[cat]['branches'][branch]['types'][v_type]['avail'] += 1
+
+    # Sort branches for consistent display
+    for cat in ['Own', 'Attached']:
+        vehicle_summary[cat]['branches'] = dict(sorted(vehicle_summary[cat]['branches'].items()))
+
     context = {
         'page_obj': page_obj,
         'first_name': first_name,
         'role': user_role,
         'enquiry_data': enquiry_data,
         'enquiry_number': enquiry_number,
+        'vehicle_summary': vehicle_summary,
     }
     return render(request, "asset_mgt_app/enquirynote_list.html", context)
 
