@@ -1984,23 +1984,31 @@ def whatsapp_delivery_status_report_view(request):
 
     if request.method == "POST":
         form = DmrForm(request.POST)
+        customer_id = request.POST.get('dmr_customer')
+        dept_id = request.POST.get('customer_department')
+        selected_month = request.POST.get('month')
+        selected_year = request.POST.get('year')
+        from_loc_id = request.POST.get('from_location')
+        to_loc_id = request.POST.get('to_location')
+        branch_id = request.POST.get('branch')
+        vehicle_source_id = request.POST.get('vehicle_source')
+        vehicle_search = request.POST.get('vehicle_search', '').strip()
     else:
         form = DmrForm()
-
-    customer_id = request.POST.get('dmr_customer')
-    dept_id = request.POST.get('customer_department')
-    selected_month = request.POST.get('month')
-    selected_year = request.POST.get('year')
-    from_loc_id = request.POST.get('from_location')
-    to_loc_id = request.POST.get('to_location')
-    branch_id = request.POST.get('branch')
-    vehicle_source_id = request.POST.get('vehicle_source')
-    vehicle_search = request.POST.get('vehicle_search', '').strip()
+        customer_id = None
+        dept_id = None
+        selected_month = '0'
+        selected_year = str(datetime.now().year)
+        from_loc_id = None
+        to_loc_id = None
+        branch_id = None
+        vehicle_source_id = None
+        vehicle_search = ""
 
     # ------------------------------------------------
-    # BASE QUERY
+    # BASE QUERY - Remove tr_category_id=1 to show all trips
     # ------------------------------------------------
-    trips = TripdetailInfo.objects.filter(tr_category_id=1).select_related(
+    trips = TripdetailInfo.objects.all().select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -2050,15 +2058,31 @@ def whatsapp_delivery_status_report_view(request):
         trips = trips.filter(tr_reportedlocation_id=to_loc_id)
 
     if branch_id:
-        trips = trips.filter(tr_enquirynumber__en_branch_id=branch_id)
+        try:
+            b_id = int(branch_id)
+            if b_id == 1: # BLR
+                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
+            elif b_id == 2: # MAA
+                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
+        except (ValueError, TypeError):
+            pass
 
     if vehicle_source_id:
         trips = trips.filter(tr_vehiclesource_id=vehicle_source_id)
-    else:
-        # Default to Attached & Own only
-        trips = trips.filter(tr_vehiclesource_id__in=[1, 2])
 
     trips = trips.order_by('-tr_created_at')
+
+    select_all = request.POST.get('select_all') or request.GET.get('select_all')
+
+    # Performance Optimization: Limit results
+    if select_all == 'true':
+        trips = trips[:2000] # Safe upper limit
+    else:
+        # Default view or filtered view: reasonable limit for fast load
+        if not (vehicle_search or customer_id or dept_id or (selected_month and selected_month != '0') or branch_id or vehicle_source_id):
+            trips = trips[:150] # Very fast initial load
+        else:
+            trips = trips[:1000] # Fast filtered load
 
     # ------------------------------------------------
     # BUILD REPORT (NO PAGINATION)
@@ -2141,6 +2165,7 @@ def whatsapp_delivery_status_report_view(request):
         'all_vehicles': VehiclemasterInfo.objects.filter(vm_ownership_id__in=[1, 2]).order_by('vm_registrationnumber'),
         'all_branches': Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name'),
         'vehicle_sources': OwnershipInfo.objects.filter(id__in=[1, 2]),
+        'select_all': select_all,
     })
 
 
