@@ -25,16 +25,16 @@ def maintenance_bill_add(request, id=None):
     else:
         form = MaintenanceBillForm(instance=instance)
     
-    # Fetch only maintenance records that are "Manager Approved" (2) or "Finance Approved" (3) 
+    # Fetch only maintenance records that are "Finance Approved" (3) 
     # and have NOT been billed yet (bills_v1__isnull=True)
     pending_maintenance = MaintenanceInfo.objects.filter(
-        mi_approval_status_id__in=[2, 3],
+        mi_approval_status_id=3,
         bills_v1__isnull=True
     ).order_by('-mi_created_at')
 
     # Fetch vehicles that have records in the pending_maintenance above (unbilled ones)
     vehicles = VehiclemasterInfo.objects.filter(
-        maintenance_records__mi_approval_status_id__in=[2, 3],
+        maintenance_records__mi_approval_status_id=3,
         maintenance_records__bills_v1__isnull=True
     ).distinct().order_by('vm_registrationnumber')
     
@@ -82,10 +82,10 @@ def fetch_maintenance_bill_details(request):
 @login_required(login_url='login_page')
 def get_maintenance_records_by_vehicle(request):
     vehicle_id = request.GET.get('vehicle_id')
-    # Match the unbilled records with status 2 or 3
+    # Match the unbilled records with status 3 (Finance Approved)
     records = MaintenanceInfo.objects.filter(
         mi_vehicle_id=vehicle_id, 
-        mi_approval_status_id__in=[2, 3],
+        mi_approval_status_id=3,
         bills_v1__isnull=True
     ).order_by('-mi_created_at')
     
