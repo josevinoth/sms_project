@@ -108,7 +108,32 @@
 
     <div class="viewer">
         {% if is_pdf %}
-        <iframe src="{{ file_url }}" class="pdf-frame"></iframe>
+        <div style="text-align:center; padding: 3rem 1rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">📄</div>
+            <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; color: #00f2fe;">{{ file_name }}
+            </div>
+            <div style="color: #64748b; font-size: 0.9rem; margin-bottom: 2rem;">PDF — tap below to open in browser
+            </div>
+            <a href="https://docs.google.com/viewer?url=http://3.110.26.240{{ file_url }}&embedded=true" target="_blank"
+                style="
+                    display: inline-block;
+                    background: linear-gradient(135deg, #00f2fe, #4facfe);
+                    color: #0f172a;
+                    text-decoration: none;
+                    padding: 1rem 2rem;
+                    border-radius: 12px;
+                    font-size: 1rem;
+                    font-weight: 700;
+                    width: 100%;
+                    max-width: 300px;
+                    box-sizing: border-box;
+                ">
+                📂 Open PDF
+            </a>
+            <div style="margin-top: 1.5rem; color: #475569; font-size: 0.8rem;">
+                Opens in your browser's PDF viewer
+            </div>
+        </div>
         {% else %}
         <img src="{{ file_url }}" alt="POD Document" class="pod-image">
         <div class="save-hint">
@@ -116,6 +141,7 @@
         </div>
         {% endif %}
     </div>
+
 </body>
 
 </html>

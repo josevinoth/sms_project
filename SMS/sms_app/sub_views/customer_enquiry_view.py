@@ -485,28 +485,44 @@ def customer_shipment_tracking(request, trip_id):
 
 @login_required
 def download_pod(request, trip_id):
-    """View to download the POD attachment for a trip."""
+    """View POD inline — works in both WebView and desktop browsers."""
     import os
     from django.conf import settings
-    
+
     customer, _, is_lp = get_customer_context(request)
     trip = get_object_or_404(TripdetailInfo, id=trip_id, tr_enquirynumber__en_customername=customer)
-    
-    # Try finding in closure files first
+
+    file_url = None
+    file_name = None
+    is_pdf = False
+
+    # Try closure files first
     closure = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip.tr_tripnumber).first()
     if closure and closure.tcf_pod:
-        file_path = os.path.join(settings.MEDIA_ROOT, str(closure.tcf_pod))
-        if os.path.exists(file_path):
-            return redirect(closure.tcf_pod.url)
-    
+        fp = os.path.join(settings.MEDIA_ROOT, str(closure.tcf_pod))
+        if os.path.exists(fp):
+            file_url = closure.tcf_pod.url
+            file_name = os.path.basename(str(closure.tcf_pod))
+            is_pdf = file_name.lower().endswith('.pdf')
+
     # Fallback to trip attachment
-    if trip.tc_pod_attachment:
-        file_path = os.path.join(settings.MEDIA_ROOT, str(trip.tc_pod_attachment))
-        if os.path.exists(file_path):
-            return redirect(trip.tc_pod_attachment.url)
-    
-    messages.error(request, "POD document not found for this shipment yet.")
-    return redirect(request.META.get('HTTP_REFERER', 'customer_dashboard'))
+    if not file_url and trip.tc_pod_attachment:
+        fp = os.path.join(settings.MEDIA_ROOT, str(trip.tc_pod_attachment))
+        if os.path.exists(fp):
+            file_url = trip.tc_pod_attachment.url
+            file_name = os.path.basename(str(trip.tc_pod_attachment))
+            is_pdf = file_name.lower().endswith('.pdf')
+
+    if not file_url:
+        messages.error(request, "POD document not found for this shipment.")
+        return redirect(request.META.get('HTTP_REFERER', 'customer_dashboard'))
+
+    return render(request, 'asset_mgt_app/view_pod.html', {
+        'file_url': file_url,
+        'file_name': file_name,
+        'is_pdf': is_pdf,
+        'trip_number': trip.tr_tripnumber,
+    })
 
 @login_required
 def download_dmr(request, trip_id):

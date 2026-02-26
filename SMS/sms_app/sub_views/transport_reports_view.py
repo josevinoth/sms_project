@@ -1489,25 +1489,46 @@ def vendor_p_l_mkt_report_view(request):
 
         data_rows.append(row)
 
-    # Fetch only vendors that have been used in MARKET trips
-    # We check Vehicle_allotmentInfo for entries linked to Market Source (3)
-    market_vendor_ids = Vehicle_allotmentInfo.objects.filter(
-        va_vehiclesource_id=3,
+    # Fetch only vendors that have been used in MARKET vehicle allotments (source 3)
+    # or have MARKET vehicles in master (ownership 3)
+    market_vendor_ids_allotment = Vehicle_allotmentInfo.objects.filter(
+        va_vehiclesource_id=3, # MARKET
         va_vendor__isnull=False
     ).values_list('va_vendor_id', flat=True).distinct()
-
+    
+    market_vendor_ids_master = VehiclemasterInfo.objects.filter(
+        vm_ownership_id=3, # MARKET
+        vm_vendor__isnull=False
+    ).values_list('vm_vendor_id', flat=True).distinct()
+    
     all_vendors = Vendor_info.objects.filter(
-        id__in=market_vendor_ids
+        id__in=set(list(market_vendor_ids_allotment) + list(market_vendor_ids_master))
     ).order_by('vend_name')
 
     # Get vehicle numbers for the selected vendor
     vehicle_numbers = []
     if vendor_id:
-        vehicle_numbers = sorted(list(Vehicle_allotmentInfo.objects.filter(
+        # 1. Market field in allotments (source 3)
+        va_mkt_veh = Vehicle_allotmentInfo.objects.filter(
             va_vendor_id=vendor_id,
-            va_vehiclesource_id=3, # Stay in Market context
+            va_vehiclesource_id=3,
             va_vehiclenumber_mkt__isnull=False
-        ).exclude(va_vehiclenumber_mkt="").values_list('va_vehiclenumber_mkt', flat=True).distinct()))
+        ).exclude(va_vehiclenumber_mkt="").values_list('va_vehiclenumber_mkt', flat=True).distinct()
+        
+        # 2. Master field in allotments (source 3)
+        va_mast_veh = Vehicle_allotmentInfo.objects.filter(
+            va_vendor_id=vendor_id,
+            va_vehiclesource_id=3,
+            va_vehiclenumber__isnull=False
+        ).values_list('va_vehiclenumber__vm_registrationnumber', flat=True).distinct()
+        
+        # 3. Dedicated Market vehicles in master (ownership 3)
+        vm_mast_veh = VehiclemasterInfo.objects.filter(
+            vm_vendor_id=vendor_id,
+            vm_ownership_id=3
+        ).exclude(vm_registrationnumber__isnull=True).exclude(vm_registrationnumber="").values_list('vm_registrationnumber', flat=True).distinct()
+
+        vehicle_numbers = sorted(set(va_mkt_veh) | set(va_mast_veh) | set(vm_mast_veh))
 
     return render(request, "asset_mgt_app/vendor_p_l_mkt_report.html", {
         'first_name': first_name,
@@ -1842,12 +1863,20 @@ def vendor_p_l_attached_report_view(request):
 
         data_rows.append(row)
 
-    # Fetch only vendors that have been used in vehicle allotments (attached) or have vehicles in master
-    all_vendors_allotment = Vehicle_allotmentInfo.objects.filter(va_vendor__isnull=False).values_list('va_vendor_id', flat=True)
-    all_vendors_master = VehiclemasterInfo.objects.filter(vm_vendor__isnull=False).values_list('vm_vendor_id', flat=True)
+    # Fetch only vendors that have been used in ATTACHED vehicle allotments (source 2)
+    # or have ATTACHED vehicles in master (ownership 2)
+    attached_vendor_ids_allotment = Vehicle_allotmentInfo.objects.filter(
+        va_vehiclesource_id=2, # ATTACHED
+        va_vendor__isnull=False
+    ).values_list('va_vendor_id', flat=True).distinct()
+    
+    attached_vendor_ids_master = VehiclemasterInfo.objects.filter(
+        vm_ownership_id=2, # ATTACHED
+        vm_vendor__isnull=False
+    ).values_list('vm_vendor_id', flat=True).distinct()
     
     all_vendors = Vendor_info.objects.filter(
-        id__in=set(list(all_vendors_allotment) + list(all_vendors_master))
+        id__in=set(list(attached_vendor_ids_allotment) + list(attached_vendor_ids_master))
     ).order_by('vend_name')
 
     # Get vehicle numbers for the selected vendor from both sources
@@ -1855,18 +1884,20 @@ def vendor_p_l_attached_report_view(request):
 
     if vendor_id:
 
-        # Source 1: Allotments
+        # Source 1: Allotments (Strictly Attached)
         va_veh_qs = Vehicle_allotmentInfo.objects.filter(
             va_vendor_id=vendor_id,
+            va_vehiclesource_id=2, # ATTACHED
             va_vehiclenumber__isnull=False
         ).values_list(
             'va_vehiclenumber__vm_registrationnumber',
             flat=True
         ).distinct()
 
-        # Source 2: Master
+        # Source 2: Master (Strictly Attached)
         vm_veh_qs = VehiclemasterInfo.objects.filter(
-            vm_vendor_id=vendor_id
+            vm_vendor_id=vendor_id,
+            vm_ownership_id=2 # ATTACHED
         ).exclude(
             vm_registrationnumber__isnull=True
         ).exclude(
@@ -1953,23 +1984,31 @@ def whatsapp_delivery_status_report_view(request):
 
     if request.method == "POST":
         form = DmrForm(request.POST)
+        customer_id = request.POST.get('dmr_customer')
+        dept_id = request.POST.get('customer_department')
+        selected_month = request.POST.get('month')
+        selected_year = request.POST.get('year')
+        from_loc_id = request.POST.get('from_location')
+        to_loc_id = request.POST.get('to_location')
+        branch_id = request.POST.get('branch')
+        vehicle_source_id = request.POST.get('vehicle_source')
+        vehicle_search = request.POST.get('vehicle_search', '').strip()
     else:
         form = DmrForm()
-
-    customer_id = request.POST.get('dmr_customer')
-    dept_id = request.POST.get('customer_department')
-    selected_month = request.POST.get('month')
-    selected_year = request.POST.get('year')
-    from_loc_id = request.POST.get('from_location')
-    to_loc_id = request.POST.get('to_location')
-    branch_id = request.POST.get('branch')
-    vehicle_source_id = request.POST.get('vehicle_source')
-    vehicle_search = request.POST.get('vehicle_search', '').strip()
+        customer_id = None
+        dept_id = None
+        selected_month = '0'
+        selected_year = str(datetime.now().year)
+        from_loc_id = None
+        to_loc_id = None
+        branch_id = None
+        vehicle_source_id = None
+        vehicle_search = ""
 
     # ------------------------------------------------
-    # BASE QUERY
+    # BASE QUERY - Remove tr_category_id=1 to show all trips
     # ------------------------------------------------
-    trips = TripdetailInfo.objects.filter(tr_category_id=1).select_related(
+    trips = TripdetailInfo.objects.all().select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -2019,15 +2058,31 @@ def whatsapp_delivery_status_report_view(request):
         trips = trips.filter(tr_reportedlocation_id=to_loc_id)
 
     if branch_id:
-        trips = trips.filter(tr_enquirynumber__en_branch_id=branch_id)
+        try:
+            b_id = int(branch_id)
+            if b_id == 1: # BLR
+                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
+            elif b_id == 2: # MAA
+                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
+        except (ValueError, TypeError):
+            pass
 
     if vehicle_source_id:
         trips = trips.filter(tr_vehiclesource_id=vehicle_source_id)
-    else:
-        # Default to Attached & Own only
-        trips = trips.filter(tr_vehiclesource_id__in=[1, 2])
 
     trips = trips.order_by('-tr_created_at')
+
+    select_all = request.POST.get('select_all') or request.GET.get('select_all')
+
+    # Performance Optimization: Limit results
+    if select_all == 'true':
+        trips = trips[:2000] # Safe upper limit
+    else:
+        # Default view or filtered view: reasonable limit for fast load
+        if not (vehicle_search or customer_id or dept_id or (selected_month and selected_month != '0') or branch_id or vehicle_source_id):
+            trips = trips[:150] # Very fast initial load
+        else:
+            trips = trips[:1000] # Fast filtered load
 
     # ------------------------------------------------
     # BUILD REPORT (NO PAGINATION)
@@ -2110,6 +2165,7 @@ def whatsapp_delivery_status_report_view(request):
         'all_vehicles': VehiclemasterInfo.objects.filter(vm_ownership_id__in=[1, 2]).order_by('vm_registrationnumber'),
         'all_branches': Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name'),
         'vehicle_sources': OwnershipInfo.objects.filter(id__in=[1, 2]),
+        'select_all': select_all,
     })
 
 
