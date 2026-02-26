@@ -1,0 +1,411 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+<form id="maintenanceBillForm" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="container-fluid">
+        <div class="card text-white bg-info mb-3" style="max-width:100%;">
+
+            <!-- ================= HEADER ================= -->
+            <div class="card-header d-flex justify-content-center align-items-center">
+                <h3 class="mb-0 text-center" style="font-size: 26px; font-weight: 600;">
+                    Maintenance Bill
+                </h3>
+            </div>
+
+            <!-- ================= BODY ================= -->
+            <div class="card-body bg-light text-dark">
+
+                <!-- ================= ROW 1 : TWO COLUMNS ================= -->
+                <div class="row">
+
+                    <!-- ========== COLUMN 1 : MAINTENANCE & BASE BILL DETAILS ========== -->
+                    <div class="col-12 col-md-6">
+                        <input type="hidden" name="mnb_maintenance" id="id_mnb_maintenance">
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width">Vehicle No</span>
+                            </div>
+                            <select id="vehicle_number_select" class="form-control">
+                                <option value="">Select Vehicle</option>
+                                {% for vehicle in vehicles %}
+                                <option value="{{ vehicle.id }}">{{ vehicle.vm_registrationnumber }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" id="selected_vehicle_no">
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width">Vehicle Type</span>
+                            </div>
+                            <input type="text" id="pull_vehicle_type" class="form-control disable_a_href" readonly>
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width">Service Type</span>
+                            </div>
+                            <input type="text" id="pull_service_type" class="form-control disable_a_href" readonly>
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width">Estimated amount</span>
+                            </div>
+                            <input type="text" id="pull_est_amount" class="form-control disable_a_href" readonly>
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width">Technician</span>
+                            </div>
+                            <input type="text" id="pull_technician" class="form-control disable_a_href" readonly>
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width">Vendor Name</span>
+                            </div>
+                            <input type="text" id="pull_vendor_name" class="form-control disable_a_href" readonly>
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width">Bill no</span>
+                            </div>
+                            {% render_field form.mnb_bill_no class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width">Bill Date</span>
+                            </div>
+                            {% render_field form.mnb_bill_date class="form-control" type="date" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width">Expenses Type</span>
+                            </div>
+                            {% render_field form.mnb_expenses_type class="form-control" %}
+                        </div>
+                    </div>
+
+                    <!-- ========== COLUMN 2 : TAX & FINAL AMOUNTS ========== -->
+                    <div class="col-12 col-md-6">
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width">Bill Amount (Taxable)</span>
+                            </div>
+                            {% render_field form.mnb_bill_amount_taxable class="form-control" id="id_mnb_bill_amount_taxable" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width">GST %</span>
+                            </div>
+                            {% render_field form.mnb_gst_percentage class="form-control" id="id_mnb_gst_percentage" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width text-primary">GST Amount</span>
+                            </div>
+                            {% render_field form.mnb_gst_amount class="form-control disable_a_href" id="id_mnb_gst_amount" readonly="readonly" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width font-weight-bold text-primary">Total
+                                    amount</span>
+                            </div>
+                            {% render_field form.mnb_total_amount class="form-control font-weight-bold disable_a_href text-primary" id="id_mnb_total_amount" readonly="readonly" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width">TDS %</span>
+                            </div>
+                            {% render_field form.mnb_tds_percentage class="form-control" id="id_mnb_tds_percentage" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width text-danger">TDS amount</span>
+                            </div>
+                            {% render_field form.mnb_tds_amount class="form-control disable_a_href" id="id_mnb_tds_amount" readonly="readonly" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width font-weight-bold text-success">Amount
+                                    Payable</span>
+                            </div>
+                            {% render_field form.mnb_amount_payable class="form-control font-weight-bold disable_a_href" id="id_mnb_amount_payable" readonly="readonly" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width">Remarks</span>
+                            </div>{% render_field form.mnb_remarks class="form-control" rows="1" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text label-width">Bill upload</span>
+                            </div>
+                            {% render_field form.mnb_bill_upload class="form-control" %}
+                            {% if instance.mnb_bill_upload %}
+                            <div class="mt-1">
+                                <small class="text-muted">Current file: <a href="{{ instance.mnb_bill_upload.url }}" target="_blank" class="text-primary font-weight-bold ml-2">{{
+                                    instance.mnb_bill_upload.name }}</a></small>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= ACTION BUTTONS ================= -->
+                <div class="action-row">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> {% if is_edit %}Update{% else %}Submit{% endif %}
+                    </button>
+                    <a href="{% url 'maintenance_bill_list' %}" class="btn btn-danger">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MAINTENANCE RECORDS TABLE ================= -->
+    <div id="maintenance_list_container" class="container-fluid mt-4">
+        <div class="card text-white bg-info mb-3">
+            <!-- ================= HEADER (Market Bill Style) ================= -->
+            <div class="card-header d-flex justify-content-between align-items-center"
+                style="background-color: #17a2b8;">
+                <h5 class="mb-0">Approved Maintenance Records</h5>
+            </div>
+
+            <!-- ================= BODY ================= -->
+            <div class="card-body bg-light text-dark pt-3 pb-3">
+                <div class="table-responsive shadow-box-table p-3">
+                    <table class="table table-striped table-bordered" id="maintenance_records_table">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Vehicle No</th>
+                                <th>Job Card No</th>
+                                <th>Service Type</th>
+                                <th>Est. Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="maintenance_records_body">
+                            {% for record in pending_maintenance %}
+                            <tr>
+                                <td class="font-weight-bold">{{ record.mi_vehicle.vm_registrationnumber }}</td>
+                                <td>{{ record.mi_job_card_no|default:record.id }}</td>
+                                <td>{{ record.mi_service_type }}</td>
+                                <td>{{ record.mi_estimated_amount }}</td>
+                                <td>{{ record.mi_created_at|date:"d-m-Y" }}</td>
+                                <td><span class="badge badge-info">{{ record.mi_approval_status }}</span></td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-primary select-record"
+                                        data-id="{{ record.id }}"
+                                        data-vehicle="{{ record.mi_vehicle.vm_registrationnumber }}">
+                                        Select
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    // Using a more robust script that runs even if jQuery is reloaded
+    (function () {
+        var isInit = false;
+        function initBillPage() {
+            var $ = window.jQuery;
+            if (!$ || isInit) return;
+            isInit = true;
+
+            console.log("Initializing Maintenance Bill Page...");
+
+            // Initialize DataTable for the records table
+            var table = $('#maintenance_records_table').DataTable({
+                pageLength: 5,
+                lengthMenu: [5, 10, 25, 50],
+                order: [[4, 'desc']],
+                responsive: true
+            });
+
+            // Handle Select2 initialization
+            if ($.fn.select2) {
+                $('#vehicle_number_select').select2({
+                    width: '100%',
+                    theme: 'bootstrap4',
+                    placeholder: 'Select Vehicle'
+                });
+            }
+
+            // Sync Dropdown with Table Filtering
+            $('#vehicle_number_select').on('change', function () {
+                var selectedText = $(this).find('option:selected').text();
+                if ($(this).val() === "") {
+                    table.search('').draw();
+                } else {
+                    table.search(selectedText).draw();
+                }
+
+                // Reset form fields when vehicle changes (unless pick from list)
+                $('#id_mnb_maintenance').val('');
+                $('#pull_vehicle_type, #pull_service_type, #pull_est_amount, #pull_technician, #pull_vendor_name').val('');
+            });
+
+            // Function to Fetch Maintenance Details for form population
+            function fetchMaintenanceDetails(maintenanceId) {
+                if (maintenanceId) {
+                    $.ajax({
+                        url: "{% url 'fetch_maintenance_bill_details' %}",
+                        data: { 'maintenance_id': maintenanceId },
+                        success: function (data) {
+                            $('#selected_vehicle_no').val(data.vehicle_no);
+                            $('#pull_vehicle_type').val(data.vehicle_type);
+                            $('#pull_service_type').val(data.service_type);
+                            $('#pull_est_amount').val(data.estimated_amount);
+                            $('#pull_technician').val(data.technician);
+                            $('#pull_vendor_name').val(data.vendor_name);
+
+                            // Scroll to top
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                    });
+                }
+            }
+
+            // Handle record selection from table
+            $(document).on('click', '.select-record', function () {
+                var maintenanceId = $(this).data('id');
+                var vehicleNo = $(this).data('vehicle');
+
+                $('#id_mnb_maintenance').val(maintenanceId);
+
+                // Sync dropdown visually
+                $('#vehicle_numnber_select option').filter(function () {
+                    return $(this).text() === vehicleNo;
+                }).prop('selected', true).trigger('change.select2');
+
+                fetchMaintenanceDetails(maintenanceId);
+
+                // UI feedback
+                $('.select-record').removeClass('btn-success').addClass('btn-primary').text('Select');
+                $(this).removeClass('btn-primary').addClass('btn-success').text('Selected');
+                $(this).closest('tr').addClass('table-success').siblings().removeClass('table-success');
+            });
+
+            // Handle Edit Mode Initialization
+            {% if is_edit %}
+            var initialMaintenanceId = "{{ instance.mnb_maintenance.id }}";
+            var initialVehicleId = "{{ instance.mnb_maintenance.mi_vehicle.id }}";
+
+            $('#id_mnb_maintenance').val(initialMaintenanceId);
+            $('#vehicle_numnber_select').val(initialVehicleId).trigger('change.select2');
+            fetchMaintenanceDetails(initialMaintenanceId);
+
+            // Highlight the row if found
+            setTimeout(function () {
+                var $rowBtn = $('.select-record[data-id="' + initialMaintenanceId + '"]');
+                if ($rowBtn.length) {
+                    $rowBtn.removeClass('btn-primary').addClass('btn-success').text('Selected');
+                    $rowBtn.closest('tr').addClass('table-success');
+                }
+            }, 800);
+            {% endif %}
+
+            // Real-time Calculations
+            function calculateBill() {
+                var taxable = parseFloat($('#id_mnb_bill_amount_taxable').val()) || 0;
+                var gstPerc = parseFloat($('#id_mnb_gst_percentage').val()) || 0;
+                var tdsPerc = parseFloat($('#id_mnb_tds_percentage').val()) || 0;
+
+                var gstAmount = (taxable * gstPerc) / 100;
+                var totalAmount = taxable + gstAmount;
+                var tdsAmount = (taxable * tdsPerc) / 100;
+                var totalPayable = totalAmount - tdsAmount;
+
+                $('#id_mnb_gst_amount').val(gstAmount.toFixed(2));
+                $('#id_mnb_total_amount').val(totalAmount.toFixed(2));
+                $('#id_mnb_tds_amount').val(tdsAmount.toFixed(2));
+                $('#id_mnb_amount_payable').val(totalPayable.toFixed(2));
+            }
+
+            $('#id_mnb_bill_amount_taxable, #id_mnb_gst_percentage, #id_mnb_tds_percentage').on('input change', function () {
+                calculateBill();
+            });
+
+            // Initial calculation
+            calculateBill();
+        }
+
+        // Run on load and also try immediately if jQuery is already ready
+        window.addEventListener('load', initBillPage);
+        if (window.jQuery) {
+            $(document).ready(initBillPage);
+        }
+    })();
+</script>
+
+<style>
+    .label-width {
+        width: 180px !important;
+        font-weight: 600;
+        background-color: #f1f1f1;
+    }
+
+    .input-group-text {
+        width: 160px;
+        background-color: #92e0e0;
+        /* Matching the teal in the screenshot */
+        color: #000000 !important;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    .card-header h3 {
+        font-size: 1.5rem;
+        font-weight: 500;
+    }
+
+    .bg-info {
+        background-color: #17a2b8 !important;
+    }
+
+    .action-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    /* Fixed Select2 dimensions for bootstrap 4 */
+    .select2-container--bootstrap4 .select2-selection--single {
+        height: calc(1.5em + 0.5rem + 2px) !important;
+    }
+
+    .select2-container--bootstrap4 .select2-selection {
+        border: 1px solid #ced4da !important;
+    }
+</style>
+{% endblock %}

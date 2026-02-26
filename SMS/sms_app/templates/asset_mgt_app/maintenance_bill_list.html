@@ -1,0 +1,171 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-4"></div>
+        <div class="col-4 rounded text-center bg-info shadow-box text-white">
+            <h3 class="mb-0">Maintenance Bill List</h3>
+        </div>
+        <div class="col-4"></div>
+    </div>
+
+    <!-- Messages Block -->
+    <div class="row mt-3">
+        <div class="col-12">
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show text-center" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid row mb-3">
+    <div class="col-md-1">
+        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="col-md-1">
+        <a href="{% url 'maintenance_bill_add' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
+</div>
+
+<div class="container-fluid shadow-box-table">
+    <div class="table-responsive">
+        <table id="maintenanceBillTable" class="table table-striped table-bordered" style="width:100%">
+            <thead class="thead-dark">
+                <tr>
+                    <th><input type="text" class="form-control filter-input" placeholder="Search Bill No"></th>
+                    <th><input type="text" class="form-control filter-input" placeholder="Search Date"></th>
+                    <th><input type="text" class="form-control filter-input" placeholder="Search Vehicle"></th>
+                    <th><input type="text" class="form-control filter-input" placeholder="Search JC No"></th>
+                    <th><input type="text" class="form-control filter-input" placeholder="Search Vendor"></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+                <tr>
+                    <th>Bill No</th>
+                    <th>Bill Date</th>
+                    <th>Vehicle No</th>
+                    <th>JC No</th>
+                    <th>Vendor</th>
+                    <th>Amount (Taxable)</th>
+                    <th>GST</th>
+                    <th>TDS</th>
+                    <th>Payable</th>
+                    <th>File</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bill in bills %}
+                <tr>
+                    <td class="font-weight-bold">{{ bill.mnb_bill_no }}</td>
+                    <td>{{ bill.mnb_bill_date|date:"d-m-Y" }}</td>
+                    <td><span class="badge badge-info">{{ bill.mnb_maintenance.mi_vehicle.vm_registrationnumber }}</span>
+                    </td>
+                    <td>{{ bill.mnb_maintenance.mi_job_card_no }}</td>
+                    <td>{{ bill.mnb_maintenance.mi_vehicle.vm_vendor.vend_name|default:"N/A" }}</td>
+                    <td>{{ bill.mnb_bill_amount_taxable }}</td>
+                    <td>{{ bill.mnb_gst_amount }} ({{ bill.mnb_gst_percentage }}%)</td>
+                    <td>{{ bill.mnb_tds_amount }} ({{ bill.mnb_tds_percentage }}%)</td>
+                    <td class="text-primary font-weight-bold">{{ bill.mnb_amount_payable }}</td>
+                    <td>
+                        {% if bill.mnb_bill_upload %}
+                        <a href="{{ bill.mnb_bill_upload.url }}" target="_blank" class="text-danger">
+                            <i class="fas fa-file-pdf"></i>
+                        </a>
+                        {% else %}
+                        <span class="text-muted small">No File</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <a class="btn btn-primary btn-sm action-btn" href="{% url 'maintenance_bill_edit' bill.id %}">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                    <td class="text-center">
+                        <a class="btn btn-danger btn-sm action-btn" href="{% url 'maintenance_bill_delete' bill.id %}"
+                            onclick="return confirm('Are you sure you want to delete this bill?');">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        var table = $('#maintenanceBillTable').DataTable({
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+            order: [[1, 'desc']],
+            pageLength: 25,
+            responsive: true,
+            initComplete: function () {
+                var api = this.api();
+                $('.filter-input').on('keyup change', function () {
+                    var index = $(this).parent().index();
+                    api.column(index).search(this.value).draw();
+                });
+            }
+        });
+
+        // Prevent sorting when clicking inside the filter input
+        $('#maintenanceBillTable thead input').on('click', function (e) {
+            e.stopPropagation();
+        });
+    });
+</script>
+
+<style>
+    .shadow-box {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 5px;
+        margin-bottom: 20px;
+    }
+
+    .shadow-box-table {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+    }
+
+    .badge-info {
+        background-color: #17a2b8;
+    }
+
+    .thead-dark th {
+        vertical-align: middle !important;
+    }
+
+    .action-btn {
+        width: 35px;
+        height: 35px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
