@@ -18,12 +18,32 @@ from ..sub_models.haltingcharges_mod import Haltingcharges
 @login_required(login_url='login_page')
 def market_bill_add(request):
     if request.method == "POST":
-        form = MarketBillForm(request.POST)
+        form = MarketBillForm(request.POST, request.FILES)
 
         if form.is_valid():
             obj = form.save(commit=False)
             obj.mb_created_by = request.user
             obj.save()
+
+            # Save per-trip costs and halting data to TripdetailInfo
+            selected_trips = request.POST.get('mb_selected_trips', '')
+            if selected_trips:
+                trip_ids = [tid for tid in selected_trips.split(',') if tid.strip()]
+                for tid in trip_ids:
+                    l_cost = request.POST.get(f'loading_cost_{tid}', 0)
+                    u_cost = request.POST.get(f'unloading_cost_{tid}', 0)
+                    p_cost = request.POST.get(f'parking_cost_{tid}', 0)
+                    h_days = request.POST.get(f'halting_days_{tid}', 0)
+                    h_cost = request.POST.get(f'halting_cost_{tid}', 0)
+
+                    TripdetailInfo.objects.filter(id=tid).update(
+                        tc_loadingcost=float(l_cost) if l_cost else 0.0,
+                        tc_unloadingcost=float(u_cost) if u_cost else 0.0,
+                        tc_parkingcost=float(p_cost) if p_cost else 0.0,
+                        tc_no_of_days_halting=int(h_days) if h_days else 0,
+                        tc_haltingcost=float(h_cost) if h_cost else 0.0
+                    )
+
             messages.success(request, "Market Bill saved successfully.")
             return redirect('market_bill_list')
         else:
@@ -66,12 +86,28 @@ def market_bill_edit(request, id):
     record = get_object_or_404(MarketBillInfo, id=id)
 
     if request.method == "POST":
-        form = MarketBillForm(request.POST, instance=record)
+        form = MarketBillForm(request.POST, request.FILES, instance=record)
 
         if form.is_valid():
             obj = form.save(commit=False)
             obj.mb_updated_by = request.user
             obj.save()
+
+            # Save per-trip costs and halting data to TripdetailInfo
+            selected_trips = request.POST.get('mb_selected_trips', '')
+            if selected_trips:
+                trip_ids = [tid for tid in selected_trips.split(',') if tid.strip()]
+                for tid in trip_ids:
+                    p_cost = request.POST.get(f'parking_cost_{tid}', 0)
+                    h_days = request.POST.get(f'halting_days_{tid}', 0)
+                    h_cost = request.POST.get(f'halting_cost_{tid}', 0)
+
+                    TripdetailInfo.objects.filter(id=tid).update(
+                        tc_parkingcost=float(p_cost) if p_cost else 0.0,
+                        tc_no_of_days_halting=int(h_days) if h_days else 0,
+                        tc_haltingcost=float(h_cost) if h_cost else 0.0
+                    )
+
             messages.success(request, "Market Bill updated successfully.")
             return redirect('market_bill_list')
         else:
@@ -127,11 +163,41 @@ def market_bill_edit(request, id):
             if trip.tr_enquirynumber and getattr(trip.tr_enquirynumber, 'en_customername', None):
                 customer_name = str(trip.tr_enquirynumber.en_customername)
 
+            # Fetch standard and special costs from allotment
+            standard_cost = 0
+            special_cost = 0
+            allotment = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=trip.tr_enquirynumber).first()
+            if allotment:
+                standard_cost = float(allotment.va_standardbuy or 0)
+                special_cost = float(allotment.va_specialbuy or 0)
+
+            # Determine current halting rate from Master Data
+            halting_rate = 0.0
+            if trip.tr_enquirynumber:
+                enquiry = trip.tr_enquirynumber
+                try:
+                    halting_obj = Haltingcharges.objects.filter(
+                        hc_Customer_name=enquiry.en_customername,
+                        hc_trip_type=enquiry.en_trip_type
+                    ).first()
+                    if halting_obj:
+                        halting_rate = float(halting_obj.hc_charges)
+                except:
+                    pass
+            
+            # Fallback if not in master: use current average ONLY if it seems valid
+            if halting_rate == 0.0:
+                h_days = int(trip.tc_no_of_days_halting or 0)
+                h_cost = float(trip.tc_haltingcost or 0)
+                if h_days > 0:
+                    halting_rate = h_cost / h_days
+                else:
+                    halting_rate = h_cost
+
             selected_trips_data.append({
                 'id': trip.id,
                 'consignment_number': consignment_number,
                 'trip_number': trip_no,
-                # Only show consignment number in Cnote — do not display trip numbers here
                 'display_cnote': consignment_number or '',
                 'vehicle_number': trip.tr_vehiclenumber or '',
                 'vehicle_type': vehicle_type,
@@ -139,10 +205,14 @@ def market_bill_edit(request, id):
                 'from_location': from_location,
                 'to_location': to_location,
                 'trip_date': trip_date,
-                'trip_cost': float(trip.tc_tripcost or 0),
+                'standard_cost': standard_cost,
+                'special_cost': special_cost,
+                'loading_cost': float(trip.tc_loadingcost or 0),
+                'unloading_cost': float(trip.tc_unloadingcost or 0),
                 'parking_cost': float(trip.tc_parkingcost or 0),
                 'halting_days': int(trip.tc_no_of_days_halting or 0),
                 'halting_cost': float(trip.tc_haltingcost or 0),
+                'halting_rate': float(halting_rate),
             })
 
     return render(
@@ -240,15 +310,14 @@ def get_trips_by_vendor(request):
         elif trip.tr_created_at:
             trip_date = trip.tr_created_at.strftime('%d-%m-%Y')
 
-        # --- Trip Cost Logic ---
-        # Fetch va_specialbuy or va_standardbuy from allotment
-        trip_cost = 0
+        # --- Cost Logic ---
+        # Fetch standard and special costs from allotment
+        standard_cost = 0
+        special_cost = 0
         allotment = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=trip.tr_enquirynumber).first()
         if allotment:
-            trip_cost = allotment.va_specialbuy if allotment.va_specialbuy else allotment.va_standardbuy
-        
-        if not trip_cost:
-            trip_cost = trip.tc_tripcost or 0
+            standard_cost = float(allotment.va_standardbuy or 0)
+            special_cost = float(allotment.va_specialbuy or 0)
 
         # --- Halting Cost Logic ---
         # Fetch halting rate based on customer and trip type
@@ -301,10 +370,46 @@ def get_trips_by_vendor(request):
             'from_location': from_location,
             'to_location': to_location,
             'trip_date': trip_date,
-            'trip_cost': float(trip_cost),
+            'standard_cost': float(standard_cost),
+            'special_cost': float(special_cost),
+            'loading_cost': float(trip.tc_loadingcost or 0),
+            'unloading_cost': float(trip.tc_unloadingcost or 0),
             'parking_cost': float(trip.tc_parkingcost or 0),
             'halting_days': halting_days,
             'halting_cost': float(halting_cost),
+            'halting_rate': float(halting_rate),
         })
 
     return JsonResponse({'trips': trip_list})
+
+# ==================================================
+# UPLOAD BILL ATTACHMENT
+# ==================================================
+@login_required(login_url='login_page')
+def market_bill_upload(request, id):
+    record = get_object_or_404(MarketBillInfo, id=id)
+
+    if request.method == "POST" and request.FILES.get('mb_attachment'):
+        record.mb_attachment = request.FILES['mb_attachment']
+        record.save()
+        messages.success(request, f"Attachment uploaded successfully for Bill {record.mb_bill_no}.")
+    else:
+        messages.error(request, "Failed to upload attachment. Please select a file.")
+
+    return redirect('market_bill_list')
+
+# ==================================================
+# UPLOAD MAIL ATTACHMENT
+# ==================================================
+@login_required(login_url='login_page')
+def market_mail_upload(request, id):
+    record = get_object_or_404(MarketBillInfo, id=id)
+
+    if request.method == "POST" and request.FILES.get('mb_mail_attachment'):
+        record.mb_mail_attachment = request.FILES['mb_mail_attachment']
+        record.save()
+        messages.success(request, f"Mail attachment uploaded successfully for Bill {record.mb_bill_no}.")
+    else:
+        messages.error(request, "Failed to upload mail attachment. Please select a file.")
+
+    return redirect('market_bill_edit', id=id)
