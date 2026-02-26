@@ -10,7 +10,7 @@ class ConsignmentgoodsInfo(models.Model):
     cg_currency_type = models.ForeignKey(Currency_type, on_delete=models.CASCADE,default=1,blank=True,null=True)
     cg_consigner = models.ForeignKey(ConsignerInfo, on_delete=models.CASCADE,blank=True,null=True)
     cg_consignee = models.ForeignKey(ConsigneeInfo, on_delete=models.CASCADE,blank=True,null=True)
-    cg_consignerinvoice = models.CharField(max_length=50)
+    cg_consignerinvoice = models.CharField(max_length=150)
     cg_consignerinvoice_date = models.DateField()
     cg_consignervalue = models.FloatField(null=True, blank=True)
     cg_valueininr = models.FloatField(null=True, blank=True)
