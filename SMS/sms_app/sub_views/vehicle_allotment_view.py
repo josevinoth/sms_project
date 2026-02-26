@@ -642,12 +642,7 @@ def load_vehicle_number(request):
     ).values_list('tr_vehiclenumber', flat=True)
     active_regs = list(active_regs)
 
-    # 3) vehicle ids already allotted (you may want to filter this to only 'active' allotments if you have a status field)
-    used_vehicle_ids = list(Vehicle_allotmentInfo.objects.values_list('va_vehiclenumber_id', flat=True))
-    # remove None if present
-    used_vehicle_ids = [vid for vid in used_vehicle_ids if vid is not None]
-
-    # 4) Get vehicles matching type+ownership
+    # 3) Get vehicles matching type+ownership
     candidate_qs = VehiclemasterInfo.objects.filter(
         vm_vehicletype=vehicletype_placed,
         vm_ownership=vehicletype_source
@@ -663,11 +658,6 @@ def load_vehicle_number(request):
 
         # Skip vehicles that are currently active in a trip
         if reg in active_regs:
-            continue
-
-        # If vehicle is already allotted (and NOT part of inactive list), skip it
-        # (This keeps vehicles that were used in closed/settled trips available.)
-        if vid in used_vehicle_ids and reg not in inactive_regs:
             continue
 
         # Add hint if it was in closed/settled trips

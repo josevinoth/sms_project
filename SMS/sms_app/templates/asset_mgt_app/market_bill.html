@@ -53,6 +53,20 @@
 
                         <div class="input-group input-group-sm mb-2">
                             <div class="input-group-prepend">
+                                <span class="input-group-text">Loading Cost</span>
+                            </div>
+                            {% render_field form.mb_loading_cost class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Unloading Cost</span>
+                            </div>
+                            {% render_field form.mb_unloading_cost class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
                                 <span class="input-group-text">Parking Cost</span>
                             </div>
                             {% render_field form.mb_parking_cost class="form-control" %}
@@ -163,9 +177,12 @@
                                 <th>To</th>
                                 <th>Trip Date</th>
                                 <th>Trip Cost</th>
+                                <th>Loading Cost</th>
+                                <th>Unloading Cost</th>
                                 <th>Parking Cost</th>
                                 <th>Halting Days</th>
                                 <th>Halting Cost</th>
+                                <th>Mail Attach</th>
                             </tr>
                         </thead>
                         <tbody id="tripsTableBody">
@@ -173,11 +190,16 @@
                             <!-- EDIT Mode: Pre-populate with saved trips -->
                             {% if selected_trips_data %}
                             {% for trip in selected_trips_data %}
-                            <tr class="added-row">
+                            <tr
+                                class="added-row {% if trip.special_cost != trip.standard_cost %}text-danger{% endif %}">
                                 <td><input type="checkbox" class="trip-checkbox" data-id="{{ trip.id }}"
-                                        data-trip="{{ trip.trip_cost }}" data-parking="{{ trip.parking_cost }}"
+                                        data-standard="{{ trip.standard_cost }}" data-special="{{ trip.special_cost }}"
+                                        data-loading="{{ trip.loading_cost }}"
+                                        data-unloading="{{ trip.unloading_cost }}"
+                                        data-parking="{{ trip.parking_cost }}"
                                         data-halting-days="{{ trip.halting_days }}"
-                                        data-halting-cost="{{ trip.halting_cost }}">
+                                        data-halting-cost="{{ trip.halting_cost }}"
+                                        data-halting-rate="{{ trip.halting_rate }}">
                                 </td>
                                 <td>{{ trip.display_cnote }}</td>
                                 <td>{{ trip.vehicle_number }}</td>
@@ -186,24 +208,62 @@
                                 <td>{{ trip.from_location }}</td>
                                 <td>{{ trip.to_location }}</td>
                                 <td>{{ trip.trip_date|default:"" }}</td>
-                                <td class="trip-cost-cell">{{ trip.trip_cost|floatformat:2 }}</td>
-                                <td class="parking-cost-cell">{{ trip.parking_cost|floatformat:2 }}</td>
+                                <td class="trip-cost-cell">{{ trip.special_cost|floatformat:2 }}</td>
                                 <td>
-                                    <input type="number" class="form-control form-control-sm halting-days-input"
+                                    <input type="number" name="loading_cost_{{ trip.id }}"
+                                        class="form-control form-control-sm loading-cost-input"
+                                        value="{{ trip.loading_cost|default:0 }}" min="0" step="0.01"
+                                        style="width: 80px;">
+                                </td>
+                                <td>
+                                    <input type="number" name="unloading_cost_{{ trip.id }}"
+                                        class="form-control form-control-sm unloading-cost-input"
+                                        value="{{ trip.unloading_cost|default:0 }}" min="0" step="0.01"
+                                        style="width: 80px;">
+                                </td>
+                                <td>
+                                    <input type="number" name="parking_cost_{{ trip.id }}"
+                                        class="form-control form-control-sm parking-cost-input"
+                                        value="{{ trip.parking_cost|default:0 }}" min="0" step="0.01"
+                                        style="width: 80px;">
+                                </td>
+                                <td>
+                                    <input type="number" name="halting_days_{{ trip.id }}"
+                                        class="form-control form-control-sm halting-days-input"
                                         value="{{ trip.halting_days }}" min="0" style="width: 70px;">
                                 </td>
-                                <td class="halting-cost-cell">{{ trip.halting_cost|floatformat:2 }}</td>
+                                <td class="halting-cost-cell">
+                                    <input type="hidden" name="halting_cost_{{ trip.id }}" class="halting-cost-hidden"
+                                        value="{{ trip.halting_cost }}">
+                                    <span class="halting-cost-text">{{ trip.halting_cost|floatformat:2 }}</span>
+                                </td>
+                                <td class="text-center">
+                                    {% if trip.special_cost != trip.standard_cost %}
+                                    {% if record.mb_mail_attachment %}
+                                    <a href="{{ record.mb_mail_attachment.url }}" target="_blank"
+                                        class="btn btn-sm btn-info mb-1" title="View Mail">
+                                        <i class="fas fa-envelope-open-text"></i>
+                                    </a>
+                                    {% endif %}
+                                    <button type="button" class="btn btn-sm btn-warning mb-1 open-mail-modal"
+                                        data-id="{{ record.id }}" title="Upload Mail Attachment">
+                                        <i class="fas fa-envelope"></i>
+                                    </button>
+                                    {% else %}
+                                    <span class="text-muted small">N/A</span>
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                             {% else %}
                             <tr>
-                                <td colspan="12" class="text-center text-muted">No trips found in this bill</td>
+                                <td colspan="15" class="text-center text-muted">No trips found in this bill</td>
                             </tr>
                             {% endif %}
                             {% else %}
                             <!-- ADD Mode: Initial empty state -->
                             <tr>
-                                <td colspan="12" class="text-center text-muted">Select a vendor to view trips</td>
+                                <td colspan="15" class="text-center text-muted">Select a vendor to view trips</td>
                             </tr>
                             {% endif %}
                         </tbody>
@@ -235,6 +295,8 @@
     // Function to recalculate totals
     function updateTotals() {
         let totalTrip = 0;
+        let totalLoading = 0;
+        let totalUnloading = 0;
         let totalParking = 0;
         let totalHalting = 0;
         let totalHaltingDays = 0;
@@ -243,34 +305,47 @@
             const cb = row.querySelector("input[data-id]");
             const daysInput = row.querySelector(".halting-days-input");
 
-            // Re-calculate row-wise halting cost if input changed
-            const initialDays = parseInt(cb.dataset.haltingDays) || 0;
-            const initialCost = parseFloat(cb.dataset.haltingCost) || 0;
-            const rate = initialDays > 0 ? (initialCost / initialDays) : (initialCost);
-
+            // Dynamic Halting Cost calculation: Rate * Days
+            const rate = parseFloat(cb.dataset.haltingRate) || 0;
             const days = parseInt(daysInput.value) || 0;
             const haltingCost = rate * days;
 
-            row.querySelector(".halting-cost-cell").textContent = haltingCost.toFixed(2);
+            const loadingInput = row.querySelector(".loading-cost-input");
+            const loadingCost = parseFloat(loadingInput?.value) || 0;
+            const unloadingInput = row.querySelector(".unloading-cost-input");
+            const unloadingCost = parseFloat(unloadingInput?.value) || 0;
+            const parkingInput = row.querySelector(".parking-cost-input");
+            const parkingCost = parseFloat(parkingInput?.value) || 0;
 
-            totalTrip += parseFloat(cb.dataset.trip) || 0;
-            totalParking += parseFloat(cb.dataset.parking) || 0;
+            row.querySelector(".halting-cost-text").textContent = haltingCost.toFixed(2);
+            row.querySelector(".halting-cost-hidden").value = haltingCost.toFixed(2);
+
+            const special = parseFloat(cb.dataset.special) || 0;
+            totalTrip += special;
+            totalLoading += loadingCost;
+            totalUnloading += unloadingCost;
+            totalParking += parkingCost;
             totalHalting += haltingCost;
             totalHaltingDays += days;
         });
 
         document.getElementById("mb_trip_cost").value = totalTrip.toFixed(2);
+        document.getElementById("mb_loading_cost").value = totalLoading.toFixed(2);
+        document.getElementById("mb_unloading_cost").value = totalUnloading.toFixed(2);
         document.getElementById("mb_parking_cost").value = totalParking.toFixed(2);
         document.getElementById("mb_halting_cost").value = totalHalting.toFixed(2);
         document.getElementById("mb_halting_days").value = totalHaltingDays;
-        document.getElementById("mb_total_cost").value = (totalTrip + totalParking + totalHalting).toFixed(2);
+        document.getElementById("mb_total_cost").value = (totalTrip + totalLoading + totalUnloading + totalParking + totalHalting).toFixed(2);
 
         document.getElementById("mb_selected_trips").value = Array.from(selectedTripIds).join(",");
     }
 
-    // Handle Halting Days change
+    // Handle inputs change
     document.addEventListener("change", function (e) {
-        if (e.target.classList.contains("halting-days-input")) {
+        if (e.target.classList.contains("halting-days-input") ||
+            e.target.classList.contains("parking-cost-input") ||
+            e.target.classList.contains("loading-cost-input") ||
+            e.target.classList.contains("unloading-cost-input")) {
             updateTotals();
         }
     });
@@ -326,10 +401,10 @@
             tripsDataTable = null;
         }
 
-        tbody.innerHTML = '<tr><td colspan="12" class="text-center">Loading...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="15" class="text-center">Loading...</td></tr>';
 
         if (!vendorId) {
-            tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Select a vendor to view trips</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="15" class="text-center text-muted">Select a vendor to view trips</td></tr>';
             return;
         }
 
@@ -339,7 +414,7 @@
                 const availableTrips = data.trips.filter(t => !selectedTripIds.has(t.id.toString()));
 
                 if (availableTrips.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">No available trips found for this vendor</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="15" class="text-center text-muted">No available trips found for this vendor</td></tr>';
                     return;
                 }
 
@@ -351,10 +426,14 @@
                     row.innerHTML = `
                     <td><input type="checkbox" class="trip-checkbox" 
                         data-id="${trip.id}" 
-                        data-trip="${trip.trip_cost}" 
+                        data-standard="${trip.standard_cost}" 
+                        data-special="${trip.special_cost}" 
+                        data-loading="${trip.loading_cost}"
+                        data-unloading="${trip.unloading_cost}"
                         data-parking="${trip.parking_cost}"
                         data-halting-days="${trip.halting_days}"
-                        data-halting-cost="${trip.halting_cost}"></td>
+                        data-halting-cost="${trip.halting_cost}"
+                        data-halting-rate="${trip.halting_rate}"></td>
                     <td>${trip.trip_number_display}</td>
                     <td>${trip.vehicle_number}</td>
                     <td>${trip.vehicle_type}</td>
@@ -362,14 +441,39 @@
                     <td>${trip.from_location}</td>
                     <td>${trip.to_location}</td>
                     <td>${trip.trip_date}</td>
-                    <td>${trip.trip_cost.toFixed(2)}</td>
-                    <td>${trip.parking_cost.toFixed(2)}</td>
+                    <td class="trip-cost-cell">${trip.special_cost.toFixed(2)}</td>
                     <td>
-                        <input type="number" class="form-control form-control-sm halting-days-input" 
+                        <input type="number" name="loading_cost_${trip.id}" class="form-control form-control-sm loading-cost-input" 
+                            value="${trip.loading_cost.toFixed(2)}" min="0" step="0.01" style="width: 80px;">
+                    </td>
+                    <td>
+                        <input type="number" name="unloading_cost_${trip.id}" class="form-control form-control-sm unloading-cost-input" 
+                            value="${trip.unloading_cost.toFixed(2)}" min="0" step="0.01" style="width: 80px;">
+                    </td>
+                    <td>
+                        <input type="number" name="parking_cost_${trip.id}" class="form-control form-control-sm parking-cost-input" 
+                            value="${trip.parking_cost.toFixed(2)}" min="0" step="0.01" style="width: 80px;">
+                    </td>
+                    <td>
+                        <input type="number" name="halting_days_${trip.id}" class="form-control form-control-sm halting-days-input" 
                             value="${trip.halting_days}" min="0" style="width: 70px;">
                     </td>
-                    <td class="halting-cost-cell">${trip.halting_cost.toFixed(2)}</td>
+                    <td class="halting-cost-cell">
+                        <input type="hidden" name="halting_cost_${trip.id}" class="halting-cost-hidden" value="${trip.halting_cost}">
+                        <span class="halting-cost-text">${trip.halting_cost.toFixed(2)}</span>
+                    </td>
+                    <td class="text-center">
+                        ${trip.special_cost !== trip.standard_cost ? `
+                            <button type="button" class="btn btn-sm btn-warning mb-1 open-mail-modal" 
+                                data-id="` + (isEditMode ? '{{ record.id }}' : '') + `" title="Upload Mail Attachment">
+                                <i class="fas fa-envelope"></i>
+                            </button>
+                        ` : '<span class="text-muted small">N/A</span>'}
+                    </td>
                 `;
+                    if (trip.special_cost !== trip.standard_cost) {
+                        row.classList.add("text-danger");
+                    }
                     tbody.appendChild(row);
                 });
 
@@ -378,7 +482,7 @@
             })
             .catch(err => {
                 console.error("Error loading trips:", err);
-                tbody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">Error loading trips</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="15" class="text-center text-danger">Error loading trips</td></tr>';
             });
     });
 
@@ -428,6 +532,49 @@
         });
     }
 </script>
+
+<!-- ================= MAIL ATTACHMENT MODAL ================= -->
+<div class="modal fade" id="mailUploadModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Upload Mail Attachment</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="mailUploadForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p class="text-muted">Upload proof of permission for cost discrepancy.</p>
+                    <div class="form-group">
+                        <label>Select File (Image/PDF)</label>
+                        <input type="file" name="mb_mail_attachment" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-warning text-white">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Handle Mail Upload Modal
+    $(document).on("click", ".open-mail-modal", function () {
+        const recordId = $(this).data("id");
+        if (!recordId) {
+            alert("Please save the Market Bill first before uploading mail attachment.");
+            return;
+        }
+        const actionUrl = "{% url 'market_mail_upload' 0 %}".replace('0', recordId);
+        $("#mailUploadForm").attr("action", actionUrl);
+        $("#mailUploadModal").modal("show");
+    });
+</script>
+
 <script>
     function parseDDMMYYYY(dateStr) {
         const [dd, mm, yyyy] = dateStr.split("-");
