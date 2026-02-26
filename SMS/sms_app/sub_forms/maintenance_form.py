@@ -8,7 +8,7 @@ class MaintenanceForm(forms.ModelForm):
     registration_no = forms.ModelChoiceField(
         queryset=VehiclemasterInfo.objects.all(),
         to_field_name='vm_registrationnumber',
-        empty_label="Select Registration No"
+        empty_label="Select Vehicle No"
     )
 
     mi_driver_name = forms.ModelChoiceField(
