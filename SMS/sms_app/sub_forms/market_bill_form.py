@@ -11,8 +11,6 @@ class MarketBillForm(forms.ModelForm):
         widget=forms.Select(attrs={"class": "form-control", "id": "mb_vendor"})
     )
 
-
-
     mb_bill_no = forms.CharField(
         max_length=50,
         required=True,
@@ -22,6 +20,16 @@ class MarketBillForm(forms.ModelForm):
     mb_trip_cost = forms.FloatField(
         required=False,
         widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_trip_cost"})
+    )
+
+    mb_loading_cost = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_loading_cost"})
+    )
+
+    mb_unloading_cost = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_unloading_cost"})
     )
 
     mb_parking_cost = forms.FloatField(
@@ -44,6 +52,11 @@ class MarketBillForm(forms.ModelForm):
         widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_total_cost"})
     )
 
+    mb_mail_attachment = forms.FileField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"class": "form-control", "id": "mb_mail_attachment"})
+    )
+
     mb_selected_trips = forms.CharField(
         required=False,
         widget=forms.HiddenInput(attrs={"id": "mb_selected_trips"})
@@ -55,11 +68,14 @@ class MarketBillForm(forms.ModelForm):
             'mb_vendor',
             'mb_bill_no',
             'mb_trip_cost',
+            'mb_loading_cost',
+            'mb_unloading_cost',
             'mb_parking_cost',
             'mb_halting_cost',
             'mb_halting_days',
             'mb_total_cost',
             'mb_selected_trips',
+            'mb_mail_attachment',
         ]
 
     def __init__(self, *args, **kwargs):

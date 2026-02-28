@@ -52,6 +52,8 @@
                     <!--<th>Vehicle Number</th>
                     <th>Vehicle Type</th>-->
                     <th>Trip Cost</th>
+                    <th>Loading Cost</th>
+                    <th>Unloading Cost</th>
                     <th>Parking Cost</th>
                     <th>Halting Days</th>
                     <th>Halting Cost</th>
@@ -59,6 +61,7 @@
                     <th>Created On</th>
                     <th>Created By</th>
                     <th>Updated By</th>
+                    <th class="text-center">Bill Attachment</th>
                     <th class="text-center">Edit</th>
                     <th class="text-center">Delete</th>
                 </tr>
@@ -74,6 +77,8 @@
                     <!--<td>{{ bill.mb_vehicle_number }}</td>
                     <td>{{ bill.mb_vehicle_type|default:"" }}</td>-->
                     <td>{{ bill.mb_trip_cost|floatformat:2 }}</td>
+                    <td>{{ bill.mb_loading_cost|floatformat:2 }}</td>
+                    <td>{{ bill.mb_unloading_cost|floatformat:2 }}</td>
                     <td>{{ bill.mb_parking_cost|floatformat:2 }}</td>
                     <td>{{ bill.mb_halting_days|default:0 }}</td>
                     <td>{{ bill.mb_halting_cost|floatformat:2 }}</td>
@@ -87,6 +92,25 @@
                     <td>
                         {% if bill.mb_updated_by %}
                         {{ bill.mb_updated_by.first_name|default:bill.mb_updated_by.username }}
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if bill.mb_attachment %}
+                        <div class="btn-group shadow-sm">
+                            <a href="{{ bill.mb_attachment.url }}" target="_blank" class="btn btn-outline-info btn-sm"
+                                title="View Attachment">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <button type="button" class="btn btn-info btn-sm upload-btn" data-id="{{ bill.id }}"
+                                data-bill="{{ bill.mb_bill_no }}" title="Re-upload">
+                                <i class="fas fa-upload"></i>
+                            </button>
+                        </div>
+                        {% else %}
+                        <button type="button" class="btn btn-outline-secondary btn-sm upload-btn"
+                            data-id="{{ bill.id }}" data-bill="{{ bill.mb_bill_no }}" title="Upload Attachment">
+                            <i class="fas fa-upload"></i> Upload
+                        </button>
                         {% endif %}
                     </td>
                     <td class="text-center">
@@ -111,6 +135,34 @@
     </div>
 </div>
 
+<!-- ================= UPLOAD MODAL ================= -->
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="uploadForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="uploadModalLabel">Upload Bill Attachment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bill No: <strong id="modalBillNo"></strong></p>
+                    <div class="mb-3">
+                        <label for="mb_attachment" class="form-label">Select File (Image or Document)</label>
+                        <input type="file" class="form-control" name="mb_attachment" id="mb_attachment" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-info shadow-sm">
+                        <i class="fas fa-cloud-upload-alt"></i> Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- ================= DATATABLE SCRIPT ================= -->
 <script>
     $(document).ready(function () {
@@ -131,7 +183,24 @@
             ],
             pageLength: 10,
             lengthMenu: [5, 10, 25, 50],
-            order: [[7, 'desc']] // Sort by Created On by default
+            order: [[11, 'desc']] // Sort by Created On by default
+        });
+
+        // Handle Upload Button Click
+        $('.upload-btn').on('click', function () {
+            var billId = $(this).data('id');
+            var billNo = $(this).data('bill');
+
+            // Set Modal Data
+            $('#modalBillNo').text(billNo);
+
+            // Set Form Action Dynamically
+            var uploadUrl = "{% url 'market_bill_upload' 0 %}".replace('0', billId);
+            $('#uploadForm').attr('action', uploadUrl);
+
+            // Show Modal
+            var uploadModal = new bootstrap.Modal(document.getElementById('uploadModal'));
+            uploadModal.show();
         });
     });
 </script>

@@ -1028,7 +1028,15 @@ urlpatterns = [
     path('market_bill/list/', views.market_bill_list, name='market_bill_list'),
     path('market_bill/<int:id>/edit/', views.market_bill_edit, name='market_bill_edit'),
     path('market_bill/<int:id>/delete/', views.market_bill_delete, name='market_bill_delete'),
+    path('market_bill/<int:id>/upload/', views.market_bill_upload, name='market_bill_upload'),
+    path('market_bill/<int:id>/mail_upload/', views.market_mail_upload, name='market_mail_upload'),
     path('ajax/get_trips_by_vendor/', views.get_trips_by_vendor, name='get_trips_by_vendor'),
+    path('maintenance_bill_add/', views.maintenance_bill_add, name='maintenance_bill_add'),
+    path('maintenance_bill_list/', views.maintenance_bill_list, name='maintenance_bill_list'),
+    path('maintenance_bill/<int:id>/edit/', views.maintenance_bill_edit, name='maintenance_bill_edit'),
+    path('maintenance_bill/<int:id>/delete/', views.maintenance_bill_delete, name='maintenance_bill_delete'),
+    path('fetch_maintenance_bill_details/', views.fetch_maintenance_bill_details, name='fetch_maintenance_bill_details'),
+    path('get_maintenance_records_by_vehicle/', views.get_maintenance_records_by_vehicle, name='get_maintenance_records_by_vehicle'),
 ]
 
 

@@ -600,7 +600,7 @@
         {% endif %}
 
         <div class="stats-grid">
-            <a href="{% url 'customer_enquiry_list' %}" style="text-decoration: none; color: inherit;">
+            <a href="{% url 'customer_enquiry_list' %}?status=active" style="text-decoration: none; color: inherit;">
                 <div class="stat-card" style="cursor: pointer;">
                     <div class="stat-icon icon-blue">
                         <i class="fas fa-clock"></i>
@@ -649,9 +649,10 @@
                 <thead>
                     <tr>
                         <th>Trip #</th>
+                        <th>Vehicle</th>
+                        <th>Driver</th>
                         <th>Origin</th>
                         <th>Destination</th>
-                        <th>Vehicle</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -660,10 +661,17 @@
                     {% for trip in recent_shipments %}
                     <tr>
                         <td style="font-weight: 600;">{{ trip.tr_tripnumber }}</td>
-                        <td>{{ trip.tr_departedlocation }}</td>
+                        <td>{{ trip.tr_vehiclenumber|default:"-" }}<br>
+                            <small style="color:#94a3b8;">{{ trip.tr_vehicletype }}</small>
+                        </td>
+                        <td>
+                            {% if trip.tr_drivername %}
+                            {{ trip.tr_drivername }}<br>
+                            <small style="color:#94a3b8;">{{ trip.tr_drivernumber|default:"" }}</small>
+                            {% else %}-{% endif %}
+                        </td>
+                        <td>{{ trip.tr_departedlocation|default:"-" }}</td>
                         <td>{{ trip.tr_reportedlocation|default:trip.tr_enquirynumber.en_tolocation }}</td>
-                        <td>{{ trip.tr_vehiclenumber }} <br><small style="color: #94a3b8;">{{ trip.tr_vehicletype
-                                }}</small></td>
                         <td>
                             {% if trip.tc_financestatus_id == 1 %}
                             <span class="status-badge status-transit">In-Transit</span>
@@ -674,17 +682,22 @@
                             {% endif %}
                         </td>
                         <td>
+                            {% if trip.tr_consignmentnumber %}
+                            <a href="{% url 'consignment_note_pdf' trip.tr_consignmentnumber.id %}" class="action-icon"
+                                title="Consignment Note" target="_blank">
+                                <i class="fas fa-file-alt"></i></a>
+                            {% endif %}
                             <a href="{% url 'download_dmr' trip.id %}" class="action-icon" title="Download DMR"><i
                                     class="fas fa-file-excel"></i></a>
                             {% if trip.tc_financestatus_id == 2 or trip.tc_financestatus_id == 7 %}
-                            <a href="{% url 'download_pod' trip.id %}" class="action-icon" title="Download POD"><i
+                            <a href="{% url 'download_pod' trip.id %}" class="action-icon" title="View POD"><i
                                     class="fas fa-file-pdf"></i></a>
                             {% endif %}
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 4rem; color: #94a3b8;">
+                        <td colspan="7" style="text-align: center; padding: 4rem; color: #94a3b8;">
                             <i class="fas fa-box-open"
                                 style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
                             No active shipments found.
