@@ -53,6 +53,24 @@
 															</div>
 															{% render_field form.vm_vendor class="form-control" id="id_vm_vendor" %}
 														</div>
+														<div class="input-group input-group-sm mb-3" id="buycost_group">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Buy Cost</span>
+															</div>
+															{% render_field form.vm_buycost class="form-control" %}
+														</div>
+														<div class="input-group input-group-sm mb-3" id="agreedkm_group">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Agreed KM</span>
+															</div>
+															{% render_field form.vm_agreedkm class="form-control" %}
+														</div>
+														<div class="input-group input-group-sm mb-3" id="extrakm_group">
+															<div class="input-group-prepend">
+																<span class="input-group-text">Extra KM Amount</span>
+															</div>
+															{% render_field form.vm_extrakm class="form-control" %}
+														</div>
 														<div class="input-group input-group-sm mb-3">
 															<div class="input-group-prepend">
 																<span class="input-group-text">Tonnage</span>
@@ -125,6 +143,7 @@
 															{% render_field form.vm_cost class="form-control" %}
 															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 														</div>
+
 														<div class="input-group input-group-sm mb-3">
 															<div class="input-group-prepend">
 																<span class="input-group-text">Fuel Type</span>
@@ -817,23 +836,28 @@
 </form>
 
 <script>
-	document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
         const ownershipField = document.getElementById('id_vm_ownership');
         const vendorGroup = document.getElementById('vendor_group');
+        const buycostGroup = document.getElementById('buycost_group');
+        const agreedkmGroup = document.getElementById('agreedkm_group');
+        const extrakmGroup = document.getElementById('extrakm_group');
 
-        function toggleVendor() {
-            if (ownershipField.value == '2') { // Ownership id = 2
-                vendorGroup.style.display = 'flex'; // show field
-            } else {
-                vendorGroup.style.display = 'none'; // hide field
-            }
+        function toggleFields() {
+            const isAttached = ownershipField.value == '2'; // Ownership id = 2 (ATTACHED)
+            const displayStyle = isAttached ? 'flex' : 'none';
+            
+            vendorGroup.style.display = displayStyle;
+            buycostGroup.style.display = displayStyle;
+            agreedkmGroup.style.display = displayStyle;
+            extrakmGroup.style.display = displayStyle;
         }
 
         // Initialize on page load
-        toggleVendor();
+        toggleFields();
 
         // Listen for changes
-        ownershipField.addEventListener('change', toggleVendor);
+        ownershipField.addEventListener('change', toggleFields);
     });
 </script>
 {% endblock content %}
