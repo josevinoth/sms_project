@@ -23,56 +23,64 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Business</span>
 									</div>
-									{% render_field invoice_form.bill_business id="bill_business" class="form-control disable_a_href" %}
+									{% render_field invoice_form.bill_business id="bill_business" class="form-control
+									disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Invoice Date</span>
 									</div>
-									{% render_field invoice_form.bill_invoice_date type="date" id="bill_invoice_date" class="form-control" %}
+									{% render_field invoice_form.bill_invoice_date type="date" id="bill_invoice_date"
+									class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">BVM Invoice Number</span>
 									</div>
-									{% render_field invoice_form.bill_invoice_ref id="bill_invoice_ref" class="form-control" %}
+									{% render_field invoice_form.bill_invoice_ref id="bill_invoice_ref"
+									class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Name</span>
 									</div>
-									{% render_field invoice_form.bill_customer_name id="bill_customer_name" class="form-control" %}
+									{% render_field invoice_form.bill_customer_name id="bill_customer_name"
+									class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Short Name</span>
 									</div>
-									{% render_field invoice_form.bill_customer_short_name id="bill_customer_short_name" class="form-control disable_a_href" %}
+									{% render_field invoice_form.bill_customer_short_name id="bill_customer_short_name"
+									class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Model</span>
 									</div>
-									{% render_field invoice_form.bill_customer_type id="bill_customer_type" class="form-control disable_a_href" %}
+									{% render_field invoice_form.bill_customer_type id="bill_customer_type"
+									class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Code</span>
 									</div>
-									{% render_field invoice_form.bill_customer_code id="bill_customer_code" class="form-control disable_a_href" %}
+									{% render_field invoice_form.bill_customer_code id="bill_customer_code"
+									class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">GSTIN</span>
 									</div>
-									{% render_field invoice_form.bill_customer_GST id="bill_customer_GST" class="form-control disable_a_href" %}
+									{% render_field invoice_form.bill_customer_GST id="bill_customer_GST"
+									class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -81,56 +89,64 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Person</span>
 									</div>
-									{% render_field invoice_form.bill_customer_person id="bill_customer_person" class="form-control disable_a_href" %}
+									{% render_field invoice_form.bill_customer_person id="bill_customer_person"
+									class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Contact</span>
 									</div>
-									{% render_field invoice_form.bill_customer_contact id="bill_customer_contact" class="form-control disable_a_href" %}
+									{% render_field invoice_form.bill_customer_contact id="bill_customer_contact"
+									class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">e-invoice</span>
 									</div>
-									{% render_field invoice_form.bill_e_invoice id="bill_e_invoice" class="form-control" %}
+									{% render_field invoice_form.bill_e_invoice id="bill_e_invoice" class="form-control"
+									%}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Billing Start Date</span>
 									</div>
-									{% render_field invoice_form.bill_start_date type="date" id="bill_start_date" onchange="no_of_days_calc()" class="form-control " %}
+									{% render_field invoice_form.bill_start_date type="date" id="bill_start_date"
+									onchange="no_of_days_calc()" class="form-control " %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Billing End Date</span>
 									</div>
-									{% render_field invoice_form.bill_end_date type="date" id="bill_end_date" onchange="no_of_days_calc()" class="form-control " %}
+									{% render_field invoice_form.bill_end_date type="date" id="bill_end_date"
+									onchange="no_of_days_calc()" class="form-control " %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Sales Person</span>
 									</div>
-									{% render_field invoice_form.bill_sale_person id="bill_sale_person" class="form-control" %}
+									{% render_field invoice_form.bill_sale_person id="bill_sale_person"
+									class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Shipment Weight (kg)</span>
 									</div>
-									{% render_field invoice_form.bill_weight id="bill_weight" class="form-control disable_a_href" %}
+									{% render_field invoice_form.bill_weight id="bill_weight" class="form-control
+									disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">No of Pieces</span>
 									</div>
-									{% render_field invoice_form.bill_no_of_pallets class="form-control disable_a_href" id="bill_no_of_pallets" %}
+									{% render_field invoice_form.bill_no_of_pallets class="form-control disable_a_href"
+									id="bill_no_of_pallets" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -139,92 +155,122 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">No Of Days</span>
 									</div>
-									{% render_field invoice_form.bill_no_of_days class="form-control disable_a_href" id="bill_no_of_days" %}
+									{% render_field invoice_form.bill_no_of_days class="form-control disable_a_href"
+									id="bill_no_of_days" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Wh Storage cost (INR)</span>
 									</div>
-									{% render_field invoice_form.bill_wh_storage_charges class="form-control disable_a_href" id="bill_wh_storage_charges" onchange="fumigation_charge_change_fn()" %}
+									{% render_field invoice_form.bill_wh_storage_charges class="form-control
+									disable_a_href" id="bill_wh_storage_charges"
+									onchange="fumigation_charge_change_fn()" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Loading Cost (INR)</span>
 									</div>
-									{% render_field invoice_form.bill_loading_charge class="form-control disable_a_href" id="bill_loading_charge" %}
+									{% render_field invoice_form.bill_loading_charge class="form-control disable_a_href"
+									id="bill_loading_charge" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Unloading Cost (INR)</span>
 									</div>
-									{% render_field invoice_form.bill_unloading_charge class="form-control disable_a_href" id="bill_unloading_charge" %}
+									{% render_field invoice_form.bill_unloading_charge class="form-control
+									disable_a_href" id="bill_unloading_charge" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Fumigation Cost (INR)</span>
 									</div>
-									{% render_field invoice_form.bill_tot_fumigation_charges class="form-control" id="bill_tot_fumigation_charges" onchange="fumigation_charge_change_fn()" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+									{% render_field invoice_form.bill_tot_fumigation_charges class="form-control"
+									id="bill_tot_fumigation_charges" onchange="fumigation_charge_change_fn()" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Handling Cost (INR)</span>
+									</div>
+									{% render_field invoice_form.bill_handling_charges class="form-control"
+									id="bill_handling_charges" onchange="fumigation_charge_change_fn()" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Packing Cost (INR)</span>
+									</div>
+									{% render_field invoice_form.bill_packing_charges class="form-control"
+									id="bill_packing_charges" onchange="fumigation_charge_change_fn()" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Crane Hours</span>
 									</div>
-									{% render_field invoice_form.bill_tot_crane_time class="form-control disable_a_href" id="bill_tot_crane_time" %}
+									{% render_field invoice_form.bill_tot_crane_time class="form-control disable_a_href"
+									id="bill_tot_crane_time" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Forklift Hours</span>
 									</div>
-									{% render_field invoice_form.bill_tot_forklift_time class="form-control disable_a_href" id="bill_tot_forklift_time" %}
+									{% render_field invoice_form.bill_tot_forklift_time class="form-control
+									disable_a_href" id="bill_tot_forklift_time" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Crane Cost (INR)</span>
 									</div>
-									{% render_field invoice_form.bill_tot_crane_charges class="form-control disable_a_href" id="bill_tot_crane_charges" %}
+									{% render_field invoice_form.bill_tot_crane_charges class="form-control
+									disable_a_href" id="bill_tot_crane_charges" %}
 								</div>
-								{% render_field invoice_form.bill_updated_by id="bill_updated_by" hidden="True" class="form-control" %}
-								{% render_field invoice_form.bill_updated_at id="bill_updated_at" class="form-control" %}
-								{% render_field invoice_form.bill_created_on id="bill_created_on" class="form-control" %}
+								{% render_field invoice_form.bill_updated_by id="bill_updated_by" hidden="True"
+								class="form-control" %}
+								{% render_field invoice_form.bill_updated_at id="bill_updated_at" class="form-control"
+								%}
+								{% render_field invoice_form.bill_created_on id="bill_created_on" class="form-control"
+								%}
 							</div>
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Forklift Cost (INR)</span>
 									</div>
-									{% render_field invoice_form.bill_tot_forklift_charges class="form-control disable_a_href" id="bill_tot_forklift_charges" %}
+									{% render_field invoice_form.bill_tot_forklift_charges class="form-control
+									disable_a_href" id="bill_tot_forklift_charges" %}
 								</div>
 
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total (Before GST) (INR)</span>
 									</div>
-									{% render_field invoice_form.bill_total_pre_gst class="form-control disable_a_href" id="bill_total_pre_gst" %}
+									{% render_field invoice_form.bill_total_pre_gst class="form-control disable_a_href"
+									id="bill_total_pre_gst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">CGST (@9%) (INR)</span>
 									</div>
-									{% render_field invoice_form.bill_cgst class="form-control disable_a_href" id="bill_cgst" %}
+									{% render_field invoice_form.bill_cgst class="form-control disable_a_href"
+									id="bill_cgst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">SGST (@9%) (INR)</span>
 									</div>
-									{% render_field invoice_form.bill_sgst class="form-control disable_a_href" id="bill_sgst" %}
+									{% render_field invoice_form.bill_sgst class="form-control disable_a_href"
+									id="bill_sgst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Post GST (INR)</span>
 									</div>
-									{% render_field invoice_form.bill_total_post_gst class="form-control disable_a_href" id="bill_total_post_gst" %}
+									{% render_field invoice_form.bill_total_post_gst class="form-control disable_a_href"
+									id="bill_total_post_gst" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 								<div class="input-group input-group-sm mb-3">
@@ -240,7 +286,8 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Address</span>
 									</div>
-									{% render_field invoice_form.bill_customer_address id="bill_customer_address" class="form-control disable_a_href" %}
+									{% render_field invoice_form.bill_customer_address id="bill_customer_address"
+									class="form-control disable_a_href" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
@@ -380,16 +427,20 @@
 	function fumigation_charge_change_fn() {
 		var fumigation_charges_val = parseFloat(document.getElementById("bill_tot_fumigation_charges").value) || 0;
 		var wh_storage_charges_val = parseFloat(document.getElementById("bill_wh_storage_charges").value) || 0;
-		var wh_loading_un_charges_val = parseFloat(document.getElementById("bill_loading_charge").value) || 0;
+		var wh_loading_charges_val = parseFloat(document.getElementById("bill_loading_charge").value) || 0;
+		var wh_unloading_charges_val = parseFloat(document.getElementById("bill_unloading_charge").value) || 0;
+		var handling_charges_val = parseFloat(document.getElementById("bill_handling_charges").value) || 0;
+		var packing_charges_val = parseFloat(document.getElementById("bill_packing_charges").value) || 0;
 		var tot_crane_charges_val = parseFloat(document.getElementById("bill_tot_crane_charges").value) || 0;
 		var tot_forklift_charges_val = parseFloat(document.getElementById("bill_tot_forklift_charges").value) || 0;
-		var total_pre_GST = fumigation_charges_val + wh_storage_charges_val + wh_loading_un_charges_val + wh_loading_un_charges_val + tot_crane_charges_val + tot_forklift_charges_val;
+
+		var total_pre_GST = fumigation_charges_val + wh_storage_charges_val + wh_loading_charges_val + wh_unloading_charges_val + handling_charges_val + packing_charges_val + tot_crane_charges_val + tot_forklift_charges_val;
+
 		document.getElementById("bill_cgst").value = (total_pre_GST * 0.09).toFixed(2);
 		document.getElementById("bill_sgst").value = (total_pre_GST * 0.09).toFixed(2);
 		var total_post_GST = total_pre_GST + (total_pre_GST * 0.18);
 		document.getElementById("bill_total_pre_gst").value = total_pre_GST.toFixed(2);
 		document.getElementById("bill_total_post_gst").value = total_post_GST.toFixed(2);
-
 	}
 </script>
 

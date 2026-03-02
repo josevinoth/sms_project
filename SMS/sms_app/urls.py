@@ -964,6 +964,7 @@ urlpatterns = [
     path('maintenance_list/', views.maintenance_list, name='maintenance_list'),
     path('shipper_invoice_export_excel/<int:invoice_id>/', views.shipper_invoice_export_excel,
          name='shipper_invoice_export_excel'),
+    path('invoice_export_excel/<int:invoice_id>/', views.invoice_export_excel, name='invoice_export_excel'),
 
     # Customer Registration URLs
     path('customer_register/<int:business_id>/', views.customer_register, name='customer_register'),

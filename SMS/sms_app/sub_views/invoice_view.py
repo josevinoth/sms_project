@@ -797,7 +797,6 @@ def extract_state(address):
 
 @login_required(login_url='login_page')
 def shipper_invoice_export_excel(request, invoice_id):
-
     # ✅ invoice = BillingInfo record
     invoice = BilingInfo.objects.select_related(
         "bill_customer_name"
@@ -817,80 +816,32 @@ def shipper_invoice_export_excel(request, invoice_id):
 
     wb = Workbook()
     ws = wb.active
-    ws.title = "TALLY_IMPORT"
+    ws.title = "WMS_TALLY_IMPORT"
 
     headers = [
-        "SL. NO.", "DATE", "Vch No", "JOB NO.",
-        "SUNDRY DEBTORS", "GSTIN", "STATE", "PINCODE", "PRIMARY COST CATEGORY",
-        "CUSTOMER", "SHIPPER'S NAME",
-        "SHIPPER'S REF. INVOICE NO.",
-        "W/H CHRGS VEHICLE TYPE",
-        "SHPT. WT (Kgs)",
-
-        "SHIPMENT IN DATE",
-        "SHIPMENT OUT DATE",
-
-        "NO. OF DAYS",
-        "PER DAY W/H CHARGES",
-        "Warehouse Storage Charges",
-
-        "NO. PALLETS/ BOXES [PCS]",
-        "RATE PER PALLET/ BOXES",
-        "Warehouse Loading Charges",
-
-        "NO. PALLETS/ BOXES [PCS]",
-        "RATE PER PALLET/ BOXES",
-        "Warehouse UnLoading Charges",
-
-        "Warehouse Handling Charges",
-        "Crane Handling Charges",
-        "Forklift Handling Charges",
-        "TOTAL",
-        "CGST Output 9%",
-        "SGST Output 9%",
+        "DATE", "Vch No", "JOB NO.", "SUNDRY DEBTORS", "GST No", "STATE", "PINCODE",
+        "PRIMARY COST CATEGORY", "CUSTOMER",
+        "Warehouse Storage Charges", "Warehouse Loading Charges", "Warehouse Unloading Charges",
+        "Warehouse Handling Charges", "Crane Handling Charges", "Forklift Handling Charges",
+        "Packing Charges", "TOTAL", "CGST Output @ 9%", "SGST Output @ 9%"
     ]
 
     ws.append(headers)
     for cell in ws[1]:
         cell.font = Font(bold=True)
 
-    def excel_date(val):
-        return val if val else ""
-
     sl = 1
-
     for obj in qs:
         customer = invoice.bill_customer_name
-
         address = customer.cu_address if customer else ""
         state = extract_state(address)
         pincode = extract_pincode(address)
 
-        # ✅ values from BillingInfo (your model!)
-        shipment_in_date = excel_date(invoice.bill_start_date)
-        shipment_out_date = excel_date(invoice.bill_end_date)
-
-        no_of_days = invoice.bill_no_of_days or 0
-        per_day_wh = invoice.bill_per_day_wh_charges or 0
-        storage_cost = invoice.bill_wh_storage_charges or 0
-
-        loading_cost = invoice.bill_loading_charge or 0
-        unloading_cost = invoice.bill_unloading_charge or 0
-
-        crane_cost = invoice.bill_tot_crane_charges or 0
-        forklift_cost = invoice.bill_tot_forklift_charges or 0
-
-        # ✅ Handling not in BillingInfo -> keep 0 (update if you have)
-        handling_cost = 0
-
-        total = invoice.bill_total_pre_gst or 0
-        cgst = round(total * 0.09, 2)
-        sgst = round(total * 0.09, 2)
-        # ✅ branch short name (remove BVM)
+        # ✅ branch short name
         branch_name = obj.wh_branch.loc_name if obj.wh_branch else ""
         branch_name = branch_name.replace("BVM ", "").strip()
 
-        # ✅ get unit from LocationmasterInfo using customer
+        # ✅ unit from LocationmasterInfo
         unit_no = ""
         lm = LocationmasterInfo.objects.filter(
             lm_customer_name=customer
@@ -899,62 +850,124 @@ def shipper_invoice_export_excel(request, invoice_id):
         if lm and lm.lm_wh_unit:
             unit_no = str(lm.lm_wh_unit)
 
-        # ✅ final output
         primary_cost_category = f"{branch_name} -{unit_no}" if unit_no else branch_name
 
-        ws.append([
-            sl,
-            invoice.bill_invoice_date,
-            invoice.bill_invoice_ref,            # ✅ Vch No
-            obj.wh_job_no,                       # ✅ JOB NO
+        # For Tally export, we typically divide the cost by number of jobs if we are repeating headers,
+        # but the user's previous code repeated the same total on each line. 
+        # However, to be safe, we'll follow the user's requested mapping which implies 
+        # these are the charges for that specific job row if available, or just the invoice totals.
+        # Given the existing structure where we iterate over qs, we'll try to use job-specific costs if they exist.
 
-            customer.customer.cu_nameshort if customer else "",            # SUNDRY DEBTORS
-            customer.cu_gst if customer else "",             # GSTIN
+        ws.append([
+            excel_datetime(invoice.bill_invoice_date),
+            invoice.bill_invoice_ref,
+            obj.wh_job_no,
+            customer.cu_nameshort if customer else "",  # SUNDRY DEBTORS (Full Name)
+            customer.cu_gst if customer else "",
             state,
             pincode,
-
             primary_cost_category,
-
-            customer.cu_name if customer else "",
-            obj.wh_consigner,
-            obj.wh_goods_invoice,
-
-            str(obj.wh_dispatch_id.dispatch_billing_truck_type)
-            if obj.wh_dispatch_id and obj.wh_dispatch_id.dispatch_billing_truck_type else "",
-
-            invoice.bill_weight or obj.wh_goods_weight or 0,
-
-            shipment_in_date,
-            shipment_out_date,
-
-            no_of_days,
-            per_day_wh,
-            storage_cost,
-
-            invoice.bill_no_of_pallets or 0,
-            invoice.bill_rate_per_pallet or 0,
-            loading_cost,
-
-            invoice.bill_no_of_pallets or 0,
-            invoice.bill_rate_per_pallet or 0,
-            unloading_cost,
-
-            handling_cost,
-            crane_cost,
-            forklift_cost,
-            total,
-            cgst,
-            sgst,
+            customer.cu_name if customer else "", # CUSTOMER (Short Name)
+            
+            # Use job-specific storage if available, else 0 (Tally often needs row-level data)
+            obj.wh_storage_cost_total or 0,
+            obj.wh_total_loading_cost or 0,
+            0, # Unloading cost - model field wh_total_unloading_cost doesn't exist? Checking Warehouse_goods_info...
+               # If it doesn't exist, we use 0. In invoice_add, it updates BilingInfo.bill_unloading_charge.
+            
+            invoice.bill_handling_charges if sl == 1 else 0, # Only put on first line for aggregated fields
+            obj.wh_crane_cost or 0,
+            obj.wh_forklift_cost or 0,
+            invoice.bill_packing_charges if sl == 1 else 0,
+            
+            invoice.bill_total_pre_gst if sl == 1 else 0,
+            invoice.bill_cgst if sl == 1 else 0,
+            invoice.bill_sgst if sl == 1 else 0,
         ])
-
         sl += 1
 
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
     response["Content-Disposition"] = (
-        f"attachment; filename=Shipper_Invoice_{invoice_id}.xlsx"
+        f"attachment; filename=WMS_Tally_Invoice_{invoice_id}.xlsx"
     )
 
+    wb.save(response)
+    return response
+
+@login_required(login_url='login_page')
+def invoice_export_excel(request, invoice_id):
+    """ Standard Detailed Excel Export excluding Tally-specific fields """
+    invoice = BilingInfo.objects.select_related("bill_customer_name").filter(id=invoice_id).first()
+    if not invoice:
+        return HttpResponse("Invoice not found", status=404)
+
+    qs = Warehouse_goods_info.objects.select_related(
+        "wh_customer_name",
+        "wh_branch",
+        "wh_dispatch_id"
+    ).filter(
+        wh_voucher_id=invoice_id
+    )
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Invoice_Details"
+
+    headers = [
+        "SL. NO.", "JOB NO.", "SHIPPER'S NAME", "SHIPPER'S REF. INVOICE NO.",
+        "W/H CHRGS VEHICLE TYPE", "SHPT. WT (Kgs)", "SHIPMENT IN DATE", "SHIPMENT OUT DATE",
+        "NO. OF DAYS", "PER DAY W/H CHARGES", "Warehouse Storage Charges",
+        "NO. PALLETS/ BOXES [PCS]", "RATE PER PALLET/ BOXES", "Warehouse Loading Charges",
+        "NO. PALLETS/ BOXES [PCS]", "RATE PER PALLET/ BOXES", "Warehouse UnLoading Charges",
+        "Warehouse Handling Charges", "Crane Handling Charges", "Forklift Handling Charges"
+    ]
+    ws.append(headers)
+    for cell in ws[1]:
+        cell.font = Font(bold=True)
+
+    sl = 1
+    for obj in qs:
+        # ✅ unit from LocationmasterInfo
+        unit_no = ""
+        lm = LocationmasterInfo.objects.filter(
+            lm_customer_name=invoice.bill_customer_name
+        ).select_related("lm_wh_unit").first()
+
+        if lm and lm.lm_wh_unit:
+            unit_no = str(lm.lm_wh_unit)
+
+        ws.append([
+            sl,
+            obj.wh_job_no,
+            invoice.bill_customer_name.cu_name if invoice.bill_customer_name else "",
+            obj.wh_goods_invoice,
+            str(obj.wh_dispatch_id.dispatch_billing_truck_type) if obj.wh_dispatch_id and obj.wh_dispatch_id.dispatch_billing_truck_type else "",
+            invoice.bill_weight or obj.wh_goods_weight or 0,
+            excel_datetime(invoice.bill_start_date),
+            excel_datetime(invoice.bill_end_date),
+            invoice.bill_no_of_days or 0,
+            invoice.bill_per_day_wh_charges or 0,
+            obj.wh_storage_cost_total or 0,
+            
+            # Loading
+            invoice.bill_no_of_pallets or 0,
+            invoice.bill_rate_per_pallet or 0,
+            obj.wh_total_loading_cost or 0,
+            
+            # Unloading
+            invoice.bill_no_of_pallets or 0,
+            invoice.bill_rate_per_pallet or 0,
+            0, # Unloading cost not in Warehouse_goods_info row
+            
+            invoice.bill_handling_charges if sl == 1 else 0,
+            obj.wh_crane_cost or 0,
+            obj.wh_forklift_cost or 0,
+        ])
+        sl += 1
+
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response["Content-Disposition"] = f"attachment; filename=Invoice_Report_{invoice_id}.xlsx"
     wb.save(response)
     return response

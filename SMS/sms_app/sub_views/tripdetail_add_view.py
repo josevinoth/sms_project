@@ -87,7 +87,7 @@ def tripdetail_add(request, tripdetail_id=0):
         request.session['ses_enqiury_id'] = enquiry_num_id
     else:
         messages.error(request, "No enquiry number found. Please try again.")
-        return redirect('tripdetail_nav')  # fallback in case it’s missing
+        return redirect('tripdetail_insert')  # fallback in case it’s missing
 
     if request.method == "GET":
         if tripdetail_id == 0:

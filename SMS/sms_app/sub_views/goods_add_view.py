@@ -288,8 +288,6 @@ def goods_add(request, goods_id=0):
                         messages.success(request, 'Goods Stored!')
                         goods_form.save()
                         messages.success(request, 'Record saved successfully')
-                goods_update(request)
-
                 # Generate Random WH_stock number
                 try:
                     last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
@@ -300,6 +298,7 @@ def goods_add(request, goods_id=0):
                 # wh_stock_num = last_id + 1
                 last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
                 Warehouse_goods_info.objects.filter(id=last_id).update(wh_qr_rand_num=wh_stock_num)
+                goods_update(request)
                 wh_excess_stock_email(request)
             else:
                 print("Goods Form not saved")
@@ -374,42 +373,50 @@ def goods_add(request, goods_id=0):
 def goods_delete(request, goods_id):
     goodsinfo = Warehouse_goods_info.objects.get(pk=goods_id)
     goodsinfo.delete()
+    goods_update(request)
     return redirect('/SMS/goods_insert')
 
 @login_required(login_url='login_page')
 def goods_update(request):
     wh_job_id = request.session.get('ses_gatein_id_nam')
-    # //Update Invoice weight, qty,values
-    invoice_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('id', flat=True)
-    stock_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_qr_rand_num', flat=True)
-    job_num = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_job_no', flat=True)
+    if not wh_job_id:
+        return
+
+    # Aggregate quantities for the entire job
+    aggregates = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).aggregate(
+        total_p=Sum('wh_goods_pieces'),
+        total_w=Sum('wh_goods_weight')
+    )
+    total_qty = aggregates['total_p'] or 0
+    gross_wt = aggregates['total_w'] or 0
+
     invoice_weight = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_weight
     invoice_package = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_no_of_pkg
     invoice_value = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_invoice_value
     invoice_amount_inr = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_amount_in
-    gross_wt = 0
-    total_qty = 0
-    for j in stock_id:
-        goods = Warehouse_goods_info.objects.filter(wh_qr_rand_num=j).first()
-        if goods:
-            gross_wt += goods.wh_goods_weight
-            total_qty += goods.wh_goods_pieces
 
-    for i in range(0, len(invoice_id)):
+    # Update all records for this job
+    invoice_ids = list(Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).order_by('id').values_list('id', flat=True))
+    
+    for i, pk in enumerate(invoice_ids):
         if i == 0:
-            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_amount_inr=invoice_amount_inr)
-            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_weight_unit=invoice_weight)
-            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_value=invoice_value)
-            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_qty=invoice_package)
-            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_gross_weight=gross_wt)
-            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_total_qty=total_qty)
+            Warehouse_goods_info.objects.filter(pk=pk).update(
+                wh_invoice_amount_inr=invoice_amount_inr,
+                wh_invoice_weight_unit=invoice_weight,
+                wh_invoice_value=invoice_value,
+                wh_invoice_qty=invoice_package,
+                wh_gross_weight=gross_wt,
+                wh_total_qty=total_qty
+            )
         else:
-            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_amount_inr=0.0)
-            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_weight_unit=0.0)
-            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_value=0.0)
-            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_qty=0)
-            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_gross_weight=0.0)
-            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_total_qty=0)
+            Warehouse_goods_info.objects.filter(pk=pk).update(
+                wh_invoice_amount_inr=0.0,
+                wh_invoice_weight_unit=0.0,
+                wh_invoice_value=0.0,
+                wh_invoice_qty=0,
+                wh_gross_weight=0.0,
+                wh_total_qty=0
+            )
 
     # update gate-in ID in Warehouse_goods_info table
     try:

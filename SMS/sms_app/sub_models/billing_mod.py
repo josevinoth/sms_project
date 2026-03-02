@@ -34,6 +34,8 @@ class BilingInfo(models.Model):
     bill_tot_crane_charges= models.FloatField(default=0.0,null=True,blank=True)
     bill_tot_forklift_charges= models.FloatField(default=0.0,null=True,blank=True)
     bill_tot_fumigation_charges= models.FloatField(default=0.0,null=True,blank=True)
+    bill_handling_charges= models.FloatField(default=0.0,null=True,blank=True)
+    bill_packing_charges= models.FloatField(default=0.0,null=True,blank=True)
     bill_total_pre_gst= models.FloatField(default=0.0,null=True,blank=True)
     bill_cgst= models.FloatField(default=9.0,blank=True, null=True)
     bill_sgst= models.FloatField(default=9.0,blank=True, null=True)

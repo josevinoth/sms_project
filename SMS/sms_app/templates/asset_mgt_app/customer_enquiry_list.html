@@ -575,7 +575,7 @@
                             <th>To</th>
                             <th>Dept</th>
                             <th>Cnote</th>
-                            <th>C-Note PDF</th>
+
                             <th>Enq Date</th>
                             <th>Veh Req Date</th>
                             <th>Action</th>
@@ -610,15 +610,7 @@
                             <td>{{ item.enq.en_tolocation.place_name }}</td>
                             <td>{{ item.enq.en_customerdepartment.ct_customerdepartment|default:"-" }}</td>
                             <td>{{ item.cnote }}</td>
-                            <td>
-                                {% if item.consignment_id %}
-                                <a href="{% url 'consignment_note_pdf' item.consignment_id %}" target="_blank"
-                                    style="display:inline-flex; align-items:center; gap:0.3rem; padding:0.25rem 0.6rem; border-radius:6px; background:rgba(99,102,241,0.15); color:#a5b4fc; text-decoration:none; font-size:0.82rem; font-weight:600;"
-                                    title="Consignment Note PDF">
-                                    <i class="fas fa-file-alt"></i> PDF
-                                </a>
-                                {% else %}-{% endif %}
-                            </td>
+
                             <td>{{ item.enq.en_created_at|date:"d M Y" }}</td>
                             <td>{{ item.enq.en_pickupdatetime|date:"d M Y H:i"|default:"-" }}</td>
                             <td>
