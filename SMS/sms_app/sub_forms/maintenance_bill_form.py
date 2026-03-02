@@ -1,5 +1,5 @@
 from django import forms
-from ..sub_models.maintenance_bill_mod import MaintenanceBill
+from ..sub_models.maintenance_bill_mod import MaintenanceBillInfo
 from ..sub_models.maintenance_mod import MaintenanceInfo
 
 class MaintenanceBillForm(forms.ModelForm):
@@ -10,7 +10,7 @@ class MaintenanceBillForm(forms.ModelForm):
     )
 
     class Meta:
-        model = MaintenanceBill
+        model = MaintenanceBillInfo
         fields = '__all__'
 
     def __init__(self, *args, **kwargs):

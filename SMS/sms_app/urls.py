@@ -1036,10 +1036,12 @@ urlpatterns = [
     path('maintenance_bill_list/', views.maintenance_bill_list, name='maintenance_bill_list'),
     path('maintenance_bill/<int:id>/edit/', views.maintenance_bill_edit, name='maintenance_bill_edit'),
     path('maintenance_bill/<int:id>/delete/', views.maintenance_bill_delete, name='maintenance_bill_delete'),
+    path('attached_bill_list/', views.attached_bill_list, name='attached_bill_list'),
+    path('attached_bill_add/', views.attached_bill_add, name='attached_bill_add'),
+    path('attached_bill_edit/<int:id>/', views.attached_bill_edit, name='attached_bill_edit'),
+    path('attached_bill_delete/<int:id>/', views.attached_bill_delete, name='attached_bill_delete'),
+    path('get_attached_vehicle_details/', views.get_attached_vehicle_details, name='get_attached_vehicle_details'),
+    path('get_vehicles_by_vendor/', views.get_vehicles_by_vendor, name='get_vehicles_by_vendor'),
     path('fetch_maintenance_bill_details/', views.fetch_maintenance_bill_details, name='fetch_maintenance_bill_details'),
     path('get_maintenance_records_by_vehicle/', views.get_maintenance_records_by_vehicle, name='get_maintenance_records_by_vehicle'),
 ]
-
-
-
-

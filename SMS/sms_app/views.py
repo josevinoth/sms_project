@@ -180,4 +180,5 @@ from .sub_views.customer_registration_view import customer_register, customer_re
 from .sub_views.maintenance_bill_view import maintenance_bill_add, maintenance_bill_list, fetch_maintenance_bill_details, get_maintenance_records_by_vehicle, maintenance_bill_edit, maintenance_bill_delete
 from .sub_views.customer_enquiry_view import customer_enquiry_add, customer_enquiry_edit, customer_enquiry_list, customer_dashboard, customer_shipment_tracking, customer_track_vehicle, download_pod, download_dmr, ajax_get_vehicle_types, customer_documents
 from .sub_views.customer_login_view import customer_login, ajax_get_customer_departments
+from .sub_views.attached_bill_view import attached_bill_add, attached_bill_list, attached_bill_edit, attached_bill_delete, get_attached_vehicle_details, get_vehicles_by_vendor
 
