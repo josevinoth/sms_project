@@ -10,20 +10,28 @@ def driver_login(request):
         if not mobile_no:
             messages.error(request, "Please enter Mobile Number.")
             return render(request, 'driver_app/driver_login.html')
-            
-        # Find active trip matching credentials
+        
+        # Step 1: Try to find the LATEST ACTIVE trip (not closed/cancelled)
         trip = TripdetailInfo.objects.filter(
             tr_drivernumber=mobile_no
         ).exclude(
-            tc_financestatus_id__in=[2, 3, 7] # Assuming 2=Closed, 3=Cancelled, 7=Delivered(Closed)
+            tc_financestatus_id__in=[2, 3, 7]  # 2=Closed, 3=Cancelled, 7=Delivered
         ).order_by('-id').first()
         
+        # Step 2: If no active trip, show the LATEST trip (even if closed)
+        #         Only skip cancelled trips (status 3)
+        if not trip:
+            trip = TripdetailInfo.objects.filter(
+                tr_drivernumber=mobile_no
+            ).exclude(
+                tc_financestatus_id=3  # Only exclude cancelled
+            ).order_by('-id').first()
+        
         if trip:
-            # Login successful
             request.session['driver_trip_id'] = trip.id
             return redirect('driver_dashboard')
         else:
-            messages.error(request, "No active trip found for these details.")
+            messages.error(request, "No trip found for this mobile number.")
             return render(request, 'driver_app/driver_login.html')
             
     return render(request, 'driver_app/driver_login.html')

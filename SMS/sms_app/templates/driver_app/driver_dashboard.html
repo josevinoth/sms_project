@@ -269,9 +269,17 @@
             <div class="card-header">
                 <i class="fas fa-tasks"></i> Workflow Actions
             </div>
+            {% if is_closed %}
+            <div
+                style="background: #28a745; color: white; text-align: center; padding: 12px; font-weight: bold; font-size: 16px;">
+                ✅ This Trip is Completed / Closed
+            </div>
+            {% endif %}
             <div class="card-body">
-                <form method="POST">
+                <form id="action_form" method="POST">
                     {% csrf_token %}
+                    <input type="hidden" name="action" id="hidden_action" value="">
+                    <input type="hidden" name="hidden_km" id="hidden_km" value="">
 
                     <!-- Loading Stage -->
                     <h6 style="margin-top: 0;">Loading / Origin</h6>
@@ -280,9 +288,12 @@
                     {% if trip.tr_departeddate_pickup %}
                     <button type="button" class="action-btn completed-step">
                         <i class="fas fa-check"></i> Vehicle Reported ({{ trip.tr_departeddate_pickup|date:"H:i" }})
+                        {% if trip.tr_reportedkm_pickup %} - KM: {{ trip.tr_reportedkm_pickup }}{% endif %}
                     </button>
                     {% else %}
-                    <button type="submit" name="action" value="vehicle_reported" class="action-btn btn-primary">
+                    <button type="button"
+                        onclick="submitWithKM('vehicle_reported', 'Enter Vehicle Reported KM (Loading Origin):')"
+                        class="action-btn btn-primary">
                         <i class="fas fa-map-marker-alt"></i> Vehicle Reported
                     </button>
                     {% endif %}
@@ -317,10 +328,12 @@
                     {% if trip.tr_departeddate %}
                     <button type="button" class="action-btn completed-step">
                         <i class="fas fa-check"></i> Vehicle Started ({{ trip.tr_departeddate|date:"H:i" }})
+                        {% if trip.tr_departedkm %} - KM: {{ trip.tr_departedkm }}{% endif %}
                     </button>
                     {% else %}
-                    <button type="submit" name="action" value="vehicle_started" class="action-btn btn-primary" {{
-                        trip.tr_dock_in_time|yesno:",disabled" }}
+                    <button type="button"
+                        onclick="submitWithKM('vehicle_started', 'Enter Vehicle Started KM (Departing Origin):')"
+                        class="action-btn btn-primary" {{ trip.tr_dock_in_time|yesno:",disabled" }}
                         style="{{ trip.tr_dock_in_time|yesno:',opacity: 0.5; pointer-events: none;' }}">
                         <i class="fas fa-truck"></i> Vehicle Started
                     </button>
@@ -333,9 +346,11 @@
                     {% if trip.tr_reporteddate %}
                     <button type="button" class="action-btn completed-step">
                         <i class="fas fa-check"></i> Vehicle Arrived ({{ trip.tr_reporteddate|date:"H:i" }})
+                        {% if trip.tr_reportedkm %} - KM: {{ trip.tr_reportedkm }}{% endif %}
                     </button>
                     {% else %}
-                    <button type="submit" name="action" value="vehicle_reported_unloading"
+                    <button type="button"
+                        onclick="submitWithKM('vehicle_reported_unloading', 'Enter Vehicle Reported KM (Destination Arrival):')"
                         class="action-btn btn-primary" {{ trip.tr_departeddate|yesno:",disabled" }}
                         style="{{ trip.tr_departeddate|yesno:',opacity: 0.5; pointer-events: none;' }}">
                         <i class="fas fa-map-marker-alt"></i> Vehicle Arrived
@@ -372,10 +387,12 @@
                     {% if trip.tr_reporteddate_delivery %}
                     <button type="button" class="action-btn completed-step">
                         <i class="fas fa-check"></i> Vehicle Released ({{ trip.tr_reporteddate_delivery|date:"H:i" }})
+                        {% if trip.tr_reportedkm_delivery %} - KM: {{ trip.tr_reportedkm_delivery }}{% endif %}
                     </button>
                     {% else %}
-                    <button type="submit" name="action" value="vehicle_started_unloading" class="action-btn btn-primary"
-                        {{ trip.tr_unloading_time|yesno:",disabled" }}
+                    <button type="button"
+                        onclick="submitWithKM('vehicle_started_unloading', 'Enter Vehicle Started KM (Destination Release):')"
+                        class="action-btn btn-primary" {{ trip.tr_unloading_time|yesno:",disabled" }}
                         style="{{ trip.tr_unloading_time|yesno:',opacity: 0.5; pointer-events: none;' }}">
                         <i class="fas fa-truck-moving"></i> Vehicle Released
                     </button>
@@ -428,6 +445,22 @@
         </div>
 
     </div>
+
+    <script>
+        function submitWithKM(actionValue, promptText) {
+            let km = prompt(promptText);
+            if (km !== null && km.trim() !== '') {
+                // Check if it's a valid number
+                if (!isNaN(km) && Number.isInteger(parseFloat(km))) {
+                    document.getElementById('hidden_action').value = actionValue;
+                    document.getElementById('hidden_km').value = km.trim();
+                    document.getElementById('action_form').submit();
+                } else {
+                    alert("Please enter a valid round number for the KM reading.");
+                }
+            }
+        }
+    </script>
 </body>
 
 </html>

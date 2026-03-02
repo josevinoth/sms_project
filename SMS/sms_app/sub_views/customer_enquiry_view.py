@@ -59,28 +59,44 @@ def customer_dashboard(request):
     if department:
         enquiry_qs = enquiry_qs.filter(en_customerdepartment=department)
 
-    # Shipment stats based on TripdetailInfo
+    # All trips for this customer
     all_trips = TripdetailInfo.objects.filter(tr_enquirynumber__en_customername=customer)
     if department:
         all_trips = all_trips.filter(tr_enquirynumber__en_customerdepartment=department)
-    
-    # Completed status IDs (delivered, cancelled, returned, etc.)
+
     completed_statuses = [2, 3, 4, 5, 7, 9]
-    
-    # Active enquiries: only those that have at least one trip with a non-completed status
-    active_trip_enquiry_ids = all_trips.exclude(
-        tc_financestatus_id__in=completed_statuses
-    ).values_list('tr_enquirynumber_id', flat=True).distinct()
+
+    # Count DISTINCT ENQUIRIES (not individual trips) so numbers match the list pages
+    # In-Transit = distinct enquiries with at least one in-transit trip (status 1)
+    in_transit = enquiry_qs.filter(
+        tripdetailinfo__tc_financestatus_id=1
+    ).distinct().count()
+
+    # Active = distinct enquiries with a trip that has a vehicle BUT NOT yet started AND NOT completed
     active_enquiries = enquiry_qs.filter(
-        id__in=active_trip_enquiry_ids
+        id__in=all_trips.filter(
+            tr_vehiclenumber__isnull=False
+        ).exclude(
+            tr_vehiclenumber=''
+        ).exclude(
+            tc_financestatus_id__in=completed_statuses + [1]
+        ).values_list('tr_enquirynumber_id', flat=True).distinct()
     ).count()
-    
-    in_transit = all_trips.filter(tc_financestatus_id=1).count()
-    delivered = all_trips.filter(tc_financestatus_id__in=[2, 7]).count()
-    cancelled = all_trips.filter(tc_financestatus_id=3).count()
- 
-    # Recent Shipments
-    recent_shipments = all_trips.select_related('tr_enquirynumber', 'tc_financestatus').order_by('-tr_created_at')[:5]
+
+    # Delivered = distinct enquiries with a completed trip this year
+    delivered = enquiry_qs.filter(
+        tripdetailinfo__tc_financestatus_id__in=[2, 7]
+    ).distinct().count()
+
+    # Cancelled = distinct enquiries with a cancelled trip
+    cancelled = enquiry_qs.filter(
+        tripdetailinfo__tc_financestatus_id=3
+    ).distinct().count()
+
+    # Recent Shipments — include driver and consignment info
+    recent_shipments = all_trips.select_related(
+        'tr_enquirynumber', 'tc_financestatus', 'tr_consignmentnumber'
+    ).order_by('-tr_created_at')[:5]
 
     return render(request, 'asset_mgt_app/customer_portal_dashboard.html', {
         'customer': customer,
@@ -371,7 +387,20 @@ def customer_enquiry_list(request):
 
     # Status filter from dashboard cards
     status_filter = request.GET.get('status', '')
-    if status_filter == 'transit':
+    _completed = [2, 3, 4, 5, 7, 9]
+    if status_filter == 'active':
+        # Active = enquiries with a trip that has a vehicle, NOT yet started AND NOT completed
+        active_trip_enq_ids = TripdetailInfo.objects.filter(
+            tr_enquirynumber__en_customername=customer
+        ).filter(
+            tr_vehiclenumber__isnull=False
+        ).exclude(
+            tr_vehiclenumber=''
+        ).exclude(
+            tc_financestatus_id__in=_completed + [1]
+        ).values_list('tr_enquirynumber_id', flat=True).distinct()
+        enquiries_qs = enquiries_qs.filter(id__in=active_trip_enq_ids)
+    elif status_filter == 'transit':
         enquiries_qs = enquiries_qs.filter(tripdetailinfo__tc_financestatus_id=1).distinct()
     elif status_filter == 'delivered':
         enquiries_qs = enquiries_qs.filter(tripdetailinfo__tc_financestatus_id__in=[2, 7]).distinct()
@@ -396,6 +425,8 @@ def customer_enquiry_list(request):
             trip = enq.tripdetailinfo_set.filter(tc_financestatus_id__in=[2, 7]).first()
         elif status_filter == 'cancelled':
             trip = enq.tripdetailinfo_set.filter(tc_financestatus_id=3).first()
+        elif status_filter == 'active':
+            trip = None  # Active enquiries have no trips yet
         else:
             trip = enq.tripdetailinfo_set.first()
         va = enq.vehicle_allotmentinfo_set.first()
@@ -445,6 +476,21 @@ def customer_enquiry_list(request):
                 if os.path.exists(fpath):
                     pod_trip_id = trip.id
 
+        # Consignment ID for PDF link
+        consignment_id = None
+        cus_ref_num = None
+        if trip and trip.tr_consignmentnumber:
+            consignment_id = trip.tr_consignmentnumber.id
+            cus_ref_num = trip.tr_consignmentnumber.co_cusrefnum
+        elif cn:
+            consignment_id = cn.id
+            cus_ref_num = cn.co_cusrefnum
+
+        # Driver number
+        driver_number = None
+        if trip and trip.tr_drivernumber:
+            driver_number = trip.tr_drivernumber
+
         enquiry_list.append({
             'enq': enq,
             'vehicle_no': vehicle_no,
@@ -452,6 +498,9 @@ def customer_enquiry_list(request):
             'cnote': cnote,
             'track_link': track_link,
             'pod_trip_id': pod_trip_id,
+            'consignment_id': consignment_id,
+            'cus_ref_num': cus_ref_num,
+            'driver_number': driver_number,
         })
     
     return render(request, 'asset_mgt_app/customer_enquiry_list.html', {

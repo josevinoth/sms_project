@@ -21,86 +21,134 @@
 <hr>
 <table id="trip_approval_table" class="table table-bordered table-sm">
     <thead class="thead-dark">
-    <tr>
-        <th>Trip No</th>
-        <th>Customer</th>
-        <th>From Location</th>
-        <th>To Location</th>
-        <th>Consignment No</th>
-        <th>Ewaybill No</th>
-        <th>Ewaybill Issue</th>
-        <th>Ewaybill Validity</th>
-        <th>Ewaybill Attachment</th>
-        <th>Invoice No</th>
-        <th>Invoice Attachment</th>
-        <th>Approval</th>
-    </tr>
+        <tr>
+            <th>Trip No</th>
+            <th>Customer</th>
+            <th>From Location</th>
+            <th>To Location</th>
+            <th>Consignment No</th>
+            <th>Ewaybill No</th>
+            <th>Ewaybill Issue</th>
+            <th>Ewaybill Validity</th>
+            <th>Ewaybill Attachment</th>
+            <th>Invoice No</th>
+            <th>Invoice Attachment</th>
+            <th>Approval</th>
+        </tr>
     </thead>
     <tbody>
-    {% for trip in trip_list %}
-    {% with consignments=trip.tr_consignmentnumber.cg_consignmentnumber.all %}
-    {% for consignment in consignments %}
-    <tr>
-        <td>{{ trip.tr_tripnumber }}</td>
-        <td>{{ trip.tr_enquirynumber.en_customername }}</td>
-        <td>{{ trip.tr_enquirynumber.en_fromlocaion }}</td>
-        <td>{{ trip.tr_enquirynumber.en_tolocation }}</td>
-        <td>{{ trip.tr_consignmentnumber }}</td>
-        <td>{{ consignment.cg_ebillno }}</td>
-        <td>{{ consignment.cg_dateofissue }}</td>
-        <td>{{ consignment.cg_dateofvalidity }}</td>
-        <td>
-            {% if consignment.cg_ewaybill_att %}
-            <a href="{{ consignment.cg_ewaybill_att.url }}" target="_blank">Download</a>
-            {% else %}
-            No File
-            {% endif %}
-        </td>
-        <td>{{ consignment.cg_consignerinvoice }}</td>
-        <td>
-            {% if consignment.cg_invoice_att %}
-            <a href="{{ consignment.cg_invoice_att.url }}" target="_blank">Download</a>
-            {% else %}
-            No File
-            {% endif %}
-        </td>
-        <td class="text-center">
-            <form method="post" action="{% url 'update_trip_approval' trip.id %}" class="d-flex align-items-center gap-2">
-                {% csrf_token %}
-                <select name="ta_approval_status" class="form-control form-control-sm" style="width: 150px;" required>
-                    {% for status in status_list %}
-                    <option value="{{ status.id }}"
-                            {% if trip.tr_approval %}
-                            {% if trip.tr_approval.ta_approval_status.id == status.id %}
-                            selected
-                            {% endif %}
-                            {% else %}
-                            {% if status.id == 3 %}
-                            selected
-                            {% endif %}
-                            {% endif %}>
-                        {{ status }}
-                    </option>
-                    {% endfor %}
-                </select>
-                <button type="submit" class="btn btn-sm btn-primary ml-2">Update</button>
-            </form>
-        </td>
-    </tr>
-    {% endfor %}
-    {% endwith %}
-    {% endfor %}
+        {% for trip in trip_list %}
+        {% with consignments=trip.tr_consignmentnumber.cg_consignmentnumber.all %}
+        {% for consignment in consignments %}
+        <tr>
+            <td>{{ trip.tr_tripnumber }}</td>
+            <td>{{ trip.tr_enquirynumber.en_customername.cu_name }}</td>
+            <td>{{ trip.tr_enquirynumber.en_fromlocaion.place_name }}</td>
+            <td>{{ trip.tr_enquirynumber.en_tolocation.place_name }}</td>
+            <td>{{ trip.tr_consignmentnumber.co_consignmentnumber|default:"-" }}</td>
+            <td>{{ consignment.cg_ebillno|default:"-" }}</td>
+            <td>{{ consignment.cg_dateofissue|date:"d-m-Y"|default:"-" }}</td>
+            <td>{{ consignment.cg_dateofvalidity|date:"d-m-Y"|default:"-" }}</td>
+            <td>
+                {% if consignment.cg_ewaybill_att %}
+                <a href="{{ consignment.cg_ewaybill_att.url }}" target="_blank">Download</a>
+                {% else %}
+                No File
+                {% endif %}
+            </td>
+            <td>{{ consignment.cg_consignerinvoice|default:"-" }}</td>
+            <td>
+                {% if consignment.cg_invoice_att %}
+                <a href="{{ consignment.cg_invoice_att.url }}" target="_blank">Download</a>
+                {% else %}
+                No File
+                {% endif %}
+            </td>
+            <td class="text-center">
+                <form method="post" action="{% url 'update_trip_approval' trip.id %}"
+                    class="d-flex align-items-center gap-2">
+                    {% csrf_token %}
+                    <select name="ta_approval_status" class="form-control form-control-sm" style="width: 150px;"
+                        required>
+                        {% for status in status_list %}
+                        <option value="{{ status.id }}"
+                                {% if trip.tr_approval %}
+                                {% if trip.tr_approval.ta_approval_status.id == status.id %}
+                                selected
+                                {% endif %}
+                                {% else %}
+                                {% if status.id == 3 %}
+                                selected
+                                {% endif %}
+                                {% endif %}>
+                            {{ status }}
+                        </option>
+                        {% endfor %}
+                    </select>
+
+                    {% if not consignment.cg_ewaybill_att and not consignment.cg_invoice_att and not consignment.cg_otl_att %}
+                    <button type="button" class="btn btn-sm btn-secondary ml-2" disabled
+                        title="Please upload at least one attachment (Ewaybill/Invoice/OTL) before approving">Update</button>
+                    <small class="text-danger d-block mt-1"
+                        style="font-size: 0.7rem; line-height: 1;">Missing<br>Attachment</small>
+                    {% else %}
+                    <button type="submit" class="btn btn-sm btn-primary ml-2">Update</button>
+                    {% endif %}
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td>{{ trip.tr_tripnumber }}</td>
+            <td>{{ trip.tr_enquirynumber.en_customername.cu_name }}</td>
+            <td>{{ trip.tr_enquirynumber.en_fromlocaion.place_name }}</td>
+            <td>{{ trip.tr_enquirynumber.en_tolocation.place_name }}</td>
+            <td>{{ trip.tr_consignmentnumber.co_consignmentnumber|default:"-" }}</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>No File</td>
+            <td>-</td>
+            <td>No File</td>
+            <td class="text-center">
+                <form method="post" action="{% url 'update_trip_approval' trip.id %}"
+                    class="d-flex align-items-center gap-2">
+                    {% csrf_token %}
+                    <select name="ta_approval_status" class="form-control form-control-sm" style="width: 150px;"
+                        required>
+                        {% for status in status_list %}
+                        <option value="{{ status.id }}"
+                                {% if trip.tr_approval and trip.tr_approval.ta_approval_status.id == status.id %}
+                                selected
+                                {% elif not trip.tr_approval and status.id == 3 %}
+                                selected
+                                {% endif %}>
+                            {{ status }}
+                        </option>
+                        {% endfor %}
+                    </select>
+
+                    <button type="button" class="btn btn-sm btn-secondary ml-2" disabled
+                        title="No consignment details found. Please add consignment data with an attachment first">Update</button>
+                    <small class="text-danger d-block mt-1"
+                        style="font-size: 0.7rem; line-height: 1;">Missing<br>Attachment</small>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        {% endwith %}
+        {% endfor %}
     </tbody>
 </table>
 <script>
-    $(document).ready(function() {
-    $('#trip_approval_table').DataTable({
-        order: [0, 'desc' ],
-        dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel','print'
-        ]
+    $(document).ready(function () {
+        $('#trip_approval_table').DataTable({
+            order: [0, 'desc'],
+            dom: 'lBfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'print'
+            ]
+        });
     });
-} );
 </script>
 {% endblock content %}
