@@ -210,6 +210,28 @@ def fetch_vehicle_details(request):
     })
 
 
+@login_required(login_url='login_page')
+def fetch_filtered_vehicles(request):
+    branch_id = request.GET.get('branch_id')
+    
+    # Filter based on user rules:
+    # 1) if Branch id 1 is selected means we must show the vehicle numbers which have 'TN' in it
+    # 2) if Branch id 2 is selected means we must show the vehicle numbers which have 'KA' in it
+    
+    vehicles = VehiclemasterInfo.objects.filter(vm_ownership_id=1)
+    
+    if branch_id == '1':
+        vehicles = vehicles.filter(vm_registrationnumber__icontains='TN')
+    elif branch_id == '2':
+        vehicles = vehicles.filter(vm_registrationnumber__icontains='KA')
+    # If no branch or other branch, we could either show all or none. 
+    # Based on prompt, specific rules for 1 and 2. 
+    
+    vehicle_list = list(vehicles.values('vm_registrationnumber'))
+    
+    return JsonResponse({'vehicles': vehicle_list})
+
+
 from django.template.loader import get_template
 from django.contrib.auth.decorators import login_required
 from xhtml2pdf import pisa

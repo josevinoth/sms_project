@@ -1,4 +1,6 @@
 from django.db import models
+
+from .branch_mod import Branch
 from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
 from ..sub_models.driver_master_mod import DrivermasterInfo
 from ..sub_models.maintenance_status_mod import Maintenance_status
@@ -36,6 +38,8 @@ class MaintenanceInfo(models.Model):
     mi_job_card_no = models.CharField(max_length=20,null=True,blank=True,unique=True,)
     mi_bay_no = models.CharField(max_length=10, null=True, blank=True)
     mi_approval_status = models.ForeignKey(Maintenance_status, default=1, on_delete=models.PROTECT)
+    mi_location = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True)
+
     def __str__(self):
         # Ensure __str__ always returns a string even if job_card_no is None
         if self.mi_job_card_no:

@@ -533,7 +533,7 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         pcs = pkg.wh_goods_pieces or 0.0
 
                         if l and w and h:
-                            dim_string = f"{l} x {w} x {h}"
+                            dim_string = f"({l}*{w}*{h})={int(pcs)}"
                             if dim_string not in dimensions:
                                 dimensions.append(dim_string)
                                 

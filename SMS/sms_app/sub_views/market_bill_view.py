@@ -10,7 +10,10 @@ from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
 from ..sub_models.tripdetail_mod import TripdetailInfo
 from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 from ..sub_models.haltingcharges_mod import Haltingcharges
+from ..sub_models.vendorratemaster1_mod import VendorratemasterInfo1
 
+from django.core.files.storage import default_storage
+import os
 
 # ==================================================
 # ADD MARKET BILL
@@ -166,10 +169,34 @@ def market_bill_edit(request, id):
             # Fetch standard and special costs from allotment
             standard_cost = 0
             special_cost = 0
-            allotment = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=trip.tr_enquirynumber).first()
+            allotment = Vehicle_allotmentInfo.objects.filter(
+                Q(va_enquirynumber=trip.tr_enquirynumber),
+                Q(va_vehiclenumber__vm_registrationnumber__iexact=trip.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip.tr_vehiclenumber)
+            ).first()
             if allotment:
                 standard_cost = float(allotment.va_standardbuy or 0)
                 special_cost = float(allotment.va_specialbuy or 0)
+
+                # Refinement: Try to fetch the rate from VendorratemasterInfo1 using Cnote details if available
+                if trip.tr_consignmentnumber and allotment.va_vendor:
+                    cnote = trip.tr_consignmentnumber
+                    v_type_id = trip.tr_vehicletype_id or trip.tr_vehicletype_placed_id
+                    if v_type_id:
+                        # Use Cnote locations if available, otherwise fallback to Enquiry locations
+                        from_loc = cnote.co_fromlocaion or trip.tr_enquirynumber.en_fromlocaion
+                        to_loc = cnote.co_tolocation or trip.tr_enquirynumber.en_tolocation
+
+                        rate_obj = VendorratemasterInfo1.objects.filter(
+                            vr1_vendor=allotment.va_vendor,
+                            vr1_fromlocation=from_loc,
+                            vr1_tolocation=to_loc,
+                            vr1_vehicletype_id=v_type_id
+                        ).first()
+                        if rate_obj:
+                            special_cost = float(rate_obj.vr1_rate)
+                            # Always update standard_cost to match master rate if master rate is found
+                            # This prevents incorrect red highlighting when the master rate is the intended standard
+                            standard_cost = special_cost
 
             # Determine current halting rate from Master Data
             halting_rate = 0.0
@@ -194,6 +221,11 @@ def market_bill_edit(request, id):
                 else:
                     halting_rate = h_cost
 
+            # Get mail attachment URL from JSON field
+            mail_attachment_url = ''
+            if record.mb_trip_mail_attachments and str(trip.id) in record.mb_trip_mail_attachments:
+                mail_attachment_url = record.mb_trip_mail_attachments[str(trip.id)]
+
             selected_trips_data.append({
                 'id': trip.id,
                 'consignment_number': consignment_number,
@@ -213,6 +245,7 @@ def market_bill_edit(request, id):
                 'halting_days': int(trip.tc_no_of_days_halting or 0),
                 'halting_cost': float(trip.tc_haltingcost or 0),
                 'halting_rate': float(halting_rate),
+                'mail_attachment_url': mail_attachment_url,
             })
 
     return render(
@@ -240,6 +273,9 @@ def market_bill_delete(request, id):
 
     return redirect('market_bill_list')
 
+
+import os
+from django.core.files.storage import default_storage
 
 # ==================================================
 # AJAX: GET TRIPS BY VENDOR
@@ -314,10 +350,34 @@ def get_trips_by_vendor(request):
         # Fetch standard and special costs from allotment
         standard_cost = 0
         special_cost = 0
-        allotment = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=trip.tr_enquirynumber).first()
+        allotment = Vehicle_allotmentInfo.objects.filter(
+            Q(va_enquirynumber=trip.tr_enquirynumber),
+            Q(va_vehiclenumber__vm_registrationnumber__iexact=trip.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip.tr_vehiclenumber)
+        ).first()
         if allotment:
             standard_cost = float(allotment.va_standardbuy or 0)
             special_cost = float(allotment.va_specialbuy or 0)
+
+            # Refinement: Try to fetch the rate from VendorratemasterInfo1 using Cnote details if available
+            if trip.tr_consignmentnumber and allotment.va_vendor:
+                cnote = trip.tr_consignmentnumber
+                v_type_id = trip.tr_vehicletype_id or trip.tr_vehicletype_placed_id
+                if v_type_id:
+                    # Use Cnote locations if available, otherwise fallback to Enquiry locations
+                    from_loc = cnote.co_fromlocaion or trip.tr_enquirynumber.en_fromlocaion
+                    to_loc = cnote.co_tolocation or trip.tr_enquirynumber.en_tolocation
+
+                    rate_obj = VendorratemasterInfo1.objects.filter(
+                        vr1_vendor=allotment.va_vendor,
+                        vr1_fromlocation=from_loc,
+                        vr1_tolocation=to_loc,
+                        vr1_vehicletype_id=v_type_id
+                    ).first()
+                    if rate_obj:
+                        special_cost = float(rate_obj.vr1_rate)
+                        # Always update standard_cost to match master rate if master rate is found
+                        # This prevents incorrect red highlighting when the master rate is the intended standard
+                        standard_cost = special_cost
 
         # --- Halting Cost Logic ---
         # Fetch halting rate based on customer and trip type
@@ -378,6 +438,7 @@ def get_trips_by_vendor(request):
             'halting_days': halting_days,
             'halting_cost': float(halting_cost),
             'halting_rate': float(halting_rate),
+            'mail_attachment_url': '', # New trips won't have attachments yet
         })
 
     return JsonResponse({'trips': trip_list})
@@ -392,7 +453,7 @@ def market_bill_upload(request, id):
     if request.method == "POST" and request.FILES.get('mb_attachment'):
         record.mb_attachment = request.FILES['mb_attachment']
         record.save()
-        messages.success(request, f"Attachment uploaded successfully for Bill {record.mb_bill_no}.")
+        messages.success(request, "Attachment uploaded successfully")
     else:
         messages.error(request, "Failed to upload attachment. Please select a file.")
 
@@ -402,14 +463,29 @@ def market_bill_upload(request, id):
 # UPLOAD MAIL ATTACHMENT
 # ==================================================
 @login_required(login_url='login_page')
-def market_mail_upload(request, id):
+def market_mail_upload(request, id, trip_id):
     record = get_object_or_404(MarketBillInfo, id=id)
 
     if request.method == "POST" and request.FILES.get('mb_mail_attachment'):
-        record.mb_mail_attachment = request.FILES['mb_mail_attachment']
+        uploaded_file = request.FILES['mb_mail_attachment']
+        
+        # Determine path: MarketMailAttachments/bill_id/trip_id/filename
+        file_name = uploaded_file.name
+        safe_file_name = "".join([c for c in file_name if c.isalnum() or c in ('.', '_')]).strip()
+        relative_path = os.path.join('MarketMailAttachments', str(record.id), str(trip_id), safe_file_name)
+        
+        # Save file using default_storage
+        path = default_storage.save(relative_path, uploaded_file)
+        file_url = default_storage.url(path)
+
+        # Update JSON field
+        if not record.mb_trip_mail_attachments:
+            record.mb_trip_mail_attachments = {}
+        
+        record.mb_trip_mail_attachments[str(trip_id)] = file_url
         record.save()
-        messages.success(request, f"Mail attachment uploaded successfully for Bill {record.mb_bill_no}.")
+        
+        messages.success(request, "Attachment uploaded successfully")
     else:
         messages.error(request, "Failed to upload mail attachment. Please select a file.")
-
     return redirect('market_bill_edit', id=id)

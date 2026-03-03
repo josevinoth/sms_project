@@ -47,6 +47,7 @@
                 <tr>
                     <th>S.No</th>
                     <th>Bill No</th>
+                    <th>Bill Date</th>
                     <th>Vendor</th>
                     <th>Branch</th>
                     <!--<th>Vehicle Number</th>
@@ -72,6 +73,7 @@
                 <tr>
                     <td>{{ forloop.counter }}</td>
                     <td>{{ bill.mb_bill_no }}</td>
+                    <td>{{ bill.mb_bill_date|date:"d-m-Y" }}</td>
                     <td>{{ bill.mb_vendor }}</td>
                     <td></td> <!-- Placeholder for Branch -->
                     <!--<td>{{ bill.mb_vehicle_number }}</td>

@@ -2,13 +2,22 @@ from django import forms
 from ..sub_models.maintenance_mod import MaintenanceInfo
 from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
 from ..sub_models.driver_master_mod import DrivermasterInfo
+from ..sub_models.branch_mod import Branch
 
 
 class MaintenanceForm(forms.ModelForm):
+    mi_location = forms.ModelChoiceField(
+        queryset=Branch.objects.all(),
+        empty_label="Select Location",
+        widget=forms.Select(attrs={"class": "form-control"}),
+        label="Location"
+    )
+
     registration_no = forms.ModelChoiceField(
-        queryset=VehiclemasterInfo.objects.all(),
+        queryset=VehiclemasterInfo.objects.filter(vm_ownership_id=1),
         to_field_name='vm_registrationnumber',
-        empty_label="Select Vehicle No"
+        empty_label="Select Vehicle No",
+        widget=forms.Select(attrs={"class": "form-control"})
     )
 
     mi_driver_name = forms.ModelChoiceField(
