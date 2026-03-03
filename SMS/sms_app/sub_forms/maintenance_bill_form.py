@@ -1,24 +1,24 @@
 from django import forms
-from ..sub_models.maintenance_bill_mod import MaintenanceBill
+from ..sub_models.maintenance_bill_mod import MaintenanceBillInfo
 from ..sub_models.maintenance_mod import MaintenanceInfo
 
 class MaintenanceBillForm(forms.ModelForm):
     mnb_maintenance = forms.ModelChoiceField(
-        queryset=MaintenanceInfo.objects.filter(mi_approval_status_id__in=[2, 3]),
+        queryset=MaintenanceInfo.objects.filter(mi_approval_status_id=3),
         empty_label="-- Select Vehicle No --",
         label="Vehicle No"
     )
 
     class Meta:
-        model = MaintenanceBill
+        model = MaintenanceBillInfo
         fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super(MaintenanceBillForm, self).__init__(*args, **kwargs)
         
-        # Filter to only unbilled maintenance records
+        # Filter to only unbilled maintenance records with Finance Approved status (3)
         unbilled_q = MaintenanceInfo.objects.filter(
-            mi_approval_status_id__in=[2, 3],
+            mi_approval_status_id=3,
             bills_v1__isnull=True
         )
         

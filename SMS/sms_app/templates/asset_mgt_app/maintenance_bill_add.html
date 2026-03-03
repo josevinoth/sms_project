@@ -161,8 +161,7 @@
                             {% render_field form.mnb_bill_upload class="form-control" %}
                             {% if instance.mnb_bill_upload %}
                             <div class="mt-1">
-                                <small class="text-muted">Current file: <a href="{{ instance.mnb_bill_upload.url }}" target="_blank" class="text-primary font-weight-bold ml-2">{{
-                                    instance.mnb_bill_upload.name }}</a></small>
+                                <small class="text-muted">Current file: <a href="{{ instance.mnb_bill_upload.url }}" target="_blank" class="text-primary font-weight-bold ml-2">{{ instance.mnb_bill_upload.name }}</a></small>
                             </div>
                             {% endif %}
                         </div>
@@ -215,7 +214,7 @@
                                 <td>{{ record.mi_service_type }}</td>
                                 <td>{{ record.mi_estimated_amount }}</td>
                                 <td>{{ record.mi_created_at|date:"d-m-Y" }}</td>
-                                <td><span class="badge badge-info">{{ record.mi_approval_status }}</span></td>
+                                <td><span class="badge badge-success">{{ record.mi_approval_status }}</span></td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-sm btn-primary select-record"
                                         data-id="{{ record.id }}"
@@ -304,7 +303,7 @@
                 $('#id_mnb_maintenance').val(maintenanceId);
 
                 // Sync dropdown visually
-                $('#vehicle_numnber_select option').filter(function () {
+                $('#vehicle_number_select option').filter(function () {
                     return $(this).text() === vehicleNo;
                 }).prop('selected', true).trigger('change.select2');
 
@@ -322,7 +321,7 @@
             var initialVehicleId = "{{ instance.mnb_maintenance.mi_vehicle.id }}";
 
             $('#id_mnb_maintenance').val(initialMaintenanceId);
-            $('#vehicle_numnber_select').val(initialVehicleId).trigger('change.select2');
+            $('#vehicle_number_select').val(initialVehicleId).trigger('change.select2');
             fetchMaintenanceDetails(initialMaintenanceId);
 
             // Highlight the row if found

@@ -1,0 +1,440 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+
+<form id="attachedBillForm" method="POST">
+    {% csrf_token %}
+
+    <div class="container-fluid">
+        <div class="card text-white bg-info mb-3" style="max-width:100%;">
+
+            <!-- ================= HEADER ================= -->
+            <div class="card-header d-flex justify-content-center align-items-center">
+                <h3 class="mb-0 text-center" style="font-size: 26px; font-weight: 600;">
+                    Attached Bill
+                </h3>
+            </div>
+
+            <!-- ================= BODY ================= -->
+            <div class="card-body bg-light text-dark">
+
+                <div class="row">
+                    <!-- ========== COLUMN 1 ========== -->
+                    <div class="col-12 col-md-6">
+                        
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Vendor Name</span>
+                            </div>
+                            {% render_field form.ab_vendor class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Vehicle No</span>
+                            </div>
+                            {% render_field form.ab_vehicle_number class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Vehicle Type</span>
+                            </div>
+                            {% render_field form.ab_vehicle_type class="form-control disable_a_href" readonly="readonly" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Bill no</span>
+                            </div>
+                            {% render_field form.ab_bill_no class="form-control" placeholder="Enter Bill No" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Bill Date</span>
+                            </div>
+                            {% render_field form.ab_bill_date class="form-control" type="date" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">From Date</span>
+                            </div>
+                            {% render_field form.ab_from_date class="form-control" type="date" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">To Date</span>
+                            </div>
+                            {% render_field form.ab_to_date class="form-control" type="date" %}
+                        </div>
+
+                    </div>
+
+                    <!-- ========== COLUMN 2 ========== -->
+                    <div class="col-12 col-md-6">
+                        
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Buy Cost</span>
+                            </div>
+                            {% render_field form.ab_buy_cost class="form-control disable_a_href" readonly="readonly" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">No.of Leave Days </span>
+                            </div>
+                            {% render_field form.ab_leave_days class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text text-primary">Leave amount</span>
+                            </div>
+                            {% render_field form.ab_leave_amount class="form-control disable_a_href" readonly="readonly" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Agreed Km</span>
+                            </div>
+                            {% render_field form.ab_agreed_km class="form-control disable_a_href" readonly="readonly" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text text-primary">Total km run</span>
+                            </div>
+                            {% render_field form.ab_total_km_run class="form-control disable_a_href" readonly="readonly" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text text-primary">Extra Km run</span>
+                            </div>
+                            {% render_field form.ab_extra_km_run class="form-control disable_a_href" readonly="readonly" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Extra km amount</span>
+                            </div>
+                            {% render_field form.ab_extra_km_amount class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text font-weight-bold bg-success text-white">Bill Amount</span>
+                            </div>
+                            {% render_field form.ab_bill_amount class="form-control font-weight-bold text-success" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= ACTION BUTTONS ================= -->
+                <div class="action-row">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Submit
+                    </button>
+                    <a href="{% url 'attached_bill_list' %}" class="btn btn-danger">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ================= TRIP LIST TABLE ================= -->
+        <div class="card text-white bg-info mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #17a2b8;">
+                <h5 class="mb-0">Attached Bill Trips</h5>
+                <button type="button" class="btn btn-warning btn-sm font-weight-bold text-dark" id="addTripsToForm">
+                    <i class="fas fa-plus"></i> ADD
+                </button>
+            </div>
+            <div class="card-body bg-light text-dark pt-3 pb-3">
+                <div class="table-responsive shadow-box-table p-3">
+                    <table class="table table-striped table-bordered table-sm" id="tripsTable">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th style="width: 30px;"><input type="checkbox" id="selectAllTrips"></th>
+                                <th>Trip Date</th>
+                                <th>Cnote</th>
+                                <th>Customer name</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Trip KM</th>
+                                <th>Buy cost</th>
+                                <th>Parking cost</th>
+                                <th>Toll cost</th>
+                                <th>Total Buy cost</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tripsTableBody">
+                            <tr>
+                                <td colspan="11" class="text-center text-muted">Select Vendor/Vehicle to view trips</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    $(document).ready(function () {
+        // Initialize Select2
+        if ($.fn.select2) {
+            $('#id_ab_vendor, #id_ab_vehicle_number').select2({
+                width: '100%',
+                theme: 'bootstrap4'
+            });
+        }
+
+        // Vendor Change logic
+        $(document).on('change', '#id_ab_vendor', function () {
+            var vendor_id = $(this).val();
+            var $vehicleSelect = $('#id_ab_vehicle_number');
+            $vehicleSelect.empty().append('<option value="">--Select Vehicle--</option>');
+            if ($vehicleSelect.data('select2')) { $vehicleSelect.trigger('change'); }
+
+            if (vendor_id) {
+                $.ajax({
+                    url: "{% url 'get_vehicles_by_vendor' %}",
+                    data: { 'vendor_id': vendor_id },
+                    success: function (data) {
+                        $.each(data.vehicles, function (index, vehicle) {
+                            $vehicleSelect.append('<option value="' + vehicle.id + '">' + vehicle.reg_no + '</option>');
+                        });
+                        if ($vehicleSelect.data('select2')) { $vehicleSelect.trigger('change'); }
+                    }
+                });
+            }
+        });
+
+        // Trip List Loading
+        $(document).on('change', '#id_ab_vendor, #id_ab_vehicle_number, #id_ab_from_date, #id_ab_to_date', function () {
+            var vendor_id = $('#id_ab_vendor').val();
+            var vehicle_id = $('#id_ab_vehicle_number').val();
+            var from_date = $('#id_ab_from_date').val();
+            var to_date = $('#id_ab_to_date').val();
+
+            if (vendor_id || vehicle_id) {
+                var tbody = $('#tripsTableBody');
+                tbody.empty().append('<tr><td colspan="11" class="text-center">Loading trips... <i class="fas fa-spinner fa-spin"></i></td></tr>');
+
+                $.ajax({
+                    url: "{% url 'get_attached_vehicle_details' %}",
+                    data: {
+                        'vendor_id': vendor_id,
+                        'vehicle_id': vehicle_id,
+                        'from_date': from_date,
+                        'to_date': to_date
+                    },
+// SUCCESS CALLBACK HANDLED BELOW
+                    success: function (data) {
+                        if (vehicle_id) {
+                            $('#id_ab_vehicle_type').val(data.vehicle_type);
+                            $('#id_ab_buy_cost').val(data.buy_cost);
+                            $('#id_ab_agreed_km').val(data.agreed_km);
+                            extraKmRate = data.extra_km_rate || 0;
+                        }
+                        $('#id_ab_total_km_run').val(data.total_km_run);
+
+                        // Auto-fill leave days: period days - days with trips
+                        if (data.leave_days !== undefined) {
+                            $('#id_ab_leave_days').val(data.leave_days);
+                        }
+
+                        calculateAmounts();
+
+                        // Populate Trips Table
+                        tbody.empty();
+
+                        if (data.trips && data.trips.length > 0) {
+                            $.each(data.trips, function (index, trip) {
+                                var row = `<tr data-id="${trip.cnote}" data-km="${trip.trip_km}" data-parking="${trip.parking_cost}" data-toll="${trip.toll_cost}">
+                                    <td><input type="checkbox" class="trip-checkbox" value="${trip.cnote}"></td>
+                                    <td>${trip.trip_date}</td>
+                                    <td>${trip.cnote}</td>
+                                    <td>${trip.customer}</td>
+                                    <td>${trip.from}</td>
+                                    <td>${trip.to}</td>
+                                    <td>${trip.trip_km}</td>
+                                    <td class="trip-buy-cost">${trip.buy_cost.toFixed(2)}</td>
+                                    <td>${trip.parking_cost.toFixed(2)}</td>
+                                    <td>${trip.toll_cost.toFixed(2)}</td>
+                                    <td class="trip-total-buy-cost">${trip.total_buy_cost.toFixed(2)}</td>
+                                </tr>`;
+                                tbody.append(row);
+                            });
+                        } else {
+                            tbody.append('<tr><td colspan="11" class="text-center text-muted">No trips found for selected criteria</td></tr>');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error:", status, error);
+                        tbody.empty().append('<tr><td colspan="10" class="text-center text-danger">Error loading data. Please try again.</td></tr>');
+                    }
+                });
+            }
+        });
+
+        // Handle ADD Button Click
+        $('#addTripsToForm').click(function() {
+            var selectedIds = [];
+            var totalKm = 0;
+            var totalExtraAmount = 0;
+
+            $('.trip-checkbox:checked').each(function() {
+                var row = $(this).closest('tr');
+                selectedIds.push($(this).val());
+                totalKm += parseFloat(row.data('km')) || 0;
+                totalExtraAmount += parseFloat(row.data('total-buy')) || 0;
+            });
+
+            if (selectedIds.length === 0) {
+                alert("Please select at least one trip to add.");
+                return;
+            }
+
+            $('#id_ab_selected_trips').val(selectedIds.join(','));
+            $('#id_ab_total_km_run').val(totalKm.toFixed(2));
+            $('#id_ab_extra_km_amount').val(totalExtraAmount.toFixed(2));
+
+            calculateAmounts();
+            
+            // Scroll back to form
+            $('html, body').animate({
+                scrollTop: $("#attachedBillForm").offset().top - 20
+            }, 500);
+        });
+
+        // Toggle Select All
+        $(document).on('change', '#selectAllTrips', function() {
+            $('.trip-checkbox').prop('checked', $(this).prop('checked'));
+        });
+
+        // Handle Manual Input Changes
+        $(document).on('input change', '#id_ab_leave_days, #id_ab_bill_amount, #id_ab_from_date, #id_ab_to_date', function () {
+            calculateAmounts();
+        });
+
+        function getDaysInMonth(dateString) {
+            if (!dateString) return 30; // Default to 30 if no date
+            var date = new Date(dateString);
+            return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+        }
+
+        var extraKmRate = 0; // Store the rate from vehicle master
+
+        function calculateAmounts() {
+            var buy_cost = parseFloat($('#id_ab_buy_cost').val()) || 0;
+            var leave_days = parseInt($('#id_ab_leave_days').val()) || 0;
+            var total_km = parseFloat($('#id_ab_total_km_run').val()) || 0;
+            var agreed_km = parseFloat($('#id_ab_agreed_km').val()) || 0;
+            
+            var from_date = $('#id_ab_from_date').val();
+            var to_date = $('#id_ab_to_date').val();
+
+            // 1. Calculate Period Days for Daily Rate denominator
+            var daysInPeriod = 30; // Default
+            if (from_date && to_date) {
+                var start = new Date(from_date);
+                var end = new Date(to_date);
+                var diffTime = Math.abs(end - start);
+                daysInPeriod = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Include both start and end
+            }
+            
+            var leave_amount = (buy_cost / daysInPeriod) * leave_days;
+            $('#id_ab_leave_amount').val(leave_amount.toFixed(2));
+
+            // 2. Calculate Extra KM Run
+            var extra_km = total_km - agreed_km;
+            if (extra_km < 0) extra_km = 0;
+            $('#id_ab_extra_km_run').val(extra_km.toFixed(2));
+
+            // 3. Calculate Extra KM Amount based on rate
+            var extra_km_amount = extra_km * extraKmRate;
+            $('#id_ab_extra_km_amount').val(extra_km_amount.toFixed(2));
+
+            // 4. Calculate Total Bill Amount (Buy Cost + Extra KM Amount)
+            if (!$('#id_ab_bill_amount').is(':focus')) {
+                var total_bill = buy_cost + extra_km_amount;
+                $('#id_ab_bill_amount').val(total_bill.toFixed(2));
+            }
+
+            // 5. Update table "Buy cost" based on correct formula: (Bill Amount / Total KM Run) * Trip KM
+            var current_bill_amount = parseFloat($('#id_ab_bill_amount').val()) || 0;
+            if (total_km > 0) {
+                var rate = current_bill_amount / total_km;
+                $('#tripsTableBody tr').each(function() {
+                    var $row = $(this);
+                    var t_km = parseFloat($row.data('km')) || 0;
+                    var t_parking = parseFloat($row.data('parking')) || 0;
+                    var t_toll = parseFloat($row.data('toll')) || 0;
+                    
+                    if (t_km > 0) {
+                        var calc_buy = rate * t_km; // Corrected: (Bill/TotalKM) * TripKM
+                        $row.find('.trip-buy-cost').text(calc_buy.toFixed(2));
+                        $row.find('.trip-total-buy-cost').text((calc_buy + t_parking + t_toll).toFixed(2));
+                    } else {
+                        $row.find('.trip-buy-cost').text("0.00");
+                        $row.find('.trip-total-buy-cost').text((t_parking + t_toll).toFixed(2));
+                    }
+                });
+            }
+        }
+
+        {% if record %}
+        extraKmRate = parseFloat("{{ record.ab_vehicle_number.vm_extrakm|default:0 }}") || 0;
+        calculateAmounts();
+        {% endif %}
+    });
+</script>
+
+<style>
+    .input-group-text {
+        width: 160px;
+        background-color: #92e0e0; /* Matching the teal in the screenshot */
+        color: #000000 !important;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    .card-header h3 {
+        font-size: 1.5rem;
+        font-weight: 500;
+    }
+
+    .bg-info {
+        background-color: #17a2b8 !important;
+    }
+
+    .action-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .disable_a_href {
+        background-color: #d4edda !important; /* light green for calculated/readonly */
+        pointer-events: none;
+    }
+
+    /* Fixed Select2 dimensions for bootstrap 4 */
+    .select2-container--bootstrap4 .select2-selection--single {
+        height: calc(1.5em + 0.5rem + 2px) !important;
+    }
+
+    .select2-container--bootstrap4 .select2-selection {
+        border: 1px solid #ced4da !important;
+    }
+</style>
+
+{% endblock %}
