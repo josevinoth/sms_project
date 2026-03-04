@@ -814,6 +814,7 @@ urlpatterns = [
     path('fin_mis/', views.fin_mis, name='fin_mis'),
     path('fin_mis_warehouse/', views.fin_mis_warehouse, name='fin_mis_warehouse'),
     path("trans_fastag/", views.fastag_enquiry_view, name="trans_fastag"),
+    path("trans_fastag_export_excel/", views.trans_fastag_export_excel, name="trans_fastag_export_excel"),
     path('track_vehicle_position/', views.track_vehicle_position, name='track_vehicle_position'),
     path("get_vehicle_data/", views.get_vehicle_data, name="get_vehicle_data"),
     path('get_remaining_quantity/<int:enquiry_id>/<int:vehicle_type_id>/', views.get_remaining_quantity,
@@ -1044,4 +1045,5 @@ urlpatterns = [
     path('get_vehicles_by_vendor/', views.get_vehicles_by_vendor, name='get_vehicles_by_vendor'),
     path('fetch_maintenance_bill_details/', views.fetch_maintenance_bill_details, name='fetch_maintenance_bill_details'),
     path('get_maintenance_records_by_vehicle/', views.get_maintenance_records_by_vehicle, name='get_maintenance_records_by_vehicle'),
+    path('fuelfilling_export_excel/', views.fuelfilling_export_excel, name='fuelfilling_export_excel'),
 ]
