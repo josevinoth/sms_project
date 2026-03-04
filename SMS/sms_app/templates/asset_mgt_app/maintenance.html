@@ -40,6 +40,13 @@
 
             <div class="input-group input-group-sm mb-3">
               <div class="input-group-prepend">
+                <span class="input-group-text">Location</span>
+              </div>
+              {% render_field form.mi_location class="form-control" id="mi_location" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
                 <span class="input-group-text">Vehicle No</span>
               </div>
               {% render_field form.registration_no class="form-control" id="registration_no" %}
@@ -221,21 +228,51 @@
 
         <div id="msgBox" class="mb-2"></div>
 
-        <button type="submit" class="btn btn-success">
-          <i class="fas fa-check"></i> Save
-        </button>
-
-        <!--<a href="{% url 'home_page' %}" class="btn btn-danger float-right">
-        <i class="fas fa-times"></i> Cancel
-      </a>-->
+        <div class="d-flex justify-content-between">
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-check"></i> Save
+          </button>
+          <a href="{% url 'maintenance_list' %}" class="btn btn-danger">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+        </div>
 
       </div>
     </div>
   </div>
 </form>
 
-<!-- ================= FETCH VEHICLE DETAILS ================= -->
+<!-- ================= FETCH VEHICLE DETAILS & FILTERING ================= -->
 <script>
+  // Filter vehicles based on location
+  document.getElementById("mi_location").addEventListener("change", function () {
+    const branchId = this.value;
+    const registrationSelect = document.getElementById("registration_no");
+
+    if (!branchId) {
+      // If no branch selected, we could show all or empty. 
+      // Let's keep existing options or fetch all.
+      return;
+    }
+
+    fetch(`/SMS/fetch_filtered_vehicles/?branch_id=${branchId}`)
+      .then(res => res.json())
+      .then(data => {
+        // Clear existing options
+        registrationSelect.innerHTML = '<option value="">Select Vehicle No</option>';
+
+        // Add new filtered options
+        data.vehicles.forEach(vehicle => {
+          const option = document.createElement("option");
+          option.value = vehicle.vm_registrationnumber;
+          option.textContent = vehicle.vm_registrationnumber;
+          registrationSelect.appendChild(option);
+        });
+      })
+      .catch(err => console.error("Error filtering vehicles:", err));
+  });
+
+  // Fetch details for selected vehicle
   document.getElementById("registration_no").addEventListener("change", function () {
     const regNo = this.value;
 
@@ -251,8 +288,6 @@
         // ignore fetch errors for now
       });
   });
-
-
 </script>
 
 
