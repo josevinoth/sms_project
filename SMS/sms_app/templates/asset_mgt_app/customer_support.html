@@ -1,0 +1,224 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Support | BVM Transport</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --accent: #f093fb;
+            --dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 0 1.5rem;
+            flex: 1;
+        }
+
+        .support-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .contact-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            border-radius: 20px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .contact-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .contact-item i {
+            font-size: 2.5rem;
+        }
+
+        .contact-item span {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .contact-item small {
+            color: #94a3b8;
+        }
+
+        .fa-whatsapp {
+            color: #25d366;
+        }
+
+        .fa-envelope {
+            color: #f093fb;
+        }
+
+        .fa-phone {
+            color: #4facfe;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            margin-top: 2rem;
+        }
+
+        .back-btn:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 600px) {
+            .support-card {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <a href="{% url 'customer_dashboard' %}" class="logo">BVM TRANSPORT</a>
+        <div style="color: #94a3b8; font-size: 0.9rem;">Customer Support Center</div>
+    </nav>
+
+    <div class="container">
+        <div class="support-card">
+            <div style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.5;">
+                <i class="fas fa-headset"></i>
+            </div>
+            <h1>How can we help?</h1>
+            <p class="subtitle">Our support team is available 24/7 to assist you with your logistics needs.</p>
+
+            <div class="contact-grid">
+                <a href="https://wa.me/919900021612" class="contact-item" target="_blank">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>WhatsApp</span>
+                    <small>Instant Support</small>
+                </a>
+                <a href="mailto:support@bvmgroup.co.in" class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>Email</span>
+                    <small>Official Queries</small>
+                </a>
+                <a href="tel:+919900021612" class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <span>Call Us</span>
+                    <small>Direct Line</small>
+                </a>
+            </div>
+
+            <div
+                style="background: rgba(0, 242, 254, 0.05); border: 1px solid rgba(0, 242, 254, 0.1); padding: 1.5rem; border-radius: 16px; text-align: left; margin-top: 1rem;">
+                <h4 style="color: var(--primary); margin-bottom: 0.5rem;"><i class="fas fa-info-circle"></i> Quick Tip
+                </h4>
+                <p style="color: #94a3b8; font-size: 0.9rem;">For faster resolution, please provide your **Enquiry
+                    Number** or **Trip Number** when contacting our support desk.</p>
+            </div>
+
+            <a href="{% url 'customer_dashboard' %}" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <footer style="padding: 2rem; text-align: center; color: #64748b; font-size: 0.8rem;">
+        &copy; 2026 The BVM Group | Logistics Ecosystem
+    </footer>
+</body>
+
+</html>

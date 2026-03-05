@@ -503,8 +503,8 @@
             <li><a href="{% url 'customer_dashboard' %}">Dashboard</a></li>
             <li><a href="{% url 'customer_enquiry_list' %}" class="active">My Shipments</a></li>
             <li><a href="{% url 'customer_documents' %}">Documents</a></li>
-            <li><a href="#">Support</a></li>
-            <li><a href="#">Profile</a></li>
+            <li><a href="{% url 'customer_support' %}">Support</a></li>
+            <li><a href="{% url 'customer_profile' %}">Profile</a></li>
         </ul>
         <div class="user-profile" style="display: flex; align-items: center; gap: 1rem;">
             <span id="currentTime" style="color: #94a3b8; font-size: 0.9rem; margin-right: 15px;"></span>
