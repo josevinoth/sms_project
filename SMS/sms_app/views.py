@@ -178,7 +178,7 @@ from .sub_views.transport_reports_view import vehicle_log_report_view, trip_canc
 from .sub_views.market_bill_view import market_bill_add, market_bill_list, market_bill_edit, market_bill_delete, get_trips_by_vendor, market_bill_upload, market_mail_upload
 from .sub_views.customer_registration_view import customer_register, customer_registration_list, customer_registration_approve, customer_registration_reject, ajax_search_customers, ajax_check_customer_code
 from .sub_views.maintenance_bill_view import maintenance_bill_add, maintenance_bill_list, fetch_maintenance_bill_details, get_maintenance_records_by_vehicle, maintenance_bill_edit, maintenance_bill_delete
-from .sub_views.customer_enquiry_view import customer_enquiry_add, customer_enquiry_edit, customer_enquiry_list, customer_dashboard, customer_shipment_tracking, customer_track_vehicle, download_pod, download_dmr, ajax_get_vehicle_types, customer_documents
+from .sub_views.customer_enquiry_view import customer_enquiry_add, customer_enquiry_edit, customer_enquiry_list, customer_dashboard, customer_shipment_tracking, customer_track_vehicle, download_pod, download_dmr, ajax_get_vehicle_types, customer_documents, customer_profile, customer_support
 from .sub_views.customer_login_view import customer_login, ajax_get_customer_departments
 from .sub_views.attached_bill_view import attached_bill_add, attached_bill_list, attached_bill_edit, attached_bill_delete, get_attached_vehicle_details, get_vehicles_by_vendor
 

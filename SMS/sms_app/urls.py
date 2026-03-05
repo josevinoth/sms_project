@@ -12,6 +12,7 @@ urlpatterns = [
     path('login_page', views.login_page, name='login_page'),  # Login_page
     path('logout_page', views.logout_page, name='logout_page'),  # Logout_page
     path('driver/login/', views.driver_login, name='driver_login'),
+    path('driver/login/', views.driver_login, name='driver_login'),
     path('driver/logout/', views.driver_logout, name='driver_logout'),
     path('driver/dashboard/', views.driver_dashboard, name='driver_dashboard'),
     path('home_page', views.home_page, name='home_page'),  # Home_page
