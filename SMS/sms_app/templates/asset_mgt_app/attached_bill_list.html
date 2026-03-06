@@ -57,6 +57,7 @@
                     <th>Agreed KM</th>
                     <th>Extra KM</th>
                     <th>Bill Amount</th>
+                    <th>Bill Attachment</th>
                     <th>Created On</th>
                     <th>Created By</th>
                     <th class="text-center">Edit</th>
@@ -79,6 +80,27 @@
                     <td>{{ bill.ab_agreed_km|floatformat:2 }}</td>
                     <td>{{ bill.ab_extra_km_run|floatformat:2 }}</td>
                     <th class="text-info">{{ bill.ab_bill_amount|floatformat:2 }}</th>
+                    <td class="text-center">
+                        <div class="d-flex align-items-center justify-content-center">
+                            {% if bill.ab_bill_upload %}
+                            <a href="{{ bill.ab_bill_upload.url }}" target="_blank"
+                                class="btn btn-sm btn-outline-danger mr-2" title="View Bill">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            {% endif %}
+
+                            <form action="{% url 'attached_bill_upload' bill.id %}" method="POST"
+                                enctype="multipart/form-data" class="upload-form">
+                                {% csrf_token %}
+                                <label class="btn btn-sm btn-light border shadow-sm mb-0 cursor-pointer"
+                                    title="Upload Bill">
+                                    <i class="fas fa-upload"></i> Upload
+                                    <input type="file" name="ab_bill_upload" class="d-none upload-input"
+                                        onchange="this.form.submit()">
+                                </label>
+                            </form>
+                        </div>
+                    </td>
                     <td>{{ bill.ab_created_at|date:"d-m-Y H:i" }}</td>
                     <td>
                         {% if bill.ab_created_by %}
@@ -127,9 +149,15 @@
             ],
             pageLength: 10,
             lengthMenu: [5, 10, 25, 50, 100],
-            order: [[12, 'desc']] // Sort by Created On by default
+            order: [[13, 'desc']] // Sort by Created On by default
         });
     });
 </script>
+
+<style>
+    .cursor-pointer {
+        cursor: pointer;
+    }
+</style>
 
 {% endblock content %}

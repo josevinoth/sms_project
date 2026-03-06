@@ -16,7 +16,7 @@ from ..sub_models.tripdetail_mod import TripdetailInfo
 @login_required(login_url='login_page')
 def attached_bill_add(request):
     if request.method == "POST":
-        form = AttachedBillForm(request.POST)
+        form = AttachedBillForm(request.POST, request.FILES)
         if form.is_valid():
             obj = form.save(commit=False)
             obj.ab_created_by = request.user
@@ -62,7 +62,7 @@ def attached_bill_list(request):
 def attached_bill_edit(request, id):
     record = get_object_or_404(AttachedBillInfo, id=id)
     if request.method == "POST":
-        form = AttachedBillForm(request.POST, instance=record)
+        form = AttachedBillForm(request.POST, request.FILES, instance=record)
         if form.is_valid():
             obj = form.save(commit=False)
             obj.ab_updated_by = request.user
@@ -96,6 +96,19 @@ def attached_bill_delete(request, id):
     if request.method == "POST":
         record.delete()
         messages.success(request, "Attached Bill deleted successfully.")
+    return redirect('attached_bill_list')
+
+
+# ==================================================
+# QUICK MEDIA UPLOAD
+# ==================================================
+@login_required(login_url='login_page')
+def attached_bill_upload(request, id):
+    record = get_object_or_404(AttachedBillInfo, id=id)
+    if request.method == "POST" and request.FILES.get('ab_bill_upload'):
+        record.ab_bill_upload = request.FILES.get('ab_bill_upload')
+        record.save()
+        messages.success(request, "File uploaded successfully.")
     return redirect('attached_bill_list')
 
 
@@ -137,6 +150,21 @@ def get_attached_vehicle_details(request):
         filters &= Q(tr_departeddate__date__range=[from_date, to_date])
 
     if filters:
+        # Get all billed trip numbers to exclude them
+        bill_id = request.GET.get('bill_id')
+        billed_trips_query = AttachedBillInfo.objects.all()
+        if bill_id:
+            billed_trips_query = billed_trips_query.exclude(id=bill_id)
+        
+        already_billed = []
+        for b_trips in billed_trips_query.values_list('ab_selected_trips', flat=True):
+            if b_trips:
+                already_billed.extend([t.strip() for t in b_trips.split(',') if t.strip()])
+        
+        # Apply exclusion
+        if already_billed:
+            filters &= ~Q(tr_tripnumber__in=already_billed)
+
         trips = TripdetailInfo.objects.filter(filters).order_by('-tr_departeddate')
         total_km_run = 0
         trip_dates = set()  # Unique departure dates (days vehicle made at least one trip)
@@ -168,13 +196,21 @@ def get_attached_vehicle_details(request):
 
         data['total_km_run'] = total_km_run
 
-        # Leave days = period days - days vehicle had at least one departure
+        # Leave days = (Total Non-Sunday days in period) - (Non-Sunday days with trips)
         if from_date and to_date:
-            from datetime import date as dt_date
+            from datetime import date as dt_date, timedelta
             start_dt = dt_date.fromisoformat(from_date)
             end_dt = dt_date.fromisoformat(to_date)
-            total_period_days = (end_dt - start_dt).days + 1
-            data['leave_days'] = max(0, total_period_days - len(trip_dates))
+            
+            leave_days_count = 0
+            curr = start_dt
+            while curr <= end_dt:
+                if curr.weekday() != 6: # 6 is Sunday
+                    if curr not in trip_dates:
+                        leave_days_count += 1
+                curr += timedelta(days=1)
+                
+            data['leave_days'] = leave_days_count
         else:
             data['leave_days'] = 0
     else:
