@@ -63,10 +63,10 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
         else:
             print("I am inside get edit Enuirynote")
             enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
-            enquiry_num_id = EnquirynoteInfo.objects.get(pk=enquirynote_id).id
+            enquiry_num_id = enquirynote.id
             request.session['enquiry_num_id'] = enquiry_num_id
-            tr_enqiury_id = EnquirynoteInfo.objects.get(pk=enquirynote_id).en_enquirynumber
-            request.session['ses_enqiury_id'] = tr_enqiury_id
+            tr_enqiury_id = enquirynote.en_enquirynumber
+            request.session['ses_enqiury_id'] = tr_enqiury_id  # Keep for backward compat if needed
             form = EnquirynoteaddForm(instance=enquirynote)
             # enquirynotevehicle = Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
             enquiryvechicle_form = EnquirynotevehicleForm()

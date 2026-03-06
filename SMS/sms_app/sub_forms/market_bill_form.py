@@ -17,6 +17,11 @@ class MarketBillForm(forms.ModelForm):
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Enter Bill No"})
     )
 
+    mb_bill_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={"class": "form-control", "type": "date", "id": "mb_bill_date"})
+    )
+
     mb_trip_cost = forms.FloatField(
         required=False,
         widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_trip_cost"})
@@ -67,6 +72,7 @@ class MarketBillForm(forms.ModelForm):
         fields = [
             'mb_vendor',
             'mb_bill_no',
+            'mb_bill_date',
             'mb_trip_cost',
             'mb_loading_cost',
             'mb_unloading_cost',

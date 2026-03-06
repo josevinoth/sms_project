@@ -4,9 +4,14 @@ from django.http import HttpResponse, JsonResponse
 import json
 
 from ..forms import FuelfillingForm
-from ..models import Fuelfillinginfo,Places,Bunkname
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.db.models import Sum, Max
+from openpyxl import Workbook
+from io import BytesIO
+import datetime
+from datetime import date
+from ..models import Fuelfillinginfo, Places, Bunkname, TripdetailInfo
 
 @login_required(login_url='login_page')
 def fuelfilling_add(request, fuelfilling_id=0):
@@ -103,3 +108,111 @@ def fetch_bunk_details(request):
         except Bunkname.DoesNotExist:
             return JsonResponse({'error': 'Bunk not found'})
     return JsonResponse({'error': 'No bunk name provided'})
+
+import calendar
+
+@login_required(login_url='login_page')
+def fuelfilling_export_excel(request):
+    month = request.GET.get('month')
+    year = request.GET.get('year')
+    
+    if not month or not year:
+        return HttpResponse("Month and Year are required", status=400)
+        
+    month = int(month)
+    year = int(year)
+    
+    # Get last day of the month
+    last_day = calendar.monthrange(year, month)[1]
+    last_date_of_month = datetime.date(year, month, last_day)
+    
+    queryset = Fuelfillinginfo.objects.filter(
+        ff_date__year=year,
+        ff_date__month=month
+    )
+        
+    # Group by vehicle (monthly summary for the selected period)
+    grouped_data = {}
+    for record in queryset:
+        if not record.ff_vehicle_num:
+            continue
+            
+        key = record.ff_vehicle_num.id
+        if key not in grouped_data:
+            grouped_data[key] = {
+                'vehicle': record.ff_vehicle_num,
+                'total_amt': 0,
+                'vendor': record.ff_bunk_name.bunk_fuel_vendor.fuel_vendor if record.ff_bunk_name and record.ff_bunk_name.bunk_fuel_vendor else "BPCL - Trans"
+            }
+        grouped_data[key]['total_amt'] += record.ff_fuel_price
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Fuel Format"
+    
+    headers = [
+        "VOUCHER NUMBER", "DATE", "REF NO.", "SUNDRY CREDITORS", 
+        "TOTAL AMT", "EXPENSES LEDGER", "AMOUNT", "PRIMARY COST CATEGORY", 
+        "JOB NO", "VEH. NO.", "CUSTOMER"
+    ]
+    ws.append(headers)
+    
+    # Adjust column widths
+    for col in range(1, len(headers) + 1):
+        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = 20
+
+    def get_financial_year(date_obj):
+        year_val = date_obj.year
+        if date_obj.month >= 4:
+            return f"{str(year_val)[2:]}{str(year_val+1)[2:]}"
+        else:
+            return f"{str(year_val-1)[2:]}{str(year_val)[2:]}"
+
+    for idx, (key, data) in enumerate(grouped_data.items(), 1):
+        vehicle = data['vehicle']
+        
+        # Voucher format: Diesel_{month}_{FY}-{serial}
+        mm = str(month).zfill(2)
+        fy = get_financial_year(last_date_of_month)
+        voucher_no = f"Diesel_{mm}_{fy}-{str(idx).zfill(3)}"
+        
+        # Ref No: Month-Year (e.g., Apr-26)
+        ref_no = last_date_of_month.strftime('%b-%y')
+        
+        # Get Primary Cost Category from Vehicle Master Ownership
+        primary_cost_category = ""
+        if vehicle.vm_ownership:
+            ownership_name = str(vehicle.vm_ownership.ow_ownership).upper()
+            if "OWN" in ownership_name:
+                primary_cost_category = "BVM - OWN"
+            elif "MARKET" in ownership_name:
+                primary_cost_category = "MARKET"
+            else:
+                primary_cost_category = ownership_name # Fallback to actual ownership name
+
+        row = [
+            voucher_no,
+            last_date_of_month.strftime("%d/%m/%Y"),
+            ref_no,
+            data['vendor'],
+            data['total_amt'],
+            "Diesel - Vehicle",
+            data['total_amt'],
+            primary_cost_category,
+            "N/A(J)", # Static Job No
+            str(vehicle),
+            "N/A(C)"  # Static Customer
+        ]
+        ws.append(row)
+
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    filename = f"Fuel_Export_{month}_{year}.xlsx"
+    response = HttpResponse(
+        buffer.getvalue(), 
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response

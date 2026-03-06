@@ -30,41 +30,49 @@
 
     {% if txn_list %}
     <h4 class="mt-4" style="color: #2c3e50;">Transaction Summary</h4>
-    <p>
-        <strong style="color: #34495e;">Total Transactions:</strong>
-        <span style="font-weight: bold; color: #27ae60;">{{ toll_count }}</span>
-    </p>
-    <p>
-        <strong style="color: #34495e;">Total Amount:</strong>
-        <span style="font-weight: bold; color: #2980b9;">₹{{ total_amount|floatformat:2 }}</span>
-    </p>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            <p class="mb-1">
+                <strong style="color: #34495e;">Total Transactions:</strong>
+                <span style="font-weight: bold; color: #27ae60;">{{ toll_count }}</span>
+            </p>
+            <p class="mb-0">
+                <strong style="color: #34495e;">Total Amount:</strong>
+                <span style="font-weight: bold; color: #2980b9;">₹{{ total_amount|floatformat:2 }}</span>
+            </p>
+        </div>
+        <a href="{% url 'trans_fastag_export_excel' %}?vehicle={{ vehicle }}&contact={{ contact }}&fromDate={{ fromDate }}&toDate={{ toDate }}"
+            class="btn btn-success">
+            <i class="fas fa-file-excel"></i> Download Excel
+        </a>
+    </div>
 
 
     <div class="table-responsive mt-3">
         <table class="table table-bordered table-striped">
             <thead class="table-dark">
-            <tr>
-                <th>Date</th>
-                <th>Vehicle Number</th>
-                <th>Txn ID</th>
-                <th>Plaza</th>
-                <th>Vehicle</th>
-                <th>Amount</th>
-                <th>Lane</th>
-            </tr>
+                <tr>
+                    <th>Date</th>
+                    <th>Vehicle Number</th>
+                    <th>Txn ID</th>
+                    <th>Plaza</th>
+                    <th>Vehicle</th>
+                    <th>Amount</th>
+                    <th>Lane</th>
+                </tr>
             </thead>
             <tbody>
-            {% for txn in txn_list %}
-            <tr>
-                <td>{{ txn.txnPostedtime }}</td>
-                <td>{{ txn.vehicleNo }}</td>
-                <td>{{ txn.originalTxnId }}</td>
-                <td>{{ txn.tollplazaname }}</td>
-                <td>{{ txn.vehicleDesc }}</td>
-                <td>₹{{ txn.txnAmt|floatformat:2 }}</td>
-                <td>{{ txn.laneId }}</td>
-            </tr>
-            {% endfor %}
+                {% for txn in txn_list %}
+                <tr>
+                    <td>{{ txn.txnPostedtime }}</td>
+                    <td>{{ txn.vehicleNo }}</td>
+                    <td>{{ txn.originalTxnId }}</td>
+                    <td>{{ txn.tollplazaname }}</td>
+                    <td>{{ txn.vehicleDesc }}</td>
+                    <td>₹{{ txn.txnAmt|floatformat:2 }}</td>
+                    <td>{{ txn.laneId }}</td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>

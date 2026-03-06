@@ -78,7 +78,7 @@
                     <td>{{ m.mi_description }}</td>
                     <td>{{ m.mi_remarks }}</td>
                     <td>{{ m.mi_job_card_creator }}</td>
-                    <td>{{ m.mi_job_card_created_on|date:"d-m-Y H:i" }}</td>
+                    <td data-order="{{ m.mi_job_card_created_on|date:'YmdHis' }}">{{ m.mi_job_card_created_on|date:"d-m-Y (H:i)" }}</td>
                     <td>{{ m.mi_updated_by }}</td>
                     <td><!-- approval status label -->
                         {{ m.mi_approval_status.approval_name }}
@@ -108,22 +108,14 @@
     </div>
 </div>
 
-<!-- ================= DATATABLE (SCRIPT 1 – SAME AS REFERENCE) ================= -->
-<script>
-    $('#maintenance_list').DataTable({
-        responsive: false,
-        scrollX: true,
-        order: [[16, 'desc']]
-    });
-</script>
-
-<!-- ================= DATATABLE (SCRIPT 2 – SAME AS REFERENCE) ================= -->
+<!-- ================= DATATABLE SCRIPT ================= -->
 <script>
     $(document).ready(function () {
         $('#maintenance_list').DataTable({
             scrollX: true,
             autoWidth: false,
             responsive: false,
+            order: [[17, 'desc']], // Sort by 'Created On' descending
             dom:
                 "<'row mb-2'<'col-md-6'l><'col-md-6 text-end'f>>" +
                 "<'row mb-2'<'col-md-12'B>>" +

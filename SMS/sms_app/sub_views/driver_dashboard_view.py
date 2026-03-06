@@ -79,8 +79,10 @@ def driver_dashboard(request):
         if action == 'vehicle_reported':
             if not trip.tr_departeddate_pickup:
                 if km_value and km_value.isdigit():
-                    trip.tr_departedkm = int(km_value)
-                    print(f"  >> SAVED tr_departedkm = {km_value}")
+                    val_km = int(km_value)
+                    # No previous trip KM to check against here usually, but let's be safe
+                    trip.tr_departedkm = val_km
+                    print(f"  >> SAVED tr_departedkm = {val_km}")
                 else:
                     print(f"  >> KM NOT SAVED (invalid: '{km_value}')")
                 trip.tr_departeddate_pickup = timezone.now()
@@ -106,8 +108,13 @@ def driver_dashboard(request):
         elif action == 'vehicle_started':
             if not trip.tr_departeddate:
                 if km_value and km_value.isdigit():
-                    trip.tr_reportedkm_pickup = int(km_value)
-                    print(f"  >> SAVED tr_reportedkm_pickup = {km_value}")
+                    val_km = int(km_value)
+                    prev_km = trip.tr_departedkm or 0
+                    if val_km < prev_km:
+                        messages.error(request, f"KM Reading ({val_km}) cannot be less than previous reading ({prev_km}).")
+                        return redirect('driver_dashboard')
+                    trip.tr_reportedkm_pickup = val_km
+                    print(f"  >> SAVED tr_reportedkm_pickup = {val_km}")
                 else:
                     print(f"  >> KM NOT SAVED (invalid: '{km_value}')")
                 trip.tr_departeddate = timezone.now()
@@ -119,8 +126,13 @@ def driver_dashboard(request):
         elif action == 'vehicle_reported_unloading':
             if not trip.tr_reporteddate:
                 if km_value and km_value.isdigit():
-                    trip.tr_reportedkm = int(km_value)
-                    print(f"  >> SAVED tr_reportedkm = {km_value}")
+                    val_km = int(km_value)
+                    prev_km = trip.tr_reportedkm_pickup or trip.tr_departedkm or 0
+                    if val_km < prev_km:
+                        messages.error(request, f"KM Reading ({val_km}) cannot be less than previous reading ({prev_km}).")
+                        return redirect('driver_dashboard')
+                    trip.tr_reportedkm = val_km
+                    print(f"  >> SAVED tr_reportedkm = {val_km}")
                 else:
                     print(f"  >> KM NOT SAVED (invalid: '{km_value}')")
                 trip.tr_reporteddate = timezone.now()
@@ -146,8 +158,13 @@ def driver_dashboard(request):
         elif action == 'vehicle_started_unloading':
             if not trip.tr_reporteddate_delivery:
                 if km_value and km_value.isdigit():
-                    trip.tr_reportedkm_delivery = int(km_value)
-                    print(f"  >> SAVED tr_reportedkm_delivery = {km_value}")
+                    val_km = int(km_value)
+                    prev_km = trip.tr_reportedkm or trip.tr_reportedkm_pickup or 0
+                    if val_km < prev_km:
+                        messages.error(request, f"KM Reading ({val_km}) cannot be less than previous reading ({prev_km}).")
+                        return redirect('driver_dashboard')
+                    trip.tr_reportedkm_delivery = val_km
+                    print(f"  >> SAVED tr_reportedkm_delivery = {val_km}")
                 else:
                     print(f"  >> KM NOT SAVED (invalid: '{km_value}')")
                 now = timezone.now()

@@ -284,7 +284,7 @@
                             <!-- Progress Width Calculation (example) -->
                             {% with status=trip.tc_financestatus_id %}
                             <div class="progress-bar"
-                                style="--p-width: {% if status == 1 %}50%{% elif status == 2 or status == 7 %}100%{% else %}25%{% endif %}; width: var(--p-width);">
+                                style="--p-width: {% if status == 1 %}66%{% elif status == 2 or status == 7 %}100%{% else %}25%{% endif %}; width: var(--p-width);">
                             </div>
                             {% endwith %}
                         </div>
@@ -350,7 +350,8 @@
                     </div>
 
                     <div style="margin-top: 1rem; border-top: 1px solid var(--glass-border); padding-top: 1.5rem;">
-                        <a href="#" class="btn-primary" style="width: 100%; justify-content: center;">
+                        <a href="{% url 'customer_support' %}" class="btn-primary"
+                            style="width: 100%; justify-content: center;">
                             <i class="fas fa-headset"></i> Contact BVM Team
                         </a>
                     </div>
