@@ -30,26 +30,29 @@ def get_customer_context(request):
         if username.endswith('_lp'):
             # AISATS Collaboration logic: aisats_lp -> AISATS customer
             prefix = username[:-3]
-            # Try to find customer by code, short name or name
             customer = CustomerInfo.objects.filter(
                 Q(cu_customercode__iexact=prefix) | 
                 Q(cu_nameshort__iexact=prefix) | 
                 Q(cu_name__iexact=prefix)
             ).first()
             
-            # Agent is the customer record linked directly in User_extInfo (e.g. EIPL)
             if user_ext.linked_customer:
                 agent_name = user_ext.linked_customer.cu_nameshort or user_ext.linked_customer.cu_name
         else:
-            # Regular Customer logic
-            customer = user_ext.linked_customer
+            # Check for Agent Mode override first
+            agent_cust_id = request.session.get('agent_selected_customer_id')
+            if agent_cust_id:
+                customer = CustomerInfo.objects.filter(id=agent_cust_id).first()
+                agent_name = user_ext.linked_customer.cu_nameshort or user_ext.linked_customer.cu_name if user_ext.linked_customer else ""
+            else:
+                # Regular Customer logic
+                customer = user_ext.linked_customer
 
-        # Check for department override in session (selected at login for regular users)
+        # Check for department override in session
         dept_id = request.session.get('ses_customer_dept_id')
         if dept_id:
             department = CustomerdepartmentInfo.objects.filter(id=dept_id).first()
         
-        # Fallback to name-based match
         if not department and user_ext.department:
              department = CustomerdepartmentInfo.objects.filter(ct_customerdepartment__iexact=user_ext.department.dept_name).first()
              
@@ -191,8 +194,8 @@ def customer_enquiry_add(request):
             vt_obj = None
             if type_id:
                 vt_obj = VehicletypeInfo.objects.filter(id=type_id).first()
-                if vt_obj:
-                    # User requested Type to be saved in en_consignmentdetails
+                # ONLY use vehicle type if cargo_details is explicitly empty
+                if not cargo_details and vt_obj:
                     cargo_details = vt_obj.vt_vehicletype
 
             # Department: use form selection, fallback to session
@@ -262,7 +265,7 @@ def customer_enquiry_add(request):
         'categories': categories,
         'types': types,
         'is_lp': is_lp,
-        'agent_name': agent_name
+        'default_agent_name': agent_name
     })
 
 @login_required
@@ -303,7 +306,8 @@ def customer_enquiry_edit(request, enquiry_id):
             vt_obj = None
             if type_id:
                 vt_obj = VehicletypeInfo.objects.filter(id=type_id).first()
-                if vt_obj:
+                # ONLY use vehicle type if cargo_details is explicitly empty
+                if not cargo_details and vt_obj:
                     cargo_details = vt_obj.vt_vehicletype
 
             # Department
@@ -372,6 +376,7 @@ def customer_enquiry_edit(request, enquiry_id):
         'enquiry': enquiry,
         'env': env,
         'edit_mode': True,
+        'default_agent_name': enquiry.en_agent_name or agent_name
     })
 
 @login_required
@@ -633,6 +638,9 @@ def customer_documents(request):
     if not customer:
         return redirect('customer_dashboard')
     
+    from django.core.paginator import Paginator
+    from django.db.models import Prefetch
+
     # Get all trips for this customer
     trips_qs = TripdetailInfo.objects.filter(
         tr_enquirynumber__en_customername=customer
@@ -641,19 +649,28 @@ def customer_documents(request):
         'tr_enquirynumber__en_fromlocaion',
         'tr_enquirynumber__en_tolocation',
         'tc_financestatus'
-    )
+    ).order_by('-tr_created_at')
+
     if department:
         trips_qs = trips_qs.filter(tr_enquirynumber__en_customerdepartment=department)
     
-    trips_qs = trips_qs.order_by('-tr_created_at')
+    # Paginate results (25 per page)
+    paginator = Paginator(trips_qs, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     
-    # Build document list
+    # Build document list for current page
     import os
     from django.conf import settings
+    
+    # Batch fetch closure files for the current page to avoid N+1 queries
+    trip_numbers = [t.tr_tripnumber for t in page_obj if t.tr_tripnumber]
+    closures = Trip_closure_files_Info.objects.filter(tcf_tripnumber__in=trip_numbers).only('tcf_tripnumber', 'tcf_pod')
+    closure_map = {c.tcf_tripnumber: c for c in closures}
+    
     documents = []
-    for trip in trips_qs:
-        # Check closure files for POD
-        closure = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip.tr_tripnumber).first()
+    for trip in page_obj:
+        closure = closure_map.get(trip.tr_tripnumber)
         has_pod = False
         pod_source = ''
         
@@ -685,6 +702,7 @@ def customer_documents(request):
         'customer': customer,
         'department': department,
         'documents': documents,
+        'page_obj': page_obj,
     })
 @login_required
 def customer_profile(request):

@@ -103,9 +103,25 @@
   }
 
   .form-control {
-    padding: 0.7rem;
+    padding: 0.85rem 1rem;
     border-radius: 8px;
     border: none;
+    width: 100%;
+    font-size: 1rem;
+    background: white;
+  }
+
+  select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.2rem;
+    padding: 0.8rem 1rem;
+    padding-right: 2.5rem;
+    height: auto;
+    min-height: 48px;
+    line-height: normal;
   }
 
   .form-control::placeholder {
@@ -270,8 +286,7 @@
       </div>
       <div id="dept_selection_group" class="form-group" style="display: none;">
         <label style="color:#ddd; margin-bottom: 0.5rem; display: block;">Select Department</label>
-        <select name="customer_department" id="login_department" class="form-control"
-          style="background: #fff; color: #000; font-size: 0.85rem; font-weight: 500;">
+        <select name="customer_department" id="login_department" class="form-control">
           <option value="">Select Department</option>
         </select>
       </div>

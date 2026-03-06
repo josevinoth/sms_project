@@ -299,6 +299,49 @@
             color: #64748b;
         }
 
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1.5rem;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .pagination-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .pagination-link:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .pagination-link.active {
+            background: var(--primary);
+            color: var(--dark);
+            border-color: var(--primary);
+        }
+
+        .pagination-link.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
         .empty-state i {
             font-size: 3rem;
             margin-bottom: 1rem;
@@ -435,6 +478,35 @@
                     </tbody>
                 </table>
             </div>
+
+            {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                <a href="?page=1" class="pagination-link" title="First"><i class="fas fa-angle-double-left"></i></a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="pagination-link" title="Previous"><i
+                        class="fas fa-angle-left"></i></a>
+                {% else %}
+                <span class="pagination-link disabled"><i class="fas fa-angle-left"></i></span>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <span class="pagination-link active">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <a href="?page={{ num }}"
+                    class="pagination-link">{{ num }}</a>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="pagination-link" title="Next"><i
+                            class="fas fa-angle-right"></i></a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}" class="pagination-link" title="Last"><i
+                            class="fas fa-angle-double-right"></i></a>
+                    {% else %}
+                    <span class="pagination-link disabled"><i class="fas fa-angle-right"></i></span>
+                    {% endif %}
+            </div>
+            {% endif %}
         </div>
     </div>
 
