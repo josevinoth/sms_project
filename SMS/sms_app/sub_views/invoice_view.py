@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.paginator import Paginator
-from django.db.models.aggregates import Sum, Max
+from django.db.models import Sum, Max, Q
 from django.http import HttpResponse
 import json
 from django.contrib import messages
@@ -102,16 +102,14 @@ def invoice_add(request,invoice_id=0):
                         # Handle the case when one or both values are None
                         max_storage_days = 0  # or set an appropriate default value
 
-                    invoices = list((Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_gate_injob_no_id', flat=True)).distinct())
-                    for inv in invoices:
-                        invoice_id = list(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_gate_injob_no_id=inv).values_list('id',flat=True))
-                        for i in range(0, len(invoice_id)):
+                    exclusive_invoices = list((Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_gate_injob_no_id', flat=True)).distinct())
+                    for inv in exclusive_invoices:
+                        exclusive_goods_ids = list(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_gate_injob_no_id=inv).values_list('id',flat=True))
+                        for i in range(0, len(exclusive_goods_ids)):
                             if i == 0:
-                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=round(warehouse_charge_1, 2))
-                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=storage_cost_total)
+                                Warehouse_goods_info.objects.filter(pk=exclusive_goods_ids[i]).update(wh_storage_cost_per_day=round(warehouse_charge_1, 2), wh_storage_cost_total=storage_cost_total, wh_voucher_id=invoice)
                             else:
-                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=0)
-                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=0)
+                                Warehouse_goods_info.objects.filter(pk=exclusive_goods_ids[i]).update(wh_storage_cost_per_day=0, wh_storage_cost_total=0, wh_voucher_id=invoice)
 
                 elif customer_type_id == 3:
                     print("Inside Dedicated Case")
@@ -143,16 +141,14 @@ def invoice_add(request,invoice_id=0):
                         # Handle the case when one or both values are None
                         max_storage_days = 0  # or set an appropriate default value
 
-                    invoices = list((Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_gate_injob_no_id', flat=True)).distinct())
-                    for inv in invoices:
-                        invoice_id = list(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_gate_injob_no_id=inv).values_list('id',flat=True))
-                        for i in range(0, len(invoice_id)):
+                    dedicated_invoices = list((Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).values_list('wh_gate_injob_no_id', flat=True)).distinct())
+                    for inv in dedicated_invoices:
+                        dedicated_goods_ids = list(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num,wh_gate_injob_no_id=inv).values_list('id',flat=True))
+                        for i in range(0, len(dedicated_goods_ids)):
                             if i == 0:
-                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=round(warehouse_charge_1, 2))
-                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=storage_cost_total)
+                                Warehouse_goods_info.objects.filter(pk=dedicated_goods_ids[i]).update(wh_storage_cost_per_day=round(warehouse_charge_1, 2), wh_storage_cost_total=storage_cost_total, wh_voucher_id=invoice)
                             else:
-                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=0)
-                                Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=0)
+                                Warehouse_goods_info.objects.filter(pk=dedicated_goods_ids[i]).update(wh_storage_cost_per_day=0, wh_storage_cost_total=0, wh_voucher_id=invoice)
                 else:
                     print("Inside Case To Case")
                     # Get billing_truck_type for voucher number
@@ -484,7 +480,10 @@ def invoice_add(request,invoice_id=0):
         if invoice_id == 0:
             invoice_form = InvoiceaddForm(request.POST)
             if invoice_form.is_valid():
-                invoice_form.save()
+                invoice = invoice_form.save()
+                voucher_num_val = invoice.bill_invoice_ref
+                # Link goods by ID for reliable exports
+                Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).update(wh_voucher_id=invoice)
                 print("Main Form Saved")
                 messages.success(request, 'Record Addedd Successfully!')
             else:
@@ -495,13 +494,11 @@ def invoice_add(request,invoice_id=0):
             invoice = BilingInfo.objects.get(pk=invoice_id)
             invoice_form = InvoiceaddForm(request.POST, instance=invoice)
             if invoice_form.is_valid():
-                invoice_form.save()
-                print("Main Form Saved")
-                messages.success(request, 'Record Updated Successfully!')
-                voucher_num_val = BilingInfo.objects.get(pk=invoice_id).bill_invoice_ref
-                # update total invoice cost in warehouse goods table
+                voucher_num_val = invoice.bill_invoice_ref
+                # update total invoice cost and link by ID in warehouse goods table
+                Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).update(wh_voucher_id=invoice)
                 stock_id = list(Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).values_list('id', flat=True))
-                total_invoice_cost = BilingInfo.objects.get(bill_invoice_ref=voucher_num_val).bill_total_pre_gst
+                total_invoice_cost = invoice.bill_total_pre_gst
                 stock_id.sort()
                 for i in range(0, len(stock_id)):
                     if i == 0:
@@ -805,13 +802,13 @@ def shipper_invoice_export_excel(request, invoice_id):
     if not invoice:
         return HttpResponse("Invoice not found", status=404)
 
-    # ✅ goods rows linked with this invoice
+    # ✅ goods rows linked with this invoice (Fallback to wh_voucher_num if ID link is missing)
     qs = Warehouse_goods_info.objects.select_related(
         "wh_customer_name",
         "wh_branch",
         "wh_dispatch_id"
     ).filter(
-        wh_voucher_id=invoice_id
+        Q(wh_voucher_id=invoice_id) | Q(wh_voucher_num=invoice.bill_invoice_ref)
     )
 
     wb = Workbook()
@@ -830,61 +827,113 @@ def shipper_invoice_export_excel(request, invoice_id):
     for cell in ws[1]:
         cell.font = Font(bold=True)
 
-    sl = 1
-    for obj in qs:
+    # Check if monthly billing (Dedicated ID=3, Exclusive ID=2)
+    is_monthly = invoice.bill_customer_type and invoice.bill_customer_type.id in [2, 3]
+
+    if is_monthly:
+        # Aggregated single line summary for Dedicated/Exclusive Monthly billing
+        # Use aggregate to get sums from the actual goods rows (Source of Truth)
+        totals = qs.aggregate(
+            total_weight=Sum('wh_goods_weight'),
+            total_storage=Sum('wh_storage_cost_total'),
+            total_loading=Sum('wh_total_loading_cost'),
+            total_forklift=Sum('wh_forklift_cost'),
+            total_crane=Sum('wh_crane_cost'),
+            total_fumigation=Sum('wh_fumigation_cost')
+        )
+        
+        all_jobs = list(qs.values_list('wh_job_no', flat=True).distinct())
+        job_no_str = ", ".join(all_jobs) if all_jobs else ""
+        
         customer = invoice.bill_customer_name
         address = customer.cu_address if customer else ""
         state = extract_state(address)
         pincode = extract_pincode(address)
 
-        # ✅ branch short name
-        branch_name = obj.wh_branch.loc_name if obj.wh_branch else ""
+        # Branch/Unit from first record
+        first_good = qs.first()
+        branch_name = first_good.wh_branch.loc_name if first_good and first_good.wh_branch else ""
         branch_name = branch_name.replace("BVM ", "").strip()
-
-        # ✅ unit from LocationmasterInfo
+        
         unit_no = ""
-        lm = LocationmasterInfo.objects.filter(
-            lm_customer_name=customer
-        ).select_related("lm_wh_unit").first()
-
+        lm = LocationmasterInfo.objects.filter(lm_customer_name=customer).select_related("lm_wh_unit").first()
         if lm and lm.lm_wh_unit:
             unit_no = str(lm.lm_wh_unit)
+        primary_cost_category = f"{branch_name} - {unit_no}" if unit_no else branch_name
 
-        primary_cost_category = f"{branch_name} -{unit_no}" if unit_no else branch_name
-
-        # For Tally export, we typically divide the cost by number of jobs if we are repeating headers,
-        # but the user's previous code repeated the same total on each line. 
-        # However, to be safe, we'll follow the user's requested mapping which implies 
-        # these are the charges for that specific job row if available, or just the invoice totals.
-        # Given the existing structure where we iterate over qs, we'll try to use job-specific costs if they exist.
+        # Calculate GST based on the sum
+        pre_gst_total = round(float(totals['total_storage'] or 0) + 
+                            float(totals['total_loading'] or 0) + 
+                            float(totals['total_forklift'] or 0) + 
+                            float(totals['total_crane'] or 0) +
+                            float(totals['total_fumigation'] or 0) +
+                            float(invoice.bill_handling_charges or 0) +
+                            float(invoice.bill_packing_charges or 0), 2)
+        
+        gst_val = round(pre_gst_total * 0.09, 2)
 
         ws.append([
             excel_datetime(invoice.bill_invoice_date),
             invoice.bill_invoice_ref,
-            obj.wh_job_no,
-            customer.cu_nameshort if customer else "",  # SUNDRY DEBTORS (Full Name)
+            job_no_str,
+            customer.cu_nameshort if customer else "",
             customer.cu_gst if customer else "",
             state,
             pincode,
             primary_cost_category,
-            customer.cu_name if customer else "", # CUSTOMER (Short Name)
-            
-            # Use job-specific storage if available, else 0 (Tally often needs row-level data)
-            obj.wh_storage_cost_total or 0,
-            obj.wh_total_loading_cost or 0,
-            0, # Unloading cost - model field wh_total_unloading_cost doesn't exist? Checking Warehouse_goods_info...
-               # If it doesn't exist, we use 0. In invoice_add, it updates BilingInfo.bill_unloading_charge.
-            
-            invoice.bill_handling_charges if sl == 1 else 0, # Only put on first line for aggregated fields
-            obj.wh_crane_cost or 0,
-            obj.wh_forklift_cost or 0,
-            invoice.bill_packing_charges if sl == 1 else 0,
-            
-            invoice.bill_total_pre_gst if sl == 1 else 0,
-            invoice.bill_cgst if sl == 1 else 0,
-            invoice.bill_sgst if sl == 1 else 0,
+            customer.cu_name if customer else "",
+            round(totals['total_storage'] or 0, 2),
+            round(totals['total_loading'] or 0, 2),
+            0, # Unloading charge (if not in goods rows)
+            round(invoice.bill_handling_charges or 0, 2),
+            round(totals['total_crane'] or 0, 2),
+            round(totals['total_forklift'] or 0, 2),
+            round(invoice.bill_packing_charges or 0, 2),
+            pre_gst_total,
+            gst_val,
+            gst_val,
         ])
-        sl += 1
+    else:
+        # Standard per-job breakdown (Case-to-Case)
+        sl = 1
+        for obj in qs:
+            customer = invoice.bill_customer_name
+            address = customer.cu_address if customer else ""
+            state = extract_state(address)
+            pincode = extract_pincode(address)
+
+            branch_name = obj.wh_branch.loc_name if obj.wh_branch else ""
+            branch_name = branch_name.replace("BVM ", "").strip()
+
+            unit_no = ""
+            lm = LocationmasterInfo.objects.filter(lm_customer_name=customer).select_related("lm_wh_unit").first()
+            if lm and lm.lm_wh_unit:
+                unit_no = str(lm.lm_wh_unit)
+
+            primary_cost_category = f"{branch_name} - {unit_no}" if unit_no else branch_name
+
+            ws.append([
+                excel_datetime(invoice.bill_invoice_date),
+                invoice.bill_invoice_ref,
+                obj.wh_job_no,
+                customer.cu_nameshort if customer else "",
+                customer.cu_gst if customer else "",
+                state,
+                pincode,
+                primary_cost_category,
+                customer.cu_name if customer else "",
+                obj.wh_storage_cost_total or 0,
+                obj.wh_total_loading_cost or 0,
+                0, # Unloading cost
+                invoice.bill_handling_charges if sl == 1 else 0,
+                obj.wh_crane_cost or 0,
+                obj.wh_forklift_cost or 0,
+                invoice.bill_packing_charges if sl == 1 else 0,
+                invoice.bill_total_pre_gst if sl == 1 else 0,
+                invoice.bill_cgst if sl == 1 else 0,
+                invoice.bill_sgst if sl == 1 else 0,
+            ])
+            sl += 1
 
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -903,12 +952,13 @@ def invoice_export_excel(request, invoice_id):
     if not invoice:
         return HttpResponse("Invoice not found", status=404)
 
+    # Fallback to wh_voucher_num if ID link is missing
     qs = Warehouse_goods_info.objects.select_related(
         "wh_customer_name",
         "wh_branch",
         "wh_dispatch_id"
     ).filter(
-        wh_voucher_id=invoice_id
+        Q(wh_voucher_id=invoice_id) | Q(wh_voucher_num=invoice.bill_invoice_ref)
     )
 
     wb = Workbook()
@@ -927,45 +977,91 @@ def invoice_export_excel(request, invoice_id):
     for cell in ws[1]:
         cell.font = Font(bold=True)
 
-    sl = 1
-    for obj in qs:
-        # ✅ unit from LocationmasterInfo
-        unit_no = ""
-        lm = LocationmasterInfo.objects.filter(
-            lm_customer_name=invoice.bill_customer_name
-        ).select_related("lm_wh_unit").first()
+    # Check if monthly billing (Dedicated ID=3, Exclusive ID=2)
+    is_monthly = invoice.bill_customer_type and invoice.bill_customer_type.id in [2, 3]
 
-        if lm and lm.lm_wh_unit:
-            unit_no = str(lm.lm_wh_unit)
-
+    if is_monthly:
+        # Aggregated single line summary
+        totals = qs.aggregate(
+            total_weight=Sum('wh_goods_weight'),
+            total_pieces=Sum('wh_goods_pieces'),
+            total_storage=Sum('wh_storage_cost_total'),
+            total_loading=Sum('wh_total_loading_cost'),
+            total_forklift=Sum('wh_forklift_cost'),
+            total_crane=Sum('wh_crane_cost'),
+            total_fumigation=Sum('wh_fumigation_cost')
+        )
+        
+        all_jobs = list(qs.values_list('wh_job_no', flat=True).distinct())
+        job_no_str = ", ".join(all_jobs) if all_jobs else ""
+        
         ws.append([
-            sl,
-            obj.wh_job_no,
+            1,
+            job_no_str,
             invoice.bill_customer_name.cu_name if invoice.bill_customer_name else "",
-            obj.wh_goods_invoice,
-            str(obj.wh_dispatch_id.dispatch_billing_truck_type) if obj.wh_dispatch_id and obj.wh_dispatch_id.dispatch_billing_truck_type else "",
-            invoice.bill_weight or obj.wh_goods_weight or 0,
+            "Summary", # Goods Invoice reference
+            "", # Truck Type
+            totals['total_weight'] or 0,
             excel_datetime(invoice.bill_start_date),
             excel_datetime(invoice.bill_end_date),
             invoice.bill_no_of_days or 0,
             invoice.bill_per_day_wh_charges or 0,
-            obj.wh_storage_cost_total or 0,
+            round(totals['total_storage'] or 0, 2),
             
             # Loading
-            invoice.bill_no_of_pallets or 0,
+            totals['total_pieces'] or 0, # Uses sum of pieces from jobs
             invoice.bill_rate_per_pallet or 0,
-            obj.wh_total_loading_cost or 0,
+            round(totals['total_loading'] or 0, 2),
             
             # Unloading
-            invoice.bill_no_of_pallets or 0,
+            totals['total_pieces'] or 0,
             invoice.bill_rate_per_pallet or 0,
-            0, # Unloading cost not in Warehouse_goods_info row
+            round(invoice.bill_unloading_charge or 0, 2),
             
-            invoice.bill_handling_charges if sl == 1 else 0,
-            obj.wh_crane_cost or 0,
-            obj.wh_forklift_cost or 0,
+            round(invoice.bill_handling_charges or 0, 2),
+            round(totals['total_crane'] or 0, 2),
+            round(totals['total_forklift'] or 0, 2),
         ])
-        sl += 1
+    else:
+        sl = 1
+        for obj in qs:
+            # ✅ unit from LocationmasterInfo
+            unit_no = ""
+            lm = LocationmasterInfo.objects.filter(
+                lm_customer_name=invoice.bill_customer_name
+            ).select_related("lm_wh_unit").first()
+
+            if lm and lm.lm_wh_unit:
+                unit_no = str(lm.lm_wh_unit)
+
+            ws.append([
+                sl,
+                obj.wh_job_no,
+                invoice.bill_customer_name.cu_name if invoice.bill_customer_name else "",
+                obj.wh_goods_invoice,
+                str(obj.wh_dispatch_id.dispatch_billing_truck_type) if obj.wh_dispatch_id and obj.wh_dispatch_id.dispatch_billing_truck_type else "",
+                invoice.bill_weight or obj.wh_goods_weight or 0,
+                excel_datetime(invoice.bill_start_date),
+                excel_datetime(invoice.bill_end_date),
+                invoice.bill_no_of_days or 0,
+                invoice.bill_per_day_wh_charges or 0,
+                obj.wh_storage_cost_total or 0,
+                
+                # Loading
+                invoice.bill_no_of_pallets or 0,
+                invoice.bill_rate_per_pallet or 0,
+                obj.wh_total_loading_cost or 0,
+                
+                # Unloading
+                invoice.bill_no_of_pallets or 0,
+                invoice.bill_rate_per_pallet or 0,
+                0, # Unloading cost not in Warehouse_goods_info row
+                
+                invoice.bill_handling_charges if sl == 1 else 0,
+                obj.wh_crane_cost or 0,
+                obj.wh_forklift_cost or 0,
+            ])
+            sl += 1
 
     response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     response["Content-Disposition"] = f"attachment; filename=Invoice_Report_{invoice_id}.xlsx"
