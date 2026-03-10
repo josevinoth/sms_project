@@ -359,6 +359,21 @@ toggleFields(false); // initial page load
     /* =====================================================
        7️⃣ INITIAL LOAD (IMPORTANT)
        ===================================================== */
+    
+    const prefillTripId = "{{ auto_trip_id|default:'' }}";
+    const isEditMode = "{{ expense.id|default:'' }}" !== "";
+    
+    if (prefillTripId && !isEditMode) {
+        // Option is natively rendered by standard Django forms
+        var changeEvent = new Event('change');
+        if(expenseType.value) {
+            expenseType.dispatchEvent(changeEvent);
+        }
+        if(tripSelect.value) {
+            tripSelect.dispatchEvent(changeEvent);
+        }
+    }
+
     calculateTotal();
     updateBalance();
 

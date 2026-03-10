@@ -1046,6 +1046,7 @@ urlpatterns = [
     path('attached_bill_edit/<int:id>/', views.attached_bill_edit, name='attached_bill_edit'),
     path('attached_bill_delete/<int:id>/', views.attached_bill_delete, name='attached_bill_delete'),
     path('attached_bill_upload/<int:id>/', views.attached_bill_upload, name='attached_bill_upload'),
+    path('attached_bill_summary/<int:id>/', views.attached_bill_summary, name='attached_bill_summary'),
     path('get_attached_vehicle_details/', views.get_attached_vehicle_details, name='get_attached_vehicle_details'),
     path('get_vehicles_by_vendor/', views.get_vehicles_by_vendor, name='get_vehicles_by_vendor'),
     path('fetch_maintenance_bill_details/', views.fetch_maintenance_bill_details, name='fetch_maintenance_bill_details'),

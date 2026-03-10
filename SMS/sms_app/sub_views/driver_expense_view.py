@@ -29,11 +29,27 @@ def driver_expense_add(request, expense_id=0):
     else:
         # ADD MODE
         settlement_id = request.GET.get('settlement_id')
-        if not settlement_id:
+        driver_master_id = request.GET.get('driver_master_id')
+
+        if settlement_id:
+            settlement = get_object_or_404(driver_settlement_info, id=settlement_id)
+        elif driver_master_id:
+            from ..sub_models.driver_master_mod import DrivermasterInfo
+            master = get_object_or_404(DrivermasterInfo, id=driver_master_id)
+            # Auto-create settlement record if it doesn't exist
+            settlement, created = driver_settlement_info.objects.get_or_create(
+                driver=master,
+                defaults={
+                    'driver_id_value': master.dm_id,
+                    'driver_name': master.dm_name,
+                    'driver_phone': master.dm_drivernumber,
+                    'driver_licence': master.dm_driver_lic,
+                    'driver_licence_expiry': master.dm_driver_lic_expiry
+                }
+            )
+        else:
             messages.error(request, "Please open expense from Driver Settlement")
             return redirect('driver_settlement_list')
-
-        settlement = get_object_or_404(driver_settlement_info, id=settlement_id)
 
     # ================= 2️⃣ CALCULATE TOTALS (AFTER settlement) =================
     advance_total = Driverexpense.objects.filter(
@@ -68,8 +84,22 @@ def driver_expense_add(request, expense_id=0):
         if expense:
             form = DriverExpenseForm(instance=expense,settlement=settlement)
         else:
+            initial_data = {'driver_name': settlement.driver}
+            
+            trip_id = request.GET.get('trip_id')
+            if trip_id:
+                initial_data['trip_number'] = trip_id
+                initial_data['de_expense_type'] = 2  # Preselect Expense
+                # Try prepopulating date too
+                try:
+                    trip = TripdetailInfo.objects.get(id=trip_id)
+                    if trip.tr_departeddate:
+                        initial_data['trip_date'] = trip.tr_departeddate.date()
+                except TripdetailInfo.DoesNotExist:
+                    pass
+
             form = DriverExpenseForm(
-                initial={'driver_name': settlement.driver},
+                initial=initial_data,
                 settlement=settlement
             )
 
@@ -81,6 +111,7 @@ def driver_expense_add(request, expense_id=0):
         'advance_total': advance_total,
         'expense_total': expense_total,
         'current_balance': current_balance,
+        'auto_trip_id': request.GET.get('trip_id') if not expense else None
     })
 
 

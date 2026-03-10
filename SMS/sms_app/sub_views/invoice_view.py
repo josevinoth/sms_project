@@ -853,7 +853,8 @@ def shipper_invoice_export_excel(request, invoice_id):
         customer = invoice.bill_customer_name
         address = customer.cu_address if customer else ""
         state = extract_state(address)
-        pincode = extract_pincode(address)
+        # Use only the dedicated pincode field from Customer Master
+        pincode = customer.cu_pincode if customer and hasattr(customer, 'cu_pincode') else ""
 
         # Branch/Unit from first record
         first_good = qs.first()
@@ -889,8 +890,28 @@ def shipper_invoice_export_excel(request, invoice_id):
         pre_gst_total = round(storage_val + loading_val + unloading_val + handling_val + 
                             crane_val + forklift_val + packing_val + fumigation_val, 2)
         
+        # Prepare summary strings for Shippers (Inspection/Gate-in) and Invoices
+        shipper_list = list(qs.exclude(wh_gate_injob_no_id__gatein_shipper__isnull=True)
+                              .exclude(wh_gate_injob_no_id__gatein_shipper='')
+                              .values_list('wh_gate_injob_no_id__gatein_shipper', flat=True).distinct())
+        
+        if not shipper_list:
+            shipper_list = list(qs.exclude(wh_consigner__isnull=True).exclude(wh_consigner='')
+                                  .values_list('wh_consigner', flat=True).distinct())
+                                  
+        shipper_str = ", ".join(shipper_list) if shipper_list else (customer.cu_name if customer else "")
+        
+        # Invoices Summary (Prioritize Gate-in Invoice)
+        invoice_list_vals = list(qs.exclude(wh_gate_injob_no_id__gatein_invoice__isnull=True)
+                                   .exclude(wh_gate_injob_no_id__gatein_invoice='')
+                                   .values_list('wh_gate_injob_no_id__gatein_invoice', flat=True).distinct())
+                                   
+        if not invoice_list_vals:
+            invoice_list_vals = list(qs.exclude(wh_goods_invoice__isnull=True).exclude(wh_goods_invoice='')
+                                       .values_list('wh_goods_invoice', flat=True).distinct())
+                                       
+        invoice_str = ", ".join(invoice_list_vals) if invoice_list_vals else "Summary"
         gst_val = round(pre_gst_total * 0.09, 2)
-
         ws.append([
             excel_datetime(invoice.bill_invoice_date),
             invoice.bill_invoice_ref,
@@ -900,7 +921,7 @@ def shipper_invoice_export_excel(request, invoice_id):
             state,
             pincode,
             primary_cost_category,
-            customer.cu_name if customer else "",
+            shipper_str, # Use actual shipper(s) instead of billing customer
             round(storage_val, 2),
             round(loading_val, 2),
             round(unloading_val, 2),
@@ -919,7 +940,8 @@ def shipper_invoice_export_excel(request, invoice_id):
             customer = invoice.bill_customer_name
             address = customer.cu_address if customer else ""
             state = extract_state(address)
-            pincode = extract_pincode(address)
+            # Use only the dedicated pincode field from Customer Master
+            pincode = customer.cu_pincode if customer and hasattr(customer, 'cu_pincode') else ""
 
             branch_name = obj.wh_branch.loc_name if obj.wh_branch else ""
             branch_name = branch_name.replace("BVM ", "").strip()
@@ -931,6 +953,13 @@ def shipper_invoice_export_excel(request, invoice_id):
 
             primary_cost_category = f"{branch_name} - {unit_no}" if unit_no else branch_name
 
+            # Shipper Name from Inspection (Gate-in)
+            shipper_name = ""
+            if obj.wh_gate_injob_no_id and obj.wh_gate_injob_no_id.gatein_shipper:
+                shipper_name = obj.wh_gate_injob_no_id.gatein_shipper
+            else:
+                shipper_name = obj.wh_consigner or (customer.cu_name if customer else "")
+            
             ws.append([
                 excel_datetime(invoice.bill_invoice_date),
                 invoice.bill_invoice_ref,
@@ -940,7 +969,7 @@ def shipper_invoice_export_excel(request, invoice_id):
                 state,
                 pincode,
                 primary_cost_category,
-                customer.cu_name if customer else "",
+                shipper_name,
                 obj.wh_storage_cost_total or 0,
                 obj.wh_total_loading_cost or 0,
                 0, # Unloading cost
@@ -1019,17 +1048,41 @@ def invoice_export_excel(request, invoice_id):
         all_jobs = list(qs.values_list('wh_job_no', flat=True).distinct())
         job_no_str = ", ".join(all_jobs) if all_jobs else ""
         
-        storage_val = float(job_totals['total_storage'] or 0)
-        loading_val = float(job_totals['total_loading'] or 0)
-        unloading_val = loading_val # Matches bill_unloading_charge logic in template
-        crane_val = float(job_totals['total_crane'] or 0)
-        forklift_val = float(job_totals['total_forklift'] or 0)
+        # Use header fields as Source of Truth for summary lines (Dedicated/Exclusive)
+        # This is more reliable than job-item sums when the portal view hasn't been refreshed
+        storage_val = float(invoice.bill_wh_storage_charges or 0)
+        loading_val = float(invoice.bill_loading_charge or 0)
+        unloading_val = float(invoice.bill_unloading_charge or 0)
+        crane_val = float(invoice.bill_tot_crane_charges or 0)
+        forklift_val = float(invoice.bill_tot_forklift_charges or 0)
+        
+        # Shippers and Invoices Summary (Prioritize Inspection/Gate-in fields)
+        shipper_list = list(qs.exclude(wh_gate_injob_no_id__gatein_shipper__isnull=True)
+                              .exclude(wh_gate_injob_no_id__gatein_shipper='')
+                              .values_list('wh_gate_injob_no_id__gatein_shipper', flat=True).distinct())
+        
+        if not shipper_list:
+            shipper_list = list(qs.exclude(wh_consigner__isnull=True).exclude(wh_consigner='')
+                                  .values_list('wh_consigner', flat=True).distinct())
+                                  
+        shipper_str = ", ".join(shipper_list) if shipper_list else (invoice.bill_customer_name.cu_name if invoice.bill_customer_name else "")
+        
+        # Shipper Invoice Summary
+        invoice_list_vals = list(qs.exclude(wh_gate_injob_no_id__gatein_invoice__isnull=True)
+                                   .exclude(wh_gate_injob_no_id__gatein_invoice='')
+                                   .values_list('wh_gate_injob_no_id__gatein_invoice', flat=True).distinct())
+                                   
+        if not invoice_list_vals:
+            invoice_list_vals = list(qs.exclude(wh_goods_invoice__isnull=True).exclude(wh_goods_invoice='')
+                                       .values_list('wh_goods_invoice', flat=True).distinct())
+                                       
+        invoice_str = ", ".join(invoice_list_vals) if invoice_list_vals else "Summary"
 
         ws.append([
             1,
             job_no_str,
-            invoice.bill_customer_name.cu_name if invoice.bill_customer_name else "",
-            "Summary", # Goods Invoice reference
+            shipper_str,
+            invoice_str,
             "", # Truck Type
             item_sums['total_weight'] or 0,
             excel_datetime(invoice.bill_start_date),
@@ -1067,8 +1120,8 @@ def invoice_export_excel(request, invoice_id):
             ws.append([
                 sl,
                 obj.wh_job_no,
-                invoice.bill_customer_name.cu_name if invoice.bill_customer_name else "",
-                obj.wh_goods_invoice,
+                obj.wh_gate_injob_no_id.gatein_shipper if obj.wh_gate_injob_no_id and obj.wh_gate_injob_no_id.gatein_shipper else (obj.wh_consigner or (invoice.bill_customer_name.cu_name if invoice.bill_customer_name else "")),
+                obj.wh_gate_injob_no_id.gatein_invoice if obj.wh_gate_injob_no_id and obj.wh_gate_injob_no_id.gatein_invoice else (obj.wh_goods_invoice or "Summary"),
                 str(obj.wh_dispatch_id.dispatch_billing_truck_type) if obj.wh_dispatch_id and obj.wh_dispatch_id.dispatch_billing_truck_type else "",
                 invoice.bill_weight or obj.wh_goods_weight or 0,
                 excel_datetime(invoice.bill_start_date),

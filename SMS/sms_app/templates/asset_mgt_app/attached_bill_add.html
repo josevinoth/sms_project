@@ -169,7 +169,8 @@
                                 <th>From</th>
                                 <th>To</th>
                                 <th>Trip KM</th>
-                                <th>Buy cost</th>
+                                <th>Selling Cost</th>
+                                <th>Buy Cost</th>
                                 <th>Parking cost</th>
                                 <th>Toll cost</th>
                                 <th>Total Buy cost</th>
@@ -256,25 +257,26 @@
                         }
                     }
 
-                    calculateAmounts();
                     isInitialLoad = false; // Reset after first load
 
-                    // Populate Trips Table
+                    // Populate Trips Table FIRST, then calculate amounts so rows exist in DOM
                     tbody.empty();
 
                     if (data.trips && data.trips.length > 0) {
                         var savedIds = ($('#id_ab_selected_trips').val() || "").split(',');
                         $.each(data.trips, function (index, trip) {
-                            var isChecked = savedIds.includes(String(trip.cnote)) ? "checked" : "";
-                            var row = `<tr data-id="${trip.cnote}" data-km="${trip.trip_km}" data-parking="${trip.parking_cost}" data-toll="${trip.toll_cost}">
-                                    <td><input type="checkbox" class="trip-checkbox" value="${trip.cnote}" ${isChecked}></td>
+                            var isChecked = savedIds.includes(String(trip.trip_no)) ? "checked" : "";
+                            var displayCnote = trip.cnote || "";
+                            var row = `<tr data-id="${trip.trip_no}" data-km="${trip.trip_km}" data-parking="${trip.parking_cost}" data-toll="${trip.toll_cost}" data-selling="${trip.buy_cost}">
+                                    <td><input type="checkbox" class="trip-checkbox" value="${trip.trip_no}" ${isChecked}></td>
                                     <td>${trip.trip_date}</td>
-                                    <td>${trip.cnote}</td>
+                                    <td>${displayCnote}</td>
                                     <td>${trip.customer}</td>
                                     <td>${trip.from}</td>
                                     <td>${trip.to}</td>
                                     <td>${trip.trip_km}</td>
-                                    <td class="trip-buy-cost">${trip.buy_cost.toFixed(2)}</td>
+                                    <td class="trip-selling">${trip.buy_cost.toFixed(2)}</td>
+                                    <td class="trip-buy-cost">0.00</td>
                                     <td>${trip.parking_cost.toFixed(2)}</td>
                                     <td>${trip.toll_cost.toFixed(2)}</td>
                                     <td class="trip-total-buy-cost">${trip.total_buy_cost.toFixed(2)}</td>
@@ -282,8 +284,11 @@
                             tbody.append(row);
                         });
                     } else {
-                        tbody.append('<tr><td colspan="11" class="text-center text-muted">No trips found for selected criteria</td></tr>');
+                        tbody.append('<tr><td colspan="12" class="text-center text-muted">No trips found for selected criteria</td></tr>');
                     }
+
+                    // Now calculate — rows are in the DOM so Buy Cost cells can be updated
+                    calculateAmounts();
                 },
                 error: function (xhr, status, error) {
                     console.error("AJAX Error:", status, error);
@@ -371,13 +376,13 @@
         var extra_km_amount = extra_km * extraKmRate;
         $('#id_ab_extra_km_amount').val(extra_km_amount.toFixed(2));
 
-        // 4. Calculate Total Bill Amount (Buy Cost + Extra KM Amount)
+        // 4. Calculate Total Bill Amount (Buy Cost + Extra KM Amount - Leave Amount)
         if (!$('#id_ab_bill_amount').is(':focus')) {
-            var total_bill = buy_cost + extra_km_amount;
+            var total_bill = buy_cost + extra_km_amount - leave_amount;
             $('#id_ab_bill_amount').val(total_bill.toFixed(2));
         }
 
-        // 5. Update table "Buy cost" based on correct formula: (Bill Amount / Total KM Run) * Trip KM
+        // 5. Update table: Selling stays as-is from trip data; Buy Cost = (Bill Amount / Total KM Run) * Trip KM
         var current_bill_amount = parseFloat($('#id_ab_bill_amount').val()) || 0;
         if (total_km > 0) {
             var rate = current_bill_amount / total_km;
@@ -388,7 +393,7 @@
                 var t_toll = parseFloat($row.data('toll')) || 0;
 
                 if (t_km > 0) {
-                    var calc_buy = rate * t_km; // Corrected: (Bill/TotalKM) * TripKM
+                    var calc_buy = rate * t_km;
                     $row.find('.trip-buy-cost').text(calc_buy.toFixed(2));
                     $row.find('.trip-total-buy-cost').text((calc_buy + t_parking + t_toll).toFixed(2));
                 } else {

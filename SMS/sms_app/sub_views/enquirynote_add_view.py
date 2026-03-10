@@ -166,14 +166,16 @@ def enquirynote_list(request):
         ).distinct()
 
     # Date filters
-    if date_from:
-        enquirynote_queryset = enquirynote_queryset.filter(
-            en_created_at__date__gte=date_from
-        )
-    if date_to:
-        enquirynote_queryset = enquirynote_queryset.filter(
-            en_created_at__date__lte=date_to
-        )
+    query_filters = Q()
+    if date_from and date_to:
+        query_filters = Q(en_created_at__date__range=[date_from, date_to])
+    elif date_from:
+        query_filters = Q(en_created_at__date__gte=date_from)
+    elif date_to:
+        query_filters = Q(en_created_at__date__lte=date_to)
+    
+    if date_from or date_to:
+        enquirynote_queryset = enquirynote_queryset.filter(query_filters)
 
     user_ext = User_extInfo.objects.get(user_id=user_id)
     user_role_obj = user_ext.emp_role  # This is RoleInfo object
@@ -189,9 +191,10 @@ def enquirynote_list(request):
 
     select_all = request.GET.get('select_all', '')
 
-    if select_all == "true":
+    any_filter = enquiry_number or consignment_number or date_from or date_to
+    if select_all == "true" or any_filter:
         # Load records with a sensible limit (500 max for performance)
-        page_obj = list(enquirynote_queryset[:500])
+        page_obj = list(enquirynote_queryset[:1000])
     else:
         # Normal pagination
         paginator = Paginator(enquirynote_queryset, 75)
@@ -207,15 +210,24 @@ def enquirynote_list(request):
         va_enquirynumber__in=enquiry_ids
     ).values_list('va_enquirynumber', 'va_vehiclenumber__vm_registrationnumber', 'va_vehiclenumber_mkt')
 
-    trip_data = TripdetailInfo.objects.filter(
-        tr_enquirynumber_id__in=enquiry_ids
-    ).values_list(
+    # Filter trips by date if provided
+    trip_filters = Q(tr_enquirynumber_id__in=enquiry_ids)
+    if date_from:
+        trip_filters &= Q(tr_created_at__date__gte=date_from)
+    if date_to:
+        trip_filters &= Q(tr_created_at__date__lte=date_to)
+
+    trip_data = TripdetailInfo.objects.filter(trip_filters).values_list(
         'tr_enquirynumber',
         'tr_consignmentnumber__co_consignmentnumber',
         'tr_tripnumber',
         'tc_financestatus__status',
         'tc_financestatus',
-        'tr_category__category'
+        'tr_category__category',
+        'tr_driver_master_id',
+        'tr_drivernumber',
+        'tr_drivername',
+        'id'  # Include primary key of trip 
     )
 
     # Pre-build consignment dict to avoid N+1 queries
@@ -232,9 +244,54 @@ def enquirynote_list(request):
         valid_numbers = [num for num in (reg_num, mkt_num) if num]
         vehicle_dict.setdefault(enq_id, []).extend(valid_numbers or ["No Vehicle"])
 
+    # Fetch driver mapping for driver settlement link
+    driver_master_ids = set()
+    driver_numbers = set()
+    driver_names = set()
+    for row in trip_data:
+        if row[6]: driver_master_ids.add(row[6])
+        if row[7]: driver_numbers.add(row[7])
+        if row[8]: driver_names.add(row[8])
+
+    from ..sub_models.driver_master_mod import DrivermasterInfo
+    from ..models import driver_settlement_info
+    
+    driver_mapping = {}
+    q_objects = Q()
+    if driver_master_ids:
+        q_objects |= Q(id__in=driver_master_ids)
+    if driver_numbers:
+        q_objects |= Q(dm_drivernumber__in=driver_numbers)
+    if driver_names:
+        q_objects |= Q(dm_name__in=driver_names)
+
+    if q_objects:
+        drivers = DrivermasterInfo.objects.filter(q_objects).values_list('id', 'dm_id', 'dm_drivernumber', 'dm_name')
+        driver_ids_found = [d[0] for d in drivers]
+        settlements = driver_settlement_info.objects.filter(driver_id__in=driver_ids_found).values_list('driver_id', 'id')
+        ds_map = {ds[0]: ds[1] for ds in settlements}
+
+        for d_id, dm_id, d_num, d_name in drivers:
+            ds_id = ds_map.get(d_id, "")
+            val = (d_id, dm_id, ds_id)
+            driver_mapping[('id', d_id)] = val
+            if d_num: driver_mapping[('num', d_num)] = val
+            if d_name: driver_mapping[('name', d_name)] = val
+
     # Trip dict
     trip_dict = {}
-    for enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category in trip_data:
+    for row in trip_data:
+        enq_id = row[0]
+        trip_cons = row[1]
+        trip_num = row[2]
+        trip_status = row[3]
+        trip_status_id = row[4]
+        trip_category = row[5]
+        driver_id = row[6]
+        driver_num = row[7]
+        driver_name = row[8]
+        trip_pk = row[9] # Primary Key of the trip
+
         # Check category safely
         cat_lower = trip_category.strip().lower() if trip_category else ""
 
@@ -244,9 +301,19 @@ def enquirynote_list(request):
             display_text = trip_cons if trip_cons else "No Consignment"
         else:
             display_text = trip_category if trip_category else "No Category"
+        
+        driver_pk = ""
+        dm_id = ""
+        ds_id = ""
+        if driver_id and ('id', driver_id) in driver_mapping:
+            driver_pk, dm_id, ds_id = driver_mapping[('id', driver_id)]
+        elif driver_num and ('num', driver_num) in driver_mapping:
+            driver_pk, dm_id, ds_id = driver_mapping[('num', driver_num)]
+        elif driver_name and ('name', driver_name) in driver_mapping:
+            driver_pk, dm_id, ds_id = driver_mapping[('name', driver_name)]
 
         trip_dict.setdefault(enq_id, []).append(
-            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id)
+            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, dm_id, ds_id, trip_pk, driver_pk)
         )
 
     # Vehicle limits
@@ -391,6 +458,9 @@ def enquirynote_list(request):
         'role': user_role,
         'enquiry_data': enquiry_data,
         'enquiry_number': enquiry_number,
+        'consignment_number': consignment_number,
+        'date_from': date_from,
+        'date_to': date_to,
         'vehicle_summary': vehicle_summary,
     }
     return render(request, "asset_mgt_app/enquirynote_list.html", context)
