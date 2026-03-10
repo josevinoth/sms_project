@@ -382,11 +382,9 @@
                     <div>
                         {% if data.trips %}
                         {% for t in data.trips %}
-                        {% with tc=t.0 tn=t.1 ts=t.2 tsid=t.3 dmid=t.4 dsid=t.5 tpk=t.6 dpk=t.7 %}
-                        <a class="link d-block mb-2" href="{% url 'tripdetail_enquiry' eid tn %}">
-                            {{ tn }} ({{ tc }})
+                        <a class="link d-block mb-2" href="{% url 'tripdetail_enquiry' eid t.trip_number %}">
+                            {{ t.trip_number }} ({{ t.display_text }})
                         </a>
-                        {% endwith %}
                         {% endfor %}
                         {% else %}
                         <span style="color: gray;">No Trips</span>
@@ -394,59 +392,47 @@
                     </div>
                 </td>
 
-                <!-- Trip Settlement -->
                 <td style="min-width:300px; width:300px; white-space:normal; word-break:break-word;">
                     {% if data.trips %}
                     {% for t in data.trips %}
-                    {% with tc=t.0 tn=t.1 ts=t.2 tsid=t.3 dmid=t.4 dsid=t.5 tpk=t.6 dpk=t.7 %}
-                    {% if tsid == 1 or tsid == 5 or tsid == 8%}
-                    <a class="link disable_a_href_list " href="" style="pointer-events: none; color: gray;">
-                        {{ ts }} ({{ tn }})
+                    {% if t.status_id == 1 or t.status_id == 5 or t.status_id == 8 %}
+                    <a class="link disable_a_href_list" href="" style="pointer-events: none; color: gray;">
+                        {{ t.status }} ({{ t.trip_number }})
                     </a><br>
                     {% else %}
-                    <a class="link " href="{% url 'tripclosure_enquiry' eid tn %}">
-                        {{ ts }} ({{ tn }})
+                    <a class="link" href="{% url 'tripclosure_enquiry' eid t.trip_number %}">
+                        {{ t.status }} ({{ t.trip_number }})
                     </a><br>
                     {% endif %}
-                    {% endwith %}
                     {% endfor %}
                     {% else %}
-                    <a class="link disable_a_href_list d-block " href="" style="pointer-events: none; color: gray;">No
+                    <a class="link disable_a_href_list d-block" href="" style="pointer-events: none; color: gray;">No
                         Settlement</a>
                     {% endif %}
                 </td>
 
-                <!-- Driver Settlement -->
                 <td style="min-width:300px; width:300px; white-space:normal; word-break:break-word;">
                     {% if data.trips %}
                     {% for t in data.trips %}
-                    {% with tc=t.0 tn=t.1 ts=t.2 tsid=t.3 dmid=t.4 dsid=t.5 tpk=t.6 dpk=t.7 tsource=t.8 %}
-                    {% if tsource|lower == 'own' or tsource|lower == 'attached' %}
-                    {% if tsid == 7 %}
-                    {% if dsid %}
-                    <a class="link " href="{% url 'driver_expense_add' %}?settlement_id={{ dsid }}&trip_id={{ tpk }}">
-                        Driver Settlement ({{ tn }})
-                    </a><br>
-                    {% elif dpk %}
-                    <a class="link " href="{% url 'driver_expense_add' %}?driver_master_id={{ dpk }}&trip_id={{ tpk }}">
-                        Driver Settlement ({{ tn }})
-                    </a><br>
+                    {% if "market" in t.veh_source %}
+                    <span style="color: #6c757d; font-weight: 600; font-style: italic;">N/A market vehicle ({{t.trip_number }})</span><br>
+                    {% elif t.is_settled %}
+                    <span style="color: green; font-weight: 600;">Driver Settlement Completed ({{ t.trip_number}})</span><br>
+                    {% elif t.status_id == 7 %}
+                    {% if t.ds_id %}
+                    <a class="link"
+                        href="{% url 'driver_expense_add' %}?settlement_id={{ t.ds_id }}&trip_id={{ t.trip_pk }}">Driver
+                        Settlement ({{ t.trip_number }})</a><br>
+                    {% elif t.driver_pk %}
+                    <a class="link"
+                        href="{% url 'driver_expense_add' %}?driver_master_id={{ t.driver_pk }}&trip_id={{ t.trip_pk }}">Driver
+                        Settlement ({{ t.trip_number }})</a><br>
                     {% else %}
-                    <span style="color: gray; font-weight: 600;">
-                        Driver Settlement ({{ tn }})
-                    </span><br>
+                    <span style="color: gray; font-weight: 600;">Driver Settlement ({{ t.trip_number }})</span><br>
                     {% endif %}
                     {% else %}
-                    <span style="color: gray; font-weight: 600;">
-                        Driver Settlement ({{ tn }})
-                    </span><br>
+                    <span style="color: gray; font-weight: 600;">Driver Settlement ({{ t.trip_number }})</span><br>
                     {% endif %}
-                    {% else %}
-                    <span style="color: gray; font-style: italic;">
-                        N/A (Market) ({{ tn }})
-                    </span><br>
-                    {% endif %}
-                    {% endwith %}
                     {% endfor %}
                     {% else %}
                     <span class="d-block" style="color: gray; font-weight: 600;">No Driver Settlement</span>

@@ -173,7 +173,7 @@ def enquirynote_list(request):
         query_filters = Q(en_created_at__date__gte=date_from)
     elif date_to:
         query_filters = Q(en_created_at__date__lte=date_to)
-    
+
     if date_from or date_to:
         enquirynote_queryset = enquirynote_queryset.filter(query_filters)
 
@@ -227,8 +227,16 @@ def enquirynote_list(request):
         'tr_driver_master_id',
         'tr_drivernumber',
         'tr_drivername',
-        'id', # 9
-        'tr_vehiclesource__ow_ownership' # 10
+        'id',  # Include primary key of trip
+        'tr_vehiclesource__ow_ownership'
+    )
+
+    # Fetch trips that have driver settlements (expenses)
+    all_trip_pks = [row[9] for row in trip_data]
+    from ..models import Driverexpense
+    settled_trip_ids = set(
+        Driverexpense.objects.filter(trip_number_id__in=all_trip_pks, de_expense_type_id=2)
+        .values_list('trip_number_id', flat=True)
     )
 
     # Pre-build consignment dict to avoid N+1 queries
@@ -256,7 +264,7 @@ def enquirynote_list(request):
 
     from ..sub_models.driver_master_mod import DrivermasterInfo
     from ..models import driver_settlement_info
-    
+
     driver_mapping = {}
     q_objects = Q()
     if driver_master_ids:
@@ -269,7 +277,8 @@ def enquirynote_list(request):
     if q_objects:
         drivers = DrivermasterInfo.objects.filter(q_objects).values_list('id', 'dm_id', 'dm_drivernumber', 'dm_name')
         driver_ids_found = [d[0] for d in drivers]
-        settlements = driver_settlement_info.objects.filter(driver_id__in=driver_ids_found).values_list('driver_id', 'id')
+        settlements = driver_settlement_info.objects.filter(driver_id__in=driver_ids_found).values_list('driver_id',
+                                                                                                        'id')
         ds_map = {ds[0]: ds[1] for ds in settlements}
 
         for d_id, dm_id, d_num, d_name in drivers:
@@ -291,7 +300,8 @@ def enquirynote_list(request):
         driver_id = row[6]
         driver_num = row[7]
         driver_name = row[8]
-        trip_pk = row[9] # Primary Key of the trip
+        trip_pk = row[9]  # Primary Key of the trip
+        veh_source = (row[10] or "").strip().lower()
 
         # Check category safely
         cat_lower = trip_category.strip().lower() if trip_category else ""
@@ -302,7 +312,7 @@ def enquirynote_list(request):
             display_text = trip_cons if trip_cons else "No Consignment"
         else:
             display_text = trip_category if trip_category else "No Category"
-        
+
         driver_pk = ""
         dm_id = ""
         ds_id = ""
@@ -313,9 +323,20 @@ def enquirynote_list(request):
         elif driver_name and ('name', driver_name) in driver_mapping:
             driver_pk, dm_id, ds_id = driver_mapping[('name', driver_name)]
 
-        trip_dict.setdefault(enq_id, []).append(
-            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, dm_id, ds_id, trip_pk, driver_pk, row[10])
-        )
+        is_settled = trip_pk in settled_trip_ids
+
+        trip_dict.setdefault(enq_id, []).append({
+            'display_text': display_text,
+            'trip_number': trip_num or "No Trip",
+            'status': trip_status or "",
+            'status_id': trip_status_id,
+            'dm_id': dm_id,
+            'ds_id': ds_id,
+            'trip_pk': trip_pk,
+            'driver_pk': driver_pk,
+            'is_settled': is_settled,
+            'veh_source': veh_source
+        })
 
     # Vehicle limits
     vehicle_limits = (
@@ -396,16 +417,16 @@ def enquirynote_list(request):
         raw_branch = "GENERAL"
         if v.vm_vendor and v.vm_vendor.vend_branch:
             raw_branch = v.vm_vendor.vend_branch.loc_name
-        
+
         branch = None
         reg = (v.vm_registrationnumber or "").upper().strip()
-        
+
         if cat == 'Own':
             if 'MAA' in raw_branch:
                 branch = 'MAA'
             elif 'BLR' in raw_branch:
                 branch = 'BLR'
-            elif raw_branch == 'HO': 
+            elif raw_branch == 'HO':
                 branch = 'MAA'
             else:
                 # Fallback to registration number prefix for Own vehicles
@@ -413,12 +434,12 @@ def enquirynote_list(request):
                     branch = 'MAA'
                 elif reg.startswith('KA'):
                     branch = 'BLR'
-        else: # Attached
+        else:  # Attached
             if 'MAA' in raw_branch:
                 branch = 'MAA'
-            elif reg.startswith('TN'): # Fallback for attached too
+            elif reg.startswith('TN'):  # Fallback for attached too
                 branch = 'MAA'
-        
+
         # If the branch doesn't match the required filters for the category, skip it.
         if not branch:
             continue
