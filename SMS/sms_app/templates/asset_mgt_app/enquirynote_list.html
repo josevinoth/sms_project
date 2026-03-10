@@ -420,7 +420,8 @@
                 <td style="min-width:300px; width:300px; white-space:normal; word-break:break-word;">
                     {% if data.trips %}
                     {% for t in data.trips %}
-                    {% with tc=t.0 tn=t.1 ts=t.2 tsid=t.3 dmid=t.4 dsid=t.5 tpk=t.6 dpk=t.7 %}
+                    {% with tc=t.0 tn=t.1 ts=t.2 tsid=t.3 dmid=t.4 dsid=t.5 tpk=t.6 dpk=t.7 tsource=t.8 %}
+                    {% if tsource|lower == 'own' or tsource|lower == 'attached' %}
                     {% if tsid == 7 %}
                     {% if dsid %}
                     <a class="link " href="{% url 'driver_expense_add' %}?settlement_id={{ dsid }}&trip_id={{ tpk }}">
@@ -438,6 +439,11 @@
                     {% else %}
                     <span style="color: gray; font-weight: 600;">
                         Driver Settlement ({{ tn }})
+                    </span><br>
+                    {% endif %}
+                    {% else %}
+                    <span style="color: gray; font-style: italic;">
+                        N/A (Market) ({{ tn }})
                     </span><br>
                     {% endif %}
                     {% endwith %}

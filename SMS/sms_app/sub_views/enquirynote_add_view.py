@@ -227,7 +227,8 @@ def enquirynote_list(request):
         'tr_driver_master_id',
         'tr_drivernumber',
         'tr_drivername',
-        'id'  # Include primary key of trip 
+        'id', # 9
+        'tr_vehiclesource__ow_ownership' # 10
     )
 
     # Pre-build consignment dict to avoid N+1 queries
@@ -313,7 +314,7 @@ def enquirynote_list(request):
             driver_pk, dm_id, ds_id = driver_mapping[('name', driver_name)]
 
         trip_dict.setdefault(enq_id, []).append(
-            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, dm_id, ds_id, trip_pk, driver_pk)
+            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, dm_id, ds_id, trip_pk, driver_pk, row[10])
         )
 
     # Vehicle limits
