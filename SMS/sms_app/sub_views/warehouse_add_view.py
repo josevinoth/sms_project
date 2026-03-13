@@ -463,12 +463,20 @@ def warehouseout_add(request, warehouseout_id=0):
                             LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_area_occupied=area_occupied)
                         else:
                             print("No Area")
-                total_area_data = LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_size
-                total_volume_data = LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_total_volume
-                available_area_final = round((total_area_data - area_occupied), 3)
-                available_volume_final = round((total_volume_data - volume_occupied), 3)
-                LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_area=available_area_final)
-                LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_volume=available_volume_final)
+                # Safer retrieval using .first() to avoid MultipleObjectsReturned
+                loc_master = LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val, lm_areaside=Bay_val).first()
+                if loc_master:
+                    total_area_data = loc_master.lm_size or 0
+                    total_volume_data = loc_master.lm_total_volume or 0
+                    available_area_final = round((total_area_data - area_occupied), 3)
+                    available_volume_final = round((total_volume_data - volume_occupied), 3)
+                    
+                    LocationmasterInfo.objects.filter(id=loc_master.id).update(
+                        lm_available_area=available_area_final,
+                        lm_available_volume=available_volume_final
+                    )
+                else:
+                    print("Location master record not found for update")
             else:
                 print("warehouseoutinfo is Not-Valid")
     return redirect('/SMS/warehouseout_cancel')
