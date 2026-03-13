@@ -21,10 +21,8 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col">
-            <div class="container-fluid">
-                <div class="card text-white bg-info mb-3" style="max-width:100%;">
+    <div class="container-fluid">
+        <div class="card text-white bg-info mb-3" style="max-width:100%;">
                     <div class="card-header text-center">
                         <h4>Add / Update Driver Expense</h4>
                     </div>
@@ -51,44 +49,44 @@
                                     {% render_field form.de_date type="Datetime-local" class="form-control" %}
                                 </div>
                                 <div id="trip-related-fields">
-<div class="input-group input-group-sm mb-3">
-    <div class="input-group-prepend">
-        <span class="input-group-text">Trip Date</span>
-    </div>
-{% render_field form.trip_date id="trip_date" type="date" class="form-control" %}
-</div>
-
-                                <div class="input-group input-group-sm mb-3" >
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Trip Number</span>
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Trip Date</span>
+                                        </div>
+                                        {% render_field form.trip_date id="trip_date" type="date" class="form-control" %}
                                     </div>
-                                    {% render_field form.trip_number id="trip_number" class="form-control" %}
+
+                                    <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Trip Number</span>
+                                        </div>
+                                        {% render_field form.trip_number id="trip_number" class="form-control" %}
+                                    </div>
+                                    <div id="trip-details-block">
+
+                                        <div class="input-group input-group-sm mb-3">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">Vehicle Number</span>
+                                            </div>
+                                            <input type="text" id="vehicle_number" class="form-control" readonly>
+                                        </div>
+
+                                        <div class="input-group input-group-sm mb-3">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">From</span>
+                                            </div>
+                                            <input type="text" id="from_location" class="form-control" readonly>
+                                        </div>
+
+                                        <div class="input-group input-group-sm mb-3">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">To</span>
+                                            </div>
+                                            <input type="text" id="to_location" class="form-control" readonly>
+                                        </div>
+
+                                    </div>
                                 </div>
-<div id="trip-details-block">
-
-    <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">Vehicle Number</span>
-        </div>
-        <input type="text" id="vehicle_number" class="form-control" readonly>
-    </div>
-
-    <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">From</span>
-        </div>
-        <input type="text" id="from_location" class="form-control" readonly>
-    </div>
-
-    <div class="input-group input-group-sm mb-3">
-        <div class="input-group-prepend">
-            <span class="input-group-text">To</span>
-        </div>
-        <input type="text" id="to_location" class="form-control" readonly>
-    </div>
-
-</div>
-                                    </div>
 
                             </div>
 
@@ -168,201 +166,330 @@
                         </div>
 
                         <!-- BUTTONS (LIKE DRIVER MASTER) -->
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-check"></i> Submit
-                        </button>
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Submit
+                            </button>
 
-                        <a href="{% url 'driver_settlement_update' settlement.id %}"
-                           class="btn btn-danger float-right">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
+                            <a href="{% url 'driver_settlement_update' settlement.id %}" class="btn btn-danger">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
 
 
 
                     </div>
                 </div>
+
+        <!-- ================= TRIP LIST TABLE ================= -->
+        <div class="card text-white bg-info mb-3" id="trip-table-row" style="display: none; max-width:100%;">
+            <div class="card-header d-flex justify-content-between align-items-center"
+                style="background-color: #17a2b8;">
+                <h5 class="mb-0">Trip Details</h5>
+            </div>
+            <div class="card-body bg-light text-dark pt-3 pb-3">
+                <div class="table-responsive shadow-box-table p-3">
+                    <table class="table table-bordered table-sm text-center">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Select</th>
+                                <th>Trip Number</th>
+                                <th>Trip Date</th>
+                                <th>Vehicle Number</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Parking</th>
+                                <th>Loading</th>
+                                <th>Unloading</th>
+                                <th>Weighment</th>
+                                <th>Supervisor</th>
+                                <th>RTO</th>
+                                <th>Batta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trip-table-body">
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
+
     </div>
 </form>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function () {
 
-    /* =====================================================
-       ELEMENT REFERENCES
-       ===================================================== */
-    const expenseType = document.getElementById("de_expense_type");
+        /* =====================================================
+           ELEMENT REFERENCES
+           ===================================================== */
+        const expenseType = document.getElementById("de_expense_type");
 
-    const tripBlock   = document.getElementById("trip-related-fields");
-    const costBlock   = document.getElementById("expense-cost-fields");
+        const tripBlock = document.getElementById("trip-related-fields");
+        const costBlock = document.getElementById("expense-cost-fields");
 
-    const tripDate    = document.getElementById("trip_date");
-    const tripSelect  = document.getElementById("trip_number");
+        const tripDate = document.getElementById("trip_date");
+        const tripSelect = document.getElementById("trip_number");
 
-    const vehicle     = document.getElementById("vehicle_number");
-    const fromLoc     = document.getElementById("from_location");
-    const toLoc       = document.getElementById("to_location");
+        const vehicle = document.getElementById("vehicle_number");
+        const fromLoc = document.getElementById("from_location");
+        const toLoc = document.getElementById("to_location");
 
-    const totalCost   = document.getElementById("de_total_cost");
-    const balanceBox  = document.getElementById("live_balance");
+        const totalCost = document.getElementById("de_total_cost");
+        const balanceBox = document.getElementById("live_balance");
 
-    const baseBalance = parseFloat("{{ current_balance }}");
+        const baseBalance = parseFloat("{{ current_balance }}");
 
-    /* COST FIELDS (EXPLICIT — NO LOOPS) */
-    const parking     = document.getElementById("id_de_parkingcost");
-    const loading     = document.getElementById("id_de_loadingcost");
-    const unloading   = document.getElementById("id_de_unloadingcost");
-    const weighment   = document.getElementById("id_de_weighmentcost");
-    const supervisor  = document.getElementById("id_de_supervisorcost");
-    const rto  = document.getElementById("id_de_rtocost");
-    const batta  = document.getElementById("id_de_battacost");
+        /* COST FIELDS (EXPLICIT — NO LOOPS) */
+        const parking = document.getElementById("id_de_parkingcost");
+        const loading = document.getElementById("id_de_loadingcost");
+        const unloading = document.getElementById("id_de_unloadingcost");
+        const weighment = document.getElementById("id_de_weighmentcost");
+        const supervisor = document.getElementById("id_de_supervisorcost");
+        const rto = document.getElementById("id_de_rtocost");
+        const batta = document.getElementById("id_de_battacost");
 
-    /* =====================================================
-       1️⃣ TOGGLE ADVANCE / EXPENSE
-       ===================================================== */
-    function toggleFields(isUserAction = false) {
+        /* =====================================================
+           1️⃣ TOGGLE ADVANCE / EXPENSE
+           ===================================================== */
+        function toggleFields(isUserAction = false) {
 
-    const type = expenseType.value;
+            const type = expenseType.value;
 
-    if (type === "1") {
-        // ADVANCE
-        tripBlock.style.display = "none";
-        costBlock.style.display = "none";
+            if (type === "1") {
+                // ADVANCE
+                tripBlock.style.display = "none";
+                costBlock.style.display = "none";
 
-        totalCost.readOnly = false;
+                totalCost.readOnly = false;
 
-        // ⚠️ CLEAR ONLY WHEN USER CHANGES TYPE
-        if (isUserAction) {
-            tripDate.value = "";
-            tripSelect.value = "";
+                // ⚠️ CLEAR ONLY WHEN USER CHANGES TYPE
+                if (isUserAction) {
+                    tripDate.value = "";
+                    tripSelect.value = "";
 
-            vehicleField.value = "";
-            fromField.value = "";
-            toField.value = "";
-        }
-
-    } else {
-        // EXPENSE
-        tripBlock.style.display = "block";
-        costBlock.style.display = "block";
-
-        totalCost.readOnly = true;
-    }
-
-    updateBalance();
-}
-
-
-    /* =====================================================
-       2️⃣ CALCULATE TOTAL COST
-       ===================================================== */
-    function calculateTotal() {
-        if (expenseType.value !== "2") return;
-
-        const total =
-            (parseFloat(parking.value)    || 0) +
-            (parseFloat(loading.value)    || 0) +
-            (parseFloat(unloading.value)  || 0) +
-            (parseFloat(weighment.value)  || 0) +
-            (parseFloat(supervisor.value) || 0) +
-            (parseFloat(rto.value) || 0) +
-            (parseFloat(batta.value) || 0);
-
-        totalCost.value = total.toFixed(2);
-    }
-
-    /* =====================================================
-       3️⃣ UPDATE LIVE BALANCE
-       ===================================================== */
-    function updateBalance() {
-        let balance = baseBalance;
-        const cost  = parseFloat(totalCost.value) || 0;
-
-        if (expenseType.value === "1") balance += cost;
-        if (expenseType.value === "2") balance -= cost;
-
-        balanceBox.innerText = balance.toFixed(2);
-    }
-
-    /* =====================================================
-       4️⃣ FILTER TRIPS BY DATE
-       ===================================================== */
-    tripDate.addEventListener("change", function () {
-        if (!this.value) return;
-
-        fetch(`/SMS/ajax/filter-trips-by-date/?trip_date=${this.value}&settlement_id={{ settlement.id }}`)
-            .then(res => res.json())
-            .then(data => {
-                tripSelect.innerHTML = '<option value="">--Select Trip--</option>';
-
-                if (!data.length) {
-                    tripSelect.innerHTML += '<option value="">No trips found</option>';
-                    return;
+                    vehicleField.value = "";
+                    fromField.value = "";
+                    toField.value = "";
                 }
 
-                data.forEach(trip => {
-                    tripSelect.innerHTML += `<option value="${trip.id}">${trip.trip_number}</option>`;
+            } else {
+                // EXPENSE
+                tripBlock.style.display = "block";
+                costBlock.style.display = "block";
+
+                totalCost.readOnly = true;
+            }
+
+            updateBalance();
+        }
+
+
+        /* =====================================================
+           2️⃣ CALCULATE TOTAL COST
+           ===================================================== */
+        function calculateTotal() {
+            if (expenseType.value !== "2") return;
+
+            const total =
+                (parseFloat(parking.value) || 0) +
+                (parseFloat(loading.value) || 0) +
+                (parseFloat(unloading.value) || 0) +
+                (parseFloat(weighment.value) || 0) +
+                (parseFloat(supervisor.value) || 0) +
+                (parseFloat(rto.value) || 0) +
+                (parseFloat(batta.value) || 0);
+
+            totalCost.value = total.toFixed(2);
+        }
+
+        /* =====================================================
+           3️⃣ UPDATE LIVE BALANCE
+           ===================================================== */
+        function updateBalance() {
+            let balance = baseBalance;
+            const cost = parseFloat(totalCost.value) || 0;
+
+            if (expenseType.value === "1") balance += cost;
+            if (expenseType.value === "2") balance -= cost;
+
+            balanceBox.innerText = balance.toFixed(2);
+        }
+
+        /* =====================================================
+           4️⃣ FILTER TRIPS BY DATE
+           ===================================================== */
+        tripDate.addEventListener("change", function () {
+            if (!this.value) return;
+
+            fetch(`/SMS/ajax/filter-trips-by-date/?trip_date=${this.value}&settlement_id={{ settlement.id }}`)
+                .then(res => res.json())
+                .then(data => {
+                    tripSelect.innerHTML = '<option value="">--Select Trip--</option>';
+                    const tableRow = document.getElementById("trip-table-row");
+                    const tbody = document.getElementById("trip-table-body");
+                    tbody.innerHTML = "";
+
+                    if (!data.length) {
+                        tripSelect.innerHTML += '<option value="">No trips found</option>';
+                        if (window.jQuery) { $(tripSelect).trigger("change"); }
+
+                        if (tableRow) tableRow.style.display = "block";
+                        tbody.innerHTML = '<tr><td colspan="13" class="text-danger font-weight-bold">No trips found for the selected date</td></tr>';
+                        return;
+                    }
+
+                    if (tableRow) tableRow.style.display = "block";
+
+                    data.forEach(trip => {
+                        tripSelect.innerHTML += `<option value="${trip.trip_number}">${trip.trip_number}</option>`;
+
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+                        <td>
+                            <input type="checkbox" name="trip_select_radio" value="${trip.trip_number}" class="trip-radio" style="width:20px; height:20px; cursor:pointer;">
+                        </td>
+                        <td>${trip.trip_number}</td>
+                        <td>${trip.date}</td>
+                        <td>${trip.vehicle}</td>
+                        <td>${trip.from}</td>
+                        <td>${trip.to}</td>
+                        <td>${trip.parking}</td>
+                        <td>${trip.loading}</td>
+                        <td>${trip.unloading}</td>
+                        <td>${trip.weighment}</td>
+                        <td>${trip.supervisor}</td>
+                        <td>${trip.rto}</td>
+                        <td>${trip.batta}</td>
+                    `;
+                        tbody.appendChild(tr);
+                    });
+
+                    if (window.jQuery) { $(tripSelect).trigger("change"); }
+
+                    // Handle Checkbox Selection Logic
+                    document.querySelectorAll(".trip-radio").forEach(radio => {
+                        radio.addEventListener("change", function () {
+                            if (this.checked) {
+                                // Uncheck all other checkboxes like a radio button behavior
+                                document.querySelectorAll(".trip-radio").forEach(other => {
+                                    if(other !== this) other.checked = false;
+                                });
+
+                                tripSelect.value = this.value;
+                                if (window.jQuery) { $(tripSelect).trigger("change"); }
+                                const event = new Event("change");
+                                tripSelect.dispatchEvent(event);
+                            } else {
+                                // Unchecking removes the selected values
+                                tripSelect.value = "";
+                                if (window.jQuery) { $(tripSelect).trigger("change"); }
+                                
+                                vehicle.value = "";
+                                fromLoc.value = "";
+                                toLoc.value = "";
+                                
+                                parking.value = 0;
+                                loading.value = 0;
+                                unloading.value = 0;
+                                weighment.value = 0;
+                                supervisor.value = 0;
+                                rto.value = 0;
+                                batta.value = 0;
+
+                                calculateTotal();
+                                updateBalance();
+                            }
+                        });
+                    });
                 });
-            });
-    });
+        });
 
-    /* =====================================================
-       5️⃣ LOAD TRIP DETAILS + COSTS
-       ===================================================== */
-    tripSelect.addEventListener("change", function () {
-        if (!this.value) return;
+        /* =====================================================
+           5️⃣ LOAD TRIP DETAILS + COSTS
+           ===================================================== */
+        tripSelect.addEventListener("change", function () {
+            let tripId = this.value;
+            if (!tripId) return;
 
-        fetch(`/SMS/ajax/get-trip-charges/?trip_id=${this.value}`)
-            .then(res => res.json())
-            .then(data => {
+            const matchingRadio = document.querySelector(`.trip-radio[value="${tripId}"]`);
+            if (matchingRadio) matchingRadio.checked = true;
 
-                if (data.error) return;
+            fetch(`/SMS/ajax/get-trip-charges/?trip_id=${tripId}`)
+                .then(res => res.json())
+                .then(data => {
 
-                // ROUTE
-                vehicle.value = data.vehicle_number || "";
-                fromLoc.value = data.from_location  || "";
-                toLoc.value   = data.to_location    || "";
+                    if (data.error) return;
 
-                // COSTS
-                parking.value    = data.parking    ?? 0;
-                loading.value    = data.loading    ?? 0;
-                unloading.value  = data.unloading  ?? 0;
-                weighment.value  = data.weighment  ?? 0;
-                supervisor.value = data.supervisor ?? 0;
-                rto.value        = data.rto ?? 0;
-                batta.value      = data.batta ?? 0;
+                    // ROUTE
+                    vehicle.value = data.vehicle_number || "";
+                    fromLoc.value = data.from_location || "";
+                    toLoc.value = data.to_location || "";
 
+                    // COSTS
+                    parking.value = data.parking ?? 0;
+                    loading.value = data.loading ?? 0;
+                    unloading.value = data.unloading ?? 0;
+                    weighment.value = data.weighment ?? 0;
+                    supervisor.value = data.supervisor ?? 0;
+                    rto.value = data.rto ?? 0;
+                    batta.value = data.batta ?? 0;
+
+                    calculateTotal();
+                    updateBalance();
+                });
+        });
+
+        /* =====================================================
+           6️⃣ EVENTS
+           ===================================================== */
+        expenseType.addEventListener("change", function () {
+            toggleFields(true); // user-triggered
+        });
+
+        toggleFields(false); // initial page load
+
+        [parking, loading, unloading, weighment, supervisor, rto, batta].forEach(input => {
+            input.addEventListener("input", function () {
                 calculateTotal();
                 updateBalance();
             });
-    });
-
-    /* =====================================================
-       6️⃣ EVENTS
-       ===================================================== */
-expenseType.addEventListener("change", function () {
-    toggleFields(true); // user-triggered
-});
-
-toggleFields(false); // initial page load
-
-    [parking, loading, unloading, weighment, supervisor,rto,batta].forEach(input => {
-        input.addEventListener("input", function () {
-            calculateTotal();
-            updateBalance();
         });
+
+        totalCost.addEventListener("input", updateBalance);
+
+        /* =====================================================
+           7️⃣ INITIAL LOAD (IMPORTANT)
+           ===================================================== */
+
+        const prefillTripId = "{{ auto_trip_id|default:'' }}";
+        const isEditMode = "{{ expense.id|default:'' }}" !== "";
+
+        if (prefillTripId && !isEditMode) {
+            // Option is natively rendered by standard Django forms
+            var changeEvent = new Event('change');
+            if (expenseType.value) {
+                expenseType.dispatchEvent(changeEvent);
+            }
+            if (tripSelect.value) {
+                tripSelect.dispatchEvent(changeEvent);
+            }
+        }
+
+        if (isEditMode) {
+            const dateChangeEvent = new Event("change");
+            tripDate.dispatchEvent(dateChangeEvent);
+
+            if (tripSelect.value) {
+                const tripChangeEvent = new Event("change");
+                tripSelect.dispatchEvent(tripChangeEvent);
+            }
+        }
+
+        calculateTotal();
+        updateBalance();
+
     });
-
-    totalCost.addEventListener("input", updateBalance);
-
-    /* =====================================================
-       7️⃣ INITIAL LOAD (IMPORTANT)
-       ===================================================== */
-    calculateTotal();
-    updateBalance();
-
-});
 </script>
 
 {% endblock content %}

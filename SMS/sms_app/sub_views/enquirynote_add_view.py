@@ -252,15 +252,15 @@ def enquirynote_list(request):
     # Vehicle limits
     vehicle_limits = (
         Enquirynotevehicle.objects.filter(env_enquirynumber__in=enquiry_ids)
-        .values('env_enquirynumber')
-        .annotate(total_allowed=Sum('env_quantity'))
+            .values('env_enquirynumber')
+            .annotate(total_allowed=Sum('env_quantity'))
     )
     vehicle_limit_dict = {v['env_enquirynumber']: v['total_allowed'] for v in vehicle_limits}
 
     vehicle_allotted = (
         Vehicle_allotmentInfo.objects.filter(va_enquirynumber__in=enquiry_ids)
-        .values('va_enquirynumber')
-        .annotate(total_allotted=Count('id'))
+            .values('va_enquirynumber')
+            .annotate(total_allotted=Count('id'))
     )
     vehicle_allotted_dict = {v['va_enquirynumber']: v['total_allotted'] for v in vehicle_allotted}
 
@@ -328,16 +328,16 @@ def enquirynote_list(request):
         raw_branch = "GENERAL"
         if v.vm_vendor and v.vm_vendor.vend_branch:
             raw_branch = v.vm_vendor.vend_branch.loc_name
-        
+
         branch = None
         reg = (v.vm_registrationnumber or "").upper().strip()
-        
+
         if cat == 'Own':
             if 'MAA' in raw_branch:
                 branch = 'MAA'
             elif 'BLR' in raw_branch:
                 branch = 'BLR'
-            elif raw_branch == 'HO': 
+            elif raw_branch == 'HO':
                 branch = 'MAA'
             else:
                 # Fallback to registration number prefix for Own vehicles
@@ -345,12 +345,12 @@ def enquirynote_list(request):
                     branch = 'MAA'
                 elif reg.startswith('KA'):
                     branch = 'BLR'
-        else: # Attached
+        else:  # Attached
             if 'MAA' in raw_branch:
                 branch = 'MAA'
-            elif reg.startswith('TN'): # Fallback for attached too
+            elif reg.startswith('TN'):  # Fallback for attached too
                 branch = 'MAA'
-        
+
         # If the branch doesn't match the required filters for the category, skip it.
         if not branch:
             continue

@@ -15,14 +15,7 @@ class Driverexpense(models.Model):
     # de_driver_name = models.CharField(max_length=100, default='')
     de_driver_id = models.ForeignKey(driver_settlement_info, on_delete=models.CASCADE, null=True,blank=True)
     de_trip_number = models.CharField(max_length=50,blank=True, null=True )
-
-    trip_number = models.ForeignKey(
-        TripdetailInfo,
-        null=True,
-        blank=True,  # <-- allow blank in forms
-        on_delete=models.CASCADE,
-        default=None  # <-- use None instead of empty string for FK default
-    )
+    trip_number = models.CharField(max_length=50,blank=True, null=True )
     de_expense_type = models.ForeignKey( Expense_type,on_delete=models.CASCADE,blank=True,null=True)
     de_parkingcost = models.FloatField(default=0.0)
     de_loadingcost = models.FloatField(default=0.0)
