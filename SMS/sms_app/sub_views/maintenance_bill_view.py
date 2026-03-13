@@ -67,6 +67,11 @@ def fetch_maintenance_bill_details(request):
     maintenance_id = request.GET.get('maintenance_id')
     try:
         maintenance = MaintenanceInfo.objects.get(id=maintenance_id)
+        advance_val = 0
+        try:
+            advance_val = float(maintenance.mi_advance) if maintenance.mi_advance else 0
+        except (ValueError, TypeError):
+            advance_val = 0
         data = {
             "vehicle_no": maintenance.mi_vehicle.vm_registrationnumber,
             "vehicle_type": maintenance.mi_vehicle.vm_vehicletype.vt_vehicletype if maintenance.mi_vehicle.vm_vehicletype else "N/A",
@@ -74,6 +79,7 @@ def fetch_maintenance_bill_details(request):
             "estimated_amount": float(maintenance.mi_estimated_amount) if maintenance.mi_estimated_amount else 0,
             "vendor_name": maintenance.mi_vehicle.vm_vendor.vend_name if maintenance.mi_vehicle.vm_vendor else "N/A",
             "technician": maintenance.mi_technician,
+            "advance": advance_val,
         }
         return JsonResponse(data)
     except MaintenanceInfo.DoesNotExist:

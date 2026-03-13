@@ -154,7 +154,10 @@ def get_trip_charges(request):
         return JsonResponse({'error': 'No trip id'}, status=400)
 
     try:
-        trip = TripdetailInfo.objects.get(id=trip_id)
+        if str(trip_id).isdigit():
+            trip = TripdetailInfo.objects.get(id=trip_id)
+        else:
+            trip = TripdetailInfo.objects.get(tr_tripnumber=trip_id)
 
         data = {
             # COSTS
@@ -220,7 +223,21 @@ def filter_trips_by_date(request):
     qs = qs.filter(tr_departeddate__date=trip_date)
 
     data = [
-        {'id': t.id, 'trip_number': t.tr_tripnumber}
+        {
+            'id': t.id, 
+            'trip_number': t.tr_tripnumber,
+            'vehicle': t.tr_vehiclenumber,
+            'from': t.tr_departedlocation.place_name if t.tr_departedlocation else "",
+            'to': t.tr_reportedlocation.place_name if t.tr_reportedlocation else "",
+            'date': t.tr_departeddate.strftime('%Y-%m-%d') if t.tr_departeddate else "",
+            'parking': t.tc_parkingcost or 0,
+            'loading': t.tc_loadingcost or 0,
+            'unloading': t.tc_unloadingcost or 0,
+            'weighment': t.tc_weighmentcost or 0,
+            'supervisor': t.tc_supervisorcost or 0,
+            'rto': t.tc_rtocost or 0,
+            'batta': t.tc_betacost or 0
+        }
         for t in qs
     ]
 

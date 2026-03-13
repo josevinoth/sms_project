@@ -81,7 +81,7 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Buy Cost</span>
                             </div>
-                            {% render_field form.ab_buy_cost class="form-control disable_a_href" readonly="readonly" %}
+                            {% render_field form.ab_buy_cost class="form-control" %}
                         </div>
 
                         <div class="input-group input-group-sm mb-3">
@@ -102,7 +102,7 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Agreed Km</span>
                             </div>
-                            {% render_field form.ab_agreed_km class="form-control disable_a_href" readonly="readonly" %}
+                            {% render_field form.ab_agreed_km class="form-control" %}
                         </div>
 
                         <div class="input-group input-group-sm mb-3">
@@ -245,8 +245,10 @@
                 success: function (data) {
                     if (vehicle_id) {
                         $('#id_ab_vehicle_type').val(data.vehicle_type);
-                        $('#id_ab_buy_cost').val(data.buy_cost);
-                        $('#id_ab_agreed_km').val(data.agreed_km);
+                        if (!isInitialLoad) {
+                            $('#id_ab_buy_cost').val(data.buy_cost);
+                            $('#id_ab_agreed_km').val(data.agreed_km);
+                        }
                         extraKmRate = data.extra_km_rate || 0;
                     }
                     if (!isInitialLoad) {
@@ -267,7 +269,7 @@
                         $.each(data.trips, function (index, trip) {
                             var isChecked = savedIds.includes(String(trip.trip_no)) ? "checked" : "";
                             var displayCnote = trip.cnote || "";
-                            var row = `<tr data-id="${trip.trip_no}" data-km="${trip.trip_km}" data-parking="${trip.parking_cost}" data-toll="${trip.toll_cost}" data-selling="${trip.buy_cost}">
+                            var row = `<tr data-id="${trip.trip_no}" data-trip-id="${trip.id}" data-km="${trip.trip_km}" data-parking="${trip.parking_cost}" data-toll="${trip.toll_cost}" data-selling="${trip.buy_cost}">
                                     <td><input type="checkbox" class="trip-checkbox" value="${trip.trip_no}" ${isChecked}></td>
                                     <td>${trip.trip_date}</td>
                                     <td>${displayCnote}</td>
@@ -275,11 +277,23 @@
                                     <td>${trip.from}</td>
                                     <td>${trip.to}</td>
                                     <td>${trip.trip_km}</td>
-                                    <td class="trip-selling">${trip.buy_cost.toFixed(2)}</td>
-                                    <td class="trip-buy-cost">0.00</td>
-                                    <td>${trip.parking_cost.toFixed(2)}</td>
-                                    <td>${trip.toll_cost.toFixed(2)}</td>
-                                    <td class="trip-total-buy-cost">${trip.total_buy_cost.toFixed(2)}</td>
+                                    <td>
+                                        <input type="number" name="trip_selling_cost_${trip.id}" class="form-control form-control-sm trip-selling-cost" 
+                                            value="${trip.buy_cost.toFixed(2)}" step="0.01" style="width: 100px;">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="trip_buy_cost_${trip.id}" class="form-control form-control-sm trip-buy-cost" 
+                                            value="0.00" step="0.01" style="width: 100px;">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="trip_parking_cost_${trip.id}" class="form-control form-control-sm trip-parking-cost" 
+                                            value="${trip.parking_cost.toFixed(2)}" step="0.01" style="width: 80px;">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="trip_toll_cost_${trip.id}" class="form-control form-control-sm trip-toll-cost" 
+                                            value="${trip.toll_cost.toFixed(2)}" step="0.01" style="width: 80px;">
+                                    </td>
+                                    <td class="trip-total-buy-cost-text font-weight-bold">${trip.total_buy_cost.toFixed(2)}</td>
                                 </tr>`;
                             tbody.append(row);
                         });
@@ -334,7 +348,7 @@
     });
 
     // Handle Manual Input Changes
-    $(document).on('input change', '#id_ab_leave_days, #id_ab_bill_amount, #id_ab_from_date, #id_ab_to_date', function () {
+    $(document).on('input change', '#id_ab_buy_cost, #id_ab_agreed_km, #id_ab_leave_days, #id_ab_bill_amount, #id_ab_from_date, #id_ab_to_date', function () {
         calculateAmounts();
     });
 
@@ -389,20 +403,33 @@
             $('#tripsTableBody tr').each(function () {
                 var $row = $(this);
                 var t_km = parseFloat($row.data('km')) || 0;
-                var t_parking = parseFloat($row.data('parking')) || 0;
-                var t_toll = parseFloat($row.data('toll')) || 0;
-
+                
+                // Only auto-update if not manually focused? 
+                // Or just auto-update since top level bill change affects everything
                 if (t_km > 0) {
                     var calc_buy = rate * t_km;
-                    $row.find('.trip-buy-cost').text(calc_buy.toFixed(2));
-                    $row.find('.trip-total-buy-cost').text((calc_buy + t_parking + t_toll).toFixed(2));
+                    $row.find('.trip-buy-cost').val(calc_buy.toFixed(2));
                 } else {
-                    $row.find('.trip-buy-cost').text("0.00");
-                    $row.find('.trip-total-buy-cost').text((t_parking + t_toll).toFixed(2));
+                    $row.find('.trip-buy-cost').val("0.00");
                 }
+                updateRowTotal($row);
             });
         }
     }
+
+    // Function to update single row total buy cost
+    function updateRowTotal($row) {
+        var t_buy = parseFloat($row.find('.trip-buy-cost').val()) || 0;
+        var t_parking = parseFloat($row.find('.trip-parking-cost').val()) || 0;
+        var t_toll = parseFloat($row.find('.trip-toll-cost').val()) || 0;
+        $row.find('.trip-total-buy-cost-text').text((t_buy + t_parking + t_toll).toFixed(2));
+    }
+
+    // Handle table input changes
+    $(document).on('input', '.trip-buy-cost, .trip-parking-cost, .trip-toll-cost', function() {
+        var $row = $(this).closest('tr');
+        updateRowTotal($row);
+    });
 
     {% if record %}
     extraKmRate = parseFloat("{{ record.ab_vehicle_number.vm_extrakm|default:0 }}") || 0;

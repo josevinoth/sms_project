@@ -23,6 +23,24 @@ def attached_bill_add(request):
             obj = form.save(commit=False)
             obj.ab_created_by = request.user
             obj.save()
+
+            # Save per-trip costs from table
+            selected_trips = request.POST.get('ab_selected_trips', '')
+            if selected_trips:
+                trip_numbers = [t.strip() for t in selected_trips.split(',') if t.strip()]
+                # Find trips to get their IDs for input name matching
+                trips_to_update = TripdetailInfo.objects.filter(tr_tripnumber__in=trip_numbers)
+                for trip in trips_to_update:
+                    tid = trip.id
+                    t_sell = request.POST.get(f'trip_selling_cost_{tid}')
+                    t_parking = request.POST.get(f'trip_parking_cost_{tid}')
+                    t_toll = request.POST.get(f'trip_toll_cost_{tid}')
+
+                    if t_sell is not None: trip.tc_tripcost = float(t_sell or 0)
+                    if t_parking is not None: trip.tc_parkingcost = float(t_parking or 0)
+                    if t_toll is not None: trip.tc_tollcost = float(t_toll or 0)
+                    trip.save()
+
             messages.success(request, "Attached Bill saved successfully.")
             return redirect('attached_bill_list')
         else:
@@ -69,6 +87,23 @@ def attached_bill_edit(request, id):
             obj = form.save(commit=False)
             obj.ab_updated_by = request.user
             obj.save()
+
+            # Save per-trip costs from table
+            selected_trips = request.POST.get('ab_selected_trips', '')
+            if selected_trips:
+                trip_numbers = [t.strip() for t in selected_trips.split(',') if t.strip()]
+                trips_to_update = TripdetailInfo.objects.filter(tr_tripnumber__in=trip_numbers)
+                for trip in trips_to_update:
+                    tid = trip.id
+                    t_sell = request.POST.get(f'trip_selling_cost_{tid}')
+                    t_parking = request.POST.get(f'trip_parking_cost_{tid}')
+                    t_toll = request.POST.get(f'trip_toll_cost_{tid}')
+
+                    if t_sell is not None: trip.tc_tripcost = float(t_sell or 0)
+                    if t_parking is not None: trip.tc_parkingcost = float(t_parking or 0)
+                    if t_toll is not None: trip.tc_tollcost = float(t_toll or 0)
+                    trip.save()
+
             messages.success(request, "Attached Bill updated successfully.")
             return redirect('attached_bill_list')
         else:
@@ -184,6 +219,7 @@ def get_attached_vehicle_details(request):
             customer_name = trip.tr_enquirynumber.en_customername.cu_name if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername else "N/A"
 
             data['trips'].append({
+                'id': trip.id,
                 'trip_date': trip.tr_departeddate.strftime('%d-%m-%Y') if trip.tr_departeddate else "",
                 'trip_no': trip.tr_tripnumber or "",
                 'cnote': trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "",
