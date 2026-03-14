@@ -20,72 +20,116 @@
             <i class="fas fa-plus"></i> Add
         </a>
     </div>
+    <div class="col-md-2">
+        <select id="exportMonth" class="form-control form-control-lg">
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select id="exportYear" class="form-control form-control-lg">
+            <!-- Dynamically populate years or hardcode if preferred -->
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="button" onclick="exportFuelFormat()" class="btn btn-warning btn-block btn-lg">
+            <i class="fas fa-file-excel"></i> Fuel Format
+        </button>
+    </div>
 </div>
+<script>
+    // Set current month and year as default
+    document.getElementById('exportMonth').value = new Date().getMonth() + 1;
+    document.getElementById('exportYear').value = new Date().getFullYear();
+
+    function exportFuelFormat() {
+        var month = document.getElementById('exportMonth').value;
+        var year = document.getElementById('exportYear').value;
+        var url = "{% url 'fuelfilling_export_excel' %}?month=" + month + "&year=" + year;
+        window.location.href = url;
+    }
+</script>
 <hr>
 <div class="container-fluid">
-    <table  id="fuelfilling_list" class="table table-striped table-bordered">
+    <table id="fuelfilling_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
-        <tr>
-            <th>Created On</th>
-            <th>Vehicle Number</th>
-            <th>Fuel Rate/ltr</th>
-            <th>Filled ltr(s)</th>
-            <th>Fuel Price(LKR)</th>
-            <th>Date</th>
-            <th>Bunk Name</th>
-            <th>Location</th>
-            <th>State</th>
-            <th>Odometer Reading at Filling</th>
-            <th>Remarks</th>
-            <th>Updated at</th>
-            <th>Updated By</th>
-            <th>Edit</th>
-            <th>Delete</th>
+            <tr>
+                <th>Created On</th>
+                <th>Vehicle Number</th>
+                <th>Fuel Rate/ltr</th>
+                <th>Filled ltr(s)</th>
+                <th>Fuel Price(LKR)</th>
+                <th>Date</th>
+                <th>Bunk Name</th>
+                <th>Location</th>
+                <th>State</th>
+                <th>Odometer Reading at Filling</th>
+                <th>Remarks</th>
+                <th>Updated at</th>
+                <th>Updated By</th>
+                <th>Edit</th>
+                <th>Delete</th>
         </thead>
         <tbody>
-        {% for fuelfillinginfo in fuelfilling_list %}
-        <tr>
-            <td> {{fuelfillinginfo.ff_created_at}}</td>
-            <td> {{fuelfillinginfo.ff_vehicle_num}}</td>
-            <td> {{fuelfillinginfo.ff_fuel_rate}}</td>
-            <td> {{fuelfillinginfo.ff_filled_ltr}}</td>
-            <td> {{fuelfillinginfo.ff_fuel_price}}</td>
-            <td> {{fuelfillinginfo.ff_date}}</td>
-            <td> {{fuelfillinginfo.ff_bunk_name}}</td>
-            <td> {{fuelfillinginfo.ff_location}}</td>
-            <td> {{fuelfillinginfo.ff_state}}</td>
-            <td> {{fuelfillinginfo.ff_odometer_reading}}</td>
-            <td> {{fuelfillinginfo.ff_remarks}}</td>
-            <td> {{fuelfillinginfo.ff_updated_at}}</td>
-            <td> {{fuelfillinginfo.ff_updated_by}}</td>
-            <td>
-                <a class="btn btn-primary" href="{% url 'fuelfilling_update' fuelfillinginfo.id %}" class="btn btn-primary">
-                    <i class="far fa-edit"></i>
-                </a>
-            </td>
-            <td>
-                <form action="{% url 'fuelfilling_delete' fuelfillinginfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
+            {% for fuelfillinginfo in fuelfilling_list %}
+            <tr>
+                <td> {{fuelfillinginfo.ff_created_at}}</td>
+                <td> {{fuelfillinginfo.ff_vehicle_num}}</td>
+                <td> {{fuelfillinginfo.ff_fuel_rate}}</td>
+                <td> {{fuelfillinginfo.ff_filled_ltr}}</td>
+                <td> {{fuelfillinginfo.ff_fuel_price}}</td>
+                <td> {{fuelfillinginfo.ff_date}}</td>
+                <td> {{fuelfillinginfo.ff_bunk_name}}</td>
+                <td> {{fuelfillinginfo.ff_location}}</td>
+                <td> {{fuelfillinginfo.ff_state}}</td>
+                <td> {{fuelfillinginfo.ff_odometer_reading}}</td>
+                <td> {{fuelfillinginfo.ff_remarks}}</td>
+                <td> {{fuelfillinginfo.ff_updated_at}}</td>
+                <td> {{fuelfillinginfo.ff_updated_by}}</td>
+                <td>
+                    <a class="btn btn-primary" href="{% url 'fuelfilling_update' fuelfillinginfo.id %}"
+                        class="btn btn-primary">
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td>
+                    <form action="{% url 'fuelfilling_delete' fuelfillinginfo.id %}" method="post"
+                        onclick="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
         </tbody>
     </table>
 </div>
 <script>
-    $(document).ready(function() {
-    $('#fuelfilling_list').DataTable({
-         order: [0, 'asc' ],
-        dom: 'Bfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ],
+    $(document).ready(function () {
+        $('#fuelfilling_list').DataTable({
+            order: [0, 'asc'],
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'print'
+            ],
+        });
     });
-} );
 </script>
 
 {% endblock content %}

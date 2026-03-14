@@ -2,7 +2,8 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form id="marketBillForm" method="POST">
+<form id="marketBillForm" method="POST" enctype="multipart/form-data"
+    data-is-edit="{% if record.id %}true{% else %}false{% endif %}">
     {% csrf_token %}
 
     <div class="container-fluid">
@@ -37,6 +38,13 @@
                                 <span class="input-group-text">Bill No</span>
                             </div>
                             {% render_field form.mb_bill_no class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Bill Date</span>
+                            </div>
+                            {% render_field form.mb_bill_date class="form-control" %}
                         </div>
 
                     </div>
@@ -96,15 +104,22 @@
                     </div>
                 </div>
 
+                <div style="display: none;">
+                    <!-- Redundant single mail attachment field removed in favor of row-specific ones -->
+                </div>
+
                 <!-- Hidden field for selected trips -->
                 {% render_field form.mb_selected_trips %}
 
                 <!-- ================= SAVE BUTTON ================= -->
                 <div class="row">
-                    <div class="col-12">
+                    <div class="col-12 d-flex justify-content-between">
                         <button type="submit" class="btn btn-success">
                             <i class="fas fa-check"></i> Submit
                         </button>
+                        <a href="{% url 'market_bill_list' %}" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
                     </div>
                 </div>
 
@@ -142,7 +157,7 @@
                         <button type="button" id="addSelectedBtn" class="btn btn-primary mr-3">
                             <i class="fas fa-plus"></i> Add
                         </button>
-                        <button type="button" id="removeSelectedBtn" class="btn btn-danger">
+                        <button type="button" id="removeSelectedBtn" class="btn btn-danger" style="display: none;">
                             <i class="fas fa-trash"></i> Remove
                         </button>
                     </div>
@@ -239,16 +254,20 @@
                                 </td>
                                 <td class="text-center">
                                     {% if trip.special_cost != trip.standard_cost %}
-                                    {% if record.mb_mail_attachment %}
-                                    <a href="{{ record.mb_mail_attachment.url }}" target="_blank"
-                                        class="btn btn-sm btn-info mb-1" title="View Mail">
-                                        <i class="fas fa-envelope-open-text"></i>
-                                    </a>
-                                    {% endif %}
-                                    <button type="button" class="btn btn-sm btn-warning mb-1 open-mail-modal"
-                                        data-id="{{ record.id }}" title="Upload Mail Attachment">
-                                        <i class="fas fa-envelope"></i>
-                                    </button>
+                                    <div class="d-flex flex-column align-items-center">
+                                        {% if trip.mail_attachment_url %}
+                                        <a href="{{ trip.mail_attachment_url }}" target="_blank"
+                                            class="btn btn-sm btn-info mb-1" title="View Mail">
+                                            <i class="fas fa-envelope-open-text"></i>
+                                        </a>
+                                        {% endif %}
+                                        <button type="button" class="btn btn-sm btn-warning mb-1 trigger-mail-upload"
+                                            data-trip-id="{{ trip.id }}" title="Upload Mail Attachment">
+                                            <i class="fas fa-envelope"></i>
+                                        </button>
+                                        <span class="selected-filename text-muted small"
+                                            style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                                    </div>
                                     {% else %}
                                     <span class="text-muted small">N/A</span>
                                     {% endif %}
@@ -281,16 +300,16 @@
     // Store selected trip IDs
     let selectedTripIds = new Set();
 
-    // Check if we are in EDIT mode
-    const isEditMode = {% if record.id %}true{% else %} false{% endif %};
+    // Check if we are in EDIT mode using a safe method
+    const isEditMode = document.getElementById("marketBillForm").dataset.isEdit === "true";
 
     // Pre-populate selectedTripIds if record exists
-    {% if record and record.mb_selected_trips %}
-    "{{ record.mb_selected_trips }}".split(',').forEach(id => {
-        if (id.trim()) selectedTripIds.add(id.trim());
-    });
-    document.getElementById("mb_selected_trips").value = Array.from(selectedTripIds).join(",");
-    {% endif %}
+    const initialTrips = document.getElementById("mb_selected_trips").value;
+    if (initialTrips) {
+        initialTrips.split(',').forEach(id => {
+            if (id.trim()) selectedTripIds.add(id.trim());
+        });
+    }
 
     // Function to recalculate totals
     function updateTotals() {
@@ -464,10 +483,18 @@
                     </td>
                     <td class="text-center">
                         ${trip.special_cost !== trip.standard_cost ? `
-                            <button type="button" class="btn btn-sm btn-warning mb-1 open-mail-modal" 
-                                data-id="` + (isEditMode ? '{{ record.id }}' : '') + `" title="Upload Mail Attachment">
-                                <i class="fas fa-envelope"></i>
-                            </button>
+                            <div class="d-flex flex-column align-items-center">
+                                ${trip.mail_attachment_url ? `
+                                    <a href="${trip.mail_attachment_url}" target="_blank" class="btn btn-sm btn-info mb-1" title="View Mail">
+                                        <i class="fas fa-envelope-open-text"></i>
+                                    </a>
+                                ` : ''}
+                                <button type="button" class="btn btn-sm btn-warning mb-1 trigger-mail-upload" 
+                                    data-trip-id="${trip.id}" title="Upload Mail Attachment">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                                <span class="selected-filename text-muted small" style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                            </div>
                         ` : '<span class="text-muted small">N/A</span>'}
                     </td>
                 `;
@@ -533,47 +560,12 @@
     }
 </script>
 
-<!-- ================= MAIL ATTACHMENT MODAL ================= -->
-<div class="modal fade" id="mailUploadModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-warning">
-                <h5 class="modal-title">Upload Mail Attachment</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form id="mailUploadForm" method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <p class="text-muted">Upload proof of permission for cost discrepancy.</p>
-                    <div class="form-group">
-                        <label>Select File (Image/PDF)</label>
-                        <input type="file" name="mb_mail_attachment" class="form-control" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-warning text-white">Upload</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
-<script>
-    // Handle Mail Upload Modal
-    $(document).on("click", ".open-mail-modal", function () {
-        const recordId = $(this).data("id");
-        if (!recordId) {
-            alert("Please save the Market Bill first before uploading mail attachment.");
-            return;
-        }
-        const actionUrl = "{% url 'market_mail_upload' 0 %}".replace('0', recordId);
-        $("#mailUploadForm").attr("action", actionUrl);
-        $("#mailUploadModal").modal("show");
-    });
-</script>
+<!-- Hidden form for row-specific mail upload -->
+<form id="mailUploadForm" method="POST" enctype="multipart/form-data" style="display: none;">
+    {% csrf_token %}
+    <input type="file" name="mb_mail_attachment" id="mailUploadInput">
+</form>
 
 <script>
     function parseDDMMYYYY(dateStr) {
@@ -623,6 +615,36 @@
     $(document).ready(function () {
         initializeTripsDataTable();
     });
+
+    // Handle Mail Upload Trigger
+    let activeTripId = null;
+    $(document).on("click", ".trigger-mail-upload", function () {
+        activeTripId = $(this).data("trip-id");
+        document.getElementById("mailUploadInput").click();
+    });
+
+    // Handle row-specific mail upload submission
+    document.getElementById("mailUploadInput")?.addEventListener("change", function () {
+        if (activeTripId && this.files.length > 0) {
+            const billId = "{{ record.id }}";
+            if (!billId || billId === "" || billId === "None") {
+                alert("Please save the Market Bill first before uploading row-specific attachments.");
+                this.value = ""; // Clear file
+                return;
+            }
+
+            // Show loading message or indicator if desired
+            const form = document.getElementById("mailUploadForm");
+
+            // Generate URL: /market_bill/${billId}/mail_upload/${activeTripId}/
+            // Using template-style for safety if possible, or manual string
+            const uploadUrlTemplate = "{% url 'market_mail_upload' id=record.id|default:0 trip_id=999999 %}";
+            form.action = uploadUrlTemplate.replace('999999', activeTripId);
+            form.submit();
+        }
+    });
+
+    // Update filename display if needed (though form submits immediately)
 </script>
 
 {% endblock %}

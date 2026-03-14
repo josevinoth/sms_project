@@ -12,6 +12,7 @@ urlpatterns = [
     path('login_page', views.login_page, name='login_page'),  # Login_page
     path('logout_page', views.logout_page, name='logout_page'),  # Logout_page
     path('driver/login/', views.driver_login, name='driver_login'),
+    path('driver/login/', views.driver_login, name='driver_login'),
     path('driver/logout/', views.driver_logout, name='driver_logout'),
     path('driver/dashboard/', views.driver_dashboard, name='driver_dashboard'),
     path('home_page', views.home_page, name='home_page'),  # Home_page
@@ -814,6 +815,7 @@ urlpatterns = [
     path('fin_mis/', views.fin_mis, name='fin_mis'),
     path('fin_mis_warehouse/', views.fin_mis_warehouse, name='fin_mis_warehouse'),
     path("trans_fastag/", views.fastag_enquiry_view, name="trans_fastag"),
+    path("trans_fastag_export_excel/", views.trans_fastag_export_excel, name="trans_fastag_export_excel"),
     path('track_vehicle_position/', views.track_vehicle_position, name='track_vehicle_position'),
     path("get_vehicle_data/", views.get_vehicle_data, name="get_vehicle_data"),
     path('get_remaining_quantity/<int:enquiry_id>/<int:vehicle_type_id>/', views.get_remaining_quantity,
@@ -959,11 +961,13 @@ urlpatterns = [
     path('trans_invoice_add_woh/', views.trans_invoice_add_woh, name='trans_invoice_add_woh'),
     path('maintenance_add/', views.maintenance_add, name='maintenance_add'),
     path('fetch_vehicle_details/', views.fetch_vehicle_details, name='fetch_vehicle_details'),
+    path('fetch_filtered_vehicles/', views.fetch_filtered_vehicles, name='fetch_filtered_vehicles'),
     path('maintenance_edit/<int:id>/', views.maintenance_edit, name='maintenance_edit'),
     path('maintenance_delete/<int:id>/', views.maintenance_delete, name='maintenance_delete'),
     path('maintenance_list/', views.maintenance_list, name='maintenance_list'),
     path('shipper_invoice_export_excel/<int:invoice_id>/', views.shipper_invoice_export_excel,
          name='shipper_invoice_export_excel'),
+    path('invoice_export_excel/<int:invoice_id>/', views.invoice_export_excel, name='invoice_export_excel'),
 
     # Customer Registration URLs
     path('customer_register/<int:business_id>/', views.customer_register, name='customer_register'),
@@ -988,6 +992,8 @@ urlpatterns = [
     path('SMS/download_pod/<int:trip_id>/', views.download_pod, name='download_pod'),
     path('SMS/download_dmr/<int:trip_id>/', views.download_dmr, name='download_dmr'),
     path('SMS/customer_documents/', views.customer_documents, name='customer_documents'),
+    path('SMS/customer_profile/', views.customer_profile, name='customer_profile'),
+    path('SMS/customer_support/', views.customer_support, name='customer_support'),
     path('ajax/filter-trips-by-date/', views.filter_trips_by_date, name='filter_trips_by_date'),
     path('insurance_renewal_report/', views.insurance_renewal_report_view, name='insurance_renewal_report'),
     path('diesel_vs_revenue_report/', views.diesel_vs_revenue_report_view, name='diesel_vs_revenue_report'),
@@ -1029,16 +1035,21 @@ urlpatterns = [
     path('market_bill/<int:id>/edit/', views.market_bill_edit, name='market_bill_edit'),
     path('market_bill/<int:id>/delete/', views.market_bill_delete, name='market_bill_delete'),
     path('market_bill/<int:id>/upload/', views.market_bill_upload, name='market_bill_upload'),
-    path('market_bill/<int:id>/mail_upload/', views.market_mail_upload, name='market_mail_upload'),
+    path('market_bill/<int:id>/mail_upload/<int:trip_id>/', views.market_mail_upload, name='market_mail_upload'),
     path('ajax/get_trips_by_vendor/', views.get_trips_by_vendor, name='get_trips_by_vendor'),
     path('maintenance_bill_add/', views.maintenance_bill_add, name='maintenance_bill_add'),
     path('maintenance_bill_list/', views.maintenance_bill_list, name='maintenance_bill_list'),
     path('maintenance_bill/<int:id>/edit/', views.maintenance_bill_edit, name='maintenance_bill_edit'),
     path('maintenance_bill/<int:id>/delete/', views.maintenance_bill_delete, name='maintenance_bill_delete'),
+    path('attached_bill_list/', views.attached_bill_list, name='attached_bill_list'),
+    path('attached_bill_add/', views.attached_bill_add, name='attached_bill_add'),
+    path('attached_bill_edit/<int:id>/', views.attached_bill_edit, name='attached_bill_edit'),
+    path('attached_bill_delete/<int:id>/', views.attached_bill_delete, name='attached_bill_delete'),
+    path('attached_bill_upload/<int:id>/', views.attached_bill_upload, name='attached_bill_upload'),
+    path('attached_bill_summary/<int:id>/', views.attached_bill_summary, name='attached_bill_summary'),
+    path('get_attached_vehicle_details/', views.get_attached_vehicle_details, name='get_attached_vehicle_details'),
+    path('get_vehicles_by_vendor/', views.get_vehicles_by_vendor, name='get_vehicles_by_vendor'),
     path('fetch_maintenance_bill_details/', views.fetch_maintenance_bill_details, name='fetch_maintenance_bill_details'),
     path('get_maintenance_records_by_vehicle/', views.get_maintenance_records_by_vehicle, name='get_maintenance_records_by_vehicle'),
+    path('fuelfilling_export_excel/', views.fuelfilling_export_excel, name='fuelfilling_export_excel'),
 ]
-
-
-
-

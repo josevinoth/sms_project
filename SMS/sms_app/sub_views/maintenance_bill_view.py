@@ -2,14 +2,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib import messages
-from ..sub_models.maintenance_bill_mod import MaintenanceBill
+from ..sub_models.maintenance_bill_mod import MaintenanceBillInfo
 from ..sub_forms.maintenance_bill_form import MaintenanceBillForm
 from ..sub_models.maintenance_mod import MaintenanceInfo
 from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
 
 @login_required(login_url='login_page')
 def maintenance_bill_add(request, id=None):
-    instance = get_object_or_404(MaintenanceBill, id=id) if id else None
+    instance = get_object_or_404(MaintenanceBillInfo, id=id) if id else None
     
     if request.method == "POST":
         form = MaintenanceBillForm(request.POST, request.FILES, instance=instance)
@@ -52,14 +52,14 @@ def maintenance_bill_edit(request, id):
 
 @login_required(login_url='login_page')
 def maintenance_bill_delete(request, id):
-    bill = get_object_or_404(MaintenanceBill, id=id)
+    bill = get_object_or_404(MaintenanceBillInfo, id=id)
     bill.delete()
     messages.success(request, "Maintenance Bill deleted successfully.")
     return redirect('maintenance_bill_list')
 
 @login_required(login_url='login_page')
 def maintenance_bill_list(request):
-    bills = MaintenanceBill.objects.all().order_by('-mnb_created_at')
+    bills = MaintenanceBillInfo.objects.all().order_by('-mnb_created_at')
     return render(request, "asset_mgt_app/maintenance_bill_list.html", {"bills": bills})
 
 @login_required(login_url='login_page')
@@ -67,6 +67,11 @@ def fetch_maintenance_bill_details(request):
     maintenance_id = request.GET.get('maintenance_id')
     try:
         maintenance = MaintenanceInfo.objects.get(id=maintenance_id)
+        advance_val = 0
+        try:
+            advance_val = float(maintenance.mi_advance) if maintenance.mi_advance else 0
+        except (ValueError, TypeError):
+            advance_val = 0
         data = {
             "vehicle_no": maintenance.mi_vehicle.vm_registrationnumber,
             "vehicle_type": maintenance.mi_vehicle.vm_vehicletype.vt_vehicletype if maintenance.mi_vehicle.vm_vehicletype else "N/A",
@@ -74,6 +79,7 @@ def fetch_maintenance_bill_details(request):
             "estimated_amount": float(maintenance.mi_estimated_amount) if maintenance.mi_estimated_amount else 0,
             "vendor_name": maintenance.mi_vehicle.vm_vendor.vend_name if maintenance.mi_vehicle.vm_vendor else "N/A",
             "technician": maintenance.mi_technician,
+            "advance": advance_val,
         }
         return JsonResponse(data)
     except MaintenanceInfo.DoesNotExist:

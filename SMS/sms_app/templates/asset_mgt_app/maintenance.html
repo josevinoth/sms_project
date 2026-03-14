@@ -2,6 +2,42 @@
 {% load widget_tweaks %}
 {% block content %}
 
+<style>
+  /* ── Select2 inside Bootstrap 4 input-group ── */
+
+  /* Wrapper div that carries Select2 must participate in flex */
+  .select2-wrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* Select2 container fills its wrapper completely */
+  .select2-wrapper .select2-container {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* Match Bootstrap sm input-group height */
+  .select2-wrapper .select2-selection--single {
+    height: 31px !important;
+    border-radius: 0 4px 4px 0 !important;
+    border-color: #ced4da !important;
+  }
+  .select2-wrapper .select2-selection--single .select2-selection__rendered {
+    line-height: 29px !important;
+    color: #495057;
+    font-size: 0.875rem;
+    padding-left: 8px;
+  }
+  .select2-wrapper .select2-selection--single .select2-selection__arrow {
+    height: 29px !important;
+  }
+  .select2-dropdown {
+    font-size: 0.875rem;
+    z-index: 9999;
+  }
+</style>
+
 <form id="maintenanceForm" method="POST">
   {% csrf_token %}
 
@@ -40,9 +76,18 @@
 
             <div class="input-group input-group-sm mb-3">
               <div class="input-group-prepend">
+                <span class="input-group-text">Location</span>
+              </div>
+              {% render_field form.mi_location class="form-control" id="mi_location" %}
+            </div>
+
+            <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
                 <span class="input-group-text">Vehicle No</span>
               </div>
-              {% render_field form.registration_no class="form-control" id="registration_no" %}
+              <div class="select2-wrapper">
+                {% render_field form.registration_no class="form-control" id="registration_no" %}
+              </div>
             </div>
 
             <div class="input-group input-group-sm mb-3">
@@ -118,12 +163,19 @@
 
             <div class="input-group input-group-sm mb-3">
               <div class="input-group-prepend">
-                <span class="input-group-text">Technician</span>
+                <span class="input-group-text">Vendor</span>
               </div>
               {% render_field form.mi_technician class="form-control" %}
             </div>
 
             <div class="input-group input-group-sm mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Advance</span>
+              </div>
+              {% render_field form.mi_advance class="form-control" %}
+            </div>
+
+              <div class="input-group input-group-sm mb-3">
               <div class="input-group-prepend">
                 <span class="input-group-text">Est.Amount</span>
               </div>
@@ -171,7 +223,9 @@
               <div class="input-group-prepend">
                 <span class="input-group-text">Complaint</span>
               </div>
-              {% render_field form.mi_complaint class="form-control form-control-sm" %}
+              <div class="select2-wrapper">
+                {% render_field form.mi_complaint class="form-control form-control-sm" %}
+              </div>
             </div>
           </div>
 
@@ -221,38 +275,88 @@
 
         <div id="msgBox" class="mb-2"></div>
 
-        <button type="submit" class="btn btn-success">
-          <i class="fas fa-check"></i> Save
-        </button>
-
-        <!--<a href="{% url 'home_page' %}" class="btn btn-danger float-right">
-        <i class="fas fa-times"></i> Cancel
-      </a>-->
+        <div class="d-flex justify-content-between">
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-check"></i> Save
+          </button>
+          <a href="{% url 'maintenance_list' %}" class="btn btn-danger">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+        </div>
 
       </div>
     </div>
   </div>
 </form>
 
-<!-- ================= FETCH VEHICLE DETAILS ================= -->
+<!-- ================= SELECT2 + VEHICLE FILTERING ================= -->
 <script>
-  document.getElementById("registration_no").addEventListener("change", function () {
-    const regNo = this.value;
+/*
+ * IIFE captures the FIRST jQuery instance (which has Select2 attached).
+ * base.html loads jQuery a second time at the bottom of <body>, which
+ * overwrites the global $ — but our closure keeps the original reference.
+ */
+(function ($) {
 
-    fetch(`/SMS/fetch_vehicle_details/?reg_no=${regNo}`)
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("make_model").value = data.make_model || "";
-        document.getElementById("registration_date").value = data.registration_date || "";
-        document.getElementById("chassis_no").value = data.chassis_no || "";
-        document.getElementById("engine_no").value = data.engine_no || "";
-      })
-      .catch(() => {
-        // ignore fetch errors for now
-      });
-  });
+  // ── Select2 : Vehicle No ──────────────────────────────────────────
+  $(document).ready(function () {
 
+    $('#registration_no').select2({
+      placeholder: 'Select Vehicle No',
+      allowClear: true,
+      width: '100%'
+    });
 
+    // ── Select2 : Complaint ─────────────────────────────────────────
+    $('#id_mi_complaint').select2({
+      placeholder: '-- Select Complaint --',
+      allowClear: true,
+      width: '100%'
+    });
+
+    // ── Location change → filter vehicles ──────────────────────────
+    $('#mi_location').on('change', function () {
+      var branchId = $(this).val();
+      if (!branchId) return;
+
+      fetch('/SMS/fetch_filtered_vehicles/?branch_id=' + branchId)
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          var $sel = $('#registration_no');
+          $sel.empty().append('<option value="">Select Vehicle No</option>');
+          data.vehicles.forEach(function (vehicle) {
+            $sel.append(new Option(vehicle.vm_registrationnumber, vehicle.vm_registrationnumber));
+          });
+          $sel.trigger('change.select2'); // refresh Select2 list
+        })
+        .catch(function (err) { console.error('Error filtering vehicles:', err); });
+    });
+
+    // ── Vehicle No change → fetch vehicle details ───────────────────
+    $('#registration_no').on('change', function () {
+      var regNo = $(this).val();
+      if (!regNo) {
+        $('#make_model').val('');
+        $('#registration_date').val('');
+        $('#chassis_no').val('');
+        $('#engine_no').val('');
+        return;
+      }
+
+      fetch('/SMS/fetch_vehicle_details/?reg_no=' + encodeURIComponent(regNo))
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          $('#make_model').val(data.make_model || '');
+          $('#registration_date').val(data.registration_date || '');
+          $('#chassis_no').val(data.chassis_no || '');
+          $('#engine_no').val(data.engine_no || '');
+        })
+        .catch(function () {});
+    });
+
+  }); // end ready
+
+}(jQuery)); // ← captures first jQuery (has Select2) before body scripts reload it
 </script>
 
 

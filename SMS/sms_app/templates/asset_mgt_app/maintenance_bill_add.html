@@ -142,6 +142,13 @@
 
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
+                                <span class="input-group-text label-width text-warning font-weight-bold">Advance</span>
+                            </div>
+                            <input type="text" id="pull_advance" class="form-control disable_a_href" readonly value="0.00">
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
                                 <span class="input-group-text label-width font-weight-bold text-success">Amount
                                     Payable</span>
                             </div>
@@ -287,6 +294,10 @@
                             $('#pull_est_amount').val(data.estimated_amount);
                             $('#pull_technician').val(data.technician);
                             $('#pull_vendor_name').val(data.vendor_name);
+                            $('#pull_advance').val(parseFloat(data.advance || 0).toFixed(2));
+
+                            // Recalculate after advance is loaded
+                            calculateBill();
 
                             // Scroll to top
                             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -339,11 +350,12 @@
                 var taxable = parseFloat($('#id_mnb_bill_amount_taxable').val()) || 0;
                 var gstPerc = parseFloat($('#id_mnb_gst_percentage').val()) || 0;
                 var tdsPerc = parseFloat($('#id_mnb_tds_percentage').val()) || 0;
+                var advance = parseFloat($('#pull_advance').val()) || 0;
 
                 var gstAmount = (taxable * gstPerc) / 100;
                 var totalAmount = taxable + gstAmount;
                 var tdsAmount = (taxable * tdsPerc) / 100;
-                var totalPayable = totalAmount - tdsAmount;
+                var totalPayable = totalAmount - tdsAmount - advance;
 
                 $('#id_mnb_gst_amount').val(gstAmount.toFixed(2));
                 $('#id_mnb_total_amount').val(totalAmount.toFixed(2));

@@ -1,7 +1,7 @@
 from django.db import models
 from ..sub_models.maintenance_mod import MaintenanceInfo
 
-class MaintenanceBill(models.Model):
+class MaintenanceBillInfo(models.Model):
     mnb_maintenance = models.ForeignKey(MaintenanceInfo, on_delete=models.CASCADE, related_name="bills_v1")
     mnb_bill_no = models.CharField(max_length=100)
     mnb_bill_date = models.DateField()

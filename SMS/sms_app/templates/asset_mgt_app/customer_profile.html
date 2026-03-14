@@ -1,0 +1,264 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Profile | BVM Transport</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --accent: #f093fb;
+            --dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 3rem;
+            background: var(--glass);
+            padding: 2rem;
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .avatar-large {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--dark);
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        }
+
+        .header-content h1 {
+            font-size: 2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-content p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .info-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+        }
+
+        .info-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 1rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .value {
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            background: rgba(0, 242, 254, 0.1);
+            color: var(--primary);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            margin-top: 3rem;
+        }
+
+        .back-btn:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 600px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .info-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <a href="{% url 'customer_dashboard' %}" class="logo">BVM TRANSPORT</a>
+        <div style="color: #94a3b8; font-size: 0.9rem;">My Profile</div>
+    </nav>
+
+    <div class="container">
+        <div class="profile-header">
+            <div class="avatar-large">{{ user.username|make_list|first|upper }}</div>
+            <div class="header-content">
+                <h1>{{ user.username }}</h1>
+                <p>{{ customer.cu_name }}</p>
+                {% if is_lp %}
+                <span class="badge" style="margin-top: 0.5rem; display: inline-block;">AISATS Collaboration</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="profile-grid">
+            <!-- Account Details -->
+            <div class="info-card">
+                <h3><i class="fas fa-user-shield"></i> Account Details</h3>
+                <div class="info-row">
+                    <span class="label">Username</span>
+                    <span class="value">{{ user.username }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Email Address</span>
+                    <span class="value">{{ user.email|default:"-" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Role</span>
+                    <span class="value">Customer Portal User</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Member Since</span>
+                    <span class="value">{{ user.date_joined|date:"d M Y" }}</span>
+                </div>
+            </div>
+
+            <!-- Company Profile -->
+            <div class="info-card">
+                <h3><i class="fas fa-building"></i> Company Profile</h3>
+                <div class="info-row">
+                    <span class="label">Company Name</span>
+                    <span class="value">{{ customer.cu_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Customer Code</span>
+                    <span class="value">{{ customer.cu_customercode }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Short Name</span>
+                    <span class="value">{{ customer.cu_nameshort|default:"-" }}</span>
+                </div>
+                {% if department %}
+                <div class="info-row">
+                    <span class="label">Department</span>
+                    <span class="value">{{ department.ct_customerdepartment }}</span>
+                </div>
+                {% endif %}
+                {% if is_lp and agent_name %}
+                <div class="info-row">
+                    <span class="label">Linked Agent</span>
+                    <span class="value">{{ agent_name }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <a href="{% url 'customer_dashboard' %}" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</body>
+
+</html>

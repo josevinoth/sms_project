@@ -12,30 +12,54 @@ from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
 from ..models import Location_info, StatusList, MyUser, CustomerdepartmentInfo, Places, VehiclecategoryInfo, VehicletypeInfo, VehiclemasterInfo
 
 def get_customer_context(request):
-    """Helper to get the linked customer, department, and LP status for the portal."""
+    """Helper to get the linked customer, department, and LP status for the portal.
+    Handles _lp suffix logic for AISATS collaboration users.
+    Returns: (customer, department, is_lp, agent_name)
+    """
     user = request.user
     customer = None
     department = None
     is_lp = False
+    agent_name = ""
     
     try:
         user_ext = User_extInfo.objects.get(user=user)
-        customer = user_ext.linked_customer
         is_lp = user_ext.is_lp_customer
         
-        # Check for department override in session (selected at login for regular users)
+        username = user.username.lower()
+        if username.endswith('_lp'):
+            # AISATS Collaboration logic: aisats_lp -> AISATS customer
+            prefix = username[:-3]
+            customer = CustomerInfo.objects.filter(
+                Q(cu_customercode__iexact=prefix) | 
+                Q(cu_nameshort__iexact=prefix) | 
+                Q(cu_name__iexact=prefix)
+            ).first()
+            
+            if user_ext.linked_customer:
+                agent_name = user_ext.linked_customer.cu_nameshort or user_ext.linked_customer.cu_name
+        else:
+            # Check for Agent Mode override first
+            agent_cust_id = request.session.get('agent_selected_customer_id')
+            if agent_cust_id:
+                customer = CustomerInfo.objects.filter(id=agent_cust_id).first()
+                agent_name = user_ext.linked_customer.cu_nameshort or user_ext.linked_customer.cu_name if user_ext.linked_customer else ""
+            else:
+                # Regular Customer logic
+                customer = user_ext.linked_customer
+
+        # Check for department override in session
         dept_id = request.session.get('ses_customer_dept_id')
         if dept_id:
             department = CustomerdepartmentInfo.objects.filter(id=dept_id).first()
         
-        # Fallback to name-based match if no session ID (e.g. legacy login or direct link)
         if not department and user_ext.department:
              department = CustomerdepartmentInfo.objects.filter(ct_customerdepartment__iexact=user_ext.department.dept_name).first()
              
     except User_extInfo.DoesNotExist:
         pass
         
-    return customer, department, is_lp
+    return customer, department, is_lp, agent_name
 
 @login_required
 def ajax_get_vehicle_types(request):
@@ -48,7 +72,7 @@ def customer_dashboard(request):
     """
     Premium dashboard for customers showing summary stats and recent shipments.
     """
-    customer, department, is_lp = get_customer_context(request)
+    customer, department, is_lp, agent_name = get_customer_context(request)
     
     if not customer:
         messages.error(request, 'Your account is not linked to a Customer Profile. Please contact support.')
@@ -113,7 +137,7 @@ def customer_enquiry_add(request):
     """
     Simplified enquiry submission form for logged-in customers.
     """
-    customer, department, is_lp = get_customer_context(request)
+    customer, department, is_lp, agent_name = get_customer_context(request)
     
     if request.method == 'POST':
         from_loc_id = request.POST.get('from_location')
@@ -170,8 +194,8 @@ def customer_enquiry_add(request):
             vt_obj = None
             if type_id:
                 vt_obj = VehicletypeInfo.objects.filter(id=type_id).first()
-                if vt_obj:
-                    # User requested Type to be saved in en_consignmentdetails
+                # ONLY use vehicle type if cargo_details is explicitly empty
+                if not cargo_details and vt_obj:
                     cargo_details = vt_obj.vt_vehicletype
 
             # Department: use form selection, fallback to session
@@ -240,13 +264,14 @@ def customer_enquiry_add(request):
         'places': places,
         'categories': categories,
         'types': types,
-        'is_lp': is_lp
+        'is_lp': is_lp,
+        'default_agent_name': agent_name
     })
 
 @login_required
 def customer_enquiry_edit(request, enquiry_id):
     """Edit an existing customer enquiry."""
-    customer, department, is_lp = get_customer_context(request)
+    customer, department, is_lp, agent_name = get_customer_context(request)
     if not customer:
         return redirect('customer_dashboard')
 
@@ -281,7 +306,8 @@ def customer_enquiry_edit(request, enquiry_id):
             vt_obj = None
             if type_id:
                 vt_obj = VehicletypeInfo.objects.filter(id=type_id).first()
-                if vt_obj:
+                # ONLY use vehicle type if cargo_details is explicitly empty
+                if not cargo_details and vt_obj:
                     cargo_details = vt_obj.vt_vehicletype
 
             # Department
@@ -350,6 +376,7 @@ def customer_enquiry_edit(request, enquiry_id):
         'enquiry': enquiry,
         'env': env,
         'edit_mode': True,
+        'default_agent_name': enquiry.en_agent_name or agent_name
     })
 
 @login_required
@@ -357,7 +384,7 @@ def customer_enquiry_list(request):
     """
     List previous enquiries and current shipments for the customer.
     """
-    customer, _, is_lp = get_customer_context(request)
+    customer, _, is_lp, agent_name = get_customer_context(request)
     if not customer:
         return redirect('customer_dashboard')
 
@@ -524,7 +551,7 @@ def customer_shipment_tracking(request, trip_id):
     """
     Real-time tracking view for a specific shipment.
     """
-    customer, _, is_lp = get_customer_context(request)
+    customer, _, is_lp, agent_name = get_customer_context(request)
     trip = get_object_or_404(TripdetailInfo, id=trip_id, tr_enquirynumber__en_customername=customer)
     
     return render(request, 'asset_mgt_app/customer_shipment_tracking.html', {
@@ -538,7 +565,7 @@ def download_pod(request, trip_id):
     import os
     from django.conf import settings
 
-    customer, _, is_lp = get_customer_context(request)
+    customer, _, is_lp, agent_name = get_customer_context(request)
     trip = get_object_or_404(TripdetailInfo, id=trip_id, tr_enquirynumber__en_customername=customer)
 
     file_url = None
@@ -581,7 +608,7 @@ def download_dmr(request, trip_id):
     from io import BytesIO
     from openpyxl import Workbook
 
-    customer, _, is_lp = get_customer_context(request)
+    customer, _, is_lp, agent_name = get_customer_context(request)
     trip = get_object_or_404(TripdetailInfo, id=trip_id, tr_enquirynumber__en_customername=customer)
     
     # Use existing DMR logic
@@ -607,10 +634,13 @@ def download_dmr(request, trip_id):
 @login_required
 def customer_documents(request):
     """Documents page showing all PODs and documents for the customer."""
-    customer, department, is_lp = get_customer_context(request)
+    customer, department, is_lp, agent_name = get_customer_context(request)
     if not customer:
         return redirect('customer_dashboard')
     
+    from django.core.paginator import Paginator
+    from django.db.models import Prefetch
+
     # Get all trips for this customer
     trips_qs = TripdetailInfo.objects.filter(
         tr_enquirynumber__en_customername=customer
@@ -619,19 +649,28 @@ def customer_documents(request):
         'tr_enquirynumber__en_fromlocaion',
         'tr_enquirynumber__en_tolocation',
         'tc_financestatus'
-    )
+    ).order_by('-tr_created_at')
+
     if department:
         trips_qs = trips_qs.filter(tr_enquirynumber__en_customerdepartment=department)
     
-    trips_qs = trips_qs.order_by('-tr_created_at')
+    # Paginate results (25 per page)
+    paginator = Paginator(trips_qs, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     
-    # Build document list
+    # Build document list for current page
     import os
     from django.conf import settings
+    
+    # Batch fetch closure files for the current page to avoid N+1 queries
+    trip_numbers = [t.tr_tripnumber for t in page_obj if t.tr_tripnumber]
+    closures = Trip_closure_files_Info.objects.filter(tcf_tripnumber__in=trip_numbers).only('tcf_tripnumber', 'tcf_pod')
+    closure_map = {c.tcf_tripnumber: c for c in closures}
+    
     documents = []
-    for trip in trips_qs:
-        # Check closure files for POD
-        closure = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip.tr_tripnumber).first()
+    for trip in page_obj:
+        closure = closure_map.get(trip.tr_tripnumber)
         has_pod = False
         pod_source = ''
         
@@ -663,4 +702,32 @@ def customer_documents(request):
         'customer': customer,
         'department': department,
         'documents': documents,
+        'page_obj': page_obj,
+    })
+@login_required
+def customer_profile(request):
+    """View to display customer user profile."""
+    customer, department, is_lp, agent_name = get_customer_context(request)
+    if not customer:
+        return redirect('customer_dashboard')
+    
+    return render(request, 'asset_mgt_app/customer_profile.html', {
+        'customer': customer,
+        'department': department,
+        'is_lp': is_lp,
+        'agent_name': agent_name,
+        'user': request.user
+    })
+
+@login_required
+def customer_support(request):
+    """View to display support contact information."""
+    customer, department, is_lp, agent_name = get_customer_context(request)
+    if not customer:
+        return redirect('customer_dashboard')
+        
+    return render(request, 'asset_mgt_app/customer_support.html', {
+        'customer': customer,
+        'department': department,
+        'is_lp': is_lp
     })
