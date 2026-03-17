@@ -801,6 +801,14 @@ def extract_state(address):
             return state
     return ""
 
+def extract_pincode(address):
+    if not address:
+        return ""
+    import re
+    # Look for 6 consecutive digits (standard Indian pincode)
+    match = re.search(r'\b\d{6}\b', address)
+    return match.group(0) if match else ""
+
 @login_required(login_url='login_page')
 def shipper_invoice_export_excel(request, invoice_id):
     # ✅ invoice = BillingInfo record
@@ -839,149 +847,110 @@ def shipper_invoice_export_excel(request, invoice_id):
     # Check if monthly billing (Dedicated ID=3, Exclusive ID=2)
     is_monthly = invoice.bill_customer_type and invoice.bill_customer_type.id in [2, 3]
 
-    if is_monthly:
-        # Aggregated single line summary for Dedicated/Exclusive Monthly billing
-        # Use aggregate for weights/pieces (Source of Truth for physical data)
-        totals = qs.aggregate(
-            total_weight=Sum('wh_goods_weight'),
-            total_pieces=Sum('wh_goods_pieces')
-        )
-        
-        all_jobs = list(qs.values_list('wh_job_no', flat=True).distinct())
-        job_no_str = ", ".join(all_jobs) if all_jobs else ""
-        
-        customer = invoice.bill_customer_name
-        address = customer.cu_address if customer else ""
-        state = extract_state(address)
-        # Use only the dedicated pincode field from Customer Master
-        pincode = customer.cu_pincode if customer and hasattr(customer, 'cu_pincode') else ""
+    # Aggregated single line summary for all billing types (Monthly & Case-to-Case)
+    # Use aggregate for weights/pieces (Source of Truth for physical data)
+    totals = qs.aggregate(
+        total_weight=Sum('wh_goods_weight'),
+        total_pieces=Sum('wh_goods_pieces')
+    )
+    
+    all_jobs = list(qs.values_list('wh_job_no', flat=True).distinct())
+    job_no_str = ", ".join(all_jobs) if all_jobs else ""
+    
+    customer = invoice.bill_customer_name
+    address = customer.cu_address if (customer and customer.cu_address) else (invoice.bill_customer_address or "")
+    state = extract_state(address)
+    # Use only the dedicated pincode field from Customer Master, fallback to address extraction
+    pincode = customer.cu_pincode if customer and hasattr(customer, 'cu_pincode') else ""
+    if not pincode:
+        pincode = extract_pincode(address)
 
-        # Branch/Unit from first record
-        first_good = qs.first()
-        branch_name = first_good.wh_branch.loc_name if first_good and first_good.wh_branch else ""
-        branch_name = branch_name.replace("BVM ", "").strip()
+    # Branch/Unit from first record
+    first_good = qs.first()
+    branch_name = first_good.wh_branch.loc_name if first_good and first_good.wh_branch else ""
+    unit_no = str(first_good.wh_unit) if (first_good and first_good.wh_unit) else ""
+    
+    # Robust Branch/Unit fallback from Location Master
+    lm = LocationmasterInfo.objects.filter(lm_customer_name=customer).select_related("lm_wh_location", "lm_wh_unit").first()
+    if not branch_name and lm and lm.lm_wh_location:
+        branch_name = lm.lm_wh_location.loc_name
+    
+    if not unit_no and lm and lm.lm_wh_unit:
+        unit_no = str(lm.lm_wh_unit)
         
-        unit_no = ""
-        lm = LocationmasterInfo.objects.filter(lm_customer_name=customer).select_related("lm_wh_unit").first()
-        if lm and lm.lm_wh_unit:
-            unit_no = str(lm.lm_wh_unit)
-        primary_cost_category = f"{branch_name} - {unit_no}" if unit_no else branch_name
+    branch_name = branch_name.replace("BVM ", "").strip()
+    primary_cost_category = f"{branch_name} - {unit_no}" if (branch_name and unit_no) else (branch_name or unit_no or "")
 
-        # For Monetary values in Monthly summary, match the portal screen logic:
-        # 1. Use job sums for activity-based costs (Storage, Loading, Crane, Forklift)
-        # 2. Use header fields for manual/fixed costs (Handling, Packing, Fumigation)
-        job_totals = qs.aggregate(
-            total_storage=Sum('wh_storage_cost_total'),
-            total_loading=Sum('wh_total_loading_cost'),
-            total_forklift=Sum('wh_forklift_cost'),
-            total_crane=Sum('wh_crane_cost'),
-            total_fumigation=Sum('wh_fumigation_cost')
-        )
-        
-        storage_val = float(job_totals['total_storage'] or 0)
-        loading_val = float(job_totals['total_loading'] or 0)
-        unloading_val = loading_val # Matches bill_unloading_charge logic in template
-        handling_val = float(invoice.bill_handling_charges or 0)
-        crane_val = float(job_totals['total_crane'] or 0)
-        forklift_val = float(job_totals['total_forklift'] or 0)
-        packing_val = float(invoice.bill_packing_charges or 0)
-        fumigation_val = float(invoice.bill_tot_fumigation_charges or 0)
+    # For Monetary values, match the portal screen logic:
+    # 1. Use job sums for activity-based costs (Storage, Loading, Crane, Forklift)
+    # 2. Use header fields for manual/fixed costs (Handling, Packing, Fumigation)
+    job_totals = qs.aggregate(
+        total_storage=Sum('wh_storage_cost_total'),
+        total_loading=Sum('wh_total_loading_cost'),
+        total_forklift=Sum('wh_forklift_cost'),
+        total_crane=Sum('wh_crane_cost'),
+        total_fumigation=Sum('wh_fumigation_cost')
+    )
+    
+    # Prioritize invoice header fields (UI boxes) over job sums to ensure exact matching
+    # Using "is not None" because 0.0 is a valid value that should not trigger fallback
+    storage_base = float(invoice.bill_wh_storage_charges if invoice.bill_wh_storage_charges is not None else (job_totals['total_storage'] or 0))
+    fumigation_val = float(invoice.bill_tot_fumigation_charges if invoice.bill_tot_fumigation_charges is not None else (job_totals['total_fumigation'] or 0))
+    
+    # Merge storage and fumigation to avoid adding new columns while keeping totals correct
+    storage_val = storage_base + fumigation_val
 
-        pre_gst_total = round(storage_val + loading_val + unloading_val + handling_val + 
-                            crane_val + forklift_val + packing_val + fumigation_val, 2)
-        
-        # Prepare summary strings for Shippers (Inspection/Gate-in) and Invoices
+    loading_val = float(invoice.bill_loading_charge if invoice.bill_loading_charge is not None else (job_totals['total_loading'] or 0))
+    unloading_val = float(invoice.bill_unloading_charge if invoice.bill_unloading_charge is not None else 0) 
+    
+    handling_val = float(invoice.bill_handling_charges if invoice.bill_handling_charges is not None else 0)
+    crane_val = float(invoice.bill_tot_crane_charges if invoice.bill_tot_crane_charges is not None else (job_totals['total_crane'] or 0))
+    forklift_val = float(invoice.bill_tot_forklift_charges if invoice.bill_tot_forklift_charges is not None else (job_totals['total_forklift'] or 0))
+    packing_val = float(invoice.bill_packing_charges if invoice.bill_packing_charges is not None else 0)
+
+    # Calculate pre-gst total components for verification
+    calc_pre_gst_total = round(storage_val + loading_val + unloading_val + handling_val + 
+                               crane_val + forklift_val + packing_val, 2)
+    
+    # Match UI Total exactly from the bill_total_pre_gst field
+    pre_gst_total = float(invoice.bill_total_pre_gst if invoice.bill_total_pre_gst is not None else calc_pre_gst_total)
+    
+    # Prioritize wh_consigner as shown in the UI "Shipper Name" column
+    shipper_list = list(qs.exclude(wh_consigner__isnull=True).exclude(wh_consigner='')
+                          .values_list('wh_consigner', flat=True).distinct())
+    
+    if not shipper_list:
         shipper_list = list(qs.exclude(wh_gate_injob_no_id__gatein_shipper__isnull=True)
                               .exclude(wh_gate_injob_no_id__gatein_shipper='')
                               .values_list('wh_gate_injob_no_id__gatein_shipper', flat=True).distinct())
-        
-        if not shipper_list:
-            shipper_list = list(qs.exclude(wh_consigner__isnull=True).exclude(wh_consigner='')
-                                  .values_list('wh_consigner', flat=True).distinct())
-                                  
-        shipper_str = ", ".join(shipper_list) if shipper_list else (customer.cu_name if customer else "")
-        
-        # Invoices Summary (Prioritize Gate-in Invoice)
-        invoice_list_vals = list(qs.exclude(wh_gate_injob_no_id__gatein_invoice__isnull=True)
-                                   .exclude(wh_gate_injob_no_id__gatein_invoice='')
-                                   .values_list('wh_gate_injob_no_id__gatein_invoice', flat=True).distinct())
-                                   
-        if not invoice_list_vals:
-            invoice_list_vals = list(qs.exclude(wh_goods_invoice__isnull=True).exclude(wh_goods_invoice='')
-                                       .values_list('wh_goods_invoice', flat=True).distinct())
-                                       
-        invoice_str = ", ".join(invoice_list_vals) if invoice_list_vals else "Summary"
-        gst_val = round(pre_gst_total * 0.09, 2)
-        ws.append([
-            excel_datetime(invoice.bill_invoice_date),
-            invoice.bill_invoice_ref,
-            job_no_str,
-            customer.cu_nameshort if customer else "",
-            customer.cu_gst if customer else "",
-            state,
-            pincode,
-            primary_cost_category,
-            shipper_str, # Use actual shipper(s) instead of billing customer
-            round(storage_val, 2),
-            round(loading_val, 2),
-            round(unloading_val, 2),
-            round(handling_val, 2),
-            round(crane_val, 2),
-            round(forklift_val, 2),
-            round(packing_val, 2),
-            pre_gst_total,
-            gst_val,
-            gst_val,
-        ])
-    else:
-        # Standard per-job breakdown (Case-to-Case)
-        sl = 1
-        for obj in qs:
-            customer = invoice.bill_customer_name
-            address = customer.cu_address if customer else ""
-            state = extract_state(address)
-            # Use only the dedicated pincode field from Customer Master
-            pincode = customer.cu_pincode if customer and hasattr(customer, 'cu_pincode') else ""
+                              
+    shipper_str = ", ".join(shipper_list) if shipper_list else (customer.cu_nameshort if customer else "")
+    
+    # Use actual taxes from header to match UI exactly, or fallback to 9% calculation
+    cgst_val = float(invoice.bill_cgst if invoice.bill_cgst is not None else round(pre_gst_total * 0.09, 2))
+    sgst_val = float(invoice.bill_sgst if invoice.bill_sgst is not None else round(pre_gst_total * 0.09, 2))
 
-            branch_name = obj.wh_branch.loc_name if obj.wh_branch else ""
-            branch_name = branch_name.replace("BVM ", "").strip()
-
-            unit_no = ""
-            lm = LocationmasterInfo.objects.filter(lm_customer_name=customer).select_related("lm_wh_unit").first()
-            if lm and lm.lm_wh_unit:
-                unit_no = str(lm.lm_wh_unit)
-
-            primary_cost_category = f"{branch_name} - {unit_no}" if unit_no else branch_name
-
-            # Shipper Name from Inspection (Gate-in)
-            shipper_name = ""
-            if obj.wh_gate_injob_no_id and obj.wh_gate_injob_no_id.gatein_shipper:
-                shipper_name = obj.wh_gate_injob_no_id.gatein_shipper
-            else:
-                shipper_name = obj.wh_consigner or (customer.cu_name if customer else "")
-            
-            ws.append([
-                excel_datetime(invoice.bill_invoice_date),
-                invoice.bill_invoice_ref,
-                obj.wh_job_no,
-                customer.cu_nameshort if customer else "",
-                customer.cu_gst if customer else "",
-                state,
-                pincode,
-                primary_cost_category,
-                shipper_name,
-                obj.wh_storage_cost_total or 0,
-                obj.wh_total_loading_cost or 0,
-                0, # Unloading cost
-                invoice.bill_handling_charges if sl == 1 else 0,
-                obj.wh_crane_cost or 0,
-                obj.wh_forklift_cost or 0,
-                invoice.bill_packing_charges if sl == 1 else 0,
-                invoice.bill_total_pre_gst if sl == 1 else 0,
-                invoice.bill_cgst if sl == 1 else 0,
-                invoice.bill_sgst if sl == 1 else 0,
-            ])
-            sl += 1
+    ws.append([
+        excel_datetime(invoice.bill_invoice_date),
+        invoice.bill_invoice_ref,
+        job_no_str,
+        invoice.bill_customer_short_name if invoice.bill_customer_short_name else (customer.cu_nameshort if customer else ""),
+        customer.cu_gst if customer else "",
+        state,
+        pincode,
+        primary_cost_category,
+        invoice.bill_customer_short_name if invoice.bill_customer_short_name else (customer.cu_nameshort if customer else ""),
+        round(storage_val, 2),
+        round(loading_val, 2),
+        round(unloading_val, 2),
+        round(handling_val, 2),
+        round(crane_val, 2),
+        round(forklift_val, 2),
+        round(packing_val, 2),
+        pre_gst_total,
+        cgst_val,
+        sgst_val,
+    ])
 
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -1048,24 +1017,27 @@ def invoice_export_excel(request, invoice_id):
         all_jobs = list(qs.values_list('wh_job_no', flat=True).distinct())
         job_no_str = ", ".join(all_jobs) if all_jobs else ""
         
-        # Use header fields as Source of Truth for summary lines (Dedicated/Exclusive)
-        # This is more reliable than job-item sums when the portal view hasn't been refreshed
-        storage_val = float(invoice.bill_wh_storage_charges or 0)
-        loading_val = float(invoice.bill_loading_charge or 0)
-        unloading_val = float(invoice.bill_unloading_charge or 0)
-        crane_val = float(invoice.bill_tot_crane_charges or 0)
-        forklift_val = float(invoice.bill_tot_forklift_charges or 0)
+        # Use header fields first (is not None to handle 0.0 correctly), fallback to job sums
+        storage_val = float(invoice.bill_wh_storage_charges if invoice.bill_wh_storage_charges is not None else (job_totals['total_storage'] or 0))
+        loading_val = float(invoice.bill_loading_charge if invoice.bill_loading_charge is not None else (job_totals['total_loading'] or 0))
+        unloading_val = float(invoice.bill_unloading_charge if invoice.bill_unloading_charge is not None else 0) 
+        crane_val = float(invoice.bill_tot_crane_charges if invoice.bill_tot_crane_charges is not None else (job_totals['total_crane'] or 0))
+        forklift_val = float(invoice.bill_tot_forklift_charges if invoice.bill_tot_forklift_charges is not None else (job_totals['total_forklift'] or 0))
         
-        # Shippers and Invoices Summary (Prioritize Inspection/Gate-in fields)
-        shipper_list = list(qs.exclude(wh_gate_injob_no_id__gatein_shipper__isnull=True)
-                              .exclude(wh_gate_injob_no_id__gatein_shipper='')
-                              .values_list('wh_gate_injob_no_id__gatein_shipper', flat=True).distinct())
+        per_day_storage = invoice.bill_per_day_wh_charges or 0
+        if not per_day_storage and invoice.bill_no_of_days and storage_val:
+            per_day_storage = round(storage_val / invoice.bill_no_of_days, 2)
+        
+        # Prioritize wh_consigner as shown in the UI "Shipper Name" column
+        shipper_list = list(qs.exclude(wh_consigner__isnull=True).exclude(wh_consigner='')
+                              .values_list('wh_consigner', flat=True).distinct())
         
         if not shipper_list:
-            shipper_list = list(qs.exclude(wh_consigner__isnull=True).exclude(wh_consigner='')
-                                  .values_list('wh_consigner', flat=True).distinct())
+            shipper_list = list(qs.exclude(wh_gate_injob_no_id__gatein_shipper__isnull=True)
+                                  .exclude(wh_gate_injob_no_id__gatein_shipper='')
+                                  .values_list('wh_gate_injob_no_id__gatein_shipper', flat=True).distinct())
                                   
-        shipper_str = ", ".join(shipper_list) if shipper_list else (invoice.bill_customer_name.cu_name if invoice.bill_customer_name else "")
+        shipper_str = ", ".join(shipper_list) if shipper_list else (invoice.bill_customer_name.cu_nameshort if invoice.bill_customer_name else "")
         
         # Shipper Invoice Summary
         invoice_list_vals = list(qs.exclude(wh_gate_injob_no_id__gatein_invoice__isnull=True)
@@ -1088,7 +1060,7 @@ def invoice_export_excel(request, invoice_id):
             excel_datetime(invoice.bill_start_date),
             excel_datetime(invoice.bill_end_date),
             invoice.bill_no_of_days or 0,
-            invoice.bill_per_day_wh_charges or 0,
+            per_day_storage,
             round(storage_val, 2),
             
             # Loading
@@ -1108,19 +1080,31 @@ def invoice_export_excel(request, invoice_id):
     else:
         sl = 1
         for obj in qs:
-            # ✅ unit from LocationmasterInfo
-            unit_no = ""
-            lm = LocationmasterInfo.objects.filter(
-                lm_customer_name=invoice.bill_customer_name
-            ).select_related("lm_wh_unit").first()
+            # Pull unit from job first
+            unit_no = str(obj.wh_unit) if obj.wh_unit else ""
+            
+            if not unit_no:
+                lm = LocationmasterInfo.objects.filter(
+                    lm_customer_name=invoice.bill_customer_name
+                ).select_related("lm_wh_unit").first()
 
-            if lm and lm.lm_wh_unit:
-                unit_no = str(lm.lm_wh_unit)
+                if lm and lm.lm_wh_unit:
+                    unit_no = str(lm.lm_wh_unit)
+
+            # Robust Shipper Name lookup
+            shipper_name = ""
+            if obj.wh_gate_injob_no_id and obj.wh_gate_injob_no_id.gatein_shipper:
+                shipper_name = obj.wh_gate_injob_no_id.gatein_shipper
+            else:
+                shipper_name = obj.wh_consigner or ""
+            
+            if not shipper_name and invoice.bill_customer_name:
+                shipper_name = invoice.bill_customer_name.cu_nameshort or ""
 
             ws.append([
                 sl,
                 obj.wh_job_no,
-                obj.wh_gate_injob_no_id.gatein_shipper if obj.wh_gate_injob_no_id and obj.wh_gate_injob_no_id.gatein_shipper else (obj.wh_consigner or (invoice.bill_customer_name.cu_name if invoice.bill_customer_name else "")),
+                shipper_name,
                 obj.wh_gate_injob_no_id.gatein_invoice if obj.wh_gate_injob_no_id and obj.wh_gate_injob_no_id.gatein_invoice else (obj.wh_goods_invoice or "Summary"),
                 str(obj.wh_dispatch_id.dispatch_billing_truck_type) if obj.wh_dispatch_id and obj.wh_dispatch_id.dispatch_billing_truck_type else "",
                 invoice.bill_weight or obj.wh_goods_weight or 0,

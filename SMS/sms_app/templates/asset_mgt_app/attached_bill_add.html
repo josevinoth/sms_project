@@ -199,6 +199,11 @@
         }
 
         var isInitialLoad = {% if record %}true{% else %}false{% endif %};
+        
+        // Lock Total KM Run to prevent editing
+        $('#id_ab_total_km_run').prop('readonly', true).addClass('disable_a_href');
+        $('#id_ab_extra_km_run').prop('readonly', true).addClass('disable_a_href');
+        $('#id_ab_leave_amount').prop('readonly', true).addClass('disable_a_href');
 
     // Vendor Change logic
     $(document).on('change', '#id_ab_vendor', function () {
@@ -252,6 +257,7 @@
                         extraKmRate = data.extra_km_rate || 0;
                     }
                     if (!isInitialLoad) {
+                        // Total KM Run from backend = same as vehicle log sheet
                         $('#id_ab_total_km_run').val(data.total_km_run);
                         // Auto-fill leave days: period days - days with trips
                         if (data.leave_days !== undefined) {
@@ -312,6 +318,11 @@
         }
     });
 
+    // Recalculate amounts when trips are checked or unchecked
+    $(document).on('change', '.trip-checkbox, #selectAllTrips', function () {
+        calculateAmounts();
+    });
+
     // Handle ADD Button Click
     $('#addTripsToForm').click(function () {
         var selectedIds = [];
@@ -331,8 +342,6 @@
         }
 
         $('#id_ab_selected_trips').val(selectedIds.join(','));
-        $('#id_ab_total_km_run').val(totalKm.toFixed(2));
-        $('#id_ab_extra_km_amount').val(totalExtraAmount.toFixed(2));
 
         calculateAmounts();
 
@@ -369,52 +378,61 @@
         var from_date = $('#id_ab_from_date').val();
         var to_date = $('#id_ab_to_date').val();
 
-        // 1. Calculate Period Days for Daily Rate denominator (Total calendar days)
-        var daysInPeriod = 30; // Default
+        // 1. Calculate Working Days in Period for Daily Rate denominator (Non-Sundays)
+        var daysInPeriod = 26; // Default
         if (from_date && to_date) {
             var start = new Date(from_date);
             var end = new Date(to_date);
-            var diffTime = Math.abs(end - start);
-            daysInPeriod = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+                var workingDays = 0;
+                var curr = new Date(start);
+                while (curr <= end) {
+                    if (curr.getDay() !== 0) { // 0 is Sunday
+                        workingDays++;
+                    }
+                    curr.setDate(curr.getDate() + 1);
+                }
+                daysInPeriod = workingDays || 1;
+            }
         }
 
         var leave_amount = (buy_cost / daysInPeriod) * leave_days;
+        if (isNaN(leave_amount)) leave_amount = 0;
         $('#id_ab_leave_amount').val(leave_amount.toFixed(2));
 
         // 2. Calculate Extra KM Run
-        var extra_km = total_km - agreed_km;
-        if (extra_km < 0) extra_km = 0;
+        var extra_km = Math.max(0, total_km - agreed_km);
         $('#id_ab_extra_km_run').val(extra_km.toFixed(2));
 
         // 3. Calculate Extra KM Amount based on rate
-        var extra_km_amount = extra_km * extraKmRate;
+        var extra_km_amount = extra_km * (parseFloat(extraKmRate) || 0);
+        if (isNaN(extra_km_amount)) extra_km_amount = 0;
         $('#id_ab_extra_km_amount').val(extra_km_amount.toFixed(2));
 
         // 4. Calculate Total Bill Amount (Buy Cost + Extra KM Amount - Leave Amount)
         if (!$('#id_ab_bill_amount').is(':focus')) {
             var total_bill = buy_cost + extra_km_amount - leave_amount;
+            if (isNaN(total_bill)) total_bill = 0;
             $('#id_ab_bill_amount').val(total_bill.toFixed(2));
         }
 
-        // 5. Update table: Selling stays as-is from trip data; Buy Cost = (Bill Amount / Total KM Run) * Trip KM
-        var current_bill_amount = parseFloat($('#id_ab_bill_amount').val()) || 0;
-        if (total_km > 0) {
-            var rate = current_bill_amount / total_km;
-            $('#tripsTableBody tr').each(function () {
-                var $row = $(this);
-                var t_km = parseFloat($row.data('km')) || 0;
-                
-                // Only auto-update if not manually focused? 
-                // Or just auto-update since top level bill change affects everything
-                if (t_km > 0) {
-                    var calc_buy = rate * t_km;
-                    $row.find('.trip-buy-cost').val(calc_buy.toFixed(2));
-                } else {
-                    $row.find('.trip-buy-cost').val("0.00");
-                }
-                updateRowTotal($row);
-            });
-        }
+        // 5. Update table: Buy Cost = (Header Buy Cost / Total KM Run) * Trip KM
+        var rate = (total_km > 0) ? (buy_cost / total_km) : 0;
+        if (isNaN(rate)) rate = 0;
+
+        $('#tripsTableBody tr').each(function () {
+            var $row = $(this);
+            var t_km = parseFloat($row.data('km')) || 0;
+            
+            if (t_km > 0) {
+                // Formula: Buy Cost = (Header Buy Cost / Total KM Run) * Trip KM
+                var calc_buy = rate * t_km;
+                $row.find('.trip-buy-cost').val(calc_buy.toFixed(2));
+            } else {
+                $row.find('.trip-buy-cost').val("0.00");
+            }
+            updateRowTotal($row);
+        });
     }
 
     // Function to update single row total buy cost

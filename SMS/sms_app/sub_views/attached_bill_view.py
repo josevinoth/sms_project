@@ -159,121 +159,141 @@ def get_attached_vehicle_details(request):
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
 
-    data = {'trips': []}
+    data = {'trips': [], 'total_km_run': 0, 'leave_days': 0, 'vehicle_type': '', 'buy_cost': 0, 'agreed_km': 0, 'extra_km_rate': 0}
 
-    if vehicle_id:
-        vehicle = get_object_or_404(VehiclemasterInfo, id=vehicle_id)
-        data.update({
-            'vehicle_type': str(vehicle.vm_vehicletype) if vehicle.vm_vehicletype else "",
-            'buy_cost': float(vehicle.vm_buycost) if vehicle.vm_buycost and vehicle.vm_buycost.replace('.','',1).isdigit() else 0.0,
-            'agreed_km': float(vehicle.vm_agreedkm) if vehicle.vm_agreedkm and vehicle.vm_agreedkm.replace('.','',1).isdigit() else 0.0,
-            'extra_km_rate': float(vehicle.vm_extrakm) if vehicle.vm_extrakm and vehicle.vm_extrakm.replace('.','',1).isdigit() else 0.0,
-        })
-    elif vendor_id:
-        # Just vendor selected, we don't have vehicle specific details yet but we can still fetch trips
-        pass
+    def parse_dt(d_str):
+        if not d_str: return None
+        try: return dt_date.fromisoformat(d_str)
+        except:
+            try:
+                p = d_str.split('-')
+                if len(p) == 3: return dt_date(int(p[2]), int(p[1]), int(p[0]))
+            except: pass
+        return None
 
-    # Filter trips
-    filters = Q()
-    if vehicle_id:
-        vehicle = VehiclemasterInfo.objects.get(id=vehicle_id)
-        filters &= Q(tr_vehiclenumber=vehicle.vm_registrationnumber)
-    elif vendor_id:
-        # Get all vehicles for this vendor and filter trips by those registration numbers
-        vehicle_reg_nos = VehiclemasterInfo.objects.filter(vm_vendor_id=vendor_id).values_list('vm_registrationnumber', flat=True)
-        filters &= Q(tr_vehiclenumber__in=vehicle_reg_nos)
-    
-    if from_date and to_date:
-        filters &= Q(tr_departeddate__date__range=[from_date, to_date])
+    f_dt_obj = parse_dt(from_date)
+    t_dt_obj = parse_dt(to_date)
 
-    if filters:
-        # Get all billed trip numbers to exclude them
-        bill_id = request.GET.get('bill_id')
-        billed_trips_query = AttachedBillInfo.objects.all()
-        if bill_id:
-            billed_trips_query = billed_trips_query.exclude(id=bill_id)
+    try:
+        if vehicle_id:
+            try:
+                vehicle = VehiclemasterInfo.objects.get(id=vehicle_id)
+                data.update({
+                    'vehicle_type': str(vehicle.vm_vehicletype) if vehicle.vm_vehicletype else "",
+                    'buy_cost': float(vehicle.vm_buycost) if vehicle.vm_buycost and str(vehicle.vm_buycost).replace('.','',1).isdigit() else 0.0,
+                    'agreed_km': float(vehicle.vm_agreedkm) if vehicle.vm_agreedkm and str(vehicle.vm_agreedkm).replace('.','',1).isdigit() else 0.0,
+                    'extra_km_rate': float(vehicle.vm_extrakm) if vehicle.vm_extrakm and str(vehicle.vm_extrakm).replace('.','',1).isdigit() else 0.0,
+                })
+            except VehiclemasterInfo.DoesNotExist:
+                pass
+        elif vendor_id:
+            pass
+
+        filters = Q()
+        if vehicle_id:
+            vehicle = VehiclemasterInfo.objects.get(id=vehicle_id)
+            filters &= Q(tr_vehiclenumber=vehicle.vm_registrationnumber)
+        elif vendor_id:
+            vehicle_reg_nos = VehiclemasterInfo.objects.filter(vm_vendor_id=vendor_id).values_list('vm_registrationnumber', flat=True)
+            filters &= Q(tr_vehiclenumber__in=vehicle_reg_nos)
         
-        already_billed = []
-        for b_trips in billed_trips_query.values_list('ab_selected_trips', flat=True):
-            if b_trips:
-                already_billed.extend([t.strip() for t in b_trips.split(',') if t.strip()])
-        
-        # Apply exclusion
-        if already_billed:
-            filters &= ~Q(tr_tripnumber__in=already_billed)
+        if f_dt_obj and t_dt_obj:
+            # Fetch trips for [start-1, end+1] to check Sunday neighbors correctly at boundaries
+            expanded_start = f_dt_obj - timedelta(days=1)
+            expanded_end = t_dt_obj + timedelta(days=1)
+            filters &= Q(tr_departeddate__date__range=[expanded_start, expanded_end])
 
-        trips = TripdetailInfo.objects.filter(filters).order_by('-tr_departeddate')
-        total_km_run = 0
-        trip_dates = set()  # Unique departure dates (days vehicle made at least one trip)
+        if filters:
+            bill_id = request.GET.get('bill_id')
+            billed_trips_query = AttachedBillInfo.objects.all()
+            if bill_id:
+                billed_trips_query = billed_trips_query.exclude(id=bill_id)
+            
+            already_billed = []
+            for b_trips in billed_trips_query.values_list('ab_selected_trips', flat=True):
+                if b_trips:
+                    already_billed.extend([t.strip() for t in b_trips.split(',') if t.strip()])
+            
+            if already_billed:
+                filters &= ~Q(tr_tripnumber__in=already_billed)
 
-        for trip in trips:
-            km = (trip.tr_reportedkm or 0) - (trip.tr_departedkm or 0)
-            if km < 0: km = 0
-            total_km_run += km
+            trips = TripdetailInfo.objects.filter(filters).order_by('tr_departeddate')
+            trip_dates = set()
+            
+            # For Total KM using Vehicle Log method (Last Closing - First Starting)
+            first_start_km = None
+            last_close_km = None
 
-            # Track unique departure dates
-            if trip.tr_departeddate:
-                trip_dates.add(trip.tr_departeddate.date())
+            for trip in trips:
+                # Per-trip KM logic stays the same for display in the 'Trip KM' column
+                km = max(0, (trip.tr_reportedkm_delivery or trip.tr_reportedkm or 0) - (trip.tr_departedkm or 0))
 
-            # Use Enquirynote data for customer name
-            customer_name = trip.tr_enquirynumber.en_customername.cu_name if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername else "N/A"
+                # Track min departed and max reported for the entire period
+                # ONLY track KM for trips within the actual billing period
+                trip_dte = trip.tr_departeddate.date() if trip.tr_departeddate else None
+                if trip_dte and f_dt_obj <= trip_dte <= t_dt_obj:
+                    trip_start_km = trip.tr_departedkm or 0
+                    trip_close_km = trip.tr_reportedkm_delivery or trip.tr_reportedkm or 0
+                    if trip_start_km > 0 and first_start_km is None:
+                        first_start_km = trip_start_km
+                    if trip_close_km > 0:
+                        last_close_km = trip_close_km
 
-            data['trips'].append({
-                'id': trip.id,
-                'trip_date': trip.tr_departeddate.strftime('%d-%m-%Y') if trip.tr_departeddate else "",
-                'trip_no': trip.tr_tripnumber or "",
-                'cnote': trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "",
-                'customer': customer_name,
-                'from': str(trip.tr_departedlocation) if trip.tr_departedlocation else "",
-                'to': str(trip.tr_reportedlocation) if trip.tr_reportedlocation else "",
-                'trip_km': km,
-                'buy_cost': float(trip.tc_tripcost or 0),
-                'parking_cost': float(trip.tc_parkingcost or 0),
-                'toll_cost': float(trip.tc_tollcost or 0),
-                'total_buy_cost': float((trip.tc_tripcost or 0) + (trip.tc_parkingcost or 0) + (trip.tc_tollcost or 0))
-            })
+                if trip.tr_departeddate:
+                    start_date = trip.tr_departeddate.date()
+                    end_date_val = (trip.tr_reporteddate_delivery or trip.tr_reporteddate or trip.tr_departeddate).date()
+                    temp_date = start_date
+                    while temp_date <= end_date_val:
+                        trip_dates.add(temp_date)
+                        temp_date += timedelta(days=1)
 
-        data['total_km_run'] = total_km_run
+                # Filter trips for the table display to just the current period
+                if trip_dte and f_dt_obj <= trip_dte <= t_dt_obj:
+                    customer_name = trip.tr_enquirynumber.en_customername.cu_name if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername else "N/A"
+                    data['trips'].append({
+                        'id': trip.id,
+                        'trip_date': trip.tr_departeddate.strftime('%d-%m-%Y') if trip.tr_departeddate else "",
+                        'trip_no': trip.tr_tripnumber or "",
+                        'cnote': trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "",
+                        'customer': customer_name,
+                        'from': str(trip.tr_departedlocation) if trip.tr_departedlocation else "",
+                        'to': str(trip.tr_reportedlocation) if trip.tr_reportedlocation else "",
+                        'trip_km': km,
+                        'buy_cost': float(trip.tc_tripcost or 0),
+                        'parking_cost': float(trip.tc_parkingcost or 0),
+                        'toll_cost': float(trip.tc_tollcost or 0),
+                        'total_buy_cost': float((trip.tc_tripcost or 0) + (trip.tc_parkingcost or 0) + (trip.tc_tollcost or 0))
+                    })
 
-        # Leave days calculation:
-        # A day is a leave day if it had no trips.
-        # Sundays are normally excluded — BUT if both the Saturday before AND
-        # the Monday after are leave days (no trips), that Sunday counts as leave too.
-        if from_date and to_date:
-            from datetime import date as dt_date, timedelta
-            start_dt = dt_date.fromisoformat(from_date)
-            end_dt = dt_date.fromisoformat(to_date)
+            # Calculate total KM run for the period (Vehicle Log Method)
+            total_km_run = 0
+            if first_start_km is not None and last_close_km is not None:
+                total_km_run = max(0, last_close_km - first_start_km)
+            data['total_km_run'] = total_km_run
 
-            # Build set of leave days (non-Sunday days with no trips)
-            leave_set = set()
-            curr = start_dt
-            while curr <= end_dt:
-                if curr.weekday() != 6:  # skip Sundays for now
-                    if curr not in trip_dates:
-                        leave_set.add(curr)
-                curr += timedelta(days=1)
-
-            # Now check every Sunday in the period:
-            # If Saturday (day before) AND Monday (day after) are both in leave_set,
-            # count that Sunday as leave too.
-            leave_days_count = len(leave_set)
-            curr = start_dt
-            while curr <= end_dt:
-                if curr.weekday() == 6:  # It's a Sunday
-                    saturday = curr - timedelta(days=1)
-                    monday   = curr + timedelta(days=1)
-                    # Both bounding days must be within the period and be leave days
-                    if saturday >= start_dt and monday <= end_dt:
-                        if saturday in leave_set and monday in leave_set:
+            if f_dt_obj and t_dt_obj:
+                leave_days_count = 0
+                curr = f_dt_obj
+                while curr <= t_dt_obj:
+                    if curr.weekday() != 6: # Mon-Sat
+                        if curr not in trip_dates:
                             leave_days_count += 1
-                curr += timedelta(days=1)
-
-            data['leave_days'] = leave_days_count
+                    else:
+                        # Sunday: Only count as working if Sat, Sun, AND Mon have trips
+                        prev_day = curr - timedelta(days=1)
+                        next_day = curr + timedelta(days=1)
+                        if not (prev_day in trip_dates and curr in trip_dates and next_day in trip_dates):
+                            leave_days_count += 1
+                    curr += timedelta(days=1)
+                data['leave_days'] = leave_days_count
         else:
+            data['total_km_run'] = 0
             data['leave_days'] = 0
-    else:
-        data['total_km_run'] = 0
-        data['leave_days'] = 0
+
+    except Exception as e:
+        data['error'] = str(e)
+        import traceback
+        data['traceback'] = traceback.format_exc()
 
     return JsonResponse(data)
 
@@ -301,7 +321,7 @@ def attached_bill_summary(request, id):
     # --- Use SAVED bill fields for reliable values ---
     contract_amount = float(bill.ab_buy_cost or 0)
     leave_days     = int(bill.ab_leave_days or 0)
-    leave_per_day  = (contract_amount / days_in_month) if days_in_month > 0 else 0
+    leave_per_day  = (contract_amount / working_days) if working_days > 0 else 0
     leave_amount   = float(bill.ab_leave_amount or 0)
     agreed_km      = float(bill.ab_agreed_km or 0)
     total_km_saved = float(bill.ab_total_km_run or 0)   # saved total KM from ADD/EDIT
@@ -328,7 +348,7 @@ def attached_bill_summary(request, id):
     trip_km_run = 0
     trip_days   = set()
     for t in trips:
-        trip_km_run += max(0, (t.tr_reportedkm or 0) - (t.tr_departedkm or 0))
+        trip_km_run += max(0, (t.tr_reportedkm_delivery or t.tr_reportedkm or 0) - (t.tr_departedkm or 0))
         if t.tr_departeddate:
             trip_days.add(t.tr_departeddate.date())
 
