@@ -1,5 +1,5 @@
 from django import forms
-from ..models import PkcostingInfo
+from ..models import PkcostingInfo, Nadimension, PkpurchaseorderInfo
 
 class PkcostingForm(forms.ModelForm):
 
@@ -8,7 +8,22 @@ class PkcostingForm(forms.ModelForm):
         fields = '__all__'
 
     def __init__(self, *args, **kwargs):
-        super(PkcostingForm,self).__init__(*args, **kwargs)
+        assessment_id = kwargs.pop('assessment_id', None)
+
+        # Get from POST if not passed
+        if not assessment_id and 'data' in kwargs:
+            assessment_id = kwargs['data'].get('ct_assessment_num')
+
+        super().__init__(*args, **kwargs)
+
+        if assessment_id:
+            self.fields['ct_requirement'].queryset = Nadimension.objects.filter(nad_assess_num=assessment_id)
+            self.fields['ct_customer_po'].queryset = PkpurchaseorderInfo.objects.filter(po_assessment_num=assessment_id)
+        else:
+            self.fields['ct_requirement'].queryset = Nadimension.objects.all()
+            self.fields['ct_customer_po'].queryset = PkpurchaseorderInfo.objects.all()
+
+        # Labels
         self.fields['ct_customer_name'].empty_label = "--Select--"
         self.fields['ct_customer_po'].empty_label = "--Select--"
         self.fields['ct_cost_type'].empty_label = "--Select--"

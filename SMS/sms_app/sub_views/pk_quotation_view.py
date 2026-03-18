@@ -3,7 +3,7 @@ from django.db import transaction
 from django.db.models.aggregates import Sum
 from django.http import JsonResponse
 from ..forms import PkquotationForm
-from ..models import User_extInfo,Nadimension,PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo,Costtype,Pkstocktype,Stockdescription,pk_itemInfo,pk_itemdescriptionInfo
+from ..models import User_extInfo,Nadimension,PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo,Costtype,Pkstocktype,Stockdescription,pk_itemInfo,pk_itemdescriptionInfo,StockMaintenance
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
@@ -97,9 +97,10 @@ def pk_quotation_add(request, quotation_id=0):
                 stock_purchase_num_id = request.POST.get('pkqt_stock_purchase_number')
                 if stock_purchase_num_id:
                     try:
-                        stock_purchase = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id)
-                        stock_purchase_num = stock_purchase.sp_purchase_num
-                        stock_qty_available = stock_purchase.sp_quantity_reduced
+                        # Fetch stock maintenance record using StockMaintenance
+                        stock_purchase = StockMaintenance.objects.get(id=stock_purchase_num_id)
+                        stock_purchase_num = stock_purchase.sm_stock_purchase_number
+                        stock_qty_available = stock_purchase.sm_count
 
                         stock_qty_str = request.POST.get('pkqt_quantity', None)
                         if not stock_qty_str:
@@ -107,9 +108,18 @@ def pk_quotation_add(request, quotation_id=0):
                             return redirect(request.META['HTTP_REFERER'])
 
                         try:
-                            stock_qty = int(stock_qty_str)
+                            stock_qty = float(stock_qty_str)
                         except ValueError:
                             messages.error(request, 'Invalid quantity value. It should be a number.')
+                            return redirect(request.META['HTTP_REFERER'])
+
+                        if stock_qty > stock_qty_available:
+                            error_message = (
+                                f"Insufficient stock for {stock_purchase.sm_partcode.pc_code}. "
+                                f"Available: {stock_qty_available}, Requested: {stock_qty}"
+                            )
+                            messages.error(request, error_message)
+                            return redirect(request.META['HTTP_REFERER'])
 
                             # ✅ Store selected values in session even when validation fails
                             # request.session['last_cost_type'] = form.cleaned_data.get(
@@ -153,8 +163,9 @@ def pk_quotation_add(request, quotation_id=0):
                         print("Quotation form is valid and stock updated.")
                         messages.success(request, 'Stock Updated Successfully')
 
-                    except PkstockpurchasesInfo.DoesNotExist:
-                        pass  # Ignore if stock purchase number is not found
+                    except StockMaintenance.DoesNotExist:
+                        messages.error(request, 'Selected stock purchase record not found.')
+                        return redirect(request.META['HTTP_REFERER'])
                 else:
                     quotation=form.save()
                     # Extract relevant fields
@@ -237,8 +248,20 @@ def pk_get_pk_requirement_type(request):
     requirement_type_val = []
     requirement_type = []
     ct_assessment_num_id = request.GET.get('ct_assessment_num_id')
-    print('ct_assessment_num_id',ct_assessment_num_id)
-    na_dimension_id = Nadimension.objects.filter(nad_assess_num=ct_assessment_num_id)
+    stock_type = request.GET.get('stock_type')
+    print('ct_assessment_num_id', ct_assessment_num_id, 'stock_type', stock_type)
+    
+    if not ct_assessment_num_id:
+        return JsonResponse({'requirement_type_val': [], 'requirement_type_id': [], 'requirement_type': ''})
+
+    if str(ct_assessment_num_id).isdigit():
+        na_dimension_id = Nadimension.objects.filter(nad_assess_num=ct_assessment_num_id)
+    else:
+        na_dimension_id = Nadimension.objects.filter(nad_assess_num__na_assessment_num=ct_assessment_num_id)
+    
+    if stock_type and stock_type != '0' and stock_type != 'None' and stock_type != '':
+        na_dimension_id = na_dimension_id.filter(nad_wood_type=stock_type)
+    
     for a in na_dimension_id:
         requirement_type_id.append(a.id)
         requirement_type_val.append(str(a.nad_item)+str(' (')+str(a.nad_type_of_req)+str(' ')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))

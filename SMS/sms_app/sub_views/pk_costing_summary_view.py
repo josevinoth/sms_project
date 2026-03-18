@@ -9,8 +9,9 @@ from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
+from django.db.models import Sum
 from ..sub_models.na_dimension_mod import Nadimension
-from ..views import Pkcosting_delete,Pkcostingsummary_delete
+from ..views import Pkcosting_delete,Pkcostingsummary_delete,get_tracker_flags
 
 @login_required(login_url='login_page')
 def costingsummary_add(request,costingsummary_id=0):
@@ -146,9 +147,12 @@ def costingsummary_add(request,costingsummary_id=0):
                     'management_cost': management_cost,
                     'material_cost': material_cost,
                     'transport_cost': transport_cost,
-                    'role': role,
                     'role_id': role_id,
                     'output': output,
+                    'current_step': 'costing',
+                    'retrival_list': costing_list.filter(ct_cost_type=8, ct_stock_status__in=[1, 3]),
+                    'acceptance_list': costing_list.filter(ct_cost_type=8, ct_stock_status=2),
+                    'tracker_flags': get_tracker_flags(needassessment_id),
                     }
         return render(request, "asset_mgt_app/pk_costingsummary_add.html", context)
     else:
@@ -180,15 +184,20 @@ def costingsummary_add(request,costingsummary_id=0):
             return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/costingsummary_list')
 
-# List costingsummary
 @login_required(login_url='login_page')
 def costingsummary_list(request):
     first_name = request.session.get('first_name')
-    costingsummary_list = PkcostingsummaryInfo.objects.all()
-    costing_list = PkcostingInfo.objects.all()
-
-    # Combine the two lists
-    combined_list = zip(costingsummary_list, costing_list)
+    summaries = PkcostingsummaryInfo.objects.all().order_by('-id')
+    
+    combined_list = []
+    for s in summaries:
+        # Fetch any one item from PkcostingInfo to show status and excess status
+        # Match by assessment and customer PO
+        costing_item = PkcostingInfo.objects.filter(
+            ct_assessment_num=s.cs_assessment_num,
+            ct_customer_po=s.cs_customer_po
+        ).first()
+        combined_list.append((s, costing_item))
 
     context = {
         'combined_list': combined_list,
@@ -215,7 +224,7 @@ def costingsummary_delete(request,costingsummary_id):
 def pk_costing_get_customer(request):
     cs_assessment_num = request.GET.get('cs_assessment_num')
     customer_name_id=PkneedassessmentInfo.objects.get(id=cs_assessment_num).na_customer_name.id
-    customer_po_qs = PkpurchaseorderInfo.objects.filter(po_assessment_num=cs_assessment_num,po_status=5)
+    customer_po_qs = PkpurchaseorderInfo.objects.filter(po_assessment_num=cs_assessment_num)
     print('customer_po',customer_po_qs)
     customer_po_name = list(customer_po_qs.values_list('po_num', flat=True))
     customer_po_id = list(customer_po_qs.values_list('id', flat=True))
@@ -480,3 +489,50 @@ def export_cost_assessment_to_excel(request):
     wb.save(response)
 
     return response
+
+@login_required(login_url='login_page')
+def get_partcode_summary(request):
+    part_code_id = request.GET.get('part_code_id')
+    if not part_code_id:
+        return JsonResponse({'error': 'Missing part_code_id'}, status=400)
+    
+    # Get total purchased (Stock IN)
+    purchases = PkstockpurchasesInfo.objects.filter(sp_part_code_id=part_code_id)
+    total_in = purchases.aggregate(Sum('sp_cft'))['sp_cft__sum'] or 0.0
+    
+    # Get total retrieved across all assessments - status > 1 means retrieved
+    retrievals = PkcostingInfo.objects.filter(
+        ct_part_code_id=part_code_id, 
+        ct_cost_type=8, 
+        ct_stock_status__in=[2, 4]
+    )
+    total_retrieved = retrievals.aggregate(Sum('ct_cft'))['ct_cft__sum'] or 0.0
+    
+    # Get returns (status 3)
+    returns = PkcostingInfo.objects.filter(
+        ct_part_code_id=part_code_id, 
+        ct_cost_type=8, 
+        ct_stock_status=3
+    )
+    total_returned = returns.aggregate(Sum('ct_cft'))['ct_cft__sum'] or 0.0
+    
+    # Calculate available
+    current_available = total_in - total_retrieved + total_returned
+
+    # Build assessment breakdown
+    assessment_breakdown = []
+    for r in retrievals.order_by('-ct_updated_at'):
+        assessment_breakdown.append({
+            'assessment_num': r.ct_assessment_num,
+            'qty_cft': round(r.ct_cft, 2),
+            'date': r.ct_updated_at.strftime('%Y-%m-%d %H:%M') if r.ct_updated_at else ''
+        })
+
+    data = {
+        'total_in': round(total_in, 2),
+        'total_retrieved': round(total_retrieved, 2),
+        'total_returned': round(total_returned, 2),
+        'current_available': round(current_available, 2),
+        'breakdown': assessment_breakdown
+    }
+    return JsonResponse(data)

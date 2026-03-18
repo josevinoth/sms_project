@@ -12,6 +12,46 @@ from django.shortcuts import render, redirect, get_object_or_404
 from random import randint
 from django.contrib import messages
 
+def get_tracker_flags(na_id):
+    """
+    Return a dict of completed flags for each PMS stage.
+    A stage is 'done' (green) if its status FK has id == 5 (Completed).
+    """
+    flags = {
+        'assessment_done': False,
+        'quotation_done': False,
+        'po_done': False,
+        'costing_done': False,
+        'acceptance_done': False,
+    }
+    if not na_id:
+        return flags
+    try:
+        na = PkneedassessmentInfo.objects.get(pk=na_id)
+        flags['assessment_done'] = bool(na.na_status and na.na_status.id == 5)
+    except PkneedassessmentInfo.DoesNotExist:
+        pass
+
+    qs = PkquotationsummaryInfo.objects.filter(qs_assessment_num=na_id).first()
+    if qs:
+        flags['quotation_done'] = bool(qs.qs_status and qs.qs_status.id == 5)
+
+    po = PkpurchaseorderInfo.objects.filter(po_assessment_num=na_id).first()
+    if po:
+        flags['po_done'] = bool(po.po_status and po.po_status.id == 5)
+
+    cs = PkcostingsummaryInfo.objects.filter(cs_assessment_num=na_id).first()
+    if cs:
+        flags['costing_done'] = bool(cs.cs_status and cs.cs_status.id == 5)
+
+    # Acceptance: all stock items (cost_type=8) are received (status=4)
+    stock_items = PkcostingInfo.objects.filter(ct_assessment_num=na_id, ct_cost_type=8)
+    if stock_items.exists() and all(i.ct_stock_status_id == 4 for i in stock_items):
+        flags['acceptance_done'] = True
+
+    return flags
+
+
 @login_required(login_url='login_page')
 def needassessment_add(request,needassessment_id=0):
     first_name = request.session.get('first_name')
@@ -36,6 +76,10 @@ def needassessment_add(request,needassessment_id=0):
             request.session['na_assessment_num'] = needassessment_num
             na_dimension_list=Nadimension.objects.filter(nad_assess_num=needassessment_id)
             comments_list= commentsInfo.objects.filter(comments_ref=needassessment_num)
+            
+            # Fetch linked quotations for the hub
+            linked_quotations = PkquotationsummaryInfo.objects.filter(qs_assessment_num=needassessment_id)
+            
             context={
                 'form': form,
                 'first_name': first_name,
@@ -43,6 +87,9 @@ def needassessment_add(request,needassessment_id=0):
                 'role': role,
                 'na_dimension_list': na_dimension_list,
                 'comments_list': comments_list,
+                'linked_quotations': linked_quotations,
+                'current_step': 'assessment',
+                'tracker_flags': get_tracker_flags(needassessment_id),
                 }
         return render(request, "asset_mgt_app/pk_needassessment_add.html", context)
     else:

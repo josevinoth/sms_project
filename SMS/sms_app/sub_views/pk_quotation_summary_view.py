@@ -5,13 +5,14 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 
-from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete,Pkquotation_delete,Pkquotation_summary_delete
+from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete,Pkquotation_delete,Pkquotation_summary_delete,get_tracker_flags
 from ..forms import PkcostingsummaryForm,PkquotationsummaryForm
-from ..models import pk_stock_statusinfo,PkcostingInfo,User_extInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo,PkcostingsummaryInfo
+from ..models import pk_stock_statusinfo,PkcostingInfo,User_extInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo,PkcostingsummaryInfo,PkpurchaseorderInfo
 from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
+from ..sub_models.stock_maintenance_mod import StockMaintenance
 
 
 @login_required(login_url='login_page')
@@ -24,13 +25,25 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
 
     if request.method == "GET":
         if pk_quotationsummary_id == 0:
-            form = PkquotationsummaryForm()
+            # Check if na_id is passed from "Convert to Quotation" button
+            na_id = request.GET.get('na_id')
+            initial_data = {}
+            if na_id:
+                try:
+                    na_obj = PkneedassessmentInfo.objects.get(pk=na_id)
+                    initial_data['qs_assessment_num'] = na_obj.id
+                    initial_data['qs_customer_name_2'] = na_obj.na_customer_name_id
+                    initial_data['pkqt_customer_new_name'] = na_obj.na_customer_new_name or ''
+                except PkneedassessmentInfo.DoesNotExist:
+                    pass
+            form = PkquotationsummaryForm(initial=initial_data, na_id=na_id)
             context = {
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
                 'role': role,
                 'role_id': role_id,
+                'current_step': 'quotation',
             }
         else:
             quotationsummary = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id)
@@ -91,6 +104,9 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 qs_transport_cost=transport_cost
             )
 
+            # Fetch linked POs for the hub
+            linked_pos = PkpurchaseorderInfo.objects.filter(po_quotation_num=pk_quotationsummary_id)
+
             context = {
                 'form': form,
                 'first_name': first_name,
@@ -106,16 +122,20 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 'transport_cost': transport_cost,
                 'role_id': role_id,
                 'role': role,
+                'linked_pos': linked_pos,
+                'current_step': 'quotation',
+                'tracker_flags': get_tracker_flags(needassessment_id),
             }
 
         return render(request, "asset_mgt_app/pk_quotationsummary_add.html", context)
 
     else:
+        post_na_id = request.POST.get('qs_assessment_num')
         if pk_quotationsummary_id == 0:
-            form = PkquotationsummaryForm(request.POST)
+            form = PkquotationsummaryForm(request.POST, na_id=post_na_id)
         else:
             quotationsummary = PkquotationsummaryInfo.objects.get(pk=pk_quotationsummary_id)
-            form = PkquotationsummaryForm(request.POST, instance=quotationsummary)
+            form = PkquotationsummaryForm(request.POST, instance=quotationsummary, na_id=post_na_id)
 
         if form.is_valid():
             print("Requirement Form is Valid")
@@ -140,12 +160,19 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                     quotation_num_next = f'BVM/PKG/{financial_year}/{quotation_number}'
                     PkquotationsummaryInfo.objects.filter(id=last_id).update(qs_quotation_number=quotation_num_next)
                     messages.success(request, 'Record Updated Successfully')
-                # if pk_quotationsummary_id == 0:
-                    last_id = PkquotationsummaryInfo.objects.latest('id').id
-                    return redirect('/SMS/pk_quotationsummary_update/' + str(last_id))
-                else:
                     form.save()
                     messages.success(request, 'Record Updated Successfully')
+                
+                # Fetch the saved instance to check the status and update parent assessment
+                saved_summary = PkquotationsummaryInfo.objects.get(id=pk_quotationsummary_id if pk_quotationsummary_id != 0 else last_id)
+                if saved_summary.qs_status and saved_summary.qs_status.id == 5:
+                    if saved_summary.qs_assessment_num:
+                        saved_summary.qs_assessment_num.na_status_id = 5
+                        saved_summary.qs_assessment_num.save()
+                        
+                if pk_quotationsummary_id == 0:
+                    return redirect('/SMS/pk_quotationsummary_update/' + str(last_id))
+                else:
                     return redirect(request.META['HTTP_REFERER'])
             else:
                 messages.error(request, 'Please enter a Unique Quotation Number.')
@@ -303,8 +330,10 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
     quotationsummary = get_object_or_404(PkquotationsummaryInfo, pk=pk_quotationsummary_id)
 
     if request.method == "GET":
+        na_id = quotationsummary.qs_assessment_num.id if quotationsummary.qs_assessment_num else None
+
         # Prefill the form with values from the quotation summary
-        form = PkcostingsummaryForm(initial={
+        form = PkcostingsummaryForm(na_id=na_id, initial={
             'cs_assessment_num': quotationsummary.qs_assessment_num,
             'cs_wood_cost': quotationsummary.qs_wood_cost,
             'cs_engineer_cost': quotationsummary.qs_engineer_cost,
@@ -342,65 +371,95 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
         return render(request, "asset_mgt_app/pk_costingsummary_add.html", context)
 
     elif request.method == "POST":
-        form = PkcostingsummaryForm(request.POST)
-        costing_summary_id = None  # Initialize costing_summary_id
+        costing_summary_id = None
+        na_id = request.POST.get('cs_assessment_num')
+        form = PkcostingsummaryForm(request.POST, request.FILES, na_id=na_id)
         if form.is_valid():
-            pkqt_customer_po = form.cleaned_data['cs_customer_po']
-            # Check for an existing costing summary with the same assessment number
-            existing_summary = PkcostingsummaryInfo.objects.filter(cs_assessment_num=quotationsummary.qs_assessment_num,cs_customer_po=pkqt_customer_po).exists()
+            customer_po = form.cleaned_data['cs_customer_po']
+
+            # Check for an existing costing summary with the same assessment number and customer PO
+            existing_summary = PkcostingsummaryInfo.objects.filter(
+                cs_assessment_num=quotationsummary.qs_assessment_num,
+                cs_customer_po=customer_po
+            ).exists()
 
             if existing_summary:
-                messages.error(request, 'A costing summary with the same assessment number already exists.')
+                messages.error(request, 'A costing summary with the same assessment number and customer PO already exists.')
             else:
                 # Create a new costing summary and copy all the necessary values from quotation
                 costing_summary = form.save(commit=False)
-                costing_summary.cs_updated_by = request.user  # Set the current user as the one updating
+                costing_summary.cs_updated_by_id = user_id
                 costing_summary.save()
                 messages.success(request, 'Costing summary cloned and saved successfully.')
                 costing_summary_id = costing_summary.id
 
 
-                # Fetch the quotation data using cs_assessment_num and cs_customer_po
+                # Fetch the quotation data using cs_assessment_num
                 quotations = PkquotationInfo.objects.filter(
                     pkqt_assessment_num=quotationsummary.qs_assessment_num,
                 )
+                print(f"DEBUG: Found {quotations.count()} quotations for assessment {quotationsummary.qs_assessment_num}")
                 stock_status_instance = pk_stock_statusinfo.objects.get(id=1)
                 if quotations.exists():
                     for quotation in quotations:
+                        print(f"DEBUG: Cloning quotation ID {quotation.id} / Item {quotation.pkqt_item}")
                         # Fetch quotation data and directly save it to costing summary
-                        costing_info = PkcostingInfo.objects.create(
-                            ct_cost_type=quotation.pkqt_cost_type,
-                            ct_stock_description=quotation.pkqt_stock_description,
-                            ct_width=quotation.pkqt_width,
-                            ct_height=quotation.pkqt_height,
-                            ct_cft=quotation.pkqt_cft,
-                            ct_rate=quotation.pkqt_rate,
-                            ct_days=quotation.pkqt_days,
-                            ct_total_cost=quotation.pkqt_total_cost,
-                            ct_quantity=quotation.pkqt_quantity,
-                            ct_size=quotation.pkqt_size,
-                            ct_uom=quotation.pkqt_uom,
-                            ct_assessment_num=quotation.pkqt_assessment_num,
-                            ct_length=quotation.pkqt_length,
-                            ct_stock_type=quotation.pkqt_stock_type,
-                            ct_stock_purchase_number=quotation.pkqt_stock_purchase_number,
-                            ct_item=quotation.pkqt_item,
-                            ct_itemdescription=quotation.pkqt_itemdescription,
-                            ct_requirement=quotation.pkqt_requirement,
-                            ct_requirement_size=quotation.pkqt_requirement_size,
-                            ct_width_req=quotation.pkqt_width_req,
-                            ct_height_req=quotation.pkqt_height_req,
-                            ct_length_req=quotation.pkqt_length_req,
-                            ct_quantity_req=quotation.pkqt_quantity_req,
-                            ct_sqrt_req=quotation.pkqt_sqrt_req,
-                            ct_stock_status=stock_status_instance,
-                            ct_customer_name=quotation.pkqt_customer_name,
-                            ct_customer_new_name=quotation.pkqt_customer_new_name2,
-                            ct_customer_po=pkqt_customer_po,
-                            ct_updated_by=request.user,
-                            ct_na_quantity=quotation.pkqt_na_quantity,
-                            ct_totalbox_cost=quotation.pkqt_totalbox_cost,
-                        )
+                        try:
+                            costing_info = PkcostingInfo.objects.create(
+                                ct_cost_type=quotation.pkqt_cost_type,
+                                ct_stock_description=quotation.pkqt_stock_description,
+                                ct_width=quotation.pkqt_width,
+                                ct_height=quotation.pkqt_height,
+                                ct_cft=quotation.pkqt_cft,
+                                ct_rate=quotation.pkqt_rate,
+                                ct_days=quotation.pkqt_days,
+                                ct_total_cost=quotation.pkqt_total_cost,
+                                ct_quantity=quotation.pkqt_quantity,
+                                ct_size=quotation.pkqt_size,
+                                ct_uom=quotation.pkqt_uom,
+                                ct_assessment_num=quotation.pkqt_assessment_num,
+                                ct_length=quotation.pkqt_length,
+                                ct_stock_type=quotation.pkqt_stock_type,
+                                ct_stock_purchase_number=quotation.pkqt_stock_purchase_number,
+                                ct_item=quotation.pkqt_item,
+                                ct_itemdescription=quotation.pkqt_itemdescription,
+                                ct_requirement=quotation.pkqt_requirement,
+                                ct_requirement_size=quotation.pkqt_requirement_size,
+                                ct_width_req=quotation.pkqt_width_req,
+                                ct_height_req=quotation.pkqt_height_req,
+                                ct_length_req=quotation.pkqt_length_req,
+                                ct_quantity_req=quotation.pkqt_quantity_req,
+                                ct_sqrt_req=quotation.pkqt_sqrt_req,
+                                ct_stock_status=stock_status_instance,
+                                ct_customer_name=quotation.pkqt_customer_name,
+                                ct_customer_new_name=quotation.pkqt_customer_new_name2,
+                                ct_customer_po=customer_po,
+                                ct_updated_by=request.user,
+                                ct_na_quantity=quotation.pkqt_na_quantity,
+                                ct_totalbox_cost=quotation.pkqt_totalbox_cost,
+                                ct_part_code=quotation.pkqt_part_code,
+                                ct_weight_sqft=quotation.pkqt_weight_sqft,
+                                ct_weight_received=quotation.pkqt_weight_received,
+                                ct_weight_Consumption=quotation.pkqt_weight_Consumption,
+                                ct_total_cft_display=quotation.pkqt_total_cft_display,
+                            )
+
+                            # Create StockMaintenance Retrieval Record if it's a stock item (Type 8, Stock Type 1/4)
+                            if quotation.pkqt_cost_type.id == 8 and quotation.pkqt_stock_purchase_number:
+                                StockMaintenance.objects.create(
+                                    sm_stock_type_id=2, # Retrieval
+                                    sm_invoice_date=datetime.now().date(),
+                                    sm_invoice_no=f"RET-CLONE-{quotation.pkqt_assessment_num}",
+                                    sm_description=f"Retrieved via Cloning for Assessment {quotation.pkqt_assessment_num}",
+                                    sm_count=quotation.pkqt_quantity or 0,
+                                    sm_total_cft=quotation.pkqt_sqrt_req or 0,
+                                    sm_per_unit_cost=quotation.pkqt_rate or 0,
+                                    sm_total_price=quotation.pkqt_totalbox_cost or 0,
+                                    sm_updated_by_id=user_id
+                                )
+                            print(f"DEBUG: Successfully created costing info for quotation ID {quotation.id}")
+                        except Exception as e:
+                            print(f"DEBUG: Error cloning quotation ID {quotation.id} - {str(e)}")
                     messages.success(request, 'Quotation data saved to costing info successfully.')
                 else:
                     messages.error(request, 'Quotation data could not be found.')

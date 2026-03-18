@@ -2,28 +2,32 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="" id="costingsummary_add"   >
+<form method="POST" action="" id="costingsummary_add">
 	{% csrf_token %}
 	<div class="row">
 		<div class="col">
 			<div class="container-fluid">
+<div class="container-fluid row d-flex align-items-center mb-3">
+	<div class="col-md-12">
+		<div class="pms-tracker-wrapper">
+			{% include "asset_mgt_app/pms_progress_tracker.html" with current_step=current_step %}
+		</div>
+	</div>
+</div>
+
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center">
-						<div class="row">
-							<div class="col-4"></div>
-							<div class="col-3">
-								<h3>Add/Update Costing Summary</h3>
-							</div>
-							<div class="col-2">
-								<!--								<a href="{% url 'pk_bvm_invoice_excel' %}" class="btn btn-warning btn-block" id="excel_invoice_report_btn"><i class="fa fa-download" aria-hidden="true"> Excel Invoice</i>-->
-								<!--								</a>-->
-							</div>
-							<div class="col-2">
-								<a href="{% url 'pk_bvm_invoice_pdf' %}" class="btn btn-warning btn-block" id="invoice_report_btn"><i class="fa fa-download" aria-hidden="true"> Invoice</i> </a>
-							</div>
+					<div class="card-header d-flex justify-content-between align-items-center">
+						<h3 class="mb-0">Add/Update Costing Summary</h3>
+						<div class="d-flex align-items-center" style="gap: 10px;">
+							<a href="{% url 'pk_bvm_invoice_pdf' %}" class="btn btn-warning" id="invoice_report_btn">
+								<i class="fa fa-download" aria-hidden="true"> Invoice PDF</i>
+							</a>
+							<a href="{% url 'pk_bvm_invoice_excel' %}" class="btn btn-success" id="invoice_excel_btn">
+								<i class="fa fa-download" aria-hidden="true"> Invoice Excel</i>
+							</a>
 						</div>
 					</div>
-					<div class="card-body bg-light" >
+					<div class="card-body bg-light">
 						<div class="row" id="costing_summary">
 							<div class="col-3">
 								<div class="input-group input-group-sm mb-3">
@@ -52,9 +56,15 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Invoice Number</span>
+									</div>
+									{% render_field form.cs_invoice_num id="cs_invoice_num" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Wood Cost</span>
 									</div>
-									{% render_field form.cs_wood_cost id="cs_wood_cost"  class="form-control disable_a_href" %}
+									{% render_field form.cs_wood_cost id="cs_wood_cost" class="form-control disable_a_href" %}
 								</div>
 							</div>
 							<div class="col-3">
@@ -106,19 +116,19 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Cost (W/O Margin)</span>
 									</div>
-									{% render_field form.cs_total_cost_wom id="cs_total_cost_wom"  class="form-control disable_a_href" %}
+									{% render_field form.cs_total_cost_wom id="cs_total_cost_wom" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Margin (%)</span>
 									</div>
-									{% render_field form.cs_margin id="cs_margin"  onchange="change_charge_type()" class="form-control " %}
+									{% render_field form.cs_margin id="cs_margin" onchange="change_charge_type()" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total Cost (With Margin)</span>
 									</div>
-									{% render_field form.cs_total_cost_wm id="cs_total_cost_wm"  class="form-control disable_a_href " %}
+									{% render_field form.cs_total_cost_wm id="cs_total_cost_wm" class="form-control disable_a_href" %}
 								</div>
 							</div>
 							<div class="col-3">
@@ -126,31 +136,31 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">GST (%)</span>
 									</div>
-									{% render_field form.cs_gst id="cs_gst"  onchange="change_charge_type()" class="form-control " %}
+									{% render_field form.cs_gst id="cs_gst" onchange="change_charge_type()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Final Cost</span>
 									</div>
-									{% render_field form.cs_final_cost id="cs_final_cost"  class="form-control disable_a_href" %}
+									{% render_field form.cs_final_cost id="cs_final_cost" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Total CFT</span>
 									</div>
-									{% render_field form.cs_total_cft id="cs_total_cft"  onchange="change_charge_type()" class="form-control disable_a_href" %}
+									{% render_field form.cs_total_cft id="cs_total_cft" onchange="change_charge_type()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Rate Per CFT (W/O GST)</span>
 									</div>
-									{% render_field form.cs_rate_per_cft id="cs_rate_per_cft"  class="form-control disable_a_href" %}
+									{% render_field form.cs_rate_per_cft id="cs_rate_per_cft" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
-									{% render_field form.cs_status id="cs_status"  class="form-control" %}
+									{% render_field form.cs_status id="cs_status" class="form-control" %}
 								</div>
 							</div>
 							<div class="col-6">
@@ -158,43 +168,49 @@
 									<div class="card">
 										<div class="card-header bg-info" id="headingOne">
 											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+												<a href="" class=" text-white" data-toggle="collapse"
+													data-target="#collapseOne" aria-expanded="true"
+													aria-controls="collapseOne">
 													Address
 												</a>
 											</h5>
 										</div>
-										<div id="collapseOne" class="collapse " aria-labelledby="headingOne" data-parent="#accordion">
+										<div id="collapseOne" class="collapse " aria-labelledby="headingOne"
+											data-parent="#accordion">
 											<div class="card-body">
-												{% render_field form.cs_address id="cs_address"  class="form-control" %}
-											</div>
+												{% render_field form.cs_address id="cs_address" class="form-control" %}</div>
 										</div>
 									</div>
 									<div class="card">
 										<div class="card-header bg-info" id="headingTwo">
 											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+												<a href="" class=" text-white" data-toggle="collapse"
+													data-target="#collapseTwo" aria-expanded="true"
+													aria-controls="collapseTwo">
 													Cost Includes
 												</a>
 											</h5>
 										</div>
-										<div id="collapseTwo" class="collapse " aria-labelledby="headingTwo" data-parent="#accordion">
+										<div id="collapseTwo" class="collapse " aria-labelledby="headingTwo"
+											data-parent="#accordion">
 											<div class="card-body">
-												{% render_field form.cs_cost_includes id="cs_cost_includes"  class="form-control" %}
-											</div>
+												{% render_field form.cs_cost_includes id="cs_cost_includes" class="form-control" %}</div>
 										</div>
 									</div>
 									<div class="card">
 										<div class="card-header bg-info" id="headingThree">
 											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
+												<a href="" class=" text-white" data-toggle="collapse"
+													data-target="#collapseThree" aria-expanded="true"
+													aria-controls="collapseThree">
 													Notes
 												</a>
 											</h5>
 										</div>
-										<div id="collapseThree" class="collapse " aria-labelledby="headingThree" data-parent="#accordion">
+										<div id="collapseThree" class="collapse " aria-labelledby="headingThree"
+											data-parent="#accordion">
 											<div class="card-body">
-												{% render_field form.cs_notes id="cs_notes"  class="form-control" %}
-											</div>
+												{% render_field form.cs_notes id="cs_notes" class="form-control" %}</div>
 										</div>
 									</div>
 								</div>
@@ -204,55 +220,61 @@
 									<div class="card">
 										<div class="card-header bg-info" id="headingFour">
 											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
+												<a href="" class=" text-white" data-toggle="collapse"
+													data-target="#collapseFour" aria-expanded="true"
+													aria-controls="collapseFour">
 													Terms & Conditions
 												</a>
 											</h5>
 										</div>
-										<div id="collapseFour" class="collapse " aria-labelledby="headingFour" data-parent="#accordion">
+										<div id="collapseFour" class="collapse " aria-labelledby="headingFour"
+											data-parent="#accordion">
 											<div class="card-body">
-												{% render_field form.cs_terms_condition id="cs_terms_condition"  class="form-control" %}
-											</div>
+												{% render_field form.cs_terms_condition id="cs_terms_condition" class="form-control" %}</div>
 										</div>
 									</div>
 									<div class="card">
 										<div class="card-header bg-info" id="headingFive">
 											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
+												<a href="" class=" text-white" data-toggle="collapse"
+													data-target="#collapseFive" aria-expanded="true"
+													aria-controls="collapseFive">
 													Client Scope
 												</a>
 											</h5>
 										</div>
-										<div id="collapseFive" class="collapse " aria-labelledby="headingFive" data-parent="#accordion">
+										<div id="collapseFive" class="collapse " aria-labelledby="headingFive"
+											data-parent="#accordion">
 											<div class="card-body">
-												{% render_field form.cs_client_scope id="cs_client_scope"  class="form-control" %}
-											</div>
+												{% render_field form.cs_client_scope id="cs_client_scope" class="form-control" %}</div>
 										</div>
 									</div>
 									<div class="card">
 										<div class="card-header bg-info" id="headingSix">
 											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse" data-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix">
+												<a href="" class=" text-white" data-toggle="collapse"
+													data-target="#collapseSix" aria-expanded="true"
+													aria-controls="collapseSix">
 													BVM Scope
 												</a>
 											</h5>
 										</div>
-										<div id="collapseSix" class="collapse " aria-labelledby="headingSix" data-parent="#accordion">
+										<div id="collapseSix" class="collapse " aria-labelledby="headingSix"
+											data-parent="#accordion">
 											<div class="card-body">
-												{% render_field form.cs_bvm_scope id="cs_bvm_scope"  class="form-control" %}
-											</div>
+												{% render_field form.cs_bvm_scope id="cs_bvm_scope" class="form-control" %}</div>
 										</div>
 									</div>
 								</div>
 							</div>
-							{% render_field form.cs_updated_by id="cs_updated_by"  hidden="True" class="form-control" %}
+							{% render_field form.cs_updated_by id="cs_updated_by" hidden="True" class="form-control" %}
 						</div>
 						<div class="row">
 							<div class="col-1"></div>
 							<div class="col-10">
 								<div class="message text-center">
 									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+									<a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
 									{% endfor %}
 									<span id="unique_field_error" style="color: red;"></span>
 									<span id="unique_record" style="color: green;"></span>
@@ -260,7 +282,8 @@
 							</div>
 							<div class="col-1"></div>
 						</div>
-						<button id="cs_submit_btn" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
+						<button id="cs_submit_btn" type="submit" class="btn btn-success "><i class="fas fa-check"></i>
+							Submit</button>
 						<a href="{% url 'costingsummary_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel
 						</a>
@@ -280,229 +303,306 @@
 </div>
 <hr>
 <div class="col-2">
-	<a id="EBOM" href="{% url 'export_costingreport' %}" class="btn btn-warning btn-block btn-lg" >
+	<a id="EBOM" href="{% url 'export_costingreport' %}" class="btn btn-warning btn-block btn-lg">
 		<i class="fas fa-file-csv"></i> EBOM
 	</a>
 </div>
 <br>
 <div class="container-fluid">
-	<table  id="costing_list" class="table table-striped table-bordered">
+	<table id="costing_list" class="table table-striped table-bordered">
 		<thead class="thead-dark">
-		<tr>
-			<th>Created On</th>
-			<th>Assessment Number</th>
-			<th>Customer PO Number</th>
-			<th>Job Type</th>
-			<th>Cost Type</th>
-			<th>Stock Type</th>
-			<th>Part Code</th>
-			<th>Stock Description</th>
-			<th>Item Name</th>
-			<th>Item Description</th>
-			<th>Length</th>
-			<th>Width(inch)</th>
-			<th>Height(inch)</th>
-			<th>Quantity</th>
-			<th>Size</th>
-			<th>UOM</th>
-			<th>CFT</th>
-			<th>Rate</th>
-			<th>Days</th>
-			<th>Job Type Quantity</th>
-			<th>Unit Cost</th>
-			<th>Total Cost</th>
-			<th>Updated at</th>
-			<th>Updated By</th>
+			<tr>
+				<th>Created On</th>
+				<th>Assessment Number</th>
+				<th>Customer PO Number</th>
+				<th>Job Type</th>
+				<th>Cost Type</th>
+				<th>Stock Type</th>
+				<th>Part Code</th>
+				<th>Stock Description</th>
+				<th>Item Name</th>
+				<th>Item Description</th>
+				<th>Length</th>
+				<th>Width(inch)</th>
+				<th>Height(inch)</th>
+				<th>Quantity</th>
+				<th>Size</th>
+				<th>UOM</th>
+				<th>CFT</th>
+				<th>Rate</th>
+				<th>Days</th>
+				<th>Job Type Quantity</th>
+				<th>Unit Cost</th>
+				<th>Total Cost</th>
+				<th>Updated at</th>
+				<th>Updated By</th>
 		</thead>
 		<tbody>
-		{% for costinginfo in costing_list %}
-		<tr>
-			<td> {{costinginfo.ct_created_at}}</td>
-			<td> {{costinginfo.ct_assessment_num}}</td>
-			<td> {{costinginfo.ct_customer_po}}</td>
-			<td> {{costinginfo.ct_requirement}}</td>
-			<td> {{costinginfo.ct_cost_type}}</td>
-			<td> {{costinginfo.ct_stock_type}}</td>
-			<td> {{costinginfo.ct_part_code}}</td>
-			<td> {{costinginfo.ct_stock_description}}</td>
-			<td> {{costinginfo.ct_item}}</td>
-			<td> {{costinginfo.ct_itemdescription}}</td>
-			<td> {{costinginfo.ct_length_req}}</td>
-			<td> {{costinginfo.ct_width_req}}</td>
-			<td> {{costinginfo.ct_height_req}}</td>
-			<td> {{costinginfo.ct_quantity}}</td>
-			<td> {{costinginfo.ct_size}}</td>
-			<td> {{costinginfo.ct_uom}}</td>
-			<td> {{costinginfo.ct_sqrt_req}}</td>
-			<td> {{costinginfo.ct_rate}}</td>
-			<td> {{costinginfo.ct_days}}</td>
-			<td> {{costinginfo.ct_quantity}}</td>
-			<td> {{costinginfo.ct_total_cost}}</td>
-			<td> {{costinginfo.ct_totalbox_cost}}</td>
-			<td> {{costinginfo.ct_updated_at}}</td>
-			<td> {{costinginfo.ct_updated_by}}</td>
-		</tr>
-		{% endfor %}
+			{% for costinginfo in costing_list %}
+			<tr>
+				<td> {{costinginfo.ct_created_at}}</td>
+				<td> {{costinginfo.ct_assessment_num}}</td>
+				<td> {{costinginfo.ct_customer_po}}</td>
+				<td> {{costinginfo.ct_requirement}}</td>
+				<td> {{costinginfo.ct_cost_type}}</td>
+				<td> {{costinginfo.ct_stock_type}}</td>
+				<td> {{costinginfo.ct_part_code}}</td>
+				<td> {{costinginfo.ct_stock_description}}</td>
+				<td> {{costinginfo.ct_item}}</td>
+				<td> {{costinginfo.ct_itemdescription}}</td>
+				<td> {{costinginfo.ct_length_req}}</td>
+				<td> {{costinginfo.ct_width_req}}</td>
+				<td> {{costinginfo.ct_height_req}}</td>
+				<td> {{costinginfo.ct_quantity}}</td>
+				<td> {{costinginfo.ct_size}}</td>
+				<td> {{costinginfo.ct_uom}}</td>
+				<td> {{costinginfo.ct_sqrt_req}}</td>
+				<td> {{costinginfo.ct_rate}}</td>
+				<td> {{costinginfo.ct_days}}</td>
+				<td> {{costinginfo.ct_quantity}}</td>
+				<td> {{costinginfo.ct_total_cost}}</td>
+				<td> {{costinginfo.ct_totalbox_cost}}</td>
+				<td> {{costinginfo.ct_updated_at}}</td>
+				<td> {{costinginfo.ct_updated_by}}</td>
+			</tr>
+			{% endfor %}
 		</tbody>
 	</table>
 </div>
+
+{% if retrival_list %}
+<div class="container-fluid mt-5">
+	<div class="card border-primary mb-3">
+		<div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+			<h4 class="mb-0"><i class="fas fa-truck-loading"></i> Pending Stock Retrieval</h4>
+			<a href="{% url 'pk_retrival_list' %}" class="btn btn-light btn-sm">View Retrieval List</a>
+		</div>
+		<div class="card-body">
+			<div class="table-responsive">
+				<table class="table table-sm table-hover">
+					<thead class="thead-light">
+						<tr>
+							<th>Item</th>
+							<th>Description</th>
+							<th>Quantity</th>
+							<th>Status</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for item in retrival_list %}
+						<tr>
+							<td>{{ item.ct_item }}</td>
+							<td>{{ item.ct_itemdescription }}</td>
+							<td>{{ item.ct_quantity }}</td>
+							<td><span class="badge badge-primary">{{ item.ct_stock_status }}</span></td>
+							<td>
+								<a href="{% url 'pk_retrival_update' item.id %}" class="btn btn-primary btn-sm">
+									<i class="fas fa-edit"></i> Retrieve Stock
+								</a>
+							</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+{% endif %}
+
+{% if acceptance_list %}
+<div class="container-fluid mt-5">
+	<div class="card border-warning mb-3">
+		<div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+			<h4 class="mb-0"><i class="fas fa-user-check"></i> Pending Stock Acceptance</h4>
+			<a href="{% url 'pk_acceptance_list' %}" class="btn btn-dark btn-sm">View Acceptance List</a>
+		</div>
+		<div class="card-body">
+			<div class="table-responsive">
+				<table class="table table-sm table-hover">
+					<thead class="thead-light">
+						<tr>
+							<th>Item</th>
+							<th>Description</th>
+							<th>Quantity</th>
+							<th>Status</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for item in acceptance_list %}
+						<tr>
+							<td>{{ item.ct_item }}</td>
+							<td>{{ item.ct_itemdescription }}</td>
+							<td>{{ item.ct_quantity }}</td>
+							<td><span class="badge badge-warning">{{ item.ct_stock_status }}</span></td>
+							<td>
+								<a href="{% url 'pk_acceptance_update' item.id %}" class="btn btn-primary btn-sm">
+									<i class="fas fa-edit"></i> Accept Stock
+								</a>
+							</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+{% endif %}
 <script>
-	$(document).ready(function() {
-        document.getElementById("cs_updated_by").value ='{{user_id}}';
-    <!--	document.getElementById("cs_wood_cost").value ='{{wood_cost}}';-->
-    <!--	document.getElementById("cs_engineer_cost").value ='{{engineer_cost}}';-->
-    <!--	document.getElementById("cs_labour_cost").value ='{{labour_cost}}';-->
-    <!--	document.getElementById("cs_crane_cost").value ='{{crane_cost}}';-->
-    <!--	document.getElementById("cs_ht_cost").value ='{{ht_cost}}';-->
-    <!--	document.getElementById("cs_management_cost").value ='{{management_cost}}';-->
-    <!--	document.getElementById("cs_material_cost").value ='{{material_cost}}';-->
-    <!--	document.getElementById("cs_transport_cost").value ='{{transport_cost}}';-->
+	$(document).ready(function () {
+		document.getElementById("cs_updated_by").value = '{{user_id}}';
+		// document.getElementById("cs_wood_cost").value ='{{wood_cost}}';
+		// document.getElementById("cs_engineer_cost").value ='{{engineer_cost}}';
+		// document.getElementById("cs_labour_cost").value ='{{labour_cost}}';
+		// document.getElementById("cs_crane_cost").value ='{{crane_cost}}';
+		// document.getElementById("cs_ht_cost").value ='{{ht_cost}}';
+		// document.getElementById("cs_management_cost").value ='{{management_cost}}';
+		// document.getElementById("cs_material_cost").value ='{{material_cost}}';
+		// document.getElementById("cs_transport_cost").value ='{{transport_cost}}';
 
-        var excess_stock_status='{{output}}'
-        if (excess_stock_status==1)
-        {
-            $('#invoice_report_btn').removeClass('disable_a_href');
-        }
-        else{
-            $('#invoice_report_btn').addClass('disable_a_href');
-        }
+		var excess_stock_status = '{{output}}'
+		if (excess_stock_status == 1) {
+			$('#invoice_report_btn').removeClass('disable_a_href');
+		}
+		else {
+			$('#invoice_report_btn').addClass('disable_a_href');
+		}
 
-        var user_role='{{role_id}}'
-        var status=document.getElementById("cs_status").value
-        if (status==5)
-        {
-            if (user_role==2)
-            {
-                alert('Since Status is Completed,you have read-only access. To edit, please contact Administrator')
-                $('#costing_summary').addClass('disable_a_href');
-                $('#cs_submit_btn').addClass('disable_a_href');
-                $('#add_costing').addClass('disable_a_href');
-            }
-            else
-            {
-                $('#costing_summary').removeClass('disable_a_href');
-                $('#cs_submit_btn').removeClass('disable_a_href');
-                $('#add_costing').removeClass('disable_a_href');
+		var user_role = '{{role_id}}'
+		var status = document.getElementById("cs_status").value
+		if (status == 5) {
+			if (user_role == 2) {
+				alert('Since Status is Completed,you have read-only access. To edit, please contact Administrator')
+				$('#costing_summary').addClass('disable_a_href');
+				$('#cs_submit_btn').addClass('disable_a_href');
+				$('#add_costing').addClass('disable_a_href');
+			}
+			else {
+				$('#costing_summary').removeClass('disable_a_href');
+				$('#cs_submit_btn').removeClass('disable_a_href');
+				$('#add_costing').removeClass('disable_a_href');
 
-            }
-        }
-        else
-        {
-            var assessment_num = document.getElementById("cs_assessment_num").value
-            if (assessment_num =="")
-            {
-                $('#add_costing').addClass('disable_a_href');
-            }
-            else
-            {
-                $('#add_costing').removeClass('disable_a_href');
-            }
-        }
+			}
+		}
+		else {
+			var assessment_num = document.getElementById("cs_assessment_num").value
+			if (assessment_num == "") {
+				$('#add_costing').addClass('disable_a_href');
+			}
+			else {
+				$('#add_costing').removeClass('disable_a_href');
+			}
+		}
 
-        $('#costing_list').DataTable({
-            scrollX: true,
-            dom: 'lBfrtip',
-            buttons: [
-                'copy', 'csv', 'excel','print'
-            ]
-        });
+		$('#costing_list').DataTable({
+			scrollX: true,
+			dom: 'lBfrtip',
+			buttons: [
+				'copy', 'csv', 'excel', 'print'
+			]
+		});
 
-        customer_po_val= document.getElementById("cs_customer_po").value;
-        if (customer_po_val=='')
-            {
-                cs_assessment_num_change()
-            }
+		// Store the initial PO value in a data attribute so AJAX can use it after re-populating the dropdown
+		var customer_po_val = document.getElementById("cs_customer_po").value;
+		if (customer_po_val != '') {
+			document.getElementById("cs_customer_po").setAttribute("data-initial-val", customer_po_val);
+		}
 
-    });
+	});
 </script>
 
 <script>
 	function change_charge_type() {
-    var wood_cost=parseFloat(document.getElementById("cs_wood_cost").value) || 0;
-    var engineer_cost=parseFloat(document.getElementById("cs_engineer_cost").value) || 0;
-    var labour_cost=parseFloat(document.getElementById("cs_labour_cost").value) || 0;
-    var crane_cost=parseFloat(document.getElementById("cs_crane_cost").value) || 0;
-    var ht_cost=parseFloat(document.getElementById("cs_ht_cost").value) || 0;
-    var management_cost=parseFloat(document.getElementById("cs_management_cost").value) || 0;
-    var material_cost=parseFloat(document.getElementById("cs_material_cost").value) || 0;
-    var transport_cost=parseFloat(document.getElementById("cs_transport_cost").value) || 0;
-    var margin=parseFloat(document.getElementById("cs_margin").value) || 0;
-    var gst=parseFloat(document.getElementById("cs_gst").value) || 0;
-    var total_cost_wo_m= wood_cost+engineer_cost+labour_cost+crane_cost+ht_cost+management_cost+material_cost+transport_cost
-    document.getElementById("cs_total_cost_wom").value=total_cost_wo_m.toFixed(2)
-    var margin_value=total_cost_wo_m*(margin/100)
-    var total_cost=margin_value+total_cost_wo_m
-    var final_cost=total_cost+(total_cost*gst/100)
+		var wood_cost = parseFloat(document.getElementById("cs_wood_cost").value) || 0;
+		var engineer_cost = parseFloat(document.getElementById("cs_engineer_cost").value) || 0;
+		var labour_cost = parseFloat(document.getElementById("cs_labour_cost").value) || 0;
+		var crane_cost = parseFloat(document.getElementById("cs_crane_cost").value) || 0;
+		var ht_cost = parseFloat(document.getElementById("cs_ht_cost").value) || 0;
+		var management_cost = parseFloat(document.getElementById("cs_management_cost").value) || 0;
+		var material_cost = parseFloat(document.getElementById("cs_material_cost").value) || 0;
+		var transport_cost = parseFloat(document.getElementById("cs_transport_cost").value) || 0;
+		var margin = parseFloat(document.getElementById("cs_margin").value) || 0;
+		var gst = parseFloat(document.getElementById("cs_gst").value) || 0;
+		var total_cost_wo_m = wood_cost + engineer_cost + labour_cost + crane_cost + ht_cost + management_cost + material_cost + transport_cost
+		document.getElementById("cs_total_cost_wom").value = total_cost_wo_m.toFixed(2)
+		var margin_value = total_cost_wo_m * (margin / 100)
+		var total_cost = margin_value + total_cost_wo_m
+		var final_cost = total_cost + (total_cost * gst / 100)
 
-    document.getElementById("cs_total_cost_wm").value=total_cost.toFixed(2)
-    document.getElementById("cs_final_cost").value=final_cost.toFixed(2)
-	document.getElementById("cs_total_cft").value={{"total_cft_display"}}
-    var total_cft=parseFloat(document.getElementById("cs_total_cft").value) || 0;
-    var rate_per_cft=total_cost/total_cft
-    document.getElementById("cs_rate_per_cft").value=rate_per_cft.toFixed(2)
-    }
-</script>
-<script>
-	function cs_assessment_num_change()
-	{
-    	var cs_assessment_num = document.getElementById("cs_assessment_num").value;
-        $.ajax
-        ({
-        	url: '{% url "pk_costing_get_customer" %}',
-            data: {
-                    'cs_assessment_num': cs_assessment_num
-                },
-            dataType: 'json',
-            success: function(data)
-            {
-            	var customer_name_id=data.customer_name_id
-                document.getElementById("cs_customer_name").value=customer_name_id
-   				$('#cs_customer_po').removeClass('disable_a_href');
-				$("#cs_customer_po").empty();
-				var customer_po_id=data.customer_po_id;
-				if (customer_po_id=="")
-				{
-                    $('#unique_field_error').text('Customer PO not available for the selected Assessment Number.');
-                }
-				var customer_po_name=data.customer_po_name;
-				var len1 = (customer_po_id).length;
-				$("#cs_customer_po").empty();
-				$('#cs_customer_po').empty().append("<option value='0'>--Select--</option>");
-				for( var j = 0; j<len1; j++)
-				{
-					$("#cs_customer_po").append("<option value='"+customer_po_id[j]+"'>"+customer_po_name[j]+"</option>");
-				}
-            }
-        });
+		document.getElementById("cs_total_cost_wm").value = total_cost.toFixed(2)
+		document.getElementById("cs_final_cost").value = final_cost.toFixed(2)
+		document.getElementById("cs_total_cft").value = "{{ total_cft_display|default:0 }}";
+		var total_cft = parseFloat(document.getElementById("cs_total_cft").value) || 0;
+		var rate_per_cft = total_cost / total_cft;
+		document.getElementById("cs_rate_per_cft").value = rate_per_cft.toFixed(2);
 	}
 </script>
 <script>
-	$('#cs_customer_po').on('change', function() {
-        var cs_customer_po_num = $(this).val();
-        var cs_assessment_num = document.getElementById("cs_assessment_num").value
-        // Send an AJAX request to check if the value exists in the database
-        $.ajax
-        ({
-            url: '{% url "pk_costing_summary_check_unique_field" %}',
-            data: {
-                'cs_assessment_num': cs_assessment_num,
-                'cs_customer_po_num': cs_customer_po_num,
-            },
-            dataType: 'json',
-            success: function(data)
-            {
-                if (data.exists)
-                    {
-                        $('#unique_field_error').text('Record already exists for selected Assessment and Customer PO.');
-                        $('#unique_record').text('');
-                    }
-                    else
-                    {
-                        $('#unique_record').text('Unique Record');
-                        $('#unique_field_error').text('');
-                    }
-            }
-        });
-    });
+	function cs_assessment_num_change() {
+		var cs_assessment_num = document.getElementById("cs_assessment_num").value;
+		var initial_po_val = document.getElementById("cs_customer_po").getAttribute("data-initial-val") || document.getElementById("cs_customer_po").value;
+		$.ajax
+			({
+				url: '{% url "pk_costing_get_customer" %}',
+				data: {
+					'cs_assessment_num': cs_assessment_num
+				},
+				dataType: 'json',
+				success: function (data) {
+					var customer_name_id = data.customer_name_id
+					document.getElementById("cs_customer_name").value = customer_name_id
+					$('#cs_customer_po').removeClass('disable_a_href');
+					$("#cs_customer_po").empty();
+					var customer_po_id = data.customer_po_id;
+					if (customer_po_id == "") {
+						$('#unique_field_error').text('Customer PO not available for the selected Assessment Number.');
+					}
+					var customer_po_name = data.customer_po_name;
+					var len1 = (customer_po_id).length;
+					$("#cs_customer_po").empty();
+					$('#cs_customer_po').empty().append("<option value='0'>--Select--</option>");
+					for (var j = 0; j < len1; j++) {
+						var selected = (customer_po_id[j] == initial_po_val) ? "selected" : "";
+						$("#cs_customer_po").append("<option value='" + customer_po_id[j] + "' " + selected + ">" + customer_po_name[j] + "</option>");
+					}
+				}
+			});
+	}
+	
+	$(document).ready(function() {
+		// Call this function on page load to populate POs if assessment is already selected
+		if(document.getElementById("cs_assessment_num").value != "") {
+			cs_assessment_num_change();
+		}
+	});
+</script>
+<script>
+	$('#cs_customer_po').on('change', function () {
+		var cs_customer_po_num = $(this).val();
+		var cs_assessment_num = document.getElementById("cs_assessment_num").value
+		// Send an AJAX request to check if the value exists in the database
+		$.ajax
+			({
+				url: '{% url "pk_costing_summary_check_unique_field" %}',
+				data: {
+					'cs_assessment_num': cs_assessment_num,
+					'cs_customer_po_num': cs_customer_po_num,
+				},
+				dataType: 'json',
+				success: function (data) {
+					if (data.exists) {
+						$('#unique_field_error').text('Record already exists for selected Assessment and Customer PO.');
+						$('#unique_record').text('');
+					}
+					else {
+						$('#unique_record').text('Unique Record');
+						$('#unique_field_error').text('');
+					}
+				}
+			});
+	});
 </script>
 {% endblock content %}

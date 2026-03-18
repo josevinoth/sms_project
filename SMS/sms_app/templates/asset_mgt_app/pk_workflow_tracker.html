@@ -1,0 +1,64 @@
+<style>
+    .workflow-tracker {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px; /* Reduced bottom margin */
+        padding: 4px 0; /* Reduced vertical padding */
+        list-style: none;
+        background: #f8f9fa;
+        border-radius: 50px; /* Pill shape for consistency */
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, .1);
+        border: 1px solid #dee2e6;
+    }
+
+    .workflow-step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        padding: 5px; /* Reduced internal padding */
+        font-weight: 700;
+        color: #6c757d;
+        font-size: 0.8rem; /* Smaller font size */
+    }
+
+    .workflow-step.active {
+        color: #17a2b8; /* Matching pms-card teal */
+        border-bottom: 2px solid #17a2b8;
+    }
+
+    .workflow-step.completed {
+        color: #28a745;
+    }
+
+    .workflow-step a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .workflow-step i {
+        display: inline-block; /* Inline icon to save vertical space */
+        margin-right: 5px; /* Side margin instead of bottom */
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="container-fluid">
+    <ul class="workflow-tracker">
+        {% for stage in stages %}
+        <li
+            class="workflow-step {% if forloop.counter == current_stage %}active{% elif stage.id %}completed{% endif %}">
+            {% if stage.id %}
+            <a href="{% url stage.url_name stage.id %}">
+                <i class="fas {% if stage.id %}fa-check-circle{% else %}fa-circle{% endif %}"></i>
+                {{ stage.name }}
+            </a>
+            {% else %}
+            <span>
+                <i class="far fa-circle"></i>
+                {{ stage.name }}
+            </span>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
