@@ -32,11 +32,16 @@ def attached_bill_add(request):
                 trips_to_update = TripdetailInfo.objects.filter(tr_tripnumber__in=trip_numbers)
                 for trip in trips_to_update:
                     tid = trip.id
-                    t_sell = request.POST.get(f'trip_selling_cost_{tid}')
+                    t_buy = request.POST.get(f'trip_buy_cost_{tid}')
                     t_parking = request.POST.get(f'trip_parking_cost_{tid}')
                     t_toll = request.POST.get(f'trip_toll_cost_{tid}')
 
-                    if t_sell is not None: trip.tc_tripcost = float(t_sell or 0)
+                    if t_buy is not None:
+                        # We still don't overwrite tc_tripcost (Selling Cost)
+                        # but we might want to save the buy cost somewhere? 
+                        # Actually, for attached vehicles, tc_tripcost WAS being used for the vendor cost.
+                        # If the user wants to preserve the original Selling Cost, we should NOT overwrite trip.tc_tripcost.
+                        pass
                     if t_parking is not None: trip.tc_parkingcost = float(t_parking or 0)
                     if t_toll is not None: trip.tc_tollcost = float(t_toll or 0)
                     trip.save()
@@ -95,11 +100,13 @@ def attached_bill_edit(request, id):
                 trips_to_update = TripdetailInfo.objects.filter(tr_tripnumber__in=trip_numbers)
                 for trip in trips_to_update:
                     tid = trip.id
-                    t_sell = request.POST.get(f'trip_selling_cost_{tid}')
+                    t_buy = request.POST.get(f'trip_buy_cost_{tid}')
                     t_parking = request.POST.get(f'trip_parking_cost_{tid}')
                     t_toll = request.POST.get(f'trip_toll_cost_{tid}')
 
-                    if t_sell is not None: trip.tc_tripcost = float(t_sell or 0)
+                    if t_buy is not None:
+                        # Do NOT overwrite tc_tripcost (Selling Cost)
+                        pass
                     if t_parking is not None: trip.tc_parkingcost = float(t_parking or 0)
                     if t_toll is not None: trip.tc_tollcost = float(t_toll or 0)
                     trip.save()
@@ -259,10 +266,11 @@ def get_attached_vehicle_details(request):
                         'from': str(trip.tr_departedlocation) if trip.tr_departedlocation else "",
                         'to': str(trip.tr_reportedlocation) if trip.tr_reportedlocation else "",
                         'trip_km': km,
-                        'buy_cost': float(trip.tc_tripcost or 0),
+                        'selling_cost': float(trip.tc_tripcost or 0),
+                        'buy_cost': 0.0, # Will be calculated on frontend from header distribution
                         'parking_cost': float(trip.tc_parkingcost or 0),
                         'toll_cost': float(trip.tc_tollcost or 0),
-                        'total_buy_cost': float((trip.tc_tripcost or 0) + (trip.tc_parkingcost or 0) + (trip.tc_tollcost or 0))
+                        'total_buy_cost': 0.0 # Will be calculated on frontend
                     })
 
             # Calculate total KM run for the period (Vehicle Log Method)
@@ -279,10 +287,10 @@ def get_attached_vehicle_details(request):
                         if curr not in trip_dates:
                             leave_days_count += 1
                     else:
-                        # Sunday: Only count as working if Sat, Sun, AND Mon have trips
+                        # Sunday: Only count as leave if Sat, Sun, AND Mon ALL have no trips
                         prev_day = curr - timedelta(days=1)
                         next_day = curr + timedelta(days=1)
-                        if not (prev_day in trip_dates and curr in trip_dates and next_day in trip_dates):
+                        if prev_day not in trip_dates and curr not in trip_dates and next_day not in trip_dates:
                             leave_days_count += 1
                     curr += timedelta(days=1)
                 data['leave_days'] = leave_days_count
@@ -312,21 +320,53 @@ def attached_bill_summary(request, id):
     working_days = 0
     if from_date and to_date:
         days_in_month = (to_date - from_date).days + 1
-        curr = from_date
-        while curr <= to_date:
-            if curr.weekday() != 6:  # not Sunday
-                working_days += 1
-            curr += timedelta(days=1)
-
     # --- Use SAVED bill fields for reliable values ---
     contract_amount = float(bill.ab_buy_cost or 0)
-    leave_days     = int(bill.ab_leave_days or 0)
-    leave_per_day  = (contract_amount / working_days) if working_days > 0 else 0
-    leave_amount   = float(bill.ab_leave_amount or 0)
+    
+    # Recalculate working_days and leave_days based on the new 100% days rule
+    working_days = days_in_month  # Denominator is now all days in the month
+    leave_per_day = (contract_amount / working_days) if working_days > 0 else 0
+
+    # Fetch ALL trips for this vehicle in the expanded range to calculate leave days correctly
+    all_trip_dates = set()
+    if vehicle:
+        expanded_start = from_date - timedelta(days=1)
+        expanded_end = to_date + timedelta(days=1)
+        all_trips_in_period = TripdetailInfo.objects.filter(
+            tr_vehiclenumber=vehicle.vm_registrationnumber,
+            tr_departeddate__date__range=[expanded_start, expanded_end]
+        )
+        for t in all_trips_in_period:
+            if t.tr_departeddate:
+                sd = t.tr_departeddate.date()
+                ed = (t.tr_reporteddate_delivery or t.tr_reporteddate or t.tr_departeddate).date()
+                curr_t = sd
+                while curr_t <= ed:
+                    all_trip_dates.add(curr_t)
+                    curr_t += timedelta(days=1)
+
+    # Now calculate leave_days using the Sat-Sun-Mon rule on all_trip_dates
+    leave_days = 0
+    if from_date and to_date:
+        curr = from_date
+        while curr <= to_date:
+            if curr.weekday() != 6: # Mon-Sat
+                if curr not in all_trip_dates:
+                    leave_days += 1
+            else:
+                # Sunday: Leave ONLY if Sat, Sun, AND Mon have no trips
+                prev_day = curr - timedelta(days=1)
+                next_day = curr + timedelta(days=1)
+                if prev_day not in all_trip_dates and curr not in all_trip_dates and next_day not in all_trip_dates:
+                    leave_days += 1
+            curr += timedelta(days=1)
+
+    leave_amount = float(leave_days * leave_per_day)
     agreed_km      = float(bill.ab_agreed_km or 0)
     total_km_saved = float(bill.ab_total_km_run or 0)   # saved total KM from ADD/EDIT
     extra_km       = float(bill.ab_extra_km_run or 0)
     extra_km_amount = float(bill.ab_extra_km_amount or 0)
+    toll_cost      = float(bill.ab_toll_cost or 0)
     actual_amount  = float(bill.ab_bill_amount or 0)
 
     # --- Fetch selected trips ONLY ---
@@ -344,18 +384,32 @@ def attached_bill_summary(request, id):
             'tr_departedlocation', 'tr_reportedlocation', 'tr_enquirynumber'
         ))
 
-    # Use fetched trips for KM/Selling calculation (these ARE the billed trips)
+    # --- Fetch selected trips ONLY (for KM/Selling) ---
+    selected_trip_numbers = [t.strip() for t in (bill.ab_selected_trips or '').split(',') if t.strip()]
+    total_trips = len(selected_trip_numbers)
+    trips = []
+    if selected_trip_numbers:
+        trip_filters = Q(tr_tripnumber__in=selected_trip_numbers)
+        if vehicle:
+            trip_filters &= Q(tr_vehiclenumber=vehicle.vm_registrationnumber)
+        trips = list(TripdetailInfo.objects.filter(trip_filters).select_related(
+            'tr_departedlocation', 'tr_reportedlocation', 'tr_enquirynumber'
+        ))
+
+    # trip_days for display in summary
+    summary_billed_trip_dates = set()
     trip_km_run = 0
-    trip_days   = set()
     for t in trips:
         trip_km_run += max(0, (t.tr_reportedkm_delivery or t.tr_reportedkm or 0) - (t.tr_departedkm or 0))
         if t.tr_departeddate:
-            trip_days.add(t.tr_departeddate.date())
+            summary_billed_trip_dates.add(t.tr_departeddate.date())
+
+    leave_amount = float(leave_days * leave_per_day)
 
     # Use saved total_km_run when trips still can't be fetched
     display_total_km = trip_km_run if trips else total_km_saved
 
-    days_run   = len(trip_days)
+    days_run   = len(summary_billed_trip_dates)
     trip_index = f"{total_trips} TRIPS / {days_run} DAYS RUN" if days_run else f"{total_trips} TRIPS"
 
     # --- Empty KM = Agreed KM − Total KM Run ---
@@ -394,6 +448,7 @@ def attached_bill_summary(request, id):
         'working_days':  working_days,
         'leave_days':    leave_days,
         'contract_amount': round(contract_amount, 2),
+        'toll_cost':       round(toll_cost, 2),
         'leave_per_day':   round(leave_per_day, 2),
         'leave_amount':    round(leave_amount, 2),
         'extra_km':        round(extra_km, 2),

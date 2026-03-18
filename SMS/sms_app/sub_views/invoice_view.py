@@ -799,6 +799,8 @@ def extract_state(address):
     for state in states:
         if state.lower() in address.lower():
             return state
+    if "bangalore" in address.lower():
+        return "Karnataka"
     return ""
 
 def extract_pincode(address):
@@ -893,27 +895,29 @@ def shipper_invoice_export_excel(request, invoice_id):
     )
     
     # Prioritize invoice header fields (UI boxes) over job sums to ensure exact matching
-    # Using "is not None" because 0.0 is a valid value that should not trigger fallback
-    storage_base = float(invoice.bill_wh_storage_charges if invoice.bill_wh_storage_charges is not None else (job_totals['total_storage'] or 0))
-    fumigation_val = float(invoice.bill_tot_fumigation_charges if invoice.bill_tot_fumigation_charges is not None else (job_totals['total_fumigation'] or 0))
+    # Using "is not None" and != 0 because 0.0 is often a default that indicates missing data
+    storage_base = float(invoice.bill_wh_storage_charges if (invoice.bill_wh_storage_charges is not None and invoice.bill_wh_storage_charges != 0) else (job_totals['total_storage'] or 0))
+    fumigation_val = float(invoice.bill_tot_fumigation_charges if (invoice.bill_tot_fumigation_charges is not None and invoice.bill_tot_fumigation_charges != 0) else (job_totals['total_fumigation'] or 0))
     
     # Merge storage and fumigation to avoid adding new columns while keeping totals correct
     storage_val = storage_base + fumigation_val
 
-    loading_val = float(invoice.bill_loading_charge if invoice.bill_loading_charge is not None else (job_totals['total_loading'] or 0))
-    unloading_val = float(invoice.bill_unloading_charge if invoice.bill_unloading_charge is not None else 0) 
+    loading_val = float(invoice.bill_loading_charge if (invoice.bill_loading_charge is not None and invoice.bill_loading_charge != 0) else (job_totals['total_loading'] or 0))
     
-    handling_val = float(invoice.bill_handling_charges if invoice.bill_handling_charges is not None else 0)
-    crane_val = float(invoice.bill_tot_crane_charges if invoice.bill_tot_crane_charges is not None else (job_totals['total_crane'] or 0))
-    forklift_val = float(invoice.bill_tot_forklift_charges if invoice.bill_tot_forklift_charges is not None else (job_totals['total_forklift'] or 0))
-    packing_val = float(invoice.bill_packing_charges if invoice.bill_packing_charges is not None else 0)
+    # If unloading is 0, default to loading_val as per UI behavior
+    unloading_val = float(invoice.bill_unloading_charge if (invoice.bill_unloading_charge is not None and invoice.bill_unloading_charge != 0) else loading_val) 
+    
+    handling_val = float(invoice.bill_handling_charges if (invoice.bill_handling_charges is not None and invoice.bill_handling_charges != 0) else 0)
+    crane_val = float(invoice.bill_tot_crane_charges if (invoice.bill_tot_crane_charges is not None and invoice.bill_tot_crane_charges != 0) else (job_totals['total_crane'] or 0))
+    forklift_val = float(invoice.bill_tot_forklift_charges if (invoice.bill_tot_forklift_charges is not None and invoice.bill_tot_forklift_charges != 0) else (job_totals['total_forklift'] or 0))
+    packing_val = float(invoice.bill_packing_charges if (invoice.bill_packing_charges is not None and invoice.bill_packing_charges != 0) else 0)
 
     # Calculate pre-gst total components for verification
     calc_pre_gst_total = round(storage_val + loading_val + unloading_val + handling_val + 
                                crane_val + forklift_val + packing_val, 2)
     
-    # Match UI Total exactly from the bill_total_pre_gst field
-    pre_gst_total = float(invoice.bill_total_pre_gst if invoice.bill_total_pre_gst is not None else calc_pre_gst_total)
+    # Match UI Total exactly or re-calculate
+    pre_gst_total = float(invoice.bill_total_pre_gst if (invoice.bill_total_pre_gst is not None and invoice.bill_total_pre_gst != 0) else calc_pre_gst_total)
     
     # Prioritize wh_consigner as shown in the UI "Shipper Name" column
     shipper_list = list(qs.exclude(wh_consigner__isnull=True).exclude(wh_consigner='')
@@ -926,9 +930,9 @@ def shipper_invoice_export_excel(request, invoice_id):
                               
     shipper_str = ", ".join(shipper_list) if shipper_list else (customer.cu_nameshort if customer else "")
     
-    # Use actual taxes from header to match UI exactly, or fallback to 9% calculation
-    cgst_val = float(invoice.bill_cgst if invoice.bill_cgst is not None else round(pre_gst_total * 0.09, 2))
-    sgst_val = float(invoice.bill_sgst if invoice.bill_sgst is not None else round(pre_gst_total * 0.09, 2))
+    # Use actual taxes from header or re-calculate
+    cgst_val = float(invoice.bill_cgst if (invoice.bill_cgst is not None and invoice.bill_cgst != 0) else round(pre_gst_total * 0.09, 2))
+    sgst_val = float(invoice.bill_sgst if (invoice.bill_sgst is not None and invoice.bill_sgst != 0) else round(pre_gst_total * 0.09, 2))
 
     ws.append([
         excel_datetime(invoice.bill_invoice_date),
@@ -951,13 +955,17 @@ def shipper_invoice_export_excel(request, invoice_id):
         cgst_val,
         sgst_val,
     ])
-
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    response["Content-Disposition"] = (
-        f"attachment; filename=WMS_Tally_Invoice_{invoice_id}.xlsx"
-    )
+    # Filename: INVOICE-XXXX (last 4 digits of BVM invoice number)
+    invoice_suffix = str(invoice.bill_invoice_ref)[-4:] if invoice.bill_invoice_ref else str(invoice_id)
+    response["Content-Disposition"] = f"attachment; filename=INVOICE-{invoice_suffix}.xlsx"
+
+    # Auto-adjust column widths for better visibility
+    for column_cells in ws.columns:
+        length = max(len(str(cell.value or "")) for cell in column_cells)
+        ws.column_dimensions[column_cells[0].column_letter].width = length + 2
 
     wb.save(response)
     return response
@@ -988,7 +996,7 @@ def invoice_export_excel(request, invoice_id):
         "NO. OF DAYS", "PER DAY W/H CHARGES", "Warehouse Storage Charges",
         "NO. PALLETS/ BOXES [PCS]", "RATE PER PALLET/ BOXES", "Warehouse Loading Charges",
         "NO. PALLETS/ BOXES [PCS]", "RATE PER PALLET/ BOXES", "Warehouse UnLoading Charges",
-        "Warehouse Handling Charges", "Crane Handling Charges", "Forklift Handling Charges"
+        "Warehouse Handling Charges", "Crane Handling Charges", "Forklift Handling Charges", "Total"
     ]
     ws.append(headers)
     for cell in ws[1]:
@@ -1073,13 +1081,50 @@ def invoice_export_excel(request, invoice_id):
             invoice.bill_rate_per_pallet or 0,
             round(unloading_val, 2),
             
-            round(float(invoice.bill_handling_charges or 0), 2),
+            # Warehouse Handling/Misc (Includes Handling + Fumigation + Packing)
+            round(float(invoice.bill_handling_charges or 0) + float(invoice.bill_tot_fumigation_charges or 0) + float(invoice.bill_packing_charges or 0), 2),
             round(crane_val, 2),
             round(forklift_val, 2),
+            # Total (Sum of Storage + Loading + Unloading + Handling/Misc + Crane + Forklift)
+            round(storage_val + loading_val + unloading_val + 
+                  (float(invoice.bill_handling_charges or 0) + float(invoice.bill_tot_fumigation_charges or 0) + float(invoice.bill_packing_charges or 0)) + 
+                  crane_val + forklift_val, 2),
         ])
     else:
+        # Pre-calculate storage split logic
+        job_totals = qs.aggregate(total_storage=Sum('wh_storage_cost_total'))
+        header_storage = float(invoice.bill_wh_storage_charges if invoice.bill_wh_storage_charges is not None else 0)
+        sum_storage = float(job_totals['total_storage'] or 0)
+        
+        # Prioritize job-level sum if header is 450 but jobs show 1050
+        total_storage = sum_storage if sum_storage > header_storage else header_storage
+        
+        distinct_jobs = list(qs.values_list('wh_job_no', flat=True).distinct())
+        num_distinct_jobs = len(distinct_jobs)
+        
+        # Calculate portion per distinct job
+        job_portion = total_storage / num_distinct_jobs if num_distinct_jobs > 0 else 0
+        
+        # Count occurrences of each job to split the job's portion among its rows
+        # Also track max per-day rate per job to avoid 0s on duplicate rows (per user request)
+        job_occurrence_counts = {}
+        job_per_day_rates = {}
+        for row in qs.values('wh_job_no', 'wh_storage_cost_per_day'):
+            job_no = row['wh_job_no']
+            job_occurrence_counts[job_no] = job_occurrence_counts.get(job_no, 0) + 1
+            rate = row['wh_storage_cost_per_day'] or 0
+            if rate > job_per_day_rates.get(job_no, 0):
+                job_per_day_rates[job_no] = rate
+
         sl = 1
         for obj in qs:
+            # Calculate row-level storage share
+            rows_for_this_job = job_occurrence_counts.get(obj.wh_job_no, 1)
+            row_storage_share = round(job_portion / rows_for_this_job, 2)
+            
+            # Use original per-day rate (per user request: "dont split perday warehouse charges")
+            row_per_day_rate = job_per_day_rates.get(obj.wh_job_no, 0)
+
             # Pull unit from job first
             unit_no = str(obj.wh_unit) if obj.wh_unit else ""
             
@@ -1106,31 +1151,46 @@ def invoice_export_excel(request, invoice_id):
                 obj.wh_job_no,
                 shipper_name,
                 obj.wh_gate_injob_no_id.gatein_invoice if obj.wh_gate_injob_no_id and obj.wh_gate_injob_no_id.gatein_invoice else (obj.wh_goods_invoice or "Summary"),
-                str(obj.wh_dispatch_id.dispatch_billing_truck_type) if obj.wh_dispatch_id and obj.wh_dispatch_id.dispatch_billing_truck_type else "",
-                invoice.bill_weight or obj.wh_goods_weight or 0,
-                excel_datetime(invoice.bill_start_date),
-                excel_datetime(invoice.bill_end_date),
-                invoice.bill_no_of_days or 0,
-                invoice.bill_per_day_wh_charges or 0,
-                obj.wh_storage_cost_total or 0,
+                
+                # W/H CHRGS VEHICLE TYPE: Show actual type instead of status
+                str(obj.wh_gate_injob_no_id.gatein_truck_type) if obj.wh_dispatch_id and obj.wh_dispatch_id.dispatch_billing_truck_type and "In" in str(obj.wh_dispatch_id.dispatch_billing_truck_type) else (str(obj.wh_dispatch_id.dispatch_truck_type) if obj.wh_dispatch_id and obj.wh_dispatch_id.dispatch_truck_type else str(obj.wh_truck_type or "")),
+                
+                obj.wh_goods_weight or 0,
+                obj.wh_checkin_time.strftime('%m-%d-%Y') if obj.wh_checkin_time else "", # Format as string to avoid ####
+                obj.wh_checkout_time.strftime('%m-%d-%Y') if obj.wh_checkout_time else "", # Format as string to avoid ####
+                obj.wh_storage_time or 0,
+                row_per_day_rate,
+                row_storage_share,
                 
                 # Loading
-                invoice.bill_no_of_pallets or 0,
-                invoice.bill_rate_per_pallet or 0,
+                obj.wh_goods_pieces or 0,
+                obj.wh_loading_charge_unit or 0,
                 obj.wh_total_loading_cost or 0,
                 
-                # Unloading
-                invoice.bill_no_of_pallets or 0,
-                invoice.bill_rate_per_pallet or 0,
-                0, # Unloading cost not in Warehouse_goods_info row
+                # Unloading (defaults to wh_total_loading_cost as per UI behavior)
+                obj.wh_goods_pieces or 0,
+                obj.wh_loading_charge_unit or 0,
+                obj.wh_total_loading_cost or 0,
                 
-                invoice.bill_handling_charges if sl == 1 else 0,
+                # Warehouse Handling/Misc (First row only)
+                round((invoice.bill_handling_charges or 0) + (invoice.bill_tot_fumigation_charges or 0) + (invoice.bill_packing_charges or 0), 2) if sl == 1 else 0,
                 obj.wh_crane_cost or 0,
                 obj.wh_forklift_cost or 0,
+                # Row Total (Sum of Storage + Loading + Unloading + Handling/Misc + Crane + Forklift)
+                round(row_storage_share + (obj.wh_total_loading_cost or 0) + (obj.wh_total_loading_cost or 0) + 
+                      ((invoice.bill_handling_charges or 0) + (invoice.bill_tot_fumigation_charges or 0) + (invoice.bill_packing_charges or 0) if sl == 1 else 0) + 
+                      (obj.wh_crane_cost or 0) + (obj.wh_forklift_cost or 0), 2),
             ])
             sl += 1
 
+    # Auto-adjust column widths for better visibility
+    for column_cells in ws.columns:
+        length = max(len(str(cell.value)) for cell in column_cells)
+        ws.column_dimensions[column_cells[0].column_letter].width = length + 2
+
     response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    response["Content-Disposition"] = f"attachment; filename=Invoice_Report_{invoice_id}.xlsx"
+    # Filename: INVOICE-XXXX (last 4 digits of BVM invoice number)
+    invoice_suffix = str(invoice.bill_invoice_ref)[-4:] if invoice.bill_invoice_ref else str(invoice_id)
+    response["Content-Disposition"] = f"attachment; filename=INVOICE-{invoice_suffix}.xlsx"
     wb.save(response)
     return response

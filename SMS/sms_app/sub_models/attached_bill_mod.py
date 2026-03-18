@@ -20,6 +20,7 @@ class AttachedBillInfo(models.Model):
     ab_leave_days = models.IntegerField(default=0)
     ab_trips_not_allotted = models.IntegerField(default=0)
     ab_leave_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    ab_toll_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     ab_agreed_km = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     ab_total_km_run = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     ab_extra_km_run = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
