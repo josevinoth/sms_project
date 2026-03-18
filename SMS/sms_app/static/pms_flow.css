@@ -1,0 +1,203 @@
+/* PMS Progress Tracker & Hub Styling */
+:root {
+    --pms-bg: #ffffff;
+    --pms-card: #17a2b8; /* Matches form bg-info */
+    --pms-accent: #0D2F3F; /* Dark navy for active icon text to pop, or we can use white */
+    --pms-accent-border: #8de4e9; /* Light cyan from form labels */
+    --pms-success: #28a745; /* Green success color */
+    --pms-text: #ffffff;
+    --pms-muted: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.3);
+}
+
+.pms-progress-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.35rem 1.5rem; /* Ultra compact padding */
+    background: var(--pms-card);
+    border: 1px solid var(--pms-card);
+    border-radius: 50px; /* Pill-shaped rounded ends */
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); /* Stronger drop shadow */
+}
+
+.pms-progress-container::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    right: 10%;
+    height: 2px; /* Thinner line for ultra-compact look */
+    background: var(--glass-border);
+    z-index: 1;
+    transform: translateY(-50%);
+    border-radius: 2px;
+}
+
+.pms-step {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem; /* Minimal gap */
+    flex: 1;
+}
+
+.pms-step-icon {
+    width: 2.1rem; /* Ultra compact icon size */
+    height: 2.1rem; /* Ultra compact icon size */
+    border-radius: 50%;
+    background: var(--pms-bg);
+    border: 3px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--pms-card);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.85rem; /* Smallest font size for icon */
+}
+
+.pms-step.active .pms-step-icon {
+    border-color: var(--pms-accent-border);
+    color: var(--pms-accent);
+    box-shadow: 0 0 0 5px rgba(141, 228, 233, 0.3); /* Uses 8de4e9 */
+    background: var(--pms-accent-border); /* Highlight icon in light cyan */
+    transform: scale(1.1);
+}
+
+.pms-step.completed .pms-step-icon {
+    background: var(--pms-success);
+    border-color: #ffffff; /* White border for contrast on teal */
+    color: white;
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);
+}
+
+.pms-step-label {
+    font-size: 0.68rem; /* Ultra small label font */
+    font-weight: 700;
+    color: var(--pms-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: color 0.3s ease;
+}
+
+.pms-step.active .pms-step-label {
+    color: #ffffff;
+}
+
+.pms-step.completed .pms-step-label {
+    color: #ffffff;
+}
+
+/* Linked Records Hub */
+.pms-hub-card {
+    background: #ffffff;
+    border: 1px solid var(--pms-card);
+    border-radius: 0.25rem;
+    margin-top: 2rem;
+    color: #212529;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.pms-hub-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--pms-card); /* Match teal header */
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+}
+
+.pms-hub-header h4 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #ffffff;
+}
+
+.pms-hub-body {
+    padding: 1.5rem;
+}
+
+.pms-table-dark {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.pms-table-dark th {
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.pms-table-dark td {
+    background: white;
+    padding: 1rem;
+    transition: background 0.2s ease;
+    border-bottom: 1px solid #e9ecef;
+    color: #212529;
+}
+
+.pms-table-dark tr:hover td {
+    background: #f8f9fa;
+}
+
+.pms-table-dark tr td:first-child {
+    border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.pms-table-dark tr td:last-child {
+    border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.pms-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.pms-badge-info {
+    background: rgba(56, 189, 248, 0.2);
+    color: #38bdf8;
+}
+
+.pms-badge-success {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+/* Action Buttons */
+.pms-btn-convert {
+    background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.pms-btn-convert:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+    color: white;
+    text-decoration: none;
+}
