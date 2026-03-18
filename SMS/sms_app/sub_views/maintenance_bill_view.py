@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib import messages
+from django.db.models import Q
 from ..sub_models.maintenance_bill_mod import MaintenanceBillInfo
 from ..sub_forms.maintenance_bill_form import MaintenanceBillForm
 from ..sub_models.maintenance_mod import MaintenanceInfo
@@ -25,18 +26,29 @@ def maintenance_bill_add(request, id=None):
     else:
         form = MaintenanceBillForm(instance=instance)
     
-    # Fetch only maintenance records that are "Finance Approved" (3) 
-    # and have NOT been billed yet (bills_v1__isnull=True)
-    pending_maintenance = MaintenanceInfo.objects.filter(
-        mi_approval_status_id=3,
-        bills_v1__isnull=True
-    ).order_by('-mi_created_at')
+    if instance:
+        # In edit mode, we want the table to show ONLY the linked record initially (as per user request "only shown the bill edit")
+        # BUT we must ensure the vehicles dropdown contains the current vehicle.
+        # We also include other unbilled vehicles so the user can still use the dropdown if needed.
+        pending_maintenance = MaintenanceInfo.objects.filter(id=instance.mnb_maintenance_id)
+        
+        vehicles = VehiclemasterInfo.objects.filter(
+            Q(id=instance.mnb_maintenance.mi_vehicle_id) |
+            Q(maintenance_records__mi_approval_status_id=3, maintenance_records__bills_v1__isnull=True)
+        ).distinct().order_by('vm_registrationnumber')
+    else:
+        # Fetch only maintenance records that are "Finance Approved" (3) 
+        # and have NOT been billed yet (bills_v1__isnull=True)
+        pending_maintenance = MaintenanceInfo.objects.filter(
+            mi_approval_status_id=3,
+            bills_v1__isnull=True
+        ).order_by('-mi_created_at')
 
-    # Fetch vehicles that have records in the pending_maintenance above (unbilled ones)
-    vehicles = VehiclemasterInfo.objects.filter(
-        maintenance_records__mi_approval_status_id=3,
-        maintenance_records__bills_v1__isnull=True
-    ).distinct().order_by('vm_registrationnumber')
+        # Fetch vehicles that have records in the pending_maintenance above (unbilled ones)
+        vehicles = VehiclemasterInfo.objects.filter(
+            maintenance_records__mi_approval_status_id=3,
+            maintenance_records__bills_v1__isnull=True
+        ).distinct().order_by('vm_registrationnumber')
     
     return render(request, "asset_mgt_app/maintenance_bill_add.html", {
         "form": form, 
@@ -88,12 +100,21 @@ def fetch_maintenance_bill_details(request):
 @login_required(login_url='login_page')
 def get_maintenance_records_by_vehicle(request):
     vehicle_id = request.GET.get('vehicle_id')
-    # Match the unbilled records with status 3 (Finance Approved)
-    records = MaintenanceInfo.objects.filter(
-        mi_vehicle_id=vehicle_id, 
-        mi_approval_status_id=3,
-        bills_v1__isnull=True
-    ).order_by('-mi_created_at')
+    current_mi_id = request.GET.get('current_mi_id') # Optional: to keep the currently selected even if billed
+    
+    # Match records with status 3 (Finance Approved)
+    # Include those that are unbilled OR the one currently being edited
+    if current_mi_id:
+        records = MaintenanceInfo.objects.filter(
+            Q(mi_vehicle_id=vehicle_id, mi_approval_status_id=3, bills_v1__isnull=True) |
+            Q(id=current_mi_id)
+        ).distinct().order_by('-mi_created_at')
+    else:
+        records = MaintenanceInfo.objects.filter(
+            mi_vehicle_id=vehicle_id, 
+            mi_approval_status_id=3,
+            bills_v1__isnull=True
+        ).order_by('-mi_created_at')
     
     data = []
     for r in records:

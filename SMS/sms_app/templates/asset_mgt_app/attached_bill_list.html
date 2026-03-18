@@ -56,6 +56,7 @@
                     <th>Total KM Run</th>
                     <th>Agreed KM</th>
                     <th>Extra KM</th>
+                    <th>Toll Cost</th>
                     <th>Bill Amount</th>
                     <th>Bill Attachment</th>
                     <th>Created On</th>
@@ -80,6 +81,7 @@
                     <td>{{ bill.ab_total_km_run|floatformat:2 }}</td>
                     <td>{{ bill.ab_agreed_km|floatformat:2 }}</td>
                     <td>{{ bill.ab_extra_km_run|floatformat:2 }}</td>
+                    <td>{{ bill.ab_toll_cost|floatformat:2 }}</td>
                     <th class="text-info">{{ bill.ab_bill_amount|floatformat:2 }}</th>
                     <td class="text-center">
                         <div class="d-flex align-items-center justify-content-center">
@@ -218,6 +220,7 @@
                         [9,  'LEAVE AMT',                     d.leave_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
                         [10, 'EXTRA KM',                      d.extra_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
                         [11, 'EXTRA KM AMT',                  d.extra_km_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [11.5, 'TOLL COST',                   d.toll_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
                         [12, 'ACTUAL AMT',                    d.actual_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
                         [13, 'TOTAL TRIPS',                   d.total_trips + ' TRIPS'],
                         [14, 'TRIP INDEX',                    d.trip_index],

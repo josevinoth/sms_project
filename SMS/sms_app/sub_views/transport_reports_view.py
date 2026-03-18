@@ -142,7 +142,7 @@ OWN_VS_MARKET_SALES_HEADERS = [
 ]
 
 ENQUIRY_PENDING_HEADERS = [
-    "SNo", "Date", "Enquiry No", "From", "To", "Vehicle Requested", "Vehicle Placed", "Vehicle Type", "Customer Name", "Reason"
+    "SNo", "Date", "Enquiry No", "From", "To", "Vehicle Requested", "Unplaced Vehicles", "Vehicle Type", "Customer Name", "Reason"
 ]
 
 # -------------------------
@@ -265,7 +265,7 @@ def vehicle_log_report_view(request):
             trip.tr_reporteddate.strftime("%H:%M") if trip.tr_reporteddate else "",
             safe_str(trip.tr_departedkm),
             safe_str(trip.tr_reportedkm),
-            max(0, (trip.tr_reportedkm or 0) - (trip.tr_departedkm or 0)),
+            max(0, (trip.tr_reportedkm_delivery or trip.tr_reportedkm or 0) - (trip.tr_departedkm or 0)),
             safe_str(trip.tr_departedlocation),
             safe_str(trip.tr_reportedlocation),
             safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else "",
@@ -848,7 +848,7 @@ def drivers_advance_report_view(request):
     advances = Driverexpense.objects.filter(
         de_expense_type__id=1
     ).select_related(
-        'driver_name', 'de_driver_id', 'trip_number', 'de_expense_type'
+        'driver_name', 'de_driver_id', 'de_expense_type'
     )
 
     # If driver_id is provided, try to find the name for display
@@ -1275,7 +1275,7 @@ def vendor_p_l_mkt_report_view(request):
     )
 
     expenses = Driverexpense.objects.filter(
-        trip_number_id__in=trip_ids
+        trip_number__in=trip_ids
     )
 
     # ------------------------------------------------
@@ -1294,7 +1294,8 @@ def vendor_p_l_mkt_report_view(request):
 
     expense_map = {}
     for e in expenses:
-        expense_map.setdefault(e.trip_number_id, []).append(e)
+        if e.trip_number and str(e.trip_number).isdigit():
+            expense_map.setdefault(int(e.trip_number), []).append(e)
 
     # VENDOR BILLS (MARKET BILLS)
     from ..models import MarketBillInfo
@@ -1682,9 +1683,10 @@ def vendor_p_l_attached_report_view(request):
     }
 
     driver_expense_map = {}
-    expenses = Driverexpense.objects.filter(trip_number_id__in=trip_ids)
+    expenses = Driverexpense.objects.filter(trip_number__in=trip_ids)
     for exp in expenses:
-        driver_expense_map.setdefault(exp.trip_number_id, []).append(exp)
+        if exp.trip_number and str(exp.trip_number).isdigit():
+            driver_expense_map.setdefault(int(exp.trip_number), []).append(exp)
 
     # VENDOR BILLS (MARKET BILLS)
     all_bills = MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips')
@@ -1796,7 +1798,7 @@ def vendor_p_l_attached_report_view(request):
         )
 
         # KM & PROFIT ----------------
-        reported_km = safe_num(trip.tr_reportedkm)
+        reported_km = safe_num(trip.tr_reportedkm_delivery or trip.tr_reportedkm)
         departed_km = safe_num(trip.tr_departedkm)
         km_run = reported_km - departed_km if reported_km and departed_km else 0
 
@@ -2468,13 +2470,14 @@ def own_vehicle_pl_report_view(request):
     # -------------------------------
     expenses = (
         Driverexpense.objects
-        .filter(trip_number_id__in=trips.values_list('id', flat=True))
+        .filter(trip_number__in=trips.values_list('id', flat=True))
         .select_related('de_expense_type')
     )
 
     expense_map = {}
     for e in expenses:
-        expense_map.setdefault(e.trip_number_id, []).append(e)
+        if e.trip_number and str(e.trip_number).isdigit():
+            expense_map.setdefault(int(e.trip_number), []).append(e)
 
     # -------------------------------
     # VEHICLE MASTER (FIXED COSTS)
@@ -2812,29 +2815,34 @@ def halting_report_view(request):
     consignment_ids = [t.tr_consignmentnumber.id for t in page_obj if t.tr_consignmentnumber]
 
     # Fetch Expenses for "Buying Halting"
-    expenses = Driverexpense.objects.filter(trip_number_id__in=trip_ids).select_related('de_expense_type')
+    expenses = Driverexpense.objects.filter(trip_number__in=trip_ids).select_related('de_expense_type')
     expense_map = {}
     
     for e in expenses:
-        if e.trip_number_id not in expense_map:
-            expense_map[e.trip_number_id] = 0.0
-        
-        # Check if expense is related to Halting
-        if e.de_expense_type and 'halting' in str(e.de_expense_type).lower():
-            expense_map[e.trip_number_id] += safe_num(e.de_total_cost)
+        if e.trip_number and str(e.trip_number).isdigit():
+            exp_trip_id = int(e.trip_number)
+            if exp_trip_id not in expense_map:
+                expense_map[exp_trip_id] = 0.0
+            
+            # Check if expense is related to Halting
+            if e.de_expense_type and 'halting' in str(e.de_expense_type).lower():
+                expense_map[exp_trip_id] += safe_num(e.de_total_cost)
             
     # Fetch Consignment Goods for Consignor/Consignee
     goods = ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber_id__in=consignment_ids).select_related(
         'cg_consigner', 'cg_consignee'
-    )
+    ).order_by('id')
     
     goods_map = {}
     for g in goods:
-        # Use simple mapping: ConsignmentID -> (ConsignorName, ConsigneeName)
-        # If multiple goods exist, this takes the last one processed. Usually sufficient for reports.
-        consigner = g.cg_consigner.consigner_name if g.cg_consigner else ""
-        consignee = g.cg_consignee.consignee_name if g.cg_consignee else ""
-        goods_map[g.cg_consignmentnumber_id] = (consigner, consignee)
+        cid = g.cg_consignmentnumber_id
+        if cid not in goods_map:
+            goods_map[cid] = {"consignors": set(), "consignees": set()}
+            
+        if g.cg_consigner:
+            goods_map[cid]["consignors"].add(str(g.cg_consigner).strip())
+        if g.cg_consignee:
+            goods_map[cid]["consignees"].add(str(g.cg_consignee).strip())
 
     data_rows = []
     
@@ -2878,7 +2886,15 @@ def halting_report_view(request):
             cnote = safe_str(trip.tr_consignmentnumber.co_consignmentnumber)
             # Lookup from goods map
             if trip.tr_consignmentnumber.id in goods_map:
-                consignor, consignee = goods_map[trip.tr_consignmentnumber.id]
+                m = goods_map[trip.tr_consignmentnumber.id]
+                consignor = ", ".join(sorted(list(m["consignors"])))
+                consignee = ", ".join(sorted(list(m["consignees"])))
+            
+            # Fallback to Enquiry locations if party names are still empty
+            if not consignor and trip.tr_enquirynumber:
+                consignor = safe_str(trip.tr_enquirynumber.en_fromlocaion)
+            if not consignee and trip.tr_enquirynumber:
+                consignee = safe_str(trip.tr_enquirynumber.en_tolocation)
 
             cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper()
             branch = "Chennai" if cust_name.endswith("MAA") else ("Bangalore" if cust_name.endswith("BLR") else "")
@@ -3718,8 +3734,11 @@ def enquiry_pending_report_view(request):
     # Vehicle Requests mapping
     vehicle_requests = Enquirynotevehicle.objects.filter(env_enquirynumber_id__in=enquiry_ids).select_related('env_vehicletype')
     req_map = {}
+    total_req_qty = {}
     for vr in vehicle_requests:
         req_map.setdefault(vr.env_enquirynumber_id, []).append(f"{vr.env_quantity} x {vr.env_vehicletype}")
+        qty = vr.env_quantity or 0
+        total_req_qty[vr.env_enquirynumber_id] = total_req_qty.get(vr.env_enquirynumber_id, 0) + qty
     
     # Vehicle Allotments mapping
     allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids).select_related('va_vehiclenumber')
@@ -3739,9 +3758,11 @@ def enquiry_pending_report_view(request):
         # Extract unique types from req_list
         veh_types = ", ".join(list(set([r.split(" x ")[-1] for r in req_list])))
 
-        # Vehicle Placed
-        places_list = allot_map.get(enq.id, [])
-        places_str = ", ".join(places_list) if places_list else "0"
+        # Vehicle Unplaced count
+        total_req = total_req_qty.get(enq.id, 0)
+        total_placed = len(allot_map.get(enq.id, []))
+        unplaced_count = max(0, total_req - total_placed)
+        places_str = str(unplaced_count)
 
         row = [
             idx,
