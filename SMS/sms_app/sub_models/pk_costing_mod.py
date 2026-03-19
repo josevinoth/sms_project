@@ -2,6 +2,7 @@ from django.db import models
 
 from .excess_mod import ExcessStock
 from .part_code_mod import PkpartcodeInfo
+from .stock_maintenance_mod import StockMaintenance
 from ..models import PkpurchaseorderInfo,CustomerInfo,Nadimension,pk_stock_statusinfo,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo
 
 class PkcostingInfo(models.Model):
@@ -22,7 +23,7 @@ class PkcostingInfo(models.Model):
     ct_assessment_num=models.ForeignKey(PkneedassessmentInfo, on_delete=models.PROTECT, default='',blank=True, null=True)
     ct_length = models.FloatField(blank=True, null=True, default=0.0)
     ct_stock_type = models.ForeignKey(Pkstocktype, on_delete=models.PROTECT, blank=True, null=True)
-    ct_stock_purchase_number = models.ForeignKey(PkstockpurchasesInfo, on_delete=models.PROTECT, blank=True, null=True)
+    ct_stock_purchase_number = models.ForeignKey(StockMaintenance, on_delete=models.PROTECT, blank=True, null=True)
     ct_item = models.ForeignKey(pk_itemInfo, on_delete=models.PROTECT, related_name='ct_item', db_column='ct_item',blank=True, null=True)
     ct_itemdescription = models.ForeignKey(pk_itemdescriptionInfo, on_delete=models.PROTECT,
                                            related_name='ct_itemdescription', db_column='ct_itemdescription',blank=True, null=True)
@@ -43,7 +44,7 @@ class PkcostingInfo(models.Model):
     ct_na_quantity = models.FloatField(blank=True, null=True, default=0.0)
     ct_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
     ct_excess_status = models.ForeignKey(ExcessStock, on_delete=models.PROTECT, blank=True, null=True)
-    ct_grn = models.ForeignKey(PkstockpurchasesInfo, on_delete=models.PROTECT, blank=True, null=True,
+    ct_grn = models.ForeignKey(StockMaintenance, on_delete=models.PROTECT, blank=True, null=True,
                                related_name='grn')
     ct_exe_width_req = models.FloatField(blank=True, null=True, default=0.0)
     ct_exe_height_req = models.FloatField(blank=True, null=True, default=0.0)

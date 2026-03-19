@@ -16,11 +16,11 @@
         </a>
     </div>
 
-    <!--    <div class="col-md-1">-->
-    <!--        <a href="{% url 'costingsummary_insert' %}" class="btn btn-success btn-block btn-lg">-->
-    <!--            <i class="fas fa-plus"></i> Add-->
-    <!--        </a>-->
-    <!--    </div>-->
+    <div class="col-md-1">
+        <a href="{% url 'costingsummary_insert' %}" class="btn btn-success btn-block btn-lg">
+            <i class="fas fa-plus"></i> Add
+        </a>
+    </div>
 </div>
 <hr>
 <div class="container-fluid">
@@ -31,6 +31,7 @@
             <th>Assessment Number</th>
             <th>Customer Name</th>
             <th>Customer PO</th>
+            <th>Invoice Number</th>
             <th>Total Cost(Without Margin)</th>
             <th>Margin</th>
             <th>Total Cost(With Margin)</th>
@@ -45,29 +46,30 @@
         </tr>
         </thead>
         <tbody>
-        {% for costingsummaryinfo, costinginfo in combined_list %}
+        {% for summary, costing in combined_list %}
         <tr>
-            <td>{{ costingsummaryinfo.cs_created_at }}</td>
-            <td>{{ costingsummaryinfo.cs_assessment_num }}</td>
-            <td>{{ costingsummaryinfo.cs_customer_name }}</td>
-            <td>{{ costingsummaryinfo.cs_customer_po }}</td>
-            <td>{{ costingsummaryinfo.cs_total_cost_wom }}</td>
-            <td>{{ costingsummaryinfo.cs_margin }}</td>
-            <td>{{ costingsummaryinfo.cs_total_cost_wm }}</td>
-            <td>{{ costingsummaryinfo.cs_total_cft }}</td>
-            <td>{{ costingsummaryinfo.cs_rate_per_cft }}</td>
-            <td>{{ costinginfo.ct_stock_status }}</td>
-            <td>{{ costinginfo.ct_excess_status }}</td>
-            <td>{{ costingsummaryinfo.cs_updated_at }}</td>
-            <td>{{ costingsummaryinfo.cs_updated_by }}</td>
+            <td>{{ summary.cs_created_at }}</td>
+            <td>{{ summary.cs_assessment_num }}</td>
+            <td>{{ summary.cs_customer_name }}</td>
+            <td>{{ summary.cs_customer_po }}</td>
+            <td>{{ summary.cs_invoice_num|default:"" }}</td>
+            <td>{{ summary.cs_total_cost_wom }}</td>
+            <td>{{ summary.cs_margin }}</td>
+            <td>{{ summary.cs_total_cost_wm }}</td>
+            <td>{{ summary.cs_total_cft }}</td>
+            <td>{{ summary.cs_rate_per_cft }}</td>
+            <td>{{ costing.ct_stock_status|default:"None" }}</td>
+            <td>{{ costing.ct_excess_status|default:"None" }}</td>
+            <td>{{ summary.cs_updated_at }}</td>
+            <td>{{ summary.cs_updated_by }}</td>
 
         <td>
-        <a class="btn btn-primary" href="{% url 'costingsummary_update' costingsummaryinfo.id %}">
+        <a class="btn btn-primary" href="{% url 'costingsummary_update' summary.id %}">
             <i class="far fa-edit"></i>
         </a>
         </td>
         <td>
-            <form action="{% url 'costingsummary_delete' costingsummaryinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+            <form action="{% url 'costingsummary_delete' summary.id %}" method="post" onclick="return confirm('Are you sure?');">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger">
                     <i class="fas fa-trash-alt"></i>
@@ -82,7 +84,7 @@
 <script>
     $(document).ready(function() {
     $('#costingsummary_list').DataTable({
-        order: [0, 'asc' ],
+        order: [0, 'desc' ],
 <!--        scrollY: "600px",-->
         scrollX: true,
         dom: 'Bfrtip',

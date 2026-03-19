@@ -502,6 +502,7 @@ urlpatterns = [
     path('pk_item_search_page_costing/', views.pk_item_search_page_costing, name='pk_item_search_page_costing'),
     # pk_item_search_page_costing
     path('costingsummary_list/', views.costingsummary_list, name='costingsummary_list'),  # List costingsummary
+    path('get_partcode_summary/', views.get_partcode_summary, name='get_partcode_summary'),
     path('costingsummary_insert/', views.costingsummary_add, name='costingsummary_insert'),  # Add costingsummary
     path('costingsummary_update/<int:costingsummary_id>', views.costingsummary_add, name='costingsummary_update'),
     # update costingsummary
@@ -529,6 +530,7 @@ urlpatterns = [
     # View pre Sales comments search
     path('dispatch_search/', views.dispatch_search, name='dispatch_search'),  # View dispatch search
     path('load_stock_description/', views.load_stock_description, name='load_stock_description'),
+    path('load_pk_wood_description/', views.load_pk_wood_description, name='load_pk_wood_description'),
     # Load stock description
     path('load_vehicle_source/', views.load_vehicle_source, name='load_vehicle_source'),  # Load vehicle_source
     path('load_vehicle_number/', views.load_vehicle_number, name='load_vehicle_number'),  # Load vehicle_details
@@ -626,6 +628,7 @@ urlpatterns = [
     path('iou_insert/', views.iou_add, name='iou_insert'),  # Add IOU
     path('iou_update/<int:iou_id>', views.iou_add, name='iou_update'),  # update IOU
     path('iou_delete/<int:iou_id>', views.iou_delete, name='iou_delete'),  # delete IOU
+    path('pk_return_excess_to_stock/<int:costing_id>/', views.pk_return_excess_to_stock, name='pk_return_excess_to_stock'),
     path('modify_dimensions_view/', views.modify_dimensions_view, name='modify_dimensions_view'),
     # modify_dimensions_view
     path('pk_return_list/', views.pk_return_list, name='pk_return_list'),  # List retrival
@@ -1004,6 +1007,7 @@ urlpatterns = [
     path('stock_maintenance_update/<int:pk>/', views.stock_maintenance_edit, name='stock_maintenance_edit'),
     path('get_part_details/', views.get_part_details, name='get_part_details'),
     path('stock_maintenance_delete/<int:pk>/', views.stock_maintenance_delete, name='stock_maintenance_delete'),
+    path('stock_usage_breakdown/', views.stock_usage_breakdown, name='stock_usage_breakdown'),
     path('trans-invoice/excel/<path:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
     path('trans-invoice/tally-excel/<int:customer_id>/', views.trans_invoice_tally_excel, name='trans_invoice_tally_excel'),
     path("maintenance/pdf/<int:id>/",views.maintenance_pdf,name="maintenance_pdf"),

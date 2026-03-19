@@ -1,9 +1,9 @@
-import json
+from datetime import datetime
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
 from ..forms import PkacceptanceForm
-from ..models import PkstockpurchasesInfo,PkcostingInfo,PkquotationsummaryInfo
-from django.shortcuts import render, redirect
-from ..views import update_reduced_dimensions
+from ..models import PkstockpurchasesInfo,PkcostingInfo,PkquotationsummaryInfo,StockMaintenance
+from ..views import update_reduced_dimensions,get_tracker_flags
 from django.contrib import messages
 
 @login_required(login_url='login_page')
@@ -22,6 +22,11 @@ def pk_acceptance_add(request,retrival_id=0):
                 'first_name': first_name,
                 'user_id': user_id,
                 'na_assessment_num_id': na_assessment_num_id,
+                'na_customer_name_id': request.session.get('na_customer_name_id'),
+                'na_customer_new_name_id': request.session.get('na_customer_new_name_id'),
+                'ses_customer_po_id': request.session.get('ses_customer_po_id'),
+                'current_step': 'acceptance',
+                'tracker_flags': get_tracker_flags(na_assessment_num_id),
                 }
         return render(request, "asset_mgt_app/pk_acceptance_add.html", context)
     else:
@@ -41,7 +46,26 @@ def pk_acceptance_add(request,retrival_id=0):
             retrival = PkcostingInfo.objects.get(pk=retrival_id)
             form = PkacceptanceForm(request.POST,instance=retrival)
             if form.is_valid():
-                form.save()
+                retrival = form.save()
+                
+                # If accepted (status 2 or 4), log as retrieval in StockMaintenance if not already logged
+                if retrival.ct_stock_status.id in [2, 4] and retrival.ct_stock_purchase_number:
+                    ref_no = f"RET-{retrival.ct_stock_purchase_number.sm_stock_purchase_number}-{retrival.id}"
+                    if not StockMaintenance.objects.filter(sm_invoice_no=ref_no).exists():
+                        try:
+                            StockMaintenance.objects.create(
+                                sm_stock_type_id=2, # Retrieval
+                                sm_invoice_date=datetime.now().date(),
+                                sm_invoice_no=ref_no,
+                                sm_description=f"Retrieved via Acceptance for Assessment {retrival.ct_assessment_num.na_assessment_num if retrival.ct_assessment_num else 'N/A'}",
+                                sm_partcode=retrival.ct_stock_purchase_number.sm_partcode,
+                                sm_count=float(retrival.ct_quantity or 0),
+                                sm_uom=retrival.ct_stock_purchase_number.sm_uom,
+                                sm_updated_by_id=user_id
+                            )
+                        except Exception as e:
+                            print(f"Error logging acceptance: {e}")
+
                 messages.success(request, 'Stock Successfully Updated')
             else:
                 print("retrival Form is Not Valid")
@@ -55,7 +79,8 @@ def pk_acceptance_list(request):
     first_name = request.session.get('first_name')
     context = {
                 'pk_retrival_list' : PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=2).order_by('-id'),
-                'first_name': first_name
+                'first_name': first_name,
+                'current_step': 'acceptance',
                }
     return render(request,"asset_mgt_app/pk_acceptance_list.html",context)
 

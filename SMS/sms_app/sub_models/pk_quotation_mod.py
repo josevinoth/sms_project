@@ -2,6 +2,7 @@ from django.db import models
 
 from .part_code_mod import PkpartcodeInfo
 from .pkweightconvention_mod import Pkweightconvention
+from .stock_maintenance_mod import StockMaintenance
 from ..models import CustomerInfo,Nadimension,pk_itemdescriptionInfo,pk_itemInfo,Cusnewexist,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo,Nadimensiontype
 
 class PkquotationInfo(models.Model):
@@ -24,7 +25,7 @@ class PkquotationInfo(models.Model):
                                           null=True)
     pkqt_length = models.FloatField(blank=True, null=True, default=0.0)
     pkqt_stock_type = models.ForeignKey(Pkstocktype, on_delete=models.CASCADE, blank=True, null=True)
-    pkqt_stock_purchase_number = models.ForeignKey(PkstockpurchasesInfo, on_delete=models.CASCADE, blank=True, null=True)
+    pkqt_stock_purchase_number = models.ForeignKey(StockMaintenance, on_delete=models.CASCADE, blank=True, null=True)
     pkqt_item = models.ForeignKey(pk_itemInfo, on_delete=models.CASCADE, related_name='pkqt_item', db_column='pkqt_item',
                                 blank=True, null=True)
     pkqt_itemdescription = models.ForeignKey(pk_itemdescriptionInfo, on_delete=models.CASCADE,

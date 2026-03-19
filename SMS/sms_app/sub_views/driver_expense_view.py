@@ -3,16 +3,11 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-
 from .driver_settlement_view import recalc_driver_settlement
-from ..models import Driverexpense,TripdetailInfo,driver_settlement_info
+from ..models import Driverexpense, TripdetailInfo, driver_settlement_info
 from ..sub_forms.driver_expense_form import DriverExpenseForm
 from datetime import datetime
-
-from django.db.models import Sum
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
+from ..sub_models.driver_master_mod import DrivermasterInfo
 
 @login_required(login_url='login_page')
 def driver_expense_add(request, expense_id=0):
@@ -194,17 +189,9 @@ def get_trip_charges(request):
 def filter_trips_by_date(request):
     trip_date = request.GET.get('trip_date')
     settlement_id = request.GET.get('settlement_id')
+    vehicle_no = request.GET.get('vehicle_no')
 
-    if not trip_date or not settlement_id:
-        return JsonResponse([], safe=False)
-
-    # ✅ FIX FORMAT (strip time if present)
-    if 'T' in trip_date:
-        trip_date = trip_date.split('T')[0]
-
-    try:
-        trip_date = datetime.strptime(trip_date, "%Y-%m-%d").date()
-    except ValueError:
+    if not settlement_id:
         return JsonResponse([], safe=False)
 
     settlement = get_object_or_404(driver_settlement_info, id=settlement_id)
@@ -219,8 +206,21 @@ def filter_trips_by_date(request):
     else:
         qs = qs.filter(tr_drivername=settlement.driver)
 
-    # ✅ FILTER BY DATE
-    qs = qs.filter(tr_departeddate__date=trip_date)
+    # ✅ OPTIONAL FILTER BY DATE
+    if trip_date:
+        if 'T' in trip_date:
+            trip_date = trip_date.split('T')[0]
+        try:
+            trip_date = datetime.strptime(trip_date, "%Y-%m-%d").date()
+            qs = qs.filter(tr_departeddate__date=trip_date)
+        except ValueError:
+            pass
+
+    # ✅ OPTIONAL FILTER BY VEHICLE
+    if vehicle_no:
+        qs = qs.filter(tr_vehiclenumber__icontains=vehicle_no)
+
+    qs = qs.order_by('-tr_departeddate')
 
     data = [
         {

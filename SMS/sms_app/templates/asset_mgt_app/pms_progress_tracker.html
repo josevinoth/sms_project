@@ -1,0 +1,67 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'pms_flow.css' %}">
+
+<div class="pms-progress-container mb-4">
+    <!-- Step 1: Assessment -->
+    <div
+        class="pms-step {% if tracker_flags.assessment_done %}completed{% endif %} {% if current_step == 'assessment' %}active{% endif %}">
+        <div class="pms-step-icon">
+            {% if tracker_flags.assessment_done %}
+            <i class="fas fa-check"></i>
+            {% else %}
+            <i class="fas fa-clipboard-list"></i>
+            {% endif %}
+        </div>
+        <div class="pms-step-label">Assessment</div>
+    </div>
+
+    <!-- Step 2: Quotation -->
+    <div
+        class="pms-step {% if tracker_flags.quotation_done %}completed{% endif %} {% if current_step == 'quotation' %}active{% endif %}">
+        <div class="pms-step-icon">
+            {% if tracker_flags.quotation_done %}
+            <i class="fas fa-check"></i>
+            {% else %}
+            <i class="fas fa-file-invoice-dollar"></i>
+            {% endif %}
+        </div>
+        <div class="pms-step-label">Quotation</div>
+    </div>
+
+    <!-- Step 3: Purchase Order -->
+    <div class="pms-step {% if tracker_flags.po_done %}completed{% endif %} {% if current_step == 'po' %}active{% endif %}">
+        <div class="pms-step-icon">
+            {% if tracker_flags.po_done %}
+            <i class="fas fa-check"></i>
+            {% else %}
+            <i class="fas fa-shopping-cart"></i>
+            {% endif %}
+        </div>
+        <div class="pms-step-label">Purchase Order</div>
+    </div>
+
+    <!-- Step 4: Costing -->
+    <div
+        class="pms-step {% if tracker_flags.costing_done %}completed{% endif %} {% if current_step == 'costing' %}active{% endif %}">
+        <div class="pms-step-icon">
+            {% if tracker_flags.costing_done %}
+            <i class="fas fa-check"></i>
+            {% else %}
+            <i class="fas fa-calculator"></i>
+            {% endif %}
+        </div>
+        <div class="pms-step-label">Costing</div>
+    </div>
+
+    <!-- Step 5: Acceptance -->
+    <div class="pms-step {% if tracker_flags.acceptance_done %}completed{% endif %} {% if current_step == 'acceptance' %}active{% endif %}">
+        <div class="pms-step-icon">
+            {% if tracker_flags.acceptance_done %}
+            <i class="fas fa-check"></i>
+            {% else %}
+            <i class="fas fa-user-check"></i>
+            {% endif %}
+        </div>
+        <div class="pms-step-label">Acceptance</div>
+    </div>
+</div>

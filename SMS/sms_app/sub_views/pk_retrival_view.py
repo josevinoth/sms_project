@@ -1,7 +1,9 @@
 import json
+from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from ..forms import PkretrivalForm
 from ..models import PkstockpurchasesInfo,PkcostingInfo,PkquotationsummaryInfo
+from ..sub_models.stock_maintenance_mod import StockMaintenance
 from django.shortcuts import render, redirect
 from ..views import update_reduced_dimensions
 from django.contrib import messages
@@ -48,26 +50,45 @@ def pk_retrival_add(request, retrival_id=0):
                 print(requested_qty)
 
                 if stock_purchase_num_id:
-                    stock_purchase_obj = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id)
-                    stock_purchase_num = stock_purchase_obj.sp_purchase_num
-                    available_qty = stock_purchase_obj.sp_quantity or 0
-                    print(available_qty)
-                    if float(requested_qty) > float(available_qty):
-                        messages.error(request, 'Available quantity is less than requested quantity')
-                        return redirect(request.META['HTTP_REFERER'])
-                    else:
-                        stock_status = retrival.ct_stock_status.id
-                        print("Stock Status ID:", stock_status)
-
-                        if stock_status == 2:
-                            form.save()
-                            stock_purchase_obj.sp_quantity_reduced = float(available_qty) - float(requested_qty)
-                            stock_purchase_obj.save()
-
-                            messages.success(request, 'Stock Successfully Retrieved & Supplied')
-                            update_reduced_dimensions(stock_purchase_num, retrival_id)
+                    try:
+                        stock_purchase_obj = StockMaintenance.objects.get(id=stock_purchase_num_id)
+                        stock_purchase_num = stock_purchase_obj.sm_invoice_no
+                        available_qty = stock_purchase_obj.sm_count or 0
+                        print(available_qty)
+                        if float(requested_qty) > float(available_qty):
+                            messages.error(request, 'Available quantity is less than requested quantity')
+                            return redirect(request.META['HTTP_REFERER'])
                         else:
-                            messages.success(request, 'Stock Not Retrieved')
+                            stock_status = retrival.ct_stock_status.id
+                            print("Stock Status ID:", stock_status)
+    
+                            # Status 2 = Supplied, Status 4 = Received
+                            if stock_status in [2, 4]:
+                                form.save()
+                                # Instead of subtracting from the original record, 
+                                # we create a NEW Retrieval record (Type 2).
+                                # This allows the Stock Purchases List to aggregate Total IN and Retrieved correctly.
+                                try:
+                                    StockMaintenance.objects.create(
+                                        sm_stock_type_id=2, # Retrieval
+                                        sm_invoice_date=datetime.now().date(),
+                                        sm_invoice_no=f"RET-{stock_purchase_num}-{retrival_id}",
+                                        sm_description=f"Retrieved for Assessment {retrival.ct_assessment_num.na_assessment_num if retrival.ct_assessment_num else 'N/A'}",
+                                        sm_partcode=stock_purchase_obj.sm_partcode,
+                                        sm_count=float(requested_qty),
+                                        sm_uom=stock_purchase_obj.sm_uom,
+                                        sm_updated_by_id=user_id
+                                    )
+                                    messages.success(request, 'Stock Successfully Retrieved & Supplied')
+                                    update_reduced_dimensions(stock_purchase_num, retrival_id)
+                                except Exception as e:
+                                    print(f"Error creating retrieval record: {e}")
+                                    messages.warning(request, 'Stock supplied but retrieval transaction log failed.')
+                            else:
+                                messages.success(request, 'Stock Not Retrieved')
+                    except StockMaintenance.DoesNotExist:
+                        messages.error(request, 'Selected stock purchase record not found.')
+                        return redirect(request.META['HTTP_REFERER'])
                 else:
                     messages.error(request, 'Please select a stock with purchase number')
                     return redirect(request.META['HTTP_REFERER'])

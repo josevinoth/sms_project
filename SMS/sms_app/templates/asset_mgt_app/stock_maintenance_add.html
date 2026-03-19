@@ -15,39 +15,45 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <style>
-  /* ── Select2 inside Bootstrap 4 input-group ── */
-  .select2-wrapper {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-  .select2-wrapper .select2-container {
-    display: block !important;
-    width: 100% !important;
-  }
-  .select2-wrapper .select2-selection--single {
-    height: 31px !important;
-    border-radius: 0 4px 4px 0 !important;
-    border-color: #ced4da !important;
-  }
-  .select2-wrapper .select2-selection--single .select2-selection__rendered {
-    line-height: 29px !important;
-    color: #495057;
-    font-size: 0.875rem;
-    padding-left: 8px;
-  }
-  .select2-wrapper .select2-selection--single .select2-selection__arrow {
-    height: 29px !important;
-  }
-  .select2-dropdown {
-    font-size: 0.875rem;
-    z-index: 9999;
-  }
+    /* ── Select2 inside Bootstrap 4 input-group ── */
+    .select2-wrapper {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .select2-wrapper .select2-container {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    .select2-wrapper .select2-selection--single {
+        height: 31px !important;
+        border-radius: 0 4px 4px 0 !important;
+        border-color: #ced4da !important;
+    }
+
+    .select2-wrapper .select2-selection--single .select2-selection__rendered {
+        line-height: 29px !important;
+        color: #495057;
+        font-size: 0.875rem;
+        padding-left: 8px;
+    }
+
+    .select2-wrapper .select2-selection--single .select2-selection__arrow {
+        height: 29px !important;
+    }
+
+    .select2-dropdown {
+        font-size: 0.875rem;
+        z-index: 9999;
+    }
 </style>
 
 <form method="POST">
     {% csrf_token %}
     {% with t_count=totals.total_count|default:0 t_cft=totals.total_cft|default:0|floatformat:2 t_cost=totals.total_cost|default:0|floatformat:2 %}
     <div class="row mb-3">
+        <!-- COUNT DASHBOARD -->
         <div class="col-md-4">
             <div class="alert alert-success">
                 <strong>Total Count:</strong>
@@ -117,11 +123,23 @@
                         </div>
 
                         <!-- Invoice No -->
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Invoice No</span>
+                        <div class="row">
+                            <div class="col-md-6 col-12">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text text-primary">STK No</span>
+                                    </div>
+                                    {% render_field form.sm_stock_purchase_number class="form-control disable_a_href" readonly="readonly" %}
+                                </div>
                             </div>
-                            {% render_field form.sm_invoice_no class="form-control" %}
+                            <div class="col-md-6 col-12">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Invoice No</span>
+                                    </div>
+                                    {% render_field form.sm_invoice_no class="form-control" %}
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Partcode -->
@@ -273,6 +291,7 @@
                     <thead class="thead-dark">
                         <tr>
                             <th>ID</th>
+                            <th>Stock Purchase No</th>
                             <th>Invoice No</th>
                             <th>Invoice Date</th>
                             <th>Stock Type</th>
@@ -296,6 +315,7 @@
                         {% for item in items %}
                         <tr>
                             <td>{{ item.id }}</td>
+                            <td><span class="badge badge-secondary">{{ item.sm_stock_purchase_number|default:"-" }}</span></td>
                             <td>{{ item.sm_invoice_no }}</td>
                             <td>{{ item.sm_invoice_date }}</td>
                             <td>{{ item.sm_stock_type.stock_type_maintenance }}</td>
@@ -368,13 +388,11 @@
                 $jq('#id_sm_uom').val('').trigger('change');
 
                 // Restore global totals
-                var gCount = $jq('#dash_total_count').data('global');
-                var gCft = $jq('#dash_total_cft').data('global');
-                var gCost = $jq('#dash_total_cost').data('global');
-
-                $jq('#dash_total_count').text(gCount).data('baseline', gCount);
-                $jq('#dash_total_cft').text(gCft).data('baseline', gCft);
-                $jq('#dash_total_cost').text(gCost).data('baseline', gCost);
+                var fields = ['overall_count', 'retrieved_count', 'current_count', 'overall_cft', 'retrieved_cft', 'current_cft', 'overall_cost', 'retrieved_cost', 'current_cost'];
+                fields.forEach(function (f) {
+                    var val = $jq('#dash_' + f).data('global');
+                    $jq('#dash_' + f).text(val).data('baseline', val);
+                });
 
                 // Clear Table Filter
                 if (window.jQuery && window.jQuery.fn.DataTable && window.jQuery.fn.DataTable.isDataTable('#stock_maintenance_table')) {
@@ -405,9 +423,18 @@
 
                         // Update Dashboard
                         if (data.part_totals) {
-                            $jq('#dash_total_count').text(data.part_totals.total_count).data('baseline', data.part_totals.total_count);
-                            $jq('#dash_total_cft').text(data.part_totals.total_cft.toFixed(2)).data('baseline', data.part_totals.total_cft);
-                            $jq('#dash_total_cost').text(data.part_totals.total_cost.toFixed(2)).data('baseline', data.part_totals.total_cost);
+                            var totals = data.part_totals;
+                            $jq('#dash_overall_count').text(totals.overall_count).data('baseline', totals.overall_count);
+                            $jq('#dash_retrieved_count').text(totals.retrieved_count).data('baseline', totals.retrieved_count);
+                            $jq('#dash_current_count').text(totals.current_count).data('baseline', totals.current_count);
+
+                            $jq('#dash_overall_cft').text(totals.overall_cft.toFixed(2)).data('baseline', totals.overall_cft);
+                            $jq('#dash_retrieved_cft').text(totals.retrieved_cft.toFixed(2)).data('baseline', totals.retrieved_cft);
+                            $jq('#dash_current_cft').text(totals.current_cft.toFixed(2)).data('baseline', totals.current_cft);
+
+                            $jq('#dash_overall_cost').text(totals.overall_cost.toFixed(2)).data('baseline', totals.overall_cost);
+                            $jq('#dash_retrieved_cost').text(totals.retrieved_cost.toFixed(2)).data('baseline', totals.retrieved_cost);
+                            $jq('#dash_current_cost').text(totals.current_cost.toFixed(2)).data('baseline', totals.current_cost);
                         }
 
                         // Filter Table (Partcode is in Column 4)

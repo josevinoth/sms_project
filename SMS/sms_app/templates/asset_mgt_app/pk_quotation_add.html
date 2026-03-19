@@ -21,25 +21,28 @@
 <br>
 <div class="row">
     <div class="col-9">
-        <form method="POST" action="" id="quotation_add" data-stock_description-url="{% url 'load_stock_description' %}"  >
+        <form method="POST" action="" id="quotation_add"
+            data-stock_description-url="{% url 'load_stock_description' %}">
             {% csrf_token %}
             <div class="container-fluid">
                 <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="card-header text-center"><h3>Add/Update Quotation</h3></div>
+                    <div class="card-header text-center">
+                        <h3>Add/Update Quotation</h3>
+                    </div>
                     <div class="card-body bg-light" id="quotation_form">
-                        <div class="row" >
+                        <div class="row">
                             <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Assessment Number</span>
                                     </div>
-                                    {% render_field form.pkqt_assessment_num id="pkqt_assessment_num"  class="form-control disable_a_href" %}
+                                    {% render_field form.pkqt_assessment_num id="pkqt_assessment_num" class="form-control disable_a_href" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Customer Name</span>
                                     </div>
-                                    {% render_field form.pkqt_customer_name id="pkqt_customer_name"  class="form-control disable_a_href" %}
+                                    {% render_field form.pkqt_customer_name id="pkqt_customer_name" class="form-control disable_a_href" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -69,7 +72,7 @@
                                     <div class="input-group-prepend">
                                         <span class="col input-group-text">Requirement Name & Size</span>
                                     </div>
-                                    {% render_field form.pkqt_requirement_size id="pkqt_requirement_size" class="form-control disable_a_href"  %}
+                                    {% render_field form.pkqt_requirement_size id="pkqt_requirement_size" class="form-control disable_a_href" %}
                                 </div>
                             </div>
                             <div class="col-3">
@@ -77,7 +80,13 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Part code</span>
                                     </div>
-                                    {% render_field form.pkqt_part_code id="pkqt_part_code" onchange="fetchPartCodeDetails()"  class="form-control select2" %}
+                                    {% render_field form.pkqt_part_code id="pkqt_part_code" onchange="fetchPartCodeDetails()" class="form-control select2" %}
+                                    <div class="input-group-append">
+                                        <button class="btn btn-warning" type="button" id="show_stock_summary"
+                                            title="View Stock Summary">
+                                            <i class="fas fa-warehouse"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -103,20 +112,25 @@
                                     </div>
                                     {% render_field form.pkqt_itemdescription id="pkqt_itemdescription" onchange="change_cost_type()" class="form-control disable_a_href" %}
                                 </div>
-                                <div class="input-group input-group-sm mb-3"  id="height_group">
+                                <div class="input-group input-group-sm mb-3" id="height_group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Height Req (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
+                                        <span class="input-group-text">Height Req (in/mm)<i class="fas fa-info-circle"
+                                                data-toggle="tooltip" data-placement="top"
+                                                title="For Wood inch. For Plywood mm"></i></span>
                                     </div>
                                     {% render_field form.pkqt_height_req id="pkqt_height_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
                                 </div>
                                 <div class="col d-flex align-items-center justify-content-center">
-                                    <button id="search_wood" type="button" class="btn btn-lg btn-primary"><i class="fas fa-search"></i> Search Item</button>
+                                    <button id="search_wood" type="button" class="btn btn-lg btn-primary"><i
+                                            class="fas fa-search"></i> Search Item</button>
                                 </div>
                             </div>
                             <div class="col-3">
                                 <div class="input-group input-group-sm mb-3" id="width_group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Width Req (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
+                                        <span class="input-group-text">Width Req (in/ft) <i class="fas fa-info-circle"
+                                                data-toggle="tooltip" data-placement="top"
+                                                title="For Wood inch. For Plywood ft"></i></span>
                                     </div>
                                     {% render_field form.pkqt_width_req id="pkqt_width_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
                                 </div>
@@ -138,7 +152,7 @@
                                     </div>
                                     {% render_field form.pkqt_size id="pkqt_size" class="form-control disable_a_href" %}
                                 </div>
-                                <div class="input-group input-group-sm mb-3"  >
+                                <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">UOM-Purchased Type</span>
                                     </div>
@@ -152,7 +166,9 @@
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Required Value<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
+                                        <span class="input-group-text">Required Value<i class="fas fa-info-circle"
+                                                data-toggle="tooltip" data-placement="top"
+                                                title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
                                     </div>
                                     {% render_field form.pkqt_sqrt_req id="pkqt_sqrt_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
                                 </div>
@@ -162,13 +178,13 @@
                                     </div>
                                     {% render_field form.pkqt_total_cft_display id="pkqt_total_cft_display" value=total_cft_display onchange="change_cost_type()" class="form-control disable_a_href" %}
                                 </div>
-                                <div class="input-group input-group-sm mb-3" >
+                                <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">UOM-Consumption Type</span>
                                     </div>
                                     {% render_field form.pkqt_weight_Consumption id="pkqt_weight_Consumption" class="form-control disable_a_href" %}
                                 </div>
-                                <div class="input-group input-group-sm mb-3" >
+                                <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Convertion Value</span>
                                     </div>
@@ -184,7 +200,7 @@
                             <div class="col-3">
                                 <fieldset style="width:100%;">
                                     <legend style="white-space: nowrap;">Stock Info</legend>
-                                    <div class="mb-3" >
+                                    <div class="mb-3">
                                         <div class="input-group input-group-sm mb-3">
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text">Stock Purchase Number</span>
@@ -195,7 +211,7 @@
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text">Available Quantity</span>
                                             </div>
-                                            {% render_field form.pkqt_quantity id="pkqt_quantity"  class="form-control disable_a_href" %}
+                                            {% render_field form.pkqt_quantity id="pkqt_quantity" class="form-control disable_a_href" %}
                                         </div>
                                     </div>
                                 </fieldset>
@@ -233,7 +249,7 @@
                             <div class="col-10">
                                 <div class="message text-center">
                                     {% for message in messages %}
-                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                                    <a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
                                     {% endfor %}
                                 </div>
                             </div>
@@ -260,50 +276,42 @@
 {% include "asset_mgt_app/pk_quotation_list_WOH.html" %}
 
 <script>
-    $(document).ready(function() {
-        var assessment_num=document.getElementById("pkqt_assessment_num").value;
-        var customer_name=document.getElementById("pkqt_customer_name").value;
-        var customer_new_name=document.getElementById("pkqt_customer_new_name2").value;
-        var user_id=document.getElementById("pkqt_updated_by").value;
+    $(document).ready(function () {
+        var assessment_num = document.getElementById("pkqt_assessment_num").value;
+        var customer_name = document.getElementById("pkqt_customer_name").value;
+        var customer_new_name = document.getElementById("pkqt_customer_new_name2").value;
+        var user_id = document.getElementById("pkqt_updated_by").value;
 
-        if (user_id=="")
-        {
-            document.getElementById("pkqt_updated_by").value ='{{user_id}}';
+        if (user_id == "") {
+            document.getElementById("pkqt_updated_by").value = '{{user_id}}';
         }
-        else
-        {
-            document.getElementById("pkqt_updated_by").value =user_id;
+        else {
+            document.getElementById("pkqt_updated_by").value = user_id;
         }
 
-        if (assessment_num=="")
-        {
-            document.getElementById("pkqt_assessment_num").value ='{{na_assessment_num_id}}';
+        if (assessment_num == "") {
+            document.getElementById("pkqt_assessment_num").value = '{{na_assessment_num_id}}';
         }
-        else
-        {
-            document.getElementById("pkqt_assessment_num").value =assessment_num;
+        else {
+            document.getElementById("pkqt_assessment_num").value = assessment_num;
         }
 
-        if (customer_name=="")
-        {
-            document.getElementById("pkqt_customer_name").value ='{{na_customer_name_id}}';
+        if (customer_name == "") {
+            document.getElementById("pkqt_customer_name").value = '{{na_customer_name_id}}';
         }
-        else
-        {
+        else {
             document.getElementById("pkqt_customer_name").value = customer_name;
         }
-        if (customer_new_name=="")
-        {
-            document.getElementById("pkqt_customer_new_name2").value ='{{na_customer_new_name_id}}';
+        if (customer_new_name == "") {
+            document.getElementById("pkqt_customer_new_name2").value = '{{na_customer_new_name_id}}';
         }
-        else
-        {
+        else {
             document.getElementById("pkqt_customer_new_name2").value = customer_new_name;
         }
 
 
         pk_store_na_dimension_id();
-        $("#search_wood").on("click", function() {
+        $("#search_wood").on("click", function () {
             search_wood();
         });
     });
@@ -318,39 +326,36 @@
         var total_sqft = parseFloat(document.getElementById("total_sqft").value) || 0;
         // Set the calculated value to the span
         document.getElementById("pkqt_cft_sqft_req").innerText = CFT_Sqft_Req_total;
-        $("#total_cft" ).hide();
-        var jn=document.getElementById("pkqt_cost_type").value;
+        $("#total_cft").hide();
+        var jn = document.getElementById("pkqt_cost_type").value;
         $('#pkqt_item').addClass('disable_a_href');
-        if ( jn==8)
-        {
+        if (jn == 8) {
             $('#pkqt_stock_type').addClass('disable_a_href');
             $('#pkqt_item').removeClass('disable_a_href');
-            var jn1=document.getElementById("pkqt_stock_type").value
-            if (jn1==1 || jn1==5)
-            {
+            var jn1 = document.getElementById("pkqt_stock_type").value
+            if (jn1 == 1 || jn1 == 5) {
                 $('#pkqt_stock_description').addClass('disable_a_href');
                 $('#pkqt_uom').addClass('disable_a_href');
                 $('#pkqt_quantity').removeClass('disable_a_href');
                 $('#pkqt_sqrt_req').addClass('disable_a_href');
                 $('#pkqt_days').addClass('disable_a_href');
-                document.getElementById("pkqt_days").value=0;
+                document.getElementById("pkqt_days").value = 0;
 
                 var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
                 var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
                 var height_req = parseFloat(document.getElementById("pkqt_height_req").value) || 0;
                 var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
-                var cft_req = (length_req*width_req*height_req/144)*quantity_req;
-                document.getElementById("pkqt_sqrt_req").value=cft_req.toFixed(3)
+                var cft_req = (length_req * width_req * height_req / 144) * quantity_req;
+                document.getElementById("pkqt_sqrt_req").value = cft_req.toFixed(3)
                 var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
 
                 var totalCost = rate * cft_req;
-                document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+                document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
                 var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
                 var totalboxCost = totalCost * na_quantity;
-                document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+                document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
             }
-            else if (jn1==4 || jn1==6)
-            {
+            else if (jn1 == 4 || jn1 == 6) {
                 $('#pkqt_stock_description').addClass('disable_a_href');
                 $('#pkqt_uom').addClass('disable_a_href');
                 $('#pkqt_quantity').removeClass('disable_a_href');
@@ -368,17 +373,16 @@
                 document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
                 var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
                 var totalboxCost = totalCost * na_quantity;
-                document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+                document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
             }
 
-            else if (jn1 == 2)
-            {
+            else if (jn1 == 2) {
                 $('#pkqt_sqrt_req').removeClass('disable_a_href');
                 var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
                 var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
                 var total_sqft = parseFloat(document.getElementById("total_sqft").value) || 0;
 
-                if (desc.startsWith("Alu") || desc.startsWith("VC")|| desc.startsWith("Air")|| desc.startsWith("Foam")) {
+                if (desc.startsWith("Alu") || desc.startsWith("VC") || desc.startsWith("Air") || desc.startsWith("Foam")) {
                     $('#pkqt_quantity_req').addClass('disable_a_href');
                     $('#pkqt_sqrt_req').removeClass('disable_a_href');
                     $('#pkqt_days').addClass('disable_a_href');
@@ -389,118 +393,111 @@
                     document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
                     var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
                     var totalboxCost = totalCost * na_quantity;
-                    document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2);
+                    document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2);
                 }
 
-                else if (desc.includes("Belt") ||desc.startsWith("Strech") ||desc.startsWith("DESICCANT") || desc.startsWith("Tar")) {
+                else if (desc.includes("Belt") || desc.startsWith("Strech") || desc.startsWith("DESICCANT") || desc.startsWith("Tar")) {
                     var pkqt_sqrt_req = parseFloat(document.getElementById("pkqt_sqrt_req").value) || 0;
-                    var totalCost = rate  * pkqt_sqrt_req * quantity_req;
-                    document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2);
+                    var totalCost = rate * pkqt_sqrt_req * quantity_req;
+                    document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
                     var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
                     var totalboxCost = totalCost * na_quantity;
-                    document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+                    document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
                 }
-                else
-                {
+                else {
                     var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
                     var totalCost = rate * quantity_req;
                     document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
                     var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
                     var totalboxCost = totalCost * na_quantity;
-                    document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+                    document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
                 }
             }
         }
-        else if (jn==4 )
-        {
+        else if (jn == 4) {
             $('#pkqt_stock_type').addClass('disable_a_href');
             $('#pkqt_stock_description').addClass('disable_a_href');
-            document.getElementById("pkqt_stock_type").value=""
-            document.getElementById("pkqt_stock_description").value=""
+            document.getElementById("pkqt_stock_type").value = ""
+            document.getElementById("pkqt_stock_description").value = ""
             $('#pkqt_quantity_req').removeClass('disable_a_href');
             $('#pkqt_days').removeClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
             var quantity = parseInt(document.getElementById("pkqt_quantity_req").value) || 0;
             var days = parseInt(document.getElementById("pkqt_days").value) || 0;
-            var totalCost = rate  * days * quantity;
-            document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+            var totalCost = rate * days * quantity;
+            document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
             var totalboxCost = totalCost * na_quantity;
-            document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+            document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
 
             var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
             var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
             var sqft_req = length_req * width_req * quantity;
-            document.getElementById("pkqt_sqrt_req").value=sqft_req.toFixed(2)
+            document.getElementById("pkqt_sqrt_req").value = sqft_req.toFixed(2)
         }
-        else if (jn==5)
-        {
-            $("#total_cft" ).show();
+        else if (jn == 5) {
+            $("#total_cft").show();
             $('#pkqt_stock_type').addClass('disable_a_href');
             $('#pkqt_stock_description').addClass('disable_a_href');
-            document.getElementById("pkqt_stock_type").value=""
-            document.getElementById("pkqt_stock_description").value=""
+            document.getElementById("pkqt_stock_type").value = ""
+            document.getElementById("pkqt_stock_description").value = ""
             $('#pkqt_quantity_req').removeClass('disable_a_href');
             $('#pkqt_days').addClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
             var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
-            var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
-            alert({{ total_cft_display }})
             document.getElementById("pkqt_total_cft_display").value = "{{ total_cft_display }}";
             var total_cft = parseFloat(document.getElementById("pkqt_total_cft_display").value) || 0;
 
             var totalCost = rate * total_cft;
-            document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2);
+            document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
             var totalboxCost = totalCost * na_quantity;
-            document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+            document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
         }
-        else if (jn==6)
-        {
+        else if (jn == 6) {
             $('#pkqt_stock_type').addClass('disable_a_href');
             $('#pkqt_stock_description').addClass('disable_a_href');
-            document.getElementById("pkqt_stock_type").value=""
-            document.getElementById("pkqt_stock_description").value=""
+            document.getElementById("pkqt_stock_type").value = ""
+            document.getElementById("pkqt_stock_description").value = ""
             $('#pkqt_quantity_req').removeClass('disable_a_href');
             $('#pkqt_days').addClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
             var quantity = parseInt(document.getElementById("pkqt_quantity_req").value) || 0;
             var totalCost = rate * quantity;
-            document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+            document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
             var totalboxCost = totalCost * na_quantity;
-            document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+            document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
         }
-        else if (jn==7)
-        {
+        else if (jn == 7) {
             $('#pkqt_stock_type').addClass('disable_a_href');
             $('#pkqt_stock_description').addClass('disable_a_href');
-            document.getElementById("pkqt_stock_type").value=""
-            document.getElementById("pkqt_stock_description").value=""
+            document.getElementById("pkqt_stock_type").value = ""
+            document.getElementById("pkqt_stock_description").value = ""
             $('#pkqt_quantity_req').removeClass('disable_a_href');
             $('#pkqt_days').addClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
             var totalCost = rate;
-            document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+            document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
             var totalboxCost = totalCost * na_quantity;
-            document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)            }
-        else
-        {
+            document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
+        }
+        else {
             $('#pkqt_stock_type').addClass('disable_a_href');
             $('#pkqt_stock_description').addClass('disable_a_href');
-            document.getElementById("pkqt_stock_type").value=""
-            document.getElementById("pkqt_stock_description").value=""
+            document.getElementById("pkqt_stock_type").value = ""
+            document.getElementById("pkqt_stock_description").value = ""
             $('#pkqt_quantity_req').removeClass('disable_a_href');
             $('#pkqt_days').removeClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
             var quantity = parseInt(document.getElementById("pkqt_quantity_req").value) || 0;
             var days = parseInt(document.getElementById("pkqt_days").value) || 0;
-            var totalCost = rate  * days * quantity;
-            document.getElementById("pkqt_total_cost").value=totalCost.toFixed(2)
+            var totalCost = rate * days * quantity;
+            document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
             var totalboxCost = totalCost * na_quantity;
-            document.getElementById("pkqt_totalbox_cost").value=totalboxCost.toFixed(2)
+            document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
         }
     }
 </script>
@@ -508,8 +505,7 @@
     $("#pkqt_stock_type").change(function () {
         var url = $("#quotation_add").attr("data-stock_description-url");
         var stock_type = $(this).val();
-        if (stock_type == 1)
-        {
+        if (stock_type == 1) {
             $('#pkqt_item').removeClass('disable_a_href');
             $('#pkqt_itemdescription').removeClass('disable_a_href');
             $('#pkqt_width_req').removeClass('disable_a_href');
@@ -517,8 +513,7 @@
             $('#pkqt_length_req').removeClass('disable_a_href');
             $('#pkqt_quantity_req').removeClass('disable_a_href');
         }
-        else if (stock_type == 4)
-        {
+        else if (stock_type == 4) {
             $('#pkqt_item').removeClass('disable_a_href');
             $('#pkqt_itemdescription').removeClass('disable_a_href');
             $('#pkqt_width_req').removeClass('disable_a_href');
@@ -526,8 +521,7 @@
             $('#pkqt_length_req').removeClass('disable_a_href');
             $('#pkqt_quantity_req').removeClass('disable_a_href');
         }
-        else if (stock_type == 2)
-        {
+        else if (stock_type == 2) {
             $('#pkqt_item').addClass('disable_a_href');
             $('#pkqt_itemdescription').addClass('disable_a_href');
             $('#pkqt_width_req').addClass('disable_a_href');
@@ -535,8 +529,7 @@
             $('#pkqt_length_req').addClass('disable_a_href');
             $('#pkqt_quantity_req').removeClass('disable_a_href');
         }
-        else
-        {
+        else {
             $('#pkqt_item').addClass('disable_a_href');
             $('#pkqt_itemdescription').addClass('disable_a_href');
             $('#pkqt_width_req').addClass('disable_a_href');
@@ -554,12 +547,12 @@
                 $('#pkqt_stock_description').removeClass('disable_a_href');
                 $("#pkqt_stock_description").empty();
                 $('#pkqt_stock_description').empty().append("<option value='0'>--Select--</option>");
-                var pkqt_stock_description_name=JSON.parse(data)["stock_description"];
-                var pkqt_stock_description_id=JSON.parse(data)["stock_description_id"];
+                var pkqt_stock_description_name = JSON.parse(data)["stock_description"];
+                var pkqt_stock_description_id = JSON.parse(data)["stock_description_id"];
                 var len = (pkqt_stock_description_id).length;
                 $('#pkqt_stock_description').empty().append("<option value='0'>--Select--</option>");
-                for( var i = 0; i<len; i++){
-                    $("#pkqt_stock_description").append("<option value='"+pkqt_stock_description_id[i]+"'>"+pkqt_stock_description_name[i]+"</option>");
+                for (var i = 0; i < len; i++) {
+                    $("#pkqt_stock_description").append("<option value='" + pkqt_stock_description_id[i] + "'>" + pkqt_stock_description_name[i] + "</option>");
                 }
             }
         });
@@ -575,7 +568,7 @@
             type: 'GET',
             data: { 'ct_requirement_id': pkqt_requirement_id },
             dataType: 'json',
-            success: function(data) {
+            success: function (data) {
                 var na_dimension_box_val = data.na_dimension_box_val;
                 var na_dimension_type_val = data.na_dimension_type;
                 var na_dimension_type_id_val = data.na_dimension_type_id;
@@ -619,7 +612,7 @@
         var includeContainer = $('#pk_item_search_page_costing');
 
         $.ajax({
-            url: '{% url "pk_item_search_page_costing" %}',
+            url: "{% url 'pk_item_search_page_costing' %}",
             data: {
                 'stock_type': stock_type,
                 'stock_description': stock_description,
@@ -671,7 +664,8 @@
                         tableHtml += '<td>' + row.sp_rate + '</td>';
                         tableHtml += '<td>' + row.sp_uom__unit_of_measure + '</td>';
                         tableHtml += '<td>' + row.sp_size + '</td>';
-                        tableHtml += '<td><a href="#" class="btn btn-primary select-stock" ' +
+                        if (row.sp_quantity > 0) {
+                            tableHtml += '<td><a href="#" class="btn btn-primary select-stock" ' +
                                 'data-id="' + row.id + '" ' +
                                 'data-length="' + row.sp_length + '" ' +
                                 'data-width="' + row.sp_width + '" ' +
@@ -681,6 +675,9 @@
                                 'data-rate="' + row.sp_rate + '" ' +
                                 'data-uom="' + row.sp_uom__unit_of_measure + '"' +
                                 '>Select</a></td>';
+                        } else {
+                            tableHtml += '<td><span class="badge badge-danger">Out of Stock</span></td>';
+                        }
                         tableHtml += '</tr>';
                     }
                 }
@@ -723,27 +720,24 @@
     }
 </script>
 <script>
-    function changeItemDescription()
-    {
+    function changeItemDescription() {
         var item_id = $('#pkqt_item').val();
         $.ajax({
-            url: '{% url 'pk_get_item_description' %}',
+            url: "{% url 'pk_get_item_description' %}",
             type: 'GET',
-            data: {'item_id': item_id},
+            data: { 'item_id': item_id },
             dataType: 'json',
-            success: function(data)
-            {
-                console.log("Data",data);
+            success: function (data) {
+                console.log("Data", data);
                 $('#pkqt_itemdescription').removeClass('disable_a_href');
                 $('#pkqt_itemdescription').empty();
                 $('#pkqt_itemdescription').empty().append("<option value='0'>--Select--</option>");
-                var pkqt_itemdescription_name=data.item_description_val;
-                var pkqt_itemdescription_id=data.item_description_id;
+                var pkqt_itemdescription_name = data.item_description_val;
+                var pkqt_itemdescription_id = data.item_description_id;
                 var len = (pkqt_itemdescription_id).length;
                 $('#pkqt_itemdescription').empty().append("<option value='0'>--Select--</option>");
-                for( var i = 0; i<len; i++)
-                {
-                    $("#pkqt_itemdescription").append("<option value='"+pkqt_itemdescription_id[i]+"'>"+pkqt_itemdescription_name[i]+"</option>");
+                for (var i = 0; i < len; i++) {
+                    $("#pkqt_itemdescription").append("<option value='" + pkqt_itemdescription_id[i] + "'>" + pkqt_itemdescription_name[i] + "</option>");
                 }
             }
         });
@@ -754,20 +748,20 @@
     function load_pk_requirement_type() {
         var pkqt_assessment_num_id = $('#pkqt_assessment_num').val();
         $.ajax({
-            url: '{% url 'pk_get_pk_requirement_type' %}',
+            url: "{% url 'pk_get_pk_requirement_type' %}",
             type: 'GET',
-            data: {'ct_assessment_num_id': pkqt_assessment_num_id},
+            data: { 'ct_assessment_num_id': pkqt_assessment_num_id },
             dataType: 'json',
-            success: function(data) {
+            success: function (data) {
                 $('#pkqt_requirement').removeClass('disable_a_href');
                 $('#pkqt_requirement').empty();
                 $('#pkqt_requirement').empty().append("<option value='0'>--Select--</option>");
-                var pkqt_requirement_name=data.requirement_type_val;
-                var pkqt_requirement_id=data.requirement_type_id;
+                var pkqt_requirement_name = data.requirement_type_val;
+                var pkqt_requirement_id = data.requirement_type_id;
                 var len = (pkqt_requirement_id).length;
                 $('#pkqt_requirement').empty().append("<option value='0'>--Select--</option>");
-                for( var i = 0; i<len; i++){
-                    $("#pkqt_requirement").append("<option value='"+pkqt_requirement_id[i]+"'>"+pkqt_requirement_name[i]+"</option>");
+                for (var i = 0; i < len; i++) {
+                    $("#pkqt_requirement").append("<option value='" + pkqt_requirement_id[i] + "'>" + pkqt_requirement_name[i] + "</option>");
                 }
             }
         });
@@ -788,7 +782,7 @@
             type: 'GET',
             data: { 'part_code_id': partCodeId },  // Make sure param name matches the backend
             dataType: 'json',
-            success: function(data) {
+            success: function (data) {
                 var pc_stock_type = data.pc_stock_type;
                 var pc_stock_type_id = data.pc_stock_type_id;
                 document.getElementById("pkqt_stock_type").value = pc_stock_type_id;
@@ -819,9 +813,9 @@
                 }
 
                 if (
-                        data.stock_received_id &&
-                        data.stock_consumption_id &&
-                        data.stock_received_id === data.stock_consumption_id
+                    data.stock_received_id &&
+                    data.stock_consumption_id &&
+                    data.stock_received_id === data.stock_consumption_id
                 ) {
                     weightSqftField.value = 1;
                     $('#pkqt_weight_sqft').addClass('disable_a_href');
@@ -842,7 +836,7 @@
         var stockType = $("#pkqt_stock_type").val();
 
         if (stockType == "1" || stockType == "4" || stockType == "5" || stockType == "6") {
-            $("#diameter_width_group, #con_length_group , #uom_group, #weight_group, #weight_sq_group " ).hide();
+            $("#diameter_width_group, #con_length_group , #uom_group, #weight_group, #weight_sq_group ").hide();
             $("#length_group, #width_group, #height_group").show();
 
         }
@@ -885,4 +879,143 @@
     });
 
 </script>
+
+<!-- Stock Summary Modal -->
+<div class="modal fade" id="stockSummaryModal" tabindex="-1" role="dialog" aria-labelledby="stockSummaryModalLabel" aria-hidden="true" style="z-index: 9999;">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" style="border-radius: 1rem; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <div class="modal-header bg-info text-white" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                <h5 class="modal-title" id="stockSummaryModalLabel">
+                    <i class="fas fa-warehouse"></i> Stock Summary: <span id="modal_part_code_text" class="badge badge-light ml-2"></span>
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row text-center mb-4">
+                    <div class="col-3">
+                        <div class="card border-0 shadow-sm" style="background: #e0f2f1; border-radius: 12px;">
+                            <div class="card-body p-3">
+                                <div class="text-muted small text-uppercase font-weight-bold mb-1">Total IN</div>
+                                <h3 id="summary_total_in" class="mb-0 text-dark">0.0</h3>
+                                <div class="text-teal small">Purchases</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="card border-0 shadow-sm" style="background: #fff3e0; border-radius: 12px;">
+                            <div class="card-body p-3">
+                                <div class="text-muted small text-uppercase font-weight-bold mb-1">Retrieved</div>
+                                <h3 id="summary_total_retrieved" class="mb-0 text-dark">0.0</h3>
+                                <div class="text-warning small">To Sites</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="card border-0 shadow-sm" style="background: #e3f2fd; border-radius: 12px;">
+                            <div class="card-body p-3">
+                                <div class="text-muted small text-uppercase font-weight-bold mb-1">Returned</div>
+                                <h3 id="summary_total_returned" class="mb-0 text-dark">0.0</h3>
+                                <div class="text-primary small">Excess</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="card border-0 shadow-sm" style="background: #f1f8e9; border-radius: 12px; border: 2px solid #81c784 !important;">
+                            <div class="card-body p-3">
+                                <div class="text-muted small text-uppercase font-weight-bold mb-1">Available</div>
+                                <h3 id="summary_current_available" class="mb-0 text-success font-weight-bold">0.0</h3>
+                                <div class="text-success small">Balance</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-light rounded shadow-sm">
+                    <h6 class="font-weight-bold mb-3 d-flex align-items-center">
+                        <i class="fas fa-history text-info mr-2"></i> Retrieval History (By Assessment)
+                    </h6>
+                    <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                        <table class="table table-sm table-hover table-striped">
+                            <thead class="bg-white sticky-top">
+                                <tr>
+                                    <th class="border-top-0">Assessment #</th>
+                                    <th class="border-top-0">Qty (CFT)</th>
+                                    <th class="border-top-0">Date & Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="retrieval_history_body">
+                                <!-- Populated via Ajax -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
+                <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-teal { color: #00897b; }
+    .badge-light { background-color: rgba(255,255,255,0.2); color: white; }
+    #retrieval_history_body tr td { vertical-align: middle; font-weight: 600; font-size: 0.9rem; }
+</style>
+
+<script>
+    $('#show_stock_summary').on('click', function() {
+        var partCodeId = $('#pkqt_part_code').val();
+        var partCodeText = $('#pkqt_part_code option:selected').text();
+        
+        if (!partCodeId || partCodeId === "") {
+            alert("Please select a Part Code first.");
+            return;
+        }
+
+        $('#modal_part_code_text').text(partCodeText);
+        
+        // Clear previous data
+        $('#summary_total_in').text('...');
+        $('#summary_total_retrieved').text('...');
+        $('#summary_total_returned').text('...');
+        $('#summary_current_available').text('...');
+        $('#retrieval_history_body').empty();
+
+        $.ajax({
+            url: "{% url 'get_partcode_summary' %}",
+            data: { 'part_code_id': partCodeId },
+            dataType: 'json',
+            success: function(data) {
+                $('#summary_total_in').text(data.total_in);
+                $('#summary_total_retrieved').text(data.total_retrieved);
+                $('#summary_total_returned').text(data.total_returned);
+                $('#summary_current_available').text(data.current_available);
+
+                if (data.breakdown.length > 0) {
+                    data.breakdown.forEach(function(item) {
+                        $('#retrieval_history_body').append(
+                            '<tr>' +
+                            '<td><span class="text-info">' + item.assessment_num + '</span></td>' +
+                            '<td>' + item.qty_cft + '</td>' +
+                            '<td><span class="text-muted small">' + item.date + '</span></td>' +
+                            '</tr>'
+                        );
+                    });
+                } else {
+                    $('#retrieval_history_body').append('<tr><td colspan="3" class="text-center p-4 text-muted">No retrieval history found for this part code.</td></tr>');
+                }
+                
+                // Show modal explicitly if it doesn't open
+                $('#stockSummaryModal').modal('show');
+            },
+            error: function() {
+                alert("Error fetching stock summary data. Please ensure you have selected a valid Part Code.");
+            }
+        });
+    });
+</script>
+
 {% endblock content %}

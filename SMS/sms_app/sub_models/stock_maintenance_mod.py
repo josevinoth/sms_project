@@ -9,6 +9,7 @@ class StockMaintenance(models.Model):
     sm_stock_type = models.ForeignKey(Stock_type_maintenance, on_delete=models.CASCADE, null=True, blank=True)
     sm_invoice_date = models.DateField(null=True, blank=True)
     sm_invoice_no = models.CharField(max_length=100, null=True, blank=True)
+    sm_stock_purchase_number = models.CharField(max_length=100, null=True, blank=True)
     sm_partcode = models.ForeignKey(PkpartcodeInfo, on_delete=models.CASCADE, null=True, blank=True)
     
     # Auto-filled fields
@@ -31,4 +32,4 @@ class StockMaintenance(models.Model):
     sm_updated_by = models.ForeignKey(MyUser, related_name='sm_updated_by_rel', db_column='sm_updated_by', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return f"{self.sm_invoice_no} - {self.sm_partcode}"
+        return f"{self.sm_stock_purchase_number or self.sm_invoice_no} - {self.sm_partcode.pc_code if self.sm_partcode else 'No Part'}"

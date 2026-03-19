@@ -32,7 +32,7 @@
                             <select id="vehicle_number_select" class="form-control">
                                 <option value="">Select Vehicle</option>
                                 {% for vehicle in vehicles %}
-                                <option value="{{ vehicle.id }}">{{ vehicle.vm_registrationnumber }}</option>
+                                <option value="{{ vehicle.id }}" {% if instance and instance.mnb_maintenance.mi_vehicle_id == vehicle.id %}selected{% endif %}>{{ vehicle.vm_registrationnumber }}</option>
                                 {% endfor %}
                             </select>
                             <input type="hidden" id="selected_vehicle_no">
@@ -61,17 +61,17 @@
 
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text label-width">Technician</span>
+                                <span class="input-group-text label-width">Vendor</span>
                             </div>
                             <input type="text" id="pull_technician" class="form-control disable_a_href" readonly>
                         </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text label-width">Vendor Name</span>
-                            </div>
-                            <input type="text" id="pull_vendor_name" class="form-control disable_a_href" readonly>
-                        </div>
+<!--                        <div class="input-group input-group-sm mb-3">-->
+<!--                            <div class="input-group-prepend">-->
+<!--                                <span class="input-group-text label-width">Vendor Name</span>-->
+<!--                            </div>-->
+<!--                            <input type="text" id="pull_vendor_name" class="form-control disable_a_href" readonly>-->
+<!--                        </div>-->
 
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
@@ -216,8 +216,8 @@
                         <tbody id="maintenance_records_body">
                             {% for record in pending_maintenance %}
                             <tr>
-                                <td class="font-weight-bold">{{ record.mi_vehicle.vm_registrationnumber }}</td>
-                                <td>{{ record.mi_job_card_no|default:record.id }}</td>
+                                <td class="font-weight-bold vehicle-col">{{ record.mi_vehicle.vm_registrationnumber }}</td>
+                                <td class="jc-col">{{ record.mi_job_card_no|default:record.id }}</td>
                                 <td>{{ record.mi_service_type }}</td>
                                 <td>{{ record.mi_estimated_amount }}</td>
                                 <td>{{ record.mi_created_at|date:"d-m-Y" }}</td>
@@ -237,6 +237,11 @@
             </div>
         </div>
     </div>
+    
+    <!-- Hidden inputs for JS initialization -->
+    <input type="hidden" id="js_is_edit" value="{% if is_edit %}true{% else %}false{% endif %}">
+    <input type="hidden" id="js_initial_maintenance_id" value="{{ instance.mnb_maintenance.id|default:'' }}">
+    <input type="hidden" id="js_initial_vehicle_id" value="{{ instance.mnb_maintenance.mi_vehicle.id|default:'' }}">
 </form>
 
 <script>
@@ -268,18 +273,47 @@
             }
 
             // Sync Dropdown with Table Filtering
-            $('#vehicle_number_select').on('change', function () {
-                var selectedText = $(this).find('option:selected').text();
-                if ($(this).val() === "") {
-                    table.search('').draw();
+            $('#vehicle_number_select').on('change', function (e, data) {
+                // If this change was triggered programmatically from table selection, skip the reset
+                if (data && data.fromTable) return;
+
+                var vehicleNo = $(this).find('option:selected').text().trim();
+                var vehicleId = $(this).val();
+                
+                if (vehicleId === "") {
+                    table.search('').column(0).search('').draw();
                 } else {
-                    table.search(selectedText).draw();
+                    // Clear global search and search specifically in column 0
+                    table.search('').column(0).search(vehicleNo).draw();
                 }
 
-                // Reset form fields when vehicle changes (unless pick from list)
+                // If a record was selected and the vehicle changed manually, deselect the record
+                var currentlySelectedId = $('#id_mnb_maintenance').val();
+                if (currentlySelectedId && vehicleId !== "") {
+                    // Only reset if the selected vehicle is different from the currently selected record's vehicle
+                    // For safety, we'll just reset on any manual change
+                    resetFormFieldsOnly();
+                }
+            });
+
+            // Function to reset form fields without clearing the dropdown
+            function resetFormFieldsOnly() {
                 $('#id_mnb_maintenance').val('');
                 $('#pull_vehicle_type, #pull_service_type, #pull_est_amount, #pull_technician, #pull_vendor_name').val('');
-            });
+                $('#pull_advance').val('0.00');
+                
+                // Reset UI feedback in table
+                $('.select-record').removeClass('btn-success').addClass('btn-primary').text('Select');
+                $('.select-record').closest('tr').removeClass('table-success');
+                
+                calculateBill();
+            }
+
+            // Function to reset EVERYTHING including dropdown
+            function resetAll() {
+                resetFormFieldsOnly();
+                $('#vehicle_number_select').val('').trigger('change.select2');
+            }
 
             // Function to Fetch Maintenance Details for form population
             function fetchMaintenanceDetails(maintenanceId) {
@@ -310,40 +344,61 @@
             $(document).on('click', '.select-record', function () {
                 var maintenanceId = $(this).data('id');
                 var vehicleNo = $(this).data('vehicle');
+                var currentlySelectedId = $('#id_mnb_maintenance').val();
 
-                $('#id_mnb_maintenance').val(maintenanceId);
+                // TOGGLE LOGIC
+                if (currentlySelectedId == maintenanceId) {
+                    // Deselect if already selected
+                    resetFormFieldsOnly();
+                } else {
+                    // Select new record
+                    $('#id_mnb_maintenance').val(maintenanceId);
+                    
+                    // Sync dropdown visually - pass {fromTable: true} to avoid loop
+                    var $option = $('#vehicle_number_select option').filter(function () {
+                        return $(this).text().trim() === vehicleNo.trim();
+                    });
+                    
+                    if ($option.length) {
+                        $('#vehicle_number_select').val($option.val()).trigger('change.select2', {fromTable: true});
+                    }
 
-                // Sync dropdown visually
-                $('#vehicle_number_select option').filter(function () {
-                    return $(this).text() === vehicleNo;
-                }).prop('selected', true).trigger('change.select2');
+                    fetchMaintenanceDetails(maintenanceId);
 
-                fetchMaintenanceDetails(maintenanceId);
-
-                // UI feedback
-                $('.select-record').removeClass('btn-success').addClass('btn-primary').text('Select');
-                $(this).removeClass('btn-primary').addClass('btn-success').text('Selected');
-                $(this).closest('tr').addClass('table-success').siblings().removeClass('table-success');
+                    // UI feedback
+                    $('.select-record').removeClass('btn-success').addClass('btn-primary').text('Select');
+                    $(this).removeClass('btn-primary').addClass('btn-success').text('Selected');
+                    $('.select-record').closest('tr').removeClass('table-success');
+                    $(this).closest('tr').addClass('table-success');
+                }
             });
 
             // Handle Edit Mode Initialization
-            {% if is_edit %}
-            var initialMaintenanceId = "{{ instance.mnb_maintenance.id }}";
-            var initialVehicleId = "{{ instance.mnb_maintenance.mi_vehicle.id }}";
+            var isEdit = $('#js_is_edit').val() === 'true';
+            if (isEdit) {
+                var initialMaintenanceId = $('#js_initial_maintenance_id').val();
+                var initialVehicleId = $('#js_initial_vehicle_id').val();
 
-            $('#id_mnb_maintenance').val(initialMaintenanceId);
-            $('#vehicle_number_select').val(initialVehicleId).trigger('change.select2');
-            fetchMaintenanceDetails(initialMaintenanceId);
+                console.log("Edit Mode - Initial IDs:", initialMaintenanceId, initialVehicleId);
 
-            // Highlight the row if found
-            setTimeout(function () {
-                var $rowBtn = $('.select-record[data-id="' + initialMaintenanceId + '"]');
-                if ($rowBtn.length) {
-                    $rowBtn.removeClass('btn-primary').addClass('btn-success').text('Selected');
-                    $rowBtn.closest('tr').addClass('table-success');
+                if (initialMaintenanceId) {
+                    $('#id_mnb_maintenance').val(initialMaintenanceId);
+                    fetchMaintenanceDetails(initialMaintenanceId);
                 }
-            }, 800);
-            {% endif %}
+
+                if (initialVehicleId) {
+                    $('#vehicle_number_select').val(initialVehicleId).trigger('change.select2');
+                }
+
+                // Highlight the row if found
+                setTimeout(function () {
+                    var $rowBtn = $('.select-record[data-id="' + initialMaintenanceId + '"]');
+                    if ($rowBtn.length) {
+                        $rowBtn.removeClass('btn-primary').addClass('btn-success').text('Selected');
+                        $rowBtn.closest('tr').addClass('table-success');
+                    }
+                }, 800);
+            }
 
             // Real-time Calculations
             function calculateBill() {
@@ -417,6 +472,11 @@
 
     .select2-container--bootstrap4 .select2-selection {
         border: 1px solid #ced4da !important;
+    }
+
+    #maintenance_records_table td, #maintenance_records_table th {
+        white-space: nowrap;
+        vertical-align: middle;
     }
 </style>
 {% endblock %}
