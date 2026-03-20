@@ -19,7 +19,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" id="">Warehouse Branch</span>
 									</div>
-									{% render_field form.lm_wh_location id="lm_branch" name="lm_branch" class="form-control" %}
+									{% render_field form.lm_wh_location id="lm_branch" class="form-control" %}
 								</div>
 
 								<div class="input-group input-group-sm mb-3">
@@ -34,7 +34,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Bay</span>
 									</div>
-									{% render_field form.lm_areaside id="lm_bay" class="form-control disable_a_href" %}
+									{% render_field form.lm_areaside id="lm_bay" onchange="area_volume_fn()" class="form-control disable_a_href" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -217,6 +217,7 @@ function area_volume_fn() {
         	for( var i = 0; i<len; i++){
         		$("#lm_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
 			}
+			area_volume_fn();
         }
       });
     });
@@ -244,6 +245,7 @@ function area_volume_fn() {
         	for( var j = 0; j<len1; j++){
         		$("#lm_bay").append("<option value='"+bay_id[j]+"'>"+bay[j]+"</option>");
 			}
+			area_volume_fn();
         }
       });
     });

@@ -277,8 +277,18 @@ def stock_usage_breakdown(request):
         usage_type = "Manual"
         linked = None
 
-        # Strategy 1: Extract costing ID from sm_invoice_no (e.g. "RET-GRN/PK/1001816-6" -> costing_id=6)
-        if sm.sm_invoice_no and "RET-" in sm.sm_invoice_no:
+        # Strategy 1: Extract costing ID from sm_description (Standardized format: "... (Costing ID: XX)")
+        if sm.sm_description and "(Costing ID: " in sm.sm_description:
+            try:
+                # The ID is between "(Costing ID: " and ")"
+                costing_id_str = sm.sm_description.split("(Costing ID: ")[-1].split(")")[0]
+                costing_id = int(costing_id_str)
+                linked = costing_by_id.get(costing_id)
+            except (ValueError, IndexError):
+                pass
+
+        # Strategy 2: Fallback for older records using "RET-GRN/PK/XXXXX-ID" format in sm_invoice_no
+        if not linked and sm.sm_invoice_no and "RET-" in sm.sm_invoice_no:
             try:
                 # The last segment after the final "-" is the costing entry ID
                 costing_id = int(sm.sm_invoice_no.rsplit("-", 1)[-1])

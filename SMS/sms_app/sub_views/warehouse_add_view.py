@@ -559,13 +559,19 @@ def load_bays_origin(request):
     bay_name_list = []
     wh_branch_id = request.GET.get('branchId')
     untid_id = request.GET.get('unitId')
-    # Fetch Bay details
-    bays = BayInfo.objects.filter(bay_branch_name=wh_branch_id,Bay_unit_name=untid_id).values('bay_bayname').distinct()
-    bays_id = BayInfo.objects.filter(bay_branch_name=wh_branch_id,Bay_unit_name=untid_id).values('id').distinct()
-    bays_count = bays.count()
-    for k in range(bays_count):
-        bay_list.append(bays[k]['bay_bayname'])
-        bay_id.append(bays_id[k]['id'])
+    # Fetch the bay IDs and Names together to ensure they remain synchronized
+    bays = BayInfo.objects.filter(bay_branch_name=wh_branch_id, Bay_unit_name=untid_id).values('id', 'bay_bayname')
+    
+    # We want to keep unique names, but since they have different IDs we keep the first one we see
+    # If they truly are distinct bays, we might want to keep all of them. The previous code
+    # used distinct() on names which would only keep one ID per name.
+    # To match the original intent but keep IDs synced:
+    seen_names = set()
+    for bay in bays:
+        if bay['bay_bayname'] not in seen_names:
+            seen_names.add(bay['bay_bayname'])
+            bay_list.append(bay['bay_bayname'])
+            bay_id.append(bay['id'])
     # for m in bay_list:
     #     bay_name=BayInfo.objects.filter(id=m).values('bay_bayname')
     #     bay_name_list.append(bay_name[0]['bay_bayname'])

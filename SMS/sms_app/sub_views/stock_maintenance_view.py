@@ -8,6 +8,7 @@ from ..sub_models.stock_maintenance_mod import StockMaintenance
 from ..sub_models.part_code_mod import PkpartcodeInfo
 from ..sub_forms.stock_maintenance_form import StockMaintenanceForm
 from ..sub_models.my_user_mod import MyUser
+from ..models import PkstockvebdorInfo
 
 
 def get_stock_totals():
@@ -133,6 +134,12 @@ def stock_maintenance_add(request):
             obj.sm_stock_purchase_number = f'GRN/PK/{reg_number}'
             obj.save(update_fields=['sm_stock_purchase_number'])
 
+            if obj.sm_invoice_no:
+                vendor_matches = PkstockvebdorInfo.objects.filter(spv_vendor_bill=obj.sm_invoice_no)
+                if vendor_matches.exists():
+                    obj.sm_vendor = vendor_matches.first()
+                    obj.save(update_fields=['sm_vendor'])
+
             # Store sticky data for next entry
             request.session['sticky_stock_data'] = {
                 'sm_stock_type': str(obj.sm_stock_type.id) if obj.sm_stock_type else '',
@@ -161,6 +168,92 @@ def stock_maintenance_add(request):
         'form': form,
         'items': items,
         'totals': totals
+    })
+
+
+@login_required
+def stock_maintenance_add_for_vendor(request):
+    vendor_id = request.session.get('ses_stock_vendor_id')
+    if not vendor_id:
+        messages.error(request, "No Vendor Bill selected.")
+        return redirect('pk_stock_vendor_list')
+        
+    vendor_info = get_object_or_404(PkstockvebdorInfo, pk=vendor_id)
+
+    # Clear sticky data if explicitly requested
+    if request.GET.get('new') == '1':
+        if 'sticky_stock_data' in request.session:
+            del request.session['sticky_stock_data']
+
+    if request.method == 'POST':
+        form = StockMaintenanceForm(request.POST)
+        if form.is_valid():
+            obj = form.save(commit=False)
+
+            # FORCE UOM FROM POST
+            uom_id = request.POST.get("sm_uom")
+            if uom_id:
+                obj.sm_uom_id = uom_id
+
+            if hasattr(request.user, 'myuser'):
+                obj.sm_updated_by = MyUser.objects.get(pk=request.user.pk)
+            elif isinstance(request.user, MyUser):
+                obj.sm_updated_by = request.user
+            else:
+                obj.sm_updated_by = MyUser.objects.get(pk=request.user.pk)
+                
+            # Set Vendor relation
+            obj.sm_vendor = vendor_info
+
+            obj.save()
+
+            # Generate and update sm_stock_purchase_number
+            reg_number = 1000000 + obj.id
+            obj.sm_stock_purchase_number = f'GRN/PK/{reg_number}'
+            obj.save(update_fields=['sm_stock_purchase_number'])
+
+            # Store sticky data for next entry
+            request.session['sticky_stock_data'] = {
+                'sm_stock_type': str(obj.sm_stock_type.id) if obj.sm_stock_type else '',
+                'sm_invoice_date': str(obj.sm_invoice_date) if obj.sm_invoice_date else '',
+                'sm_invoice_no': obj.sm_invoice_no,
+                'sm_partcode': str(obj.sm_partcode.id) if obj.sm_partcode else '',
+                'sm_per_unit_cost': str(obj.sm_per_unit_cost),
+                'sm_count': obj.sm_count,
+            }
+            messages.success(request, f"Stock item '{obj.sm_stock_purchase_number}' saved successfully under Vendor Bill {vendor_info.spv_vendor_bill}!")
+            return redirect('/SMS/pk_stock_vendor_update/' + str(vendor_id))
+    else:
+        initial_data = request.session.get('sticky_stock_data', {})
+        
+        # If the sticky data belongs to a different invoice, discard the sticky data!
+        if initial_data.get('sm_invoice_no') and initial_data['sm_invoice_no'] != vendor_info.spv_vendor_bill:
+            initial_data = {}
+        else:
+            initial_data = initial_data.copy()
+        
+        # Always enforce the current vendor's bill and date in the vendor-specific flow
+        initial_data['sm_invoice_no'] = vendor_info.spv_vendor_bill
+        if vendor_info.spv_vendor_bill_date:
+            initial_data['sm_invoice_date'] = vendor_info.spv_vendor_bill_date
+            
+        form = StockMaintenanceForm(initial=initial_data)
+
+    items = StockMaintenance.objects.select_related('sm_stock_type', 'sm_partcode', 'sm_uom', 'sm_updated_by').filter(sm_vendor=vendor_info).order_by('-sm_created_at')[:1000]
+
+    # If sticky part exists, show its totals initially to avoid jump
+    sticky_part_id = request.session.get('sticky_stock_data', {}).get('sm_partcode')
+    if sticky_part_id:
+        totals = get_part_totals(sticky_part_id)
+    else:
+        totals = get_stock_totals()
+
+    return render(request, 'asset_mgt_app/stock_maintenance_add.html', {
+        'form': form,
+        'items': items,
+        'totals': totals,
+        'is_vendor_flow': True,
+        'vendor_id': vendor_id
     })
 
 

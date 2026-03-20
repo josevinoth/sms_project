@@ -94,7 +94,7 @@ def costing_add(request, costing_id=0):
                         try:
                             # Fetch stock purchase record from StockMaintenance (not PkstockpurchasesInfo)
                             stock_purchase = StockMaintenance.objects.get(id=stock_purchase_num_id)
-                            stock_purchase_num = stock_purchase.sm_stock_purchase_number
+                            stock_purchase_num = stock_purchase.sm_stock_purchase_number or stock_purchase.sm_invoice_no or f"SM-{stock_purchase_num_id}"
                             stock_qty_available = stock_purchase.sm_count or 0.0
 
                             # Validate quantity
@@ -129,15 +129,17 @@ def costing_add(request, costing_id=0):
 
                             if costing.ct_stock_status.id in [2, 4]:
                                 try:
-                                    ref_no = f"RET-{stock_purchase_num}-{costing.id}"
-                                    if not StockMaintenance.objects.filter(sm_invoice_no=ref_no).exists():
+                                    # User request: original GRN number should be in the 'sm_invoice_no' field for retrievals.
+                                    # No more 'RET-' prefix.
+                                    ref_no = stock_purchase_num
+                                    if not StockMaintenance.objects.filter(sm_stock_type_id=2, sm_invoice_no=ref_no, sm_description__endswith=f"(Costing ID: {costing.id})").exists():
                                         StockMaintenance.objects.create(
                                             sm_stock_type_id=2, # Retrieval
                                             sm_invoice_date=datetime.now().date(),
-                                            sm_invoice_no=ref_no,
-                                            sm_description=f"Retrieved via Costing for Assessment {costing.ct_assessment_num.na_assessment_num if costing.ct_assessment_num else 'N/A'}",
+                                            sm_invoice_no=ref_no, # Standardizing: Putting original GRN here
+                                            sm_description=f"Retrieved via Costing for Assessment {costing.ct_assessment_num.na_assessment_num if costing.ct_assessment_num else 'N/A'} (Costing ID: {costing.id})",
                                             sm_partcode=stock_purchase.sm_partcode,
-                                            sm_count=float(stock_qty),
+                                            sm_count=float(costing.ct_na_quantity or stock_qty),
                                             sm_uom=stock_purchase.sm_uom,
                                             sm_updated_by_id=user_id
                                         )
@@ -206,20 +208,25 @@ def pk_return_excess_to_stock(request, costing_id):
     costing = get_object_or_404(PkcostingInfo, pk=costing_id)
     user_id = request.session.get('ses_userID')
 
-    if costing.ct_excess_status.id == 3:  # Excess
+    if costing.ct_excess_status and costing.ct_excess_status.id == 3:  # Excess
         # Create Return Record in StockMaintenance
+        # Ensure dimensions and part code are preserved for accurate inventory
         sm_return = StockMaintenance.objects.create(
             sm_stock_type_id=3,  # Return
+            sm_partcode=costing.ct_part_code,
+            sm_thickness=costing.ct_exe_height_req or 0,
+            sm_width=costing.ct_exe_width_req or 0,
+            sm_length=costing.ct_exe_length_req or 0,
             sm_invoice_date=datetime.now().date(),
-            sm_invoice_no=f"RET-EXC-{costing.ct_assessment_num}",
-            sm_description=f"Excess Return from Assessment {costing.ct_assessment_num}",
+            sm_invoice_no=str(costing.ct_assessment_num.na_assessment_num) if costing.ct_assessment_num else "",
+            sm_description=f"Excess Return from Assessment {costing.ct_assessment_num.na_assessment_num if costing.ct_assessment_num else 'N/A'}",
             sm_count=costing.ct_exe_quantity_req or 0,
             sm_total_cft=costing.ct_exe_sqrt_req or 0,
             sm_per_unit_cost=costing.ct_rate or 0,
-            sm_total_price=0,  # It's a return, maybe value it?
+            sm_total_price=0,
             sm_updated_by_id=user_id
         )
-        # Auto-generate GRN/PK number for return
+        # Auto-generate NEW GRN number for return in sm_stock_purchase_number
         sm_return.sm_stock_purchase_number = f"GRN/PK/{1000000 + sm_return.id}"
         sm_return.save(update_fields=['sm_stock_purchase_number'])
         # Update status to Returned (assuming 5 is Returned or similar)
@@ -240,30 +247,7 @@ def update_reduced_dimensions(stock_purchase_num,last_id):
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity=current_qty)
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft=round(current_cft,2))
 
-def append_reduced_dimensions(stock_purchase_num,costing_id):
-    length = PkcostingInfo.objects.get(pk=costing_id).ct_length
-    qty = PkcostingInfo.objects.get(pk=costing_id).ct_quantity
-    cft = PkcostingInfo.objects.get(pk=costing_id).ct_cft
 
-    prev_length = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_length_reduced
-    prev_qty = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_quantity_reduced
-    prev_cft = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_cft_reduced
-
-    if prev_length>=length:
-        current_length = prev_length + length
-        current_cft= prev_cft + cft
-    else:
-        current_length = prev_length
-        current_cft= prev_cft
-
-    if prev_qty >= qty:
-        current_qty=prev_qty+qty
-    else:
-        current_qty = prev_qty
-
-    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_length_reduced=current_length)
-    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity_reduced=current_qty)
-    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft_reduced=current_cft)
 
 # List costing
 @login_required(login_url='login_page')
@@ -281,9 +265,8 @@ def costing_delete(request,costing_id):
     stock_purchase_num = PkcostingInfo.objects.get(pk=costing_id).ct_stock_purchase_number
     cost_type_id = PkcostingInfo.objects.get(pk=costing_id).ct_cost_type.id
     if cost_type_id == 8:
-        append_reduced_dimensions(stock_purchase_num, costing_id)
-    else:
-        pass
+        # Clean up both Retrieval (Type 2) and Return (Type 3) records linked to this costing ID
+        StockMaintenance.objects.filter(sm_stock_type_id__in=[2, 3], sm_description__contains=f"(Costing ID: {costing_id})").delete()
     costing.delete()
     print("Successfully Deleted")
     # return redirect('/SMS/costing_list')
