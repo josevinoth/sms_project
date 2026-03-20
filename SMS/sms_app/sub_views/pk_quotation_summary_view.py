@@ -140,31 +140,43 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
         if form.is_valid():
             print("Requirement Form is Valid")
             quotation_num = form.cleaned_data['qs_quotation_number']
-            if not PkquotationsummaryInfo.objects.filter(qs_quotation_number=quotation_num).exclude(id=pk_quotationsummary_id).exists():
-                form.save()
-                if pk_quotationsummary_id==0:
+            
+            # Uniqueness check logic
+            is_duplicate = False
+            if quotation_num:
+                is_duplicate = PkquotationsummaryInfo.objects.filter(qs_quotation_number=quotation_num).exclude(id=pk_quotationsummary_id).exists()
+                
+            if not is_duplicate:
+                instance = form.save()
+                if pk_quotationsummary_id == 0:
                     try:
-                        last_id = (PkquotationsummaryInfo.objects.values_list('id', flat=True)).last()
-                        quotation_number=100000+last_id
+                        # Use the newly created instance id correctly
+                        new_id = instance.id
+                        quotation_number = 100000 + new_id
                         date_to_check = datetime.now()
                         current_year = date_to_check.year
-                        end_of_march = datetime(current_year, 3, 31)
-                        if date_to_check <= end_of_march:
+                        if date_to_check.month <= 3:
                             financial_year = f"{current_year - 1}-{str(current_year)[-2:]}"
                         else:
                             financial_year = f"{current_year}-{str(current_year + 1)[-2:]}"
-                        # req_num_next = str('Req_') + str(int(((RequirementsInfo.objects.get(id=last_id)).req_number).replace('Req_', '')) + 1)
-                    except ObjectDoesNotExist:
-                        quotation_number=100000
-                    quotation_number = f'{quotation_number:03}'
-                    quotation_num_next = f'BVM/PKG/{financial_year}/{quotation_number}'
-                    PkquotationsummaryInfo.objects.filter(id=last_id).update(qs_quotation_number=quotation_num_next)
-                    messages.success(request, 'Record Updated Successfully')
-                    form.save()
+                        
+                        quotation_number_str = f'{quotation_number:03}'
+                        quotation_num_next = f'BVM/PKG/{financial_year}/{quotation_number_str}'
+                        
+                        # Update the instance with the generated number
+                        instance.qs_quotation_number = quotation_num_next
+                        instance.save()
+                        messages.success(request, 'Record Created Successfully with Quotation Number: ' + quotation_num_next)
+                        last_id = new_id # For redirection
+                    except Exception as e:
+                        print(f"Error generating quotation number: {str(e)}")
+                        last_id = instance.id
+                else:
+                    last_id = pk_quotationsummary_id
                     messages.success(request, 'Record Updated Successfully')
                 
                 # Fetch the saved instance to check the status and update parent assessment
-                saved_summary = PkquotationsummaryInfo.objects.get(id=pk_quotationsummary_id if pk_quotationsummary_id != 0 else last_id)
+                saved_summary = PkquotationsummaryInfo.objects.get(id=last_id)
                 if saved_summary.qs_status and saved_summary.qs_status.id == 5:
                     if saved_summary.qs_assessment_num:
                         saved_summary.qs_assessment_num.na_status_id = 5
@@ -173,12 +185,25 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 if pk_quotationsummary_id == 0:
                     return redirect('/SMS/pk_quotationsummary_update/' + str(last_id))
                 else:
-                    return redirect(request.META['HTTP_REFERER'])
+                    # Redirect back to where they came from or referer
+                    referer = request.META.get('HTTP_REFERER')
+                    if referer:
+                        return redirect(referer)
+                    else:
+                        return redirect('/SMS/pk_quotationsummary_list')
             else:
                 messages.error(request, 'Please enter a Unique Quotation Number.')
         else:
             messages.error(request, 'Record NOT Updated Successfully')
-        return redirect(request.META['HTTP_REFERER'])
+            # If the form is not valid, print errors for debugging
+            print(f"Form errors: {form.errors}")
+        
+        # In case of error (duplicate or invalid form), instead of just REFERER which can cause issues or redirect loops if they just clicked submit
+        # we try to stay on the same page or redirect back
+        referer = request.META.get('HTTP_REFERER')
+        if referer:
+            return redirect(referer)
+        return redirect('/SMS/pk_quotationsummary_list')
 # List quotationsummary
 @login_required(login_url='login_page')
 def pk_quotationsummary_list(request):
@@ -446,10 +471,13 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
 
                             # Create StockMaintenance Retrieval Record if it's a stock item (Type 8, Stock Type 1/4)
                             if quotation.pkqt_cost_type.id == 8 and quotation.pkqt_stock_purchase_number:
+                                # User request: original GRN number should be in the 'sm_invoice_no' field for retrievals.
+                                # No more 'RET-CLONE-' prefix.
+                                ref_no = quotation.pkqt_stock_purchase_number
                                 StockMaintenance.objects.create(
                                     sm_stock_type_id=2, # Retrieval
                                     sm_invoice_date=datetime.now().date(),
-                                    sm_invoice_no=f"RET-CLONE-{quotation.pkqt_assessment_num}",
+                                    sm_invoice_no=ref_no, # Standardizing: Putting original GRN here
                                     sm_description=f"Retrieved via Cloning for Assessment {quotation.pkqt_assessment_num}",
                                     sm_count=quotation.pkqt_quantity or 0,
                                     sm_total_cft=quotation.pkqt_sqrt_req or 0,

@@ -1,9 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 
 from ..forms import PkstockvendorForm
 from ..models import PkstockvebdorInfo,PkstockpurchasesInfo
+from ..sub_models.stock_maintenance_mod import StockMaintenance
 from django.shortcuts import render, redirect
 
 @login_required(login_url='login_page')
@@ -12,9 +14,14 @@ def pk_stock_vendor_add(request,stock_vendor_id=0):
     user_id = request.session.get('ses_userID')
     if request.method == "GET":
         if stock_vendor_id == 0:
+            if 'ses_stock_vendor_id' in request.session:
+                del request.session['ses_stock_vendor_id']
+            if 'ses_pk_vendor_bill' in request.session:
+                del request.session['ses_pk_vendor_bill']
             psv_form = PkstockvendorForm()
             pk_vendor_bill = ''
             stockpurchases_list = PkstockpurchasesInfo.objects.filter(sp_vendor_bill=pk_vendor_bill)
+            stockmaintenance_list = StockMaintenance.objects.none()
         else:
             pk_vendor_bill = PkstockvebdorInfo.objects.get(pk=stock_vendor_id).spv_vendor_bill
             pk_vendor_bill_id = PkstockvebdorInfo.objects.get(pk=stock_vendor_id).id
@@ -24,44 +31,30 @@ def pk_stock_vendor_add(request,stock_vendor_id=0):
             psv_form = PkstockvendorForm(instance=pk_stock_vendor)
             # pk_vendor_bill = request.session.get('ses_pk_vendor_bill')
             stockpurchases_list = PkstockpurchasesInfo.objects.filter(sp_vendor_bill_id=pk_vendor_bill_id)
+            stockmaintenance_list = StockMaintenance.objects.filter(Q(sm_vendor_id=pk_vendor_bill_id) | Q(sm_invoice_no=pk_vendor_bill)).order_by('-sm_created_at')
         context={
                 'psv_form': psv_form,
                 'first_name': first_name,
                 'user_id': user_id,
-                'stockpurchases_list':stockpurchases_list,}
+                'stockpurchases_list': stockpurchases_list,
+                'stockmaintenance_list': stockmaintenance_list,
+        }
         return render(request, "asset_mgt_app/pk_stock_vendor_add.html", context)
     else:
         psv_form = PkstockvendorForm(request.POST)
 
         if psv_form.is_valid():
-            # psv_form.save()  # Save the new record
-            # Extract the vendor bill and purchase type
             spv_vendor_bill = psv_form.cleaned_data['spv_vendor_bill']
-            purchase_type = psv_form.cleaned_data['spv_stock_Purchasetype'].id
-            print('purchase_type', purchase_type)
-            if purchase_type == 1 and PkstockvebdorInfo.objects.filter(spv_vendor_bill=spv_vendor_bill).exclude(id=stock_vendor_id).exists():
-                print("Data not saved - Duplicate Vendor Bill found for purchase_type=3")
+            
+            if PkstockvebdorInfo.objects.filter(spv_vendor_bill=spv_vendor_bill).exclude(id=stock_vendor_id).exists():
                 messages.error(request, 'Duplicate Found. Please enter a Unique Vendor Bill.')
                 return redirect(request.META['HTTP_REFERER'])
 
             if stock_vendor_id == 0:
                 new_place = psv_form.save()
-                print("psv_form saved")
-                try:
-                    last_id = PkstockvebdorInfo.objects.latest('id').id
-                    rand_number = int(1000000 + last_id)
-                except ObjectDoesNotExist:
-                    rand_number = 1000000
-
-                print('last_id', last_id)
-                print('rand_number', rand_number)
-
-                if purchase_type == 2:
-                    vendor_bill_num = str('Prod_Ret') + str(rand_number)
-                    PkstockvebdorInfo.objects.filter(id=last_id).update(spv_vendor_bill=vendor_bill_num)
-                elif purchase_type == 3:
-                    vendor_bill_num = str('New_Order') + str(rand_number)
-                    PkstockvebdorInfo.objects.filter(id=last_id).update(spv_vendor_bill=vendor_bill_num)
+                
+                # Auto-link any unlinked StockMaintenance entries that match this new invoice number
+                StockMaintenance.objects.filter(sm_invoice_no=new_place.spv_vendor_bill, sm_vendor__isnull=True).update(sm_vendor=new_place)
 
                 messages.success(request, 'Record Saved Successfully')
                 url = new_place.get_absolute_url_pk_stock_vendor()
@@ -70,6 +63,10 @@ def pk_stock_vendor_add(request,stock_vendor_id=0):
                 pk_stock_vendor = PkstockvebdorInfo.objects.get(pk=stock_vendor_id)
                 psv_form = PkstockvendorForm(request.POST, instance=pk_stock_vendor)
                 psv_form.save()
+                
+                # Auto-link any unlinked StockMaintenance entries that match this invoice number
+                StockMaintenance.objects.filter(sm_invoice_no=pk_stock_vendor.spv_vendor_bill, sm_vendor__isnull=True).update(sm_vendor=pk_stock_vendor)
+                
                 print("psv_form saved")
                 messages.success(request, 'Record Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])

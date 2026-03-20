@@ -4,12 +4,14 @@ from .stock_type_mod import Stock_type
 from .stocktype_maintenance_mod import Stock_type_maintenance
 from .unit_of_measure_mod import Unitofmeasure
 from .my_user_mod import MyUser
+from .pk_stock_vendor_mod import PkstockvebdorInfo
 
 class StockMaintenance(models.Model):
     sm_stock_type = models.ForeignKey(Stock_type_maintenance, on_delete=models.CASCADE, null=True, blank=True)
     sm_invoice_date = models.DateField(null=True, blank=True)
     sm_invoice_no = models.CharField(max_length=100, null=True, blank=True)
     sm_stock_purchase_number = models.CharField(max_length=100, null=True, blank=True)
+    sm_vendor = models.ForeignKey(PkstockvebdorInfo, on_delete=models.SET_NULL, null=True, blank=True, related_name='stock_maintenance_entries')
     sm_partcode = models.ForeignKey(PkpartcodeInfo, on_delete=models.CASCADE, null=True, blank=True)
     
     # Auto-filled fields
