@@ -478,6 +478,7 @@ def vehicle_utilization_report_view(request):
         selected_month = request.POST.get('month') or "0"
         selected_year = request.POST.get('year') or "0"
         branch_id = request.POST.get('branch') or ""
+        vehicle_source = request.POST.get('vehicle_source') or ""
     else:
         form = DmrForm(request.GET or None)
 
@@ -485,6 +486,7 @@ def vehicle_utilization_report_view(request):
         selected_month = request.GET.get('month', str(date.today().month))
         selected_year = request.GET.get('year', str(date.today().year))
         branch_id = request.GET.get('branch', '')
+        vehicle_source = request.GET.get('vehicle_source', '')
 
     # Convert month/year to integers for calculation
     try:
@@ -514,11 +516,14 @@ def vehicle_utilization_report_view(request):
             veh_no_clean=Upper(Trim('vm_registrationnumber'))
         )
         .select_related('vm_vehicletype', 'vm_vendor', 'vm_vendor__vend_branch')
-        .filter(vm_ownership_id__in=[1, 2, 3]) # OWN, MARKET, ATTACHED as per logic elsewhere
+        .filter(vm_ownership_id__in=[1, 2]) # OWN, ATTACHED
     )
 
     if vehicle_search:
         vehicles = vehicles.filter(vm_registrationnumber__icontains=vehicle_search)
+    
+    if vehicle_source:
+        vehicles = vehicles.filter(vm_ownership_id=vehicle_source)
     
     if branch_id and branch_id != 'None':
         try:
@@ -675,6 +680,7 @@ def vehicle_utilization_report_view(request):
         'all_vehicles': all_vehicles,
         'vehicle_search': vehicle_search,
         'selected_branch': branch_id,
+        'selected_source': vehicle_source,
     }
 
     return render(
@@ -828,7 +834,7 @@ def ref_no_pending_report_view(request):
         'from_location': from_loc_id,
         'to_location': to_loc_id,
         'vehicle_search': vehicle_search,
-        'all_vehicles': VehiclemasterInfo.objects.filter(vm_ownership_id__in=[1, 2]).order_by('vm_registrationnumber'),
+        'all_vehicles': VehiclemasterInfo.objects.filter(vm_ownership_id__in=[1, 2, 3]).order_by('vm_registrationnumber'),
     }
     return render(request, "asset_mgt_app/ref_no_pending_report.html", context)
 
@@ -1530,6 +1536,9 @@ def vendor_p_l_mkt_report_view(request):
         ).exclude(vm_registrationnumber__isnull=True).exclude(vm_registrationnumber="").values_list('vm_registrationnumber', flat=True).distinct()
 
         vehicle_numbers = sorted(set(va_mkt_veh) | set(va_mast_veh) | set(vm_mast_veh))
+    else:
+        # If no vendor, show all vehicles currently in the filtered trips table
+        vehicle_numbers = sorted(trips.values_list('tr_vehiclenumber', flat=True).distinct())
 
     return render(request, "asset_mgt_app/vendor_p_l_mkt_report.html", {
         'first_name': first_name,
@@ -1909,10 +1918,12 @@ def vendor_p_l_attached_report_view(request):
             flat=True
         ).distinct()
 
-        # Combine both
         vehicle_numbers = sorted(
             set(va_veh_qs) | set(vm_veh_qs)
         )
+    else:
+        # If no vendor, show all vehicles currently in the filtered trips table
+        vehicle_numbers = sorted(trips.values_list('tr_vehiclenumber', flat=True).distinct())
 
 
     print("Selected Vendor ID:", vendor_id)

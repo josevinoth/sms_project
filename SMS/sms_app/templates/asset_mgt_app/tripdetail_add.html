@@ -162,7 +162,7 @@
 								</div>
 
 							</div>
-							<div class="  col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
+							<div class="  col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border" id="loading-details-section">
 								<!-- ✅ HEADING -->
 								<div class="text-center font-weight-bold text-white bg-info p-1 rounded mb-2">
 									Loading Details
@@ -212,7 +212,7 @@
 								</div>
 
 							</div>
-							<div class="col-12 col-md-6 col-lg-3  shadow bg-white rounded border p-2">
+							<div class="col-12 col-md-6 col-lg-3  shadow bg-white rounded border p-2" id="unloading-details-section">
 								<!-- ✅ HEADING -->
 								<div class="text-center font-weight-bold text-white bg-info p-1 rounded mb-2">
 									Unloading Details
@@ -600,17 +600,9 @@
 		if (categoryValue == "2" || categoryValue == "3") {
 			loadingTimeDiv.style.display = "none";
 			unloadingTimeDiv.style.display = "none";
-
-			// Make fields non-mandatory
-			document.getElementById("id_trip_loading_time").required = false;
-			document.getElementById("id_trip_unloading_time").required = false;
 		} else {
 			loadingTimeDiv.style.display = "flex";
 			unloadingTimeDiv.style.display = "flex";
-
-			// Make fields mandatory
-			document.getElementById("id_trip_loading_time").required = true;
-			document.getElementById("id_trip_unloading_time").required = true;
 		}
 
 	}
@@ -620,36 +612,102 @@
 	});
 </script>
 <script>
-	function hideEmptyFields() {
+	/**
+	 * ✅ NEW CONSOLIDATED WORKFLOW LOGIC
+	 * Handles visibility, required attributes, and field locking.
+	 */
+	function updateWorkflowUI() {
 		let categoryValue = document.getElementById("tr_category").value;
+		let tripStatus = document.getElementById("tc_financestatus").value;
+		
+		// Section references
+		let loadingSection = $("#loading-details-section");
+		let unloadingSection = $("#unloading-details-section");
 
-		// ✅ EMPTY = category 2 or 3
+		// Grouped Field Selectors
+		let loadingStage1Ids = ["tr_departedlocation", "tr_departeddate_pickup", "tr_departedkm"];
+		let loadingStage2Ids = ["tr_loading_time", "tr_dock_in_time", "tr_departeddate", "tr_reportedkm_pickup"];
+		
+		let unloadingStage1Ids = ["tr_reportedlocation", "tr_reporteddate", "tr_reportedkm"];
+		let unloadingStage2Ids = ["tr_departeddate_delivery", "tr_unloading_time", "tr_reporteddate_pickup", "tr_reportedkm_delivery"];
+
+		let allTimeFields = [...loadingStage1Ids, ...loadingStage2Ids, ...unloadingStage1Ids, ...unloadingStage2Ids];
+
+		// 🔹 STEP 0: Special Categories (2 or 3)
 		if (categoryValue === "2" || categoryValue === "3") {
-			$(".empty-field").hide();   // ✅ Hide unwanted fields
-
-			// ✅ Enable the visible fields for category 2 & 3
-			// Loading section fields
-			$("#tr_departedlocation").prop("disabled", false).removeClass('disable_a_href');
-			$("#tr_departeddate").prop("disabled", false).removeClass('disable_a_href');
-			$("#tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
-
-			// Unloading section fields
-			$("#tr_reportedlocation").prop("disabled", false).removeClass('disable_a_href');
-			$("#tr_reporteddate").prop("disabled", false).removeClass('disable_a_href');
-			$("#tr_reportedkm").prop("disabled", false).removeClass('disable_a_href');
+			$(".empty-field").hide();
+			allTimeFields.forEach(id => {
+				let el = document.getElementById(id);
+				if (el) el.required = false;
+			});
+			loadingSection.find(":input").prop("disabled", false).removeClass("disable_a_href");
+			unloadingSection.find(":input").prop("disabled", false).removeClass("disable_a_href");
+			return; // Skip complex logic for special categories
 		} else {
-			$(".empty-field").show();   // ✅ Show all for normal trip
+			$(".empty-field").show();
+		}
+
+		// 🔹 STEP 1: INITIAL LOADING (Lock Unloading)
+		// If Loading Reported mail is NOT SENT yet, we only require Stage 1 Loading
+		if (!g_loadingSent) {
+			// Required
+			loadingStage1Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = true; });
+			loadingStage2Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = false; });
+			
+			// Enabled/Disabled
+			loadingSection.find(":input").filter(loadingStage1Ids.map(id => "#"+id).join(",")).prop("disabled", false).removeClass("disable_a_href");
+			loadingSection.find(":input").filter(loadingStage2Ids.map(id => "#"+id).join(",")).prop("disabled", true).addClass("disable_a_href");
+			
+			// Lock Unloading completely
+			unloadingSection.find(":input").prop("disabled", true).addClass("disable_a_href").prop("required", false);
+			unloadingSection.css("opacity", "0.6");
+		} else {
+			// 🔹 STEP 2: LOADING SENT (Unlock Unloading Stage 1)
+			unloadingSection.css("opacity", "1.0");
+			
+			// Loading Stage 1 is already done, Stage 2 (Started) becomes optional until status is 'Started'
+			loadingStage1Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = false; });
+			
+			// If trip is Open/Started (Status 1), Stage 2 (Started) details are required
+			if (tripStatus == "1") {
+				loadingStage2Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = true; });
+			} else {
+				loadingStage2Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = false; });
+			}
+			
+			loadingSection.find(":input").prop("disabled", false).removeClass("disable_a_href");
+			
+			// Enable Unloading Stage 1
+			unloadingSection.find(":input").filter(unloadingStage1Ids.map(id => "#"+id).join(",")).prop("disabled", false).removeClass("disable_a_href");
+			
+			// Unloading Stage 1 (Reported) required only if user is closing trip (Status 2)
+			if (tripStatus == "2") {
+                unloadingStage1Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = true; });
+            } else {
+                unloadingStage1Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = false; });
+            }
+
+			// 🔹 STEP 3: UNLOADING SENT (Unlock Unloading Stage 2)
+			if (g_unloadingSent || tripStatus == "2") {
+				unloadingSection.find(":input").prop("disabled", false).removeClass("disable_a_href");
+				if (tripStatus == "2") {
+					unloadingStage2Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = true; });
+				}
+			} else {
+				unloadingSection.find(":input").filter(unloadingStage2Ids.map(id => "#"+id).join(",")).prop("disabled", true).addClass("disable_a_href").prop("required", false);
+			}
 		}
 	}
 
-	// ✅ Trigger when category changes
-	$("#tr_category").on("change", function () {
-		hideEmptyFields();
+	// Trigger on category or status changes
+	$(document).on("change", "#tr_category, #tc_financestatus", function () {
+		updateWorkflowUI();
+		trip_type(); // Keep existing type logic
 	});
 
-	// ✅ Trigger on page load
+	// Trigger on page load
 	$(document).ready(function () {
-		hideEmptyFields();
+		updateWorkflowUI();
 	});
 </script>
 
@@ -778,35 +836,16 @@
 		});
 
 
-		// ---- 6. Initialization Logic ----
+		// ---- 6. Initialization Logic (Consolidated into updateWorkflowUI) ----
 		function initializeWorkflow() {
-			let status = $("#tc_financestatus").val();
-
-			lockLoadingFieldsInitially();
-			lockUnloadingFields();
-
-			if (g_loadingSent) {
-				enableLoadingFields();
-			}
-			if (status == "1" || status == "2" || g_tripStartedSent) {
-				enableUnloadingStage1();
-			}
-			if (g_unloadingSent) {
-				enableUnloadingStage2();
-			}
+			updateWorkflowUI();
 		}
 
 		initializeWorkflow();
-
-		// ---- 7. Existing Logic Integration ----
-		document.getElementById("tr_updated_by").value = '{{user_id}}';
-		document.getElementById("tc_financestatus").value = '{{status_selected}}';
-		document.getElementById("tr_enquirynumber").value = '{{enquiry_num_id}}';
-
-		trip_type();
-		trip_status_update();
 	});
 
+	// Redundant helper removed as it's now integrated in updateWorkflowUI
+	/*
 	function trip_status_update() {
 		var trip_status = document.getElementById("tc_financestatus").value;
 		if (trip_status == 1) {
@@ -815,6 +854,7 @@
 			$("#tr_unloading_time, #tr_reportedlocation, #tr_reportedkm, #tr_reporteddate").attr("required", "required");
 		}
 	}
+	*/
 </script>
 
 {% block scripts %}

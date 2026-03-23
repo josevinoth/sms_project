@@ -1,4 +1,4 @@
-﻿{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% load static %}
 {% block content %}
@@ -144,21 +144,33 @@
         background: #fff;
     }
     .text-nowrap { white-space: nowrap; }
+    .select2-container--bootstrap4 .select2-selection--single {
+        border: 1px solid #ced4da !important;
+    }
 </style>
 
 <script>
 
-        // Auto-submit on vendor change
-        $('#vendor_select').on('change', function () {
-            // Reset vehicle selection
-            $('#vehicle_number').val('').trigger('change');
-            $('#report-filter-form').submit();
+</script>
+<script>
+    var $jq = jQuery.noConflict(true);
+    $jq(document).ready(function () {
+        $jq('.select2').select2({
+            theme: 'bootstrap4',
+            width: '100%'
         });
 
+        // Auto-submit on vendor change
+        $jq('#vendor_select').on('change', function () {
+            // Reset vehicle selection
+            $jq('#vehicle_number').val('').trigger('change');
+            $jq('#report-filter-form').submit();
+        });
+    });
 </script>
 <script>
 $(document).ready(function () {
-
+ 
     $('#vendor_p_l_report_table').DataTable({
         scrollX: true,
         dom: 'lBfrtip',

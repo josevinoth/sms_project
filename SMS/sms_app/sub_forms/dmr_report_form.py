@@ -13,6 +13,12 @@ class DmrForm(forms.Form):
         label="Customer"
     )
 
+    vehicle_source = forms.ChoiceField(
+        choices=[('', 'All'), ('1', 'Own'), ('2', 'Attached')],
+        required=False,
+        label="Vehicle Source"
+    )
+
     customer_department = forms.ModelChoiceField(
         queryset=CustomerdepartmentInfo.objects.all(),
         required=False,

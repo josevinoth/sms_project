@@ -1,13 +1,10 @@
-﻿{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% load static %}
 {% block content %}
 
-<!-- Select2/Styling dependencies -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"
-    rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- Select2 dependencies handled via base.html and local script isolation -->
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet">
 
 <div class="container-fluid d-flex justify-content-center py-3">
     <div class="rounded text-center bg-info shadow-box px-4 py-2">
@@ -141,17 +138,26 @@
         padding: 10px;
         background: #fff;
     }
+    .select2-container--bootstrap4 .select2-selection--single {
+        border: 1px solid #ced4da !important;
+    }
 </style>
 
 <script>
-
-        // Auto-submit on vendor change
-        $('#vendor_select').on('change', function () {
-            // Reset vehicle selection
-            $('#vehicle_number').val('').trigger('change');
-            $('#report-filter-form').submit();
+    var $jq = jQuery.noConflict(true);
+    $jq(document).ready(function () {
+        $jq('.select2').select2({
+            theme: 'bootstrap4',
+            width: '100%'
         });
 
+        // Auto-submit on vendor change
+        $jq('#vendor_select').on('change', function () {
+            // Reset vehicle selection
+            $jq('#vehicle_number').val('').trigger('change');
+            $jq('#report-filter-form').submit();
+        });
+    });
 </script>
 <script>
 $(document).ready(function () {
