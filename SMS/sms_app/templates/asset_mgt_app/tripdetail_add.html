@@ -665,36 +665,39 @@
 			// 🔹 STEP 2: LOADING SENT (Unlock Unloading Stage 1)
 			unloadingSection.css("opacity", "1.0");
 			
-			// Loading Stage 1 is already done, Stage 2 (Started) becomes optional until status is 'Started'
-			loadingStage1Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = false; });
+			// Loading Stage 1 is already done
+			loadingStage1Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = true; });
 			
-			// If trip is Open/Started (Status 1), Stage 2 (Started) details are required
-			if (tripStatus == "1") {
-				loadingStage2Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = true; });
-			} else {
-				loadingStage2Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = false; });
-			}
+			// All Loading Time fields become mandatory once Reported mail is sent
+			loadingStage2Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = true; });
 			
 			loadingSection.find(":input").prop("disabled", false).removeClass("disable_a_href");
 			
 			// Enable Unloading Stage 1
 			unloadingSection.find(":input").filter(unloadingStage1Ids.map(id => "#"+id).join(",")).prop("disabled", false).removeClass("disable_a_href");
 			
-			// Unloading Stage 1 (Reported) required only if user is closing trip (Status 2)
-			if (tripStatus == "2") {
+			// Unloading fields only mandatory if they've been sent or closing the trip (Status 2)
+			// OR if the user has started filling the unloading section (Stage 1)
+			let unloadingStage1Filled = unloadingStage1Ids.some(id => {
+				let el = document.getElementById(id);
+				return el && el.value && el.value.trim() !== "";
+			});
+
+			if (g_unloadingSent || tripStatus == "2" || unloadingStage1Filled) {
                 unloadingStage1Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = true; });
+				
+				// If we are at the unloading stage, all timings in unloading section must be mandatory
+				unloadingStage2Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = true; });
             } else {
                 unloadingStage1Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = false; });
+				unloadingStage2Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = false; });
             }
 
 			// 🔹 STEP 3: UNLOADING SENT (Unlock Unloading Stage 2)
 			if (g_unloadingSent || tripStatus == "2") {
 				unloadingSection.find(":input").prop("disabled", false).removeClass("disable_a_href");
-				if (tripStatus == "2") {
-					unloadingStage2Ids.forEach(id => { let el = document.getElementById(id); if (el) el.required = true; });
-				}
 			} else {
-				unloadingSection.find(":input").filter(unloadingStage2Ids.map(id => "#"+id).join(",")).prop("disabled", true).addClass("disable_a_href").prop("required", false);
+				unloadingSection.find(":input").filter(unloadingStage2Ids.map(id => "#"+id).join(",")).prop("disabled", true).addClass("disable_a_href");
 			}
 		}
 	}
