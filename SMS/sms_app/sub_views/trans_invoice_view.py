@@ -176,6 +176,7 @@ def trans_invoice_edit(request, invoice_id):
         TransInvoiceInfo.objects
         .filter(
             ti_customer=customer,
+            ti_inv_no=invoice.ti_inv_no,
             is_woh=True
         )
         .annotate(
@@ -335,25 +336,9 @@ def trans_invoice_edit(request, invoice_id):
 def trans_invoice_list(request):
     first_name = request.session.get('first_name')
 
-    # Subquery to get the total of related WOH invoices
-    woh_total_subquery = (
-        TransInvoiceInfo.objects.filter(
-            is_woh=True,
-            ti_inv_no=OuterRef('ti_inv_no'),
-            ti_customer=OuterRef('ti_customer')
-        )
-        .values('ti_inv_no')  # Group by invoice number
-        .annotate(total=Sum('ti_total'))
-        .values('total')
-    )
-
     queryset = (
         TransInvoiceInfo.objects
         .filter(is_woh=False)
-        .annotate(
-            # Start with 0.0, add WOH sum. Ignore Master's own ti_total as per instruction.
-            grand_total=Coalesce(Subquery(woh_total_subquery), 0.0)
-        )
         .order_by('-id')
     )
 
@@ -515,6 +500,51 @@ def trans_invoice_list_woh(request, customer_id):
                     }
                 )
 
+            # Recalculate Master Invoice Totals
+            if master_inv:
+                woh_items = TransInvoiceInfo.objects.filter(
+                    ti_customer=customer,
+                    ti_inv_no=manual_inv_no,
+                    is_woh=True
+                )
+                from django.db.models import Sum
+                aggs = woh_items.aggregate(
+                    transport=Sum('ti_trip__tc_tripcost'),
+                    toll=Sum('ti_trip__tc_tollcost'),
+                    parking=Sum('ti_trip__tc_parkingcost'),
+                    loading=Sum('ti_trip__tc_loadingcost'),
+                    unloading=Sum('ti_trip__tc_unloadingcost'),
+                    halting=Sum('ti_trip__tc_haltingcost'),
+                    weighment=Sum('ti_trip__tc_weighmentcost'),
+                    handling=Sum('ti_trip__tc_handlingcost'),
+                    cancellation=Sum('ti_trip__tc_cancellation'),
+                )
+                def get_val(k): return aggs.get(k) or 0.0
+
+                master_inv.ti_transportation_charges = get_val('transport')
+                master_inv.ti_toll_charges = get_val('toll')
+                master_inv.ti_parking_charges = get_val('parking')
+                master_inv.ti_loading_charges = get_val('loading')
+                master_inv.ti_unloading_charges = get_val('unloading')
+                master_inv.ti_halting_charges = get_val('halting')
+                master_inv.ti_weighment_charges = get_val('weighment')
+                master_inv.ti_handling_charges = get_val('handling')
+                master_inv.ti_cancellation_charges = get_val('cancellation')
+
+                master_inv.ti_total = (
+                    master_inv.ti_transportation_charges +
+                    master_inv.ti_toll_charges +
+                    master_inv.ti_parking_charges +
+                    master_inv.ti_loading_charges +
+                    master_inv.ti_unloading_charges +
+                    master_inv.ti_halting_charges +
+                    (master_inv.ti_docket_charges or 0.0) +
+                    master_inv.ti_weighment_charges +
+                    master_inv.ti_handling_charges +
+                    master_inv.ti_cancellation_charges
+                )
+                master_inv.save()
+
             return JsonResponse({'status': 'success'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
@@ -647,10 +677,63 @@ def trans_invoice_list_woh(request, customer_id):
     )
 
 
+from django.db.models import Sum
+
 @login_required(login_url='login_page')
 def trans_invoice_remove_woh(request):
     trip_ids = request.GET.getlist('invoice_list[]')
-    TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_ids).update(is_woh=False)
+    
+    # Get master invoice specs before deleting
+    woh_items = TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_ids, is_woh=True)
+    affected_pairs = list(woh_items.values('ti_inv_no', 'ti_customer_id').distinct())
+
+    # Delete the specified WOH items
+    woh_items.delete()
+
+    # Recalculate totals for the affected master invoices
+    for pair in affected_pairs:
+        inv_no = pair['ti_inv_no']
+        cid = pair['ti_customer_id']
+        master_inv = TransInvoiceInfo.objects.filter(ti_inv_no=inv_no, ti_customer_id=cid, is_woh=False).first()
+        if master_inv:
+            woh_remaining = TransInvoiceInfo.objects.filter(ti_inv_no=inv_no, ti_customer_id=cid, is_woh=True)
+            aggs = woh_remaining.aggregate(
+                transport=Sum('ti_trip__tc_tripcost'),
+                toll=Sum('ti_trip__tc_tollcost'),
+                parking=Sum('ti_trip__tc_parkingcost'),
+                loading=Sum('ti_trip__tc_loadingcost'),
+                unloading=Sum('ti_trip__tc_unloadingcost'),
+                halting=Sum('ti_trip__tc_haltingcost'),
+                weighment=Sum('ti_trip__tc_weighmentcost'),
+                handling=Sum('ti_trip__tc_handlingcost'),
+                cancellation=Sum('ti_trip__tc_cancellation'),
+            )
+            def get_val(k): return aggs.get(k) or 0.0
+
+            master_inv.ti_transportation_charges = get_val('transport')
+            master_inv.ti_toll_charges = get_val('toll')
+            master_inv.ti_parking_charges = get_val('parking')
+            master_inv.ti_loading_charges = get_val('loading')
+            master_inv.ti_unloading_charges = get_val('unloading')
+            master_inv.ti_halting_charges = get_val('halting')
+            master_inv.ti_weighment_charges = get_val('weighment')
+            master_inv.ti_handling_charges = get_val('handling')
+            master_inv.ti_cancellation_charges = get_val('cancellation')
+
+            master_inv.ti_total = (
+                master_inv.ti_transportation_charges +
+                master_inv.ti_toll_charges +
+                master_inv.ti_parking_charges +
+                master_inv.ti_loading_charges +
+                master_inv.ti_unloading_charges +
+                master_inv.ti_halting_charges +
+                (master_inv.ti_docket_charges or 0.0) +
+                master_inv.ti_weighment_charges +
+                master_inv.ti_handling_charges +
+                master_inv.ti_cancellation_charges
+            )
+            master_inv.save()
+
     return JsonResponse({'status': 'success'})
 
 @login_required(login_url='login_page')
