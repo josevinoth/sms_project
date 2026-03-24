@@ -12,15 +12,11 @@ class MaintenanceInfo(models.Model):
     mi_registration_date = models.DateField(null=True, blank=True)
     mi_chassis_no = models.CharField(max_length=50, null=True, blank=True)
     mi_engine_no = models.CharField(max_length=50, null=True, blank=True)
+    mi_advance = models.CharField(max_length=50, null=True, blank=True)
     mi_current_km = models.PositiveIntegerField()
     mi_total_km_run = models.PositiveIntegerField()
     mi_service_type = models.CharField(max_length=50)
-    mi_driver_name = models.ForeignKey(
-        DrivermasterInfo,
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True
-    )
+    mi_driver_name = models.ForeignKey(DrivermasterInfo,on_delete=models.PROTECT,null=True,blank=True)
     mi_est_delivery = models.DateTimeField()
     mi_work_area = models.CharField(max_length=100)
     mi_job_card_creator = models.CharField(max_length=100)

@@ -121,41 +121,57 @@ def locationmaster_list(request):
 @login_required(login_url='login_page')
 def warehousevolme_area_calc(request):
     print("Inside warehousevolme_area_calc")
-    warehouse_list = LocationmasterInfo.objects.all().values_list('id', flat=True)
-    for i in warehouse_list:
-        branch = LocationmasterInfo.objects.get(pk=i).lm_wh_location
-        unit = LocationmasterInfo.objects.get(pk=i).lm_wh_unit
-        bay = LocationmasterInfo.objects.get(pk=i).lm_areaside
-        volume_occupied = Warehouse_goods_info.objects.filter(wh_branch=branch, wh_unit=unit, wh_bay=bay,wh_check_in_out=1).aggregate(Sum('wh_goods_volume_weight'))['wh_goods_volume_weight__sum']
-        area_occupied = Warehouse_goods_info.objects.filter(wh_branch=branch,wh_unit=unit,wh_bay=bay,wh_check_in_out=1,).filter(Q(wh_stack_layer=1) | Q(wh_stack_layer=2)).aggregate(Sum('wh_goods_area'))['wh_goods_area__sum']
-        if volume_occupied==None:
-            volume_occupied_val=0
-        else:
-            volume_occupied_val=volume_occupied
+    # Fetch all LocationmasterInfo objects once
+    warehouse_objects = LocationmasterInfo.objects.all()
+    
+    for loc in warehouse_objects:
+        branch = loc.lm_wh_location
+        unit = loc.lm_wh_unit
+        bay = loc.lm_areaside
+        
+        # Calculate occupied volume and area
+        volume_occupied = Warehouse_goods_info.objects.filter(
+            wh_branch=branch, 
+            wh_unit=unit, 
+            wh_bay=bay,
+            wh_check_in_out=1
+        ).aggregate(Sum('wh_goods_volume_weight'))['wh_goods_volume_weight__sum'] or 0
+        
+        area_occupied = Warehouse_goods_info.objects.filter(
+            wh_branch=branch,
+            wh_unit=unit,
+            wh_bay=bay,
+            wh_check_in_out=1
+        ).filter(Q(wh_stack_layer=1) | Q(wh_stack_layer=2)).aggregate(Sum('wh_goods_area'))['wh_goods_area__sum'] or 0
 
-        if area_occupied == None:
-            area_occupied_val = 0
-        else:
-            area_occupied_val = area_occupied
+        # Use attributes from the 'loc' object directly
+        total_volume = loc.lm_total_volume or 0
+        total_area = loc.lm_size or 0
 
-        # Get Total Volume
-        total_volume = LocationmasterInfo.objects.get(lm_wh_location=branch, lm_wh_unit=unit,lm_areaside=bay).lm_total_volume
+        # Self-healing: If total area or volume is 0, try to calculate from dimensions
+        if total_area == 0 and loc.lm_length > 0 and loc.lm_width > 0:
+            total_area = round(loc.lm_length * loc.lm_width, 2)
+            loc.lm_size = total_area
+        
+        if total_volume == 0 and loc.lm_length > 0 and loc.lm_width > 0:
+            height = loc.lm_height if loc.lm_height > 0 else 5.0 # Default height 5.0 as discussed
+            if loc.lm_height == 0:
+                loc.lm_height = height
+            total_volume = round(loc.lm_length * loc.lm_width * height, 2)
+            loc.lm_total_volume = total_volume
 
-        # Get Total Area
-        total_area = LocationmasterInfo.objects.get(lm_wh_location=branch, lm_wh_unit=unit, lm_areaside=bay).lm_size
+        # Calculate Available Volume and Area
+        available_volume = total_volume - volume_occupied
+        available_area = total_area - area_occupied
 
-        # Calculate_Available Volume
-        available_volume = total_volume - volume_occupied_val
-
-        # Calculate_Available Ara
-        available_area = total_area - area_occupied_val
-
-        # Update Volume and Area
-        LocationmasterInfo.objects.filter(lm_wh_location=branch, lm_wh_unit=unit, lm_areaside=bay).update(lm_available_area=round(available_area, 2))
-        LocationmasterInfo.objects.filter(lm_wh_location=branch, lm_wh_unit=unit, lm_areaside=bay).update(lm_available_volume=round(available_volume, 2))
-        LocationmasterInfo.objects.filter(lm_wh_location=branch, lm_wh_unit=unit, lm_areaside=bay).update(lm_volume_occupied=round(volume_occupied_val, 2))
-        LocationmasterInfo.objects.filter(lm_wh_location=branch, lm_wh_unit=unit, lm_areaside=bay).update(lm_area_occupied=round(area_occupied_val, 2))
-    return()
+        # Update the specific object 'loc' instead of filtering again
+        loc.lm_available_area = round(available_area, 2)
+        loc.lm_available_volume = round(available_volume, 2)
+        loc.lm_volume_occupied = round(volume_occupied, 2)
+        loc.lm_area_occupied = round(area_occupied, 2)
+        loc.save()
+    
+    return
 #Delete locationmaster
 @login_required(login_url='login_page')
 def locationmaster_delete(request,locationmaster_id):

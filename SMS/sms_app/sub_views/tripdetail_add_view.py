@@ -42,7 +42,7 @@ def tripdetail_enquiry(request, enquiry_id, trip_num):
 
     # If no trip is associated, store enquiry ID in session and redirect to insert
     if trip_num == 'none' or trip_num == '':
-        request.session['ses_enqiury_id'] = enquiry_id
+        request.session['enquiry_num_id'] = enquiry_id
         return redirect('tripdetail_insert')  # Define this URL in urls.py
     else:
         trip_id = TripdetailInfo.objects.get(tr_tripnumber=trip_num).id
@@ -58,7 +58,7 @@ def tripdetail_nav(request,tripdetail_id=0):
     trip_det_form = TripdetailaddForm()
     tripclosurefiles_form = TripclosurefilesForm()
     enquiry_num_id = tripdetail_id
-    request.session['ses_enqiury_id'] = enquiry_num_id
+    request.session['enquiry_num_id'] = enquiry_num_id
     tripdetail_list=TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id)
     status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3,8])
     consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
@@ -80,14 +80,24 @@ def tripdetail_add(request, tripdetail_id=0):
     user_id = request.session.get('ses_userID')
 
     # ✅ Get enquiry_num_id safely from URL or session
-    enquiry_num_id = request.GET.get('enquiry_num_id') or request.session.get('ses_enqiury_id')
+    # Prioritize 'enquiry_num_id' (integer) over 'ses_enqiury_id' (string)
+    enquiry_num_id = request.GET.get('enquiry_num_id') or request.session.get('enquiry_num_id')
+    
+    # Fallback to string-based session key if needed (though we should avoid this)
+    if not enquiry_num_id:
+        string_enq_num = request.session.get('ses_enqiury_id')
+        if string_enq_num:
+            enq_obj = EnquirynoteInfo.objects.filter(en_enquirynumber=string_enq_num).first()
+            if enq_obj:
+                enquiry_num_id = enq_obj.id
 
     # ✅ Always refresh session with current enquiry_num_id for consistency
     if enquiry_num_id:
-        request.session['ses_enqiury_id'] = enquiry_num_id
+        request.session['enquiry_num_id'] = enquiry_num_id
     else:
-        messages.error(request, "No enquiry number found. Please try again.")
-        return redirect('tripdetail_nav')  # fallback in case it’s missing
+        # Avoid redirect loop: don't redirect to insert if we are already failing it
+        messages.error(request, "No enquiry number found in session. Please select an enquiry first.")
+        return redirect('enquirynote_list')
 
     if request.method == "GET":
         if tripdetail_id == 0:
@@ -285,6 +295,13 @@ def tripdetail_add(request, tripdetail_id=0):
                         pass
 
                 trip = trip_det_form.save(commit=False)
+
+                # KM Validation: Ensure closing KM >= opening KM
+                closing_km = trip.tr_reportedkm or 0
+                opening_km = trip.tr_reportedkm_pickup or 0
+                if closing_km > 0 and closing_km < opening_km:
+                    messages.error(request, f"Error: Closing KM ({closing_km}) cannot be less than Opening KM ({opening_km})")
+                    return redirect(request.META.get('HTTP_REFERER', 'tripdetail_list'))
                 
                 # ✅ Robust Status Matching
                 status_open = Tripstatusinfo.objects.filter(Q(status__iexact='Open') | Q(status__iexact='Started')).first()
@@ -394,6 +411,13 @@ def tripdetail_add(request, tripdetail_id=0):
 
             if trip_det_form.is_valid():
                 trip = trip_det_form.save(commit=False)
+
+                # KM Validation: Ensure closing KM >= opening KM
+                closing_km = trip.tr_reportedkm or 0
+                opening_km = trip.tr_reportedkm_pickup or 0
+                if closing_km > 0 and closing_km < opening_km:
+                    messages.error(request, f"Error: Closing KM ({closing_km}) cannot be less than Opening KM ({opening_km})")
+                    return redirect(request.META.get('HTTP_REFERER', 'tripdetail_list'))
 
                 # ✅ Robust Status Matching Lookups
                 status_open = Tripstatusinfo.objects.filter(Q(status__iexact='Open') | Q(status__iexact='Started')).first()
@@ -725,7 +749,7 @@ def trip_email(request):
     from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
     reported_dt = format_email_date(trip.tr_departeddate_pickup)
     consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
-    started_dt = {format_email_date(trip.tr_departeddate)}
+    started_dt = format_email_date(trip.tr_departeddate)
     to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else "N/A"
     unloading_reported_dt = format_email_date(trip.tr_reporteddate)
 

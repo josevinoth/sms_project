@@ -56,9 +56,12 @@
                     <th>Total KM Run</th>
                     <th>Agreed KM</th>
                     <th>Extra KM</th>
+                    <th>Toll Cost</th>
                     <th>Bill Amount</th>
+                    <th>Bill Attachment</th>
                     <th>Created On</th>
                     <th>Created By</th>
+                    <th class="text-center">Summary</th>
                     <th class="text-center">Edit</th>
                     <th class="text-center">Delete</th>
                 </tr>
@@ -78,12 +81,41 @@
                     <td>{{ bill.ab_total_km_run|floatformat:2 }}</td>
                     <td>{{ bill.ab_agreed_km|floatformat:2 }}</td>
                     <td>{{ bill.ab_extra_km_run|floatformat:2 }}</td>
+                    <td>{{ bill.ab_toll_cost|floatformat:2 }}</td>
                     <th class="text-info">{{ bill.ab_bill_amount|floatformat:2 }}</th>
+                    <td class="text-center">
+                        <div class="d-flex align-items-center justify-content-center">
+                            {% if bill.ab_bill_upload %}
+                            <a href="{{ bill.ab_bill_upload.url }}" target="_blank"
+                                class="btn btn-sm btn-outline-danger mr-2" title="View Bill">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            {% endif %}
+
+                            <form action="{% url 'attached_bill_upload' bill.id %}" method="POST"
+                                enctype="multipart/form-data" class="upload-form">
+                                {% csrf_token %}
+                                <label class="btn btn-sm btn-light border shadow-sm mb-0 cursor-pointer"
+                                    title="Upload Bill">
+                                    <i class="fas fa-upload"></i> Upload
+                                    <input type="file" name="ab_bill_upload" class="d-none upload-input"
+                                        onchange="this.form.submit()">
+                                </label>
+                            </form>
+                        </div>
+                    </td>
                     <td>{{ bill.ab_created_at|date:"d-m-Y H:i" }}</td>
                     <td>
                         {% if bill.ab_created_by %}
                         {{ bill.ab_created_by.first_name|default:bill.ab_created_by.username }}
                         {% endif %}
+                    </td>
+                    <!-- Summary Button -->
+                    <td class="text-center">
+                        <button class="btn btn-info btn-sm summary-btn" data-id="{{ bill.id }}"
+                            title="View Summary">
+                            <i class="fas fa-table"></i> Summary
+                        </button>
                     </td>
                     <td class="text-center">
                         <a href="{% url 'attached_bill_edit' bill.id %}" class="btn btn-primary shadow-sm btn-sm">
@@ -107,6 +139,39 @@
     </div>
 </div>
 
+<!-- ================= SUMMARY MODAL ================= -->
+<div class="modal fade" id="billSummaryModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#1e293b; color:white;">
+                <h5 class="modal-title" id="summaryModalTitle">Bill Summary</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body p-0">
+                <table id="summaryTable" class="table table-bordered table-sm mb-0" style="font-size:0.85rem;">
+                    <thead>
+                        <tr style="background:#1e293b;color:white;">
+                            <th colspan="3" class="text-center" id="summaryTableTitle">BILL SUMMARY</th>
+                        </tr>
+                        <tr class="table-secondary">
+                            <th style="width:40px;">#</th>
+                            <th>Description</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summaryTableBody">
+                        <tr><td colspan="3" class="text-center">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button onclick="window.print()" class="btn btn-primary"><i class="fas fa-print"></i> Print</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ================= DATATABLE SCRIPT ================= -->
 <script>
     $(document).ready(function () {
@@ -127,9 +192,76 @@
             ],
             pageLength: 10,
             lengthMenu: [5, 10, 25, 50, 100],
-            order: [[12, 'desc']] // Sort by Created On by default
+            order: [[13, 'desc']] // Sort by Created On by default
+        });
+
+        // ===== Summary Button Click =====
+        $(document).on('click', '.summary-btn', function () {
+            var billId = $(this).data('id');
+            var tbody = $('#summaryTableBody');
+            tbody.html('<tr><td colspan="3" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>');
+            $('#billSummaryModal').modal('show');
+
+            $.ajax({
+                url: '/SMS/attached_bill_summary/' + billId + '/',
+                method: 'GET',
+                success: function (d) {
+                    $('#summaryTableTitle').text(d.title);
+                    $('#summaryModalTitle').text('Bill Summary – ' + d.title);
+
+                    var rows = [
+                        [1,  'VEHICLE NO',                    d.vehicle_no],
+                        [2,  'VEHICLE TYPE',                  d.vehicle_type],
+                        [3,  'NO. OF DAYS IN THE MONTH',      d.days_in_month],
+                        [4,  'NO. OF WORKING DAYS',           d.working_days],
+                        [5,  'NO. OF LEAVE',                  d.leave_days],
+                        [6,  'CONTRACT AMOUNT',               d.contract_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [8,  'LEAVE PER DAY',                 d.leave_per_day.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [9,  'LEAVE AMT',                     d.leave_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [10, 'EXTRA KM',                      d.extra_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [11, 'EXTRA KM AMT',                  d.extra_km_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [11.5, 'TOLL COST',                   d.toll_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [12, 'ACTUAL AMT',                    d.actual_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [13, 'TOTAL TRIPS',                   d.total_trips + ' TRIPS'],
+                        [14, 'TRIP INDEX',                    d.trip_index],
+                        [15, 'TOTAL KM',                      d.total_km + ' KM / ' + d.agreed_km + ' KM'],
+                        [16, 'EMPTY KM',                      d.empty_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [17, 'EMPTY KM BUY COST',             d.empty_km_buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [18, 'BUSINESS EMPTY KM',             d.business_empty_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [19, 'BUSINESS EMPTY KM BUY COST',    d.business_empty_km_buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [20, 'SELLING',                       d.selling.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [21, 'BUYING',                        d.buying.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [22, 'PROFIT',                        d.profit.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [23, 'SELLING %',                     d.sell_pct + '%'],
+                        [24, 'BUYING %',                      d.buy_pct + '%'],
+                    ];
+
+                    var html = '';
+                    rows.forEach(function (r) {
+                        var rowStyle = '';
+                        if (r[0] === 22) rowStyle = 'style="background:#d4edda; font-weight:700;"'; // profit row
+                        html += '<tr ' + rowStyle + '><td class="text-center font-weight-bold">' + r[0] + '</td><td class="font-weight-bold">' + r[1] + ':</td><td>' + r[2] + '</td></tr>';
+                    });
+                    tbody.html(html);
+                },
+                error: function () {
+                    tbody.html('<tr><td colspan="3" class="text-danger text-center">Failed to load summary.</td></tr>');
+                }
+            });
         });
     });
 </script>
+
+<style>
+    .cursor-pointer {
+        cursor: pointer;
+    }
+    @media print {
+        body * { visibility: hidden; }
+        #billSummaryModal, #billSummaryModal * { visibility: visible; }
+        #billSummaryModal { position: absolute; left: 0; top: 0; width: 100%; }
+        .modal-footer, .modal-header button { display: none !important; }
+    }
+</style>
 
 {% endblock content %}

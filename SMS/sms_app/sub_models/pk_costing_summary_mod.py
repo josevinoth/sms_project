@@ -3,6 +3,7 @@ from ..models import StatusList,PkpurchaseorderInfo,CustomerInfo,MyUser,Pkneedas
 
 class PkcostingsummaryInfo(models.Model):
     cs_assessment_num=models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE)
+    cs_invoice_num = models.CharField(max_length=100, blank=True, null=True)
     cs_wood_cost = models.FloatField(blank=True, null=True, default=0.0)
     cs_engineer_cost = models.FloatField(blank=True, null=True, default=0.0)
     cs_labour_cost = models.FloatField(blank=True, null=True, default=0.0)

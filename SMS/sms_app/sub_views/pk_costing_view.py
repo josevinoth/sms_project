@@ -1,11 +1,14 @@
 import json
+from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.contrib.postgres.search import TrigramSimilarity
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Sum, Q
 
 from ..forms import ModifyDimensionsForm,CostingSearchForm,PkcostingForm
-from ..models import POdimension,Nadimension,pk_itemdescriptionInfo,PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo,Costtype,Pkstocktype,Stockdescription,pk_itemInfo,pk_itemdescriptionInfo
+from ..models import POdimension,Nadimension,pk_itemdescriptionInfo,PkstockpurchasesInfo,PkcostingsummaryInfo,Stockdescription,PkcostingInfo,Costtype,Pkstocktype,pk_itemInfo,PkpartcodeInfo,Pkwooddescription,pk_stock_statusinfo
+from ..sub_models.stock_maintenance_mod import StockMaintenance
+# from ..sub_models.stocktype_maintenance_mod import Stock_type_maintenance
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
@@ -47,7 +50,9 @@ def costing_add(request, costing_id=0):
             #
             # print("Initial Data:", initial_data)
 
-            form = PkcostingForm()
+            form = PkcostingForm(
+                assessment_id=na_assessment_num_id
+            )
         else:
             costing = get_object_or_404(PkcostingInfo, pk=costing_id)
             form = PkcostingForm(instance=costing)
@@ -70,11 +75,14 @@ def costing_add(request, costing_id=0):
     else:
         if costing_id == 0:
             print("Inside PK Costing post add")
-            form = PkcostingForm(request.POST)
+            form = PkcostingForm(request.POST,assessment_id=request.POST.get('ct_assessment_num'))
         else:
             costing = get_object_or_404(PkcostingInfo, pk=costing_id)
-            form = PkcostingForm(request.POST, instance=costing)
-
+            form = PkcostingForm(
+                request.POST,
+                instance=costing,
+                assessment_id=request.POST.get('ct_assessment_num')
+            )
         if form.is_valid():
             print('Form is valid')
             cost_type_id = request.POST.get('ct_cost_type')
@@ -83,60 +91,67 @@ def costing_add(request, costing_id=0):
                 stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
                 print('stock_purchase_num_id',stock_purchase_num_id)
                 if stock_purchase_num_id:
-                    try:
-                        # Fetch stock purchase record
-                        stock_purchase = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id)
-                        stock_purchase_num = stock_purchase.sp_purchase_num
-                        stock_qty_available = stock_purchase.sp_quantity_reduced
-
-                        # Validate quantity
-                        stock_qty_str = request.POST.get('ct_quantity', None)
-                        if not stock_qty_str:
-                            messages.error(request, 'Quantity is required.')
-                            return redirect(request.META['HTTP_REFERER'])
-
                         try:
-                            stock_qty = int(stock_qty_str)
-                        except ValueError:
-                            messages.error(request, 'Invalid quantity value. It should be a number.')
-                            return redirect(request.META['HTTP_REFERER'])
+                            # Fetch stock purchase record from StockMaintenance (not PkstockpurchasesInfo)
+                            stock_purchase = StockMaintenance.objects.get(id=stock_purchase_num_id)
+                            stock_purchase_num = stock_purchase.sm_stock_purchase_number or stock_purchase.sm_invoice_no or f"SM-{stock_purchase_num_id}"
+                            stock_qty_available = stock_purchase.sm_count or 0.0
 
-                        # if stock_qty <= 0:
-                        #     messages.error(request, 'Quantity should be greater than 0.')
-                        #     return redirect(request.META['HTTP_REFERER'])
-                        # elif stock_qty > stock_qty_available:
-                        #     error_message = (
-                        #         f'Quantity should be less than or equal to available stock: '
-                        #         f'{stock_purchase_num}. Available quantity: {stock_qty_available}.'
-                        #     )
-                        #     messages.error(request, error_message)
-                        # else:
-                        #     # Stock quantity is valid, proceed to save
-                        #     form.save()
-                        #     messages.success(request, 'Stock Updated Successfully')
-                        # form.save()
-                        # No stock purchase number provided, still save the record
-                        costing = form.save()
-                        # Extract relevant fields
-                        cost_type = costing.ct_cost_type.id
-                        stock_type = costing.ct_stock_type.id
-                        assessment_id = costing.ct_assessment_num.id
+                            # Validate quantity
+                            stock_qty_str = request.POST.get('ct_quantity', None)
+                            if not stock_qty_str:
+                                messages.error(request, 'Quantity is required.')
+                                return redirect(request.META.get('HTTP_REFERER', '/'))
 
-                        if cost_type == 8 and stock_type == 1:
-                            total_cft = PkcostingInfo.objects.filter(
-                                ct_assessment_num=assessment_id,
-                                ct_cost_type=8,
-                                ct_stock_type=1
-                            ).aggregate(Sum('ct_sqrt_req'))['ct_sqrt_req__sum'] or 0.0
-                            print("total_cft", total_cft)
-                            request.session['ct_total_cft_display'] = round(total_cft, 2)
-                        else:
-                            request.session['ct_total_cft_display'] = 0.0
+                            try:
+                                stock_qty = float(stock_qty_str)
+                            except ValueError:
+                                messages.error(request, 'Invalid quantity value. It should be a number.')
+                                return redirect(request.META.get('HTTP_REFERER', '/'))
 
-                        print("Costing form is valid and stock updated.")
-                        messages.success(request, 'Stock Updated Successfully')
-                    except PkstockpurchasesInfo.DoesNotExist:
-                        pass
+                            # Save the record
+                            costing = form.save()
+                            # Extract relevant fields
+                            cost_type = costing.ct_cost_type.id
+                            stock_type = costing.ct_stock_type.id
+                            assessment_id = costing.ct_assessment_num.id
+
+                            if cost_type == 8 and stock_type == 1:
+                                total_cft = PkcostingInfo.objects.filter(
+                                    ct_assessment_num=assessment_id,
+                                    ct_cost_type=8,
+                                    ct_stock_type=1
+                                ).aggregate(Sum('ct_sqrt_req'))['ct_sqrt_req__sum'] or 0.0
+                                print("total_cft", total_cft)
+                                request.session['ct_total_cft_display'] = round(total_cft, 2)
+                            else:
+                                request.session['ct_total_cft_display'] = 0.0
+
+                            if costing.ct_stock_status.id in [2, 4]:
+                                try:
+                                    # User request: original GRN number should be in the 'sm_invoice_no' field for retrievals.
+                                    # No more 'RET-' prefix.
+                                    ref_no = stock_purchase_num
+                                    if not StockMaintenance.objects.filter(sm_stock_type_id=2, sm_invoice_no=ref_no, sm_description__endswith=f"(Costing ID: {costing.id})").exists():
+                                        StockMaintenance.objects.create(
+                                            sm_stock_type_id=2, # Retrieval
+                                            sm_invoice_date=datetime.now().date(),
+                                            sm_invoice_no=ref_no, # Standardizing: Putting original GRN here
+                                            sm_description=f"Retrieved via Costing for Assessment {costing.ct_assessment_num.na_assessment_num if costing.ct_assessment_num else 'N/A'} (Costing ID: {costing.id})",
+                                            sm_partcode=stock_purchase.sm_partcode,
+                                            sm_count=float(costing.ct_na_quantity or stock_qty),
+                                            sm_uom=stock_purchase.sm_uom,
+                                            sm_updated_by_id=user_id
+                                        )
+                                    # Note: We NO LONGER subtract from stock_purchase.sm_count here
+                                    # because the balance is aggregated as (Total In - Retrieved).
+                                except Exception as e:
+                                    print(f"Error creating retrieval record from costing: {e}")
+
+                            messages.success(request, 'Record Saved Successfully')
+                        except StockMaintenance.DoesNotExist:
+                            messages.error(request, f'Stock batch with ID {stock_purchase_num_id} not found.')
+                            print(f"Stock batch with ID {stock_purchase_num_id} not found.")
 
                 else:
                     # No stock purchase number provided, still save the record
@@ -187,6 +202,40 @@ def costing_add(request, costing_id=0):
 
         return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
 
+
+@login_required(login_url='login_page')
+def pk_return_excess_to_stock(request, costing_id):
+    costing = get_object_or_404(PkcostingInfo, pk=costing_id)
+    user_id = request.session.get('ses_userID')
+
+    if costing.ct_excess_status and costing.ct_excess_status.id == 3:  # Excess
+        # Create Return Record in StockMaintenance
+        # Ensure dimensions and part code are preserved for accurate inventory
+        sm_return = StockMaintenance.objects.create(
+            sm_stock_type_id=3,  # Return
+            sm_partcode=costing.ct_part_code,
+            sm_thickness=costing.ct_exe_height_req or 0,
+            sm_width=costing.ct_exe_width_req or 0,
+            sm_length=costing.ct_exe_length_req or 0,
+            sm_invoice_date=datetime.now().date(),
+            sm_invoice_no=str(costing.ct_assessment_num.na_assessment_num) if costing.ct_assessment_num else "",
+            sm_description=f"Excess Return from Assessment {costing.ct_assessment_num.na_assessment_num if costing.ct_assessment_num else 'N/A'}",
+            sm_count=costing.ct_exe_quantity_req or 0,
+            sm_total_cft=costing.ct_exe_sqrt_req or 0,
+            sm_per_unit_cost=costing.ct_rate or 0,
+            sm_total_price=0,
+            sm_updated_by_id=user_id
+        )
+        # Auto-generate NEW GRN number for return in sm_stock_purchase_number
+        sm_return.sm_stock_purchase_number = f"GRN/PK/{1000000 + sm_return.id}"
+        sm_return.save(update_fields=['sm_stock_purchase_number'])
+        # Update status to Returned (assuming 5 is Returned or similar)
+        # For now, let's keep it 5 but maybe add a message
+        messages.success(request, f'Excess stock of {costing.ct_exe_quantity_req} returned to ledger.')
+
+    return redirect(request.META.get('HTTP_REFERER', '/'))
+
+
 def update_reduced_dimensions(stock_purchase_num,last_id):
     requested_qty = PkcostingInfo.objects.get(pk=last_id).ct_quantity_req
     requested_overall_qty = PkcostingInfo.objects.get(pk=last_id).ct_na_quantity
@@ -198,30 +247,7 @@ def update_reduced_dimensions(stock_purchase_num,last_id):
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity=current_qty)
     PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft=round(current_cft,2))
 
-def append_reduced_dimensions(stock_purchase_num,costing_id):
-    length = PkcostingInfo.objects.get(pk=costing_id).ct_length
-    qty = PkcostingInfo.objects.get(pk=costing_id).ct_quantity
-    cft = PkcostingInfo.objects.get(pk=costing_id).ct_cft
 
-    prev_length = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_length_reduced
-    prev_qty = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_quantity_reduced
-    prev_cft = PkstockpurchasesInfo.objects.get(sp_purchase_num=stock_purchase_num).sp_cft_reduced
-
-    if prev_length>=length:
-        current_length = prev_length + length
-        current_cft= prev_cft + cft
-    else:
-        current_length = prev_length
-        current_cft= prev_cft
-
-    if prev_qty >= qty:
-        current_qty=prev_qty+qty
-    else:
-        current_qty = prev_qty
-
-    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_length_reduced=current_length)
-    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_quantity_reduced=current_qty)
-    PkstockpurchasesInfo.objects.filter(sp_purchase_num=stock_purchase_num).update(sp_cft_reduced=current_cft)
 
 # List costing
 @login_required(login_url='login_page')
@@ -239,9 +265,8 @@ def costing_delete(request,costing_id):
     stock_purchase_num = PkcostingInfo.objects.get(pk=costing_id).ct_stock_purchase_number
     cost_type_id = PkcostingInfo.objects.get(pk=costing_id).ct_cost_type.id
     if cost_type_id == 8:
-        append_reduced_dimensions(stock_purchase_num, costing_id)
-    else:
-        pass
+        # Clean up both Retrieval (Type 2) and Return (Type 3) records linked to this costing ID
+        StockMaintenance.objects.filter(sm_stock_type_id__in=[2, 3], sm_description__contains=f"(Costing ID: {costing_id})").delete()
     costing.delete()
     print("Successfully Deleted")
     # return redirect('/SMS/costing_list')
@@ -255,13 +280,34 @@ def load_stock_description(request):
     stock_description = list(Stockdescription.objects.filter(stock_type=stock_type).values_list('stock_description', flat=True).distinct())
     stock_description.sort()
     for j in stock_description:
-        stock_description_id.append(Stockdescription.objects.get(stock_description=j).id)
+        stock_obj = Stockdescription.objects.filter(stock_description=j).first()
+        if stock_obj:
+            stock_description_id.append(stock_obj.id)
     data = {
         'stock_description':stock_description,
         'stock_description_id': stock_description_id,
     }
     return HttpResponse(json.dumps(data))
-    # return JsonResponse((data))
+@login_required(login_url='login_page')
+def load_pk_wood_description(request):
+    stock_type = request.GET.get('stock_type')
+    if stock_type == '0' or stock_type == '':
+        pk_wood_description_objs = Pkwooddescription.objects.none()
+    else:
+        # Include records with matching type OR where type is NULL
+        pk_wood_description_objs = Pkwooddescription.objects.filter(Q(pk_wood_type_id=stock_type) | Q(pk_wood_type_id__isnull=True)).order_by('pk_wood_description')
+
+    wood_description = []
+    wood_description_id = []
+    for i in pk_wood_description_objs:
+        wood_description.append(i.pk_wood_description)
+        wood_description_id.append(i.id)
+
+    data = {
+        'stock_description': wood_description,
+        'stock_description_id': wood_description_id,
+    }
+    return HttpResponse(json.dumps(data))
 
 @login_required(login_url='login_page')
 def costing_cancel(request):
@@ -272,53 +318,97 @@ def costing_cancel(request):
 
 @login_required(login_url='login_page')
 def pk_item_search_page_costing(request):
+    from django.db.models import Sum, Case, When, FloatField, Avg
+    from django.contrib.postgres.search import TrigramSimilarity
+
     part_code = request.GET.get('part_code')
+    stock_type = request.GET.get('stock_type')
+    stock_description = request.GET.get('stock_description')
+    length_req = request.GET.get('length_req')
+    width_req = request.GET.get('width_req')
+    height_req = request.GET.get('height_req')
 
-    # First: Try exact match
-    queryset = PkstockpurchasesInfo.objects.filter(sp_part_code=part_code)
+    parts = PkpartcodeInfo.objects.all()
+    if part_code:
+        if part_code.isdigit():
+            parts = parts.filter(id=int(part_code))
+        else:
+            parts = parts.filter(pc_code__icontains=part_code)
 
-    # If no exact match, fallback to similar part codes using TrigramSimilarity
-    if not queryset.exists() and part_code:
-        queryset = (
-            PkstockpurchasesInfo.objects
-            .annotate(similarity=TrigramSimilarity('sp_part_code', part_code))
-            .filter(similarity__gt=0.3)  # adjust threshold if needed
-            .order_by('-similarity')[:5]  # top 5 similar
-        )
+    if stock_type and stock_type != '0':
+        parts = parts.filter(pc_stock_type_id=stock_type)
+    if stock_description and stock_description != '0':
+        parts = parts.filter(pc_stock_description_id=stock_description)
 
-    # Format date function
-    def format_date(date):
-        return date.strftime('%B %d, %Y') if date else ''
+    try:
+        if length_req and float(length_req) > 0:
+            parts = parts.filter(pc_length=float(length_req))
+        if width_req and float(width_req) > 0:
+            parts = parts.filter(pc_width=float(width_req))
+        if height_req and float(height_req) > 0:
+            parts = parts.filter(pc_height=float(height_req))
+    except (ValueError, TypeError):
+        pass
 
-    # Serialize queryset
-    results = list(queryset.values(
-        'id',
-        'sp_vendor_bill_id',
-        'sp_stock_in_date',
-        'sp_purchase_num',
-        'sp_category__category',
-        'sp_part_code__pc_code',
-        'sp_stock_type__pk_stocktype',
-        'sp_stock_description__stock_description',
-        'sp_source__source',
-        'sp_thick_height',
-        'sp_width',
-        'sp_length',
-        'sp_cft',
-        'sp_weight_convention__unit_of_measure',
-        'sp_weight_Consumption__unit_of_measure',
-        'sp_weight_sqft',
-        'sp_rate',
-        'sp_quantity',
-        'sp_uom__unit_of_measure',
-        'sp_size',
-    ))
+    p_ids = list(parts.values_list('id', flat=True))
 
-    # Apply date formatting
-    for result in results:
-        result['sp_stock_in_date'] = format_date(result['sp_stock_in_date'])
+    if not p_ids and part_code and not part_code.isdigit():
+        p_ids = list(PkpartcodeInfo.objects.annotate(
+            similarity=TrigramSimilarity('pc_code', part_code)
+        ).filter(similarity__gt=0.3).order_by('-similarity').values_list('id', flat=True)[:5])
 
-    return JsonResponse(results, safe=False)
+    # 2. Calculate FIFO stock batches for all matching parts
+    formatted_results = []
+    for p_id in p_ids:
+        p = PkpartcodeInfo.objects.select_related('pc_stock_description', 'pc_stock_type', 'pc_uom').get(id=p_id)
+
+        # Get all ledger entries for this part, ordered by date
+        ledger = StockMaintenance.objects.filter(sm_partcode_id=p_id).order_by('sm_invoice_date', 'id')
+
+        # Calculate total retrieved for this part to distribute across batches
+        total_retrieved_qty = ledger.filter(sm_stock_type_id=2).aggregate(Sum('sm_count'))['sm_count__sum'] or 0.0
+        total_retrieved_cft = ledger.filter(sm_stock_type_id=2).aggregate(Sum('sm_total_cft'))['sm_total_cft__sum'] or 0.0
+
+        # Get all "In" batches (Purchase=1, Return=3)
+        in_batches = ledger.filter(sm_stock_type_id__in=[1, 3]).order_by('sm_invoice_date', 'id')
+
+        pool_qty = total_retrieved_qty
+        pool_cft = total_retrieved_cft
+
+        for batch in in_batches:
+            batch_qty = batch.sm_count or 0.0
+            batch_cft = batch.sm_total_cft or 0.0
+
+            # Use FIFO to subtract retrieved from this batch
+            used_qty = min(batch_qty, pool_qty)
+            pool_qty -= used_qty
+
+            used_cft = min(batch_cft, pool_cft)
+            pool_cft -= used_cft
+
+            available_qty = batch_qty - used_qty
+            available_cft = batch_cft - used_cft
+
+            # Include the batch even if available_qty is 0, so user knows it exists but is depleted
+            formatted_results.append({
+                'id': batch.id, # Link directly to the batch record
+                'sp_vendor_bill_id': batch.sm_invoice_no,
+                'sp_stock_in_date': batch.sm_invoice_date.strftime('%Y-%m-%d') if batch.sm_invoice_date else '',
+                'sp_purchase_num': batch.sm_stock_purchase_number or batch.sm_invoice_no,
+                'sp_part_code__pc_code': p.pc_code,
+                'sp_stock_type__pk_stocktype': p.pc_stock_type.pk_stocktype if p.pc_stock_type else '',
+                'sp_stock_description__stock_description': p.pc_stock_description.stock_description if p.pc_stock_description else '',
+                'sp_thick_height': batch.sm_thickness,
+                'sp_width': batch.sm_width,
+                'sp_length': batch.sm_length,
+                'sp_cft': round(max(0, available_cft), 4),
+                'sp_quantity': round(max(0, available_qty), 2),
+                'sp_rate': round(batch.sm_per_unit_cost or 0.0, 2),
+                'sp_uom__unit_of_measure': p.pc_uom.unit_of_measure if p.pc_uom else '',
+                'sp_size': f"{batch.sm_thickness}x{batch.sm_width}x{batch.sm_length}"
+            })
+
+    return JsonResponse(formatted_results, safe=False)
 @login_required(login_url='login_page')
 def pk_item_search_page(request):
     form = CostingSearchForm(request.GET)

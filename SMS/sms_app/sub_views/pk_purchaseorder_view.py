@@ -2,10 +2,10 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from ..forms import POdimensionForm,PkpurchaseorderForm
-from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkquotationsummaryInfo
+from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkquotationsummaryInfo,PkcostingsummaryInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete
+from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete,get_tracker_flags
 
 @login_required(login_url='login_page')
 def purchaseorder_add(request, purchaseorder_id=0):
@@ -16,13 +16,28 @@ def purchaseorder_add(request, purchaseorder_id=0):
 
     if request.method == "GET":
         if purchaseorder_id == 0:
-            form = PkpurchaseorderForm()
+            # Check if qs_id is passed from "Generate Purchase Order" button
+            qs_id = request.GET.get('qs_id')
+            initial_data = {}
+            na_id = None
+            if qs_id:
+                try:
+                    qs_obj = PkquotationsummaryInfo.objects.get(pk=qs_id)
+                    na_id = qs_obj.qs_assessment_num_id
+                    initial_data['po_assessment_num'] = na_id
+                    initial_data['po_quotation_num'] = qs_obj.id
+                    initial_data['po_customer_name'] = qs_obj.qs_customer_name_2_id
+                    initial_data['po_customer_new_name'] = qs_obj.pkqt_customer_new_name or ''
+                except PkquotationsummaryInfo.DoesNotExist:
+                    pass
+            form = PkpurchaseorderForm(initial=initial_data, na_id=na_id)
             context = {
                 'form': form,
                 'first_name': first_name,
                 'user_id': user_id,
                 'role': role,
                 'role_id': role_id,
+                'current_step': 'po',
             }
         else:
             purchaseorder = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
@@ -35,6 +50,9 @@ def purchaseorder_add(request, purchaseorder_id=0):
             request.session['ses_na_id'] = na_id
             request.session['purchaseorder_id'] = purchaseorder.id
             
+            # Fetch linked costing summaries for the hub
+            linked_costings = PkcostingsummaryInfo.objects.filter(cs_customer_po=purchaseorder_id)
+            
             context = {
                 'form': form,
                 'first_name': first_name,
@@ -43,18 +61,25 @@ def purchaseorder_add(request, purchaseorder_id=0):
                 'po_dimension_list': po_dimension_list,
                 'role': role,
                 'role_id': role_id,
+                'linked_costings': linked_costings,
+                'current_step': 'po',
+                'tracker_flags': get_tracker_flags(na_id),
             }
         return render(request, "asset_mgt_app/pk_purchaseorder_add.html", context)
 
     else:
         if purchaseorder_id == 0:
             # Add mode
-            form = PkpurchaseorderForm(request.POST, request.FILES)
+            post_na_id = request.POST.get('po_assessment_num')
+            form = PkpurchaseorderForm(request.POST, request.FILES, na_id=post_na_id)
             if form.is_valid():
                 customer_po_num = form.cleaned_data['po_num']
 
                 if not PkpurchaseorderInfo.objects.filter(po_num=customer_po_num).exists():
                     instance = form.save(commit=False)
+
+                    # Set updated_by from session (excluded from form)
+                    instance.po_updated_by_id = user_id
 
                     # Auto-generate sales_order_num
                     last_po = PkpurchaseorderInfo.objects.filter(sales_order_num__startswith="25-26-MP-SO-").order_by('-id').first()
@@ -87,9 +112,12 @@ def purchaseorder_add(request, purchaseorder_id=0):
         else:
             # Edit mode
             purchaseorder = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
-            form = PkpurchaseorderForm(request.POST, request.FILES, instance=purchaseorder)
+            post_na_id = request.POST.get('po_assessment_num')
+            form = PkpurchaseorderForm(request.POST, request.FILES, instance=purchaseorder, na_id=post_na_id)
             if form.is_valid():
                 instance = form.save(commit=False)
+                # Set updated_by from session (excluded from form)
+                instance.po_updated_by_id = user_id
                 # Do NOT regenerate sales_order_num when editing
                 instance.sales_order_num = purchaseorder.sales_order_num
                 instance.save()

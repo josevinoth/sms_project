@@ -1,0 +1,112 @@
+{% extends "asset_mgt_app/base.html" %}
+{% block content %}
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet">
+
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- ================= HEADER ================= -->
+<div class="container-fluid py-3">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-5 rounded text-center bg-info shadow-box">
+            <h3 class="mb-0 text-white"><i class="fas fa-cubes position-absolute" style="left: 20px; top: 10px; opacity: 0.5;"></i> Partwise Stock Summary</h3>
+        </div>
+    </div>
+</div>
+
+<!-- ================= ACTION BAR ================= -->
+<div class="container-fluid mb-3">
+    <div class="row align-items-center">
+        <div class="col-md-2">
+            <a href="{% url 'stock_maintenance_list' %}" class="btn btn-primary btn-block btn-lg shadow-sm">
+                <i class="fas fa-arrow-left"></i> Back to Maintenance
+            </a>
+        </div>
+        <div class="col-md-10 text-right text-muted small">
+            <em>Showing aggregated stock totals (In - Retrieved = Balance) across all part codes.</em>
+        </div>
+    </div>
+</div>
+
+<hr>
+
+<!-- ================= SUMMARY TABLE ================= -->
+<div class="container-fluid">
+    <div class="table-responsive shadow-box-table p-3 bg-white rounded">
+        <table id="partwise_summary_table" class="table table-hover table-bordered table-striped w-100">
+            <thead class="thead-dark">
+                <tr>
+                    <th class="align-middle text-center" width="5%">#</th>
+                    <th class="align-middle" width="15%">Part Code</th>
+                    <th class="align-middle" width="30%">Description</th>
+                    <th class="align-middle text-center" width="10%">UOM</th>
+                    <th class="align-middle text-center bg-teal text-white" width="10%">Total IN<br><small>(Qty)</small></th>
+                    <th class="align-middle text-center bg-warning text-dark" width="10%">Retrieved<br><small>(Qty)</small></th>
+                    <th class="align-middle text-center bg-success text-white" width="20%">Available Balance<br><small>(Qty)</small></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in summary_data %}
+                <tr>
+                    <td class="text-center font-weight-bold text-muted">{{ forloop.counter }}</td>
+                    <td class="font-weight-bold">
+                        <span class="badge badge-info" style="font-size: 0.9rem;">{{ item.part_code }}</span>
+                    </td>
+                    <td class="text-truncate" style="max-width: 250px;" title="{{ item.description }}">
+                        {{ item.description }}
+                    </td>
+                    <td class="text-center"><span class="badge badge-light border">{{ item.uom }}</span></td>
+                    <td class="text-center font-weight-bold" style="color: #00897b; font-size: 1.1rem;">
+                        {{ item.total_in|floatformat:"-2" }}
+                    </td>
+                    <td class="text-center font-weight-bold text-warning" style="font-size: 1.1rem;">
+                        {{ item.total_retrieved|floatformat:"-2" }}
+                    </td>
+                    <td class="text-center font-weight-bold text-success" style="font-size: 1.25rem;">
+                        {{ item.available_balance|floatformat:"-2" }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="fas fa-box-open fa-3x mb-3 text-light"></i><br>
+                        No stock data available to summarize.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .bg-teal { background-color: #00897b !important; }
+    #partwise_summary_table th { border-bottom: 2px solid #dee2e6; letter-spacing: 0.5px; }
+    #partwise_summary_table td { vertical-align: middle; }
+    .shadow-box-table { box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; border: 1px solid rgba(0,0,0,.125); }
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #17a2b8; color: white !important; border: none; }
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #138496; color: white !important; border: none; }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        $('#partwise_summary_table').DataTable({
+            order: [[1, 'asc']], // Order by Part Code by default
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            scrollCollapse: true,
+            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                 '<"row"<"col-sm-12"tr>>' +
+                 '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search Part Codes..."
+            }
+        });
+    });
+</script>
+
+{% endblock content %}

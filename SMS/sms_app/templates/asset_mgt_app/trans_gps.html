@@ -13,196 +13,224 @@
 
 <style>
   body {
-    background: #121212;
-    color: #f1f1f1;
+    background: #f8f9fa;
+    color: #333;
+    font-family: 'Inter', -apple-system, sans-serif;
   }
 
   .card {
-    background: #1e1e1e;
-    color: #f1f1f1;
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
   .card-header {
-    background: linear-gradient(45deg, #0d7377, #14ffec);
+    background: #0077b5;
+    /* Official Provider Blue */
     color: #fff;
-    border-bottom: none;
+    padding: 10px 15px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
   }
 
-  .table thead {
-    background: #0d7377;
-    color: #fff;
+  .table thead th {
+    background-color: #d1e3ef !important;
+    color: #333 !important;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 12px 6px !important;
+    border-bottom: 2px solid #aec6d8 !important;
+    text-align: center;
+    vertical-align: middle;
   }
 
-  button.btn {
-    border-radius: 30px;
-    font-weight: 500;
-    transition: all 0.3s;
+  .table tbody td {
+    font-size: 0.82rem;
+    padding: 10px 6px !important;
+    vertical-align: middle;
+    border-bottom: 1px solid #eee;
   }
 
-  button.btn:hover {
-    transform: scale(1.05);
+  .table-hover tbody tr:hover {
+    background-color: #f1f8fc !important;
   }
 
-  #map {
-    border: 2px solid #0d7377;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  .custom-div-icon {
+    background: transparent;
+    border: none;
   }
 
-  /* Status Bar Styles */
-  .status-bar {
-    display: flex;
-    gap: 15px;
-    background: #1e1e1e;
-    padding: 10px 20px;
-    border-radius: 30px;
-    border: 1px solid #333;
-  }
-
-  .status-badge {
-    cursor: pointer;
-    font-size: 0.95rem;
-    padding: 8px 15px;
-    border-radius: 20px;
-    transition: all 0.3s ease;
-    border: 1px solid transparent;
-  }
-
-  .status-badge:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  }
-
-  .status-badge.active {
-    border-color: #fff;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-  }
-
-  /* Custom Marker Pin Styles */
   .custom-pin {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50% 50% 50% 0;
     position: absolute;
     transform: rotate(-45deg);
-    border: 3px solid #fff;
-    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
+    border: 2px solid #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
     display: flex;
     justify-content: center;
     align-items: center;
-    left: -18px;
-    /* Center horizontally (half width) */
-    top: -36px;
-    /* Position above anchor point */
+    left: -16px;
+    top: -32px;
   }
 
   .custom-pin i {
     transform: rotate(45deg);
     color: white;
-    font-size: 16px;
-    margin-left: 2px;
-    /* Visual adjustment */
+    font-size: 14px;
+  }
+
+  .pin-moving {
+    background: #28a745 !important;
+  }
+
+  .pin-stop {
+    background: #dc3545 !important;
+  }
+
+  .pin-idle {
+    background: #ffc107 !important;
+  }
+
+  .pin-na {
+    background: #6c757d !important;
+  }
+
+  .official-status-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: #fff;
+    margin: 0 auto 3px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .status-on {
+    background-color: #28a745;
+  }
+
+  .status-off {
+    background-color: #dc3545;
+  }
+
+  .status-na {
+    background-color: #f8f9fa;
+    color: #6c757d;
+  }
+
+  .steering-wheel-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .steering-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+  }
+
+  .status-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  /* Semi-circular Gauges - Refined Alignment */
+  .gauge-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 65px;
+    margin: 0 auto;
+    min-height: 55px;
+  }
+
+  .gauge-svg {
+    width: 50px;
+    height: 25px;
     margin-top: 2px;
   }
 
-  .pin-green {
-    background: #28a745;
-  }
-
-  .pin-blue {
-    background: #17a2b8;
-  }
-
-  .pin-red {
-    background: #dc3545;
-  }
-
-  .pin-grey {
-    background: #6c757d;
-  }
-
-  /* Dark Modal */
-  .modal-content {
-    background: #1e1e1e;
-    color: #e0e0e0;
-    border: 1px solid #333;
-  }
-
-  .modal-header,
-  .modal-footer {
-    border-color: #333;
-  }
-
-  /* Dark Leaflet Controls - Compromise: Grey Background + Dark Font */
-  .leaflet-control-layers {
-    background: #e0e0e0 !important;
-    color: #000 !important;
-    border: 1px solid #999 !important;
-    border-radius: 8px !important;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4) !important;
-  }
-
-  .leaflet-control-layers-expanded {
-    padding: 12px !important;
-    font-weight: 700;
-    /* Bold dark font */
-  }
-
-  .leaflet-control-layers label {
-    font-size: 14px;
-    margin-bottom: 8px;
+  .battery-container {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    color: #000 !important;
-    /* Explicit Black Text */
+    gap: 2px;
   }
 
-  .leaflet-control-layers-separator {
-    border-top: 1px solid #777 !important;
-    margin: 8px 0 !important;
+  .battery-box {
+    width: 18px;
+    height: 28px;
+    border: 2px solid #333;
+    border-radius: 2px;
+    position: relative;
+    margin: 0 auto;
+    padding: 1px;
+    background: #fff;
   }
 
-  /* Radio/Checkbox styles */
-  .leaflet-control-layers input[type="radio"],
-  .leaflet-control-layers input[type="checkbox"] {
-    margin-right: 8px !important;
-    accent-color: #38bdf8;
-    /* Blue accent */
+  .battery-box::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 4px;
+    width: 6px;
+    height: 3px;
+    background: #333;
   }
 
+  .battery-level {
+    width: 100%;
+    background: #28a745;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    transition: height 0.5s ease;
+  }
 
+  .battery-v {
+    font-size: 0.65rem;
+    font-weight: bold;
+    color: #555;
+  }
 
-  /* Dark Loader Centered */
   #fullScreenLoader {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(18, 18, 18, 0.95);
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 9999;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 99999;
     flex-direction: column;
-    transition: opacity 0.3s ease;
+    align-items: center;
+    justify-content: center;
   }
 
   #fullScreenLoader p {
-    margin-top: 20px;
-    font-size: 20px;
-    color: #FF0000;
+    margin-top: 15px;
     font-weight: bold;
+    color: #0077b5;
   }
 </style>
 
 <div class="container-fluid p-3 position-relative">
   <div class="card shadow">
-    <div class="card-header bg-info text-white text-center">
+    <div class="card-header bg-info text-white text-center position-relative">
       <h4>Vehicle Position Tracker</h4>
+      <div id="demoBadge" class="position-absolute end-0 top-50 translate-middle-y me-4 d-none">
+        <span class="badge bg-warning text-dark border border-dark animate-pulse">
+          <i class="fas fa-flask"></i> DEMO MODE ACTIVE
+        </span>
+      </div>
     </div>
 
 
@@ -286,15 +314,20 @@
 
     <div class="table-responsive px-4 pb-4">
       <table id="vehicle_gps_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
+        <thead class="table-light">
           <tr>
-            <th>Status</th>
-            <th>Number</th>
-            <th>Running</th>
-            <th>Speed</th>
-            <th>Odometer</th>
-            <th>Location</th>
-            <th>Last Updated</th>
+            <th>Vehicle Status</th>
+            <th>Vehicle & Location</th>
+            <th>Map</th>
+            <th>Last Seen</th>
+            <th class="text-center">Speed</th>
+            <th class="text-center">Fuel</th>
+            <th class="text-center">Engine</th>
+            <th class="text-center">A/C</th>
+            <th class="text-center">Lid</th>
+            <th class="text-center">Veh Battery</th>
+            <th class="text-center">Weight</th>
+            <th class="text-center">Expiry</th>
           </tr>
         </thead>
         <tbody id="vehicle-table-body"></tbody>
@@ -379,12 +412,12 @@
 
   L.control.layers(baseMaps).addTo(map);
 
-  // trip_status: in_trip (Green), available (Blue), workshop (Red)
+  // Official-style Pins
   const tripIcons = {
-    in_trip: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-green"><i class="fa-solid fa-truck"></i></div>', iconSize: [36, 36], iconAnchor: [18, 42] }),
-    available: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-blue"><i class="fa-solid fa-truck"></i></div>', iconSize: [36, 36], iconAnchor: [18, 42] }),
-    workshop: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-red"><i class="fa-solid fa-truck"></i></div>', iconSize: [36, 36], iconAnchor: [18, 42] }),
-    default: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-grey"><i class="fa-solid fa-truck"></i></div>', iconSize: [36, 36], iconAnchor: [18, 42] })
+    Moving: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-moving"><i class="fa-solid fa-truck"></i></div>', iconSize: [32, 32], iconAnchor: [16, 32] }),
+    Stopped: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-stop"><i class="fa-solid fa-truck"></i></div>', iconSize: [32, 32], iconAnchor: [16, 32] }),
+    Idle: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-idle"><i class="fa-solid fa-truck"></i></div>', iconSize: [32, 32], iconAnchor: [16, 32] }),
+    default: L.divIcon({ className: 'custom-div-icon', html: '<div class="custom-pin pin-na"><i class="fa-solid fa-truck"></i></div>', iconSize: [32, 32], iconAnchor: [16, 32] })
   };
 
   function showLoader() {
@@ -491,10 +524,13 @@
       if (layer instanceof L.Marker) map.removeLayer(layer);
     });
 
+    const bounds = L.latLngBounds();
+    let hasPoints = false;
+
     vehicleList.forEach(v => {
       const lat = parseFloat(v.lat);
       const lon = parseFloat(v.lon);
-      const icon = tripIcons[v.status] || tripIcons.default;
+      const icon = tripIcons[v.running_status] || tripIcons.default;
       const addr = v.address ? `<br>📍 ${v.address}` : '';
       const ago = timeAgo(v.timestamp);
       const agoStr = ago ? ` (${ago})` : '';
@@ -503,12 +539,75 @@
         const marker = L.marker([lat, lon], { icon: icon })
           .addTo(map)
           .bindPopup(`<b>${v.number}</b><br>Status: ${v.status.replace('_', ' ').toUpperCase()}<br>Running: ${v.running_status}<br>Speed: ${v.speed} km/h<br>Odometer: ${v.Odometer} km${addr}<br>🕐 ${v.timestamp}${agoStr}`);
+
+        bounds.extend([lat, lon]);
+        hasPoints = true;
+
         if (liveTrackMode) {
           map.setView([lat, lon], 15);
           marker.openPopup();
         }
       }
     });
+
+    if (hasPoints && !liveTrackMode) {
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+    }
+  }
+
+  // --- OFFICIAL UI HELPER FUNCTIONS ---
+  function getGaugeColor(value, max) {
+    const p = value / max;
+    if (p < 0.2) return "#ff4d4d"; // Red
+    if (p < 0.6) return "#ffa500"; // Orange
+    return "#28a745"; // Green (Official)
+  }
+
+  function renderGauge(value, max, label) {
+    if (value === "N/A" || isNaN(value)) {
+      return `<div class="gauge-wrapper text-center"><div class="text-muted small">N/A</div><div style="font-size: 0.6rem; color: #888;">${label}</div></div>`;
+    }
+
+    const radius = 25;
+    const circumference = Math.PI * radius;
+    const valObj = parseFloat(value) || 0;
+    const percent = Math.min(valObj / max, 1);
+    const offset = circumference - (percent * circumference);
+    const color = getGaugeColor(valObj, max);
+
+    // Official-style layout: Value -> Label -> SVG Arc
+    return `
+      <div class="gauge-wrapper">
+        <div style="font-size: 0.85rem; font-weight: bold; line-height: 1;">${Math.round(valObj)}</div>
+        <div style="font-size: 0.6rem; color: #888; line-height: 1.1;">${label}</div>
+        <svg class="gauge-svg" viewBox="0 0 60 30">
+          <path d="M 5,28 A 25,25 0 0,1 55,28" fill="none" stroke="#f2f2f2" stroke-width="5" />
+          <path d="M 5,28 A 25,25 0 0,1 55,28" 
+                fill="none" 
+                stroke="${color}" 
+                stroke-width="5" 
+                stroke-dasharray="${circumference}" 
+                stroke-dashoffset="${offset}" 
+                style="transition: stroke-dashoffset 0.8s ease;" />
+        </svg>
+      </div>
+    `;
+  }
+
+  function renderOfficialIcon(status, icon, label) {
+    if (status === "N/A" || status === null || status === undefined) {
+      return `<div class="text-center"><div class="official-status-icon status-na"><i class="fas fa-minus"></i></div><div style="font-size: 0.6rem; color: #888;">N/A</div></div>`;
+    }
+    const bgClass = status ? 'status-on' : 'status-off';
+    const text = status ? 'On' : 'Off';
+    return `
+      <div class="text-center">
+        <div class="official-status-icon ${bgClass}">
+          <i class="fas ${icon}"></i>
+        </div>
+        <div style="font-size: 0.6rem; color: #666;">${text}</div>
+      </div>
+    `;
   }
 
   function renderVehicleTable(vehicleList) {
@@ -517,16 +616,70 @@
 
     vehicleList.forEach(v => {
       const tr = document.createElement("tr");
-      const ago = timeAgo(v.timestamp);
-      const agoStr = ago ? `<br><small class="text-success">${ago}</small>` : '';
+
+      // Steering Wheel Status
+      const isMoving = v.running_status === 'Moving';
+      const statusColor = isMoving ? '#28a745' : '#dc3545';
+      const statusText = isMoving ? 'Moving' : 'Stop';
+
+      const statusCell = `
+        <td class="text-center">
+          <div class="steering-wheel-container">
+            <div style="color: ${statusColor};" class="steering-icon">
+              <i class="fas fa-dharmachakra"></i>
+            </div>
+            <div class="status-label" style="color: ${statusColor};">${statusText}</div>
+          </div>
+        </td>
+      `;
+
+      // Location Cell
+      const locationCell = `
+        <td>
+          <div class="fw-bold text-primary">${v.number}</div>
+          <div class="text-muted small" style="max-width: 250px;">${v.address || '-'}</div>
+        </td>
+      `;
+
+      // Map Cell
+      const mapCell = `
+        <td class="text-center">
+          <i class="fas fa-map-marker-alt text-danger" style="font-size: 1.5rem; cursor: pointer;" onclick="map.setView([${v.lat}, ${v.lon}], 16)"></i>
+        </td>
+      `;
+
+      // Battery Cell
+      const volt = parseFloat(v.battery_voltage) || 0;
+      let levelPercent = (volt - 3.2) / (4.2 - 3.2) * 100; // Rough 3.2V to 4.2V scale
+      levelPercent = Math.max(0, Math.min(100, levelPercent));
+
+      const batColor = levelPercent < 20 ? '#dc3545' : (levelPercent < 60 ? '#ffa500' : '#28a745');
+
+      const batteryCell = `
+        <td class="text-center">
+          <div class="battery-container">
+            <div class="battery-box">
+              <div class="battery-level" style="height: ${levelPercent}%; background-color: ${batColor};"></div>
+            </div>
+            <div class="battery-v">${volt.toFixed(1)} V</div>
+          </div>
+        </td>
+      `;
+
       tr.innerHTML = `
-      <td><span class="badge bg-${v.status === 'in_trip' ? 'primary' : v.status === 'available' ? 'success' : 'danger'}">${v.status.replace("_", " ").toUpperCase()}</span></td>
-      <td>${v.number}</td>
-      <td>${v.running_status}</td>
-      <td>${v.speed} km/h</td>
-      <td>${v.Odometer} km</td>
-      <td>${v.address || '-'}</td>
-      <td>${v.timestamp}${agoStr}</td>`;
+        ${statusCell}
+        ${locationCell}
+        ${mapCell}
+        <td class="small text-muted">${v.timestamp}<br>${timeAgo(v.timestamp)}</td>
+        <td class="text-center">${renderGauge(v.speed, 120, 'Kmph')}</td>
+        <td class="text-center">${renderGauge(v.fuel, 100, v.fuel ? 'Fuel' : 'N/A')}</td>
+        <td class="text-center">${renderOfficialIcon(v.engine, 'fa-power-off', 'Engine')}</td>
+        <td class="text-center">${renderOfficialIcon(v.ac, 'fa-snowflake', 'A/C')}</td>
+        <td class="text-center text-muted">-</td>
+        ${batteryCell}
+        <td class="text-center">${v.weight || 0}</td>
+        <td class="text-center">${v.expiry || '-'}</td>
+      `;
       tbody.appendChild(tr);
     });
   }
@@ -537,6 +690,13 @@
     fetch("/SMS/get_vehicle_data/?_t=" + Date.now(), { cache: "no-store" })
       .then(res => res.json())
       .then(data => {
+        // Toggle Demo Badge
+        const demoBadge = document.getElementById('demoBadge');
+        if (data.is_demo) {
+          demoBadge.classList.remove('d-none');
+        } else {
+          demoBadge.classList.add('d-none');
+        }
         allVehicleData = data.all_data || [];
 
         if (liveTrackMode) {

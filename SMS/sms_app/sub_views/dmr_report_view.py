@@ -702,7 +702,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
             if hh in ("veh reported km @ unloading point", "closing km"):
                 row.append(safe_str(trip.tr_reportedkm)); continue
             if hh in ("used km", "used kms"):
-                diff = (trip.tr_reportedkm or 0) - (trip.tr_departedkm or 0)
+                diff = (trip.tr_reportedkm_delivery or trip.tr_reportedkm or 0) - (trip.tr_departedkm or 0)
                 row.append(safe_num(max(0, diff))); continue
 
             if hh in ("from", "origin", "starting place", "pickup location", "orgin"):

@@ -12,6 +12,7 @@ urlpatterns = [
     path('login_page', views.login_page, name='login_page'),  # Login_page
     path('logout_page', views.logout_page, name='logout_page'),  # Logout_page
     path('driver/login/', views.driver_login, name='driver_login'),
+    path('driver/login/', views.driver_login, name='driver_login'),
     path('driver/logout/', views.driver_logout, name='driver_logout'),
     path('driver/dashboard/', views.driver_dashboard, name='driver_dashboard'),
     path('home_page', views.home_page, name='home_page'),  # Home_page
@@ -501,6 +502,7 @@ urlpatterns = [
     path('pk_item_search_page_costing/', views.pk_item_search_page_costing, name='pk_item_search_page_costing'),
     # pk_item_search_page_costing
     path('costingsummary_list/', views.costingsummary_list, name='costingsummary_list'),  # List costingsummary
+    path('get_partcode_summary/', views.get_partcode_summary, name='get_partcode_summary'),
     path('costingsummary_insert/', views.costingsummary_add, name='costingsummary_insert'),  # Add costingsummary
     path('costingsummary_update/<int:costingsummary_id>', views.costingsummary_add, name='costingsummary_update'),
     # update costingsummary
@@ -528,6 +530,7 @@ urlpatterns = [
     # View pre Sales comments search
     path('dispatch_search/', views.dispatch_search, name='dispatch_search'),  # View dispatch search
     path('load_stock_description/', views.load_stock_description, name='load_stock_description'),
+    path('load_pk_wood_description/', views.load_pk_wood_description, name='load_pk_wood_description'),
     # Load stock description
     path('load_vehicle_source/', views.load_vehicle_source, name='load_vehicle_source'),  # Load vehicle_source
     path('load_vehicle_number/', views.load_vehicle_number, name='load_vehicle_number'),  # Load vehicle_details
@@ -625,6 +628,7 @@ urlpatterns = [
     path('iou_insert/', views.iou_add, name='iou_insert'),  # Add IOU
     path('iou_update/<int:iou_id>', views.iou_add, name='iou_update'),  # update IOU
     path('iou_delete/<int:iou_id>', views.iou_delete, name='iou_delete'),  # delete IOU
+    path('pk_return_excess_to_stock/<int:costing_id>/', views.pk_return_excess_to_stock, name='pk_return_excess_to_stock'),
     path('modify_dimensions_view/', views.modify_dimensions_view, name='modify_dimensions_view'),
     # modify_dimensions_view
     path('pk_return_list/', views.pk_return_list, name='pk_return_list'),  # List retrival
@@ -814,6 +818,7 @@ urlpatterns = [
     path('fin_mis/', views.fin_mis, name='fin_mis'),
     path('fin_mis_warehouse/', views.fin_mis_warehouse, name='fin_mis_warehouse'),
     path("trans_fastag/", views.fastag_enquiry_view, name="trans_fastag"),
+    path("trans_fastag_export_excel/", views.trans_fastag_export_excel, name="trans_fastag_export_excel"),
     path('track_vehicle_position/', views.track_vehicle_position, name='track_vehicle_position'),
     path("get_vehicle_data/", views.get_vehicle_data, name="get_vehicle_data"),
     path('get_remaining_quantity/<int:enquiry_id>/<int:vehicle_type_id>/', views.get_remaining_quantity,
@@ -965,6 +970,7 @@ urlpatterns = [
     path('maintenance_list/', views.maintenance_list, name='maintenance_list'),
     path('shipper_invoice_export_excel/<int:invoice_id>/', views.shipper_invoice_export_excel,
          name='shipper_invoice_export_excel'),
+    path('invoice_export_excel/<int:invoice_id>/', views.invoice_export_excel, name='invoice_export_excel'),
 
     # Customer Registration URLs
     path('customer_register/<int:business_id>/', views.customer_register, name='customer_register'),
@@ -989,6 +995,8 @@ urlpatterns = [
     path('SMS/download_pod/<int:trip_id>/', views.download_pod, name='download_pod'),
     path('SMS/download_dmr/<int:trip_id>/', views.download_dmr, name='download_dmr'),
     path('SMS/customer_documents/', views.customer_documents, name='customer_documents'),
+    path('SMS/customer_profile/', views.customer_profile, name='customer_profile'),
+    path('SMS/customer_support/', views.customer_support, name='customer_support'),
     path('ajax/filter-trips-by-date/', views.filter_trips_by_date, name='filter_trips_by_date'),
     path('insurance_renewal_report/', views.insurance_renewal_report_view, name='insurance_renewal_report'),
     path('diesel_vs_revenue_report/', views.diesel_vs_revenue_report_view, name='diesel_vs_revenue_report'),
@@ -996,9 +1004,11 @@ urlpatterns = [
     path('maintenance_report/', views.maintenance_report_view, name='maintenance_report'),
     path('stock_maintenance_list/', views.stock_maintenance_list, name='stock_maintenance_list'),
     path('stock_maintenance_insert/', views.stock_maintenance_add, name='stock_maintenance_add'),
+    path('stock_maintenance_add_for_vendor/', views.stock_maintenance_add_for_vendor, name='stock_maintenance_add_for_vendor'),
     path('stock_maintenance_update/<int:pk>/', views.stock_maintenance_edit, name='stock_maintenance_edit'),
     path('get_part_details/', views.get_part_details, name='get_part_details'),
     path('stock_maintenance_delete/<int:pk>/', views.stock_maintenance_delete, name='stock_maintenance_delete'),
+    path('stock_usage_breakdown/', views.stock_usage_breakdown, name='stock_usage_breakdown'),
     path('trans-invoice/excel/<path:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
     path('trans-invoice/tally-excel/<int:customer_id>/', views.trans_invoice_tally_excel, name='trans_invoice_tally_excel'),
     path("maintenance/pdf/<int:id>/",views.maintenance_pdf,name="maintenance_pdf"),
@@ -1040,8 +1050,11 @@ urlpatterns = [
     path('attached_bill_add/', views.attached_bill_add, name='attached_bill_add'),
     path('attached_bill_edit/<int:id>/', views.attached_bill_edit, name='attached_bill_edit'),
     path('attached_bill_delete/<int:id>/', views.attached_bill_delete, name='attached_bill_delete'),
+    path('attached_bill_upload/<int:id>/', views.attached_bill_upload, name='attached_bill_upload'),
+    path('attached_bill_summary/<int:id>/', views.attached_bill_summary, name='attached_bill_summary'),
     path('get_attached_vehicle_details/', views.get_attached_vehicle_details, name='get_attached_vehicle_details'),
     path('get_vehicles_by_vendor/', views.get_vehicles_by_vendor, name='get_vehicles_by_vendor'),
     path('fetch_maintenance_bill_details/', views.fetch_maintenance_bill_details, name='fetch_maintenance_bill_details'),
     path('get_maintenance_records_by_vehicle/', views.get_maintenance_records_by_vehicle, name='get_maintenance_records_by_vehicle'),
+    path('fuelfilling_export_excel/', views.fuelfilling_export_excel, name='fuelfilling_export_excel'),
 ]

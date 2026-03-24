@@ -1,9 +1,10 @@
 import json
+from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from ..forms import PkretrivalForm
 from ..models import PkstockpurchasesInfo,PkcostingInfo,PkquotationsummaryInfo
+from ..sub_models.stock_maintenance_mod import StockMaintenance
 from django.shortcuts import render, redirect
-from ..views import update_reduced_dimensions
 from django.contrib import messages
 
 @login_required(login_url='login_page')
@@ -48,26 +49,53 @@ def pk_retrival_add(request, retrival_id=0):
                 print(requested_qty)
 
                 if stock_purchase_num_id:
-                    stock_purchase_obj = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id)
-                    stock_purchase_num = stock_purchase_obj.sp_purchase_num
-                    available_qty = stock_purchase_obj.sp_quantity or 0
-                    print(available_qty)
-                    if float(requested_qty) > float(available_qty):
-                        messages.error(request, 'Available quantity is less than requested quantity')
-                        return redirect(request.META['HTTP_REFERER'])
-                    else:
-                        stock_status = retrival.ct_stock_status.id
-                        print("Stock Status ID:", stock_status)
-
-                        if stock_status == 2:
-                            form.save()
-                            stock_purchase_obj.sp_quantity_reduced = float(available_qty) - float(requested_qty)
-                            stock_purchase_obj.save()
-
-                            messages.success(request, 'Stock Successfully Retrieved & Supplied')
-                            update_reduced_dimensions(stock_purchase_num, retrival_id)
+                    try:
+                        stock_purchase_obj = StockMaintenance.objects.get(id=stock_purchase_num_id)
+                        # Use sm_stock_purchase_number (e.g. GRN/PK/1001816), NOT sm_invoice_no which can be None
+                        stock_purchase_num = stock_purchase_obj.sm_stock_purchase_number or stock_purchase_obj.sm_invoice_no or f"SM-{stock_purchase_num_id}"
+                        available_qty = stock_purchase_obj.sm_count or 0
+                        print(available_qty)
+                        if float(requested_qty) > float(available_qty):
+                            messages.error(request, 'Available quantity is less than requested quantity')
+                            return redirect(request.META['HTTP_REFERER'])
                         else:
-                            messages.success(request, 'Stock Not Retrieved')
+                            stock_status = retrival.ct_stock_status.id
+                            print("Stock Status ID:", stock_status)
+    
+                            # Status 2 = Supplied, Status 4 = Received
+                            if stock_status in [2, 4]:
+                                form.save()
+                                # Create a NEW Retrieval record (Type 2) with duplicate check.
+                                # User request: original GRN number should be in the 'sm_invoice_no' field for retrievals.
+                                ref_no = stock_purchase_num # This is the original GRN number (e.g. GRN/PK/1001816)
+                                if not StockMaintenance.objects.filter(sm_stock_type_id=2, sm_invoice_no=ref_no, sm_description__endswith=f"(Costing ID: {retrival_id})").exists():
+                                    try:
+                                        # Use ct_na_quantity (job type qty * job type quantity) 
+                                        # which is the actual stock count being retrieved
+                                        retrival_obj = PkcostingInfo.objects.get(pk=retrival_id)
+                                        actual_qty = float(retrival_obj.ct_na_quantity or requested_qty or 0)
+                                        
+                                        StockMaintenance.objects.create(
+                                            sm_stock_type_id=2, # Retrieval
+                                            sm_invoice_date=datetime.now().date(),
+                                            sm_invoice_no=ref_no, # Standardizing: Putting original GRN here (No RET prefix)
+                                            sm_description=f"Retrieved for Assessment {retrival_obj.ct_assessment_num.na_assessment_num if retrival_obj.ct_assessment_num else 'N/A'} (Costing ID: {retrival_id})",
+                                            sm_partcode=stock_purchase_obj.sm_partcode,
+                                            sm_count=actual_qty,
+                                            sm_uom=stock_purchase_obj.sm_uom,
+                                            sm_updated_by_id=user_id
+                                        )
+                                        messages.success(request, 'Stock Successfully Retrieved & Supplied')
+                                    except Exception as e:
+                                        print(f"Error creating retrieval record: {e}")
+                                        messages.warning(request, 'Stock supplied but retrieval transaction log failed.')
+                                else:
+                                    messages.success(request, 'Stock Successfully Retrieved & Supplied')
+                            else:
+                                messages.success(request, 'Stock Not Retrieved')
+                    except StockMaintenance.DoesNotExist:
+                        messages.error(request, 'Selected stock purchase record not found.')
+                        return redirect(request.META['HTTP_REFERER'])
                 else:
                     messages.error(request, 'Please select a stock with purchase number')
                     return redirect(request.META['HTTP_REFERER'])
@@ -95,6 +123,8 @@ def pk_retrival_list(request):
 @login_required(login_url='login_page')
 def pk_retrival_delete(request,retrival_id):
     retrival = PkcostingInfo.objects.get(pk=retrival_id)
+    # Clean up both Retrieval (Type 2) and potential Return (Type 3) records linked to this costing ID
+    StockMaintenance.objects.filter(sm_stock_type_id__in=[2, 3], sm_description__contains=f"(Costing ID: {retrival_id})").delete()
     retrival.delete()
     # return redirect('/SMS/pK_retrival_cancel')
     return redirect(request.META['HTTP_REFERER'])

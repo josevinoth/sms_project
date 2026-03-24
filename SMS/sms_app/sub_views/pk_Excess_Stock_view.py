@@ -3,6 +3,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from ..forms import PkexcessForm
 from ..models import PkcostingInfo
+from ..sub_models.stock_maintenance_mod import StockMaintenance
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
@@ -67,9 +68,10 @@ def pk_excess_stock_add(request, costing_id=0):
                     if stock_purchase_num_id:
                         try:
                             # Fetch stock purchase record
-                            stock_purchase = PkstockpurchasesInfo.objects.get(id=stock_purchase_num_id)
-                            stock_purchase_num = stock_purchase.sp_purchase_num
-                            stock_qty_available = stock_purchase.sp_quantity_reduced
+                            stock_purchase = StockMaintenance.objects.get(id=stock_purchase_num_id)
+                            stock_purchase_num = stock_purchase.sm_invoice_no
+                            # Assuming sm_count is what we check against
+                            stock_qty_available = stock_purchase.sm_count or 0
 
                             # Validate quantity
                             stock_qty_str = request.POST.get('ct_quantity', None)
@@ -78,7 +80,7 @@ def pk_excess_stock_add(request, costing_id=0):
                                 return redirect(request.META['HTTP_REFERER'])
 
                             try:
-                                stock_qty = int(stock_qty_str)
+                                stock_qty = float(stock_qty_str) # Support decimal quantities
                             except ValueError:
                                 messages.error(request, 'Invalid quantity value. It should be a number.')
                                 return redirect(request.META['HTTP_REFERER'])
@@ -86,8 +88,9 @@ def pk_excess_stock_add(request, costing_id=0):
                             form.save()
                             print("Costing form is valid and stock updated.")
                             messages.success(request, 'Stock Updated Successfully')
-                        except PkstockpurchasesInfo.DoesNotExist:
-                            pass
+                        except StockMaintenance.DoesNotExist:
+                             messages.error(request, 'Selected stock purchase record not found.')
+                             return redirect(request.META['HTTP_REFERER'])
 
                     else:
                         # No stock purchase number provided, still save the record

@@ -3,16 +3,11 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-
 from .driver_settlement_view import recalc_driver_settlement
-from ..models import Driverexpense,TripdetailInfo,driver_settlement_info
+from ..models import Driverexpense, TripdetailInfo, driver_settlement_info
 from ..sub_forms.driver_expense_form import DriverExpenseForm
 from datetime import datetime
-
-from django.db.models import Sum
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
+from ..sub_models.driver_master_mod import DrivermasterInfo
 
 @login_required(login_url='login_page')
 def driver_expense_add(request, expense_id=0):
@@ -29,11 +24,27 @@ def driver_expense_add(request, expense_id=0):
     else:
         # ADD MODE
         settlement_id = request.GET.get('settlement_id')
-        if not settlement_id:
+        driver_master_id = request.GET.get('driver_master_id')
+
+        if settlement_id:
+            settlement = get_object_or_404(driver_settlement_info, id=settlement_id)
+        elif driver_master_id:
+            from ..sub_models.driver_master_mod import DrivermasterInfo
+            master = get_object_or_404(DrivermasterInfo, id=driver_master_id)
+            # Auto-create settlement record if it doesn't exist
+            settlement, created = driver_settlement_info.objects.get_or_create(
+                driver=master,
+                defaults={
+                    'driver_id_value': master.dm_id,
+                    'driver_name': master.dm_name,
+                    'driver_phone': master.dm_drivernumber,
+                    'driver_licence': master.dm_driver_lic,
+                    'driver_licence_expiry': master.dm_driver_lic_expiry
+                }
+            )
+        else:
             messages.error(request, "Please open expense from Driver Settlement")
             return redirect('driver_settlement_list')
-
-        settlement = get_object_or_404(driver_settlement_info, id=settlement_id)
 
     # ================= 2️⃣ CALCULATE TOTALS (AFTER settlement) =================
     advance_total = Driverexpense.objects.filter(
@@ -68,8 +79,22 @@ def driver_expense_add(request, expense_id=0):
         if expense:
             form = DriverExpenseForm(instance=expense,settlement=settlement)
         else:
+            initial_data = {'driver_name': settlement.driver}
+            
+            trip_id = request.GET.get('trip_id')
+            if trip_id:
+                initial_data['trip_number'] = trip_id
+                initial_data['de_expense_type'] = 2  # Preselect Expense
+                # Try prepopulating date too
+                try:
+                    trip = TripdetailInfo.objects.get(id=trip_id)
+                    if trip.tr_departeddate:
+                        initial_data['trip_date'] = trip.tr_departeddate.date()
+                except TripdetailInfo.DoesNotExist:
+                    pass
+
             form = DriverExpenseForm(
-                initial={'driver_name': settlement.driver},
+                initial=initial_data,
                 settlement=settlement
             )
 
@@ -81,6 +106,7 @@ def driver_expense_add(request, expense_id=0):
         'advance_total': advance_total,
         'expense_total': expense_total,
         'current_balance': current_balance,
+        'auto_trip_id': request.GET.get('trip_id') if not expense else None
     })
 
 
@@ -123,7 +149,10 @@ def get_trip_charges(request):
         return JsonResponse({'error': 'No trip id'}, status=400)
 
     try:
-        trip = TripdetailInfo.objects.get(id=trip_id)
+        if str(trip_id).isdigit():
+            trip = TripdetailInfo.objects.get(id=trip_id)
+        else:
+            trip = TripdetailInfo.objects.get(tr_tripnumber=trip_id)
 
         data = {
             # COSTS
@@ -160,17 +189,9 @@ def get_trip_charges(request):
 def filter_trips_by_date(request):
     trip_date = request.GET.get('trip_date')
     settlement_id = request.GET.get('settlement_id')
+    vehicle_no = request.GET.get('vehicle_no')
 
-    if not trip_date or not settlement_id:
-        return JsonResponse([], safe=False)
-
-    # ✅ FIX FORMAT (strip time if present)
-    if 'T' in trip_date:
-        trip_date = trip_date.split('T')[0]
-
-    try:
-        trip_date = datetime.strptime(trip_date, "%Y-%m-%d").date()
-    except ValueError:
+    if not settlement_id:
         return JsonResponse([], safe=False)
 
     settlement = get_object_or_404(driver_settlement_info, id=settlement_id)
@@ -185,11 +206,38 @@ def filter_trips_by_date(request):
     else:
         qs = qs.filter(tr_drivername=settlement.driver)
 
-    # ✅ FILTER BY DATE
-    qs = qs.filter(tr_departeddate__date=trip_date)
+    # ✅ OPTIONAL FILTER BY DATE
+    if trip_date:
+        if 'T' in trip_date:
+            trip_date = trip_date.split('T')[0]
+        try:
+            trip_date = datetime.strptime(trip_date, "%Y-%m-%d").date()
+            qs = qs.filter(tr_departeddate__date=trip_date)
+        except ValueError:
+            pass
+
+    # ✅ OPTIONAL FILTER BY VEHICLE
+    if vehicle_no:
+        qs = qs.filter(tr_vehiclenumber__icontains=vehicle_no)
+
+    qs = qs.order_by('-tr_departeddate')
 
     data = [
-        {'id': t.id, 'trip_number': t.tr_tripnumber}
+        {
+            'id': t.id, 
+            'trip_number': t.tr_tripnumber,
+            'vehicle': t.tr_vehiclenumber,
+            'from': t.tr_departedlocation.place_name if t.tr_departedlocation else "",
+            'to': t.tr_reportedlocation.place_name if t.tr_reportedlocation else "",
+            'date': t.tr_departeddate.strftime('%Y-%m-%d') if t.tr_departeddate else "",
+            'parking': t.tc_parkingcost or 0,
+            'loading': t.tc_loadingcost or 0,
+            'unloading': t.tc_unloadingcost or 0,
+            'weighment': t.tc_weighmentcost or 0,
+            'supervisor': t.tc_supervisorcost or 0,
+            'rto': t.tc_rtocost or 0,
+            'batta': t.tc_betacost or 0
+        }
         for t in qs
     ]
 

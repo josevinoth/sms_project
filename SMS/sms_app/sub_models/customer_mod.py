@@ -25,6 +25,7 @@ class CustomerInfo(models.Model):
     cu_paymentcycle =  models.ForeignKey(PaymentcycleInfo,on_delete=models.CASCADE, default='',null=True)
     cu_creditcountfrom = models.ForeignKey(CrcountfromInfo,on_delete=models.CASCADE, default='')
     cu_tallyid = models.CharField(max_length=100,null=True)
+    cu_pincode = models.CharField(max_length=6, default='', blank=True, null=True)
     cu_businessmodel = models.ForeignKey(TrbusinesstypeInfo,on_delete=models.CASCADE, default='')
     cu_lastmodifiedby = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
     cu_created_at = models.DateTimeField(null=True, auto_now_add=True)

@@ -171,7 +171,7 @@ load_pk_requirement_type();
       var wood_type = $(this).val();
       $('#pod_wood_description').removeClass('disable_a_href');
            $.ajax({
-        url: '{% url "load_stock_description" %}',
+        url: '{% url "load_pk_wood_description" %}',
         data: {
           'stock_type': wood_type,
         },
@@ -179,11 +179,11 @@ load_pk_requirement_type();
 			console.log(data);
 			$('#pod_wood_description').removeClass('disable_a_href');
 			$("#pod_wood_description").empty();
-			$('#pod_wood_description').empty().append("<option value='0'>--Select--</option>");
+			$('#pod_wood_description').empty().append("<option value=''>--Select--</option>");
         	var pod_wood_description_name=JSON.parse(data)["stock_description"];
         	var pod_wood_description_id=JSON.parse(data)["stock_description_id"];
         	var len = (pod_wood_description_id).length;
-        	$('#pod_wood_description').empty().append("<option value='0'>--Select--</option>");
+        	$('#pod_wood_description').empty().append("<option value=''>--Select--</option>");
         	for( var i = 0; i<len; i++){
         		$("#pod_wood_description").append("<option value='"+pod_wood_description_id[i]+"'>"+pod_wood_description_name[i]+"</option>");
 			}
@@ -216,7 +216,7 @@ function plywood_thickness() {
         data: { 'ct_assessment_num_id': pod_assess_num },
         dataType: 'json',
         success: function(data) {
-            $('#pod_nad').empty().append("<option value='0'>--Select--</option>");
+            $('#pod_nad').empty().append("<option value=''>--Select--</option>");
 
             var pkqt_requirement_name = data.requirement_type_val;
             var pkqt_requirement_id = data.requirement_type_id;

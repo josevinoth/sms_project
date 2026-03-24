@@ -7,6 +7,7 @@ from ..forms import WarehoseinaddForm,WarehoseoutaddForm
 from ..models import Dispatch_info,Location_info,User_extInfo,Warehouse_goods_info,Gatein_info,DamagereportInfo,Loadingbay_Info,LocationmasterInfo,UnitInfo,BayInfo
 from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Sum
 from ..sub_forms.GateinForm_form import GateinaddForm
 from ..sub_models.gatein_mod_pre import Gatein_pre_info
 from ..views import warehousevolme_area_calc
@@ -324,34 +325,41 @@ def warehousein_add(request, warehousein_id=0):
                     messages.success(request, 'Goods Stored!')
                     warehousein_form.save()
             # //Update Invoice weight, qty,value
-            invoice_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('id',flat=True)
-            stock_id = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_qr_rand_num',flat=True)
-            job_num = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).values_list('wh_job_no',flat=True)
+            # Aggregate quantities for the entire job
+            aggregates = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).aggregate(
+                total_p=Sum('wh_goods_pieces'),
+                total_w=Sum('wh_goods_weight')
+            )
+            total_qty = aggregates['total_p'] or 0
+            gross_wt = aggregates['total_w'] or 0
+
             invoice_weight = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_weight
             invoice_package = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_no_of_pkg
             invoice_value = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_invoice_value
             invoice_amount_inr = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_stock_amount_in
-            gross_wt = 0
-            total_qty = 0
-            for j in stock_id:
-                gross_wt=gross_wt+(Warehouse_goods_info.objects.get(wh_qr_rand_num=j).wh_goods_weight)
-                total_qty=total_qty+(Warehouse_goods_info.objects.get(wh_qr_rand_num=j).wh_goods_pieces)
 
-            for i in range(0,len(invoice_id)):
-                if i==0:
-                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_amount_inr=invoice_amount_inr)
-                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_weight_unit=invoice_weight)
-                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_value=invoice_value)
-                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_qty=invoice_package)
-                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_gross_weight=gross_wt)
-                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_total_qty=total_qty)
+            # Update all records for this job
+            invoice_ids = list(Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).order_by('id').values_list('id', flat=True))
+            
+            for i, pk in enumerate(invoice_ids):
+                if i == 0:
+                    Warehouse_goods_info.objects.filter(pk=pk).update(
+                        wh_invoice_amount_inr=invoice_amount_inr,
+                        wh_invoice_weight_unit=invoice_weight,
+                        wh_invoice_value=invoice_value,
+                        wh_invoice_qty=invoice_package,
+                        wh_gross_weight=gross_wt,
+                        wh_total_qty=total_qty
+                    )
                 else:
-                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_amount_inr=0.0)
-                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_weight_unit=0.0)
-                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_value=0.0)
-                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_invoice_qty=0)
-                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_gross_weight=0.0)
-                    Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_total_qty=0)
+                    Warehouse_goods_info.objects.filter(pk=pk).update(
+                        wh_invoice_amount_inr=0.0,
+                        wh_invoice_weight_unit=0.0,
+                        wh_invoice_value=0.0,
+                        wh_invoice_qty=0,
+                        wh_gross_weight=0.0,
+                        wh_total_qty=0
+                    )
 
             # update gate-in ID in Warehouse_goods_info table
             try:
@@ -455,12 +463,20 @@ def warehouseout_add(request, warehouseout_id=0):
                             LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_area_occupied=area_occupied)
                         else:
                             print("No Area")
-                total_area_data = LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_size
-                total_volume_data = LocationmasterInfo.objects.get(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).lm_total_volume
-                available_area_final = round((total_area_data - area_occupied), 3)
-                available_volume_final = round((total_volume_data - volume_occupied), 3)
-                LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_area=available_area_final)
-                LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val,lm_areaside=Bay_val).update(lm_available_volume=available_volume_final)
+                # Safer retrieval using .first() to avoid MultipleObjectsReturned
+                loc_master = LocationmasterInfo.objects.filter(lm_wh_location=Branch_val, lm_wh_unit=Unit_val, lm_areaside=Bay_val).first()
+                if loc_master:
+                    total_area_data = loc_master.lm_size or 0
+                    total_volume_data = loc_master.lm_total_volume or 0
+                    available_area_final = round((total_area_data - area_occupied), 3)
+                    available_volume_final = round((total_volume_data - volume_occupied), 3)
+                    
+                    LocationmasterInfo.objects.filter(id=loc_master.id).update(
+                        lm_available_area=available_area_final,
+                        lm_available_volume=available_volume_final
+                    )
+                else:
+                    print("Location master record not found for update")
             else:
                 print("warehouseoutinfo is Not-Valid")
     return redirect('/SMS/warehouseout_cancel')
@@ -543,13 +559,19 @@ def load_bays_origin(request):
     bay_name_list = []
     wh_branch_id = request.GET.get('branchId')
     untid_id = request.GET.get('unitId')
-    # Fetch Bay details
-    bays = BayInfo.objects.filter(bay_branch_name=wh_branch_id,Bay_unit_name=untid_id).values('bay_bayname').distinct()
-    bays_id = BayInfo.objects.filter(bay_branch_name=wh_branch_id,Bay_unit_name=untid_id).values('id').distinct()
-    bays_count = bays.count()
-    for k in range(bays_count):
-        bay_list.append(bays[k]['bay_bayname'])
-        bay_id.append(bays_id[k]['id'])
+    # Fetch the bay IDs and Names together to ensure they remain synchronized
+    bays = BayInfo.objects.filter(bay_branch_name=wh_branch_id, Bay_unit_name=untid_id).values('id', 'bay_bayname')
+    
+    # We want to keep unique names, but since they have different IDs we keep the first one we see
+    # If they truly are distinct bays, we might want to keep all of them. The previous code
+    # used distinct() on names which would only keep one ID per name.
+    # To match the original intent but keep IDs synced:
+    seen_names = set()
+    for bay in bays:
+        if bay['bay_bayname'] not in seen_names:
+            seen_names.add(bay['bay_bayname'])
+            bay_list.append(bay['bay_bayname'])
+            bay_id.append(bay['id'])
     # for m in bay_list:
     #     bay_name=BayInfo.objects.filter(id=m).values('bay_bayname')
     #     bay_name_list.append(bay_name[0]['bay_bayname'])

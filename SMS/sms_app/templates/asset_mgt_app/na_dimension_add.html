@@ -157,7 +157,7 @@
        var wood_type = $(this).val();
        $('#nad_wood_description').removeClass('disable_a_href');
             $.ajax({
-         url: '{% url 'load_stock_description' %}',
+         url: '{% url "load_pk_wood_description" %}',
          data: {
            'stock_type': wood_type,
          },
@@ -165,11 +165,11 @@
              console.log(data);
              $('#nad_wood_description').removeClass('disable_a_href');
              $("#nad_wood_description").empty();
-             $('#nad_wood_description').empty().append("<option value='0'>--Select--</option>");
+             $('#nad_wood_description').empty().append("<option value=''>--Select--</option>");
              var nad_wood_description_name=JSON.parse(data)["stock_description"];
              var nad_wood_description_id=JSON.parse(data)["stock_description_id"];
              var len = (nad_wood_description_id).length;
-             $('#nad_wood_description').empty().append("<option value='0'>--Select--</option>");
+             $('#nad_wood_description').empty().append("<option value=''>--Select--</option>");
              for( var i = 0; i<len; i++){
                  $("#nad_wood_description").append("<option value='"+nad_wood_description_id[i]+"'>"+nad_wood_description_name[i]+"</option>");
              }

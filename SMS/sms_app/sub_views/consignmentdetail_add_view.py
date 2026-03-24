@@ -24,6 +24,7 @@ def consignmentdetail_enquiry(request, enquiry_id, consignment_number):
     print('consignment_number', consignment_number)
 
     # ✅ Set both session keys here
+    request.session['enquiry_num_id'] = enquiry.id
     request.session['ses_enqiury_id'] = enquiry.id
     request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
 
@@ -43,6 +44,8 @@ def consignmentdetail_nav(request,consignmentdetail_id=0):
     enquiry_num = EnquirynoteInfo.objects.get(pk=consignmentdetail_id).en_enquirynumber
     enquiry_num_id = consignmentdetail_id
     request.session['ses_enqiury_num'] = enquiry_num
+    request.session['enquiry_num_id'] = enquiry_num_id
+    request.session['ses_enqiury_id'] = enquiry_num_id
     request.session['ses_enqiury_num_id'] = enquiry_num_id
     consignmentdetail_list=ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
     print('enquiry_num',enquiry_num)
@@ -64,14 +67,13 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
     user_branch_id = Location_info.objects.get(loc_name=user_branch).id
     enquiry_num = request.session.get('ses_enqiury_num')
-    enquiry_num_id = request.session.get('ses_enqiury_id')
+    # Prioritize 'enquiry_num_id' over the misspelled session key
+    enquiry_num_id = request.session.get('enquiry_num_id') or request.session.get('ses_enqiury_id')
 
     print("Enquiry Number:", enquiry_num)
     print("Enquiry ID:", enquiry_num_id)
 
-    # enquiry_num_id = request.session.get('enquiry_num_id')
     consignmentgoods_id_val = request.session.get('ses_consignment_id')
-    enquiry_num_id = request.session.get('ses_enqiury_id')
     has_invoice_or_ewaybill = ConsignmentgoodsInfo.objects.filter(
         cg_consignmentnumber=consignmentdetail_id
     ).filter(
@@ -80,12 +82,15 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     ).exists()
 
     if consignmentdetail_id != 0:
-        enquiry_num_id = ConsignmentdetailInfo.objects.get(id=consignmentdetail_id).co_enquirynumber.id
+        try:
+            enquiry_num_id = ConsignmentdetailInfo.objects.get(id=consignmentdetail_id).co_enquirynumber.id
+        except ConsignmentdetailInfo.DoesNotExist:
+            pass
 
     if not enquiry_num_id or enquiry_num_id == 0:
-        # Handle error, redirect or show message
-        messages.error(request, "Invalid enquiry number. Please select a valid consignment.")
-        return redirect('some_fallback_view')
+        # Handle error, redirect to enquirynote_list instead of self or placeholder
+        messages.error(request, "Enquiry context missing. Please select an enquiry first.")
+        return redirect('enquirynote_list')
 
     customer = EnquirynoteInfo.objects.get(pk=enquiry_num_id).en_customername
     customer_obj = CustomerInfo.objects.filter(cu_name=customer).first()

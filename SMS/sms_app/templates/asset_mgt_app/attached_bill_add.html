@@ -22,7 +22,7 @@
                 <div class="row">
                     <!-- ========== COLUMN 1 ========== -->
                     <div class="col-12 col-md-6">
-                        
+
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Vendor Name</span>
@@ -76,12 +76,19 @@
 
                     <!-- ========== COLUMN 2 ========== -->
                     <div class="col-12 col-md-6">
-                        
+
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Buy Cost</span>
                             </div>
-                            {% render_field form.ab_buy_cost class="form-control disable_a_href" readonly="readonly" %}
+                            {% render_field form.ab_buy_cost class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Toll Cost</span>
+                            </div>
+                            {% render_field form.ab_toll_cost class="form-control" %}
                         </div>
 
                         <div class="input-group input-group-sm mb-3">
@@ -102,7 +109,7 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Agreed Km</span>
                             </div>
-                            {% render_field form.ab_agreed_km class="form-control disable_a_href" readonly="readonly" %}
+                            {% render_field form.ab_agreed_km class="form-control" %}
                         </div>
 
                         <div class="input-group input-group-sm mb-3">
@@ -150,7 +157,8 @@
 
         <!-- ================= TRIP LIST TABLE ================= -->
         <div class="card text-white bg-info mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #17a2b8;">
+            <div class="card-header d-flex justify-content-between align-items-center"
+                style="background-color: #17a2b8;">
                 <h5 class="mb-0">Attached Bill Trips</h5>
                 <button type="button" class="btn btn-warning btn-sm font-weight-bold text-dark" id="addTripsToForm">
                     <i class="fas fa-plus"></i> ADD
@@ -168,15 +176,16 @@
                                 <th>From</th>
                                 <th>To</th>
                                 <th>Trip KM</th>
-                                <th>Buy cost</th>
-                                <th>Parking cost</th>
+                                <th class="d-none">Selling Cost</th>
+                                <th>Buy Cost</th>
+                                <th class="d-none">Parking cost</th>
                                 <th>Toll cost</th>
                                 <th>Total Buy cost</th>
                             </tr>
                         </thead>
                         <tbody id="tripsTableBody">
                             <tr>
-                                <td colspan="11" class="text-center text-muted">Select Vendor/Vehicle to view trips</td>
+                                <td colspan="12" class="text-center text-muted">Select Vendor/Vehicle to view trips</td>
                             </tr>
                         </tbody>
                     </table>
@@ -196,212 +205,301 @@
             });
         }
 
-        // Vendor Change logic
-        $(document).on('change', '#id_ab_vendor', function () {
-            var vendor_id = $(this).val();
-            var $vehicleSelect = $('#id_ab_vehicle_number');
-            $vehicleSelect.empty().append('<option value="">--Select Vehicle--</option>');
-            if ($vehicleSelect.data('select2')) { $vehicleSelect.trigger('change'); }
+        var isInitialLoad = {% if record %}true{% else %}false{% endif %};
+        
+        // Lock Total KM Run to prevent editing
+        $('#id_ab_total_km_run').prop('readonly', true).addClass('disable_a_href');
+        $('#id_ab_extra_km_run').prop('readonly', true).addClass('disable_a_href');
+        $('#id_ab_leave_amount').prop('readonly', true).addClass('disable_a_href');
 
-            if (vendor_id) {
-                $.ajax({
-                    url: "{% url 'get_vehicles_by_vendor' %}",
-                    data: { 'vendor_id': vendor_id },
-                    success: function (data) {
-                        $.each(data.vehicles, function (index, vehicle) {
-                            $vehicleSelect.append('<option value="' + vehicle.id + '">' + vehicle.reg_no + '</option>');
-                        });
-                        if ($vehicleSelect.data('select2')) { $vehicleSelect.trigger('change'); }
-                    }
-                });
-            }
-        });
+    // Vendor Change logic
+    $(document).on('change', '#id_ab_vendor', function () {
+        var vendor_id = $(this).val();
+        var $vehicleSelect = $('#id_ab_vehicle_number');
+        $vehicleSelect.empty().append('<option value="">--Select Vehicle--</option>');
+        if ($vehicleSelect.data('select2')) { $vehicleSelect.trigger('change'); }
 
-        // Trip List Loading
-        $(document).on('change', '#id_ab_vendor, #id_ab_vehicle_number, #id_ab_from_date, #id_ab_to_date', function () {
-            var vendor_id = $('#id_ab_vendor').val();
-            var vehicle_id = $('#id_ab_vehicle_number').val();
-            var from_date = $('#id_ab_from_date').val();
-            var to_date = $('#id_ab_to_date').val();
+        if (vendor_id) {
+            $.ajax({
+                url: "{% url 'get_vehicles_by_vendor' %}",
+                data: { 'vendor_id': vendor_id },
+                success: function (data) {
+                    $.each(data.vehicles, function (index, vehicle) {
+                        $vehicleSelect.append('<option value="' + vehicle.id + '">' + vehicle.reg_no + '</option>');
+                    });
+                    if ($vehicleSelect.data('select2')) { $vehicleSelect.trigger('change'); }
+                }
+            });
+        }
+    });
 
-            if (vendor_id || vehicle_id) {
-                var tbody = $('#tripsTableBody');
-                tbody.empty().append('<tr><td colspan="11" class="text-center">Loading trips... <i class="fas fa-spinner fa-spin"></i></td></tr>');
+    // Trip List Loading
+    $(document).on('change', '#id_ab_vendor, #id_ab_vehicle_number, #id_ab_from_date, #id_ab_to_date', function () {
+        var vendor_id = $('#id_ab_vendor').val();
+        var vehicle_id = $('#id_ab_vehicle_number').val();
+        var from_date = $('#id_ab_from_date').val();
+        var to_date = $('#id_ab_to_date').val();
 
-                $.ajax({
-                    url: "{% url 'get_attached_vehicle_details' %}",
-                    data: {
-                        'vendor_id': vendor_id,
-                        'vehicle_id': vehicle_id,
-                        'from_date': from_date,
-                        'to_date': to_date
-                    },
-// SUCCESS CALLBACK HANDLED BELOW
-                    success: function (data) {
-                        if (vehicle_id) {
-                            $('#id_ab_vehicle_type').val(data.vehicle_type);
+        if (vendor_id || vehicle_id) {
+            var tbody = $('#tripsTableBody');
+            tbody.empty().append('<tr><td colspan="12" class="text-center">Loading trips... <i class="fas fa-spinner fa-spin"></i></td></tr>');
+
+            $.ajax({
+                url: "{% url 'get_attached_vehicle_details' %}",
+                data: {
+                    'vendor_id': vendor_id,
+                    'vehicle_id': vehicle_id,
+                    'from_date': from_date,
+                    'to_date': to_date,
+                    'bill_id': '{% if record %}{{ record.id }}{% endif %}'
+                },
+                // SUCCESS CALLBACK HANDLED BELOW
+                success: function (data) {
+                    if (vehicle_id) {
+                        $('#id_ab_vehicle_type').val(data.vehicle_type);
+                        if (!isInitialLoad) {
                             $('#id_ab_buy_cost').val(data.buy_cost);
                             $('#id_ab_agreed_km').val(data.agreed_km);
-                            extraKmRate = data.extra_km_rate || 0;
                         }
+                        extraKmRate = data.extra_km_rate || 0;
+                    }
+                    if (!isInitialLoad) {
+                        // Total KM Run from backend = same as vehicle log sheet
                         $('#id_ab_total_km_run').val(data.total_km_run);
-
                         // Auto-fill leave days: period days - days with trips
                         if (data.leave_days !== undefined) {
                             $('#id_ab_leave_days').val(data.leave_days);
                         }
+                    }
 
-                        calculateAmounts();
+                    // isInitialLoad will be reset after the first calculateAmounts call
 
-                        // Populate Trips Table
-                        tbody.empty();
+                    // Populate Trips Table FIRST, then calculate amounts so rows exist in DOM
+                    tbody.empty();
 
-                        if (data.trips && data.trips.length > 0) {
-                            $.each(data.trips, function (index, trip) {
-                                var row = `<tr data-id="${trip.cnote}" data-km="${trip.trip_km}" data-parking="${trip.parking_cost}" data-toll="${trip.toll_cost}">
-                                    <td><input type="checkbox" class="trip-checkbox" value="${trip.cnote}"></td>
+                    if (data.trips && data.trips.length > 0) {
+                        var savedIds = ($('#id_ab_selected_trips').val() || "").split(',');
+                        $.each(data.trips, function (index, trip) {
+                            var isChecked = savedIds.includes(String(trip.trip_no)) ? "checked" : "";
+                            var displayCnote = trip.cnote || "";
+                            var row = `<tr data-id="${trip.trip_no}" data-trip-id="${trip.id}" data-km="${trip.trip_km}" data-parking="${trip.parking_cost}" data-toll="${trip.toll_cost}" data-selling="${trip.buy_cost}">
+                                    <td><input type="checkbox" class="trip-checkbox" value="${trip.trip_no}" ${isChecked}></td>
                                     <td>${trip.trip_date}</td>
-                                    <td>${trip.cnote}</td>
+                                    <td>${displayCnote}</td>
                                     <td>${trip.customer}</td>
                                     <td>${trip.from}</td>
                                     <td>${trip.to}</td>
                                     <td>${trip.trip_km}</td>
-                                    <td class="trip-buy-cost">${trip.buy_cost.toFixed(2)}</td>
-                                    <td>${trip.parking_cost.toFixed(2)}</td>
-                                    <td>${trip.toll_cost.toFixed(2)}</td>
-                                    <td class="trip-total-buy-cost">${trip.total_buy_cost.toFixed(2)}</td>
+                                    <td class="d-none trip-selling-cost-text">${trip.selling_cost.toFixed(2)}</td>
+                                    <td>
+                                        <input type="number" name="trip_buy_cost_${trip.id}" class="form-control form-control-sm trip-buy-cost" 
+                                            value="0.00" step="0.01" style="width: 100px;">
+                                    </td>
+                                    <td class="d-none">
+                                        <input type="number" name="trip_parking_cost_${trip.id}" class="form-control form-control-sm trip-parking-cost" 
+                                            value="${trip.parking_cost.toFixed(2)}" step="0.01" style="width: 80px;">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="trip_toll_cost_${trip.id}" class="form-control form-control-sm trip-toll-cost" 
+                                            value="${trip.toll_cost.toFixed(2)}" step="0.01" style="width: 80px;">
+                                    </td>
+                                    <td class="trip-total-buy-cost-text font-weight-bold">0</td>
                                 </tr>`;
-                                tbody.append(row);
-                            });
-                        } else {
-                            tbody.append('<tr><td colspan="11" class="text-center text-muted">No trips found for selected criteria</td></tr>');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("AJAX Error:", status, error);
-                        tbody.empty().append('<tr><td colspan="10" class="text-center text-danger">Error loading data. Please try again.</td></tr>');
-                    }
-                });
-            }
-        });
-
-        // Handle ADD Button Click
-        $('#addTripsToForm').click(function() {
-            var selectedIds = [];
-            var totalKm = 0;
-            var totalExtraAmount = 0;
-
-            $('.trip-checkbox:checked').each(function() {
-                var row = $(this).closest('tr');
-                selectedIds.push($(this).val());
-                totalKm += parseFloat(row.data('km')) || 0;
-                totalExtraAmount += parseFloat(row.data('total-buy')) || 0;
-            });
-
-            if (selectedIds.length === 0) {
-                alert("Please select at least one trip to add.");
-                return;
-            }
-
-            $('#id_ab_selected_trips').val(selectedIds.join(','));
-            $('#id_ab_total_km_run').val(totalKm.toFixed(2));
-            $('#id_ab_extra_km_amount').val(totalExtraAmount.toFixed(2));
-
-            calculateAmounts();
-            
-            // Scroll back to form
-            $('html, body').animate({
-                scrollTop: $("#attachedBillForm").offset().top - 20
-            }, 500);
-        });
-
-        // Toggle Select All
-        $(document).on('change', '#selectAllTrips', function() {
-            $('.trip-checkbox').prop('checked', $(this).prop('checked'));
-        });
-
-        // Handle Manual Input Changes
-        $(document).on('input change', '#id_ab_leave_days, #id_ab_bill_amount, #id_ab_from_date, #id_ab_to_date', function () {
-            calculateAmounts();
-        });
-
-        function getDaysInMonth(dateString) {
-            if (!dateString) return 30; // Default to 30 if no date
-            var date = new Date(dateString);
-            return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-        }
-
-        var extraKmRate = 0; // Store the rate from vehicle master
-
-        function calculateAmounts() {
-            var buy_cost = parseFloat($('#id_ab_buy_cost').val()) || 0;
-            var leave_days = parseInt($('#id_ab_leave_days').val()) || 0;
-            var total_km = parseFloat($('#id_ab_total_km_run').val()) || 0;
-            var agreed_km = parseFloat($('#id_ab_agreed_km').val()) || 0;
-            
-            var from_date = $('#id_ab_from_date').val();
-            var to_date = $('#id_ab_to_date').val();
-
-            // 1. Calculate Period Days for Daily Rate denominator
-            var daysInPeriod = 30; // Default
-            if (from_date && to_date) {
-                var start = new Date(from_date);
-                var end = new Date(to_date);
-                var diffTime = Math.abs(end - start);
-                daysInPeriod = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Include both start and end
-            }
-            
-            var leave_amount = (buy_cost / daysInPeriod) * leave_days;
-            $('#id_ab_leave_amount').val(leave_amount.toFixed(2));
-
-            // 2. Calculate Extra KM Run
-            var extra_km = total_km - agreed_km;
-            if (extra_km < 0) extra_km = 0;
-            $('#id_ab_extra_km_run').val(extra_km.toFixed(2));
-
-            // 3. Calculate Extra KM Amount based on rate
-            var extra_km_amount = extra_km * extraKmRate;
-            $('#id_ab_extra_km_amount').val(extra_km_amount.toFixed(2));
-
-            // 4. Calculate Total Bill Amount (Buy Cost + Extra KM Amount)
-            if (!$('#id_ab_bill_amount').is(':focus')) {
-                var total_bill = buy_cost + extra_km_amount;
-                $('#id_ab_bill_amount').val(total_bill.toFixed(2));
-            }
-
-            // 5. Update table "Buy cost" based on correct formula: (Bill Amount / Total KM Run) * Trip KM
-            var current_bill_amount = parseFloat($('#id_ab_bill_amount').val()) || 0;
-            if (total_km > 0) {
-                var rate = current_bill_amount / total_km;
-                $('#tripsTableBody tr').each(function() {
-                    var $row = $(this);
-                    var t_km = parseFloat($row.data('km')) || 0;
-                    var t_parking = parseFloat($row.data('parking')) || 0;
-                    var t_toll = parseFloat($row.data('toll')) || 0;
-                    
-                    if (t_km > 0) {
-                        var calc_buy = rate * t_km; // Corrected: (Bill/TotalKM) * TripKM
-                        $row.find('.trip-buy-cost').text(calc_buy.toFixed(2));
-                        $row.find('.trip-total-buy-cost').text((calc_buy + t_parking + t_toll).toFixed(2));
+                            tbody.append(row);
+                        });
                     } else {
-                        $row.find('.trip-buy-cost').text("0.00");
-                        $row.find('.trip-total-buy-cost').text((t_parking + t_toll).toFixed(2));
+                        tbody.append('<tr><td colspan="12" class="text-center text-muted">No trips found for selected criteria</td></tr>');
                     }
-                });
+
+                    // Now calculate — rows are in the DOM so Buy Cost cells can be updated
+                    isInitialLoad = false; 
+                    calculateAmounts();
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    tbody.empty().append('<tr><td colspan="12" class="text-center text-danger">Error loading data. Please try again.</td></tr>');
+                }
+            });
+        }
+    });
+
+    // Recalculate amounts when trips are checked or unchecked
+    $(document).on('change', '.trip-checkbox, #selectAllTrips', function () {
+        calculateAmounts();
+    });
+
+    // Handle ADD Button Click
+    $('#addTripsToForm').click(function () {
+        var selectedIds = [];
+        var totalKm = 0;
+        var totalExtraAmount = 0;
+
+        var totalToll = 0;
+        $('.trip-checkbox:checked').each(function () {
+            var row = $(this).closest('tr');
+            selectedIds.push($(this).val());
+            totalKm += parseFloat(row.data('km')) || 0;
+            totalExtraAmount += parseFloat(row.data('total-buy')) || 0;
+            totalToll += parseFloat(row.find('.trip-toll-cost').val()) || 0;
+        });
+
+        if (selectedIds.length === 0) {
+            alert("Please select at least one trip to add.");
+            return;
+        }
+
+        $('#id_ab_selected_trips').val(selectedIds.join(','));
+        $('#id_ab_toll_cost').val(totalToll.toFixed(2));
+
+        calculateAmounts();
+
+        // Scroll back to form
+        $('html, body').animate({
+            scrollTop: $("#attachedBillForm").offset().top - 20
+        }, 500);
+    });
+
+    // Toggle Select All
+    $(document).on('change', '#selectAllTrips', function () {
+        $('.trip-checkbox').prop('checked', $(this).prop('checked'));
+    });
+
+    // Handle Manual Input Changes
+    $(document).on('input change', '#id_ab_buy_cost, #id_ab_toll_cost, #id_ab_agreed_km, #id_ab_leave_days, #id_ab_bill_amount, #id_ab_from_date, #id_ab_to_date', function () {
+        calculateAmounts();
+    });
+
+    function getDaysInMonth(dateString) {
+        if (!dateString) return 30; // Default to 30 if no date
+        var date = new Date(dateString);
+        return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    }
+
+    var extraKmRate = 0; // Store the rate from vehicle master
+
+    function calculateAmounts() {
+        var buy_cost = parseFloat($('#id_ab_buy_cost').val()) || 0;
+        var toll_cost = parseFloat($('#id_ab_toll_cost').val()) || 0;
+        var leave_days = parseInt($('#id_ab_leave_days').val()) || 0;
+        var total_km = parseFloat($('#id_ab_total_km_run').val()) || 0;
+        var agreed_km = parseFloat($('#id_ab_agreed_km').val()) || 0;
+
+        var from_date = $('#id_ab_from_date').val();
+        var to_date = $('#id_ab_to_date').val();
+
+        // 1. Calculate Total Days in Period for Daily Rate denominator
+        var daysInPeriod = 30; // Default
+        if (from_date && to_date) {
+            var start = new Date(from_date);
+            var end = new Date(to_date);
+            if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+                var diffTime = Math.abs(end - start);
+                var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                daysInPeriod = diffDays || 1;
             }
         }
 
-        {% if record %}
-        extraKmRate = parseFloat("{{ record.ab_vehicle_number.vm_extrakm|default:0 }}") || 0;
-        calculateAmounts();
-        {% endif %}
+        var leave_amount = (buy_cost / daysInPeriod) * leave_days;
+        if (isNaN(leave_amount)) leave_amount = 0;
+        $('#id_ab_leave_amount').val(leave_amount.toFixed(2));
+
+        // 2. Calculate Extra KM Run
+        var extra_km = Math.max(0, total_km - agreed_km);
+        $('#id_ab_extra_km_run').val(extra_km.toFixed(2));
+
+        // 3. Calculate Extra KM Amount based on rate
+        var extra_km_amount = extra_km * (parseFloat(extraKmRate) || 0);
+        if (isNaN(extra_km_amount)) extra_km_amount = 0;
+        $('#id_ab_extra_km_amount').val(extra_km_amount.toFixed(2));
+
+        // 4. Calculate Total Bill Amount (Buy Cost + Toll Cost + Extra KM Amount - Leave Amount)
+        if (!$('#id_ab_bill_amount').is(':focus')) {
+            var total_bill = buy_cost + toll_cost + extra_km_amount - leave_amount;
+            if (isNaN(total_bill)) total_bill = 0;
+            $('#id_ab_bill_amount').val(total_bill.toFixed(2));
+        }
+
+        // 5. Update table: Buy Cost = (Header Buy Cost / Total KM Run) * Trip KM
+        var rate = (total_km > 0) ? (buy_cost / total_km) : 0;
+        if (isNaN(rate)) rate = 0;
+
+        // Auto-distribute header into table rows
+        $('#tripsTableBody tr').each(function () {
+            var $row = $(this);
+            var t_km = parseFloat($row.data('km')) || 0;
+            
+            // Map: UI "Buy Cost" -> Backend trip_buy_cost
+            if (t_km > 0) {
+                var calc_buy = rate * t_km;
+                $row.find('.trip-buy-cost').val(calc_buy.toFixed(2));
+            } else {
+                $row.find('.trip-buy-cost').val("0.00");
+            }
+            updateRowTotal($row);
+        });
+    }
+
+    // NEW: Sync table Toll Cost back to header
+    function syncTableToHeader() {
+        var totalToll = 0;
+        $('.trip-checkbox:checked').each(function() {
+            var $row = $(this).closest('tr');
+            totalToll += parseFloat($row.find('.trip-toll-cost').val()) || 0;
+        });
+        $('#id_ab_toll_cost').val(totalToll.toFixed(2));
+        
+        // After syncing up, we must trigger header-based recalculation for the final bill total
+        // but avoid infinite loops.
+        var curBill = parseFloat($('#id_ab_bill_amount').val()) || 0;
+        calculateAmounts(); 
+    }
+
+    // Function to update single row total buy cost
+    function updateRowTotal($row) {
+        var t_buy = parseFloat($row.find('.trip-buy-cost').val()) || 0;
+        var t_parking = parseFloat($row.find('.trip-parking-cost').val()) || 0;
+        var t_toll = parseFloat($row.find('.trip-toll-cost').val()) || 0;
+        var total = t_buy + t_toll; // Excluded parking_cost as requested
+        $row.find('.trip-total-buy-cost-text').text(Math.round(total));
+    }
+
+    // Handle table input changes
+    $(document).on('input', '.trip-buy-cost, .trip-parking-cost, .trip-toll-cost', function() {
+        var $row = $(this).closest('tr');
+        
+        // Auto-check the row if any cost is edited
+        var $checkbox = $row.find('.trip-checkbox');
+        if (!$checkbox.is(':checked')) {
+            $checkbox.prop('checked', true).trigger('change');
+        }
+
+        updateRowTotal($row);
+        
+        // If toll or parking changes in table, sync back to header
+        if ($(this).hasClass('trip-toll-cost') || $(this).hasClass('trip-parking-cost')) {
+            syncTableToHeader();
+        }
+    });
+
+    $(document).on('change', '.trip-checkbox, #selectAllTrips', function() {
+        // When checking/unchecking, sync toll cost to header
+        syncTableToHeader();
+    });
+
+    {% if record %}
+    extraKmRate = parseFloat("{{ record.ab_vehicle_number.vm_extrakm|default:0 }}") || 0;
+    // Trigger trip loading for existing record
+    $('#id_ab_vehicle_number').trigger('change');
+    calculateAmounts();
+    {% endif %}
     });
 </script>
 
 <style>
     .input-group-text {
         width: 160px;
-        background-color: #92e0e0; /* Matching the teal in the screenshot */
+        background-color: #92e0e0;
+        /* Matching the teal in the screenshot */
         color: #000000 !important;
         font-size: 0.9rem;
         font-weight: bold;
@@ -423,7 +521,8 @@
     }
 
     .disable_a_href {
-        background-color: #d4edda !important; /* light green for calculated/readonly */
+        background-color: #d4edda !important;
+        /* light green for calculated/readonly */
         pointer-events: none;
     }
 

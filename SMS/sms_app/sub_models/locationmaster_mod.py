@@ -18,6 +18,21 @@ class LocationmasterInfo(models.Model):
     lm_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, default='')
     lm_customer_model = models.ForeignKey(TrbusinesstypeInfo,on_delete=models.CASCADE, default='')
 
+    def save(self, *args, **kwargs):
+        # Auto-calculate area and volume if they are 0 but dimensions are provided
+        if self.lm_size == 0 and self.lm_length > 0 and self.lm_width > 0:
+            self.lm_size = round(self.lm_length * self.lm_width, 2)
+        if self.lm_total_volume == 0 and self.lm_length > 0 and self.lm_width > 0 and self.lm_height > 0:
+            self.lm_total_volume = round(self.lm_length * self.lm_width * self.lm_height, 2)
+        
+        # Ensure available area/volume are updated if area/volume were just calculated
+        if self.lm_available_area == 0 and self.lm_size > 0:
+            self.lm_available_area = self.lm_size - self.lm_area_occupied
+        if self.lm_available_volume == 0 and self.lm_total_volume > 0:
+            self.lm_available_volume = self.lm_total_volume - self.lm_volume_occupied
+            
+        super(LocationmasterInfo, self).save(*args, **kwargs)
+
     def __str__(self):
         return str([self.lm_wh_unit,self.lm_areaside])
 
