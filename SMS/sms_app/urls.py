@@ -1004,6 +1004,7 @@ urlpatterns = [
     path('maintenance_report/', views.maintenance_report_view, name='maintenance_report'),
     path('stock_maintenance_list/', views.stock_maintenance_list, name='stock_maintenance_list'),
     path('stock_maintenance_insert/', views.stock_maintenance_add, name='stock_maintenance_add'),
+    path('stock_maintenance_add_for_vendor/', views.stock_maintenance_add_for_vendor, name='stock_maintenance_add_for_vendor'),
     path('stock_maintenance_update/<int:pk>/', views.stock_maintenance_edit, name='stock_maintenance_edit'),
     path('get_part_details/', views.get_part_details, name='get_part_details'),
     path('stock_maintenance_delete/<int:pk>/', views.stock_maintenance_delete, name='stock_maintenance_delete'),
