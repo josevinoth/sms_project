@@ -1,5 +1,5 @@
 from django import forms
-from ..models import VehiclemasterInfo
+from ..models import VehiclemasterInfo, OwnershipInfo
 
 class VehiclemasteraddForm(forms.ModelForm):
 

@@ -20,12 +20,20 @@
     class="row g-3 align-items-end justify-content-center">
 
     {% csrf_token %}
-    <div class="col-md-3">
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Vehicle Source</label>
+        {% render_field form.vehicle_source class="form-control" id="vehicle_source" value=selected_source %}
+    </div>
+
+    <div class="col-md-2">
         <label class="form-label fw-bold">Vehicle Number</label>
         <select name="vehicle_search" id="vehicle_number" class="form-control select2">
             <option value="">Search Vehicle...</option>
             {% for v in all_vehicles %}
-            <option value="{{ v.vm_registrationnumber }}" {% if vehicle_search == v.vm_registrationnumber %}selected{% endif %}>{{ v.vm_registrationnumber }}
+            <option value="{{ v.vm_registrationnumber }}" 
+                    data-source="{{ v.vm_ownership_id }}"
+                    {% if vehicle_search == v.vm_registrationnumber %}selected{% endif %}>
+                {{ v.vm_registrationnumber }}
             </option>
             {% endfor %}
         </select>
@@ -36,16 +44,16 @@
         {% render_field form.branch class="form-control" value=selected_branch %}
     </div>
 
-    <div class="col-md-2">
+    <div class="col-md-1">
         <label class="form-label fw-bold">Month</label>
         {% render_field form.month class="form-control" value=selected_month %}
     </div>
-    <div class="col-md-2">
+    <div class="col-md-1">
         <label class="form-label fw-bold">Year</label>
         {% render_field form.year class="form-control" value=selected_year %}
     </div>
 
-    <div class="col-md-2">
+    <div class="col-md-2 d-flex gap-2">
         <button type="submit" class="btn btn-primary">Filter</button>
         <a href="{% url 'vehicle_utilization_report' %}" class="btn btn-secondary">Clear</a>
     </div>
@@ -176,6 +184,42 @@
             placeholder: 'Search Vehicle...',
             allowClear: true
         });
+
+        const $vehicleSource = $jq('#vehicle_source');
+        const $vehicleNumber = $jq('#vehicle_number');
+        const allOptions = $vehicleNumber.find('option').clone();
+
+        function filterVehicles() {
+            const source = $vehicleSource.val();
+            const currentVal = $vehicleNumber.val();
+            
+            $vehicleNumber.empty().append('<option value="">Search Vehicle...</option>');
+            
+            allOptions.each(function() {
+                const $opt = $jq(this);
+                if ($opt.val() === "") return;
+                
+                if (source === "" || $opt.data('source') == source) {
+                    $vehicleNumber.append($opt.clone());
+                }
+            });
+            
+            // Restore value if it still exists in the filtered list
+            if (currentVal && $vehicleNumber.find('option[value="' + currentVal + '"]').length > 0) {
+                $vehicleNumber.val(currentVal);
+            } else {
+                $vehicleNumber.val("");
+            }
+            
+            $vehicleNumber.trigger('change.select2');
+        }
+
+        $vehicleSource.on('change', filterVehicles);
+        
+        // Initial filter on load if a source is selected
+        if ($vehicleSource.val()) {
+            filterVehicles();
+        }
     });
 </script>
 

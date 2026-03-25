@@ -117,36 +117,34 @@
     $(document).ready(function () {
 
         const table = $('#diesel_vs_revenue_report_table').DataTable({
-
             scrollX: true,
-            dom: 'lBfrtip',
-
+            autoWidth: false,
+            dom: "<'row'<'col-sm-12 col-md-4'l><'col-sm-12 col-md-4'B><'col-sm-12 col-md-4'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            
             lengthMenu: [
                 [10, 25, 50, 100, -1],
                 [10, 25, 50, 100, "All"]
             ],
-
-            pageLength: 10,
-
+            pageLength: 25,
             buttons: [
-
-                'copy',
-                'csv',
-
-                // ======================
-                // EXCEL EXPORT
-                // ======================
+                {
+                    extend: 'copy',
+                    className: 'btn btn-sm btn-info'
+                },
+                {
+                    extend: 'csv',
+                    className: 'btn btn-sm btn-info'
+                },
                 {
                     extend: 'excelHtml5',
+                    className: 'btn btn-sm btn-info',
                     text: 'Excel',
                     title: 'Diesel Vs Revenue Report',
-
                     customize: function (xlsx) {
-
                         let sheet = xlsx.xl.worksheets['sheet1.xml'];
                         let styles = xlsx.xl['styles.xml'];
-
-                        // ---------- FONT ----------
                         let fonts = $('fonts', styles);
                         fonts.append(`
                         <font>
@@ -157,8 +155,6 @@
                         </font>
                     `);
                         let fontId = fonts.children().length - 1;
-
-                        // ---------- BLUE FILL ----------
                         let fills = $('fills', styles);
                         fills.append(`
                         <fill>
@@ -169,8 +165,6 @@
                         </fill>
                     `);
                         let fillId = fills.children().length - 1;
-
-                        // ---------- STYLE ----------
                         let cellXfs = $('cellXfs', styles);
                         cellXfs.append(`
                         <xf xfId="0"
@@ -180,37 +174,26 @@
                             applyFont="1"
                             applyFill="1"/>
                     `);
-
                         let styleId = cellXfs.children().length - 1;
-
-                        // APPLY STYLE TO HEADER ROW
                         $('row:eq(1) c', sheet).attr('s', styleId);
                     }
                 },
-
-                // ======================
-                // PDF EXPORT
-                // ======================
                 {
                     extend: 'pdfHtml5',
+                    className: 'btn btn-sm btn-info',
                     orientation: 'landscape',
                     pageSize: 'A4',
                     title: 'Diesel Vs Revenue Report',
-
                     customize: function (doc) {
                         doc.styles.tableHeader.fillColor = '#0A3278';
                         doc.styles.tableHeader.color = 'white';
                         doc.styles.tableHeader.bold = true;
                     }
                 },
-
-                // ======================
-                // PRINT
-                // ======================
                 {
                     extend: 'print',
+                    className: 'btn btn-sm btn-info',
                     title: 'Diesel Vs Revenue Report',
-
                     customize: function (win) {
                         $(win.document.body).find('thead th')
                             .css('background-color', '#0A3278')
@@ -219,8 +202,12 @@
                     }
                 }
             ],
-
             order: [[0, 'asc']]
+        });
+
+        // Handle window resize to adjust columns
+        $(window).on('resize', function () {
+            $('#diesel_vs_revenue_report_table').DataTable().columns.adjust();
         });
 
     });
