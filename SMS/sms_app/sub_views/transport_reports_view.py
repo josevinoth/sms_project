@@ -3786,19 +3786,23 @@ def enquiry_pending_report_view(request):
 
     data_rows = []
     for idx, enq in enumerate(enquiries, start=1):
-        # Vehicle Requested
-        req_list = req_map.get(enq.id, [])
-        veh_req_str = ", ".join(req_list)
-        
-        # Vehicle Type
-        # Extract unique types from req_list
-        veh_types = ", ".join(list(set([r.split(" x ")[-1] for r in req_list])))
-
         # Vehicle Unplaced count
         total_req = total_req_qty.get(enq.id, 0)
         total_placed = len(allot_map.get(enq.id, []))
         unplaced_count = max(0, total_req - total_placed)
+        # Vehicle Type
+        req_list = req_map.get(enq.id, [])
+        veh_types = ", ".join(list(set([r.split(" x ")[-1] for r in req_list if " x " in r])))
+
+        # New Rule: Vehicle Requested should only show the count
+        veh_req_str = str(total_req)
         places_str = str(unplaced_count)
+
+        # New Rule: Only show enquiries where 0 vehicles have been placed. 
+        # If any vehicle has been placed (total_placed > 0), hide the enquiry entirely.
+        if total_placed > 0:
+            continue
+
 
         row = [
             idx,
