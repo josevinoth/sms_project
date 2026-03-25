@@ -83,9 +83,15 @@
 
     <div class="row mb-3">
         <div class="col-12 px-4">
+            {% if is_vendor_flow %}
+            <a href="{% url 'pk_stock_vendor_update' stock_vendor_id=vendor_id %}" class="btn btn-primary shadow-sm">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            {% else %}
             <a href="{% url 'stock_maintenance_list' %}" class="btn btn-primary shadow-sm">
                 <i class="fas fa-arrow-left"></i> Back
             </a>
+            {% endif %}
             <a href="{% url 'stock_maintenance_add' %}?new=1" class="btn btn-success shadow-sm ml-2">
                 <i class="fas fa-plus"></i> Add
             </a>
@@ -257,9 +263,15 @@
                     <i class="fas fa-check"></i> Submit
                 </button>
 
+                {% if is_vendor_flow %}
+                <a href="{% url 'pk_stock_vendor_update' stock_vendor_id=vendor_id %}" class="btn btn-danger float-right">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                {% else %}
                 <a href="{% url 'stock_maintenance_list' %}" class="btn btn-danger float-right">
                     <i class="fas fa-times"></i> Cancel
                 </a>
+                {% endif %}
 
             </div>
         </div>
