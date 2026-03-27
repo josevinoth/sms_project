@@ -89,7 +89,7 @@ def fetch_maintenance_bill_details(request):
             "vehicle_type": maintenance.mi_vehicle.vm_vehicletype.vt_vehicletype if maintenance.mi_vehicle.vm_vehicletype else "N/A",
             "service_type": maintenance.mi_service_type,
             "estimated_amount": float(maintenance.mi_estimated_amount) if maintenance.mi_estimated_amount else 0,
-            "vendor_name": maintenance.mi_vehicle.vm_vendor.vend_name if maintenance.mi_vehicle.vm_vendor else "N/A",
+            "vendor_name": maintenance.mi_technician if maintenance.mi_technician else "N/A",
             "technician": maintenance.mi_technician,
             "advance": advance_val,
         }
