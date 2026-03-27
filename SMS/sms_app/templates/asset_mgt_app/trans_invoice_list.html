@@ -58,12 +58,12 @@
                     <td>{{ invoice.ti_customer }}</td>
                     <td>{{ invoice.ti_gst_in }}</td>
                     <td>{{ invoice.ti_state }}</td>
-                    <td><strong>{{ invoice.grand_total }}</strong></td>
+                    <td><strong>{{ invoice.ti_total }}</strong></td>
 
                     <!-- Tally to Excel -->
                     <td class="text-center">
-                        <a href="{% url 'trans_invoice_tally_excel' invoice.ti_customer.id %}"
-                            class="btn btn-sm btn-info" title="Tally to Excel">
+                        <a href="{% url 'trans_invoice_tally_excel' invoice.ti_inv_no %}" class="btn btn-sm btn-info"
+                            title="Tally to Excel">
                             <i class="fas fa-file-invoice"></i>
                         </a>
                     </td>
