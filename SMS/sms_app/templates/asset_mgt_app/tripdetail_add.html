@@ -602,15 +602,15 @@
 			unloadingTimeDiv.style.display = "none";
 
 			// Make fields non-mandatory
-			document.getElementById("id_trip_loading_time").required = false;
-			document.getElementById("id_trip_unloading_time").required = false;
+			document.getElementById("tr_loading_time").required = false;
+			document.getElementById("tr_unloading_time").required = false;
 		} else {
 			loadingTimeDiv.style.display = "flex";
 			unloadingTimeDiv.style.display = "flex";
 
 			// Make fields mandatory
-			document.getElementById("id_trip_loading_time").required = true;
-			document.getElementById("id_trip_unloading_time").required = true;
+			document.getElementById("tr_loading_time").required = true;
+			document.getElementById("tr_unloading_time").required = true;
 		}
 
 	}
@@ -623,9 +623,28 @@
 	function hideEmptyFields() {
 		let categoryValue = document.getElementById("tr_category").value;
 
+		// Date fields in empty-field class
+		const emptyDateFields = [
+			"tr_departeddate_pickup", "tr_loading_time", "tr_dock_in_time", 
+			"tr_departeddate_delivery", "tr_unloading_time", "tr_reporteddate_pickup"
+		];
+		const otherDateFields = [
+			"tr_departeddate", "tr_reporteddate"
+		];
+
 		// ✅ EMPTY = category 2 or 3
 		if (categoryValue === "2" || categoryValue === "3") {
 			$(".empty-field").hide();   // ✅ Hide unwanted fields
+
+			emptyDateFields.forEach(id => {
+				try {
+					$("#" + id).removeAttr("required");
+					let el = document.getElementById(id);
+					if (el) el.required = false;
+				} catch (e) {
+					console.error('Error removing required from ' + id);
+				}
+			});
 
 			// ✅ Enable the visible fields for category 2 & 3
 			// Loading section fields
@@ -639,12 +658,22 @@
 			$("#tr_reportedkm").prop("disabled", false).removeClass('disable_a_href');
 		} else {
 			$(".empty-field").show();   // ✅ Show all for normal trip
+
+			emptyDateFields.forEach(id => {
+				let el = document.getElementById(id);
+				if (el && !el.disabled) el.required = true;
+			});
+			otherDateFields.forEach(id => {
+				let el = document.getElementById(id);
+				if (el && !el.disabled) el.required = true;
+			});
 		}
 	}
 
 	// ✅ Trigger when category changes
 	$("#tr_category").on("change", function () {
 		hideEmptyFields();
+		trip_status_update();
 	});
 
 	// ✅ Trigger on page load
@@ -728,12 +757,25 @@
 	// ---- Helper Functions to be accessible globally ----
 	function enableLoadingFields() {
 		$("#tr_loading_time, #tr_dock_in_time, #tr_departeddate, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
+		// Make date fields mandatory
+		if($("#tr_category").val() !== "2" && $("#tr_category").val() !== "3") {
+			$("#tr_loading_time, #tr_dock_in_time").prop("required", true);
+		}
+		$("#tr_departeddate").prop("required", true);
 	}
 	function enableUnloadingStage1() {
 		$("#tr_reportedlocation, #tr_reporteddate, #tr_reportedkm").prop("disabled", false).removeClass('disable_a_href');
+		if($("#tr_category").val() !== "2" && $("#tr_category").val() !== "3") {
+			$("#tr_reporteddate").prop("required", true);
+		} else {
+			$("#tr_reporteddate").removeAttr("required");
+		}
 	}
 	function enableUnloadingStage2() {
 		$("#tr_departeddate_delivery, #tr_unloading_time, #tr_reporteddate_pickup, #tr_reportedkm_delivery").prop("disabled", false).removeClass('disable_a_href');
+		if($("#tr_category").val() !== "2" && $("#tr_category").val() !== "3") {
+			$("#tr_departeddate_delivery, #tr_unloading_time, #tr_reporteddate_pickup").prop("required", true);
+		}
 	}
 
 	$(document).ready(function () {
@@ -745,16 +787,27 @@
 		// ---- 2. Field State Management ----
 		function lockLoadingFieldsInitially() {
 			$("#tr_departedlocation, #tr_departeddate_pickup, #tr_departedkm").prop("disabled", false).removeClass('disable_a_href');
-			$("#tr_loading_time, #tr_dock_in_time, #tr_departeddate, #tr_reportedkm_pickup").prop("disabled", true).addClass('disable_a_href');
+			if ($("#tr_category").val() !== "2" && $("#tr_category").val() !== "3") {
+				$("#tr_departeddate_pickup").prop("required", true);
+				$("#tr_loading_time, #tr_dock_in_time, #tr_departeddate, #tr_reportedkm_pickup").prop("disabled", true).addClass('disable_a_href');
+			} else {
+				$("#tr_departeddate_pickup").removeAttr("required");
+				$("#tr_loading_time, #tr_dock_in_time").prop("disabled", true).addClass('disable_a_href');
+				$("#tr_departeddate, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
+			}
+			
+			$("#tr_loading_time, #tr_dock_in_time, #tr_departeddate").removeAttr("required");
 		}
 
 		function lockUnloadingFields() {
 			$("#tr_reportedlocation, #tr_reporteddate, #tr_reportedkm, #tr_departeddate_delivery, #tr_unloading_time, #tr_reporteddate_pickup, #tr_reportedkm_delivery").prop("disabled", true).addClass('disable_a_href');
+			$("#tr_reporteddate, #tr_departeddate_delivery, #tr_unloading_time, #tr_reporteddate_pickup").prop("required", false);
 		}
 
 
 		// ---- 4. Status Handling ----
 		$("#tc_financestatus").on("change", function () {
+			trip_status_update();
 			let status = $(this).val();
 			let tripId = "{{ trip_instance.id|default:'' }}";
 			if (!tripId) return;
@@ -809,10 +862,28 @@
 
 	function trip_status_update() {
 		var trip_status = document.getElementById("tc_financestatus").value;
+		var trip_category = document.getElementById("tr_category").value;
+		var isNewTrip = !("{{ trip_instance.id|default:'' }}");
+		
 		if (trip_status == 1) {
-			$("#tr_departedlocation, #tr_departedkm, #tr_departeddate, #tr_loading_time").attr("required", "required");
+			if (trip_category !== "2" && trip_category !== "3") {
+				$("#tr_departedlocation, #tr_departedkm, #tr_departeddate, #tr_loading_time").attr("required", "required");
+			} else {
+				if (isNewTrip) {
+					$("#tr_departedlocation").attr("required", "required");
+					$("#tr_departeddate, #tr_reportedkm_pickup").removeAttr("required");
+				} else {
+					$("#tr_departedlocation, #tr_departeddate, #tr_reportedkm_pickup").attr("required", "required");
+				}
+				$("#tr_departedkm, #tr_loading_time").removeAttr("required");
+			}
 		} else if (trip_status == 2) {
-			$("#tr_unloading_time, #tr_reportedlocation, #tr_reportedkm, #tr_reporteddate").attr("required", "required");
+			if (trip_category !== "2" && trip_category !== "3") {
+				$("#tr_unloading_time, #tr_reportedlocation, #tr_reportedkm, #tr_reporteddate").attr("required", "required");
+			} else {
+				$("#tr_reportedlocation, #tr_reportedkm, #tr_reporteddate").attr("required", "required");
+				$("#tr_unloading_time").removeAttr("required");
+			}
 		}
 	}
 </script>

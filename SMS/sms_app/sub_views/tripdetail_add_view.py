@@ -252,7 +252,7 @@ def tripdetail_add(request, tripdetail_id=0):
             trip_det_form = TripdetailaddForm(request.POST, request.FILES)
             vehicle_allotment_id = request.POST.get('vehicle_allotment_id')
             tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES)
-            enquiry_num = request.session.get('ses_enqiury_id')
+            enquiry_num = enquiry_num_id
             cosnignment_number = request.POST.get('tr_consignmentnumber')
             vehicle_number = request.POST.get('tr_vehiclenumber')
 
@@ -390,7 +390,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     tr_enquirynumber=enquiry_num
                 ).values_list('tr_tripnumber', flat=True)
                 EnquirynoteInfo.objects.filter(
-                    en_enquirynumber=enquiry_num
+                    pk=enquiry_num
                 ).update(en_tripdetails=list(tripdetail_list))
                 messages.success(request, "Record Updated Successfully")
 
