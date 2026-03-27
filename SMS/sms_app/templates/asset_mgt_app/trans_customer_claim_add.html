@@ -1,0 +1,158 @@
+{% extends "asset_mgt_app/base_1.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<style>
+    .select2-wrapper { flex: 1 1 auto; min-width: 0; }
+    .select2-wrapper .select2-container { display: block !important; width: 100% !important; }
+    .select2-wrapper .select2-selection--single { height: 31px !important; border-radius: 0 4px 4px 0 !important; border-color: #ced4da !important; }
+    .select2-wrapper .select2-selection--single .select2-selection__rendered { line-height: 29px !important; color: #495057; font-size: 0.875rem; padding-left: 8px; }
+    .select2-wrapper .select2-selection--single .select2-selection__arrow { height: 29px !important; }
+    .select2-dropdown { font-size: 0.875rem; z-index: 9999; }
+</style>
+<form method="POST" action="" id="trans_customer_claim_add" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col">
+            <div class="container-fluid">
+                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+                    <div class="card-header text-center"><h3>Add/Update Transport Customer Claims</h3></div>
+                    <div class="card-body bg-light text-dark">
+                        <div class="row">
+                            <!-- Column 1 -->
+                            <div class="col-3">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Cnote No</span></div>
+                                    <div class="select2-wrapper">{% render_field form.tcc_cnote id="tcc_cnote" class="form-control" %}</div>
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Trip Date</span></div>
+                                    {% render_field form.tcc_trip_date type="date" id="id_tcc_trip_date" class="form-control" readonly="True" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">From</span></div>
+                                    {% render_field form.tcc_from id="tcc_from" class="form-control" readonly="True" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">To</span></div>
+                                    {% render_field form.tcc_to id="tcc_to" class="form-control" readonly="True" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Veh No</span></div>
+                                    {% render_field form.tcc_veh_no id="tcc_veh_no" class="form-control" readonly="True" %}
+                                </div>
+                            </div>
+                            <!-- Column 2 -->
+                            <div class="col-3">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Veh Type</span></div>
+                                    {% render_field form.tcc_veh_type id="tcc_veh_type" class="form-control" readonly="True" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Driver No</span></div>
+                                    {% render_field form.tcc_driver_no id="tcc_driver_no" class="form-control" readonly="True" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Driver Name</span></div>
+                                    {% render_field form.tcc_driver_name id="tcc_driver_name" class="form-control" readonly="True" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Shipper Reference No</span></div>
+                                    {% render_field form.tcc_shipper_ref_no id="tcc_shipper_ref_no" class="form-control" readonly="True" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Total No.of pkg</span></div>
+                                    {% render_field form.tcc_total_pkg id="tcc_total_pkg" class="form-control" readonly="True" %}
+                                </div>
+                            </div>
+                            <!-- Column 3 -->
+                            <div class="col-3">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">No.of Pkg Damaged</span></div>
+                                    {% render_field form.tcc_damaged_pkg id="tcc_damaged_pkg" class="form-control" readonly="True" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Damage remarks</span></div>
+                                    {% render_field form.tcc_damage_remarks id="tcc_damage_remarks" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Reason for Claim</span></div>
+                                    {% render_field form.tcc_reason_for_claim id="tcc_reason_for_claim" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Claim Amount</span></div>
+                                    {% render_field form.tcc_claim_amount id="tcc_claim_amount" class="form-control" %}
+                                </div>
+                            </div>
+                            <!-- Column 4 -->
+                            <div class="col-3">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">CAPA Issued Date</span></div>
+                                    {% render_field form.tcc_capa_issued_date type="date" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">CAPA Closed Date</span></div>
+                                    {% render_field form.tcc_capa_closed_date type="date" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Management Approval</span></div>
+                                    {% render_field form.tcc_mgmt_approval id="tcc_mgmt_approval" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Current Status</span></div>
+                                    {% render_field form.tcc_current_status id="tcc_current_status" class="form-control" %}
+                                </div>
+                                {% render_field form.tcc_updated_by id="tcc_updated_by" hidden="True" class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-1"></div>
+                            <div class="col-10">
+                                <div class="message text-center">
+                                    {% for message in messages %}
+                                    <a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-1"></div>
+                        </div>
+                        <button type="submit" class="btn btn-success" id="save-btn"><i class="fas fa-check"></i> Submit</button>
+                        <a href="{% url 'trans_customer_claims_list' %}" class="btn btn-danger float-right"><i class="fas fa-times"></i> Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+    $(document).ready(function () {
+        $('#tcc_cnote').select2({ placeholder: "--Select--", allowClear: true, width: '100%' });
+        $('#tcc_cnote').change(function () {
+            var cnoteId = $(this).val();
+            if (cnoteId && cnoteId !== "0" && cnoteId !== "") {
+                $.ajax({
+                    url: '{% url "fetch_trip_details_by_cnote" %}',
+                    data: { 'cnote_id': cnoteId },
+                    success: function (data) {
+                        if (data) {
+                            if (data.trip_date) $('#id_tcc_trip_date').val(data.trip_date);
+                            if (data.from_loc) $('#tcc_from').val(data.from_loc);
+                            if (data.to_loc) $('#tcc_to').val(data.to_loc);
+                            if (data.veh_no) $('#tcc_veh_no').val(data.veh_no);
+                            if (data.veh_type) $('#tcc_veh_type').val(data.veh_type);
+                            if (data.driver_no) $('#tcc_driver_no').val(data.driver_no);
+                            if (data.driver_name) $('#tcc_driver_name').val(data.driver_name);
+                            if (data.shipper_ref_no) $('#tcc_shipper_ref_no').val(data.shipper_ref_no);
+                            if (data.total_pkg !== undefined) $('#tcc_total_pkg').val(data.total_pkg);
+                            if (data.damaged_pkg !== undefined) $('#tcc_damaged_pkg').val(data.damaged_pkg);
+                            if (data.damage_remarks) $('#tcc_damage_remarks').val(data.damage_remarks);
+                        }
+                    }
+                });
+            }
+        });
+        var updated_by = document.getElementById("tcc_updated_by").value;
+        if (updated_by == "") { document.getElementById("tcc_updated_by").value = '{{user_id}}'; }
+        else { document.getElementById("tcc_updated_by").value = updated_by; }
+    });
+</script>
+{% endblock content %}

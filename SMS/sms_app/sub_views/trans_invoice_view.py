@@ -378,6 +378,7 @@ def fetch_customer_details(request):
             'branch': '',
             'state': '',
             'customer_name': '',
+            'pincode': '',
         })
 
     customer_name = str(customer).upper()
@@ -397,6 +398,7 @@ def fetch_customer_details(request):
         'branch': branch,
         'state': state,
         'customer_name': customer_name,
+        'pincode': customer.cu_pincode or '',
     })
 
 
@@ -903,17 +905,21 @@ def get_tally_vehicle_no(invoice):
 
 
 @login_required(login_url='login_page')
-def trans_invoice_tally_excel(request, customer_id):
-    customer = get_object_or_404(CustomerInfo, id=customer_id)
-    qs = TransInvoiceInfo.objects.filter(ti_customer=customer, is_woh=True).select_related("ti_customer","ti_trip","ti_consignment","ti_goods")
+def trans_invoice_tally_excel(request, invoice_no):
+    first_record = TransInvoiceInfo.objects.filter(ti_inv_no=invoice_no).first()
+    if not first_record:
+        messages.warning(request, "Invoice not found.")
+        return redirect('trans_invoice_list')
+    customer = first_record.ti_customer
+    qs = TransInvoiceInfo.objects.filter(ti_customer=customer, ti_inv_no=invoice_no, is_woh=True).select_related("ti_customer","ti_trip","ti_consignment","ti_goods")
     if not qs.exists():
-        messages.warning(request, "No invoices found in WOH list for this customer.")
+        messages.warning(request, "No trips found in WOH list for this invoice.")
         return redirect('trans_invoice_list')
     wb = Workbook()
     ws = wb.active
     ws.title = "Tally Export"
     headers = [
-        "Date", "Sundry Debtors", "State", "Pincode", "Voucher No.", "Primary Cost Category", "Customer", "Job No.", "Vehicle Number",
+        "Date", "Sundry Debtors", "State", "GST No.", "Pincode", "Voucher No.", "Primary Cost Category", "Customer", "Job No.", "Vehicle Number",
         "Transportation Charges", "Toll Charges", "Parking Charges", "Loading Charges", "Unloading Charges", "Halting Charges",
         "Docket Charges", "Weighment Charges", "Transportation Handling Charges", "Total"
     ]
@@ -940,6 +946,7 @@ def trans_invoice_tally_excel(request, customer_id):
             formatted_date,
             safe(obj.ti_customer_short_name), 
             safe(obj.ti_state), 
+            safe(obj.ti_gst_in),
             safe(obj.ti_pincode), 
             safe(obj.ti_inv_no),
             safe(str(trip.tr_vehiclesource) if trip and trip.tr_vehiclesource else ""),
