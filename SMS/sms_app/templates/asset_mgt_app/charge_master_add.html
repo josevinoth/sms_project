@@ -1,0 +1,112 @@
+{% extends "asset_mgt_app/base_1.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<style>
+    .select2-wrapper {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .select2-wrapper .select2-container {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    .select2-wrapper .select2-selection--single {
+        height: 31px !important;
+        border-radius: 0 4px 4px 0 !important;
+        border-color: #ced4da !important;
+    }
+
+    .select2-wrapper .select2-selection--single .select2-selection__rendered {
+        line-height: 29px !important;
+        color: #495057;
+        font-size: 0.875rem;
+        padding-left: 8px;
+    }
+
+    .select2-wrapper .select2-selection--single .select2-selection__arrow {
+        height: 29px !important;
+    }
+
+    .custom-label {
+        background-color: #93e8ef !important;
+        color: black !important;
+        font-weight: bold !important;
+        border: 1px solid #ced4da !important;
+    }
+
+    .custom-input {
+        background-color: #f4f4f2 !important;
+        font-weight: bold !important;
+        border: 1px solid #ced4da !important;
+    }
+</style>
+<form method="POST" action="" id="charge_master_form">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col">
+            <div class="container-fluid">
+                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
+                    <div class="card-header text-center">
+                        <h3>Add/Update Charge Master</h3>
+                    </div>
+                    <div class="card-body bg-light text-dark">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Customer Name</span>
+                                    </div>
+                                    <div class="select2-wrapper">{% render_field form.cm_customer id="cm_customer" class="form-control" %}</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text custom-label">Charge
+                                            Type</span></div>
+                                    {% render_field form.cm_charge_type id="cm_charge_type" class="form-control custom-input" %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Vehicle Type</span>
+                                    </div>
+                                    <div class="select2-wrapper">{% render_field form.cm_vehicle_type id="cm_vehicle_type" class="form-control" %}</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Amount</span></div>
+                                    {% render_field form.cm_amount class="form-control" %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-1"></div>
+                            <div class="col-10">
+                                <div class="message text-center">
+                                    {% for message in messages %}
+                                    <a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-1"></div>
+                        </div>
+                        <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Submit</button>
+                        <a href="{% url 'charge_master_list' %}" class="btn btn-danger float-right"><i
+                                class="fas fa-times"></i> Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+    $(document).ready(function () {
+        $('#cm_customer').select2({ placeholder: "--Select Customer--", allowClear: true, width: '100%' });
+        $('#cm_vehicle_type').select2({ placeholder: "--Select Vehicle Type--", allowClear: true, width: '100%' });
+    });
+</script>
+{% endblock content %}
