@@ -1036,6 +1036,7 @@ urlpatterns = [
     path('own_vehicle_pl_report/', views.own_vehicle_pl_report_view, name='own_vehicle_pl_report'),
     path('claim_pending_report/', views.claim_pending_report_view, name='claim_pending_report'),
     path('enquiry_pending_report/', views.enquiry_pending_report_view, name='enquiry_pending_report'),
+    path('enquiry_pending_report_ajax/', views.enquiry_pending_report_ajax_view, name='enquiry_pending_report_ajax'),
     path('driver_balance_report/', views.driver_balance_report_view, name='driver_balance_report'),
     path('halting_report/', views.halting_report_view, name='halting_report'),
     path("trip_send_loading_report_mail/", views.trip_send_loading_report_mail, name="trip_send_loading_report_mail"),

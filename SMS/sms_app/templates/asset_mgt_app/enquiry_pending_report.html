@@ -19,7 +19,7 @@
     <div class="col-2"></div>
 </div>
 
-<form method="POST" action="{% url 'enquiry_pending_report' %}" class="row g-3 align-items-end px-3">
+<form id="enquiry_filter_form" method="POST" action="{% url 'enquiry_pending_report' %}" class="row g-3 align-items-end px-3">
     {% csrf_token %}
 
     <div class="col-md-2">
@@ -57,7 +57,7 @@
     </div>
 
     <div class="col-md-2">
-        <button type="submit" class="btn btn-primary mt-3">Filter</button>
+        <button type="button" id="btn-filter" class="btn btn-primary mt-3">Filter</button>
     </div>
 </form>
 <br>
@@ -83,30 +83,47 @@
             </tr>
         </thead>
         <tbody>
-            {% for row in data_rows %}
-            <tr>
-                {% for cell in row %}
-                <td>{{ cell }}</td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
+            <!-- DataTables AJAX will populate this -->
         </tbody>
     </table>
 </div>
 
 <script>
     $(document).ready(function () {
-        $('#enquiry_pending_report_table').DataTable({
-            scrollX: true,
-            dom: 'lBfrtip',
-            lengthMenu: [
+        var table = $('#enquiry_pending_report_table').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "scrollX": true,
+            "ajax": {
+                "url": "{% url 'enquiry_pending_report_ajax' %}",
+                "type": "GET",
+                "data": function (d) {
+                    var formData = $('#enquiry_filter_form').serializeArray();
+                    $.each(formData, function (i, obj) {
+                        d[obj.name] = obj.value;
+                    });
+                }
+            },
+            "columns": [
+                { "data": 0 }, // SNo
+                { "data": 1 }, // Date
+                { "data": 2 }, // Enquiry No
+                { "data": 3 }, // From
+                { "data": 4 }, // To
+                { "data": 5 }, // Vehicle Requested
+                { "data": 6 }, // Unassigned
+                { "data": 7 }, // Vehicle Type
+                { "data": 8 }, // Customer
+                { "data": 9 }  // Reason
+            ],
+            "dom": 'lBfrtip',
+            "lengthMenu": [
                 [10, 25, 50, 100, -1],
                 [10, 25, 50, 100, "All"]
             ],
-            pageLength: 10,
-            buttons: [
-                'copy',
-                'csv',
+            "pageLength": 10,
+            "buttons": [
+                'copy', 'csv',
                 {
                     extend: 'excelHtml5',
                     text: 'Excel',
@@ -148,7 +165,13 @@
                     }
                 }
             ],
-            order: [[0, 'asc']]
+            "order": [[1, 'desc']] // Order by Date by default
+        });
+
+        // Trigger filter on click
+        $('#btn-filter').on('click', function (e) {
+            e.preventDefault();
+            table.draw();
         });
     });
 </script>

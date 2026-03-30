@@ -3945,7 +3945,8 @@ def pod_pending_report_ajax_view(request):
         'tr_vehiclesource', 'tr_category',
         'tr_departedlocation', 'tr_reportedlocation'
     ).filter(
-        Q(tr_reporteddate__isnull=False) | Q(tr_unloading_time__isnull=False)
+        Q(tr_reporteddate__isnull=False) | Q(tr_unloading_time__isnull=False),
+        tc_financestatus_id=7
     )
 
     # Apply Custom Filters
@@ -4028,7 +4029,8 @@ def pod_pending_report_ajax_view(request):
         cons_goods = goods_map.get(trip.tr_consignmentnumber_id)
         
         start_date = trip.tr_departeddate or trip.tr_loading_time
-        end_date = trip.tr_reporteddate or trip.tr_unloading_time
+        # Trip Closed Date = tr_reporteddate_pickup, fallback to unloading_time or reporteddate
+        end_date = trip.tr_reporteddate_pickup or trip.tr_unloading_time or trip.tr_reporteddate
         
         pending_days = ""
         if not trip.tc_pod_attachment and end_date:
@@ -4050,6 +4052,125 @@ def pod_pending_report_ajax_view(request):
             safe_num(trip.tc_tripcost),
             pending_days,
             safe_str(trip.tr_remarks),
+        ])
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': records_total,
+        'recordsFiltered': records_filtered,
+        'data': data,
+    })
+
+
+@login_required(login_url='login_page')
+def enquiry_pending_report_ajax_view(request):
+    from ..models import EnquirynoteInfo, Enquirynotevehicle, Vehicle_allotmentInfo
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '')
+
+    # Filters
+    branch = request.GET.get('branch', '')
+    customer_id = request.GET.get('dmr_customer', '')
+    from_loc_id = request.GET.get('from_location', '')
+    to_loc_id = request.GET.get('to_location', '')
+    from_date = request.GET.get('date_from', '')
+    to_date = request.GET.get('date_to', '')
+
+    # Base Query: Pending Enquiries (Status 6)
+    enquiries = EnquirynoteInfo.objects.filter(en_status_id=6).select_related(
+        'en_customername', 'en_fromlocaion', 'en_tolocation'
+    )
+
+    # Apply Filters
+    if branch == "Bengaluru":
+        enquiries = enquiries.filter(en_enquirynumber__istartswith="BLR")
+    elif branch == "Chennai":
+        enquiries = enquiries.filter(en_enquirynumber__istartswith="MAA")
+
+    if customer_id:
+        enquiries = enquiries.filter(en_customername_id=customer_id)
+    if from_loc_id:
+        enquiries = enquiries.filter(en_fromlocaion_id=from_loc_id)
+    if to_loc_id:
+        enquiries = enquiries.filter(en_tolocation_id=to_loc_id)
+    if from_date:
+        enquiries = enquiries.filter(en_created_at__date__gte=from_date)
+    if to_date:
+        enquiries = enquiries.filter(en_created_at__date__lte=to_date)
+
+    if search_value:
+        enquiries = enquiries.filter(
+            Q(en_enquirynumber__icontains=search_value) |
+            Q(en_customername__cu_name__icontains=search_value)
+        )
+
+    records_total = EnquirynoteInfo.objects.filter(en_status_id=6).count()
+    records_filtered = enquiries.count()
+
+    # Order By
+    order_col = int(request.GET.get('order[0][column]', 0))
+    order_dir = request.GET.get('order[0][dir]', 'desc')
+    col_map = {
+        0: 'id',
+        1: 'en_created_at',
+        2: 'en_enquirynumber',
+        3: 'en_fromlocaion__place_name',
+        4: 'en_tolocation__place_name',
+        8: 'en_customername__cu_name',
+    }
+    order_field = col_map.get(order_col, '-en_created_at')
+    if order_dir == 'desc' and not order_field.startswith('-'):
+        order_field = '-' + order_field
+    enquiries = enquiries.order_by(order_field)
+
+    # Slicing
+    if length != -1:
+        enquiries_slice = enquiries[start:start + length]
+    else:
+        enquiries_slice = enquiries[start:]
+
+    enquiry_ids = [enq.id for enq in enquiries_slice]
+
+    # Fetch vehicle requests
+    vehicle_requests = Enquirynotevehicle.objects.filter(env_enquirynumber_id__in=enquiry_ids).select_related('env_vehicletype')
+    req_map = {}
+    total_req_qty = {}
+    for vr in vehicle_requests:
+        req_map.setdefault(vr.env_enquirynumber_id, []).append(f"{vr.env_quantity} x {vr.env_vehicletype}")
+        qty = vr.env_quantity or 0
+        total_req_qty[vr.env_enquirynumber_id] = total_req_qty.get(vr.env_enquirynumber_id, 0) + qty
+
+    # Fetch allotments
+    allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids)
+    allot_map = {}
+    for va in allotments:
+        allot_map.setdefault(va.va_enquirynumber_id, []).append(va.id)
+
+    def safe_str(val):
+        return str(val) if val else ""
+
+    data = []
+    for idx, enq in enumerate(enquiries_slice, start=start + 1):
+        req_list = req_map.get(enq.id, [])
+        veh_req_str = str(total_req_qty.get(enq.id, 0))
+        veh_types = ", ".join(list(set([r.split(" x ")[-1] for r in req_list])))
+        total_req = total_req_qty.get(enq.id, 0)
+        total_placed = len(allot_map.get(enq.id, []))
+        unplaced_count = max(0, total_req - total_placed)
+
+        data.append([
+            idx,
+            enq.en_created_at.strftime('%d-%m-%Y') if enq.en_created_at else "",
+            enq.en_enquirynumber,
+            safe_str(enq.en_fromlocaion),
+            safe_str(enq.en_tolocation),
+            veh_req_str,
+            str(unplaced_count),
+            veh_types,
+            safe_str(enq.en_customername),
+            " "
         ])
 
     return JsonResponse({
