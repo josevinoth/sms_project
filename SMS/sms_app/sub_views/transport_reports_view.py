@@ -145,7 +145,7 @@ ENQUIRY_PENDING_HEADERS = [
 
 DRIVER_BALANCE_HEADERS = ["S.No", "Driver Id", "Branch", "Driver name", "Balance"]
 
-POD_ENDING_REPORT_HEADERS = [
+POD_PENDING_REPORT_HEADERS = [
     "S.No", "Trip Start Date", "Trip End Date", "Cnote", "Customer Name", "From", "To",
     "Department", "Vehicle No", "Vehicle Source", "Shipper Name", "Revenue", "Pending Days", "Remarks"
 ]
@@ -3903,21 +3903,41 @@ def driver_balance_report_view(request):
 
 
 @login_required(login_url='login_page')
-def pod_ending_report_view(request):
+def pod_pending_report_view(request):
     first_name = request.session.get('first_name')
 
-    if request.method == "POST":
-        from_date = request.POST.get('from_date', '')
-        to_date = request.POST.get('to_date', '')
-        branch_id = request.POST.get('branch', '')
-        vehiclesource_id = request.POST.get('vehiclesource', '')
-        triptype_id = request.POST.get('triptype', '')
-    else:
-        from_date = ""
-        to_date = ""
-        branch_id = ""
-        vehiclesource_id = ""
-        triptype_id = ""
+    from ..models import Location_info, OwnershipInfo, Trip_category_info
+    return render(request, "asset_mgt_app/pod_pending_report.html", {
+        'first_name': first_name,
+        'headers': POD_PENDING_REPORT_HEADERS,
+        'all_vehiclesources': OwnershipInfo.objects.all(),
+        'all_triptypes': Trip_category_info.objects.all(),
+        'all_branches': [
+            {'id': b.id, 'name': b.loc_name.replace('BVM ', '').strip()}
+            for b in Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name')
+        ],
+    })
+
+
+@login_required(login_url='login_page')
+def pod_pending_report_ajax_view(request):
+    """Server-side DataTables AJAX endpoint for POD Pending Report."""
+    from django.db.models import Q
+    from datetime import date
+    from django.http import JsonResponse
+
+    # DataTables params
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 50))
+    search_value = request.GET.get('search[value]', '').strip()
+
+    # Custom Filter params
+    from_date = request.GET.get('from_date', '').strip()
+    to_date = request.GET.get('to_date', '').strip()
+    branch_id = request.GET.get('branch', '').strip()
+    vehiclesource_id = request.GET.get('vehiclesource', '').strip()
+    triptype_id = request.GET.get('triptype', '').strip()
 
     trips = TripdetailInfo.objects.select_related(
         'tr_enquirynumber', 'tr_enquirynumber__en_customername',
@@ -3928,6 +3948,7 @@ def pod_ending_report_view(request):
         Q(tr_reporteddate__isnull=False) | Q(tr_unloading_time__isnull=False)
     )
 
+    # Apply Custom Filters
     if from_date:
         trips = trips.filter(Q(tr_reporteddate__date__gte=from_date) | Q(tr_unloading_time__date__gte=from_date))
     if to_date:
@@ -3940,8 +3961,6 @@ def pod_ending_report_view(request):
                 trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
             elif b_id == 2: # MAA
                 trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
-            else:
-                pass
         except:
             pass
 
@@ -3951,13 +3970,51 @@ def pod_ending_report_view(request):
     if triptype_id:
         trips = trips.filter(tr_category_id=triptype_id)
 
-    trips = trips.order_by('-tr_created_at')
+    records_total = trips.count()
 
-    paginator = Paginator(trips, 50)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    # Apply Global Search
+    if search_value:
+        trips = trips.filter(
+            Q(tr_tripnumber__icontains=search_value) |
+            Q(tr_vehiclenumber__icontains=search_value) |
+            Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
+            Q(tr_enquirynumber__en_customerdepartment__cd_name__icontains=search_value) |
+            Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+            Q(tr_departedlocation__place_name__icontains=search_value) |
+            Q(tr_reportedlocation__place_name__icontains=search_value)
+        )
 
-    trip_cons_ids = [t.tr_consignmentnumber_id for t in page_obj if t.tr_consignmentnumber_id]
+    records_filtered = trips.count()
+
+    # Ordering
+    order_col = int(request.GET.get('order[0][column]', 0))
+    order_dir = request.GET.get('order[0][dir]', 'desc')
+    col_map = {
+        0: 'id',
+        1: 'tr_departeddate',
+        2: 'tr_reporteddate',
+        3: 'tr_consignmentnumber__co_consignmentnumber',
+        4: 'tr_enquirynumber__en_customername__cu_name',
+        5: 'tr_departedlocation__place_name',
+        6: 'tr_reportedlocation__place_name',
+        7: 'tr_enquirynumber__en_customerdepartment__cd_name',
+        8: 'tr_vehiclenumber',
+        9: 'tr_vehiclesource__ow_ownership',
+        11: 'tc_tripcost',
+    }
+    order_field = col_map.get(order_col, '-tr_created_at')
+    if order_dir == 'desc' and not order_field.startswith('-'):
+        order_field = '-' + order_field
+    trips = trips.order_by(order_field)
+
+    # Slicing for Pagination
+    if length != -1:
+        trips_slice = trips[start:start + length]
+    else:
+        trips_slice = trips[start:]
+
+    # Fetch Consignment Goods in Bulk for current page
+    trip_cons_ids = [t.tr_consignmentnumber_id for t in trips_slice if t.tr_consignmentnumber_id]
     goods_map = {
         g.cg_consignmentnumber_id: g
         for g in ConsignmentgoodsInfo.objects.filter(
@@ -3965,9 +4022,9 @@ def pod_ending_report_view(request):
         ).select_related('cg_consigner')
     }
 
-    data_rows = []
+    data = []
     today = date.today()
-    for idx, trip in enumerate(page_obj, start=(page_obj.start_index() if hasattr(page_obj, 'start_index') else 1)):
+    for idx, trip in enumerate(trips_slice, start=start + 1):
         cons_goods = goods_map.get(trip.tr_consignmentnumber_id)
         
         start_date = trip.tr_departeddate or trip.tr_loading_time
@@ -3978,7 +4035,7 @@ def pod_ending_report_view(request):
             diff = today - end_date.date()
             pending_days = max(0, diff.days)
 
-        data_rows.append([
+        data.append([
             idx,
             start_date.strftime("%d-%m-%Y") if start_date else "",
             end_date.strftime("%d-%m-%Y") if end_date else "",
@@ -3995,23 +4052,11 @@ def pod_ending_report_view(request):
             safe_str(trip.tr_remarks),
         ])
 
-    from ..models import Location_info, OwnershipInfo, Trip_category_info
-    return render(request, "asset_mgt_app/pod_ending_report.html", {
-        'first_name': first_name,
-        'headers': POD_ENDING_REPORT_HEADERS,
-        'data_rows': data_rows,
-        'page_obj': page_obj,
-        'from_date': from_date,
-        'to_date': to_date,
-        'branch_id': int(branch_id) if branch_id else None,
-        'selected_vehiclesource': int(vehiclesource_id) if vehiclesource_id else None,
-        'selected_triptype': int(triptype_id) if triptype_id else None,
-        'all_vehiclesources': OwnershipInfo.objects.all(),
-        'all_triptypes': Trip_category_info.objects.all(),
-        'all_branches': [
-            {'id': b.id, 'name': b.loc_name.replace('BVM ', '').strip()}
-            for b in Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name')
-        ],
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': records_total,
+        'recordsFiltered': records_filtered,
+        'data': data,
     })
 
 
