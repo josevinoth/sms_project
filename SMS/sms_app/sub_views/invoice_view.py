@@ -857,7 +857,17 @@ def shipper_invoice_export_excel(request, invoice_id):
     )
     
     all_jobs = list(qs.values_list('wh_job_no', flat=True).distinct())
-    job_no_str = ", ".join(all_jobs) if all_jobs else ""
+    
+    if is_monthly and invoice.bill_invoice_date:
+        month_abbr = invoice.bill_invoice_date.strftime('%b').lower()
+        year_yy = invoice.bill_invoice_date.strftime('%y')
+        customer_prefix = invoice.bill_customer_short_name or (invoice.bill_customer_name.cu_nameshort if invoice.bill_customer_name else "CUST")
+        # Take first word of customer name e.g. "ROHLIG INDIA" -> "ROHLIG"
+        if customer_prefix:
+            customer_prefix = customer_prefix.split(' ')[0].split('(')[0].split('-')[0].strip()
+        job_no_str = f"{customer_prefix}-{month_abbr}-{year_yy}"
+    else:
+        job_no_str = ", ".join(all_jobs) if all_jobs else ""
     
     customer = invoice.bill_customer_name
     address = customer.cu_address if (customer and customer.cu_address) else (invoice.bill_customer_address or "")

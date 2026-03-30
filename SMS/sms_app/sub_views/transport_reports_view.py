@@ -10,6 +10,7 @@ from django.db.models import Q, F, Sum, Value, FloatField
 from django.db.models.functions import Coalesce, Trim, Upper
 from django.utils.safestring import mark_safe
 from ..models import TripdetailInfo, ConsignmentdetailInfo, CustomerInfo, CustomerdepartmentInfo, ConsignmentgoodsInfo, Places, VehiclemasterInfo, Driverexpense, Vehicle_allotmentInfo, VendorratemasterInfo1, Vendor_info, OwnershipInfo, CustomerClaimsInfo
+from ..sub_models.trans_customer_claims_mod import TransCustomerClaimsInfo
 from ..sub_forms.dmr_report_form import DmrForm
 from ..sub_models.location_info_mod import Location_info
 from ..models import VehiclemasterInfo
@@ -97,9 +98,7 @@ HALTING_REPORT_HEADERS = [
 ]
 
 CLAIM_PENDING_HEADERS = [
-    "SNo", "Branch", "CustomerName", "Department", "CNotes", "Reason", "Vertical",
-    "TripCode", "TripDate", "TruckNo", "VehicleType", "From", "To", "Driver",
-    "Liability", "ClaimAmount", "Claim Status"
+    "SNo", "Cnote No", "Trip Date", "From", "To", "Veh No", "Driver Name", "Shipper Ref", "Damage Remarks", "Reason For Claim", "Amount"
 ]
 
 
@@ -145,6 +144,12 @@ ENQUIRY_PENDING_HEADERS = [
 ]
 
 DRIVER_BALANCE_HEADERS = ["S.No", "Driver Id", "Branch", "Driver name", "Balance"]
+
+POD_ENDING_REPORT_HEADERS = [
+    "S.No", "Trip Start Date", "Trip End Date", "Cnote", "Customer Name", "From", "To",
+    "Department", "Vehicle No", "Vehicle Source", "Shipper Name", "Revenue", "Pending Days", "Remarks"
+]
+
 
 # -------------------------
 # HELPERS
@@ -2645,40 +2650,41 @@ def own_vehicle_pl_report_view(request):
 def claim_pending_report_view(request):
     first_name = request.session.get('first_name')
 
-    
+    # Fetch all vehicles present in TransCustomerClaimsInfo for the dropdown
+    claim_vehicles = TransCustomerClaimsInfo.objects.values_list('tcc_veh_no', flat=True).distinct().order_by('tcc_veh_no')
+    claim_vehicles = [v for v in claim_vehicles if v]
+
     # Initialize Filter Form
     if request.method == "POST":
         form = DmrForm(request.POST)
     else:
         form = DmrForm()
-
+    
     # Get Filter Parameters
-    customer_id = request.POST.get('dmr_customer')
-    selected_month = request.POST.get('month')
-    selected_year = request.POST.get('year')
-    branch_id = request.POST.get('branch')
+    vehicle_no = request.POST.get('vehicle_number')
+    from_date = request.POST.get('from_date')
+    to_date = request.POST.get('to_date')
 
-    # Base Query: Fetch All Claims
-    # We need to join with Customer, Branch, Unit, and Trip
-    claims = CustomerClaimsInfo.objects.all().select_related(
-        'cc_branch',
-        'cc_unit',
-        'cc_customer',
-        'cc_status',
+    # Base Query: Fetch All Claims from TransCustomerClaimsInfo
+    claims = TransCustomerClaimsInfo.objects.all().select_related(
+        'tcc_cnote',
+        'tcc_cnote__co_customer',
+        'tcc_cnote__co_enquirynumber',
+        'tcc_cnote__co_enquirynumber__en_customerdepartment',
+        'tcc_current_status',
+        'tcc_mgmt_approval'
     )
 
-    if customer_id:
-        claims = claims.filter(cc_customer_id=customer_id)
-    if selected_month and selected_month != '0':
-         # Using cc_CAPA_issueddate or cc_updated_on for date filtering?
-         # Assuming updated_on is more relevant for general tracking if date field ambiguous
-         claims = claims.filter(cc_updated_on__month=selected_month)
-    if selected_year and selected_year != '0':
-         claims = claims.filter(cc_updated_on__year=selected_year)
-    if branch_id:
-        claims = claims.filter(cc_branch_id=branch_id)
+    if vehicle_no:
+        claims = claims.filter(tcc_veh_no=vehicle_no)
     
-    claims = claims.order_by('-cc_updated_on')
+    if from_date:
+        claims = claims.filter(tcc_trip_date__gte=from_date)
+    
+    if to_date:
+        claims = claims.filter(tcc_trip_date__lte=to_date)
+    
+    claims = claims.order_by('-tcc_updated_on')
 
     # Pagination
     paginator = Paginator(claims, 50)
@@ -2686,106 +2692,53 @@ def claim_pending_report_view(request):
     page_obj = paginator.get_page(page_number)
 
     # Fetch related Trips for the current page
-    # cc_job_ref is the link. It could contain Trip Number OR CNote Number.
-    job_refs = [c.cc_job_ref for c in page_obj if c.cc_job_ref]
-    
-    # Try to find trips matching tr_tripnumber
-    trips_by_no = TripdetailInfo.objects.filter(tr_tripnumber__in=job_refs).select_related(
+    cnote_ids = [c.tcc_cnote_id for c in page_obj if c.tcc_cnote_id]
+    trips_by_cnote = TripdetailInfo.objects.filter(tr_consignmentnumber_id__in=cnote_ids).select_related(
         'tr_vehicletype', 'tr_departedlocation', 'tr_reportedlocation'
     )
-    trip_map = {t.tr_tripnumber: t for t in trips_by_no}
-
-    # Try to find trips matching tr_consignmentnumber__co_consignmentnumber for unmapped ones
-    # This requires a second query or careful OR logic.
-    # Simpler to do a second lookup for remaining refs
-    remaining_refs = [r for r in job_refs if r not in trip_map]
-    if remaining_refs:
-        trips_by_cnote = TripdetailInfo.objects.filter(
-            tr_consignmentnumber__co_consignmentnumber__in=remaining_refs
-        ).select_related(
-            'tr_vehicletype', 'tr_departedlocation', 'tr_reportedlocation', 'tr_consignmentnumber'
-        )
-        for t in trips_by_cnote:
-            # Map by CNote so we can lookup later
-            if t.tr_consignmentnumber:
-                trip_map[t.tr_consignmentnumber.co_consignmentnumber] = t
+    trip_map = {t.tr_consignmentnumber_id: t for t in trips_by_cnote}
 
     data_rows = []
     
     for idx, claim in enumerate(page_obj, start=(page_obj.start_index() if hasattr(page_obj, 'start_index') else 1)):
-        
         # Look up trip details
-        trip = trip_map.get(claim.cc_job_ref)
+        trip = trip_map.get(claim.tcc_cnote_id)
         
-        trip_code = claim.cc_job_ref
-        trip_date = ""
-        truck_no = ""
-        veh_type = ""
-        loc_from = ""
-        loc_to = ""
-        driver = ""
-        department = "" # From trip or customer?
-        cnote = claim.cc_job_ref # Default to ref
+        trip_code = "N/A"
+        trip_date = claim.tcc_trip_date.strftime("%d-%m-%Y") if claim.tcc_trip_date else ""
+        truck_no = safe_str(claim.tcc_veh_no)
+        veh_type = safe_str(claim.tcc_veh_type)
+        loc_from = safe_str(claim.tcc_from)
+        loc_to = safe_str(claim.tcc_to)
+        driver = safe_str(claim.tcc_driver_name)
+        department = ""
+        cnote = ""
+        cust_name_str = "N/A"
 
         if trip:
             trip_code = safe_str(trip.tr_tripnumber)
-            # Filter-aware date selection
-            dates = [
-                trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
-                trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
-                trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
-                trip.tr_dock_out_time, trip.tr_created_at
-            ]
-            target_month = int(selected_month) if selected_month and selected_month != '0' else None
-            target_year = int(selected_year) if selected_year and selected_year != '0' else None
-            
-            t_date = None
-            for d in dates:
-                if d:
-                    month_match = (not target_month or d.month == target_month)
-                    year_match = (not target_year or d.year == target_year)
-                    if month_match and year_match:
-                        t_date = d
-                        break
-            if not t_date:
-                t_date = next((d for d in dates if d), None)
-            trip_date = t_date.strftime("%d-%m-%Y") if t_date else ""
-            truck_no = safe_str(trip.tr_vehiclenumber)
-            veh_type = safe_str(trip.tr_vehicletype)
-            loc_from = safe_str(trip.tr_departedlocation)
-            loc_to = safe_str(trip.tr_reportedlocation)
-            driver = safe_str(trip.tr_drivername)
-            if trip.tr_consignmentnumber:
-                cnote = safe_str(trip.tr_consignmentnumber.co_consignmentnumber)
-            
-            # Try to get dept from trip enquiry if available, else standard customer dept
-            if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customerdepartment:
-                 department = safe_str(trip.tr_enquirynumber.en_customerdepartment)
+        
+        if claim.tcc_cnote:
+            cnote = safe_str(claim.tcc_cnote.co_consignmentnumber)
+            if claim.tcc_cnote.co_enquirynumber:
+                department = safe_str(claim.tcc_cnote.co_enquirynumber.en_customerdepartment)
+            cust_name_str = safe_str(claim.tcc_cnote.co_customer)
 
-            cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper()
-            branch = "Chennai" if cust_name.endswith("MAA") else ("Bangalore" if cust_name.endswith("BLR") else "")
-        else:
-            cust_name = safe_str(claim.cc_customer).strip().upper()
-            branch = "Chennai" if cust_name.endswith("MAA") else ("Bangalore" if cust_name.endswith("BLR") else "")
+        cust_name_upper = cust_name_str.strip().upper()
+        branch = "Chennai" if cust_name_upper.endswith("MAA") else ("Bangalore" if cust_name_upper.endswith("BLR") else "")
 
         row = [
             idx,
-            branch,
-            safe_str(claim.cc_customer),
-            department,
             cnote,
-            safe_str(claim.cc_claim_reason),
-            safe_str(claim.cc_unit), # Vertical? Assuming UnitInfo maps to vertical/business unit
-            trip_code,
             trip_date,
-            truck_no,
-            veh_type,
             loc_from,
             loc_to,
+            truck_no,
             driver,
-            "N/A", # Liability - Field missing in model
-            safe_num(claim.cc_amount),
-            safe_str(claim.cc_status)
+            safe_str(claim.tcc_shipper_ref_no),
+            safe_str(claim.tcc_damage_remarks),
+            safe_str(claim.tcc_reason_for_claim),
+            safe_num(claim.tcc_claim_amount)
         ]
         data_rows.append(row)
 
@@ -2795,11 +2748,10 @@ def claim_pending_report_view(request):
         'headers': CLAIM_PENDING_HEADERS,
         'data_rows': data_rows,
         'page_obj': page_obj,
-        'selected_month': selected_month,
-        'selected_year': selected_year,
-        'customer_id': customer_id,
-        'selected_branch': int(branch_id) if branch_id else None,
-        'all_branches': Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name'),
+        'vehicle_no': vehicle_no,
+        'all_vehicles': claim_vehicles,
+        'from_date': from_date,
+        'to_date': to_date,
     }
     
     return render(request, "asset_mgt_app/claim_pending_report.html", context)
@@ -3948,3 +3900,118 @@ def driver_balance_report_view(request):
         'to_date': to_date,
     }
     return render(request, "asset_mgt_app/driver_balance_report.html", context)
+
+
+@login_required(login_url='login_page')
+def pod_ending_report_view(request):
+    first_name = request.session.get('first_name')
+
+    if request.method == "POST":
+        from_date = request.POST.get('from_date', '')
+        to_date = request.POST.get('to_date', '')
+        branch_id = request.POST.get('branch', '')
+        vehiclesource_id = request.POST.get('vehiclesource', '')
+        triptype_id = request.POST.get('triptype', '')
+    else:
+        from_date = ""
+        to_date = ""
+        branch_id = ""
+        vehiclesource_id = ""
+        triptype_id = ""
+
+    trips = TripdetailInfo.objects.select_related(
+        'tr_enquirynumber', 'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_customerdepartment', 'tr_consignmentnumber',
+        'tr_vehiclesource', 'tr_category',
+        'tr_departedlocation', 'tr_reportedlocation'
+    ).filter(
+        Q(tr_reporteddate__isnull=False) | Q(tr_unloading_time__isnull=False)
+    )
+
+    if from_date:
+        trips = trips.filter(Q(tr_reporteddate__date__gte=from_date) | Q(tr_unloading_time__date__gte=from_date))
+    if to_date:
+        trips = trips.filter(Q(tr_reporteddate__date__lte=to_date) | Q(tr_unloading_time__date__lte=to_date))
+
+    if branch_id:
+        try:
+            b_id = int(branch_id)
+            if b_id == 1: # BLR
+                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
+            elif b_id == 2: # MAA
+                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
+            else:
+                pass
+        except:
+            pass
+
+    if vehiclesource_id:
+        trips = trips.filter(tr_vehiclesource_id=vehiclesource_id)
+
+    if triptype_id:
+        trips = trips.filter(tr_category_id=triptype_id)
+
+    trips = trips.order_by('-tr_created_at')
+
+    paginator = Paginator(trips, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    trip_cons_ids = [t.tr_consignmentnumber_id for t in page_obj if t.tr_consignmentnumber_id]
+    goods_map = {
+        g.cg_consignmentnumber_id: g
+        for g in ConsignmentgoodsInfo.objects.filter(
+            cg_consignmentnumber_id__in=trip_cons_ids
+        ).select_related('cg_consigner')
+    }
+
+    data_rows = []
+    today = date.today()
+    for idx, trip in enumerate(page_obj, start=(page_obj.start_index() if hasattr(page_obj, 'start_index') else 1)):
+        cons_goods = goods_map.get(trip.tr_consignmentnumber_id)
+        
+        start_date = trip.tr_departeddate or trip.tr_loading_time
+        end_date = trip.tr_reporteddate or trip.tr_unloading_time
+        
+        pending_days = ""
+        if not trip.tc_pod_attachment and end_date:
+            diff = today - end_date.date()
+            pending_days = max(0, diff.days)
+
+        data_rows.append([
+            idx,
+            start_date.strftime("%d-%m-%Y") if start_date else "",
+            end_date.strftime("%d-%m-%Y") if end_date else "",
+            safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else "",
+            safe_str(trip.tr_enquirynumber.en_customername),
+            safe_str(trip.tr_departedlocation),
+            safe_str(trip.tr_reportedlocation),
+            safe_str(trip.tr_enquirynumber.en_customerdepartment),
+            safe_str(trip.tr_vehiclenumber),
+            safe_str(trip.tr_vehiclesource),
+            safe_str(cons_goods.cg_consigner) if cons_goods else "",
+            safe_num(trip.tc_tripcost),
+            pending_days,
+            safe_str(trip.tr_remarks),
+        ])
+
+    from ..models import Location_info, OwnershipInfo, Trip_category_info
+    return render(request, "asset_mgt_app/pod_ending_report.html", {
+        'first_name': first_name,
+        'headers': POD_ENDING_REPORT_HEADERS,
+        'data_rows': data_rows,
+        'page_obj': page_obj,
+        'from_date': from_date,
+        'to_date': to_date,
+        'branch_id': int(branch_id) if branch_id else None,
+        'selected_vehiclesource': int(vehiclesource_id) if vehiclesource_id else None,
+        'selected_triptype': int(triptype_id) if triptype_id else None,
+        'all_vehiclesources': OwnershipInfo.objects.all(),
+        'all_triptypes': Trip_category_info.objects.all(),
+        'all_branches': [
+            {'id': b.id, 'name': b.loc_name.replace('BVM ', '').strip()}
+            for b in Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name')
+        ],
+    })
+
+
