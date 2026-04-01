@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>{% if edit_mode %}Edit Enquiry{% else %}New Enquiry{% endif %} | BVM Transport</title>
+    <title>{% if edit_mode %}Edit Booking{% else %}New Booking{% endif %} | BVM Transport</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap"
         rel="stylesheet">
@@ -536,7 +536,7 @@
             <div class="page-header-left">
                 <a href="{% url 'customer_dashboard' %}" class="back-btn"><i class="fas fa-arrow-left"></i></a>
                 <div>
-                    <div class="page-title">{% if edit_mode %}Edit Shipment{% else %}Request Shipment{% endif %}</div>
+                    <div class="page-title">{% if edit_mode %}Edit Shipment{% else %}Book Shipment{% endif %}</div>
                     <div class="page-subtitle">{% if edit_mode %}Update the details below{% else %}Fill in the details
                         to create a new movement request{% endif %}</div>
                 </div>
@@ -588,7 +588,7 @@
                 </div>
             </div>
 
-            <!-- Section 3: Route -->
+            <!-- Section 3: Route & Contacts -->
             <div class="form-section">
                 <div class="form-grid">
                     <div class="form-group">
@@ -610,6 +610,32 @@
                             <option value="{{ place.id }}">{{ place.place_name }}</option>
                             {% endfor %}
                         </select>
+                    </div>
+                </div>
+
+                <div class="form-grid" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--glass-border);">
+                    <div class="form-group">
+                        <label>Pickup Contact Name</label>
+                        <input type="text" name="pickup_contact_name" placeholder="Contact person at origin" 
+                               value="{{ enquiry.en_pickup_contact_name|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Pickup Mobile No.</label>
+                        <input type="text" name="pickup_contact_mobile" placeholder="Mobile number at origin" 
+                               value="{{ enquiry.en_pickup_contact_mobile|default:'' }}">
+                    </div>
+                </div>
+                
+                <div class="form-grid" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--glass-border);">
+                    <div class="form-group">
+                        <label>Delivery Contact Name</label>
+                        <input type="text" name="delivery_contact_name" placeholder="Contact person at destination" 
+                               value="{{ enquiry.en_delivery_contact_name|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery Mobile No.</label>
+                        <input type="text" name="delivery_contact_mobile" placeholder="Mobile number at destination" 
+                               value="{{ enquiry.en_delivery_contact_mobile|default:'' }}">
                     </div>
                 </div>
             </div>
@@ -640,17 +666,11 @@
                         <input type="number" name="no_of_veh" value="{{ enquiry.en_no_of_vehicles|default:'1' }}"
                             min="1" required>
                     </div>
-                    <div class="form-group">
-                        <label>Cargo Details (Optional)</label>
-                        <input type="text" name="cargo_details" placeholder="Specific cargo info"
-                            value="{{ enquiry.en_consignmentdetails|default:'' }}">
-                    </div>
                 </div>
-
                 <div class="form-grid-3" style="margin-top: 1rem;">
                     <div class="form-group">
                         <label>Pieces</label>
-                        <input type="number" name="no_of_pcs" placeholder="0"
+                        <input type="number" name="no_of_pcs" id="no_of_pcs" placeholder="0"
                             value="{{ enquiry.en_no_of_pcs|default:'' }}">
                     </div>
                     <div class="form-group">
@@ -659,23 +679,30 @@
                             value="{{ enquiry.en_weight|default:'' }}">
                     </div>
                     <div class="form-group">
-                        <label>CBM</label>
-                        <input type="text" name="cbm" placeholder="e.g. 24.5" value="{{ enquiry.en_cbm|default:'' }}">
+                        <label>Dimensions (LxWxH in mm)</label>
+                        <input type="text" name="dimensions" id="dimensions" placeholder="e.g. 1200x800x1000"
+                            value="{{ enquiry.en_dimensions|default:'' }}">
                     </div>
                 </div>
 
-                <div class="form-group full-width" style="margin-top: 1rem;">
-                    <label>Dimensions & Special Requirements</label>
-                    <textarea name="dimensions" rows="2"
-                        placeholder="LxWxH in mm or any special instructions...">{{ enquiry.en_dimensions|default:'' }}</textarea>
+                <div class="form-grid-3" style="margin-top: 1rem;">
+                    <div class="form-group">
+                        <label>CBM <small style="color:var(--primary);">(Auto-calc)</small></label>
+                        <input type="text" name="cbm" id="cbm" placeholder="e.g. 2.5" value="{{ enquiry.en_cbm|default:'' }}">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Special Requirements</label>
+                        <input type="text" name="cargo_details" placeholder="Any specific cargo or vehicle info"
+                            value="{{ enquiry.en_consignmentdetails|default:'' }}">
+                    </div>
                 </div>
             </div>
 
             <!-- Submit -->
             {% if edit_mode %}
-            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Update Enquiry</button>
+            <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Update Booking</button>
             {% else %}
-            <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Submit Enquiry</button>
+            <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Confirm Booking</button>
             {% endif %}
         </form>
     </div>
@@ -716,6 +743,41 @@
             document.getElementById('sidebarOverlay').classList.remove('active');
             document.body.style.overflow = '';
         }
+
+        // CBM Calculation
+        function calculateCBM() {
+            var dimEl = document.getElementById('dimensions');
+            var pcsEl = document.getElementById('no_of_pcs');
+            var cbmEl = document.getElementById('cbm');
+            
+            if (!dimEl || !pcsEl || !cbmEl) return;
+            
+            // Remove commas (thousands separators), replace non-numeric chars with space
+            var dimStr = dimEl.value.replace(/,/g, '');
+            var pcs = parseInt(pcsEl.value) || 1;
+            
+            // Extract all numbers (including decimals)
+            var numbers = dimStr.match(/[0-9.]+/g);
+            
+            if (numbers && numbers.length >= 3) {
+                var l = parseFloat(numbers[0]);
+                var w = parseFloat(numbers[1]);
+                var h = parseFloat(numbers[2]);
+                
+                if (!isNaN(l) && !isNaN(w) && !isNaN(h)) {
+                    // CBM Formula: (L_mm * W_mm * H_mm * pcs) / 1,000,000,000
+                    var cbm = (l * w * h * pcs) / 1000000000;
+                    cbmEl.value = cbm.toFixed(3);
+                }
+            } else if (!dimEl.value) {
+                cbmEl.value = ""; // Clear CBM if dimensions cleared
+            }
+        }
+
+        var dimEl = document.getElementById('dimensions');
+        var pcsEl = document.getElementById('no_of_pcs');
+        if(dimEl) dimEl.addEventListener('input', calculateCBM);
+        if(pcsEl) pcsEl.addEventListener('input', calculateCBM);
     </script>
 </body>
 

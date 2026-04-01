@@ -2,6 +2,7 @@ from io import BytesIO
 from io import BytesIO
 from random import randint
 from django.contrib import messages
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
@@ -168,32 +169,18 @@ def gatein_add(request, gatein_id=0):
             gatein_form = GateinaddForm(request.POST)
             if gatein_form.is_valid():
                 print("Form is Valid")
-                # Generate Random WH_job number
-                if user_branch_id == 1:
-                    branch = 'BLR_WH_Job_'
-                elif user_branch_id == 2:
-                    branch = 'MAA_WH_Job_'
-                elif user_branch_id == 3:
-                    branch = 'PNY_WH_Job_'
-                else:
-                    branch = 'HYD_WH_Job_'
+                instance = gatein_form.save()
+                # Determine branch code using centralized utility
+                fy = get_financial_year()
+                branch_id = get_session_branch_id(request)
+                branch_code = get_branch_code(branch_id)
+                prefix = f"{fy}_{branch_code}_WH_"
+                wh_job_num_next = generate_next_number(Gatein_info, 'gatein_job_no', prefix, 6)
 
-                last_id = Gatein_info.objects.latest('id').id
-                gatein_form.save()
-                # Generate Random requirement number
-                try:
-                    last_id = (Gatein_info.objects.values_list('id', flat=True)).last()
-                    wh_job_num_next = 2000000 + last_id
-                    # req_num_next = str('Req_') + str(int(((RequirementsInfo.objects.get(id=last_id)).req_number).replace('Req_', '')) + 1)
-                except ObjectDoesNotExist:
-                    wh_job_num_next = 2000000
-                    # req_num_next = str('Req_') + str(randint(10000, 99999))
-                wh_job_num_next = str(branch) + str(wh_job_num_next)
-
-                Gatein_info.objects.filter(id=last_id).update(gatein_job_no=wh_job_num_next)
+                Gatein_info.objects.filter(id=instance.id).update(gatein_job_no=wh_job_num_next)
                 messages.success(request, 'Record Updated Successfully')
                 # job_id = Gatein_info.objects.get(gatein_job_no=wh_job_num_next).id
-                url = 'gatein_update/' + str(last_id)
+                url = 'gatein_update/' + str(instance.id)
                 return redirect(url)
             else:
                 print("Form is In-Valid")

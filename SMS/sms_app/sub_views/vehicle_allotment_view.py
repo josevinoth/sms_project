@@ -11,6 +11,7 @@ from ..models import Enquirynotevehicle,TripdetailInfo,OwnershipInfo,User_extInf
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from .send_department_email import send_department_email
+from .general_utils import get_branch_code, get_session_branch_id
 
 from ..sub_models.vendor_info_mod import Vendor_info
 from ..sub_models.emailmaster_mod import Emailmaster
@@ -381,10 +382,9 @@ def vehicle_allotment_list(request):
     user_branch_obj = user_ext.emp_branch  # Location_info object
     
     # Defensive: Handle missing branch or role
-    branch_code = ""
-    if user_branch_obj and user_branch_obj.loc_name:
-        # Extract "MAA" / "BLR" from "BVM MAA"
-        branch_code = user_branch_obj.loc_name.split()[-1]
+    # Standardized branch code retrieval
+    branch_id = get_session_branch_id(request)
+    branch_code = get_branch_code(branch_id)
     
     # Filters from HTML
     enquiry_number = request.GET.get('enquiry_number', '')

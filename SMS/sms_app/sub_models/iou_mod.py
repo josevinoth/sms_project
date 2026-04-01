@@ -12,14 +12,14 @@ class iou_info(models.Model):
     iou_created_at = models.DateTimeField(null=True, auto_now_add=True)
     iou_updated_at = models.DateTimeField(null=True, auto_now=True)
     iou_updated_by = models.ForeignKey(MyUser, null=True,blank=True,on_delete=models.CASCADE, related_name='iou_updated_by',db_column='iou_updated_by',)
-    iou_number=models.CharField(max_length=20,null=True,blank=True)
+    iou_number=models.CharField(max_length=50,null=True,blank=True)
 
 
     class Meta:
         ordering = ["iou_number"]
 
     def __str__(self):
-        return self.iou_number
+        return str(self.iou_number) if self.iou_number else "N/A"
 
     def get_absolute_url_iou(self):
         return reverse('iou_update', args=[str(self.id)])

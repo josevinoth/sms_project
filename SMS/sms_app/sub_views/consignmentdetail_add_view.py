@@ -12,6 +12,7 @@ from ..forms import ConsignmentdetailaddForm,ConsignmentgoodsaddForm
 from ..models import VehiclemasterInfo,User_extInfo,Location_info,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo, MyUser
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.contrib.auth.decorators import login_required
@@ -137,19 +138,27 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             vehicle_type = request.POST.get('vehicle_type_field')
             if consignmentdetail_id == 0:
                 consignment_detail = con_det_form.save(commit=False)
-                consignment_detail.save()  # Save to generate ID
-                if user_branch_id == 1:
-                    branch = 'BLR_'
-                elif user_branch_id == 2:
-                    branch = 'MAA_'
-                elif user_branch_id == 3:
-                    branch = 'PNY_'
-                else:
-                    branch = 'HYD_'
-                # Generate consignment number based on its own ID
-                consignment_detail.co_consignmentnumber = str(branch)+f"CON_{1000000 + consignment_detail.id}"
+                # Determine branch name using centralized utility
+                branch_id = get_session_branch_id(request)
+                
+                # Robust fallback for Consignment: Try to derive branch from Enquiry number prefix
+                # (This helps if both session and user profile are ambiguous, which shouldn't happen but is extra safe)
+                if branch_id == 1 and consignment_detail.co_enquirynumber and consignment_detail.co_enquirynumber.en_enquirynumber:
+                    en_num = consignment_detail.co_enquirynumber.en_enquirynumber
+                    if "_MAA_" in en_num: branch_id = 2
+                    elif "_BLR_" in en_num: branch_id = 1
+                    elif "_HYD_" in en_num: branch_id = 4
+                
+                branch_code = get_branch_code(branch_id)
+                
+                # Generate consignment number with financial year and branch name
+                # Example format: 26-27_MAA_T_00001
+                current_fy = get_financial_year()
+                prefix = f"{current_fy}_{branch_code}_T_"
+                consignment_detail.co_consignmentnumber = generate_next_number(ConsignmentdetailInfo, 'co_consignmentnumber', prefix, 5)
+                
                 consignment_detail.co_vehicletype = vehicle_type
-                consignment_detail.save(update_fields=['co_consignmentnumber', 'co_vehicletype'])
+                consignment_detail.save()
 
                 return redirect(f'/SMS/consignmentdetail_update/{consignment_detail.id}')
             else:

@@ -1,0 +1,199 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- Select2 Resources specifically for this page to override base.html conflicts -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet">
+
+<style>
+    .dataTables_length, .dt-buttons {
+        display: inline-block !important;
+        vertical-align: middle !important;
+        margin-bottom: 10px !important;
+    }
+    .dataTables_length {
+        margin-right: 20px !important;
+    }
+    .dt-button {
+        padding: 5px 12px !important;
+        margin-right: 5px !important;
+    }
+    /* Fixed height for Select2 to match Bootstrap 4 inputs */
+    .select2-container--bootstrap4 .select2-selection--single {
+        height: 38px !important;
+        line-height: 38px !important;
+    }
+</style>
+
+<div class="container-fluid d-flex justify-content-center py-3">
+    <div class="rounded text-center bg-info shadow-box px-4 py-2">
+        <h3>Driver Balance Report</h3>
+    </div>
+</div>
+<br>
+
+<form method="POST" action="{% url 'driver_balance_report' %}" class="row g-3 align-items-end justify-content-center" id="filterForm">
+    {% csrf_token %}
+
+    <div class="col-md-3">
+        <label class="form-label fw-bold">Driver Name</label>
+        <select name="driver_name" id="driver_name" class="form-control select2">
+            <option value="">-- All Drivers --</option>
+            {% for driver in drivers %}
+            <option value="{{ driver.id }}" {% if driver.id == selected_driver_id %}selected{% endif %}>
+                {{ driver.dm_name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Branch</label>
+        <select name="branch" id="branch" class="form-control">
+            <option value="">-- All Branches --</option>
+            {% for branch in branches %}
+            <option value="{{ branch.id }}" {% if branch.id == selected_branch_id %}selected{% endif %}>
+                {{ branch.loc_name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label fw-bold">From Date</label>
+        <input type="date" name="from_date" id="from_date" class="form-control" value="{{ from_date }}">
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label fw-bold">To Date</label>
+        <input type="date" name="to_date" id="to_date" class="form-control" value="{{ to_date }}">
+    </div>
+
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-primary shadow-sm"><i class="fas fa-filter"></i> Filter</button>
+        <a href="{% url 'driver_balance_report' %}" class="btn btn-secondary shadow-sm">Clear</a>
+    </div>
+</form>
+<br>
+
+<div class="row">
+    <div class="col-auto">
+        <a href="{% url 'transport_reports' %}" class="btn btn-primary shadow-sm"><i class="fas fa-arrow-left"></i> Back</a>
+    </div>
+</div>
+<br>
+
+<div class="container-fluid shadow-box-table">
+    <table id="driver_balance_table" class="table table-striped table-bordered" style="width:100%">
+        <thead class="thead-dark">
+            <tr>
+                {% for header in headers %}
+                <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data_rows %}
+            <tr>
+                {% for cell in row %}
+                <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Extremely robust initialization to handle multiple jQuery versions in base.html
+    window.addEventListener('load', function() {
+        // Wait for jQuery to be definitely available
+        var checkjQuery = setInterval(function() {
+            if (window.jQuery) {
+                clearInterval(checkjQuery);
+                var $ = window.jQuery;
+                
+                // Dynamically load Select2 JS to ensure it attaches to THIS jQuery instance
+                var script = document.createElement('script');
+                script.src = "https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js";
+                script.onload = function() {
+                    // Initialize Select2
+                    $('.select2').select2({
+                        placeholder: "Search and select...",
+                        allowClear: true,
+                        width: '100%',
+                        theme: 'bootstrap4'
+                    });
+                };
+                document.head.appendChild(script);
+
+                // Initialize DataTable
+                if ($.fn.DataTable) {
+                    $('#driver_balance_table').DataTable({
+                        scrollX: true,
+                        autoWidth: false,
+                        dom: "<'row'<'col-sm-12 col-md-6'lB><'col-sm-12 col-md-6'f>>" +
+                             "<'row'<'col-sm-12'tr>>" +
+                             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                        lengthMenu: [
+                            [10, 25, 50, 100, -1],
+                            [10, 25, 50, 100, "All"]
+                        ],
+                        pageLength: 25,
+                        buttons: [
+                            { extend: 'copy', className: 'btn btn-sm btn-info' },
+                            { extend: 'csv', className: 'btn btn-sm btn-info' },
+                            {
+                                extend: 'excelHtml5',
+                                className: 'btn btn-sm btn-info',
+                                text: 'Excel',
+                                title: 'Driver Balance Report',
+                                customize: function (xlsx) {
+                                    let sheet = xlsx.xl.worksheets['sheet1.xml'];
+                                    let styles = xlsx.xl['styles.xml'];
+                                    let fonts = $('fonts', styles);
+                                    fonts.append('<font><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/><b/></font>');
+                                    let fontId = fonts.children().length - 1;
+                                    let fills = $('fills', styles);
+                                    fills.append('<fill><patternFill patternType="solid"><fgColor rgb="FF0A3278"/><bgColor indexed="64"/></patternFill></fill>');
+                                    let fillId = fills.children().length - 1;
+                                    let cellXfs = $('cellXfs', styles);
+                                    cellXfs.append('<xf xfId="0" fontId="' + fontId + '" fillId="' + fillId + '" borderId="0" applyFont="1" applyFill="1"/>');
+                                    let styleId = cellXfs.children().length - 1;
+                                    $('row:eq(1) c', sheet).attr('s', styleId);
+                                }
+                            },
+                            {
+                                extend: 'pdfHtml5',
+                                className: 'btn btn-sm btn-info',
+                                orientation: 'landscape',
+                                pageSize: 'A4',
+                                title: 'Driver Balance Report',
+                                customize: function (doc) {
+                                    doc.styles.tableHeader.fillColor = '#0A3278';
+                                    doc.styles.tableHeader.color = 'white';
+                                    doc.styles.tableHeader.bold = true;
+                                }
+                            },
+                            {
+                                extend: 'print',
+                                className: 'btn btn-sm btn-info',
+                                title: 'Driver Balance Report',
+                                customize: function (win) {
+                                    $(win.document.body).find('thead th')
+                                        .css('background-color', '#0A3278')
+                                        .css('color', 'white')
+                                        .css('font-weight', 'bold');
+                                }
+                            }
+                        ],
+                        order: [[0, 'asc']]
+                    });
+                }
+            }
+        }, 100);
+    });
+</script>
+
+{% endblock content %}

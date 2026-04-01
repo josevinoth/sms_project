@@ -5,6 +5,12 @@ from django.db.models import Q
 
 def driver_login(request):
     if request.method == 'POST':
+        # ── Clear any stale session from a previous driver ──
+        # The WebView app shares one session, so an old driver_trip_id
+        # would persist and show the wrong vehicle for a new phone number.
+        if 'driver_trip_id' in request.session:
+            del request.session['driver_trip_id']
+
         mobile_no = request.POST.get('mobile_number', '').strip()
         
         if not mobile_no:

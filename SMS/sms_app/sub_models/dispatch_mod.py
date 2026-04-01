@@ -20,7 +20,7 @@ class Dispatch_info(models.Model):
     # dispatch_destination = models.CharField(null=False, max_length=20)
     dispatch_comments = models.TextField(null=False,blank=True,max_length=300,default="All Goods Received and In Good Condition")
     dispatch_cargo_picked = models.ForeignKey(GstexcemptionInfo, on_delete=models.CASCADE,null=False,related_name='dispatch_cargo_picked', db_column='dispatch_cargo_picked',default=1)
-    dispatch_num = models.CharField(null=False,blank=True,max_length=20)
+    dispatch_num = models.CharField(null=False,blank=True,max_length=50)
     # dispatch_ewaybill = models.CharField(null=False, max_length=30)
     dispatch_created_at = models.DateTimeField(null=True, auto_now_add=True)
     dispatch_updated_at = models.DateTimeField(null=True, auto_now=True)
@@ -40,3 +40,6 @@ class Dispatch_info(models.Model):
     dispatch_driver_signature = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
     dispatch_supervisor_signature = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
     dispatch_gatepass_att = models.FileField(upload_to=user_directory_path, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.dispatch_num) if self.dispatch_num else "N/A"

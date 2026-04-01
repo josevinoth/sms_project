@@ -40,5 +40,11 @@ class EnquirynoteInfo(models.Model):
     en_weight = models.CharField(max_length=100, null=True, blank=True)
     en_dimensions = models.CharField(max_length=200, null=True, blank=True)
     en_cbm = models.CharField(max_length=100, null=True, blank=True)
+
+    en_pickup_contact_name = models.CharField(max_length=150, null=True, blank=True)
+    en_pickup_contact_mobile = models.CharField(max_length=20, null=True, blank=True)
+    en_delivery_contact_name = models.CharField(max_length=150, null=True, blank=True)
+    en_delivery_contact_mobile = models.CharField(max_length=20, null=True, blank=True)
+
     def __str__(self):
-        return self.en_enquirynumber
+        return str(self.en_enquirynumber) if self.en_enquirynumber else "N/A"

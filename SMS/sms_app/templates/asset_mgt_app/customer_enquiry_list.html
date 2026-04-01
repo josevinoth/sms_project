@@ -485,10 +485,10 @@
         <ul class="sidebar-menu">
             <li><a href="{% url 'customer_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
             <li><a href="{% url 'customer_enquiry_list' %}" class="active"><i class="fas fa-shipping-fast"></i> My
-                    Shipments</a></li>
+                    Bookings</a></li>
             <li><a href="{% url 'customer_documents' %}"><i class="fas fa-file-alt"></i> Documents</a></li>
-            <li><a href="#"><i class="fas fa-headset"></i> Support</a></li>
-            <li><a href="#"><i class="fas fa-user-circle"></i> Profile</a></li>
+            <li><a href="{% url 'customer_support' %}"><i class="fas fa-headset"></i> Support</a></li>
+            <li><a href="{% url 'customer_profile' %}"><i class="fas fa-user-circle"></i> Profile</a></li>
             <li><a href="{% url 'logout_page' %}?business_id=2" style="color: #ef4444;"><i
                         class="fas fa-sign-out-alt"></i> Logout</a></li>
         </ul>
@@ -501,7 +501,7 @@
         </div>
         <ul class="nav-links">
             <li><a href="{% url 'customer_dashboard' %}">Dashboard</a></li>
-            <li><a href="{% url 'customer_enquiry_list' %}" class="active">My Shipments</a></li>
+            <li><a href="{% url 'customer_enquiry_list' %}" class="active">My Bookings</a></li>
             <li><a href="{% url 'customer_documents' %}">Documents</a></li>
             <li><a href="{% url 'customer_support' %}">Support</a></li>
             <li><a href="{% url 'customer_profile' %}">Profile</a></li>
@@ -533,7 +533,7 @@
                     {% if status_filter == 'transit' %}In-Transit Shipments
                     {% elif status_filter == 'delivered' %}Delivered Shipments
                     {% elif status_filter == 'cancelled' %}Cancelled Shipments
-                    {% else %}Shipment Registry{% endif %}
+                    {% else %}Shipment Summary{% endif %}
                 </h1>
                 {% if status_filter %}
                 <a href="{% url 'customer_enquiry_list' %}"
@@ -542,7 +542,7 @@
                 </a>
                 {% endif %}
             </div>
-            <a href="{% url 'customer_enquiry_add' %}" class="btn-primary"><i class="fas fa-plus"></i> Request
+            <a href="{% url 'customer_enquiry_add' %}" class="btn-primary"><i class="fas fa-plus"></i> Book
                 Shipment</a>
         </header>
 
@@ -576,7 +576,7 @@
                             <th>Dept</th>
                             <th>Cnote</th>
 
-                            <th>Enq Date</th>
+                            <th>Booking Date</th>
                             <th>Veh Req Date</th>
                             <th>Action</th>
                         </tr>
