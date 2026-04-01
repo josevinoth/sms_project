@@ -6,7 +6,7 @@ from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,P
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete,get_tracker_flags
-from .general_utils import get_financial_year, generate_next_number, get_branch_code
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
 @login_required(login_url='login_page')
 def purchaseorder_add(request, purchaseorder_id=0):
@@ -84,7 +84,7 @@ def purchaseorder_add(request, purchaseorder_id=0):
 
                     # Generate Sales Order number based on financial year (Branch specific)
                     fy = get_financial_year()
-                    branch_id = request.session.get('ses_branch_id', 1)
+                    branch_id = get_session_branch_id(request)
                     branch_code = get_branch_code(branch_id)
                     prefix = f"{fy}_{branch_code}_PO_"
                     instance.sales_order_num = generate_next_number(PkpurchaseorderInfo, 'sales_order_num', prefix, 6)

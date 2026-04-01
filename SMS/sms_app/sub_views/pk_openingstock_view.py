@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from .general_utils import get_financial_year, generate_next_number, get_branch_code
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.core.exceptions import ObjectDoesNotExist
 
 from ..forms import PkopeningstockForm
@@ -31,7 +31,7 @@ def openingstock_add(request,openingstock_id=0):
             if form.is_valid():
                 # Generate Opening Stock number based on financial year (Branch specific)
                 fy = get_financial_year()
-                branch_id = request.session.get('ses_branch_id', 1)
+                branch_id = get_session_branch_id(request)
                 branch_code = get_branch_code(branch_id)
                 prefix = f"{fy}_{branch_code}_OS_"
                 openingstock_num_next = generate_next_number(PkopeningstockInfo, 'os_stock_number', prefix, 6)

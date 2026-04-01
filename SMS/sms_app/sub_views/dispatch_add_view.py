@@ -23,7 +23,7 @@ from .send_department_email import send_department_email
 from ..forms import DispatchaddForm
 from django.contrib.auth.decorators import login_required
 from ..models import Check_in_out,Warehouse_goods_info,Dispatch_info,GoodsPartialDispatchInfo
-from .general_utils import get_financial_year, generate_next_number, get_branch_code
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.contrib import messages
 import cv2
 import numpy as np
@@ -89,7 +89,7 @@ def dispatch_add(request, dispatch_id=0):
             if dispatch_form.is_valid():
                 # Generate Dispatch number based on financial year (Branch specific)
                 fy = get_financial_year()
-                branch_id = request.session.get('ses_branch_id', 1)
+                branch_id = get_session_branch_id(request)
                 branch_code = get_branch_code(branch_id)
                 prefix = f"{fy}_{branch_code}_DSP_"
                 dispatch_num_next = generate_next_number(Dispatch_info, 'dispatch_num', prefix, 6)

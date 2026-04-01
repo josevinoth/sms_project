@@ -2,7 +2,7 @@ from io import BytesIO
 from io import BytesIO
 from random import randint
 from django.contrib import messages
-from .general_utils import get_financial_year, generate_next_number, get_branch_code
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
@@ -172,7 +172,7 @@ def gatein_add(request, gatein_id=0):
                 instance = gatein_form.save()
                 # Determine branch code using centralized utility
                 fy = get_financial_year()
-                branch_id = request.session.get('ses_branch_id', 1)
+                branch_id = get_session_branch_id(request)
                 branch_code = get_branch_code(branch_id)
                 prefix = f"{fy}_{branch_code}_WH_"
                 wh_job_num_next = generate_next_number(Gatein_info, 'gatein_job_no', prefix, 6)

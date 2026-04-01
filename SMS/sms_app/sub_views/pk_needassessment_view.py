@@ -11,7 +11,7 @@ from ..models import  PkquotationsummaryInfo,PkquotationInfo,POdimension,Natypeo
 from django.shortcuts import render, redirect, get_object_or_404
 from random import randint
 from django.contrib import messages
-from .general_utils import get_financial_year, generate_next_number, get_branch_code
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
 def get_tracker_flags(na_id):
     """
@@ -104,7 +104,7 @@ def needassessment_add(request,needassessment_id=0):
 
                 # Generate assessment number based on the financial year and next sequence (Branch specific)
                 fy = get_financial_year()
-                branch_id = request.session.get('ses_branch_id', 1)
+                branch_id = get_session_branch_id(request)
                 branch_code = get_branch_code(branch_id)
                 prefix = f"{fy}_{branch_code}_AS_"
                 assessment_num_next = generate_next_number(PkneedassessmentInfo, 'na_assessment_num', prefix, 6)
@@ -342,7 +342,7 @@ def na_dimension_add(request, na_dimension_id=0):
                 instance = form.save()
                 # Generate Item number based on financial year (Branch specific)
                 fy = get_financial_year()
-                branch_id = request.session.get('ses_branch_id', 1)
+                branch_id = get_session_branch_id(request)
                 branch_code = get_branch_code(branch_id)
                 prefix = f"{fy}_{branch_code}_ITM_"
                 na_item_num_next = generate_next_number(Nadimension, 'nad_item', prefix, 6)

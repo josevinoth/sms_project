@@ -1,5 +1,5 @@
 from django.contrib import messages
-from .general_utils import get_financial_year, generate_next_number
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from ..forms import DamagereportaddForm,DamagereportImagesForm
@@ -133,7 +133,8 @@ def damagereport_add(request,damagereport_id=0):
 
                 # Generate Damage GRN number based on financial year
                 fy = get_financial_year()
-                branch_code = 'BLR' if user_branch_id == 1 else 'MAA' if user_branch_id == 2 else 'PNY' if user_branch_id == 3 else 'HYD'
+                branch_id = get_session_branch_id(request)
+                branch_code = get_branch_code(branch_id)
                 prefix = f"{fy}_{branch_code}_DR_"
                 wh_grn_num_next = generate_next_number(DamagereportInfo, 'dam_GRN_num', prefix, 6)
 

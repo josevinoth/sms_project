@@ -12,7 +12,7 @@ from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
-from .general_utils import get_financial_year, generate_next_number, get_branch_code
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from ..sub_models.stock_maintenance_mod import StockMaintenance
 
 
@@ -153,7 +153,7 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                     try:
                         # Generate Quotation Summary number based on financial year (Branch specific)
                         fy = get_financial_year()
-                        branch_id = request.session.get('ses_branch_id', 1)
+                        branch_id = get_session_branch_id(request)
                         branch_code = get_branch_code(branch_id)
                         prefix = f"{fy}_{branch_code}_QS_"
                         quotation_num_next = generate_next_number(PkquotationsummaryInfo, 'qs_quotation_number', prefix, 6)

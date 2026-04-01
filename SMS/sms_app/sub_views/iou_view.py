@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from .general_utils import get_financial_year, generate_next_number, get_branch_code
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
@@ -35,7 +35,7 @@ def iou_add(request,iou_id=0):
                     instance = form.save()
                     # Generate IOU number based on financial year (Branch specific)
                     fy = get_financial_year()
-                    branch_id = request.session.get('ses_branch_id', 1)
+                    branch_id = get_session_branch_id(request)
                     branch_code = get_branch_code(branch_id)
                     prefix = f"{fy}_{branch_code}_IOU_"
                     req_num_next = generate_next_number(iou_info, 'iou_number', prefix, 6)

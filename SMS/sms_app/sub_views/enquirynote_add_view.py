@@ -12,7 +12,7 @@ from django.core.paginator import Paginator
 
 from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.location_info_mod import Location_info
-from .general_utils import get_financial_year, generate_next_number, get_branch_code
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
 
 @login_required(login_url='login_page')
@@ -91,8 +91,7 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
                 instance.save()  # ID is generated after this
 
                 # Determine branch prefix using centralized utility
-                user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
-                branch_id = Location_info.objects.get(loc_name=user_branch).id
+                branch_id = get_session_branch_id(request)
                 branch_code = get_branch_code(branch_id)
                 branch_prefix = f"{branch_code}_"
 

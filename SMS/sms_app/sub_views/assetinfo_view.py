@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from .general_utils import get_financial_year, generate_next_number
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -89,8 +89,7 @@ def assetinfo_add(request, asset_id=0):
                 branch_id = asset_obj.asset_location.id
                 
                 # Branch mapping
-                branch_map = {1: 'BLR', 2: 'MAA', 3: 'PYN', 4: 'HYD', 5: 'CBE'}
-                branch_code = branch_map.get(branch_id, 'UNC')
+                branch_code = get_branch_code(branch_id)
                 
                 # Generate Asset number based on financial year
                 fy = get_financial_year()

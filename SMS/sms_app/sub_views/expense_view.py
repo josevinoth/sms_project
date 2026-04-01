@@ -1,5 +1,5 @@
 from django.contrib import messages
-from .general_utils import get_financial_year, generate_next_number, get_branch_code
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
@@ -56,7 +56,7 @@ def expense_add(request, expense_id=0):
             # Generate the expense number for new expenses based on financial year
             if expense_id == 0:
                 fy = get_financial_year()
-                branch_id = request.session.get('ses_branch_id', 1)
+                branch_id = get_session_branch_id(request)
                 branch_code = get_branch_code(branch_id)
                 cat_prefix = 'C_' if saved_expense.exp_category.id == 1 else 'B_'
                 prefix = f"{fy}_{branch_code}_EXP_{cat_prefix}"

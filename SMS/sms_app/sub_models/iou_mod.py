@@ -12,7 +12,7 @@ class iou_info(models.Model):
     iou_created_at = models.DateTimeField(null=True, auto_now_add=True)
     iou_updated_at = models.DateTimeField(null=True, auto_now=True)
     iou_updated_by = models.ForeignKey(MyUser, null=True,blank=True,on_delete=models.CASCADE, related_name='iou_updated_by',db_column='iou_updated_by',)
-    iou_number=models.CharField(max_length=20,null=True,blank=True)
+    iou_number=models.CharField(max_length=50,null=True,blank=True)
 
 
     class Meta:

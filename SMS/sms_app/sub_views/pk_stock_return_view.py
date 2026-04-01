@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from .general_utils import get_financial_year, generate_next_number
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.core.exceptions import ObjectDoesNotExist
 
 from ..forms import PkreturnForm
@@ -39,7 +39,9 @@ def stockpurchases_add(request, stockpurchases_id=0):
                 instance = form.save()  # Save the new record and get the instance
                 # Generate Stock Purchase (Return) number based on financial year
                 fy = get_financial_year()
-                prefix = f"{fy}_GRN_PK_"
+                branch_id = get_session_branch_id(request)
+                branch_code = get_branch_code(branch_id)
+                prefix = f"{fy}_{branch_code}_GRN_PK_"
                 stockpurchases_num_next = generate_next_number(PkstockpurchasesInfo, 'sp_purchase_num', prefix, 6)
 
                 # Update the new record with the generated stock purchase number using the instance ID

@@ -6,7 +6,7 @@ from ..models import PkquotesInfo
 from django.shortcuts import render, redirect
 from random import randint
 from django.contrib import messages
-from .general_utils import get_financial_year, generate_next_number
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
 @login_required(login_url='login_page')
 def quotes_add(request,quotes_id=0):
@@ -32,7 +32,9 @@ def quotes_add(request,quotes_id=0):
                 instance = form.save()
                 # Generate Quotation number based on financial year
                 fy = get_financial_year()
-                prefix = f"{fy}_QT_"
+                branch_id = get_session_branch_id(request)
+                branch_code = get_branch_code(branch_id)
+                prefix = f"{fy}_{branch_code}_QT_"
                 quotes_num_next = generate_next_number(PkquotesInfo, 'qt_quotes_num', prefix, 6)
                 
                 PkquotesInfo.objects.filter(id=instance.id).update(qt_quotes_num=quotes_num_next)

@@ -23,8 +23,24 @@ def get_branch_code(branch_id):
     Returns the short code for a branch ID.
     1: BLR, 2: MAA, 4: HYD
     """
-    branch_code_map = {1: "BLR", 2: "MAA", 4: "HYD"}
+    branch_code_map = {1: "BLR", 2: "MAA", 3: "PNY", 4: "HYD", 5: "CBE"}
     return branch_code_map.get(branch_id, "UNK")
+
+def get_session_branch_id(request):
+    """
+    Returns the branch ID from the session, with a fallback to the user's profile.
+    """
+    branch_id = request.session.get('ses_branch_id')
+    if not branch_id or branch_id == 1:
+        # Fallback to database if session is empty or defaults to 1 (BLR)
+        from ..models import User_extInfo
+        try:
+            user_ext = User_extInfo.objects.get(user_id=request.user.id)
+            if user_ext.emp_branch:
+                return user_ext.emp_branch.id
+        except (User_extInfo.DoesNotExist, Exception):
+            pass
+    return branch_id or 1
 
 def generate_next_number(model_class, field_name, prefix, padding, filter_prefix=None):
     """

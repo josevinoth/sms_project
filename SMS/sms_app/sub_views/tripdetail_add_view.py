@@ -16,7 +16,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 import json
-from .general_utils import get_financial_year, get_branch_code, generate_next_number
+from .general_utils import get_financial_year, get_branch_code, generate_next_number, get_session_branch_id
 
 
 def format_email_date(dt):
@@ -280,7 +280,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 # Generate trip number with financial year (Branch specific)
                 # Example format: 26-27_MAA_TN_0000001
                 current_fy = get_financial_year()
-                branch_id = request.session.get('ses_branch_id', 1)
+                branch_id = get_session_branch_id(request)
                 branch_code = get_branch_code(branch_id)
                 prefix = f"{current_fy}_{branch_code}_TN_"
                 trip_num_next = generate_next_number(TripdetailInfo, 'tr_tripnumber', prefix, 7)

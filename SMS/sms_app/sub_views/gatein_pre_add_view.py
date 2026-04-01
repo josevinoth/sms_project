@@ -1,5 +1,5 @@
 from django.core.paginator import Paginator
-from .general_utils import get_financial_year, generate_next_number
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect
@@ -75,10 +75,7 @@ def gatein_pre_add(request, gatein_pre_id=0):
                 unit_name = request.session.get('ses_unit_name') or "UNK"
                 
                 # Get branch code from the instance's branch
-                branch_code = "UNK"
-                if instance.gatein_pre_branch:
-                    branch_code_map = {1: "BLR", 2: "MAA", 4: "HYD"}
-                    branch_code = branch_code_map.get(instance.gatein_pre_branch.id, "UNK")
+                branch_code = get_branch_code(instance.gatein_pre_branch.id) if instance.gatein_pre_branch else "UNK"
 
                 # Generate number based on financial year (shared per branch)
                 fy = get_financial_year()
@@ -172,12 +169,8 @@ def pre_gatein_search(request):
     try:
         user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
         user_branch_obj = Location_info.objects.get(loc_name=user_branch)
-        branch_code_map = {
-            1: "BLR",
-            2: "MAA",
-            4: "HYD"
-        }
-        branch_code = branch_code_map.get(user_branch_obj.id, "UNK")
+        branch_id = get_session_branch_id(request)
+        branch_code = get_branch_code(branch_id)
     except ObjectDoesNotExist:
         branch_code = "UNK"
         user_branch = ""

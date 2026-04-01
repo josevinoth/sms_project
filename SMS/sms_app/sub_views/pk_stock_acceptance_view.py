@@ -5,7 +5,7 @@ from ..forms import PkacceptanceForm
 from ..models import PkstockpurchasesInfo,PkcostingInfo,PkquotationsummaryInfo,StockMaintenance
 from ..views import get_tracker_flags
 from django.contrib import messages
-from .general_utils import get_financial_year, generate_next_number, get_branch_code
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
 @login_required(login_url='login_page')
 def pk_acceptance_add(request,retrival_id=0):
@@ -92,7 +92,7 @@ def pk_acceptance_add(request,retrival_id=0):
                                 )
                                 # Generate Stock Maintenance number (Branch specific)
                                 fy = get_financial_year()
-                                branch_id = request.session.get('ses_branch_id', 1)
+                                branch_id = get_session_branch_id(request)
                                 branch_code = get_branch_code(branch_id)
                                 prefix = f"{fy}_{branch_code}_GRN_PK_"
                                 sm_return.sm_stock_purchase_number = generate_next_number(StockMaintenance, 'sm_stock_purchase_number', prefix, 6)

@@ -1,7 +1,7 @@
 from datetime import datetime
 import json
 from django.contrib import messages
-from .general_utils import get_financial_year, generate_next_number
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from ..forms import WarehoseinaddForm,WarehoseoutaddForm
@@ -143,14 +143,8 @@ def warehouse_jobs_add(request, gatein_id=0):
                 instance = gatein_form.save()
                 # Generate Warehouse Job number based on financial year
                 fy = get_financial_year()
-                if user_branch_id == 1:
-                    branch_code = 'BLR'
-                elif user_branch_id == 2:
-                    branch_code = 'MAA'
-                elif user_branch_id == 3:
-                    branch_code = 'PNY'
-                else:
-                    branch_code = 'HYD'
+                branch_id = get_session_branch_id(request)
+                branch_code = get_branch_code(branch_id)
                 
                 prefix = f"{fy}_{branch_code}_WH_"
                 wh_job_num_next = generate_next_number(Gatein_info, 'gatein_job_no', prefix, 6)

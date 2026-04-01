@@ -6,7 +6,7 @@ from ..forms import PkstockpurchasesForm
 from ..models import PkstockpurchasesInfo, PkpartcodeInfo, PkcostingInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from .general_utils import get_financial_year, generate_next_number, get_branch_code
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
 from ..sub_models.pk_stock_vendor_mod import PkstockvebdorInfo
 from ..sub_models.stock_description_mod import Stockdescription
@@ -50,7 +50,7 @@ def stockpurchases_add(request, stockpurchases_id=0):
                 fy = get_financial_year()
                 
                 # Try to get branch from vendor bill -> vendor
-                branch_id = request.session.get('ses_branch_id', 1)
+                branch_id = get_session_branch_id(request)
                 if new_record.sp_vendor_bill_id:
                     vb = new_record.sp_vendor_bill_id
                     if vb.spv_vendor_name and vb.spv_vendor_name.vend_branch:
