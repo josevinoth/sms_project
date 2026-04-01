@@ -2,6 +2,7 @@ from django.db import models
 
 class TransCustomerClaimsInfo(models.Model):
     tcc_cnote = models.ForeignKey('ConsignmentdetailInfo', on_delete=models.CASCADE, blank=True, null=True, verbose_name="Cnote No")
+    tcc_customer_name = models.CharField(max_length=200, blank=True, null=True, verbose_name="Customer Name")
     tcc_trip_date = models.DateField(null=True, blank=True, verbose_name="Trip Date")
     tcc_from = models.CharField(max_length=200, blank=True, null=True, verbose_name="From")
     tcc_to = models.CharField(max_length=200, blank=True, null=True, verbose_name="To")
