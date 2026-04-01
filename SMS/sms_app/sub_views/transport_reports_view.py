@@ -4181,3 +4181,330 @@ def enquiry_pending_report_ajax_view(request):
     })
 
 
+@login_required(login_url='login_page')
+def movementwise_pl_report_view(request):
+    first_name = request.session.get('first_name')
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+    else:
+        form = DmrForm()
+
+    branch_id = request.POST.get('branch')
+    trip_category_id = request.POST.get('trip_category')
+    vehicle_source_id = request.POST.get('vehicle_source')
+    from_date = request.POST.get('from_date')
+    to_date = request.POST.get('to_date')
+    selected_year = request.POST.get('year')
+
+    trips = TripdetailInfo.objects.filter(
+         Q(tc_financestatus_id__in=[1,2,3])
+    ).select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_consignmentnumber',
+        'tr_vehicletype',
+        'tr_vehiclesource',
+        'tr_departedlocation',
+        'tr_reportedlocation'
+    )
+
+    if trip_category_id:
+        trips = trips.filter(tr_category_id=trip_category_id)
+        
+    if vehicle_source_id:
+        trips = trips.filter(tr_vehiclesource_id=vehicle_source_id)
+
+    if from_date:
+        trips = trips.filter(
+            Q(tr_loading_time__date__gte=from_date) |
+            Q(tr_departeddate__date__gte=from_date) |
+            Q(tr_departeddate_pickup__date__gte=from_date) |
+            Q(tr_reporteddate__date__gte=from_date) |
+            Q(tr_unloading_time__date__gte=from_date) |
+            Q(tr_created_at__date__gte=from_date)
+        )
+
+    if to_date:
+        trips = trips.filter(
+            Q(tr_loading_time__date__lte=to_date) |
+            Q(tr_departeddate__date__lte=to_date) |
+            Q(tr_departeddate_pickup__date__lte=to_date) |
+            Q(tr_reporteddate__date__lte=to_date) |
+            Q(tr_unloading_time__date__lte=to_date) |
+            Q(tr_created_at__date__lte=to_date)
+        )
+
+    if selected_year and selected_year != '0':
+        trips = trips.filter(
+            Q(tr_loading_time__year=selected_year) |
+            Q(tr_departeddate__year=selected_year) |
+            Q(tr_departeddate_pickup__year=selected_year) |
+            Q(tr_reporteddate__year=selected_year) |
+            Q(tr_unloading_time__year=selected_year) |
+            Q(tr_created_at__year=selected_year)
+        )
+
+    if branch_id:
+        try:
+            b_id = int(branch_id)
+            if b_id == 1: # BLR
+                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
+            elif b_id == 2: # MAA
+                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
+            elif b_id == 3: # PNY
+                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='PNY')
+            elif b_id == 4: # HYD
+                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='HYD')
+            else:
+                loc = Location_info.objects.get(id=b_id)
+                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains=loc.loc_name)
+        except (ValueError, Location_info.DoesNotExist):
+            pass
+
+    trips = trips.order_by('-tr_created_at')
+
+    paginator = Paginator(trips, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    data_rows = []
+    
+    from datetime import datetime
+    fd_obj = datetime.strptime(from_date, "%Y-%m-%d").date() if from_date else None
+    td_obj = datetime.strptime(to_date, "%Y-%m-%d").date() if to_date else None
+    
+    for idx, trip in enumerate(page_obj, start=(page_obj.start_index() if hasattr(page_obj, 'start_index') else 1)):
+        cons_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
+        
+        dates = [
+            trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+            trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+            trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+            trip.tr_dock_out_time, trip.tr_created_at
+        ]
+        target_year = int(selected_year) if selected_year and selected_year != '0' else None
+        
+        trip_date = None
+        for d in dates:
+            if d:
+                year_match = (not target_year or d.year == target_year)
+                from_match = (not fd_obj or d.date() >= fd_obj)
+                to_match = (not td_obj or d.date() <= td_obj)
+                if year_match and from_match and to_match:
+                    trip_date = d
+                    break
+        if not trip_date:
+            trip_date = next((d for d in dates if d), None)
+        display_date = trip_date.strftime("%d-%m-%Y") if trip_date else ""
+
+        total_selling = (
+            safe_num(trip.tc_tripcost) + safe_num(trip.tc_tollcost) + safe_num(trip.tc_loadingcost) +
+            safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_weighmentcost) + safe_num(trip.tc_haltingcost) +
+            safe_num(trip.tc_handlingcost) + safe_num(trip.tc_supervisorcost)
+        )
+        # Calculate buying cost from Vehicle Allotment
+        total_buying = 0.0
+        if trip.tr_enquirynumber_id:
+            from ..models import Vehicle_allotmentInfo
+            va = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id=trip.tr_enquirynumber_id).first()
+            if va:
+                total_buying = safe_num(va.va_specialbuy) or safe_num(va.va_standardbuy)
+
+        
+        profit = total_selling - total_buying
+        profit_pct = (profit / total_selling * 100) if total_selling > 0 else 0
+        
+        data_rows.append([
+            idx,
+            display_date,
+            cons_no,
+            safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
+            safe_str(trip.tr_departedlocation),
+            safe_str(trip.tr_reportedlocation),
+            safe_str(trip.tr_vehiclesource),
+            safe_str(trip.tr_vehiclenumber),
+            safe_str(trip.tr_vehicletype),
+            round(total_selling, 2),
+            round(total_buying, 2),
+            round(profit, 2),
+            f"{round(profit_pct, 2)}%"
+        ])
+
+    from ..models import Location_info, OwnershipInfo, Trip_category_info
+    headers = [
+        "SNo", "Trip Date", "Cnote", "Customer Name", "From", "To", 
+        "Vehicle Source", "Vehicle No", "Veh Type", "Revenue", 
+        "Expenses", "Profit", "Profit %"
+    ]
+
+    return render(request, "asset_mgt_app/movementwise_pl_report.html", {
+        'first_name': first_name,
+        'form': form,
+        'headers': headers,
+        'data_rows': data_rows,
+        'page_obj': page_obj,
+        'selected_year': int(selected_year) if selected_year else None,
+        'branch_id': int(branch_id) if branch_id else None,
+        'trip_category_id': int(trip_category_id) if trip_category_id else None,
+        'vehicle_source_id': int(vehicle_source_id) if vehicle_source_id else None,
+        'from_date': from_date,
+        'to_date': to_date,
+        'all_trip_categories': Trip_category_info.objects.all().order_by('category'),
+        'all_vehicle_sources': OwnershipInfo.objects.all().order_by('ow_ownership'),
+        'all_branches': Location_info.objects.filter(id__in=[1, 2, 3, 4]).order_by('loc_name'),
+    })
+
+
+
+@login_required(login_url='/')
+def customerwise_pl_report_view(request):
+    first_name = request.session.get('first_name')
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+    else:
+        form = DmrForm()
+
+    branch_id = request.POST.get('branch')
+    trip_category_id = request.POST.get('trip_category')
+    customer_id = request.POST.get('customer')
+    from_date = request.POST.get('from_date')
+    to_date = request.POST.get('to_date')
+
+    from ..models import TripdetailInfo, Location_info, OwnershipInfo, Trip_category_info, CustomerInfo
+    from django.db.models import Q
+
+    trips = TripdetailInfo.objects.filter(
+        Q(tc_financestatus_id__in=[1, 2, 3])
+    ).select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_consignmentnumber',
+        'tr_vehicletype',
+        'tr_vehiclesource',
+        'tr_departedlocation',
+        'tr_reportedlocation'
+    )
+
+    if trip_category_id:
+        trips = trips.filter(tr_category_id=trip_category_id)
+
+    if customer_id:
+        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
+
+    if from_date:
+        trips = trips.filter(
+            Q(tr_loading_time__date__gte=from_date) |
+            Q(tr_departeddate__date__gte=from_date) |
+            Q(tr_departeddate_pickup__date__gte=from_date) |
+            Q(tr_reporteddate__date__gte=from_date) |
+            Q(tr_unloading_time__date__gte=from_date) |
+            Q(tr_created_at__date__gte=from_date)
+        )
+
+    if to_date:
+        trips = trips.filter(
+            Q(tr_loading_time__date__lte=to_date) |
+            Q(tr_departeddate__date__lte=to_date) |
+            Q(tr_departeddate_pickup__date__lte=to_date) |
+            Q(tr_reporteddate__date__lte=to_date) |
+            Q(tr_unloading_time__date__lte=to_date) |
+            Q(tr_created_at__date__lte=to_date)
+        )
+
+    if branch_id:
+        try:
+            b_id = int(branch_id)
+            loc = Location_info.objects.get(id=b_id)
+            trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains=loc.loc_name)
+        except (ValueError, Location_info.DoesNotExist):
+            pass
+
+    trips = trips.order_by('-tr_created_at')
+
+    paginator = Paginator(trips, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    data_rows = []
+
+    from datetime import datetime
+    fd_obj = datetime.strptime(from_date, "%Y-%m-%d").date() if from_date else None
+    td_obj = datetime.strptime(to_date, "%Y-%m-%d").date() if to_date else None
+
+    for idx, trip in enumerate(page_obj, start=(page_obj.start_index() if hasattr(page_obj, 'start_index') else 1)):
+        cons_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
+
+        dates = [
+            trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
+            trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+            trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
+            trip.tr_dock_out_time, trip.tr_created_at
+        ]
+
+        trip_date = None
+        for d in dates:
+            if d:
+                from_match = (not fd_obj or d.date() >= fd_obj)
+                to_match = (not td_obj or d.date() <= td_obj)
+                if from_match and to_match:
+                    trip_date = d
+                    break
+        if not trip_date:
+            trip_date = next((d for d in dates if d), None)
+        display_date = trip_date.strftime("%d-%m-%Y") if trip_date else ""
+
+        total_selling = (
+            safe_num(trip.tc_tripcost) + safe_num(trip.tc_tollcost) + safe_num(trip.tc_loadingcost) +
+            safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_weighmentcost) + safe_num(trip.tc_haltingcost) +
+            safe_num(trip.tc_handlingcost) + safe_num(trip.tc_supervisorcost)
+        )
+
+        total_buying = 0.0
+        if trip.tr_enquirynumber_id:
+            from ..models import Vehicle_allotmentInfo
+            va = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id=trip.tr_enquirynumber_id).first()
+            if va:
+                total_buying = safe_num(va.va_specialbuy) or safe_num(va.va_standardbuy)
+
+        profit = total_selling - total_buying
+        profit_pct = (profit / total_selling * 100) if total_selling > 0 else 0
+
+        data_rows.append([
+            idx,
+            display_date,
+            cons_no,
+            safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
+            safe_str(trip.tr_departedlocation),
+            safe_str(trip.tr_reportedlocation),
+            safe_str(trip.tr_vehiclesource),
+            safe_str(trip.tr_vehiclenumber),
+            safe_str(trip.tr_vehicletype),
+            round(total_selling, 2),
+            round(total_buying, 2),
+            round(profit, 2),
+            f"{round(profit_pct, 2)}%"
+        ])
+
+    headers = [
+        "SNo", "Trip Date", "Cnote", "Customer Name", "From", "To",
+        "Vehicle Source", "Vehicle No", "Veh Type", "Revenue",
+        "Expenses", "Profit", "Profit %"
+    ]
+
+    all_customers = CustomerInfo.objects.all().order_by('cu_name')
+
+    return render(request, "asset_mgt_app/customerwise_pl_report.html", {
+        'first_name': first_name,
+        'form': form,
+        'headers': headers,
+        'data_rows': data_rows,
+        'page_obj': page_obj,
+        'branch_id': int(branch_id) if branch_id else None,
+        'trip_category_id': int(trip_category_id) if trip_category_id else None,
+        'customer_id': int(customer_id) if customer_id else None,
+        'from_date': from_date,
+        'to_date': to_date,
+        'all_trip_categories': Trip_category_info.objects.all().order_by('category'),
+        'all_branches': Location_info.objects.filter(id__in=[1, 2, 3, 4]).order_by('loc_name'),
+        'all_customers': all_customers,
+    })
