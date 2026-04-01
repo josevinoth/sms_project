@@ -26,4 +26,4 @@ class PkopeningstockInfo(models.Model):
         ordering = ["os_stock_number"]
 
     def __str__(self):
-        return self.os_stock_number
+        return str(self.os_stock_number) if self.os_stock_number else "N/A"

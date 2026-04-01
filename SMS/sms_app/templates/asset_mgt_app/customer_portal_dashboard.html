@@ -539,7 +539,7 @@
         <ul class="sidebar-menu">
             <li><a href="{% url 'customer_dashboard' %}" class="active"><i class="fas fa-tachometer-alt"></i>
                     Dashboard</a></li>
-            <li><a href="{% url 'customer_enquiry_list' %}"><i class="fas fa-shipping-fast"></i> My Shipments</a></li>
+            <li><a href="{% url 'customer_enquiry_list' %}"><i class="fas fa-shipping-fast"></i> My Bookings</a></li>
             <li><a href="{% url 'customer_documents' %}"><i class="fas fa-file-alt"></i> Documents</a></li>
             <li><a href="{% url 'customer_support' %}"><i class="fas fa-headset"></i> Support</a></li>
             <li><a href="{% url 'customer_profile' %}"><i class="fas fa-user-circle"></i> Profile</a></li>
@@ -555,7 +555,7 @@
         </div>
         <ul class="nav-links">
             <li><a href="{% url 'customer_dashboard' %}" class="active">Dashboard</a></li>
-            <li><a href="{% url 'customer_enquiry_list' %}">My Shipments</a></li>
+            <li><a href="{% url 'customer_enquiry_list' %}">My Bookings</a></li>
             <li><a href="{% url 'customer_documents' %}">Documents</a></li>
             <li><a href="{% url 'customer_support' %}">Support</a></li>
             <li><a href="{% url 'customer_profile' %}">Profile</a></li>
@@ -586,7 +586,7 @@
                 <p>Real-time visibility of your logistics ecosystem.</p>
             </div>
             <a href="{% url 'customer_enquiry_add' %}" class="btn-primary">
-                <i class="fas fa-plus"></i> New Enquiry
+                <i class="fas fa-plus"></i> New Booking
             </a>
         </header>
 
@@ -606,7 +606,7 @@
                         <i class="fas fa-clock"></i>
                     </div>
                     <div class="stat-value">{{ active_enquiries }}</div>
-                    <div class="stat-label">Active Enquiries</div>
+                    <div class="stat-label">Active Bookings</div>
                 </div>
             </a>
             <a href="{% url 'customer_enquiry_list' %}?status=transit" style="text-decoration: none; color: inherit;">

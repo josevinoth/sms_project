@@ -30,7 +30,7 @@ class PkpurchaseorderInfo(models.Model):
         ordering = ["po_num"]
 
     def __str__(self):
-        return self.po_num
+        return str(self.po_num) if self.po_num else "N/A"
 
     def save(self, *args, **kwargs):
         # Calculate total value: Value + (Value x Tax%)

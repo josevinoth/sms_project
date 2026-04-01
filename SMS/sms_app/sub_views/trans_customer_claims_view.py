@@ -102,6 +102,7 @@ def fetch_trip_details_by_cnote(request):
             trip = TripdetailInfo.objects.filter(tr_consignmentnumber_id=cnote_id).first()
             if trip:
                 data = {
+                    'customer_name': trip.tr_consignmentnumber.co_customer.cu_name if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_customer else '',
                     'trip_date': trip.tr_departeddate.strftime('%Y-%m-%d') if trip.tr_departeddate else '',
                     'from_loc': trip.tr_departedlocation.place_name if trip.tr_departedlocation else '',
                     'to_loc': trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else (trip.tr_consignmentnumber.co_tolocation.place_name if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_tolocation else ''),

@@ -6,6 +6,7 @@ from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,P
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete,get_tracker_flags
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
 @login_required(login_url='login_page')
 def purchaseorder_add(request, purchaseorder_id=0):
@@ -81,21 +82,12 @@ def purchaseorder_add(request, purchaseorder_id=0):
                     # Set updated_by from session (excluded from form)
                     instance.po_updated_by_id = user_id
 
-                    # Auto-generate sales_order_num
-                    last_po = PkpurchaseorderInfo.objects.filter(sales_order_num__startswith="25-26-MP-SO-").order_by('-id').first()
-                    last_num = 0
-                    if last_po and last_po.sales_order_num:
-                        try:
-                            last_num = int(last_po.sales_order_num.split("-")[-1])
-                        except ValueError:
-                            last_num = 0
-
-                    if last_num >= 9999:
-                        messages.error(request, 'Sales Order number limit (9999) reached.')
-                        return redirect(request.META['HTTP_REFERER'])
-
-                    next_num = str(last_num + 1).zfill(4)
-                    instance.sales_order_num = f"25-26-MP-SO-{next_num}"
+                    # Generate Sales Order number based on financial year (Branch specific)
+                    fy = get_financial_year()
+                    branch_id = get_session_branch_id(request)
+                    branch_code = get_branch_code(branch_id)
+                    prefix = f"{fy}_{branch_code}_PO_"
+                    instance.sales_order_num = generate_next_number(PkpurchaseorderInfo, 'sales_order_num', prefix, 6)
                     instance.save()
                     
                     # Set session variables for dimension insert/update after add

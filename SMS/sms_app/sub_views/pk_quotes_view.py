@@ -6,6 +6,7 @@ from ..models import PkquotesInfo
 from django.shortcuts import render, redirect
 from random import randint
 from django.contrib import messages
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
 @login_required(login_url='login_page')
 def quotes_add(request,quotes_id=0):
@@ -28,20 +29,17 @@ def quotes_add(request,quotes_id=0):
         if quotes_id == 0:
             form = PkquotesForm(request.POST)
             if form.is_valid():
-                # Generate Random quotes number
-                try:
-                    last_id = PkquotesInfo.objects.latest('id').id
-                    quotes_num_next = str('QT_') + str(
-                        int(((PkquotesInfo.objects.get(id=last_id)).qt_quotes_num).replace('QT_','')) + 1)
-                except ObjectDoesNotExist:
-                    quotes_num_next = str('QT_') + str(randint(10000, 99999))
-                form.save()
-                print("PkquotesInfo Form is Valid")
-                last_id = (PkquotesInfo.objects.latest('id')).id
-                PkquotesInfo.objects.filter(id=last_id).update(qt_quotes_num=quotes_num_next)
-                messages.success(request, 'Record Updated Successfully')
-                # return redirect(request.META['HTTP_REFERER'])
-                return redirect('/SMS/quotes_update/' + str(last_id))
+                instance = form.save()
+                # Generate Quotation number based on financial year
+                fy = get_financial_year()
+                branch_id = get_session_branch_id(request)
+                branch_code = get_branch_code(branch_id)
+                prefix = f"{fy}_{branch_code}_QT_"
+                quotes_num_next = generate_next_number(PkquotesInfo, 'qt_quotes_num', prefix, 6)
+                
+                PkquotesInfo.objects.filter(id=instance.id).update(qt_quotes_num=quotes_num_next)
+                messages.success(request, 'Record Updated Successfully with Quotation Number: ' + quotes_num_next)
+                return redirect(f'/SMS/quotes_update/{instance.id}')
             else:
                 print("PkquotesInfo Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
