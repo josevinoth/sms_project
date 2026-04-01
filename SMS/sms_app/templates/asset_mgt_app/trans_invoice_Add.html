@@ -118,7 +118,7 @@
               <div class="input-group-prepend">
                 <span class="input-group-text">Pincode</span>
               </div>
-              {% render_field form.ti_pincode class="form-control" %}
+              {% render_field form.ti_pincode class="form-control" readonly="readonly" %}
             </div>
 
             <div class="input-group input-group-sm mb-3">
@@ -342,6 +342,7 @@
         $('#id_ti_gst_in').val('');
         $('#id_ti_customer_short_name').val('');
         $('#id_ti_state').val('');
+        $('#id_ti_pincode').val('');
         $('.cond-field').hide();
         return;
       }
@@ -354,6 +355,7 @@
           $('#id_ti_gst_in').val(data.gstin);
           $('#id_ti_customer_short_name').val(data.customer_short_name);
           $('#id_ti_state').val(data.state);
+          $('#id_ti_pincode').val(data.pincode);
 
           const custName = data.customer_name;
 

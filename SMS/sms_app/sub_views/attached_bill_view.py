@@ -37,11 +37,7 @@ def attached_bill_add(request):
                     t_toll = request.POST.get(f'trip_toll_cost_{tid}')
 
                     if t_buy is not None:
-                        # We still don't overwrite tc_tripcost (Selling Cost)
-                        # but we might want to save the buy cost somewhere? 
-                        # Actually, for attached vehicles, tc_tripcost WAS being used for the vendor cost.
-                        # If the user wants to preserve the original Selling Cost, we should NOT overwrite trip.tc_tripcost.
-                        pass
+                        pass  # buy cost is calculated dynamically in report from ab_buy_cost/total_km
                     if t_parking is not None: trip.tc_parkingcost = float(t_parking or 0)
                     if t_toll is not None: trip.tc_tollcost = float(t_toll or 0)
                     trip.save()
@@ -105,8 +101,7 @@ def attached_bill_edit(request, id):
                     t_toll = request.POST.get(f'trip_toll_cost_{tid}')
 
                     if t_buy is not None:
-                        # Do NOT overwrite tc_tripcost (Selling Cost)
-                        pass
+                        pass  # buy cost is calculated dynamically in report from ab_buy_cost/total_km
                     if t_parking is not None: trip.tc_parkingcost = float(t_parking or 0)
                     if t_toll is not None: trip.tc_tollcost = float(t_toll or 0)
                     trip.save()
