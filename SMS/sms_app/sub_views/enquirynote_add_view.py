@@ -12,6 +12,7 @@ from django.core.paginator import Paginator
 
 from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.location_info_mod import Location_info
+from .general_utils import get_financial_year, generate_next_number, get_branch_code
 
 
 @login_required(login_url='login_page')
@@ -89,21 +90,17 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
                 instance = form.save(commit=False)
                 instance.save()  # ID is generated after this
 
-                # Determine branch prefix
+                # Determine branch prefix using centralized utility
                 user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
                 branch_id = Location_info.objects.get(loc_name=user_branch).id
+                branch_code = get_branch_code(branch_id)
+                branch_prefix = f"{branch_code}_"
 
-                if branch_id == 1:
-                    branch_prefix = "BLR_"
-                elif branch_id == 2:
-                    branch_prefix = "MAA_"
-                elif branch_id == 3:
-                    branch_prefix = "PNY_"
-                else:
-                    branch_prefix = "HYD_"
-
-                # Generate enquiry number with branch prefix
-                enquiry_num_next = f"{branch_prefix}EN_{1000000 + instance.id}"
+                # Generate enquiry number with financial year and branch prefix
+                # Example format: 26-27_MAA_EN_000001
+                current_fy = get_financial_year()
+                prefix = f"{current_fy}_{branch_prefix}EN_"
+                enquiry_num_next = generate_next_number(EnquirynoteInfo, 'en_enquirynumber', prefix, 6)
 
                 # Update the enquiry number and save
                 instance.en_enquirynumber = enquiry_num_next

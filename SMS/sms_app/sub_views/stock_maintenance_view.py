@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from .general_utils import get_financial_year, generate_next_number
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -129,9 +130,10 @@ def stock_maintenance_add(request):
 
             obj.save()
 
-            # Generate and update sm_stock_purchase_number
-            reg_number = 1000000 + obj.id
-            obj.sm_stock_purchase_number = f'GRN/PK/{reg_number}'
+            # Generate and update sm_stock_purchase_number based on financial year
+            fy = get_financial_year()
+            prefix = f"{fy}_GRN_PK_"
+            obj.sm_stock_purchase_number = generate_next_number(StockMaintenance, 'sm_stock_purchase_number', prefix, 6)
             obj.save(update_fields=['sm_stock_purchase_number'])
 
             if obj.sm_invoice_no:
@@ -207,9 +209,10 @@ def stock_maintenance_add_for_vendor(request):
 
             obj.save()
 
-            # Generate and update sm_stock_purchase_number
-            reg_number = 1000000 + obj.id
-            obj.sm_stock_purchase_number = f'GRN/PK/{reg_number}'
+            # Generate and update sm_stock_purchase_number based on financial year
+            fy = get_financial_year()
+            prefix = f"{fy}_GRN_PK_"
+            obj.sm_stock_purchase_number = generate_next_number(StockMaintenance, 'sm_stock_purchase_number', prefix, 6)
             obj.save(update_fields=['sm_stock_purchase_number'])
 
             # Store sticky data for next entry

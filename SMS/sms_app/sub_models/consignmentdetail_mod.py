@@ -29,4 +29,4 @@ class ConsignmentdetailInfo(models.Model):
     co_tolocation = models.ForeignKey(Places, on_delete=models.CASCADE, related_name='co_tolocation',db_column='co_tolocation', null=True, blank=True)
 
     def __str__(self):
-        return self.co_consignmentnumber
+        return str(self.co_consignmentnumber) if self.co_consignmentnumber else "N/A"

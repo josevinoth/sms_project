@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from .general_utils import get_financial_year, generate_next_number
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -84,38 +85,26 @@ def assetinfo_add(request, asset_id=0):
             print("Inside Post Asset Add")
             form = AssetinfoaddForm(request.POST,request.FILES)
             if form.is_valid():
-                form.save()
-                try:
-                    last_id = (AssetInfo.objects.values_list('id', flat=True)).last()
-                    reg_number=100000+last_id
-                    # req_num_next = str('Req_') + str(int(((RequirementsInfo.objects.get(id=last_id)).req_number).replace('Req_', '')) + 1)
-                except ObjectDoesNotExist:
-                    reg_number=100000
-                    # req_num_next = str('Req_') + str(randint(10000, 99999))
-                last_id = (AssetInfo.objects.values_list('id', flat=True)).last()
-                branch = AssetInfo.objects.get(id=last_id).asset_location.id
-                if branch==1:
-                    asset_num_next=str('BLR_')+str(reg_number)
-                elif branch==2:
-                    asset_num_next = str('MAA_') + str(reg_number)
-                elif branch==3:
-                    asset_num_next = str('PYN_') + str(reg_number)
-                elif branch==4:
-                    asset_num_next = str('HYD_') + str(reg_number)
-                elif branch==5:
-                    asset_num_next = str('CBE_') + str(reg_number)
-                else:
-                    messages.error(request, 'Branch Code Not available. Please connect to adminstrator')
-                    return redirect(request.META['HTTP_REFERER'])
+                asset_obj = form.save()
+                branch_id = asset_obj.asset_location.id
+                
+                # Branch mapping
+                branch_map = {1: 'BLR', 2: 'MAA', 3: 'PYN', 4: 'HYD', 5: 'CBE'}
+                branch_code = branch_map.get(branch_id, 'UNC')
+                
+                # Generate Asset number based on financial year
+                fy = get_financial_year()
+                prefix = f"{fy}_{branch_code}_AST_"
+                asset_num_next = generate_next_number(AssetInfo, 'asset_number', prefix, 6)
 
-                AssetInfo.objects.filter(id=last_id).update(asset_number=asset_num_next)
+                AssetInfo.objects.filter(id=asset_obj.id).update(asset_number=asset_num_next)
                 print("Asset Form is Valid")
                 messages.success(request, 'Record Updated Successfully')
             else:
                 print("Form is In-Valid")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
             # return redirect(request.META['HTTP_REFERER'])
-            return redirect('/SMS/asset_update/' + str(last_id))
+            return redirect('/SMS/asset_update/' + str(asset_obj.id))
         else:
             print("Inside Post Asset Edit")
             assetinfo = AssetInfo.objects.get(pk=asset_id)
@@ -123,7 +112,6 @@ def assetinfo_add(request, asset_id=0):
             if form.is_valid():
                 form.save()
                 print("Form is Valid")
-                form.save()
                 messages.success(request, 'Record Updated Successfully')
             else:
                 print("Form is In-Valid")

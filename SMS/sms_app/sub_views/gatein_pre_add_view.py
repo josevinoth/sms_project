@@ -1,4 +1,5 @@
 from django.core.paginator import Paginator
+from .general_utils import get_financial_year, generate_next_number
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect
@@ -68,37 +69,28 @@ def gatein_pre_add(request, gatein_pre_id=0):
             gatein_pre_form = Gatein_preaddForm(request.POST,request.FILES)
             if gatein_pre_form.is_valid():
                 print("Pre-Gate-in Main Form is Valid")
-                gatein_pre_form.save()
+                instance = gatein_pre_form.save()
 
-                # Get unit name and branch info from session
-                unit_id = request.session.get('ses_unit_id')
-                user_branch = request.session.get('ses_unit_name')  # or actual branch name
-                # user_branch_id = Location_info.objects.get(loc_name=user_branch).id
+                # Get unit info from session (not stored in Gatein_pre_info model)
+                unit_name = request.session.get('ses_unit_name') or "UNK"
+                
+                # Get branch code from the instance's branch
+                branch_code = "UNK"
+                if instance.gatein_pre_branch:
+                    branch_code_map = {1: "BLR", 2: "MAA", 4: "HYD"}
+                    branch_code = branch_code_map.get(instance.gatein_pre_branch.id, "UNK")
 
-                # Map branch ID to code
-                branch_code_map = {
-                    1: "BLR",
-                    2: "MAA",
-                    4: "HYD"
-                }
-                branch_code = branch_code_map.get(user_branch_id, "UNK")  # fallback to UNK
-
-                # Get last inserted ID
-                try:
-                    last_id = Gatein_pre_info.objects.order_by('-id').values_list('id', flat=True).first()
-                    seq_number = 2000000 + last_id
-                except ObjectDoesNotExist:
-                    last_id = None
-                    seq_number = 2000000
-
-                # Construct number
-                pre_gatein_num = f"{branch_code}_{user_branch}_{seq_number}"
+                # Generate number based on financial year (shared per branch)
+                fy = get_financial_year()
+                prefix = f"{fy}_{branch_code}_{unit_name}_"
+                filter_prefix = f"{fy}_{branch_code}_"
+                pre_gatein_num = generate_next_number(Gatein_pre_info, 'gatein_pre_number', prefix, 6, filter_prefix=filter_prefix)
 
                 # Update record
-                if last_id:
-                    Gatein_pre_info.objects.filter(id=last_id).update(gatein_pre_number=pre_gatein_num)
+                Gatein_pre_info.objects.filter(id=instance.id).update(gatein_pre_number=pre_gatein_num)
+                
                 messages.success(request, 'Record Updated Successfully')
-                url = 'gatein_pre_update/' + str(last_id)
+                url = 'gatein_pre_update/' + str(instance.id)
                 return redirect(url)
             else:
                 print("Pre-Gate-in Main Form is In-Valid")

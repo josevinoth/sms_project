@@ -19,7 +19,7 @@ class iou_info(models.Model):
         ordering = ["iou_number"]
 
     def __str__(self):
-        return self.iou_number
+        return str(self.iou_number) if self.iou_number else "N/A"
 
     def get_absolute_url_iou(self):
         return reverse('iou_update', args=[str(self.id)])

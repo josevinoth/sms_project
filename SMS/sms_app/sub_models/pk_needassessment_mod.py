@@ -42,4 +42,4 @@ class PkneedassessmentInfo(models.Model):
         ordering = ["na_assessment_num"]
 
     def __str__(self):
-        return self.na_assessment_num
+        return str(self.na_assessment_num) if self.na_assessment_num else "N/A"

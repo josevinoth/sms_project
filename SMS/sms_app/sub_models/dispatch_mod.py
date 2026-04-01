@@ -40,3 +40,6 @@ class Dispatch_info(models.Model):
     dispatch_driver_signature = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
     dispatch_supervisor_signature = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
     dispatch_gatepass_att = models.FileField(upload_to=user_directory_path, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.dispatch_num) if self.dispatch_num else "N/A"

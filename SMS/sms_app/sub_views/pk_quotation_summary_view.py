@@ -12,6 +12,7 @@ from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
+from .general_utils import get_financial_year, generate_next_number, get_branch_code
 from ..sub_models.stock_maintenance_mod import StockMaintenance
 
 
@@ -150,24 +151,18 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 instance = form.save()
                 if pk_quotationsummary_id == 0:
                     try:
-                        # Use the newly created instance id correctly
-                        new_id = instance.id
-                        quotation_number = 100000 + new_id
-                        date_to_check = datetime.now()
-                        current_year = date_to_check.year
-                        if date_to_check.month <= 3:
-                            financial_year = f"{current_year - 1}-{str(current_year)[-2:]}"
-                        else:
-                            financial_year = f"{current_year}-{str(current_year + 1)[-2:]}"
-                        
-                        quotation_number_str = f'{quotation_number:03}'
-                        quotation_num_next = f'BVM/PKG/{financial_year}/{quotation_number_str}'
+                        # Generate Quotation Summary number based on financial year (Branch specific)
+                        fy = get_financial_year()
+                        branch_id = request.session.get('ses_branch_id', 1)
+                        branch_code = get_branch_code(branch_id)
+                        prefix = f"{fy}_{branch_code}_QS_"
+                        quotation_num_next = generate_next_number(PkquotationsummaryInfo, 'qs_quotation_number', prefix, 6)
                         
                         # Update the instance with the generated number
                         instance.qs_quotation_number = quotation_num_next
                         instance.save()
                         messages.success(request, 'Record Created Successfully with Quotation Number: ' + quotation_num_next)
-                        last_id = new_id # For redirection
+                        last_id = instance.id # For redirection
                     except Exception as e:
                         print(f"Error generating quotation number: {str(e)}")
                         last_id = instance.id

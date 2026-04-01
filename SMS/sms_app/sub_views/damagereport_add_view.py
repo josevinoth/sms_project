@@ -1,4 +1,5 @@
 from django.contrib import messages
+from .general_utils import get_financial_year, generate_next_number
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from ..forms import DamagereportaddForm,DamagereportImagesForm
@@ -130,19 +131,11 @@ def damagereport_add(request,damagereport_id=0):
                 else:
                     print("Sub Form Not saved")
 
-                # Generate Random GRN number
-                branch_mapping = {
-                    1: 'BLR_GRN_',
-                    2: 'MAA_GRN_',
-                    3: 'PNY_GRN_',
-                }
-                branch = branch_mapping.get(user_branch_id, 'HYD_GRN_')
-
-                try:
-                    group = [str(int(i)) for i in wh_job_id if str(i).isdigit()]
-                    wh_grn_num_next = branch + ''.join(group) if group else branch + str(randint(10000, 99999))
-                except ValueError:
-                    wh_grn_num_next = branch + str(randint(10000, 99999))
+                # Generate Damage GRN number based on financial year
+                fy = get_financial_year()
+                branch_code = 'BLR' if user_branch_id == 1 else 'MAA' if user_branch_id == 2 else 'PNY' if user_branch_id == 3 else 'HYD'
+                prefix = f"{fy}_{branch_code}_DR_"
+                wh_grn_num_next = generate_next_number(DamagereportInfo, 'dam_GRN_num', prefix, 6)
 
                 # Assigning GRN number and saving the form
                 damagereport_instance.dam_GRN_num = wh_grn_num_next

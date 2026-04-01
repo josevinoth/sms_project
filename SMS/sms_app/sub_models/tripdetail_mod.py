@@ -83,7 +83,7 @@ class TripdetailInfo(models.Model):
     class Meta:
         ordering = ["tr_tripnumber"]
     def __str__(self):
-        return self.tr_tripnumber
+        return str(self.tr_tripnumber) if self.tr_tripnumber else "N/A"
 def trip_closure_directory_path(instance, filename):
 
     return 'Tripclosurefiles/{0}/{1}'.format(instance.tcf_tripnumber, filename)

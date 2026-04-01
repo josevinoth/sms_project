@@ -11,6 +11,7 @@ from ..models import  PkquotationsummaryInfo,PkquotationInfo,POdimension,Natypeo
 from django.shortcuts import render, redirect, get_object_or_404
 from random import randint
 from django.contrib import messages
+from .general_utils import get_financial_year, generate_next_number, get_branch_code
 
 def get_tracker_flags(na_id):
     """
@@ -101,18 +102,18 @@ def needassessment_add(request,needassessment_id=0):
                 instance = form.save(commit=False)
                 instance.save()  # Now the ID is generated
 
-                # Generate assessment number based on the instance's ID
-                try:
-                    assessment_num_next = f"Assess_{1000000 + instance.id}"
-                except Exception:
-                    # Fallback in rare case of error
-                    assessment_num_next = f"Assess_{randint(10000, 99999)}"
+                # Generate assessment number based on the financial year and next sequence (Branch specific)
+                fy = get_financial_year()
+                branch_id = request.session.get('ses_branch_id', 1)
+                branch_code = get_branch_code(branch_id)
+                prefix = f"{fy}_{branch_code}_AS_"
+                assessment_num_next = generate_next_number(PkneedassessmentInfo, 'na_assessment_num', prefix, 6)
 
                 # Update the field and save only that field
                 instance.na_assessment_num = assessment_num_next
                 instance.save(update_fields=['na_assessment_num'])
 
-                messages.success(request, 'Record Updated Successfully')
+                messages.success(request, 'Record Updated Successfully with Assessment Number: ' + assessment_num_next)
                 return redirect(f'/SMS/needassessment_update/{instance.id}')
             else:
                 print("needassessment Form is Not Valid")
@@ -339,12 +340,12 @@ def na_dimension_add(request, na_dimension_id=0):
             form = NadimensionForm(request.POST)
             if form.is_valid():
                 instance = form.save()
-                try:
-                    last_id = Nadimension.objects.latest('id').id
-                    na_item_num_next = 'Item_' + str(1000000 + last_id)
-                except ObjectDoesNotExist:
-                    na_item_num_next = 'Item_1000000'
-
+                # Generate Item number based on financial year (Branch specific)
+                fy = get_financial_year()
+                branch_id = request.session.get('ses_branch_id', 1)
+                branch_code = get_branch_code(branch_id)
+                prefix = f"{fy}_{branch_code}_ITM_"
+                na_item_num_next = generate_next_number(Nadimension, 'nad_item', prefix, 6)
                 Nadimension.objects.filter(id=instance.id).update(nad_item=na_item_num_next)
 
                 # Store last submitted values in session

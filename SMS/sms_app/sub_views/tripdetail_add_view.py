@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.core.files.base import ContentFile
 from django.db.models import Q
 from django.utils.timezone import make_aware
+from django.utils import timezone
 
 from .send_department_email import send_department_email
 from ..forms import TripclosurefilesForm,TripdetailaddForm
@@ -15,12 +16,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 import json
-
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from ..models import TripdetailInfo
-from django.core.paginator import Paginator
-from django.utils import timezone
+from .general_utils import get_financial_year, get_branch_code, generate_next_number
 
 
 def format_email_date(dt):
@@ -281,20 +277,16 @@ def tripdetail_add(request, tripdetail_id=0):
                         )
                         return redirect(request.META['HTTP_REFERER'])
 
-                # SAFELY GENERATE trip_num_next
-                trip_num_next = 'TN_1000000'
-                latest_trip = TripdetailInfo.objects.exclude(
-                    tr_tripnumber__isnull=True
-                ).exclude(tr_tripnumber='').order_by('-id').first()
-
-                if latest_trip and latest_trip.tr_tripnumber and latest_trip.tr_tripnumber.startswith('TN_'):
-                    try:
-                        last_number = int(latest_trip.tr_tripnumber.replace('TN_', ''))
-                        trip_num_next = f'TN_{last_number + 1}'
-                    except (ValueError, TypeError):
-                        pass
+                # Generate trip number with financial year (Branch specific)
+                # Example format: 26-27_MAA_TN_0000001
+                current_fy = get_financial_year()
+                branch_id = request.session.get('ses_branch_id', 1)
+                branch_code = get_branch_code(branch_id)
+                prefix = f"{current_fy}_{branch_code}_TN_"
+                trip_num_next = generate_next_number(TripdetailInfo, 'tr_tripnumber', prefix, 7)
 
                 trip = trip_det_form.save(commit=False)
+                trip.tr_tripnumber = trip_num_next
 
                 # KM Validation: Ensure closing KM >= opening KM
                 closing_km = trip.tr_reportedkm or 0

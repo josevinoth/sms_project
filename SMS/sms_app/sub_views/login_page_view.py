@@ -50,6 +50,8 @@ def login_page(request):
             request.session['ses_role_id'] = user_ext.emp_role.id if user_ext.emp_role else None
             request.session['ses_role'] = user_ext.emp_role.role_name if user_ext.emp_role else None
             request.session['ses_organisation_id'] = org_id
+            request.session['ses_branch_id'] = user_ext.emp_branch.id if user_ext.emp_branch else None
+            request.session['ses_branch_name'] = user_ext.emp_branch.loc_name if user_ext.emp_branch else None
             if org_id == 1 and selected_unit_id:
                 request.session['ses_unit_id'] = selected_unit_id
                 try:
