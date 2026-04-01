@@ -166,7 +166,7 @@ from .sub_views.trip_settlement_view import trip_settlement_view,trip_settlement
 from .sub_views.trip_finance_approval_view import trip_finance_approval_view,update_trip_finance_approval
 from .sub_views.haltingcharges_view import halting_charges_add,halting_list,halting_delete
 from .sub_views.emailmaster_view import email_master_add,email_master_list,email_delete
-from .sub_views.tripclosure_add_view import get_halting_charge
+from .sub_views.tripclosure_add_view import get_halting_charge, get_cancellation_charge
 from .sub_views.driver_expense_view import driver_expense_add,driver_expense_list,driver_expense_delete,get_trip_charges
 from .sub_views.driver_master_view import driver_add,driver_list,driver_delete,get_employee_driver_details,driver_autocomplete
 from .sub_views.driver_expense_view import driver_expense_add,driver_expense_list,driver_expense_delete,filter_trips_by_date

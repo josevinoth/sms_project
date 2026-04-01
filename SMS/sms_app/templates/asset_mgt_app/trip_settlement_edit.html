@@ -1,4 +1,4 @@
-{% extends "asset_mgt_app/base.html" %}
+﻿{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
 <form method="POST" action="" enctype="multipart/form-data">
@@ -106,7 +106,7 @@
 										</div>
 									</div>
 									<div class="col-3 text-center">
-										<input type="checkbox" id="tc_tripcost">
+										{% render_field tripclosure_form.tc_tripcost_check id="tc_tripcost_check" %}
 									</div>
 								</div>
 
@@ -120,7 +120,7 @@
 										</div>
 									</div>
 									<div class="col-3 text-center">
-										<input type="checkbox" id="tc_parkingcost">
+										{% render_field tripclosure_form.tc_parkingcost_check id="tc_parkingcost_check" %}
 									</div>
 								</div>
 
@@ -157,7 +157,7 @@
 										</div>
 									</div>
 									<div class="col-3 text-center">
-										<input type="checkbox" id="tc_tollcost">
+										{% render_field tripclosure_form.tc_tollcost_check id="tc_tollcost_check" %}
 									</div>
 								</div>
 
@@ -171,7 +171,7 @@
 										</div>
 									</div>
 									<div class="col-3 text-center">
-										<input type="checkbox" id="tc_loadingcost">
+										{% render_field tripclosure_form.tc_loadingcost_check id="tc_loadingcost_check" %}
 									</div>
 								</div>
 
@@ -185,7 +185,7 @@
 										</div>
 									</div>
 									<div class="col-3 text-center">
-										<input type="checkbox" id="tc_unloadingcost">
+										{% render_field tripclosure_form.tc_unloadingcost_check id="tc_unloadingcost_check" %}
 									</div>
 								</div>
 
@@ -199,7 +199,7 @@
 										</div>
 									</div>
 									<div class="col-3 text-center">
-										<input type="checkbox" id="tc_weighmentcost">
+										{% render_field tripclosure_form.tc_weighmentcost_check id="tc_weighmentcost_check" %}
 									</div>
 								</div>
 								<div class="row mb-2 align-items-center">
@@ -212,7 +212,7 @@
 										</div>
 									</div>
 									<div class="col-3 text-center">
-										<input type="checkbox" id="tc_supervisorcost">
+										{% render_field tripclosure_form.tc_supervisorcost_check id="tc_supervisorcost_check" %}
 									</div>
 								</div>
 								<div class="row mb-2 align-items-center">
@@ -225,7 +225,7 @@
 										</div>
 									</div>
 									<div class="col-3 text-center">
-										<input type="checkbox" id="tc_handlingcost">
+										{% render_field tripclosure_form.tc_handlingcost_check id="tc_handlingcost_check" %}
 									</div>
 								</div>
                                 <div class="row mb-2 align-items-center">
@@ -238,10 +238,10 @@
 										</div>
 									</div>
 									<div class="col-3 text-center">
-										<input type="checkbox" id="tc_haltingcost">
+										{% render_field tripclosure_form.tc_haltingcost_check id="tc_haltingcost_check" %}
 									</div>
 								</div>
-								<div class="input-group input-group-sm mb-3">
+								<div class="input-group input-group-sm mb-2">
 									<div class="input-group-prepend">
 										<span class="input-group-text">No of Halting Days</span>
 									</div>
@@ -249,7 +249,7 @@
 								</div>
                                 <div class="row mb-2 align-items-center">
                                     <div class="col-9">
-                                        <div class="input-group input-group-sm mb-3">
+                                        <div class="input-group input-group-sm">
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text">Total Halting Charges</span>
                                             </div>
@@ -258,7 +258,7 @@
                                         </div>
                                     </div>
                                     <div class="col-3 text-center">
-                                        <input type="checkbox" id="tc_total_halting_cost_check">
+                                        {% render_field tripclosure_form.tc_total_halting_cost_check id="tc_total_halting_cost_check" %}
                                     </div>
 							    </div>
 								<div class="row mb-2 align-items-center">
@@ -271,7 +271,7 @@
 										</div>
 									</div>
 									<div class="col-3 text-center">
-										<input type="checkbox" id="tc_rtocost_check">
+										{% render_field tripclosure_form.tc_rtocost_check id="tc_rtocost_check" %}
 									</div>
 								</div>
 								<div class="row mb-2 align-items-center">
@@ -284,7 +284,21 @@
 										</div>
 									</div>
 									<div class="col-3 text-center">
-										<input type="checkbox" id="tc_betacost_check">
+										{% render_field tripclosure_form.tc_betacost_check id="tc_betacost_check" %}
+									</div>
+								</div>
+
+								<div class="row mb-2 align-items-center">
+									<div class="col-9">
+										<div class="input-group input-group-sm">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Cancellation Charges</span>
+											</div>
+											{% render_field tripclosure_form.tc_cancellation id="tc_cancellation" class="form-control" %}
+										</div>
+									</div>
+									<div class="col-3 text-center">
+										{% render_field tripclosure_form.tc_cancellation_check id="tc_cancellation_check" %}
 									</div>
 								</div>
                             </div>
@@ -397,7 +411,7 @@
 function getRoRate(force=false) {
 
     if (IS_EDIT && force === false) {
-        console.log("⛔ RO rate blocked (edit mode)");
+        console.log("â›” RO rate blocked (edit mode)");
         return;
     }
 
@@ -438,7 +452,10 @@ $(document).ready(function () {
 <script>
 	document.addEventListener('DOMContentLoaded', function () {
       // Add "data-bs-toggle" and "title" attributes to each checkbox dynamically
-      ['tc_tripcost','tc_parkingcost','tc_tollcost', 'tc_loadingcost', 'tc_unloadingcost', 'tc_weighmentcost', 'tc_handlingcost'].forEach(function (id) {
+      ['tc_tripcost_check','tc_parkingcost_check','tc_tollcost_check', 'tc_loadingcost_check',
+       'tc_unloadingcost_check', 'tc_weighmentcost_check', 'tc_supervisorcost_check', 'tc_handlingcost_check',
+       'tc_haltingcost_check', 'tc_total_halting_cost_check', 'tc_rtocost_check', 'tc_betacost_check',
+       'tc_cancellation_check'].forEach(function (id) {
         const checkbox = document.getElementById(id);
         if (checkbox) {
           checkbox.setAttribute('data-bs-toggle', 'tooltip');
@@ -458,7 +475,7 @@ $(document).ready(function () {
     function fetchTollCost(force = false) {
 
     if (IS_EDIT && force === false) {
-        console.log("⛔ Toll API blocked (edit mode)");
+        console.log("â›” Toll API blocked (edit mode)");
         return;   // do NOT overwrite DB value
     }
 
@@ -517,7 +534,7 @@ $(document).ready(function () {
                     <td>${txn.originalTxnId}</td>
                     <td>${txn.tollplazaname}</td>
                     <td>${txn.vehicleDesc}</td>
-                    <td>₹${parseFloat(txn.txnAmt).toFixed(2)}</td>
+                    <td>â‚¹${parseFloat(txn.txnAmt).toFixed(2)}</td>
                     <td>${txn.laneId}</td>
                 </tr>`;
         });

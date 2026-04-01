@@ -11,6 +11,8 @@ from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.tripdetail_mod import TripdetailInfo
 from ..sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
+from django.db.models import F, Sum, Q, Case, When, Value, FloatField
+from django.db.models.functions import Coalesce
 
 
 
@@ -31,17 +33,7 @@ def trans_invoice_add(request):
 
             # calculate total
             invoice.ti_total = 0  # Initialize to 0 as no WOH items yet
-            invoice.ti_transportation_charges = 0
-            invoice.ti_toll_charges = 0
-            invoice.ti_parking_charges = 0
-            invoice.ti_loading_charges = 0
-            invoice.ti_unloading_charges = 0
-            invoice.ti_halting_charges = 0
-            invoice.ti_docket_charges = 0
-            invoice.ti_weighment_charges = 0
-            invoice.ti_handling_charges = 0
-            invoice.ti_cancellation_charges = 0
-
+            
             # ==================================================
             # ATTACH CONSIGNMENT / TRIP / GOODS
             # ==================================================
@@ -73,6 +65,16 @@ def trans_invoice_add(request):
                 )
                 if trip:
                     invoice.ti_trip = trip
+                    invoice.ti_transportation_charges=(trip.tc_tripcost if trip.tc_tripcost_check else 0.0)
+                    invoice.ti_toll_charges=(trip.tc_tollcost if trip.tc_tollcost_check else 0.0)
+                    invoice.ti_parking_charges=(trip.tc_parkingcost if trip.tc_parkingcost_check else 0.0)
+                    invoice.ti_loading_charges=(trip.tc_loadingcost if trip.tc_loadingcost_check else 0.0)
+                    invoice.ti_unloading_charges=(trip.tc_unloadingcost if trip.tc_unloadingcost_check else 0.0)
+                    invoice.ti_halting_charges=(trip.tc_haltingcost if trip.tc_haltingcost_check else 0.0) + (trip.tc_total_halting_cost if trip.tc_total_halting_cost_check else 0.0)
+                    invoice.ti_docket_charges=(trip.tc_rtocost if trip.tc_rtocost_check else 0.0)
+                    invoice.ti_weighment_charges=(trip.tc_weighmentcost if trip.tc_weighmentcost_check else 0.0)
+                    invoice.ti_handling_charges=(trip.tc_handlingcost if trip.tc_handlingcost_check else 0.0)
+                    invoice.ti_cancellation_charges=(trip.tc_cancellation if trip.tc_cancellation_check else 0.0)
 
             goods = None
             if cons:
@@ -155,13 +157,6 @@ def trans_invoice_add(request):
 
 
 
-from django.db.models import Sum, F, Value, FloatField, Subquery, OuterRef
-from django.db.models.functions import Coalesce
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib import messages
-
-
 @login_required(login_url='login_page')
 def trans_invoice_edit(request, invoice_id):
     first_name = request.session.get('first_name')
@@ -180,16 +175,21 @@ def trans_invoice_edit(request, invoice_id):
             is_woh=True
         )
         .annotate(
-            trip_total=Coalesce(F('ti_trip__tc_tripcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_tollcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_parkingcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_loadingcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_unloadingcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_haltingcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_rtocost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_weighmentcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_handlingcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_cancellation'), 0.0)
+            trip_total=(
+                Case(When(ti_trip__tc_tripcost_check=True, then=F('ti_trip__tc_tripcost')), default=0.0, output_field=FloatField()) +
+                Case(When(ti_trip__tc_tollcost_check=True, then=F('ti_trip__tc_tollcost')), default=0.0, output_field=FloatField()) +
+                Case(When(ti_trip__tc_parkingcost_check=True, then=F('ti_trip__tc_parkingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(ti_trip__tc_loadingcost_check=True, then=F('ti_trip__tc_loadingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(ti_trip__tc_unloadingcost_check=True, then=F('ti_trip__tc_unloadingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(ti_trip__tc_haltingcost_check=True, then=F('ti_trip__tc_haltingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(ti_trip__tc_rtocost_check=True, then=F('ti_trip__tc_rtocost')), default=0.0, output_field=FloatField()) +
+                Case(When(ti_trip__tc_weighmentcost_check=True, then=F('ti_trip__tc_weighmentcost')), default=0.0, output_field=FloatField()) +
+                Case(When(ti_trip__tc_handlingcost_check=True, then=F('ti_trip__tc_handlingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(ti_trip__tc_supervisorcost_check=True, then=F('ti_trip__tc_supervisorcost')), default=0.0, output_field=FloatField()) +
+                Case(When(ti_trip__tc_betacost_check=True, then=F('ti_trip__tc_betacost')), default=0.0, output_field=FloatField()) +
+                Case(When(ti_trip__tc_total_halting_cost_check=True, then=F('ti_trip__tc_total_halting_cost')), default=0.0, output_field=FloatField()) +
+                Case(When(ti_trip__tc_cancellation_check=True, then=F('ti_trip__tc_cancellation')), default=0.0, output_field=FloatField())
+            )
         )
     )
 
@@ -586,16 +586,21 @@ def trans_invoice_list_woh(request, customer_id):
         .filter(id__in=current_woh_trip_ids)
         .select_related('tr_enquirynumber','tr_consignmentnumber','tr_vehicletype','tr_vehiclesource')
         .annotate(
-            trip_total=Coalesce(F('tc_tripcost'), 0.0) +
-                       Coalesce(F('tc_tollcost'), 0.0) +
-                       Coalesce(F('tc_parkingcost'), 0.0) +
-                       Coalesce(F('tc_loadingcost'), 0.0) +
-                       Coalesce(F('tc_unloadingcost'), 0.0) +
-                       Coalesce(F('tc_haltingcost'), 0.0) +
-                       Coalesce(F('tc_rtocost'), 0.0) +
-                       Coalesce(F('tc_weighmentcost'), 0.0) +
-                       Coalesce(F('tc_handlingcost'), 0.0) +
-                       Coalesce(F('tc_cancellation'), 0.0)
+            trip_total=(
+                Case(When(tc_tripcost_check=True, then=F('tc_tripcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_tollcost_check=True, then=F('tc_tollcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_parkingcost_check=True, then=F('tc_parkingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_loadingcost_check=True, then=F('tc_loadingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_unloadingcost_check=True, then=F('tc_unloadingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_haltingcost_check=True, then=F('tc_haltingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_rtocost_check=True, then=F('tc_rtocost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_weighmentcost_check=True, then=F('tc_weighmentcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_handlingcost_check=True, then=F('tc_handlingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_supervisorcost_check=True, then=F('tc_supervisorcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_betacost_check=True, then=F('tc_betacost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_total_halting_cost_check=True, then=F('tc_total_halting_cost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_cancellation_check=True, then=F('tc_cancellation')), default=0.0, output_field=FloatField())
+            )
         )
         .order_by('-tr_created_at')
     )
@@ -610,16 +615,21 @@ def trans_invoice_list_woh(request, customer_id):
         .exclude(id__in=all_assigned_trip_ids)
         .select_related('tr_enquirynumber','tr_consignmentnumber','tr_vehicletype','tr_vehiclesource')
         .annotate(
-            trip_total=Coalesce(F('tc_tripcost'), 0.0) +
-                       Coalesce(F('tc_tollcost'), 0.0) +
-                       Coalesce(F('tc_parkingcost'), 0.0) +
-                       Coalesce(F('tc_loadingcost'), 0.0) +
-                       Coalesce(F('tc_unloadingcost'), 0.0) +
-                       Coalesce(F('tc_haltingcost'), 0.0) +
-                       Coalesce(F('tc_rtocost'), 0.0) +
-                       Coalesce(F('tc_weighmentcost'), 0.0) +
-                       Coalesce(F('tc_handlingcost'), 0.0) +
-                       Coalesce(F('tc_cancellation'), 0.0)
+            trip_total=(
+                Case(When(tc_tripcost_check=True, then=F('tc_tripcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_tollcost_check=True, then=F('tc_tollcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_parkingcost_check=True, then=F('tc_parkingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_loadingcost_check=True, then=F('tc_loadingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_unloadingcost_check=True, then=F('tc_unloadingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_haltingcost_check=True, then=F('tc_haltingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_rtocost_check=True, then=F('tc_rtocost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_weighmentcost_check=True, then=F('tc_weighmentcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_handlingcost_check=True, then=F('tc_handlingcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_supervisorcost_check=True, then=F('tc_supervisorcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_betacost_check=True, then=F('tc_betacost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_total_halting_cost_check=True, then=F('tc_total_halting_cost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_cancellation_check=True, then=F('tc_cancellation')), default=0.0, output_field=FloatField())
+            )
         )
         .order_by('-tr_created_at')
     )
@@ -820,10 +830,19 @@ def trans_invoice_excel(request, invoice_no):
         trip_total = 0.0
         if trip:
             trip_total = (
-                (trip.tc_tripcost or 0) + (trip.tc_tollcost or 0) + (trip.tc_parkingcost or 0) +
-                (trip.tc_loadingcost or 0) + (trip.tc_unloadingcost or 0) + (trip.tc_haltingcost or 0) +
-                (trip.tc_rtocost or 0) + (trip.tc_weighmentcost or 0) + (trip.tc_handlingcost or 0) +
-                (trip.tc_cancellation or 0)
+                (trip.tc_tripcost if trip.tc_tripcost_check else 0) +
+                (trip.tc_tollcost if trip.tc_tollcost_check else 0) +
+                (trip.tc_parkingcost if trip.tc_parkingcost_check else 0) +
+                (trip.tc_loadingcost if trip.tc_loadingcost_check else 0) +
+                (trip.tc_unloadingcost if trip.tc_unloadingcost_check else 0) +
+                (trip.tc_haltingcost if trip.tc_haltingcost_check else 0) +
+                (trip.tc_total_halting_cost if trip.tc_total_halting_cost_check else 0) +
+                (trip.tc_rtocost if trip.tc_rtocost_check else 0) +
+                (trip.tc_weighmentcost if trip.tc_weighmentcost_check else 0) +
+                (trip.tc_handlingcost if trip.tc_handlingcost_check else 0) +
+                (trip.tc_supervisorcost if trip.tc_supervisorcost_check else 0) +
+                (trip.tc_betacost if trip.tc_betacost_check else 0) +
+                (trip.tc_cancellation if trip.tc_cancellation_check else 0)
             )
 
         row = [
@@ -843,14 +862,16 @@ def trans_invoice_excel(request, invoice_no):
             safe(str(goods.cg_hawbno) if goods else ""),
             safe(str(goods.cg_qty) if goods else ""),
             safe(str(goods.cg_weight) if goods else ""),
-            safe(trip.tc_tripcost if trip else 0),
-            safe(trip.tc_tollcost if trip else 0),
-            safe(trip.tc_parkingcost if trip else 0),
-            safe(trip.tc_loadingcost if trip else 0),
-            safe(trip.tc_unloadingcost if trip else 0),
-            safe(trip.tc_haltingcost if trip else 0),
-            safe(0), safe(trip.tc_weighmentcost if trip else 0),
-            safe(trip.tc_handlingcost if trip else 0), safe(trip.tc_cancellation if trip else 0),
+            safe(trip.tc_tripcost if trip and trip.tc_tripcost_check else 0),
+            safe(trip.tc_tollcost if trip and trip.tc_tollcost_check else 0),
+            safe(trip.tc_parkingcost if trip and trip.tc_parkingcost_check else 0),
+            safe(trip.tc_loadingcost if trip and trip.tc_loadingcost_check else 0),
+            safe(trip.tc_unloadingcost if trip and trip.tc_unloadingcost_check else 0),
+            safe((trip.tc_haltingcost if trip and trip.tc_haltingcost_check else 0) + (trip.tc_total_halting_cost if trip and trip.tc_total_halting_cost_check else 0)),
+            safe(trip.tc_rtocost if trip and trip.tc_rtocost_check else 0), 
+            safe(trip.tc_weighmentcost if trip and trip.tc_weighmentcost_check else 0),
+            safe(trip.tc_handlingcost if trip and trip.tc_handlingcost_check else 0), 
+            safe(trip.tc_cancellation if trip and trip.tc_cancellation_check else 0),
             safe(trip_total),
         ]
 
