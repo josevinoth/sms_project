@@ -946,6 +946,7 @@ urlpatterns = [
     path("email_master_list/", views.email_master_list, name="email_master_list"),  # List page
     path("email_delete/<int:record_id>/", views.email_delete, name="email_delete"),  # Delete record
     path('get_halting_charge/', views.get_halting_charge, name='get_halting_charge'),
+    path('get_cancellation_charge/', views.get_cancellation_charge, name='get_cancellation_charge'),
     path('get_route_rate/', views.get_vendor_buy_rate, name='get_route_rate'),
     path('driver_expense_add/', views.driver_expense_add, name='driver_expense_add'),
     path('driver_expense_list/', views.driver_expense_list, name='driver_expense_list'),

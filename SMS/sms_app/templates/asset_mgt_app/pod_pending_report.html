@@ -78,7 +78,7 @@
         <select id="triptype" name="triptype" class="form-control select2">
             <option value="">-- All Types --</option>
             {% for ttype in all_triptypes %}
-            <option value="{{ ttype.id }}" {% if selected_triptype == ttype.id %}selected{% endif %}>{{ ttype.category }}</option>
+            <option value="{{ ttype.id }}" {% if selected_triptype == ttype.id %}selected{% endif %}>{{ ttype.tr_trip_type }}</option>
             {% endfor %}
         </select>
     </div>
