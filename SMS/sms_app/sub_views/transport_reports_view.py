@@ -15,6 +15,17 @@ from ..sub_forms.dmr_report_form import DmrForm
 from ..sub_models.location_info_mod import Location_info
 from ..models import VehiclemasterInfo
 
+def safe_num(val):
+    if val is None or val == "":
+        return 0.0
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return 0.0
+
+def safe_str(val):
+    return str(val) if val is not None else ""
+
 # -------------------------
 # HEADERS
 # -------------------------
@@ -4722,4 +4733,93 @@ def customerwise_pl_report_view(request):
         'all_trip_categories': Trip_category_info.objects.all().order_by('category'),
         'all_branches': Location_info.objects.filter(id__in=[1, 2, 3, 4]).order_by('loc_name'),
         'all_customers': all_customers,
+    })
+
+
+@login_required(login_url='/')
+def mileage_report_view(request):
+    first_name = request.session.get('first_name')
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+    else:
+        form = DmrForm()
+
+    branch_id = request.POST.get('branch')
+    vehicle_source_id = request.POST.get('vehicle_source')
+    from_date = request.POST.get('from_date')
+    to_date = request.POST.get('to_date')
+
+    from ..models import VehiclemasterInfo, OwnershipInfo, Location_info
+    from ..sub_models.fuelfilling_mod import Fuelfillinginfo
+    from django.db.models import Q, Max, Min, Sum
+
+    fuel_records = Fuelfillinginfo.objects.all()
+    if from_date:
+        fuel_records = fuel_records.filter(ff_date__gte=from_date)
+    if to_date:
+        fuel_records = fuel_records.filter(ff_date__lte=to_date)
+
+    vehicle_stats = fuel_records.values('ff_vehicle_num').annotate(
+        km_start=Min('ff_odometer_reading'),
+        km_end=Max('ff_odometer_reading'),
+        total_ltrs=Sum('ff_filled_ltr')
+    )
+
+    data_rows = []
+    idx = 1
+    for stat in vehicle_stats:
+        v_id = stat['ff_vehicle_num']
+        vehicle = VehiclemasterInfo.objects.get(id=v_id)
+
+        if vehicle_source_id:
+            if str(vehicle.vm_ownership_id) != str(vehicle_source_id):
+                continue
+
+        if branch_id:
+            try:
+                loc = Location_info.objects.get(id=branch_id)
+                # Filtering vehicles by activity in a branch for mileage report
+                found_in_branch = fuel_records.filter(ff_vehicle_num=v_id, ff_location__icontains=loc.loc_name).exists()
+                if not found_in_branch:
+                    continue
+            except Location_info.DoesNotExist:
+                pass
+
+        km_start = stat['km_start'] or 0
+        km_end = stat['km_end'] or 0
+        total_km = km_end - km_start
+        total_ltrs = stat['total_ltrs'] or 0
+
+        std_mileage = safe_num(vehicle.vm_millage)
+        actual_mileage = (total_km / total_ltrs) if total_ltrs > 0 else 0
+
+        data_rows.append([
+            idx,
+            vehicle.vm_registrationnumber,
+            safe_str(vehicle.vm_vehicletype),
+            km_start,
+            km_end,
+            total_km,
+            round(total_ltrs, 2),
+            round(std_mileage, 2),
+            round(actual_mileage, 2)
+        ])
+        idx += 1
+
+    headers = [
+        "SNo", "Vehicle No", "Vehicle Type", "KM Start", "KM End",
+        "Total KM", "Fuel Ltrs", "Standard Mileage", "Actual Mileage"
+    ]
+
+    return render(request, "asset_mgt_app/mileage_report.html", {
+        'first_name': first_name,
+        'form': form,
+        'headers': headers,
+        'data_rows': data_rows,
+        'branch_id': int(branch_id) if branch_id else None,
+        'vehicle_source_id': int(vehicle_source_id) if vehicle_source_id else None,
+        'from_date': from_date,
+        'to_date': to_date,
+        'all_vehicle_sources': OwnershipInfo.objects.all().order_by('ow_ownership'),
+        'all_branches': Location_info.objects.filter(id__in=[1, 2, 3, 4]).order_by('loc_name'),
     })
