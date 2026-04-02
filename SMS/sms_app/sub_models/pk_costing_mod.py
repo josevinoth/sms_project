@@ -3,7 +3,7 @@ from django.db import models
 from .excess_mod import ExcessStock
 from .part_code_mod import PkpartcodeInfo
 from .stock_maintenance_mod import StockMaintenance
-from ..models import PkpurchaseorderInfo,CustomerInfo,Nadimension,pk_stock_statusinfo,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo
+from ..models import PkpurchaseorderInfo,CustomerInfo,Nadimension,pk_stock_statusinfo,pk_itemdescriptionInfo,pk_itemInfo,PkstockpurchasesInfo,Pkstocktype,MyUser,Costtype,Stockdescription,Unitofmeasure,PkneedassessmentInfo,POdimension
 
 class PkcostingInfo(models.Model):
     ct_cost_type = models.ForeignKey(Costtype, on_delete=models.PROTECT, default='')
@@ -61,6 +61,8 @@ class PkcostingInfo(models.Model):
                                               null=True, blank=True)
     ct_cft_sqft_req = models.FloatField(blank=True, null=True, default=0.0)
     ct_total_cft_display = models.FloatField(blank=True, null=True, default=0.0)
+    ct_po_dimension = models.ForeignKey(POdimension, on_delete=models.CASCADE, null=True, blank=True)
+    ct_job_no = models.CharField(max_length=100, blank=True, null=True)
 
 
     class Meta:

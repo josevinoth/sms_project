@@ -310,19 +310,25 @@ def stock_usage_breakdown(request):
             linked = costing_map.get(key)
 
         # Strategy 3: Parse assessment from sm_description (e.g. "Retrieved for Assessment Assess_1000103")
+        job_no = "N/A"
         if linked:
             assessment = linked.ct_assessment_num.na_assessment_num if linked.ct_assessment_num else "N/A"
+            job_no = linked.ct_job_no or "N/A"
             customer = linked.ct_customer_name.cu_name if linked.ct_customer_name else (linked.ct_customer_new_name or "N/A")
             usage_type = "Automated"
         elif sm.sm_description and "Assessment " in sm.sm_description:
             try:
                 assessment = sm.sm_description.split("Assessment ")[-1].strip()
+                # Try to extract Job No if present in description (e.g. "... (Job: XX)")
+                if "(Job: " in sm.sm_description:
+                    job_no = sm.sm_description.split("(Job: ")[-1].split(")")[0]
                 usage_type = "Historical"
             except:
                 pass
 
         data.append({
             'assessment_num': assessment,
+            'job_no': job_no,
             'customer_name': customer,
             'quantity': sm.sm_count or 0.0,
             'date': date_full,

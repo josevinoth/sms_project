@@ -103,7 +103,7 @@
                     <table class="table table-striped table-hover mb-0">
                         <thead class="bg-light">
                             <tr>
-                                <th class="border-top-0">Assessment #</th>
+                                <th class="border-top-0">Job / Assessment #</th>
                                 <th class="border-top-0">Customer / Remarks</th>
                                 <th class="border-top-0 text-center">Qty Used</th>
                                 <th class="border-top-0 text-center">Source</th>
@@ -182,8 +182,11 @@
                             if (item.type === 'Automated') typeBadge = '<span class="badge badge-success">Auto</span>';
                             if (item.type === 'Historical') typeBadge = '<span class="badge badge-info">Hist</span>';
 
+                            var displayRef = item.job_no !== 'N/A' ? item.job_no : item.assessment_num;
+                            var refBadgeClass = item.job_no !== 'N/A' ? 'badge-info' : 'badge-primary';
+
                             html += '<tr>' +
-                                '<td><span class="badge badge-primary">' + item.assessment_num + '</span></td>' +
+                                '<td><span class="badge ' + refBadgeClass + '">' + displayRef + '</span></td>' +
                                 '<td>' + item.customer_name + '<br><small class="text-muted">' + (item.remarks || "") + '</small></td>' +
                                 '<td class="text-center font-weight-bold">' + (item.quantity || 0) + '</td>' +
                                 '<td class="text-center">' + typeBadge + '</td>' +
