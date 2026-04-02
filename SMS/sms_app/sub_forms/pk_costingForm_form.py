@@ -1,5 +1,5 @@
 from django import forms
-from ..models import PkcostingInfo, Nadimension, PkpurchaseorderInfo
+from ..models import PkcostingInfo, Nadimension, PkpurchaseorderInfo, POdimension
 
 class PkcostingForm(forms.ModelForm):
 
@@ -19,9 +19,11 @@ class PkcostingForm(forms.ModelForm):
         if assessment_id:
             self.fields['ct_requirement'].queryset = Nadimension.objects.filter(nad_assess_num=assessment_id)
             self.fields['ct_customer_po'].queryset = PkpurchaseorderInfo.objects.filter(po_assessment_num=assessment_id)
+            self.fields['ct_po_dimension'].queryset = POdimension.objects.filter(pod_assess_num=assessment_id)
         else:
             self.fields['ct_requirement'].queryset = Nadimension.objects.all()
             self.fields['ct_customer_po'].queryset = PkpurchaseorderInfo.objects.all()
+            self.fields['ct_po_dimension'].queryset = POdimension.objects.all()
 
         # Labels
         self.fields['ct_customer_name'].empty_label = "--Select--"

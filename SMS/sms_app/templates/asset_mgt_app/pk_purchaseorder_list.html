@@ -40,6 +40,7 @@
             <th>Updated at</th>
             <th>Updated By</th>
             <th>Status</th>
+            <th>Clone</th>
             <th>Edit</th>
             <th>Delete</th>
         </thead>
@@ -60,6 +61,11 @@
             <td> {{purchaseorderinfo.po_updated_at}}</td>
             <td> {{purchaseorderinfo.po_updated_by}}</td>
             <td> {{purchaseorderinfo.po_status}}</td>
+            <td>
+                <a class="btn btn-warning" href="{% url 'pk_quotationsummary_clone_po' purchaseorderinfo.id %}" title="Clone to Costing">
+                    <i class="fas fa-copy"></i>
+                </a>
+            </td>
             <td>
                 <a class="btn btn-primary" href="{% url 'purchaseorder_update' purchaseorderinfo.id %}" class="btn btn-primary">
                     <i class="far fa-edit"></i>

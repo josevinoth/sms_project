@@ -184,33 +184,32 @@ def needassessment_delete(request,needassessment_id):
     return redirect('/SMS/needassessment_list')
 
 
-def Pkcosting_delete(assessment_num):
+def Pkcosting_delete(assessment_num, job_no=None):
     try:
-        # Fetch the queryset for the matching records
-        costing_objects = PkcostingInfo.objects.filter(ct_assessment_num=assessment_num)
+        if job_no:
+            # Safer: Only delete lines for this SPECIFIC Job
+            costing_objects = PkcostingInfo.objects.filter(ct_job_no=job_no)
+        else:
+            # Legacy: Delete everything for this Assessment
+            costing_objects = PkcostingInfo.objects.filter(ct_assessment_num=assessment_num)
 
-        # Check if any objects were found
         if costing_objects.exists():
-            # Delete the objects
             costing_objects.delete()
-        else:
-            # Handle the case where no objects were found, if needed
-            print("No matching costing info found to delete.")
     except Exception as e:
-        # Handle any unexpected exceptions
-        print(f"An error occurred: {e}")
+        print(f"Error in Pkcosting_delete: {e}")
 
 
-def Pkcostingsummary_delete(assessment_num):
-    # Deleting PkcostingsummaryInfo objects
+def Pkcostingsummary_delete(assessment_num, job_no=None):
     try:
-        costingsummary_objects = PkcostingsummaryInfo.objects.filter(cs_assessment_num=assessment_num)
-        if costingsummary_objects.exists():
-            costingsummary_objects.delete()
+        if job_no:
+            summaries = PkcostingsummaryInfo.objects.filter(cs_job_no=job_no)
         else:
-            print("No matching PkcostingsummaryInfo found to delete.")
+            summaries = PkcostingsummaryInfo.objects.filter(cs_assessment_num=assessment_num)
+            
+        if summaries.exists():
+            summaries.delete()
     except Exception as e:
-        print(f"An error occurred while deleting PkcostingsummaryInfo: {e}")
+        print(f"Error in Pkcostingsummary_delete: {e}")
 
 
 def Pkpurchaseorder_delete(assessment_num):

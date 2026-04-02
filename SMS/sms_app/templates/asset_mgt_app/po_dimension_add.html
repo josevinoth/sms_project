@@ -15,13 +15,13 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Assessment Number</span>
 									</div>
-									{% render_field form.pod_assess_num id="pod_assess_num" class="form-control disable_a_href" %}
+									{% render_field form.pod_assess_num id="pod_assess_num" onchange="load_pk_requirement_type()" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Quotation Item Number</span>
 									</div>
-									{% render_field form.pod_nad id="pod_nad" onchange="load_pk_requirement_type()" class="form-control" %}
+									{% render_field form.pod_nad id="pod_nad" onchange="load_na_dimension_details(); updatePodItem();" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -242,6 +242,40 @@ function updatePodItem() {
 
     // Update the PO Item Number input field with the selected text
     $('#pod_item').val(selectedText);
+}
+
+function load_na_dimension_details() {
+    var nad_id = $('#pod_nad').val();
+    if (!nad_id) return;
+
+    $.ajax({
+        url: '{% url "pk_store_na_dimension_id" %}',
+        type: 'GET',
+        data: { 'ct_requirement_id': nad_id },
+        dataType: 'json',
+        success: function(data) {
+            console.log("NA Details:", data);
+            // Populate fields
+            $('#pod_dimension_type').val(data.na_dimension_type_id);
+            $('#pod_uom').val(data.na_uom_id);
+            $('#pod_length').val(data.na_length);
+            $('#pod_width').val(data.na_width);
+            $('#pod_height').val(data.na_height);
+            $('#pod_quantity').val(data.na_quantity);
+            $('#pod_type_of_req').val(data.na_type_of_req_id);
+            
+            // Populate Wood Type and trigger its change to load descriptions
+            if (data.na_wood_type_id) {
+                $('#pod_wood_type').val(data.na_wood_type_id).trigger('change');
+                
+                // We need a small delay or a better way to set the description 
+                // since the .change() event above is also an AJAX call.
+                setTimeout(function() {
+                    $('#pod_wood_description').val(data.na_wood_desc_id);
+                }, 500); 
+            }
+        }
+    });
 }
 
 </script>

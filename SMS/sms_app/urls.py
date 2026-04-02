@@ -2,9 +2,12 @@ from django.urls import path
 from django.views.generic import TemplateView
 
 from . import views
+from .sub_views.pk_purchaseorder_view import pk_create_batch_job, pk_get_po_items_for_job
 from django.contrib.auth import views as auth_views  # import this
 
 urlpatterns = [
+    path('pk_create_batch_job/', pk_create_batch_job, name='pk_create_batch_job'),
+    path('pk_get_po_items_for_job/', pk_get_po_items_for_job, name='pk_get_po_items_for_job'),
     path('print_pdf', views.print_pdf, name='print_pdf'),  # Print PDF
     path('asset_qr_id/<int:asset_qr_id>', views.qr_code_asset, name='asset_qr_id'),  # qr_code
     path('goods_qr_id/<int:goods_qr_id>', views.qr_code_goods, name='goods_qr_id'),  # goods qr_code
@@ -480,6 +483,8 @@ urlpatterns = [
     # update purchaseorder
     path('purchaseorder_delete/<int:purchaseorder_id>', views.purchaseorder_delete, name='purchaseorder_delete'),
     # delete purchaseorder
+    path('pk_get_po_items_for_job/', views.pk_get_po_items_for_job, name='pk_get_po_items_for_job'),
+    path('pk_create_batch_job/', views.pk_create_batch_job, name='pk_create_batch_job'),
     path('na_dimension_list/', views.na_dimension_list, name='na_dimension_list'),  # List Na Dimension
     path('na_dimension_insert/', views.na_dimension_add, name='na_dimension_insert'),  # Add Na Dimension
     path('na_dimension_update/<int:na_dimension_id>', views.na_dimension_add, name='na_dimension_update'),
@@ -613,6 +618,8 @@ urlpatterns = [
     path('pk_quotationsummary_list/', views.pk_quotationsummary_list, name='pk_quotationsummary_list'),
     path('pk_quotationsummary_clone/<int:pk_quotationsummary_id>/', views.pk_quotationsummary_clone,
          name='pk_quotationsummary_clone'),
+    path('pk_quotationsummary_clone_po/<int:purchaseorder_id>/', views.pk_quotationsummary_clone_po,
+         name='pk_quotationsummary_clone_po'),
     path('pk_quotationsummary_insert/', views.pk_quotationsummary_add, name='pk_quotationsummary_insert'),
     # Add pk_quotationsummary
     path('pk_quotationsummary_update/<int:pk_quotationsummary_id>', views.pk_quotationsummary_add,

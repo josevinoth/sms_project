@@ -18,11 +18,10 @@
 				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
 					<div class="card-header d-flex justify-content-between align-items-center">
 						<h3 class="mb-0">Add/Update Sales Order</h3>
-						{% if form.instance.id and form.instance.po_quotation_num %}
-						<a href="{% url 'pk_quotationsummary_clone' form.instance.po_quotation_num.id %}?po_id={{ form.instance.id }}"
-							class="pms-btn-convert">
+						{% if form.instance.id %}
+						<button type="button" class="btn btn-warning text-white" id="start_costing_btn">
 							<i class="fas fa-calculator"></i> Start Costing
-						</a>
+						</button>
 						{% endif %}
 					</div>
 					<div class="card-body bg-light">
@@ -310,4 +309,163 @@
 	</div>
 </div>
 
+
+
+
+<!-- Job Creation Modal -->
+<div class="modal fade" id="jobCreationModal" tabindex="-1" role="dialog" aria-labelledby="jobCreationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="jobCreationModalLabel"><i class="fas fa-industry"></i> Create Production Batch Job</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Enter the quantities you want to release for this production job.</p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered" id="modal_job_table">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Ordered Qty</th>
+                                <th style="width: 150px;">Job Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirm_batch_job_btn">
+                    <i class="fas fa-check"></i> Create Job & Map Items
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+	$(document).ready(function () {
+        // Function to open modal and populate items
+        function openJobModal() {
+            var po_id = '{{ purchaseorder_id }}' || '{{ form.instance.id }}';
+            if (!po_id) {
+                alert('Purchase Order ID not found.');
+                return;
+            }
+
+            var tbody = $('#modal_job_table tbody');
+            tbody.empty();
+            tbody.append('<tr><td colspan="3" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading items...</td></tr>');
+            
+            $('#jobCreationModal').modal('show');
+
+            $.ajax({
+                url: '/SMS/pk_get_po_items_for_job/',
+                method: 'GET',
+                data: { 'po_id': po_id },
+                success: function(response) {
+                    tbody.empty();
+                    if (response.success && response.items.length > 0) {
+                        response.items.forEach(function(item) {
+                            var tr = $('<tr>');
+                            tr.append($('<td>').text(item.item_name));
+                            tr.append($('<td>').html(
+                                'Total: ' + item.ordered_qty + '<br>' +
+                                '<span class="text-primary">Remaining: <strong>' + item.remaining_qty + '</strong></span>'
+                            ));
+                            tr.append($('<td>').append(
+                                $('<input>').attr({
+                                    'type': 'number',
+                                    'step': '0.01',
+                                    'class': 'form-control form-control-sm modal-job-qty',
+                                    'data-id': item.id,
+                                    'data-max': item.remaining_qty,
+                                    'value': item.remaining_qty > 0 ? '0' : '0',
+                                    'min': '0',
+                                    'max': item.remaining_qty
+                                })
+                            ));
+                            tbody.append(tr);
+                        });
+                    } else {
+                        tbody.append('<tr><td colspan="3" class="text-center">No items found or all items already jobbed.</td></tr>');
+                    }
+                },
+                error: function() {
+                    tbody.empty();
+                    tbody.append('<tr><td colspan="3" class="text-center text-danger">Error loading items.</td></tr>');
+                }
+            });
+        }
+
+        $('#confirm_batch_job_btn').on('click', function () {
+            var po_id = '{{ purchaseorder_id }}' || '{{ form.instance.id }}';
+            var items = [];
+            var hasError = false;
+
+            $('.modal-job-qty').each(function () {
+                var qty = parseFloat($(this).val()) || 0;
+                var maxQty = parseFloat($(this).data('max')) || 0;
+                
+                if (qty > maxQty) {
+                    alert('Quantity for ' + $(this).closest('tr').find('td:first').text() + ' exceeds remaining quantity (' + maxQty + ').');
+                    hasError = true;
+                    return false;
+                }
+
+                if (qty > 0) {
+                    items.push({
+                        'id': $(this).data('id'),
+                        'qty': qty
+                    });
+                }
+            });
+
+            if (hasError) return;
+
+			if (items.length === 0) {
+				alert('Please enter at least one quantity for the job.');
+				return;
+			}
+
+			$.ajax({
+				url: '/SMS/pk_create_batch_job/',
+				method: 'POST',
+				data: JSON.stringify({
+					'po_id': po_id,
+					'items': items
+				}),
+				contentType: 'application/json',
+				headers: {
+					'X-CSRFToken': '{{ csrf_token }}'
+				},
+				success: function (response) {
+					if (response.success) {
+						window.location.href = response.redirect_url;
+					} else {
+						alert('Error: ' + response.message);
+					}
+				},
+				error: function (xhr) {
+                    var errorMsg = 'An error occurred while creating the batch job.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+					alert(errorMsg);
+				}
+			});
+		});
+
+        // Re-bind the trigger buttons
+        $('#start_costing_btn, #create_batch_job_btn').on('click', function() {
+            openJobModal();
+        });
+	});
+</script>
 {% endblock content %}

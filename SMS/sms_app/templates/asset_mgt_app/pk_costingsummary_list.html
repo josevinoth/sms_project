@@ -27,6 +27,7 @@
     <table  id="costingsummary_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
+            <th>Job No</th>
             <th>Created On</th>
             <th>Assessment Number</th>
             <th>Customer Name</th>
@@ -48,6 +49,7 @@
         <tbody>
         {% for summary, costing in combined_list %}
         <tr>
+            <td>{{ summary.cs_job_no }}</td>
             <td>{{ summary.cs_created_at }}</td>
             <td>{{ summary.cs_assessment_num }}</td>
             <td>{{ summary.cs_customer_name }}</td>
