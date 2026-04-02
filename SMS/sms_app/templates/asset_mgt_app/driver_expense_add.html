@@ -300,7 +300,16 @@
         function loadTrips() {
             const sid = "{{ settlement.id }}";
             if (!sid) return;
-            const url = `/SMS/ajax/filter-trips-by-date/?settlement_id=${sid}`;
+            
+            // 🔥 Dynamically pass filters to server
+            const dVal = filterDateInput ? filterDateInput.value : "";
+            const vVal = filterVehicleNumSelect ? filterVehicleNumSelect.value : "";
+            const tVal = filterTripNumSelect ? filterTripNumSelect.value : "";
+
+            let url = `/SMS/ajax/filter-trips-by-date/?settlement_id=${sid}`;
+            if (dVal) url += `&trip_date=${dVal}`;
+            if (vVal) url += `&vehicle_no=${encodeURIComponent(vVal)}`;
+            if (tVal) url += `&trip_num=${encodeURIComponent(tVal)}`;
 
             fetch(url)
                 .then(res => res.json())
@@ -319,7 +328,7 @@
                 if (window.jQuery?.fn?.select2) $(tripNumberSelect).trigger('change.select2');
             }
             if (!data || data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="13" class="text-danger p-3">No trips found for this driver.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="13" class="text-danger p-3">No trips found. Try adjusting filters.</td></tr>';
                 return;
             }
             data.forEach(trip => {
@@ -387,17 +396,20 @@
         }
         function executeTableFilter() {
             if (!filterTripNumSelect || !filterVehicleNumSelect || !filterDateInput) return;
-            const tVal = filterTripNumSelect.value.toLowerCase();
-            const vVal = filterVehicleNumSelect.value.toLowerCase();
+            const tVal = filterTripNumSelect.value.toLowerCase().trim();
+            const vVal = filterVehicleNumSelect.value.toLowerCase().trim();
             const dVal = filterDateInput.value;
+            
             document.querySelectorAll("#trip-table-body tr").forEach(tr => {
                 if (tr.cells.length < 5) return;
-                const rowT = tr.cells[1].innerText.toLowerCase();
-                const rowD = tr.cells[2].innerText;
-                const rowV = tr.cells[3].innerText.toLowerCase();
+                const rowT = tr.cells[1].innerText.toLowerCase().trim();
+                const rowD = tr.cells[2].innerText.trim();
+                const rowV = tr.cells[3].innerText.toLowerCase().trim();
+                
                 const mKey = !tVal || rowT.includes(tVal);
                 const mVeh = !vVal || rowV.includes(vVal);
                 const mDat = !dVal || rowD === dVal;
+                
                 tr.style.display = (mKey && mVeh && mDat) ? "" : "none";
             });
         }
@@ -408,7 +420,7 @@
         
         if (filterTripNumSelect) filterTripNumSelect.addEventListener("input", executeTableFilter);
         if (filterVehicleNumSelect) filterVehicleNumSelect.addEventListener("input", executeTableFilter);
-        if (filterDateInput) filterDateInput.addEventListener("input", executeTableFilter);
+        if (filterDateInput) filterDateInput.addEventListener("input", loadTrips); // 🔥 Refresh from server on date change
 
         // Select2 for main dropdown
         if (window.jQuery?.fn?.select2) {
