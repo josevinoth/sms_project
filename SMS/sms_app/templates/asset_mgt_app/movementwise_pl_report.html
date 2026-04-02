@@ -91,13 +91,13 @@
 
 <br>
 
-<div class="container-fluid shadow-box-table">
+<div class="container-fluid shadow-box-table mt-4">
     <table id="movementwise_pl_report_table" class="table table-striped table-bordered text-center align-middle"
-        style="white-space:nowrap;font-size:14px;">
+        width="100%" style="white-space:nowrap; font-size:14px;">
         <thead class="thead-dark">
             <tr>
                 {% for h in headers %}
-                <th>{{ h }}</th>
+                <th class="text-center">{{ h }}</th>
                 {% endfor %}
             </tr>
         </thead>
@@ -113,11 +113,25 @@
     </table>
 </div>
 
+<style>
+    /* Force minimum width on headers to prevent squashing in scrollX mode */
+    #movementwise_pl_report_table thead th {
+        min-width: 120px !important;
+        white-space: nowrap !important;
+    }
+
+    /* Narrower S.No column to match reference */
+    #movementwise_pl_report_table thead th:first-child {
+        min-width: 40px !important;
+    }
+</style>
+
 <script>
     $(document).ready(function () {
-
-        $('#movementwise_pl_report_table').DataTable({
+        var table = $('#movementwise_pl_report_table').DataTable({
             scrollX: true,
+            scrollCollapse: true,
+            autoWidth: false,
             dom: 'lBfrtip',
             lengthMenu: [
                 [10, 25, 50, 100, -1],
@@ -158,6 +172,16 @@
             ],
             order: [[0, 'asc']]
         });
+
+        // Recalculate column widths on window resize and zoom
+        $(window).on('resize', function () {
+            table.columns.adjust();
+        });
+
+        // Final fix for alignment after a short delay
+        setTimeout(function () {
+            table.columns.adjust().draw();
+        }, 800);
     });
 </script>
 
