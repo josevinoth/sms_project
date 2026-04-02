@@ -84,7 +84,7 @@ $(document).ready(function () {
     $('#drivers_advance_table').DataTable({
         scrollX: true,
         autoWidth: false,
-        dom: "<'row'<'col-sm-12 col-md-4'l><'col-sm-12 col-md-4'B><'col-sm-12 col-md-4'f>>" +
+        dom: "<'row'<'col-sm-12 col-md-6'lB><'col-sm-12 col-md-6'f>>" +
              "<'row'<'col-sm-12'tr>>" +
              "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
         
@@ -201,6 +201,16 @@ $(document).ready(function () {
 
 .select2-dropdown {
     z-index: 1055; /* higher than bootstrap */
+}
+
+/* UI Tweak: Inline buttons with length menu */
+.dataTables_length {
+    display: inline-block !important;
+    margin-right: 20px;
+}
+.dt-buttons {
+    display: inline-block !important;
+    margin-bottom: 5px;
 }
 </style>
 

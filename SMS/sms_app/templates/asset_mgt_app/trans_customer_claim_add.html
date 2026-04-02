@@ -25,6 +25,10 @@
                                     <div class="select2-wrapper">{% render_field form.tcc_cnote id="tcc_cnote" class="form-control" %}</div>
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend"><span class="input-group-text">Customer Name</span></div>
+                                    {% render_field form.tcc_customer_name id="tcc_customer_name" class="form-control" readonly="True" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend"><span class="input-group-text">Trip Date</span></div>
                                     {% render_field form.tcc_trip_date type="date" id="id_tcc_trip_date" class="form-control" readonly="True" %}
                                 </div>
@@ -36,13 +40,13 @@
                                     <div class="input-group-prepend"><span class="input-group-text">To</span></div>
                                     {% render_field form.tcc_to id="tcc_to" class="form-control" readonly="True" %}
                                 </div>
+                            </div>
+                            <!-- Column 2 -->
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend"><span class="input-group-text">Veh No</span></div>
                                     {% render_field form.tcc_veh_no id="tcc_veh_no" class="form-control" readonly="True" %}
                                 </div>
-                            </div>
-                            <!-- Column 2 -->
-                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend"><span class="input-group-text">Veh Type</span></div>
                                     {% render_field form.tcc_veh_type id="tcc_veh_type" class="form-control" readonly="True" %}
@@ -59,13 +63,13 @@
                                     <div class="input-group-prepend"><span class="input-group-text">Shipper Reference No</span></div>
                                     {% render_field form.tcc_shipper_ref_no id="tcc_shipper_ref_no" class="form-control" readonly="True" %}
                                 </div>
+                            </div>
+                            <!-- Column 3 -->
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend"><span class="input-group-text">Total No.of pkg</span></div>
                                     {% render_field form.tcc_total_pkg id="tcc_total_pkg" class="form-control" readonly="True" %}
                                 </div>
-                            </div>
-                            <!-- Column 3 -->
-                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend"><span class="input-group-text">No.of Pkg Damaged</span></div>
                                     {% render_field form.tcc_damaged_pkg id="tcc_damaged_pkg" class="form-control" readonly="True" %}
@@ -78,13 +82,13 @@
                                     <div class="input-group-prepend"><span class="input-group-text">Reason for Claim</span></div>
                                     {% render_field form.tcc_reason_for_claim id="tcc_reason_for_claim" class="form-control" %}
                                 </div>
+                            </div>
+                            <!-- Column 4 -->
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend"><span class="input-group-text">Claim Amount</span></div>
                                     {% render_field form.tcc_claim_amount id="tcc_claim_amount" class="form-control" %}
                                 </div>
-                            </div>
-                            <!-- Column 4 -->
-                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend"><span class="input-group-text">CAPA Issued Date</span></div>
                                     {% render_field form.tcc_capa_issued_date type="date" class="form-control" %}
@@ -134,6 +138,7 @@
                     data: { 'cnote_id': cnoteId },
                     success: function (data) {
                         if (data) {
+                            if (data.customer_name) $('#tcc_customer_name').val(data.customer_name);
                             if (data.trip_date) $('#id_tcc_trip_date').val(data.trip_date);
                             if (data.from_loc) $('#tcc_from').val(data.from_loc);
                             if (data.to_loc) $('#tcc_to').val(data.to_loc);

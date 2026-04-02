@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from .driver_settlement_view import recalc_driver_settlement
@@ -201,20 +201,36 @@ def filter_trips_by_date(request):
     )
 
     # Filter by driver
-    if getattr(settlement, 'driver_master_id', None):
-        qs = qs.filter(tr_driver_master_id=settlement.driver_master_id)
+    if settlement.driver:
+        qs = qs.filter(Q(tr_driver_master_id=settlement.driver.id) | Q(tr_drivername=settlement.driver.dm_name))
     else:
-        qs = qs.filter(tr_drivername=settlement.driver)
+        qs = qs.filter(tr_drivername=settlement.driver_name)
 
     # ✅ OPTIONAL FILTER BY DATE
     if trip_date:
+        # Support both YYYY-MM-DD and DD-MM-YYYY
+        parsed_date = None
+        
         if 'T' in trip_date:
             trip_date = trip_date.split('T')[0]
+            
+        # Try YYYY-MM-DD
         try:
-            trip_date = datetime.strptime(trip_date, "%Y-%m-%d").date()
-            qs = qs.filter(tr_departeddate__date=trip_date)
+            parsed_date = datetime.strptime(trip_date, "%Y-%m-%d").date()
         except ValueError:
-            pass
+            # Try DD-MM-YYYY
+            try:
+                parsed_date = datetime.strptime(trip_date, "%d-%m-%Y").date()
+            except ValueError:
+                pass
+        
+        if parsed_date:
+            qs = qs.filter(
+                Q(tr_departeddate__date=parsed_date) | 
+                Q(tr_reporteddate__date=parsed_date) |
+                Q(tr_departeddate_pickup__date=parsed_date) |
+                Q(tr_departeddate_delivery__date=parsed_date)
+            )
 
     # ✅ OPTIONAL FILTER BY VEHICLE
     if vehicle_no:
@@ -229,7 +245,7 @@ def filter_trips_by_date(request):
             'vehicle': t.tr_vehiclenumber,
             'from': t.tr_departedlocation.place_name if t.tr_departedlocation else "",
             'to': t.tr_reportedlocation.place_name if t.tr_reportedlocation else "",
-            'date': t.tr_departeddate.strftime('%Y-%m-%d') if t.tr_departeddate else "",
+            'date': (t.tr_departeddate_pickup or t.tr_departeddate or t.tr_reporteddate or t.tr_departeddate_delivery).strftime('%Y-%m-%d') if (t.tr_departeddate_pickup or t.tr_departeddate or t.tr_reporteddate or t.tr_departeddate_delivery) else "",
             'parking': t.tc_parkingcost or 0,
             'loading': t.tc_loadingcost or 0,
             'unloading': t.tc_unloadingcost or 0,
