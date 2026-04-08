@@ -44,22 +44,36 @@ def get_session_branch_id(request):
 
 def generate_next_number(model_class, field_name, prefix, padding, filter_prefix=None):
     """
-    Generates the next sequence number for a given prefix.
-    If filter_prefix is provided, it's used for finding the last record (shared sequence).
-    Example: filter_prefix='25-26_MAA_', prefix='25-26_MAA_Unit-1_'
+    Generates the next sequence number for a given prefix by scanning existing records.
+    Robust against string-sorting issues (e.g. Unit-3 vs Unit-4).
     """
     search_prefix = filter_prefix if filter_prefix is not None else prefix
-    last_record = model_class.objects.filter(**{f"{field_name}__startswith": search_prefix}).order_by(f"-{field_name}").first()
     
-    if last_record:
-        last_val = getattr(last_record, field_name)
-        try:
-            # Robustly extract the last 'padding' characters as the number
-            num_part = last_val[-padding:]
-            next_num = int(num_part) + 1
-        except (ValueError, IndexError):
-            next_num = 1
-    else:
-        next_num = 1
+    # Fetch the most recent 100 records to find the numeric maximum
+    # We use -id because it is the primary chronological key
+    recent_vals = model_class.objects.filter(
+        **{f"{field_name}__startswith": search_prefix}
+    ).order_by("-id")[:100].values_list(field_name, flat=True)
     
-    return f"{prefix}{str(next_num).zfill(padding)}"
+    max_num = 0
+    for val in recent_vals:
+        if val:
+            try:
+                # Extract the last 'padding' characters as the number
+                num_part = val[-padding:]
+                num = int(num_part)
+                if num > max_num:
+                    max_num = num
+            except (ValueError, IndexError):
+                continue
+    
+    next_num = max_num + 1
+    new_num = f"{prefix}{str(next_num).zfill(padding)}"
+    
+    # Final 'Safety-First' check: If this number ALREADY exists for any reason
+    # (very rare race condition), increment until we find a truly empty slot.
+    while model_class.objects.filter(**{field_name: new_num}).exists():
+        next_num += 1
+        new_num = f"{prefix}{str(next_num).zfill(padding)}"
+        
+    return new_num
