@@ -4745,7 +4745,6 @@ def mileage_report_view(request):
         form = DmrForm()
 
     branch_id = request.POST.get('branch')
-    vehicle_source_id = request.POST.get('vehicle_source')
     from_date = request.POST.get('from_date')
     to_date = request.POST.get('to_date')
 
@@ -4753,42 +4752,51 @@ def mileage_report_view(request):
     from ..sub_models.fuelfilling_mod import Fuelfillinginfo
     from django.db.models import Q, Max, Min, Sum
 
-    fuel_records = Fuelfillinginfo.objects.all()
-    if from_date:
-        fuel_records = fuel_records.filter(ff_date__gte=from_date)
-    if to_date:
-        fuel_records = fuel_records.filter(ff_date__lte=to_date)
-
-    vehicle_stats = fuel_records.values('ff_vehicle_num').annotate(
-        km_start=Min('ff_odometer_reading'),
-        km_end=Max('ff_odometer_reading'),
-        total_ltrs=Sum('ff_filled_ltr')
-    )
+    # Only show Own vehicles (vm_ownership_id=1)
+    vehicles = VehiclemasterInfo.objects.filter(vm_ownership_id=1)
+    
+    # Filter by Branch based on registration number prefix
+    if branch_id:
+        try:
+            b_id = int(branch_id)
+            if b_id == 1: # BLR -> KA
+                vehicles = vehicles.filter(vm_registrationnumber__icontains='KA')
+            elif b_id == 2: # MAA -> TN
+                vehicles = vehicles.filter(vm_registrationnumber__icontains='TN')
+        except (ValueError, Location_info.DoesNotExist):
+            pass
 
     data_rows = []
     idx = 1
-    for stat in vehicle_stats:
-        v_id = stat['ff_vehicle_num']
-        vehicle = VehiclemasterInfo.objects.get(id=v_id)
+    for vehicle in vehicles:
+        v_fuel_records = Fuelfillinginfo.objects.filter(ff_vehicle_num=vehicle.id)
+        if from_date:
+            v_fuel_records = v_fuel_records.filter(ff_date__gte=from_date)
+        if to_date:
+            v_fuel_records = v_fuel_records.filter(ff_date__lte=to_date)
+        
+        v_fuel_records = v_fuel_records.order_by('ff_date', 'ff_odometer_reading')
+        
+        if not v_fuel_records.exists():
+            continue
 
-        if vehicle_source_id:
-            if str(vehicle.vm_ownership_id) != str(vehicle_source_id):
-                continue
-
-        if branch_id:
-            try:
-                loc = Location_info.objects.get(id=branch_id)
-                # Filtering vehicles by activity in a branch for mileage report
-                found_in_branch = fuel_records.filter(ff_vehicle_num=v_id, ff_location__icontains=loc.loc_name).exists()
-                if not found_in_branch:
-                    continue
-            except Location_info.DoesNotExist:
-                pass
-
-        km_start = stat['km_start'] or 0
-        km_end = stat['km_end'] or 0
+        first_rec = v_fuel_records.first()
+        last_rec = v_fuel_records.last()
+        
+        km_start = first_rec.ff_odometer_reading or 0
+        km_end = last_rec.ff_odometer_reading or 0
         total_km = km_end - km_start
-        total_ltrs = stat['total_ltrs'] or 0
+        
+        # total_ltrs = sum of all liters in range EXCEPT the last record's liters
+        # as the last record's fuel is consumed AFTER the last odometer reading in this range.
+        total_ltrs = 0.0
+        if v_fuel_records.count() > 1:
+            all_but_last = v_fuel_records.exclude(id=last_rec.id)
+            total_ltrs = all_but_last.aggregate(Sum('ff_filled_ltr'))['ff_filled_ltr__sum'] or 0.0
+        else:
+            # If only one record, we can't calculate mileage, so we show the fill but 0 km
+            total_ltrs = 0.0 # Or potentially first_rec.ff_filled_ltr if we want to show it, but mileage will be 0.
+            # Usually for a period report, distance and fuel should correspond to a valid delta.
 
         std_mileage = safe_num(vehicle.vm_millage)
         actual_mileage = (total_km / total_ltrs) if total_ltrs > 0 else 0
@@ -4817,9 +4825,7 @@ def mileage_report_view(request):
         'headers': headers,
         'data_rows': data_rows,
         'branch_id': int(branch_id) if branch_id else None,
-        'vehicle_source_id': int(vehicle_source_id) if vehicle_source_id else None,
         'from_date': from_date,
         'to_date': to_date,
-        'all_vehicle_sources': OwnershipInfo.objects.all().order_by('ow_ownership'),
-        'all_branches': Location_info.objects.filter(id__in=[1, 2, 3, 4]).order_by('loc_name'),
+        'all_branches': Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name'),
     })
