@@ -228,6 +228,8 @@ def pk_costing_get_customer(request):
     customer_po_name = list(customer_po_qs.values_list('po_num', flat=True))
     customer_po_id = list(customer_po_qs.values_list('id', flat=True))
     customer = CustomerInfo.objects.get(id=customer_name_id)
+    job_no_qs = PkcostingsummaryInfo.objects.filter(cs_assessment_num=cs_assessment_num).values_list('cs_job_no', flat=True).distinct()
+    job_no_list = list(job_no_qs)
 
     return JsonResponse(
         {
@@ -236,6 +238,7 @@ def pk_costing_get_customer(request):
             'customer_po_name':customer_po_name,
             'customer_address': customer.cu_address,
             'customer_gstin': customer.cu_gst,
+            'job_no_list': job_no_list,
         }
     )
 

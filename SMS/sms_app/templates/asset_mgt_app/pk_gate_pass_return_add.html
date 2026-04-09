@@ -4,6 +4,8 @@
 {% block content %}
 <form method="POST" action="" id="packing_gatepass_return_add" enctype="multipart/form-data">
     {% csrf_token %}
+    <input type="hidden" name="gp_assessment_num" id="gp_assessment_num">
+    
     <div class="row">
         <div class="col">
             <div class="container-fluid">
@@ -13,19 +15,8 @@
                     </div>
                     <div class="card-body bg-light">
                         <div class="row">
-                            <div class="col-6">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Assessment Number</span>
-                                    </div>
-                                    {% render_field form.gp_assessment_num id="gp_assessment_num" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Customer Po</span>
-                                    </div>
-                                    {% render_field form.gp_customer_po id="gp_customer_po" class="form-control" %}
-                                </div>
+                            <!-- Column 1: Customer Name, Packing Location, Job No, PO No -->
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Customer Name</span>
@@ -34,12 +25,60 @@
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
+                                        <span class="input-group-text">Packing Location</span>
+                                    </div>
+                                    {% render_field form.gp_packing_location id="gp_packing_location" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Job No</span>
+                                    </div>
+                                    {% render_field form.gp_job_no id="gp_job_no" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Customer Po</span>
+                                    </div>
+                                    {% render_field form.gp_customer_po id="gp_customer_po" class="form-control" %}
+                                </div>
+                            </div>
+
+                            <!-- Column 2: Sales order No, GST No, Bvm Inv No, Bvm Inv Value, HSN -->
+                            <div class="col-3">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Sales Order</span>
+                                    </div>
+                                    {% render_field form.gp_sales_order_po id="gp_sales_order_po" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
                                         <span class="input-group-text">GSTIN</span>
                                     </div>
                                     {% render_field form.gp_customer_gstin id="gp_customer_gstin" class="form-control" %}
                                 </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Bvm Inv No</span>
+                                    </div>
+                                    {% render_field form.gp_bvm_inv_no id="gp_bvm_inv_no" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Bvm Inv Value</span>
+                                    </div>
+                                    {% render_field form.gp_bvm_inv_value id="gp_bvm_inv_value" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">HSN Code</span>
+                                    </div>
+                                    {% render_field form.gp_hsn_code id="gp_hsn_code" class="form-control" %}
+                                </div>
                             </div>
-                            <div class="col-6">
+
+                            <!-- Column 3: Staff Name, Emp Id, Transporter, Consignment details -->
+                            <div class="col-3">
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Staff Name</span>
@@ -54,9 +93,67 @@
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Sales Order</span>
+                                        <span class="input-group-text">Transporter name</span>
                                     </div>
-                                    {% render_field form.gp_sales_order_po id="gp_sales_order_po" class="form-control" %}
+                                    {% render_field form.gp_transporter_name id="gp_transporter_name" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Consignment No</span>
+                                    </div>
+                                    {% render_field form.gp_consignment_note_no id="gp_consignment_note_no" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Gate Pass Date</span>
+                                    </div>
+                                    {% render_field form.gp_consignment_date id="gp_consignment_date" class="form-control" %}
+                                </div>
+                            </div>
+
+                            <!-- Column 4: Veh info, Driver info -->
+                            <div class="col-3">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Veh No</span>
+                                    </div>
+                                    {% render_field form.gp_veh_no id="gp_veh_no" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Veh Type</span>
+                                    </div>
+                                    {% render_field form.gp_veh_type id="gp_veh_type" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Eway Bill no</span>
+                                    </div>
+                                    {% render_field form.gp_eway_bill_no id="gp_eway_bill_no" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Driver Name</span>
+                                    </div>
+                                    {% render_field form.gp_driver_name id="gp_driver_name" class="form-control" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Driver mobile</span>
+                                    </div>
+                                    {% render_field form.gp_driver_mobile_no id="gp_driver_mobile_no" class="form-control" %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Full-width Remarks -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Remarks</span>
+                                    </div>
+                                    {% render_field form.gp_remarks id="gp_remarks" class="form-control" %}
                                 </div>
                             </div>
                         </div>
@@ -93,54 +190,101 @@
 {% include "asset_mgt_app/pk_gate_pass_returnable_WOH.html" %}
 <script>
     $(document).ready(function() {
-        $('#gp_assessment_num').on('change', function() {
-            var gp_assessment_num = document.getElementById("gp_assessment_num").value;
-            // Send an AJAX request to check if the value exists in the database
-            $.ajax({
-                url: '{% url "pk_costing_get_customer" %}',
-                data: {
-                    'cs_assessment_num': gp_assessment_num,
-                },
-                dataType: 'json',
-                success: function(data) {
-                var customer_name_id=data.customer_name_id
-                document.getElementById("gp_customer_name").value=customer_name_id
-   				$('#gp_customer_po').removeClass('disable_a_href');
-				$("#gp_customer_po").empty();
-				var customer_po_id=data.customer_po_id;
+        // Track the initial customer to prevent clearing on load
+        var initial_customer = $('#gp_customer_name').val();
 
-				var customer_po_name=data.customer_po_name;
-				var len1 = (customer_po_id).length;
-				$("#gp_customer_po").empty();
-				$('#gp_customer_po').empty().append("<option value='0'>--Select--</option>");
-				for( var j = 0; j<len1; j++)
-				{
-					$("#gp_customer_po").append("<option value='"+customer_po_id[j]+"'>"+customer_po_name[j]+"</option>");
-				}
-                $('#gp_customer_gstin').val(data.customer_gstin);
+        // Event for Customer Name Change -> Filter Jobs
+        $('#gp_customer_name').on('change', function() {
+            var customer_id = $(this).val();
+            
+            // If it's the same as initial and we already have a job selected, don't clear
+            if (customer_id === initial_customer && $('#gp_job_no').val() !== "") {
+                return;
             }
-            });
+
+            // Clear downstream fields
+            $("#gp_job_no").empty().append("<option value=''>--Select--</option>");
+            $("#gp_customer_po").empty().append("<option value=''>--Select--</option>");
+            $("#gp_sales_order_po").val("");
+            $("#gp_customer_gstin").val("");
+            $("#gp_assessment_num").val("");
+
+            if(customer_id) {
+                $.ajax({
+                    url: '{% url "gate_pass_get_jobs_by_customer" %}',
+                    data: {
+                        'customer_id': customer_id,
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        $('#gp_customer_gstin').val(data.customer_gstin);
+                        
+                        var job_no_list = data.job_no_list;
+                        var len = job_no_list.length;
+                        for(var j = 0; j < len; j++) {
+                            $("#gp_job_no").append("<option value='" + job_no_list[j] + "'>" + job_no_list[j] + "</option>");
+                        }
+                    }
+                });
+            }
+        });
+
+        // Event for Job No Selection -> Pull PO and SO
+        $('#gp_job_no').on('change', function() {
+            var job_no = $(this).val();
+            var customer_id = $('#gp_customer_name').val();
+            
+            // Clear PO and SO
+            $("#gp_customer_po").empty().append("<option value=''>--Select--</option>");
+            $("#gp_sales_order_po").val("");
+            $("#gp_assessment_num").val("");
+
+            if(job_no && customer_id) {
+                $.ajax({
+                    url: '{% url "gate_pass_get_job_details" %}',
+                    data: {
+                        'job_no': job_no,
+                        'customer_id': customer_id
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        // Populate PO List and select the correct one
+                        var po_list_id = data.po_list_id;
+                        var po_list_name = data.po_list_name;
+                        for(var i = 0; i < po_list_id.length; i++) {
+                            $("#gp_customer_po").append("<option value='" + po_list_id[i] + "'>" + po_list_name[i] + "</option>");
+                        }
+                        
+                        // Select the linked PO
+                        if(data.po_id) {
+                            $("#gp_customer_po").val(data.po_id);
+                        }
+                        
+                        // Auto-fill Sales Order
+                        $("#gp_sales_order_po").val(data.sales_order);
+                        
+                        // Hidden Assessment ID
+                        $("#gp_assessment_num").val(data.assessment_id);
+                    }
+                });
+            }
+        });
+
+        // Existing Staff Name logic
+        $('#gp_s_name').on('change', function() {
+            var userID = $(this).val();
+            if(userID) {
+                $.ajax({
+                    url: "{% url 'gate_return_employee_id' %}",
+                    data: { 'id': userID },
+                    success: function(data) {
+                        $('#gp_employee').val(data.employee);
+                    }
+                });
+            } else {
+                $('#gp_employee').val('');
+            }
         });
     });
 </script>
-<script>
-    $('#gp_s_name').on('change', function() {
-        var userID = $(this).val();
-        if(userID) {
-            $.ajax({
-                url: "{% url 'gate_return_employee_id' %}",
-                data: {
-                    'id': userID
-                },
-                success: function(data) {
-                    $('#gp_employee').val(data.employee);
-                }
-            });
-        } else {
-            $('#gp_employee').val('');
-        }
-    });
-</script>
-
-
 {% endblock content %}

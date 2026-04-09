@@ -91,8 +91,9 @@ def tripdetail_add(request, tripdetail_id=0):
     if enquiry_num_id:
         request.session['enquiry_num_id'] = enquiry_num_id
     else:
-        # Avoid redirect loop: don't redirect to insert if we are already failing it
-        messages.error(request, "No enquiry number found in session. Please select an enquiry first.")
+        # If no enquiry ID is found, inform the user and redirect to the list.
+        # This message will now be displayed and cleared once on the next page.
+        messages.warning(request, "No enquiry number found in session. Please select an enquiry from the list first.")
         return redirect('enquirynote_list')
 
     if request.method == "GET":

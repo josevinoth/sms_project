@@ -196,7 +196,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Dock out Time</span>
 									</div>
-									{% render_field trip_det_form.tr_dock_in_time id="tr_dock_in_time" type="Datetime-local" class="form-control" %}
+									{% render_field trip_det_form.tr_dock_out_time id="tr_dock_out_time" type="Datetime-local" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm m-1">
 									<div class="input-group-prepend">
@@ -756,20 +756,31 @@
 
 	// ---- Helper Functions to be accessible globally ----
 	function enableLoadingFields() {
-		$("#tr_loading_time, #tr_dock_in_time, #tr_departeddate, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
+		$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time, #tr_departeddate, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
 		// Make date fields mandatory
 		if($("#tr_category").val() !== "2" && $("#tr_category").val() !== "3") {
-			$("#tr_loading_time, #tr_dock_in_time").prop("required", true);
+			$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time").prop("required", true);
 		}
 		$("#tr_departeddate").prop("required", true);
 	}
 	function enableUnloadingStage1() {
 		$("#tr_reportedlocation, #tr_reporteddate, #tr_reportedkm").prop("disabled", false).removeClass('disable_a_href');
-		if($("#tr_category").val() !== "2" && $("#tr_category").val() !== "3") {
+		
+		// If Stage 1 info already exists (either from DB or just typed), check if we can unlock Stage 2
+		// We use broad logic here: if not Category 2/3, allow unlocking next stage
+		var cat = $("#tr_category").val();
+		var hasReportedDate = $("#tr_reporteddate").val() !== "";
+		
+		if (cat !== "2" && cat !== "3") {
 			$("#tr_reporteddate").prop("required", true);
+			if (g_unloadingSent || hasReportedDate) {
+				enableUnloadingStage2();
+			}
 		} else {
 			$("#tr_reporteddate").removeAttr("required");
 		}
+		
+		validateStatusRestriction();
 	}
 	function enableUnloadingStage2() {
 		$("#tr_departeddate_delivery, #tr_unloading_time, #tr_reporteddate_pickup, #tr_reportedkm_delivery").prop("disabled", false).removeClass('disable_a_href');
@@ -789,14 +800,14 @@
 			$("#tr_departedlocation, #tr_departeddate_pickup, #tr_departedkm").prop("disabled", false).removeClass('disable_a_href');
 			if ($("#tr_category").val() !== "2" && $("#tr_category").val() !== "3") {
 				$("#tr_departeddate_pickup").prop("required", true);
-				$("#tr_loading_time, #tr_dock_in_time, #tr_departeddate, #tr_reportedkm_pickup").prop("disabled", true).addClass('disable_a_href');
+				$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time, #tr_departeddate, #tr_reportedkm_pickup").prop("disabled", true).addClass('disable_a_href');
 			} else {
 				$("#tr_departeddate_pickup").removeAttr("required");
-				$("#tr_loading_time, #tr_dock_in_time").prop("disabled", true).addClass('disable_a_href');
+				$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time").prop("disabled", true).addClass('disable_a_href');
 				$("#tr_departeddate, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
 			}
 			
-			$("#tr_loading_time, #tr_dock_in_time, #tr_departeddate").removeAttr("required");
+			$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time, #tr_departeddate").removeAttr("required");
 		}
 
 		function lockUnloadingFields() {
@@ -827,8 +838,41 @@
 				$("#sendEmailModal").modal("show");
 			}
 			*/
-			if (status == "1") enableUnloadingStage1();
-		});
+		if (status == "1") enableUnloadingStage1();
+		validateStatusRestriction();
+	});
+
+	// Trigger validation on date change
+	$("#tr_reporteddate_pickup").on("change input", function() {
+		validateStatusRestriction();
+	});
+
+	function validateStatusRestriction() {
+		var category = $("#tr_category").val();
+		var startedDate = $("#tr_reporteddate_pickup").val();
+		var statusDropdown = $("#tc_financestatus");
+		var currentStatus = statusDropdown.val();
+
+		// Only apply to Category 1
+		if (category === "1") {
+			if (!startedDate || startedDate.trim() === "") {
+				// Disable "Closed" option (Value 2)
+				statusDropdown.find("option[value='2']").prop("disabled", true);
+				
+				// If user somehow has 2 selected, reset it to 1 (Started) if possible, or show alert
+				if (currentStatus == "2") {
+					alert("Cannot transition to Closed status. Please provide 'Vehicle Started Date & Time' in the Unloading section first.");
+					statusDropdown.val("1").trigger("change");
+				}
+			} else {
+				// Enable "Closed" option
+				statusDropdown.find("option[value='2']").prop("disabled", false);
+			}
+		} else {
+			// Always enable for other categories
+			statusDropdown.find("option[value='2']").prop("disabled", false);
+		}
+	}
 
 
 		// ---- 6. Initialization Logic ----
@@ -841,12 +885,20 @@
 			if (g_loadingSent) {
 				enableLoadingFields();
 			}
-			if (status == "1" || status == "2" || g_tripStartedSent) {
-				enableUnloadingStage1();
+			// Broad logic for Normal workflow
+			var cat = $("#tr_category").val();
+			if (cat !== "2" && cat !== "3") {
+				if (status == "1" || status == "2" || g_tripStartedSent) {
+					enableUnloadingStage1();
+				}
+			} else {
+				// For Category 2/3, Stage 1 is usually enough or handled by hideEmptyFields
+				// but let's call it if status is active
+				if (status == "1" || status == "2") {
+					enableUnloadingStage1();
+				}
 			}
-			if (g_unloadingSent) {
-				enableUnloadingStage2();
-			}
+			validateStatusRestriction();
 		}
 
 		initializeWorkflow();
