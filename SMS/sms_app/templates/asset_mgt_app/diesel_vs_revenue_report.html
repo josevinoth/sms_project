@@ -4,7 +4,17 @@
 {% block content %}
 
 
+<style>
+    .shadow-box-table {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
 
+    .text-right {
+        text-align: right;
+    }
+</style>
 
 <!-- Select2 CSS -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -84,7 +94,7 @@
                 {% for row in data_rows %}
                 <tr>
                     {% for cell in row %}
-                    <td class="{% if forloop.counter >= 8 %}text-right{% endif %}">{{ cell }}</td>
+                    <td class="{% if forloop.counter >= 9 %}text-right{% endif %}">{{ cell }}</td>
                     {% endfor %}
                 </tr>
                 {% endfor %}
@@ -93,25 +103,6 @@
     </div>
 </div>
 
-<style>
-    .shadow-box-table {
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        border: 1px solid #ddd;
-        border-radius: 5px;
-    }
-
-    #diesel_vs_revenue_report_table thead th {
-        background-color: #0A3278 !important;
-        color: white !important;
-        font-weight: bold;
-        text-align: center;
-        vertical-align: middle;
-    }
-
-    .text-right {
-        text-align: right;
-    }
-</style>
 
 <script>
     $(document).ready(function () {
@@ -119,7 +110,7 @@
         const table = $('#diesel_vs_revenue_report_table').DataTable({
             scrollX: true,
             autoWidth: false,
-            dom: "<'row'<'col-sm-12 col-md-4'l><'col-sm-12 col-md-4'B><'col-sm-12 col-md-4'f>>" +
+            dom: "<'row'<'col-sm-12 col-md-6 d-flex align-items-center gap-2'lB><'col-sm-12 col-md-6'f>>" +
                  "<'row'<'col-sm-12'tr>>" +
                  "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
             

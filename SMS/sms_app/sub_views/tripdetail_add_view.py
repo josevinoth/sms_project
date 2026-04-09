@@ -91,8 +91,9 @@ def tripdetail_add(request, tripdetail_id=0):
     if enquiry_num_id:
         request.session['enquiry_num_id'] = enquiry_num_id
     else:
-        # Avoid redirect loop: don't redirect to insert if we are already failing it
-        messages.error(request, "No enquiry number found in session. Please select an enquiry first.")
+        # If no enquiry ID is found, inform the user and redirect to the list.
+        # This message will now be displayed and cleared once on the next page.
+        messages.warning(request, "No enquiry number found in session. Please select an enquiry from the list first.")
         return redirect('enquirynote_list')
 
     if request.method == "GET":
@@ -549,9 +550,9 @@ def tripdetail_list_ajax(request):
 
     # Branch filter
     if branch == 'MAA':
-        qs = qs.filter(tr_consignmentnumber__co_consignmentnumber__istartswith='MAA')
+        qs = qs.filter(tr_consignmentnumber__co_consignmentnumber__icontains='MAA')
     elif branch == 'BLR':
-        qs = qs.filter(tr_consignmentnumber__co_consignmentnumber__istartswith='BLR')
+        qs = qs.filter(tr_consignmentnumber__co_consignmentnumber__icontains='BLR')
 
     # Status filter
     if selected_status_id:
@@ -1243,6 +1244,14 @@ def trip_send_trip_started_mail(request):
         email_type=1
     )
 
+    # --- ADD WHATSAPP TRIGGER ---
+    try:
+        from ..utils.whatsapp_utils import send_whatsapp_consignment_details
+        send_whatsapp_consignment_details(trip)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"WhatsApp Error: {e}")
+
     trip.tr_trip_started_mail_sent = True
     trip.save(update_fields=["tr_trip_started_mail_sent"])
 
@@ -1414,6 +1423,14 @@ def trip_send_trip_closed_mail(request):
         recipient_list=recipients,
         email_type=1
     )
+
+    # --- ADD WHATSAPP TRIGGER ---
+    try:
+        from ..utils.whatsapp_utils import send_whatsapp_consignment_details
+        send_whatsapp_consignment_details(trip)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"WhatsApp Error: {e}")
 
     trip.tr_trip_closed_mail_sent = True
     trip.save(update_fields=["tr_trip_closed_mail_sent"])

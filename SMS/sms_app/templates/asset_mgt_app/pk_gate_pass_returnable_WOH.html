@@ -4,20 +4,28 @@
     <table  id="dispatch_goods_list" class="table table-striped table-bordered">
         <thead class="thead-dark">
         <tr>
-            <th>Assessment Number</th>
             <th>Customer PO</th>
+            <th>Job No</th>
             <th>Description</th>
+            <th>Length</th>
+            <th>Width</th>
+            <th>Height</th>
             <th>UOM</th>
+            <th>Weight</th>
             <th>Quantity</th>
         </tr>
         </thead>
         <tbody>
         {% for gatepassreturn in gatepassreturn_list %}
         <tr>
-            <td>{{ gatepassreturn.pod_assess_num }}</td>
             <td>{{ gatepassreturn.pod_po_num }}</td>
+            <td>{{ gate.gp_job_no }}</td>
             <td>{{ gatepassreturn.pod_type_of_req }}</td>
+            <td>{{ gatepassreturn.pod_length }}</td>
+            <td>{{ gatepassreturn.pod_width }}</td>
+            <td>{{ gatepassreturn.pod_height }}</td>
             <td>{{ gatepassreturn.pod_uom }}</td>
+            <td>{{ gatepassreturn.pod_job_weight }}</td>
             <td>{{ gatepassreturn.pod_quantity }}</td>
         </tr>
         {% endfor %}

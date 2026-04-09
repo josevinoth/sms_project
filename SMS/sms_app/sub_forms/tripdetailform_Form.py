@@ -26,7 +26,7 @@ class TripdetailaddForm(forms.ModelForm):
                   'tr_vehiclenumber', 'tr_drivername', 'tr_driver_lic', 'tr_drivernumber', 'tr_departedlocation',
                   'tr_departedkm', 'tr_departeddate', 'tr_reportedlocation', 'tr_reportedkm', 'tr_reporteddate',
                   'tc_financestatus', 'tr_updated_by', 'tr_category', 'tr_remarks', 'tr_loading_time',
-                  'tr_unloading_time', 'tc_pod_attachment', 'tc_pod', 'tr_high_value', 'tr_track_link', 'td_pod','tr_departeddate_pickup','tr_dock_in_time','tr_reportedkm_pickup','tr_departeddate_delivery','tr_reporteddate_pickup','tr_reportedkm_delivery']
+                  'tr_unloading_time', 'tc_pod_attachment', 'tc_pod', 'tr_high_value', 'tr_track_link', 'td_pod','tr_departeddate_pickup','tr_dock_in_time','tr_dock_out_time','tr_reportedkm_pickup','tr_departeddate_delivery','tr_reporteddate_pickup','tr_reportedkm_delivery']
 
     def __init__(self, *args, **kwargs):
         super(TripdetailaddForm, self).__init__(*args, **kwargs)
