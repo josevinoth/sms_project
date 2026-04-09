@@ -256,9 +256,9 @@ def consignmentdetail_list_ajax(request):
     if date_to:
         qs = qs.filter(co_consignmentdate__lte=date_to)
     if branch == 'MAA':
-        qs = qs.filter(co_consignmentnumber__istartswith='MAA')
+        qs = qs.filter(co_consignmentnumber__icontains='MAA')
     elif branch == 'BLR':
-        qs = qs.filter(co_consignmentnumber__istartswith='BLR')
+        qs = qs.filter(co_consignmentnumber__icontains='BLR')
 
     records_total = qs.count()
 
