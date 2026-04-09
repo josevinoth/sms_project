@@ -1,0 +1,603 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+<style>
+    .green-bg {
+        background-color: #c8e6c9 !important;
+        color: black !important;
+    }
+
+    /* Ensure conditional fields flow naturally in the grid */
+    .cond-section {
+        display: none;
+        padding: 15px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+</style>
+
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="container-fluid" style="padding-top:15px;">
+        <div class="card text-white bg-info mb-3" style="max-width:100%;">
+
+            <!-- ================= HEADER ================= -->
+            <div class="card-header text-center position-relative">
+                <h3 class="mb-0">Sale Enquiry Form</h3>
+            </div>
+
+            <!-- ================= BODY ================= -->
+            <div class="card-body bg-light text-dark">
+                {% if form.errors %}
+                <div class="container-fluid">
+                    <div class="alert alert-danger fade show" role="alert">
+                        {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                        {{ error }}<br>
+                        {% endfor %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-success fade show" role="alert">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <div class="row">
+
+                    <!-- ================= COLUMN 1 ================= -->
+                    <div class="col-12 col-md-3">
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Enquiry ID</span>
+                            </div>
+                            {% render_field form.enquiry_id class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Enquiry Date/Time</span>
+                            </div>
+                            {% render_field form.enquiry_date_time type="datetime-local" class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Source of Enquiry</span>
+                            </div>
+                            {% render_field form.enquiry_source class="form-control" id="enquiry_source_select" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Branch</span>
+                            </div>
+                            {% render_field form.branch class="form-control" id="branch_select" %}
+                        </div>
+                    </div>
+
+                    <!-- ================= COLUMN 2 ================= -->
+                    <div class="col-12 col-md-3">
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Customer Name</span>
+                            </div>
+                            {% render_field form.customer_name class="form-control" id="customer_name_select" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">New Customer Name</span>
+                            </div>
+                            {% render_field form.new_customer_name class="form-control" id="new_customer_name_input" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Customer Code</span>
+                            </div>
+                            <input type="text" name="customer_code" id="customer_code_input" class="form-control"
+                                value="{% if form.customer_code.value %}{{ form.customer_code.value }}{% endif %}">
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Contact Person</span>
+                            </div>
+                            {% render_field form.contact_person_name class="form-control" %}
+                        </div>
+                    </div>
+
+                    <!-- ================= COLUMN 3 ================= -->
+                    <div class="col-12 col-md-3">
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Contact No</span>
+                            </div>
+                            {% render_field form.contact_no class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Mail</span>
+                            </div>
+                            {% render_field form.mail class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Service Type</span>
+                            </div>
+                            {% render_field form.service_type class="form-control" %}
+                        </div>
+                    </div>
+
+                    <!-- ================= COLUMN 4 ================= -->
+                    <div class="col-12 col-md-3">
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Address</span>
+                            </div>
+                            {% render_field form.address class="form-control" rows="3" %}
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ================= EXTRA FIELDS TOGGLES ================= -->
+                <hr>
+                <div class="d-flex w-100 mb-4" style="gap: 10px;">
+                    <button type="button" class="btn btn-outline-info flex-fill toggle-btn"
+                        data-target="fields-warehouse">Warehouse</button>
+                    <button type="button" class="btn btn-outline-info flex-fill toggle-btn"
+                        data-target="fields-transport">Transport</button>
+                    <button type="button" class="btn btn-outline-info flex-fill toggle-btn"
+                        data-target="fields-packing">Packing</button>
+                    <button type="button" class="btn btn-outline-info flex-fill toggle-btn"
+                        data-target="fields-express">Express</button>
+                    <button type="button" class="btn btn-outline-info flex-fill toggle-btn"
+                        data-target="fields-support">Support</button>
+                    <button type="button" class="btn btn-outline-info flex-fill toggle-btn" data-target="fields-mc">MC
+                        Tours&Travels</button>
+                </div>
+
+                <!-- ================= DYNAMIC CONTAINERS ================= -->
+                <div id="fields-warehouse" class="toggle-section p-3 mb-3 border rounded shadow-sm"
+                    style="display:none; background-color:#e0f7fa;">
+                    <h5 class="text-info mb-3">Warehouse Details</h5>
+                    <div class="row">
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Customer Type</span>
+                                </div>
+                                {% render_field form.wh_customer_type class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Sqft Required</span>
+                                </div>
+                                {% render_field form.wh_sqft_req class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Scope of Loading/Unloading</span>
+                                </div>
+                                {% render_field form.wh_scope_of_lul class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Tonnage</span>
+                                </div>
+                                {% render_field form.wh_tonnage class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Months Required</span>
+                                </div>
+                                {% render_field form.wh_no_of_months_req class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">RFQ Closed Date</span>
+                                </div>
+                                {% render_field form.wh_rfq_closed_date type="date" class="form-control" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="fields-transport" class="toggle-section p-3 mb-3 border rounded shadow-sm"
+                    style="display:none; background-color:#e0f7fa;">
+                    <h5 class="text-info mb-3">Transport Details</h5>
+                    <div class="row">
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Customer Type</span>
+                                </div>
+                                {% render_field form.tr_customer_type class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">No. Vehicles Req</span>
+                                </div>
+                                {% render_field form.tr_no_of_vehicles_req class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Veh Type Req</span>
+                                </div>
+                                {% render_field form.tr_veh_type_req class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">From</span>
+                                </div>
+                                {% render_field form.tr_from class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">To</span>
+                                </div>
+                                {% render_field form.tr_to class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Avg Trips/Month</span>
+                                </div>
+                                {% render_field form.tr_no_of_avg_trips_per_month class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Tonnage</span>
+                                </div>
+                                {% render_field form.tr_tonnage class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">RFQ Closed Date</span>
+                                </div>
+                                {% render_field form.tr_rfq_closed_date type="date" class="form-control" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="fields-packing" class="toggle-section p-3 mb-3 border rounded shadow-sm"
+                    style="display:none; background-color:#e0f7fa;">
+                    <h5 class="text-info mb-3">Packing Details</h5>
+                    <div class="row">
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Customer Type</span>
+                                </div>
+                                {% render_field form.pa_customer_type class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Inhouse/Onsite</span>
+                                </div>
+                                {% render_field form.pa_inhouse_onsite class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">L/UL Scope</span></div>
+                                {% render_field form.pa_lul_scope class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Transport Scope</span>
+                                </div>
+                                {% render_field form.pa_transport_scope class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Boxes/Pallets</span>
+                                </div>
+                                {% render_field form.pa_no_of_boxes_per_month class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">RFQ Closed Date</span>
+                                </div>
+                                {% render_field form.pa_rfq_closed_date type="date" class="form-control" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="fields-express" class="toggle-section p-3 mb-3 border rounded shadow-sm"
+                    style="display:none; background-color:#e0f7fa;">
+                    <h5 class="text-info mb-3">Express Details</h5>
+                    <div class="row">
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Customer Type</span>
+                                </div>
+                                {% render_field form.ex_customer_type class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Veh Type (DD)</span>
+                                </div>
+                                {% render_field form.ex_veh_type class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">No. Vehicles (DD)</span>
+                                </div>
+                                {% render_field form.ex_no_of_vehicles class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Pickup</span></div>
+                                {% render_field form.ex_pickup class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Delivery</span></div>
+                                {% render_field form.ex_delivery class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Shipment Type</span>
+                                </div>
+                                {% render_field form.ex_shipment_type class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">No. Shipments</span>
+                                </div>
+                                {% render_field form.ex_no_of_shipments class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Avg Wt/Shipment</span>
+                                </div>
+                                {% render_field form.ex_avg_weight_per_shipment class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Delivery Type</span>
+                                </div>
+                                {% render_field form.ex_delivery_type class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">RFQ Closed Date</span>
+                                </div>
+                                {% render_field form.ex_rfq_closed_date type="date" class="form-control" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="fields-support" class="toggle-section p-3 mb-3 border rounded shadow-sm"
+                    style="display:none; background-color:#e0f7fa;">
+                    <h5 class="text-info mb-3">Support Details</h5>
+                    <div class="row">
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Customer Type</span>
+                                </div>
+                                {% render_field form.su_customer_type class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">No. Manpowers</span>
+                                </div>
+                                {% render_field form.su_no_of_manpowers class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Shift Type</span></div>
+                                {% render_field form.su_shift_type class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Working Days</span>
+                                </div>
+                                {% render_field form.su_working_days class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Supervisors</span></div>
+                                {% render_field form.su_supervisors class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Loaders</span></div>
+                                {% render_field form.su_loaders class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">RFQ Closed Date</span>
+                                </div>
+                                {% render_field form.su_rfq_closed_date type="date" class="form-control" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="fields-mc" class="toggle-section p-3 mb-3 border rounded shadow-sm"
+                    style="display:none; background-color:#e0f7fa;">
+                    <h5 class="text-info mb-3">MC Tours&Travels Details</h5>
+                    <div class="row">
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Customer Type</span>
+                                </div>
+                                {% render_field form.mc_customer_type class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Travel Type</span></div>
+                                {% render_field form.mc_travel_type class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">From</span></div>
+                                {% render_field form.mc_from class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">To</span></div>
+                                {% render_field form.mc_to class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">No. Passengers</span>
+                                </div>
+                                {% render_field form.mc_no_of_passengers class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Travel Date</span></div>
+                                {% render_field form.mc_travel_date type="date" class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Return Date</span></div>
+                                {% render_field form.mc_return_date type="date" class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Vehicle Type</span>
+                                </div>
+                                {% render_field form.mc_vehicle_type class="form-control" %}
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Package Req</span></div>
+                                {% render_field form.mc_package_req class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Hotel Req</span></div>
+                                {% render_field form.mc_hotel_req class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">RFQ Closed Date</span>
+                                </div>
+                                {% render_field form.mc_rfq_closed_date type="date" class="form-control" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= ACTION BUTTONS ================= -->
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check"></i> Save
+                </button>
+                <a href="{% url 'sale_enquiry_list' %}" class="btn btn-danger float-right">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    $(document).ready(function () {
+        // Customer name AJAX handler - autofill code & toggle readonly
+        function toggleFieldBackground(isGreen) {
+            if (isGreen) {
+                $('#customer_code_input').addClass('green-bg');
+                $('#new_customer_name_input').addClass('green-bg');
+
+                // Remove from Customer Name
+                $('#customer_name_select').removeClass('green-bg');
+                $('#customer_name_select').next('.select2').find('.select2-selection').removeClass('green-bg');
+            } else {
+                $('#customer_code_input').removeClass('green-bg');
+                $('#new_customer_name_input').removeClass('green-bg');
+            }
+
+            // Ensure other fields are NOT colored
+            $('#id_contact_person_name, #id_contact_no, #id_mail').removeClass('green-bg').css('background-color', '');
+        }
+
+        function updateCustomerCode() {
+            var customer_id = $('#customer_name_select').val();
+            if (customer_id) {
+                $.ajax({
+                    url: "{% url 'get_customer_code' %}",
+                    data: {
+                        'customer_id': customer_id
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data.status === 'success') {
+                            $('#customer_code_input').val(data.customer_code).prop('readonly', true);
+                        } else {
+                            $('#customer_code_input').val('').prop('readonly', false);
+                        }
+                    }
+                });
+                // Lock new_customer_name when existing customer selected
+                $('#new_customer_name_input').prop('readonly', true).val('');
+                toggleFieldBackground(true);
+            } else {
+                $('#customer_code_input').val('').prop('readonly', false);
+                // Unlock new_customer_name when selection cleared
+                $('#new_customer_name_input').prop('readonly', false);
+                toggleFieldBackground(false);
+            }
+        }
+
+        $('#customer_name_select').change(function () {
+            updateCustomerCode();
+        });
+
+        // Initialize Select2 if it's available
+        if ($.fn.select2) {
+            $('#customer_name_select').select2({
+                placeholder: "---------",
+                allowClear: true
+            });
+            $('#branch_select').select2();
+            $('#enquiry_source_select').select2();
+            $('#wh_customer_type_select').select2();
+            $('#pa_customer_type_select').select2();
+            $('#mc_customer_type_select').select2();
+            $('#tr_customer_type_select').select2();
+            $('#ex_customer_type_select').select2();
+            $('#su_customer_type_select').select2();
+            $('#ex_shipment_type_select').select2();
+            $('#ex_delivery_type_select').select2();
+            $('#mc_travel_type_select').select2();
+        }
+
+        // On page load: set correct state and colors based on existing selection
+        if ($('#customer_name_select').val()) {
+            $('#customer_code_input').prop('readonly', true);
+            $('#new_customer_name_input').prop('readonly', true);
+            toggleFieldBackground(true);
+        } else {
+            $('#customer_code_input').prop('readonly', false);
+            $('#new_customer_name_input').prop('readonly', false);
+            toggleFieldBackground(false);
+        }
+
+        // Toggle Buttons Logic
+        $('.toggle-btn').click(function () {
+            var target = $(this).data('target');
+
+            // Toggle active styling
+            $(this).toggleClass('active');
+            if ($(this).hasClass('active')) {
+                $(this).removeClass('btn-outline-info').addClass('btn-info text-white');
+            } else {
+                $(this).removeClass('btn-info text-white').addClass('btn-outline-info');
+            }
+
+            // Slide toggle the target section
+            $('#' + target).slideToggle();
+        });
+    });
+</script>
+{% endblock content %}

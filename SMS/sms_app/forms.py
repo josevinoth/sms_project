@@ -146,3 +146,4 @@ from .sub_forms.maintenance_form import MaintenanceForm
 from .sub_forms.maintenance_bill_form import MaintenanceBillForm
 from .sub_forms.trans_customerclaims_Form import TransCustomerClaimsForm
 from .sub_forms.charge_master_form import ChargeMasterForm
+from .sub_forms.sale_enquiry_form import SaleEnquiryForm
