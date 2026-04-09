@@ -115,7 +115,7 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">Vendor Name</span>
+									<span class="input-group-text">Vendor Name <span id="vendor_required_star" style="color:red; display:none">*</span></span>
 									</div>
 									{% render_field vehicle_allotment_form.va_vendor class="form-control" id="va_vendor" onchange="loadVendorBuyRate()"  data-selected=vehicle_allotment_form.va_vendor.value %}
 								</div>
@@ -150,7 +150,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Standard Buy</span>
 									</div>
-									{% render_field vehicle_allotment_form.va_standardbuy id="va_standardbuy"  class="form-control disable_a_href" %}
+									{% render_field vehicle_allotment_form.va_standardbuy id="va_standardbuy" class="form-control" readonly="readonly" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -424,6 +424,7 @@
         $('#va_vendor').removeClass('disable_a_href').prop('disabled', false);
 			$('#va_standardbuy').addClass('disable_a_href');
         $('#va_sale').removeClass('disable_a_href').prop('readonly', false).prop('disabled', false);
+        $('#vendor_required_star').show();
 		}
 		else
 		{
@@ -433,6 +434,7 @@
         $('#va_vendor').addClass('disable_a_href').prop('disabled', true);
 			$('#va_standardbuy').addClass('disable_a_href');
         $('#va_sale').addClass('disable_a_href').prop('readonly', false).prop('disabled', false);
+        $('#vendor_required_star').hide();
 		}
 	}
 </script>
@@ -661,6 +663,17 @@ document.addEventListener("DOMContentLoaded", function() {
             if (sellRate === "" || sellRate === "0") {
                 event.preventDefault();
                 alert("Sell Rate is required for Own or Attached Vehicles. Please assign a Sell Rate before submitting.");
+                return false;
+            }
+        }
+        // -----------------------------------------
+        // 4️⃣ MARKET VEHICLE (ID = 3) → VENDOR REQUIRED
+        // -----------------------------------------
+        if (vehicleSource === 3) {
+            const vendor = document.getElementById("va_vendor").value.trim();
+            if (vendor === "") {
+                event.preventDefault();
+                alert("Vendor Name is required for Market Vehicles.");
                 return false;
             }
         }
