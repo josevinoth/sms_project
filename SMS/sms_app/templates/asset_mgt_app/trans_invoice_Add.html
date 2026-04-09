@@ -29,6 +29,18 @@
 
       <!-- ================= BODY ================= -->
       <div class="card-body bg-light text-dark">
+        {% if form.errors %}
+        <div class="container-fluid">
+          <div class="alert alert-danger fade show" role="alert">
+            {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+            {{ error }}<br>
+            {% endfor %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
         <div class="row">
 
           <!-- ================= COLUMN 1 ================= -->
@@ -179,12 +191,6 @@
           <!-- ================= COLUMN 4 ================= -->
           <div class="col-12 col-md-3">
 
-            <div class="input-group input-group-sm mb-3" style="display:none;">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Docket Charges</span>
-              </div>
-              {% render_field form.ti_docket_charges class="form-control charge" %}
-            </div>
 
             <div class="input-group input-group-sm mb-3">
               <div class="input-group-prepend">
@@ -272,7 +278,6 @@
             <th>Loading Charges</th>
             <th>Unloading Charges</th>
             <th>Halting Charges</th>
-            <th style="display:none;">Docket Charges</th>
             <th>Weighment Charges</th>
             <th>Handling Charges</th>
             <th>Cancellation Charges</th>
@@ -307,7 +312,6 @@
             <td>{{ inv.ti_trip.tc_loadingcost }}</td>
             <td>{{ inv.ti_trip.tc_unloadingcost }}</td>
             <td>{{ inv.ti_trip.tc_haltingcost }}</td>
-            <td style="display:none;">{{ inv.ti_trip.tc_rtocost }}</td>
             <td>{{ inv.ti_trip.tc_weighmentcost }}</td>
             <td>{{ inv.ti_trip.tc_handlingcost }}</td>
             <td>{{ inv.ti_trip.tc_cancellation }}</td>

@@ -1,4 +1,4 @@
-﻿{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% load static %}
 {% block content %}
@@ -41,18 +41,6 @@
             <option value="">-- All Branches --</option>
             {% for b in all_branches %}
             <option value="{{ b.id }}" {% if branch_id == b.id %}selected{% endif %}>{{ b.loc_name }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <!-- Vehicle Source -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Vehicle Source</label>
-        <select name="vehicle_source" class="form-select form-control" id="vehicleSourceSelect">
-            <option value="">-- All Sources --</option>
-            {% for vs in all_vehicle_sources %}
-            <option value="{{ vs.id }}" {% if vehicle_source_id == vs.id %}selected{% endif %}>{{ vs.ow_ownership }}
-            </option>
             {% endfor %}
         </select>
     </div>

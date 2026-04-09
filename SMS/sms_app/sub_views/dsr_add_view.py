@@ -294,7 +294,7 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
             for stock_value in stock_values:
 
                 # Determine if this customer requires job-level grouping
-                is_grouped_cust = any(k in customer_name_str for k in ["GEODIS(H&M)", "DAMCO"])
+                is_grouped_cust = any(k in customer_name_str for k in ["GEODIS(H&M)"])
 
                 if is_grouped_cust:
                     if stock_value.wh_job_no in seen_jobs:
@@ -641,12 +641,12 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         l_val = w_val = h_val = 0.0
 
                     try:
-                        cbm_calc = (l_val * w_val * h_val * float(total_pieces_for_job)) / 1000000.0
+                        cbm_calc = (l_val * w_val * h_val * float(stock_value.wh_goods_pieces or 0)) / 1000000.0
                     except Exception:
                         cbm_calc = 0.0
 
                     try:
-                        vol_wt_calc = round((l_val * w_val * h_val * float(total_pieces_for_job)) / 6000.0, 2)
+                        vol_wt_calc = round((l_val * w_val * h_val * float(stock_value.wh_goods_pieces or 0)) / 6000.0, 2)
                     except Exception:
                         vol_wt_calc = 0.0
 
@@ -666,7 +666,7 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         stock_value.wh_po_num,
                         getattr(gate, "gatein_so_number", ""),
                         getattr(gate, "gatein_destination", ""),
-                        stock_value.wh_goods_pieces,
+                        total_pieces_for_job,
                         getattr(gate, "gatein_no_of_pcs", ""),
                         cbm_calc,
                         stock_value.wh_invoice_weight_unit,

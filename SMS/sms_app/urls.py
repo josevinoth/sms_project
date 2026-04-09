@@ -1035,6 +1035,7 @@ urlpatterns = [
     path('vehicle_log_report/', views.vehicle_log_report_view, name='vehicle_log_report'),
     path('movementwise_pl_report/', views.movementwise_pl_report_view, name='movementwise_pl_report'),
     path('customerwise_pl_report/', views.customerwise_pl_report_view, name='customerwise_pl_report'),
+    path('mileage_report/', views.mileage_report_view, name='mileage_report'),
     path('trip_cancellation_report/', views.trip_cancellation_report_view, name='trip_cancellation_report'),
     path('ref_no_pending_report/', views.ref_no_pending_report_view, name='ref_no_pending_report'),
     path('vehicle_utilization_report/', views.vehicle_utilization_report_view, name='vehicle_utilization_report'),
