@@ -38,6 +38,7 @@ def market_bill_add(request):
                     p_cost = request.POST.get(f'parking_cost_{tid}', 0)
                     h_days = request.POST.get(f'halting_days_{tid}', 0)
                     h_cost = request.POST.get(f'halting_cost_{tid}', 0)
+                    t_cost = request.POST.get(f'trip_cost_{tid}', 0)
 
                     TripdetailInfo.objects.filter(id=tid).update(
                         tc_loadingcost=float(l_cost) if l_cost else 0.0,
@@ -46,6 +47,14 @@ def market_bill_add(request):
                         tc_no_of_days_halting=int(h_days) if h_days else 0,
                         tc_haltingcost=float(h_cost) if h_cost else 0.0
                     )
+
+                    # Update Buying Price in Allotment instead of Revenue in Trip
+                    trip_obj = TripdetailInfo.objects.get(id=tid)
+                    Vehicle_allotmentInfo.objects.filter(
+                        Q(va_enquirynumber=trip_obj.tr_enquirynumber),
+                        Q(va_vehiclenumber__vm_registrationnumber__iexact=trip_obj.tr_vehiclenumber) | 
+                        Q(va_vehiclenumber_mkt__iexact=trip_obj.tr_vehiclenumber)
+                    ).update(va_specialbuy=float(t_cost) if t_cost else 0.0)
 
             messages.success(request, "Market Bill saved successfully.")
             return redirect('market_bill_list')
@@ -101,15 +110,28 @@ def market_bill_edit(request, id):
             if selected_trips:
                 trip_ids = [tid for tid in selected_trips.split(',') if tid.strip()]
                 for tid in trip_ids:
+                    l_cost = request.POST.get(f'loading_cost_{tid}', 0)
+                    u_cost = request.POST.get(f'unloading_cost_{tid}', 0)
                     p_cost = request.POST.get(f'parking_cost_{tid}', 0)
                     h_days = request.POST.get(f'halting_days_{tid}', 0)
                     h_cost = request.POST.get(f'halting_cost_{tid}', 0)
+                    t_cost = request.POST.get(f'trip_cost_{tid}', 0)
 
                     TripdetailInfo.objects.filter(id=tid).update(
+                        tc_loadingcost=float(l_cost) if l_cost else 0.0,
+                        tc_unloadingcost=float(u_cost) if u_cost else 0.0,
                         tc_parkingcost=float(p_cost) if p_cost else 0.0,
                         tc_no_of_days_halting=int(h_days) if h_days else 0,
                         tc_haltingcost=float(h_cost) if h_cost else 0.0
                     )
+
+                    # Update Buying Price in Allotment instead of Revenue in Trip
+                    trip_obj = TripdetailInfo.objects.get(id=tid)
+                    Vehicle_allotmentInfo.objects.filter(
+                        Q(va_enquirynumber=trip_obj.tr_enquirynumber),
+                        Q(va_vehiclenumber__vm_registrationnumber__iexact=trip_obj.tr_vehiclenumber) | 
+                        Q(va_vehiclenumber_mkt__iexact=trip_obj.tr_vehiclenumber)
+                    ).update(va_specialbuy=float(t_cost) if t_cost else 0.0)
 
             messages.success(request, "Market Bill updated successfully.")
             return redirect('market_bill_list')

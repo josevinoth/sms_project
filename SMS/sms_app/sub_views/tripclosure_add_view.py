@@ -220,9 +220,9 @@ def tripclosure_list_ajax(request):
 
     # Branch filter
     if branch == 'MAA':
-        qs = qs.filter(tr_consignmentnumber__co_consignmentnumber__istartswith='MAA')
+        qs = qs.filter(tr_consignmentnumber__co_consignmentnumber__icontains='MAA')
     elif branch == 'BLR':
-        qs = qs.filter(tr_consignmentnumber__co_consignmentnumber__istartswith='BLR')
+        qs = qs.filter(tr_consignmentnumber__co_consignmentnumber__icontains='BLR')
 
     if selected_status:
         qs = qs.filter(tc_financestatus_id=selected_status)

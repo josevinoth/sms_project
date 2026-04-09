@@ -223,7 +223,12 @@
                                 <td>{{ trip.from_location }}</td>
                                 <td>{{ trip.to_location }}</td>
                                 <td>{{ trip.trip_date|default:"" }}</td>
-                                <td class="trip-cost-cell">{{ trip.special_cost|floatformat:2 }}</td>
+                                <td class="trip-cost-cell">
+                                    <input type="number" name="trip_cost_{{ trip.id }}"
+                                        class="form-control form-control-sm trip-cost-input"
+                                        value="{{ trip.special_cost|default:0 }}" min="0" step="0.01"
+                                        style="width: 100px;">
+                                </td>
                                 <td>
                                     <input type="number" name="loading_cost_{{ trip.id }}"
                                         class="form-control form-control-sm loading-cost-input"
@@ -339,7 +344,8 @@
             row.querySelector(".halting-cost-text").textContent = haltingCost.toFixed(2);
             row.querySelector(".halting-cost-hidden").value = haltingCost.toFixed(2);
 
-            const special = parseFloat(cb.dataset.special) || 0;
+            const tripInput = row.querySelector(".trip-cost-input");
+            const special = parseFloat(tripInput?.value) || 0;
             totalTrip += special;
             totalLoading += loadingCost;
             totalUnloading += unloadingCost;
@@ -364,6 +370,7 @@
         if (e.target.classList.contains("halting-days-input") ||
             e.target.classList.contains("parking-cost-input") ||
             e.target.classList.contains("loading-cost-input") ||
+            e.target.classList.contains("trip-cost-input") ||
             e.target.classList.contains("unloading-cost-input")) {
             updateTotals();
         }
@@ -460,7 +467,10 @@
                     <td>${trip.from_location}</td>
                     <td>${trip.to_location}</td>
                     <td>${trip.trip_date}</td>
-                    <td class="trip-cost-cell">${trip.special_cost.toFixed(2)}</td>
+                    <td class="trip-cost-cell">
+                        <input type="number" name="trip_cost_${trip.id}" class="form-control form-control-sm trip-cost-input" 
+                            value="${trip.special_cost.toFixed(2)}" min="0" step="0.01" style="width: 100px;">
+                    </td>
                     <td>
                         <input type="number" name="loading_cost_${trip.id}" class="form-control form-control-sm loading-cost-input" 
                             value="${trip.loading_cost.toFixed(2)}" min="0" step="0.01" style="width: 80px;">
