@@ -134,7 +134,7 @@ DRIVERS_ADVANCE_HEADERS = [
 ]
 
 INVOICE_PENDING_HEADERS = [
-    "Branch", "Customer Short Name", "Planning Date", "Cnote No", "From", "To", "Dept",
+    "SNo", "Branch", "Customer Short Name", "Planning Date", "Cnote No", "From", "To", "Dept",
     "Veh No", "Veh Type", "Consignee", "Reference No", "HAWB No", "No. of Pcs", "Weight",
     "Transportation Charges", "Toll Charges", "Parking Charges", "Loading Charges", "Unloading Charges",
     "Halting Charges", "Docket Charges", "Weighment Charges", "Handling Charges", "Cancellation Charges",
@@ -1081,6 +1081,7 @@ def invoice_pending_report_view(request):
     selected_year = request.POST.get('year')
     from_loc_id = request.POST.get('from_location')
     to_loc_id = request.POST.get('to_location')
+    branch_id = request.POST.get('branch')
 
     # -----------------------------
     # Trips already invoiced
@@ -1123,6 +1124,9 @@ def invoice_pending_report_view(request):
     trips = TripdetailInfo.objects.filter(
         tr_category_id=1,
         tc_financestatus_id=7
+    ).filter(
+        Q(tr_enquirynumber__en_customername__cu_name__icontains='MAA') |
+        Q(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
     ).exclude(
         tr_consignmentnumber__isnull=True
     ).exclude(
@@ -1191,6 +1195,12 @@ def invoice_pending_report_view(request):
     if to_loc_id:
         trips = trips.filter(tr_reportedlocation_id=to_loc_id)
 
+    if branch_id:
+        if branch_id == '2': # MAA
+            trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
+        elif branch_id == '1': # BLR
+            trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
+
     trips = trips.order_by('-tr_created_at')
 
     # -----------------------------
@@ -1202,9 +1212,18 @@ def invoice_pending_report_view(request):
         cons = trip.tr_consignmentnumber
         goods = cons.cg_consignmentnumber.first() if cons else None
 
+        # 1. Branch (Fixed)
+        branch_name = "OTH"
+        cu_name = str(trip.tr_enquirynumber.en_customername if trip.tr_enquirynumber else "").upper()
+        if 'MAA' in cu_name: branch_name = 'MAA'
+        elif 'BLR' in cu_name: branch_name = 'BLR'
+        elif 'HYD' in cu_name: branch_name = 'HYD'
+        elif 'PNY' in cu_name: branch_name = 'PNY'
+        elif 'CJB' in cu_name: branch_name = 'CJB'
+        
         row = [
-            # 1. Branch (maps to Dept in Master List)
-            safe_str(trip.tr_enquirynumber.en_customerdepartment),
+            idx,
+            branch_name,
             # 2. Customer Short Name
             safe_str(trip.tr_enquirynumber.en_customername),
             # 3. Date
@@ -1292,6 +1311,8 @@ def invoice_pending_report_view(request):
         'selected_year': selected_year,
         'from_location': from_loc_id,
         'to_location': to_loc_id,
+        'branch_id': int(branch_id) if branch_id else None,
+        'all_branches': Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name'), # Only BLR and MAA
     }
 
     return render(request, "asset_mgt_app/invoice_pending_report.html", context)
