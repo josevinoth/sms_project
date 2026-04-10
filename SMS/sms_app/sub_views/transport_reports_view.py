@@ -3887,22 +3887,28 @@ def diesel_vs_revenue_report_view(request):
     )
     fuel_map = {item['ff_vehicle_num__vm_registrationnumber']: item for item in fuel_stats}
 
-    # Total KM aggregation per vehicle from trips for the selected period
+    # Total KM and Total LTR aggregation per vehicle from trips for the selected period
     km_stats_q = Q(tr_vehiclenumber__in=vehicle_numbers)
     if q_date:
         km_stats_q &= q_date
         
     v_km_map = {}
+    v_ltr_map = {}
     vehicle_trips_data = TripdetailInfo.objects.filter(km_stats_q).values('tr_vehiclenumber', 'tr_reportedkm', 'tr_reportedkm_delivery', 'tr_departedkm')
     for vtr in vehicle_trips_data:
         vno = vtr['tr_vehiclenumber']
         rep_km = safe_num(vtr['tr_reportedkm_delivery'] if vtr['tr_reportedkm_delivery'] else vtr['tr_reportedkm'])
         dep_km = safe_num(vtr['tr_departedkm'])
         vkm = max(0, rep_km - dep_km)
-        # Extreme bad data sanitization (When user leaves departed=0 and inputs lifetime odometer as reported)
+        # Extreme bad data sanitization
         if vkm > 15000:
             continue
         v_km_map[vno] = v_km_map.get(vno, 0) + vkm
+
+    # Fleet-wide statistics for fallback
+    total_fleet_cost = sum(item['total_cost'] for item in fuel_map.values() if item['total_cost'])
+    total_fleet_ltr = sum(item['total_ltr'] for item in fuel_map.values() if item['total_ltr'])
+    fleet_avg_price = (total_fleet_cost / total_fleet_ltr) if total_fleet_ltr > 0 else 96.0 # Fallback to 96 if no fleet data
 
     # Vehicle Master for fixed mileage
     vehicles = VehiclemasterInfo.objects.filter(vm_registrationnumber__in=vehicle_numbers).select_related('vm_vehiclemanufacturer', 'vm_vehiclemodel')
@@ -3993,24 +3999,45 @@ def diesel_vs_revenue_report_view(request):
         reported_km_val = trip.tr_reportedkm_delivery if trip.tr_reportedkm_delivery else trip.tr_reportedkm
         trip_km = max(0, safe_num(reported_km_val) - safe_num(trip.tr_departedkm))
 
-        # Stats for this vehicle in period
+        # --- Enhanced Diesel Calculation with Robust Fallbacks ---
         v_fuel = fuel_map.get(trip.tr_vehiclenumber, {'total_cost': 0, 'total_ltr': 0})
         v_total_fuel_cost = safe_num(v_fuel['total_cost'])
         v_total_ltr = safe_num(v_fuel['total_ltr'])
         v_total_km = v_km_map.get(trip.tr_vehiclenumber, 0)
-
-        # Formula: Diesel Expenses = Total Diesel expenses / Total KM run * trip run KM
-        if v_total_km > 0:
-            assigned_diesel_expense = (v_total_fuel_cost / v_total_km) * trip_km
+        
+        # 1. Price per Ltr (Vehicle specific -> Fleet avg)
+        price_per_ltr = (v_total_fuel_cost / v_total_ltr) if v_total_ltr > 0 else fleet_avg_price
+        
+        # 2. Mileage Determination (Actual -> Fixed -> Default Type-based)
+        actual_mileage = (v_total_km / v_total_ltr) if v_total_ltr > 0 else 0
+        vm = vehicle_master_map.get(trip.tr_vehiclenumber)
+        fixed_mileage = safe_num(vm.vm_millage) if vm else 0
+        
+        # Default mileage by vehicle type (fallback of fallbacks)
+        vt_str = str(trip.tr_vehicletype).upper()
+        default_mileage = 4.5 # Default for unknown heavy trucks
+        if "ACE" in vt_str: default_mileage = 14.0
+        elif "407" in vt_str: default_mileage = 9.0
+        elif "10FT" in vt_str: default_mileage = 8.0
+        elif "14FT" in vt_str: default_mileage = 7.0
+        elif "17FT" in vt_str: default_mileage = 6.0
+        elif "19FT" in vt_str: default_mileage = 5.5
+        elif "20FT" in vt_str: default_mileage = 4.5
+        elif "22FT" in vt_str: default_mileage = 4.0
+        elif "24FT" in vt_str: default_mileage = 4.0
+        elif "32FT" in vt_str: default_mileage = 3.5
+        
+        # Logic: Use actual if realistic, else fixed, else default
+        # Realistic range for trucks/commercial vehicles: 2.5 to 18 km/ltr
+        if 2.5 <= actual_mileage <= 18.0:
+            eff_mileage = actual_mileage
+        elif fixed_mileage > 0:
+            eff_mileage = fixed_mileage
         else:
-            assigned_diesel_expense = 0
-
-        # Formula: Actual Mileage = Total KM / Total Ltr (for the month)
-        # Note: mileage is usually identical for all trips of the same vehicle in that period
-        if v_total_ltr > 0:
-            actual_mileage = v_total_km / v_total_ltr
-        else:
-            actual_mileage = 0
+            eff_mileage = default_mileage
+            
+        assigned_diesel_expense = (price_per_ltr / eff_mileage) * trip_km
+        actual_mileage_display = actual_mileage if actual_mileage > 0 else eff_mileage
 
         diesel_vs_revenue_pct = (assigned_diesel_expense / revenue * 100) if revenue > 0 else 0
 
@@ -4036,7 +4063,7 @@ def diesel_vs_revenue_report_view(request):
             round(assigned_diesel_expense, 2),
             round(revenue, 2),
             f"{diesel_vs_revenue_pct:.2f}%",
-            f"{actual_mileage:.2f}"
+            f"{actual_mileage_display:.2f}"
         ])
         counter += 1
 
