@@ -46,9 +46,9 @@
 
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text">Bill no</span>
+                                <span class="input-group-text">Bill no <span class="text-danger ml-1">*</span></span>
                             </div>
-                            {% render_field form.ab_bill_no class="form-control" placeholder="Enter Bill No" %}
+                            {% render_field form.ab_bill_no class="form-control" placeholder="Enter Bill No" required="required" %}
                         </div>
 
                         <div class="input-group input-group-sm mb-3">

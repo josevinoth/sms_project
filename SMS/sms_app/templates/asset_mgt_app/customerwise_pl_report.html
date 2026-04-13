@@ -1,4 +1,4 @@
-﻿{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% load static %}
 {% block content %}
@@ -25,13 +25,13 @@
     <!-- From Date -->
     <div class="col-md-2">
         <label class="form-label fw-bold">From Date</label>
-        <input type="date" name="from_date" class="form-control" value="{{ from_date|default_if_none:'' }}">
+        <input type="date" id="fromDate" name="from_date" class="form-control" value="{{ from_date|default_if_none:'' }}">
     </div>
 
     <!-- To Date -->
     <div class="col-md-2">
         <label class="form-label fw-bold">To Date</label>
-        <input type="date" name="to_date" class="form-control" value="{{ to_date|default_if_none:'' }}">
+        <input type="date" id="toDate" name="to_date" class="form-control" value="{{ to_date|default_if_none:'' }}">
     </div>
 
     <!-- Branch -->
@@ -58,7 +58,7 @@
 
     <!-- Customer Name -->
     <div class="col-md-2">
-        <label class="form-label fw-bold">Customer Name</label>
+        <label class="form-label fw-bold">Customer</label>
         <select name="customer" class="form-select form-control" id="customerSelect">
             <option value="">-- All Customers --</option>
             {% for c in all_customers %}
@@ -122,16 +122,29 @@
 <script>
     $(document).ready(function () {
         var table = $('#customerwise_pl_report_table').DataTable({
-            scrollX: true,
-            scrollCollapse: true,
-            autoWidth: false,
-            dom: 'lBfrtip',
-            lengthMenu: [
+            "processing": true,
+            "serverSide": true,
+            "scrollX": true,
+            "scrollCollapse": true,
+            "autoWidth": false,
+            "ajax": {
+                "url": "{% url 'customerwise_pl_report_ajax' %}",
+                "type": "GET",
+                "data": function (d) {
+                    d.branch = $('#branchSelect').val();
+                    d.trip_category = $('#tripCategorySelect').val();
+                    d.customer = $('#customerSelect').val();
+                    d.from_date = $('#fromDate').val();
+                    d.to_date = $('#toDate').val();
+                }
+            },
+            "dom": 'lBfrtip',
+            "lengthMenu": [
                 [10, 25, 50, 100, -1],
                 [10, 25, 50, 100, "All"]
             ],
-            pageLength: 10,
-            buttons: [
+            "pageLength": 10,
+            "buttons": [
                 'copy',
                 'csv',
                 {
@@ -163,7 +176,13 @@
                     }
                 }
             ],
-            order: [[0, 'asc']]
+            "order": [[0, 'asc']]
+        });
+
+        // Custom Filter trigger
+        $('form').on('submit', function(e) {
+            e.preventDefault();
+            table.draw();
         });
 
         // Recalculate column widths on window resize and zoom

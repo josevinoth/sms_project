@@ -27,6 +27,17 @@
         <label class="form-label fw-bold">Customer Name</label>
         {% render_field form.dmr_customer class="form-control" value=customer_id %}
     </div>
+    
+    <!-- Branch -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Branch</label>
+        <select name="branch" class="form-select form-control" id="branchSelect">
+            <option value="">-- All Branches --</option>
+            {% for b in all_branches %}
+            <option value="{{ b.id }}" {% if branch_id == b.id %}selected{% endif %}>{{ b.loc_name|cut:"BVM " }}</option>
+            {% endfor %}
+        </select>
+    </div>
 
 
     <!-- Department -->

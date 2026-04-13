@@ -75,16 +75,16 @@
 
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text label-width">Bill no</span>
+                                <span class="input-group-text label-width">Bill no <span class="text-danger ml-1">*</span></span>
                             </div>
-                            {% render_field form.mnb_bill_no class="form-control" %}
+                            {% render_field form.mnb_bill_no class="form-control" required="required" %}
                         </div>
 
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text label-width">Bill Date</span>
+                                <span class="input-group-text label-width">Bill Date <span class="text-danger ml-1">*</span></span>
                             </div>
-                            {% render_field form.mnb_bill_date class="form-control" type="date" %}
+                            {% render_field form.mnb_bill_date class="form-control" type="date" required="required" %}
                         </div>
 
                         <div class="input-group input-group-sm mb-3">
@@ -99,9 +99,9 @@
                     <div class="col-12 col-md-6">
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text label-width">Bill Amount (Taxable)</span>
+                                <span class="input-group-text label-width">Bill Amount (Taxable) <span class="text-danger ml-1">*</span></span>
                             </div>
-                            {% render_field form.mnb_bill_amount_taxable class="form-control" id="id_mnb_bill_amount_taxable" %}
+                            {% render_field form.mnb_bill_amount_taxable class="form-control" id="id_mnb_bill_amount_taxable" required="required" %}
                         </div>
 
                         <div class="input-group input-group-sm mb-3">
