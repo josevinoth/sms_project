@@ -608,9 +608,17 @@
 			loadingTimeDiv.style.display = "flex";
 			unloadingTimeDiv.style.display = "flex";
 
-			// Make fields mandatory
-			document.getElementById("tr_loading_time").required = true;
-			document.getElementById("tr_unloading_time").required = true;
+			// Make fields mandatory only if the status is NOT 'Awaiting Approval' (ID 8)
+			let tripStatusVal = document.getElementById('tc_financestatus').value;
+			let isAwaitingVal = (tripStatusVal === "8" || tripStatusVal === "");
+
+			if (isAwaitingVal) {
+				document.getElementById("tr_loading_time").required = false;
+				document.getElementById("tr_unloading_time").required = false;
+			} else {
+				document.getElementById("tr_loading_time").required = true;
+				document.getElementById("tr_unloading_time").required = true;
+			}
 		}
 
 	}
@@ -659,13 +667,28 @@
 		} else {
 			$(".empty-field").show();   // ✅ Show all for normal trip
 
+			let tripStatusVal = document.getElementById('tc_financestatus').value;
+			let isAwaitingVal = (tripStatusVal === "8" || tripStatusVal === "");
+
 			emptyDateFields.forEach(id => {
 				let el = document.getElementById(id);
-				if (el && !el.disabled) el.required = true;
+				if (el && !el.disabled) {
+					if (isAwaitingVal) {
+						el.required = false;
+					} else {
+						el.required = true;
+					}
+				}
 			});
 			otherDateFields.forEach(id => {
 				let el = document.getElementById(id);
-				if (el && !el.disabled) el.required = true;
+				if (el && !el.disabled) {
+					if (isAwaitingVal) {
+						el.required = false;
+					} else {
+						el.required = true;
+					}
+				}
 			});
 		}
 	}

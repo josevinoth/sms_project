@@ -312,9 +312,9 @@
                     {% endif %}
 
                     <!-- 3. Loading Dock Out -->
-                    {% if trip.tr_dock_in_time %}
+                    {% if trip.tr_dock_out_time %}
                     <button type="button" class="action-btn completed-step">
-                        <i class="fas fa-check"></i> Loading Dock Out ({{ trip.tr_dock_in_time|date:"H:i" }})
+                        <i class="fas fa-check"></i> Loading Dock Out ({{ trip.tr_dock_out_time|date:"H:i" }})
                     </button>
                     {% else %}
                     <button type="submit" name="action" value="loading_dock_out" class="action-btn btn-danger" {{
@@ -333,8 +333,9 @@
                     {% else %}
                     <button type="button"
                         onclick="submitWithKM('vehicle_started', 'Enter Vehicle Started KM (Departing Origin):')"
-                        class="action-btn btn-primary" {{ trip.tr_dock_in_time|yesno:",disabled" }}
-                        style="{{ trip.tr_dock_in_time|yesno:',opacity: 0.5; pointer-events: none;' }}">
+                        class="action-btn btn-primary" 
+                        {% if trip.tr_dock_out_time and trip.tc_financestatus_id == 1 %}{% else %}disabled{% endif %}
+                        style="{% if trip.tr_dock_out_time and trip.tc_financestatus_id == 1 %}{% else %}opacity: 0.5; pointer-events: none;{% endif %}">
                         <i class="fas fa-truck"></i> Vehicle Started
                     </button>
                     {% endif %}
@@ -351,8 +352,9 @@
                     {% else %}
                     <button type="button"
                         onclick="submitWithKM('vehicle_reported_unloading', 'Enter Vehicle Reported KM (Destination Arrival):')"
-                        class="action-btn btn-primary" {{ trip.tr_departeddate|yesno:",disabled" }}
-                        style="{{ trip.tr_departeddate|yesno:',opacity: 0.5; pointer-events: none;' }}">
+                        class="action-btn btn-primary" 
+                        {% if trip.tr_departeddate and trip.tc_financestatus_id == 1 %}{% else %}disabled{% endif %}
+                        style="{% if trip.tr_departeddate and trip.tc_financestatus_id == 1 %}{% else %}opacity: 0.5; pointer-events: none;{% endif %}">
                         <i class="fas fa-map-marker-alt"></i> Vehicle Arrived
                     </button>
                     {% endif %}
@@ -363,9 +365,9 @@
                         <i class="fas fa-check"></i> Unloading Dock In ({{ trip.tr_departeddate_delivery|date:"H:i" }})
                     </button>
                     {% else %}
-                    <button type="submit" name="action" value="unloading_dock_in" class="action-btn btn-success" {{
-                        trip.tr_reporteddate|yesno:",disabled" }}
-                        style="{{ trip.tr_reporteddate|yesno:',opacity: 0.5; pointer-events: none;' }}">
+                    <button type="submit" name="action" value="unloading_dock_in" class="action-btn btn-success" 
+                        {% if trip.tr_reporteddate and trip.tc_financestatus_id == 1 %}{% else %}disabled{% endif %}
+                        style="{% if trip.tr_reporteddate and trip.tc_financestatus_id == 1 %}{% else %}opacity: 0.5; pointer-events: none;{% endif %}">
                         <i class="fas fa-sign-in-alt"></i> Unloading Dock In
                     </button>
                     {% endif %}
@@ -376,9 +378,9 @@
                         <i class="fas fa-check"></i> Unloading Dock Out ({{ trip.tr_unloading_time|date:"H:i" }})
                     </button>
                     {% else %}
-                    <button type="submit" name="action" value="unloading_dock_out" class="action-btn btn-danger" {{
-                        trip.tr_departeddate_delivery|yesno:",disabled" }}
-                        style="{{ trip.tr_departeddate_delivery|yesno:',opacity: 0.5; pointer-events: none;' }}">
+                    <button type="submit" name="action" value="unloading_dock_out" class="action-btn btn-danger" 
+                        {% if trip.tr_departeddate_delivery and trip.tc_financestatus_id == 1 %}{% else %}disabled{% endif %}
+                        style="{% if trip.tr_departeddate_delivery and trip.tc_financestatus_id == 1 %}{% else %}opacity: 0.5; pointer-events: none;{% endif %}">
                         <i class="fas fa-sign-out-alt"></i> Unloading Dock Out
                     </button>
                     {% endif %}
@@ -392,8 +394,9 @@
                     {% else %}
                     <button type="button"
                         onclick="submitWithKM('vehicle_started_unloading', 'Enter Vehicle Started KM (Destination Release):')"
-                        class="action-btn btn-primary" {{ trip.tr_unloading_time|yesno:",disabled" }}
-                        style="{{ trip.tr_unloading_time|yesno:',opacity: 0.5; pointer-events: none;' }}">
+                        class="action-btn btn-primary" 
+                        {% if trip.tr_unloading_time and trip.tc_financestatus_id == 1 %}{% else %}disabled{% endif %}
+                        style="{% if trip.tr_unloading_time and trip.tc_financestatus_id == 1 %}{% else %}opacity: 0.5; pointer-events: none;{% endif %}">
                         <i class="fas fa-truck-moving"></i> Vehicle Released
                     </button>
                     {% endif %}
