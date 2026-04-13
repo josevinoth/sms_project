@@ -9,9 +9,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
 from ..forms import TripclosurefilesForm,TripclosureaddForm
-from ..models import RtratemasterInfo,User_extInfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,Tripstatusinfo
+from ..models import RtratemasterInfo,User_extInfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,Tripstatusinfo, Vehicle_allotmentInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.db.models import Q
 
 from django.http import JsonResponse
 from ..sub_models.haltingcharges_mod import Haltingcharges
@@ -113,6 +114,16 @@ def tripclosure_add(request,tripclosure_id=0):
                 else None
             )
             status_list = list(Tripstatusinfo.objects.filter(id__in=[4,5,6,7]))
+
+            # Fetch Sell value from allotment
+            allotment = Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber=trip.tr_enquirynumber
+            ).filter(
+                Q(va_vehiclenumber__vm_registrationnumber=trip.tr_vehiclenumber) |
+                Q(va_vehiclenumber_mkt=trip.tr_vehiclenumber)
+            ).first()
+            va_sale = allotment.va_sale if allotment else 0
+
             context = {
                 'tripclosure_form': tripclosure_form,
                 'tripclosurefiles_form': tripclosurefiles_form,
@@ -124,6 +135,7 @@ def tripclosure_add(request,tripclosure_id=0):
                 'status_list': status_list,
                 'status_selected': status_selected,
                 'tripclosure_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num),
+                'va_sale': va_sale,
             }
         return render(request, "asset_mgt_app/tripclosure_add.html", context)
     else:
