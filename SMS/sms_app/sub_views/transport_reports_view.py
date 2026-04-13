@@ -37,7 +37,17 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill):
     tc_loadingcost = (safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if getattr(trip, 'tc_loadingcost_check', True) else 0.0))
     tc_unloadingcost = (safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if getattr(trip, 'tc_unloadingcost_check', True) else 0.0))
     tc_weighmentcost = (safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if getattr(trip, 'tc_weighmentcost_check', True) else 0.0))
-    tc_haltingcost = (safe_num(inv.ti_halting_charges) if inv else ((safe_num(trip.tc_haltingcost) if getattr(trip, 'tc_haltingcost_check', True) else 0) + (safe_num(trip.tc_total_halting_cost) if getattr(trip, 'tc_total_halting_cost_check', True) else 0)))
+    # Use total halting cost if checked, otherwise calculate from rate if checked. Priority to Invoice if available.
+    halting_days = safe_num(trip.tc_no_of_days_halting)
+    if inv:
+        tc_haltingcost = safe_num(inv.ti_halting_charges)
+    elif getattr(trip, 'tc_total_halting_cost_check', False):
+        tc_haltingcost = safe_num(trip.tc_total_halting_cost)
+    elif getattr(trip, 'tc_haltingcost_check', False):
+        tc_haltingcost = safe_num(trip.tc_haltingcost) * halting_days
+    else:
+        tc_haltingcost = 0.0
+
     tc_handlingcost = (safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if getattr(trip, 'tc_handlingcost_check', True) else 0.0))
     tc_parkingcost = (safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if getattr(trip, 'tc_parkingcost_check', True) else 0.0))
     tc_rtocost = safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0
@@ -176,7 +186,7 @@ WHATSAPP_DELIVERY_STATUS_HEADERS = [
 ]
 
 HALTING_REPORT_HEADERS = [
-    "S.No", "Branch", "DAte", "Vehicle No", "Veh Type", "Customer Name", "Dept", "Consignor", "Consignee", "Cnote No",
+    "S.No", "Branch", "Date", "Vehicle No", "Veh Type", "Customer Name", "Dept", "Consignor", "Consignee", "Cnote No",
     "Vehicle reported date& time at loading point", "Vehicle started date & time at Unloading Point", "Time Taken",
     "Halting days as per billing", "Halting Charges as per Billing", "Remarks"
 ]
@@ -2825,7 +2835,14 @@ def own_vehicle_pl_report_view(request):
         selling_unloading = (safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if getattr(trip, 'tc_unloadingcost_check', True) else 0.0))
         selling_weighment = (safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if getattr(trip, 'tc_weighmentcost_check', True) else 0.0))
         selling_handling = (safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if getattr(trip, 'tc_handlingcost_check', True) else 0.0))
-        selling_halting = (safe_num(inv.ti_halting_charges) if inv else (safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost) if getattr(trip, 'tc_haltingcost_check', True) or getattr(trip, 'tc_total_halting_cost_check', True) else 0.0))
+        halting_days = safe_num(trip.tc_no_of_days_halting)
+        if inv:
+            selling_halting = safe_num(inv.ti_halting_charges)
+        elif getattr(trip, 'tc_haltingcost_check', False) or getattr(trip, 'tc_total_halting_cost_check', False):
+            selling_halting = safe_num(trip.tc_haltingcost) * halting_days
+        else:
+            selling_halting = 0.0
+
         selling_supervisor = (safe_num(trip.tc_supervisorcost) if getattr(trip, 'tc_supervisorcost_check', True) else 0.0)
         selling_rto = (safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0)
         selling_beta = (safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_check', True) else 0.0)
@@ -2916,7 +2933,8 @@ def own_vehicle_pl_report_view(request):
             safe_num(trip.tc_unloadingcost),
             safe_num(trip.tc_weighmentcost),
             safe_num(trip.tc_handlingcost),
-            safe_num(trip.tc_haltingcost) + safe_num(trip.tc_total_halting_cost),
+            safe_num(trip.tc_haltingcost) * safe_num(trip.tc_no_of_days_halting),
+
             selling_total,
             driver_salary,
             fuel_expense,
@@ -3238,8 +3256,8 @@ def halting_report_view(request):
     branch_id = request.POST.get('branch')
     vehicle_source_id = request.POST.get('vehicle_source')
     
-    # Base Query
-    trips = TripdetailInfo.objects.all().select_related(
+    # Base Query - Filtered for Business trips only (ID 1)
+    trips = TripdetailInfo.objects.filter(tr_category_id=1).select_related(
         'tr_enquirynumber', 'tr_vehicletype', 'tr_consignmentnumber', 'tr_vehiclesource'
     )
     
@@ -3384,7 +3402,12 @@ def halting_report_view(request):
         time_taken = _duration_str(veh_reported_loading, veh_started_unloading)
 
         halting_days = int(safe_num(trip.tc_no_of_days_halting))
-        selling_halting = (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0)
+        # Use rate * days if either check is enabled, prioritizing what the user edited in the rate field.
+        if trip.tc_haltingcost_check or trip.tc_total_halting_cost_check:
+            selling_halting = safe_num(trip.tc_haltingcost) * safe_num(trip.tc_no_of_days_halting)
+        else:
+            selling_halting = 0
+
 
         row = [
             idx, branch, date_val, veh_no, veh_type, customer, dept,
