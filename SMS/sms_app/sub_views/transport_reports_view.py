@@ -176,10 +176,9 @@ WHATSAPP_DELIVERY_STATUS_HEADERS = [
 ]
 
 HALTING_REPORT_HEADERS = [
-    "SNo", "Branch", "Date", "VehicleNo", "VehicleType", "Customer", "Department",
-    "Consignor", "Consignee", "C-Note",
-    "Halting Start", "Halting End", "Halting Days",
-    "Halting Charges (As Per Agreement)", "Halting Charges (As Per Billing)"
+    "S.No", "Branch", "DAte", "Vehicle No", "Veh Type", "Customer Name", "Dept", "Consignor", "Consignee", "Cnote No",
+    "Vehicle reported date& time at loading point", "Vehicle started date & time at Unloading Point", "Time Taken",
+    "Halting days as per billing", "Halting Charges as per Billing", "Remarks"
 ]
 
 CLAIM_PENDING_HEADERS = [
@@ -3241,9 +3240,7 @@ def halting_report_view(request):
     
     # Base Query
     trips = TripdetailInfo.objects.all().select_related(
-        'tr_enquirynumber', 'tr_enquirynumber__en_customername', 'tr_enquirynumber__en_customerdepartment',
-        'tr_vehicletype', 'tr_departedlocation', 'tr_reportedlocation',
-        'tr_consignmentnumber', 'tr_vehiclesource'
+        'tr_enquirynumber', 'tr_vehicletype', 'tr_consignmentnumber', 'tr_vehiclesource'
     )
     
     if customer_id:
@@ -3259,7 +3256,14 @@ def halting_report_view(request):
         )
 
     if branch_id:
-        trips = trips.filter(tr_enquirynumber__en_branch_id=branch_id)
+        try:
+            b_id = int(branch_id)
+            if b_id == 1: # Bangalore
+                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
+            elif b_id == 2: # Chennai
+                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
+        except (ValueError, TypeError):
+            pass
 
     if vehicle_source_id:
         trips = trips.filter(tr_vehiclesource_id=vehicle_source_id)
@@ -3277,17 +3281,17 @@ def halting_report_view(request):
             Q(tr_created_at__year=selected_year)
         )
             
-    # --- PRE-FETCH Logic (Harmonized) ---
+    # --- Optimized PRE-FETCH Logic ---
     trips_list = list(trips)
     trip_id_to_pk = {t.id: t.id for t in trips_list}
     trip_num_to_pk = {str(t.tr_tripnumber).strip().upper(): t.id for t in trips_list if t.tr_tripnumber}
     all_query_ids = [str(t.id) for t in trips_list] + [str(t.tr_tripnumber).strip() for t in trips_list if t.tr_tripnumber] + \
                     [str(t.tr_tripnumber).strip().upper() for t in trips_list if t.tr_tripnumber]
 
-    invoices = TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_id_to_pk.keys())
-    invoice_obj_map = {i.ti_trip_id: i for i in invoices}
-
-    expenses = Driverexpense.objects.filter(trip_number__in=all_query_ids).select_related('de_expense_type')
+    # Fetch Expenses for Halting
+    expenses = Driverexpense.objects.filter(trip_number__in=all_query_ids).select_related('de_expense_type').only(
+        'trip_number', 'de_expense_type__expense_type', 'de_total_cost'
+    )
     expense_map = {}
     for e in expenses:
         t_id = None
@@ -3295,85 +3299,24 @@ def halting_report_view(request):
         if search_key in trip_num_to_pk:
             t_id = trip_num_to_pk[search_key]
         elif search_key.isdigit():
-            t_id = int(search_key)
+            try: t_id = int(search_key)
+            except: t_id = None
+        
         if t_id and t_id in trip_id_to_pk:
-            expense_map.setdefault(t_id, []).append(e)
-
-    all_bills = MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost')
-    bill_no_map = {}
-    for b in all_bills:
-        if b.mb_selected_trips:
-            ids = [tid.strip() for tid in b.mb_selected_trips.split(',') if tid.strip()]
-            for tid in ids:
-                try: bill_no_map[int(tid)] = b
-                except: pass
-
-    attached_bill_map = {}
-    all_attached_bills = AttachedBillInfo.objects.all().only('ab_bill_no', 'ab_selected_trips', 'ab_buy_cost', 'ab_total_km_run')
-    for b in all_attached_bills:
-        if b.ab_selected_trips:
-            ids = [tid.strip() for tid in b.ab_selected_trips.split(',') if tid.strip()]
-            for tid in ids:
-                try: attached_bill_map[int(tid)] = b
-                except: pass
-
-    va_map = {
-        va.va_enquirynumber_id: va
-        for va in Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=[t.tr_enquirynumber_id for t in trips_list if t.tr_enquirynumber_id]).select_related('va_vendor')
-    }
-
-    vendor_ids = set(a.va_vendor_id for a in va_map.values() if a.va_vendor_id)
-    rates = VendorratemasterInfo1.objects.filter(vr1_vendor_id__in=vendor_ids).values(
-        'vr1_fromlocation_id', 'vr1_tolocation_id', 'vr1_vehicletype_id', 'vr1_vendor_id', 'vr1_rate'
-    )
-    rate_map = {
-        (r['vr1_fromlocation_id'], r['vr1_tolocation_id'], r['vr1_vehicletype_id'], r['vr1_vendor_id']): r['vr1_rate']
-        for r in rates
-    }
-
-    paginator = Paginator(trips_list, 50)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    trip_ids = [t.id for t in page_obj]
-    # Filter valid consignment IDs (not None)
-    consignment_ids = [t.tr_consignmentnumber.id for t in page_obj if t.tr_consignmentnumber]
-
-    # Fetch Expenses for "Buying Halting"
-    # Create mappings for matching strings to IDs
-    trip_id_to_pk = {t.id: t.id for t in page_obj}
-    trip_num_to_pk = {t.tr_tripnumber: t.id for t in page_obj if t.tr_tripnumber}
-    all_query_ids = [str(t.id) for t in page_obj] + [t.tr_tripnumber for t in page_obj if t.tr_tripnumber]
-
-    expenses = Driverexpense.objects.filter(trip_number__in=all_query_ids).select_related('de_expense_type')
-    expense_map = {}
-    
-    for e in expenses:
-        t_id = None
-        if e.trip_number in trip_num_to_pk:
-            t_id = trip_num_to_pk[e.trip_number]
-        elif e.trip_number and str(e.trip_number).isdigit():
-            t_id = int(e.trip_number)
-            
-        if t_id and t_id in trip_id_to_pk:
-            if t_id not in expense_map:
-                expense_map[t_id] = 0.0
-            
-            # Check if expense is related to Halting
             if e.de_expense_type and 'halting' in str(e.de_expense_type).lower():
-                expense_map[t_id] += safe_num(e.de_total_cost)
-            
-    # Fetch Consignment Goods for Consignor/Consignee
+                expense_map[t_id] = expense_map.get(t_id, 0.0) + safe_num(e.de_total_cost)
+
+    # Fetch Consignment Goods
+    consignment_ids = [t.tr_consignmentnumber.id for t in trips_list if t.tr_consignmentnumber]
     goods = ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber_id__in=consignment_ids).select_related(
         'cg_consigner', 'cg_consignee'
-    ).order_by('id')
+    ).only('cg_consignmentnumber_id', 'cg_consigner__consigner_name', 'cg_consignee__consignee_name')
     
     goods_map = {}
     for g in goods:
         cid = g.cg_consignmentnumber_id
         if cid not in goods_map:
             goods_map[cid] = {"consignors": set(), "consignees": set()}
-            
         if g.cg_consigner:
             goods_map[cid]["consignors"].add(str(g.cg_consigner).strip())
         if g.cg_consignee:
@@ -3381,7 +3324,7 @@ def halting_report_view(request):
 
     data_rows = []
     
-    for idx, trip in enumerate(page_obj, start=(page_obj.start_index() if hasattr(page_obj, 'start_index') else 1)):
+    for idx, trip in enumerate(trips_list, start=1):
         
         # --- Basic Details ---
         branch = safe_str(trip.tr_enquirynumber.en_branch if hasattr(trip.tr_enquirynumber, 'en_branch') else '') 
@@ -3406,12 +3349,11 @@ def halting_report_view(request):
                     break
         if not trip_date:
             trip_date = next((d for d in dates if d), None)
-        date_val = trip_date.strftime("%d-%m-%Y") if trip_date else ""
+        date_val = timezone.localtime(trip_date).strftime("%d-%m-%Y") if trip_date else ""
         veh_no = safe_str(trip.tr_vehiclenumber)
         veh_type = safe_str(trip.tr_vehicletype)
         customer = safe_str(trip.tr_enquirynumber.en_customername)
         dept = safe_str(trip.tr_enquirynumber.en_customerdepartment)
-        vertical = safe_str(trip.tr_enquirynumber.en_unit if hasattr(trip.tr_enquirynumber, 'en_unit') else '')
         
         consignor = ""
         consignee = ""
@@ -3434,59 +3376,25 @@ def halting_report_view(request):
             cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper()
             branch = "Chennai" if cust_name.endswith("MAA") else ("Bangalore" if cust_name.endswith("BLR") else "")
             
-        # --- Halting ---
-        # Halting Start: Vehicle Reported at Loading (tr_departeddate_pickup)
-        # Halting End: Dock-In at Loading (tr_loading_time)
-        h_start = trip.tr_departeddate_pickup
-        h_end = trip.tr_loading_time
+        # --- Timing for Revised Report ---
+        # "Vehicle reported date& time at loading point" maps to tr_departeddate_pickup
+        # "Vehicle started date & time at Unloading Point" maps to tr_reporteddate_pickup
+        veh_reported_loading = trip.tr_departeddate_pickup
+        veh_started_unloading = trip.tr_reporteddate_pickup
+        time_taken = _duration_str(veh_reported_loading, veh_started_unloading)
 
-        halting_start_str = h_start.strftime("%d-%m-%Y %H:%M") if h_start else ""
-        halting_end_str = h_end.strftime("%d-%m-%Y %H:%M") if h_end else ""
-        halting_days = safe_num(trip.tc_no_of_days_halting)
-
-        buying_halting = expense_map.get(trip.id, 0.0)
+        halting_days = int(safe_num(trip.tc_no_of_days_halting))
         selling_halting = (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0)
-        diff = selling_halting - buying_halting
-
-        # --- Pickup ---
-        # Pickup Start: Dock-In at Loading (tr_loading_time)
-        # Pickup End: Dock-Out at Loading (tr_dock_out_time)
-        p_start = trip.tr_loading_time
-        p_end = trip.tr_dock_out_time
-        p_hrs = "0.0"
-        p_start_str = ""
-        p_end_str = ""
-
-        if p_start and p_end:
-            p_start_str = p_start.strftime("%d-%m-%Y %H:%M")
-            p_end_str = p_end.strftime("%d-%m-%Y %H:%M")
-            delta = p_end - p_start
-            p_hrs = f"{round(delta.total_seconds() / 3600, 2)}"
-        elif p_start:
-            p_start_str = p_start.strftime("%d-%m-%Y %H:%M")
-
-        # --- Delivery ---
-        # Delivery Start: Dock-In at Delivery (tr_departeddate_delivery)
-        # Delivery End: Dock-Out at Delivery (tr_unloading_time)
-        d_start = trip.tr_departeddate_delivery
-        d_end = trip.tr_unloading_time
-        d_hrs = "0.0"
-        d_start_str = ""
-        d_end_str = ""
-
-        if d_start and d_end:
-            d_start_str = d_start.strftime("%d-%m-%Y %H:%M")
-            d_end_str = d_end.strftime("%d-%m-%Y %H:%M")
-            delta = d_end - d_start
-            d_hrs = f"{round(delta.total_seconds() / 3600, 2)}"
-        elif d_start:
-             d_start_str = d_start.strftime("%d-%m-%Y %H:%M")
 
         row = [
             idx, branch, date_val, veh_no, veh_type, customer, dept,
             consignor, consignee, cnote,
-            halting_start_str, halting_end_str, halting_days,
-            buying_halting, selling_halting
+            timezone.localtime(veh_reported_loading).strftime("%d-%m-%Y %H:%M") if veh_reported_loading else "",
+            timezone.localtime(veh_started_unloading).strftime("%d-%m-%Y %H:%M") if veh_started_unloading else "",
+            time_taken,
+            halting_days,
+            selling_halting,
+            safe_str(trip.tr_remarks)
         ]
         data_rows.append(row)
         
@@ -3495,7 +3403,6 @@ def halting_report_view(request):
         'form': form,
         'headers': HALTING_REPORT_HEADERS,
         'data_rows': data_rows,
-        'page_obj': page_obj,
         'selected_month': selected_month,
         'selected_year': selected_year,
         'customer_id': customer_id,
