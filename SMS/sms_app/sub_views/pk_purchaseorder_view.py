@@ -1,11 +1,15 @@
+import json
+from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from ..forms import POdimensionForm,PkpurchaseorderForm
-from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkquotationsummaryInfo,PkcostingsummaryInfo
+from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkquotationsummaryInfo,PkcostingsummaryInfo, pk_stock_statusinfo, PkquotationInfo, PkcostingInfo, StatusList
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete,get_tracker_flags
+from django.db.models import Sum, Max
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
 @login_required(login_url='login_page')
 def purchaseorder_add(request, purchaseorder_id=0):
@@ -43,6 +47,19 @@ def purchaseorder_add(request, purchaseorder_id=0):
             purchaseorder = PkpurchaseorderInfo.objects.get(pk=purchaseorder_id)
             form = PkpurchaseorderForm(instance=purchaseorder)
             po_dimension_list = POdimension.objects.filter(pod_po_num=purchaseorder_id)
+            
+            # Calculate remaining qty for each dimension item
+            for pod in po_dimension_list:
+                jobbed_data = PkcostingInfo.objects.filter(
+                    ct_po_dimension=pod,
+                    ct_job_no__isnull=False
+                ).exclude(ct_job_no='').values('ct_job_no').annotate(
+                    job_qty=Max('ct_quantity_req')
+                ).aggregate(total=Sum('job_qty'))
+                
+                already_jobbed_qty = jobbed_data['total'] or 0
+                pod.remaining_qty = max(0, float(pod.pod_quantity) - float(already_jobbed_qty))
+
             # Safely get assessment num ID (handle None case)
             na_id = purchaseorder.po_assessment_num.id if purchaseorder.po_assessment_num else None
             
@@ -81,21 +98,12 @@ def purchaseorder_add(request, purchaseorder_id=0):
                     # Set updated_by from session (excluded from form)
                     instance.po_updated_by_id = user_id
 
-                    # Auto-generate sales_order_num
-                    last_po = PkpurchaseorderInfo.objects.filter(sales_order_num__startswith="25-26-MP-SO-").order_by('-id').first()
-                    last_num = 0
-                    if last_po and last_po.sales_order_num:
-                        try:
-                            last_num = int(last_po.sales_order_num.split("-")[-1])
-                        except ValueError:
-                            last_num = 0
-
-                    if last_num >= 9999:
-                        messages.error(request, 'Sales Order number limit (9999) reached.')
-                        return redirect(request.META['HTTP_REFERER'])
-
-                    next_num = str(last_num + 1).zfill(4)
-                    instance.sales_order_num = f"25-26-MP-SO-{next_num}"
+                    # Generate Sales Order number based on financial year (Branch specific)
+                    fy = get_financial_year()
+                    branch_id = get_session_branch_id(request)
+                    branch_code = get_branch_code(branch_id)
+                    prefix = f"{fy}_{branch_code}_PO_"
+                    instance.sales_order_num = generate_next_number(PkpurchaseorderInfo, 'sales_order_num', prefix, 6)
                     instance.save()
                     
                     # Set session variables for dimension insert/update after add
@@ -215,9 +223,12 @@ def po_dimension_add(request, po_dimension_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     purchaseorder_id=request.session.get('purchaseorder_id')
+    po = get_object_or_404(PkpurchaseorderInfo, id=purchaseorder_id)
+
     if request.method == "GET":
         if po_dimension_id == 0:
             form = POdimensionForm()
+            form.fields['pod_assess_num'].queryset = PkneedassessmentInfo.objects.filter(na_customer_name=po.po_customer_name)
             na_assessment_num_id = request.session.get('ses_na_id')
             context = {
                 'form': form,
@@ -229,6 +240,7 @@ def po_dimension_add(request, po_dimension_id=0):
         else:
             po_dimensioninfo = POdimension.objects.get(pk=po_dimension_id)
             form = POdimensionForm(instance=po_dimensioninfo)
+            form.fields['pod_assess_num'].queryset = PkneedassessmentInfo.objects.filter(na_customer_name=po.po_customer_name)
             context={
                 'form': form,
                 'first_name': first_name,
@@ -241,6 +253,8 @@ def po_dimension_add(request, po_dimension_id=0):
         else:
             dimension = get_object_or_404(POdimension, pk=po_dimension_id)
             form = POdimensionForm(request.POST, instance=dimension)
+        
+        form.fields['pod_assess_num'].queryset = PkneedassessmentInfo.objects.filter(na_customer_name=po.po_customer_name)
 
             # Check if form is valid
         if form.is_valid():
@@ -297,3 +311,167 @@ def pk_get_po_requirement_type(request):
     }
     print('Response data:', data)  # Log response data for debugging
     return JsonResponse(data)
+
+
+
+
+@login_required(login_url='login_page')
+def pk_create_batch_job(request):
+    """
+    Creates a new production job (Costing Summary) based on specific quantities
+    manually entered for items in a PO.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'GET not allowed'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        po_id = data.get('po_id')
+        items = data.get('items', [])
+
+        if not po_id or not items:
+            return JsonResponse({'success': False, 'message': 'Missing PO ID or items'}, status=400)
+
+        po = get_object_or_404(PkpurchaseorderInfo, id=po_id)
+        
+        # 1. Generate unique Job Number (e.g., 24-25_BLR_JOB-0001)
+        fy = get_financial_year()
+        branch_id = get_session_branch_id(request)
+        branch_code = get_branch_code(branch_id)
+        prefix = f"{fy}_{branch_code}_JOB_"
+        job_no = generate_next_number(PkcostingsummaryInfo, 'cs_job_no', prefix, 4)
+
+        # 2. Get WIP Status (id=6)
+        try:
+            wip_status = StatusList.objects.get(id=6)
+        except StatusList.DoesNotExist:
+            wip_status = None
+
+        # 3. Create the Costing Summary (The Job)
+        # Using the first item's assessment as the primary one for the summary
+        first_pod = POdimension.objects.get(id=items[0]['id'])
+        summary = PkcostingsummaryInfo.objects.create(
+            cs_customer_po=po,
+            cs_assessment_num=first_pod.pod_assess_num,
+            cs_customer_name=po.po_customer_name,
+            cs_customer_new_name=po.po_customer_new_name,
+            cs_status=wip_status,
+            cs_job_no=job_no,
+            cs_updated_by_id=request.session.get('ses_userID')
+        )
+
+        # 4. Get stock status (id=1)
+        try:
+            stock_status_instance = pk_stock_statusinfo.objects.get(id=1)
+        except pk_stock_statusinfo.DoesNotExist:
+            stock_status_instance = None
+
+        cloned_count = 0
+        for entry in items:
+            pod_id = entry['id']
+            job_qty = float(entry['qty'])
+            
+            pod = POdimension.objects.get(id=pod_id)
+            
+            # Backend Safety Check: Ensure we don't over-produce
+            # Correctly identify already jobbed qty by summing unique job releases
+            jobbed_data = PkcostingInfo.objects.filter(
+                ct_po_dimension=pod,
+                ct_job_no__isnull=False
+            ).exclude(ct_job_no='').values('ct_job_no').annotate(
+                job_qty=Max('ct_quantity_req')
+            ).aggregate(total=Sum('job_qty'))
+            
+            already_jobbed_qty = jobbed_data['total'] or 0
+            
+            if (float(already_jobbed_qty) + job_qty) > (float(pod.pod_quantity) + 0.001): # Allow small float margin
+                return JsonResponse({
+                    'success': False, 
+                    'message': f'Over-production for {pod.pod_item}. Remaining: {pod.pod_quantity - already_jobbed_qty}'
+                }, status=400)
+            
+            # Find matching quotations for this item's specific requirements (Nadimension)
+            quotations = PkquotationInfo.objects.filter(pkqt_requirement=pod.pod_nad)
+            
+            for q in quotations:
+                PkcostingInfo.objects.create(
+                    ct_cost_type=q.pkqt_cost_type,
+                    ct_stock_description=q.pkqt_stock_description,
+                    ct_width=q.pkqt_width,
+                    ct_height=q.pkqt_height,
+                    ct_cft=q.pkqt_cft,
+                    ct_rate=q.pkqt_rate,
+                    ct_days=q.pkqt_days,
+                    ct_total_cost=q.pkqt_total_cost,
+                    ct_quantity=q.pkqt_quantity,
+                    ct_size=q.pkqt_size,
+                    ct_uom=q.pkqt_uom,
+                    ct_assessment_num=q.pkqt_assessment_num,
+                    ct_length=q.pkqt_length,
+                    ct_stock_type=q.pkqt_stock_type,
+                    ct_stock_purchase_number=q.pkqt_stock_purchase_number,
+                    ct_item=q.pkqt_item,
+                    ct_itemdescription=q.pkqt_itemdescription,
+                    ct_requirement=q.pkqt_requirement,
+                    ct_requirement_size=q.pkqt_requirement_size,
+                    ct_width_req=q.pkqt_width_req,
+                    ct_height_req=q.pkqt_height_req,
+                    ct_length_req=q.pkqt_length_req,
+                    ct_quantity_req=job_qty,  # CRITICAL: Use the SPECIFIED JOB QUANTITY
+                    ct_sqrt_req=q.pkqt_sqrt_req,
+                    ct_stock_status=stock_status_instance,
+                    ct_customer_name=q.pkqt_customer_name,
+                    ct_customer_new_name=q.pkqt_customer_new_name2,
+                    ct_customer_po=po,
+                    ct_updated_by=request.user,
+                    ct_na_quantity=q.pkqt_na_quantity,
+                    ct_totalbox_cost=q.pkqt_totalbox_cost,
+                    ct_part_code=q.pkqt_part_code,
+                    ct_total_cft_display=q.pkqt_total_cft_display,
+                    ct_po_dimension=pod,
+                    ct_job_no=job_no  # Tag with unique job number
+                )
+                cloned_count += 1
+
+        return JsonResponse({
+            'success': True, 
+            'redirect_url': f'/SMS/costingsummary_update/{summary.id}'
+        })
+
+    except Exception as e:
+        print(f"Error in pk_create_batch_job: {str(e)}")
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@login_required(login_url='login_page')
+def pk_get_po_items_for_job(request):
+    po_id = request.GET.get('po_id')
+    if not po_id:
+        return JsonResponse({'success': False, 'message': 'PO ID is required.'}, status=400)
+    
+    # Fetch all dimension items for this PO
+    po_items = POdimension.objects.filter(pod_po_num_id=po_id)
+    
+    items_data = []
+    for item in po_items:
+        # Calculate already jobbed quantity by summing unique job releases
+        # We group by job_no and take one representative qty (Max) to avoid double counting 
+        # multiple specifications (e.g. Wood Base + Wood Lid) for the same job.
+        jobbed_data = PkcostingInfo.objects.filter(
+            ct_po_dimension=item,
+            ct_job_no__isnull=False
+        ).exclude(ct_job_no='').values('ct_job_no').annotate(
+            job_qty=Max('ct_quantity_req')
+        ).aggregate(total=Sum('job_qty'))
+        
+        already_jobbed_qty = jobbed_data['total'] or 0
+        remaining_qty = max(0, float(item.pod_quantity) - float(already_jobbed_qty))
+        
+        items_data.append({
+            'id': item.id,
+            'item_name': item.pod_item,
+            'ordered_qty': item.pod_quantity,
+            'already_jobbed_qty': float(already_jobbed_qty),
+            'remaining_qty': float(remaining_qty),
+        })
+    
+    return JsonResponse({'success': True, 'items': items_data})

@@ -26,8 +26,11 @@ class VehicleallotmentForm(forms.ModelForm):
         # OWN (1) or ATTACHED (2) - only check driver_name since driver_id is not a form field
         if vehicle_source and vehicle_source.id in [1, 2]:
             if not driver_name:
-                raise forms.ValidationError(
-                    "Driver Name is required for OWN and ATTACHED vehicles."
-                )
+                self.add_error('va_drivername', "Driver Name is required for OWN and ATTACHED vehicles.")
+
+        # MARKET (3) - check vendor
+        if vehicle_source and vehicle_source.id == 3:
+            if not cleaned_data.get("va_vendor"):
+                self.add_error('va_vendor', "Vendor Name is required for MARKET vehicles.")
 
         return cleaned_data

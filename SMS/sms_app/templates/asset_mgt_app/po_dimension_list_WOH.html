@@ -30,6 +30,7 @@
 			<th>Width</th>
 			<th>Height</th>
 			<th>Quantity</th>
+			<th class="text-primary">Remaining Qty</th>
 			<th>Updated On</th>
 			<th>Updated By</th>
 			<th>Edit</th>
@@ -49,6 +50,7 @@
 			<td> {{po_dimensioninfo.pod_width}}</td>
 			<td> {{po_dimensioninfo.pod_height}}</td>
 			<td> {{po_dimensioninfo.pod_quantity}}</td>
+			<td class="font-weight-bold text-primary"> {{po_dimensioninfo.remaining_qty|floatformat:2}}</td>
 			<td> {{po_dimensioninfo.pod_updated_at}}</td>
 			<td> {{po_dimensioninfo.pod_updated_by}}</td>
 			<td>

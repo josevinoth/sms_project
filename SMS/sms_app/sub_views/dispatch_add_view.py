@@ -23,6 +23,7 @@ from .send_department_email import send_department_email
 from ..forms import DispatchaddForm
 from django.contrib.auth.decorators import login_required
 from ..models import Check_in_out,Warehouse_goods_info,Dispatch_info,GoodsPartialDispatchInfo
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.contrib import messages
 import cv2
 import numpy as np
@@ -86,23 +87,18 @@ def dispatch_add(request, dispatch_id=0):
             dispatch_form = DispatchaddForm(request.POST)
 
             if dispatch_form.is_valid():
-                # Generate Random pre-Dispatch number
-                try:
-                    last_id = (Dispatch_info.objects.latest('id')).id
-                    # last_id = (Gatein_pre_info.objects.values_list('gatein_pre_number',flat=True)).last()
-                    dispatch_num_next = str('Dispatch_') + str(
-                        (int((Dispatch_info.objects.get(id=last_id).dispatch_num).replace('Dispatch_', '')) + 1))
-                    print(dispatch_num_next)
-                except ObjectDoesNotExist:
-                    dispatch_num_next = str('Dispatch_') + str(1000000)
-                dispatch_form.save()
+                # Generate Dispatch number based on financial year (Branch specific)
+                fy = get_financial_year()
+                branch_id = get_session_branch_id(request)
+                branch_code = get_branch_code(branch_id)
+                prefix = f"{fy}_{branch_code}_DSP_"
+                dispatch_num_next = generate_next_number(Dispatch_info, 'dispatch_num', prefix, 6)
+                instance = dispatch_form.save()
                 print("Form Saved")
-                last_id = (Dispatch_info.objects.latest('id')).id
-                Dispatch_info.objects.filter(id=last_id).update(dispatch_num=dispatch_num_next)
+                Dispatch_info.objects.filter(id=instance.id).update(dispatch_num=dispatch_num_next)
                 messages.success(request, 'Record Updated Successfully')
                 # sales_num = request.POST.get('s_sale_number')
-                dipstach_id = Dispatch_info.objects.get(dispatch_num=dispatch_num_next).id
-                return redirect('/SMS/dispatch_update/' + str(dipstach_id))
+                return redirect('/SMS/dispatch_update/' + str(instance.id))
                 # return redirect(request.META['HTTP_REFERER'])
             else:
                 print("Form Not Saved")

@@ -241,3 +241,6 @@ from .sub_models.vehicle_replacement_status_mod import Replacementstatus
 from .sub_models.customer_registration_mod import CustomerRegistrationInfo
 from .sub_models.maintenance_bill_mod import MaintenanceBillInfo
 from .sub_models.attached_bill_mod import AttachedBillInfo
+from .sub_models.trans_customer_claims_mod import TransCustomerClaimsInfo
+from .sub_models.charge_master_mod import ChargeMasterInfo
+from .sub_models.sale_enquiry_mod import SaleEnquiry

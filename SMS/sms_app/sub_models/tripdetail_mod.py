@@ -18,7 +18,7 @@ class Trip_category_info(models.Model):
 class TripdetailInfo(models.Model):
     tr_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.CASCADE, default='')
     tr_consignmentnumber = models.ForeignKey(ConsignmentdetailInfo, on_delete=models.CASCADE, null=True,blank=True)
-    tr_tripnumber = models.CharField(max_length=10,default = '',blank=True,null=True)
+    tr_tripnumber = models.CharField(max_length=30,default = '',blank=True,null=True)
     tr_vehiclesource = models.ForeignKey(OwnershipInfo, on_delete=models.CASCADE, default='')
     tr_vehicletype = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='',related_name='tr_vehicletype', db_column='tr_vehicletype')
     tr_vehicletype_placed = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='',related_name='tr_vehicletype_placed', db_column='tr_vehicletype_placed')
@@ -67,6 +67,22 @@ class TripdetailInfo(models.Model):
     tc_total_halting_cost = models.FloatField(default=0.0)
     tc_supervisorcost = models.FloatField(default=0.0)
     tc_cancellation = models.FloatField(default=0.0)
+
+    # Bill to Customer Checkboxes (Specifically for Trans Invoice)
+    tc_tripcost_check = models.BooleanField(default=False)
+    tc_parkingcost_check = models.BooleanField(default=False)
+    tc_tollcost_check = models.BooleanField(default=False)
+    tc_loadingcost_check = models.BooleanField(default=False)
+    tc_unloadingcost_check = models.BooleanField(default=False)
+    tc_weighmentcost_check = models.BooleanField(default=False)
+    tc_supervisorcost_check = models.BooleanField(default=False)
+    tc_handlingcost_check = models.BooleanField(default=False)
+    tc_haltingcost_check = models.BooleanField(default=False)
+    tc_total_halting_cost_check = models.BooleanField(default=False)
+    tc_rtocost_check = models.BooleanField(default=False)
+    tc_betacost_check = models.BooleanField(default=False)
+    tc_cancellation_check = models.BooleanField(default=False)
+
     tc_no_of_days_halting = models.IntegerField(null=True, blank=True,default=0)
     tc_pod = models.CharField(default=" ")
     tc_financestatus = models.ForeignKey(Tripstatusinfo, on_delete=models.CASCADE,blank=True,null=True)
@@ -83,7 +99,7 @@ class TripdetailInfo(models.Model):
     class Meta:
         ordering = ["tr_tripnumber"]
     def __str__(self):
-        return self.tr_tripnumber
+        return str(self.tr_tripnumber) if self.tr_tripnumber else "N/A"
 def trip_closure_directory_path(instance, filename):
 
     return 'Tripclosurefiles/{0}/{1}'.format(instance.tcf_tripnumber, filename)

@@ -6,6 +6,7 @@ from ..forms import PkstockpurchasesForm
 from ..models import PkstockpurchasesInfo, PkpartcodeInfo, PkcostingInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
 from ..sub_models.pk_stock_vendor_mod import PkstockvebdorInfo
 from ..sub_models.stock_description_mod import Stockdescription
@@ -45,12 +46,19 @@ def stockpurchases_add(request, stockpurchases_id=0):
                 new_record = form.save()  # Save and get the instance
                 last_id = new_record.id  # Directly get the saved ID
 
-                # Generate purchase number
-                reg_number = 1000000 + last_id
-                stockpurchases_num_next = f'item_no-{reg_number}'
-
-                # Update the new record with the generated stock purchase number
-                new_record.sp_purchase_num = stockpurchases_num_next
+                # Generate Stock Purchase number based on financial year (Branch specific)
+                fy = get_financial_year()
+                
+                # Try to get branch from vendor bill -> vendor
+                branch_id = get_session_branch_id(request)
+                if new_record.sp_vendor_bill_id:
+                    vb = new_record.sp_vendor_bill_id
+                    if vb.spv_vendor_name and vb.spv_vendor_name.vend_branch:
+                        branch_id = vb.spv_vendor_name.vend_branch.id
+                
+                branch_code = get_branch_code(branch_id)
+                prefix = f"{fy}_{branch_code}_GRN_PK_"
+                new_record.sp_purchase_num = generate_next_number(PkstockpurchasesInfo, 'sp_purchase_num', prefix, 6)
                 new_record.save(update_fields=['sp_purchase_num'])  # Efficient update
 
                 messages.success(request, 'Record created successfully.')
@@ -302,19 +310,25 @@ def stock_usage_breakdown(request):
             linked = costing_map.get(key)
 
         # Strategy 3: Parse assessment from sm_description (e.g. "Retrieved for Assessment Assess_1000103")
+        job_no = "N/A"
         if linked:
             assessment = linked.ct_assessment_num.na_assessment_num if linked.ct_assessment_num else "N/A"
+            job_no = linked.ct_job_no or "N/A"
             customer = linked.ct_customer_name.cu_name if linked.ct_customer_name else (linked.ct_customer_new_name or "N/A")
             usage_type = "Automated"
         elif sm.sm_description and "Assessment " in sm.sm_description:
             try:
                 assessment = sm.sm_description.split("Assessment ")[-1].strip()
+                # Try to extract Job No if present in description (e.g. "... (Job: XX)")
+                if "(Job: " in sm.sm_description:
+                    job_no = sm.sm_description.split("(Job: ")[-1].split(")")[0]
                 usage_type = "Historical"
             except:
                 pass
 
         data.append({
             'assessment_num': assessment,
+            'job_no': job_no,
             'customer_name': customer,
             'quantity': sm.sm_count or 0.0,
             'date': date_full,

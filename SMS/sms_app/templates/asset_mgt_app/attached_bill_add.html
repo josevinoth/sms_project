@@ -46,9 +46,9 @@
 
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text">Bill no</span>
+                                <span class="input-group-text">Bill no <span class="text-danger ml-1">*</span></span>
                             </div>
-                            {% render_field form.ab_bill_no class="form-control" placeholder="Enter Bill No" %}
+                            {% render_field form.ab_bill_no class="form-control" placeholder="Enter Bill No" required="required" %}
                         </div>
 
                         <div class="input-group input-group-sm mb-3">
@@ -116,7 +116,7 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text text-primary">Total km run</span>
                             </div>
-                            {% render_field form.ab_total_km_run class="form-control disable_a_href" readonly="readonly" %}
+                            {% render_field form.ab_total_km_run class="form-control" %}
                         </div>
 
                         <div class="input-group input-group-sm mb-3">
@@ -141,6 +141,9 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Hidden field for selected trips -->
+                {% render_field form.ab_selected_trips %}
 
                 <!-- ================= ACTION BUTTONS ================= -->
                 <div class="action-row">
@@ -207,8 +210,7 @@
 
         var isInitialLoad = {% if record %}true{% else %}false{% endif %};
         
-        // Lock Total KM Run to prevent editing
-        $('#id_ab_total_km_run').prop('readonly', true).addClass('disable_a_href');
+        // Lock Extra KM and Leave Amount to prevent editing (but keep Total KM unlocked for manual override)
         $('#id_ab_extra_km_run').prop('readonly', true).addClass('disable_a_href');
         $('#id_ab_leave_amount').prop('readonly', true).addClass('disable_a_href');
 
@@ -365,7 +367,7 @@
     });
 
     // Handle Manual Input Changes
-    $(document).on('input change', '#id_ab_buy_cost, #id_ab_toll_cost, #id_ab_agreed_km, #id_ab_leave_days, #id_ab_bill_amount, #id_ab_from_date, #id_ab_to_date', function () {
+    $(document).on('input change', '#id_ab_buy_cost, #id_ab_toll_cost, #id_ab_total_km_run, #id_ab_agreed_km, #id_ab_leave_days, #id_ab_bill_amount, #id_ab_from_date, #id_ab_to_date', function () {
         calculateAmounts();
     });
 
@@ -454,7 +456,6 @@
         calculateAmounts(); 
     }
 
-    // Function to update single row total buy cost
     function updateRowTotal($row) {
         var t_buy = parseFloat($row.find('.trip-buy-cost').val()) || 0;
         var t_parking = parseFloat($row.find('.trip-parking-cost').val()) || 0;

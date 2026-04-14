@@ -54,4 +54,4 @@ class Gatein_info(models.Model):
         ordering = ["gatein_job_no"]
 
     def __str__(self):
-        return self.gatein_invoice
+        return str(self.gatein_invoice) if self.gatein_invoice else str(self.gatein_job_no) if self.gatein_job_no else "N/A"

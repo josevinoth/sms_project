@@ -97,12 +97,18 @@ def driver_dashboard(request):
                 trip.save()
                 messages.success(request, "Loading Dock In Reported!")
 
-        # 2. Loading Dock Out (Mapped to tr_dock_in_time)
+        # 2. Loading Dock Out (Mapped to tr_dock_out_time)
         elif action == 'loading_dock_out':
-            if not trip.tr_dock_in_time:
-                trip.tr_dock_in_time = timezone.now()
+            if not trip.tr_dock_out_time:
+                trip.tr_dock_out_time = timezone.now()
+                
+                # For Category 1: Force manager approval after dock out
+                if trip.tr_category_id == 1:
+                    trip.tr_approval = None  # Reset approval status
+                    trip.tc_financestatus_id = 8  # Status: Awaiting Trip Approval
+                    
                 trip.save()
-                messages.success(request, "Loading Dock Out Reported!")
+                messages.success(request, "Loading Dock Out Reported! Waiting for Manager Approval to start trip.")
 
         # 3. Vehicle Started (Departing Origin) -> tr_departeddate & tr_departedkm
         elif action == 'vehicle_started':

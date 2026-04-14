@@ -10,6 +10,7 @@ from ..sub_models.tripdetail_mod import TripdetailInfo, Trip_closure_files_Info
 from ..sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
 from ..models import Location_info, StatusList, MyUser, CustomerdepartmentInfo, Places, VehiclecategoryInfo, VehicletypeInfo, VehiclemasterInfo
+from .general_utils import get_financial_year, generate_next_number
 
 def get_customer_context(request):
     """Helper to get the linked customer, department, and LP status for the portal.
@@ -96,16 +97,26 @@ def customer_dashboard(request):
         tripdetailinfo__tc_financestatus_id=1
     ).distinct().count()
 
-    # Active = distinct enquiries with a trip that has a vehicle BUT NOT yet started AND NOT completed
+    # Active = enquiries with NO vehicle allotted yet (vehicle not attended/assigned)
+    allotted_trip_ids = all_trips.filter(
+        tr_vehiclenumber__isnull=False
+    ).exclude(
+        tr_vehiclenumber=''
+    ).values_list('tr_enquirynumber_id', flat=True).distinct()
+
+    from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
+    allotted_va_ids = Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber__en_customername=customer
+    ).filter(
+        ~Q(va_vehiclenumber__isnull=True) | (~Q(va_vehiclenumber_mkt='') & ~Q(va_vehiclenumber_mkt__isnull=True))
+    ).values_list('va_enquirynumber_id', flat=True).distinct()
+
+    from datetime import timedelta
+    recent_limit = timezone.now() - timedelta(days=3)
+
     active_enquiries = enquiry_qs.filter(
-        id__in=all_trips.filter(
-            tr_vehiclenumber__isnull=False
-        ).exclude(
-            tr_vehiclenumber=''
-        ).exclude(
-            tc_financestatus_id__in=completed_statuses + [1]
-        ).values_list('tr_enquirynumber_id', flat=True).distinct()
-    ).count()
+        en_created_at__gte=recent_limit
+    ).exclude(id__in=allotted_trip_ids).exclude(id__in=allotted_va_ids).count()
 
     # Delivered = distinct enquiries with a completed trip this year
     delivered = enquiry_qs.filter(
@@ -175,6 +186,11 @@ def customer_enquiry_add(request):
         dimensions = request.POST.get('dimensions')
         cbm = request.POST.get('cbm')
         
+        pickup_contact_name = request.POST.get('pickup_contact_name')
+        pickup_contact_mobile = request.POST.get('pickup_contact_mobile')
+        delivery_contact_name = request.POST.get('delivery_contact_name')
+        delivery_contact_mobile = request.POST.get('delivery_contact_mobile')
+        
         if not customer:
             messages.error(request, 'Account link missing.')
             return redirect('customer_dashboard')
@@ -225,12 +241,19 @@ def customer_enquiry_add(request):
                 en_no_of_pcs=int(no_of_pcs) if no_of_pcs else 0,
                 en_weight=weight,
                 en_dimensions=dimensions,
-                en_cbm=cbm
+                en_cbm=cbm,
+                en_pickup_contact_name=pickup_contact_name,
+                en_pickup_contact_mobile=pickup_contact_mobile,
+                en_delivery_contact_name=delivery_contact_name,
+                en_delivery_contact_mobile=delivery_contact_mobile
             )
             enquiry.save() # Save first to get ID
             
             # Generate number based on ID to match internal pattern
-            enquiry.en_enquirynumber = f"WEB_EN_{1000000 + enquiry.id}"
+            # Example format: 26-27_WEB_EN_000001
+            current_fy = get_financial_year()
+            prefix = f"{current_fy}_WEB_EN_"
+            enquiry.en_enquirynumber = generate_next_number(EnquirynoteInfo, 'en_enquirynumber', prefix, 6)
             enquiry.save(update_fields=['en_enquirynumber'])
             
             # Save structured vehicle info for internal view sync using fetched objects
@@ -246,7 +269,7 @@ def customer_enquiry_add(request):
                 except Exception as inner_e:
                      print(f"Failed to create vehicle detail: {inner_e}")
             
-            messages.success(request, f'Enquiry {enquiry.en_enquirynumber} submitted successfully!')
+            messages.success(request, f'Booking {enquiry.en_enquirynumber} submitted successfully!')
             return redirect('customer_enquiry_list')
             
         except Exception as e:
@@ -291,6 +314,10 @@ def customer_enquiry_edit(request, enquiry_id):
         weight = request.POST.get('weight')
         dimensions = request.POST.get('dimensions')
         cbm = request.POST.get('cbm')
+        pickup_contact_name = request.POST.get('pickup_contact_name')
+        pickup_contact_mobile = request.POST.get('pickup_contact_mobile')
+        delivery_contact_name = request.POST.get('delivery_contact_name')
+        delivery_contact_mobile = request.POST.get('delivery_contact_mobile')
 
         try:
             from_loc = Places.objects.get(id=from_loc_id) if from_loc_id else None
@@ -331,6 +358,10 @@ def customer_enquiry_edit(request, enquiry_id):
             enquiry.en_weight = weight
             enquiry.en_dimensions = dimensions
             enquiry.en_cbm = cbm
+            enquiry.en_pickup_contact_name = pickup_contact_name
+            enquiry.en_pickup_contact_mobile = pickup_contact_mobile
+            enquiry.en_delivery_contact_name = delivery_contact_name
+            enquiry.en_delivery_contact_mobile = delivery_contact_mobile
             enquiry.save()
 
             # Update vehicle detail record
@@ -351,7 +382,7 @@ def customer_enquiry_edit(request, enquiry_id):
                         env_updated_by=request.user
                     )
 
-            messages.success(request, f'Enquiry {enquiry.en_enquirynumber} updated successfully!')
+            messages.success(request, f'Booking {enquiry.en_enquirynumber} updated successfully!')
             return redirect('customer_enquiry_list')
 
         except Exception as e:
@@ -416,17 +447,27 @@ def customer_enquiry_list(request):
     status_filter = request.GET.get('status', '')
     _completed = [2, 3, 4, 5, 7, 9]
     if status_filter == 'active':
-        # Active = enquiries with a trip that has a vehicle, NOT yet started AND NOT completed
-        active_trip_enq_ids = TripdetailInfo.objects.filter(
-            tr_enquirynumber__en_customername=customer
-        ).filter(
+        # Active = enquiries with NO vehicle allotted yet
+        allotted_trip_ids = TripdetailInfo.objects.filter(
+            tr_enquirynumber__en_customername=customer,
             tr_vehiclenumber__isnull=False
         ).exclude(
             tr_vehiclenumber=''
-        ).exclude(
-            tc_financestatus_id__in=_completed + [1]
         ).values_list('tr_enquirynumber_id', flat=True).distinct()
-        enquiries_qs = enquiries_qs.filter(id__in=active_trip_enq_ids)
+
+        from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
+        allotted_va_ids = Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber__en_customername=customer
+        ).filter(
+            ~Q(va_vehiclenumber__isnull=True) | (~Q(va_vehiclenumber_mkt='') & ~Q(va_vehiclenumber_mkt__isnull=True))
+        ).values_list('va_enquirynumber_id', flat=True).distinct()
+
+        from datetime import timedelta
+        recent_limit = timezone.now() - timedelta(days=3)
+
+        enquiries_qs = enquiries_qs.filter(
+            en_created_at__gte=recent_limit
+        ).exclude(id__in=allotted_trip_ids).exclude(id__in=allotted_va_ids)
     elif status_filter == 'transit':
         enquiries_qs = enquiries_qs.filter(tripdetailinfo__tc_financestatus_id=1).distinct()
     elif status_filter == 'delivered':

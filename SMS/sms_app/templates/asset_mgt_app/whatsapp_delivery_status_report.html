@@ -1,4 +1,4 @@
-﻿{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% load static %}
 {% block content %}
@@ -190,17 +190,28 @@
         // Initialize DataTable
         $jq('#whatsapp_report_table').DataTable({
             scrollX: true,
-            dom: 'lBfrtip',
+            autoWidth: false,
+            dom: "<'row'<'col-sm-12 col-md-6'lB><'col-sm-12 col-md-6'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            
             lengthMenu: [
                 [10, 25, 50, 100, -1],
                 [10, 25, 50, 100, "All"]
             ],
-            pageLength: 10,
+            pageLength: 25,
             buttons: [
-                'copy',
-                'csv',
+                {
+                    extend: 'copy',
+                    className: 'btn btn-sm btn-info'
+                },
+                {
+                    extend: 'csv',
+                    className: 'btn btn-sm btn-info'
+                },
                 {
                     extend: 'excelHtml5',
+                    className: 'btn btn-sm btn-info',
                     text: 'Excel',
                     title: 'WhatsApp Delivery Status Report',
                     customize: function (xlsx) {
@@ -222,7 +233,7 @@
                                 <patternFill patternType="solid">
                                     <fgColor rgb="FF0A3278"/>
                                     <bgColor indexed="64"/>
-                                </patternFill>
+                                patternFill>
                             </fill>
                         `);
                         let fillId = fills.children().length - 1;
@@ -237,6 +248,7 @@
                 },
                 {
                     extend: 'pdfHtml5',
+                    className: 'btn btn-sm btn-info',
                     orientation: 'landscape',
                     pageSize: 'A4',
                     title: 'WhatsApp Delivery Status Report',
@@ -248,6 +260,7 @@
                 },
                 {
                     extend: 'print',
+                    className: 'btn btn-sm btn-info',
                     title: 'WhatsApp Delivery Status Report',
                     customize: function (win) {
                         $jq(win.document.body).find('thead th')
@@ -258,6 +271,11 @@
                 }
             ],
             order: [[0, 'asc']]
+        });
+
+        // Handle window resize to adjust columns
+        $jq(window).on('resize', function () {
+            $jq('#whatsapp_report_table').DataTable().columns.adjust();
         });
     });
 </script>

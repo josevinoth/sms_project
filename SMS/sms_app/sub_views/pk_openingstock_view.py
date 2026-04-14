@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.core.exceptions import ObjectDoesNotExist
 
 from ..forms import PkopeningstockForm
@@ -28,20 +29,18 @@ def openingstock_add(request,openingstock_id=0):
         if openingstock_id == 0:
             form = PkopeningstockForm(request.POST)
             if form.is_valid():
-                # Generate Random Opening Stock number
-                try:
-                    last_id = PkopeningstockInfo.objects.latest('id').id
-                    openingstock_num_next = str('OS_') + str(
-                        int(((PkopeningstockInfo.objects.get(id=last_id)).os_stock_number).replace('OS_','')) + 1)
-                except ObjectDoesNotExist:
-                    openingstock_num_next = str('OS_') + str(1000000)
-                form.save()
+                # Generate Opening Stock number based on financial year (Branch specific)
+                fy = get_financial_year()
+                branch_id = get_session_branch_id(request)
+                branch_code = get_branch_code(branch_id)
+                prefix = f"{fy}_{branch_code}_OS_"
+                openingstock_num_next = generate_next_number(PkopeningstockInfo, 'os_stock_number', prefix, 6)
+                instance = form.save()
                 print("openingstock Form is Valid")
-                last_id = (PkopeningstockInfo.objects.latest('id')).id
-                PkopeningstockInfo.objects.filter(id=last_id).update(os_stock_number=openingstock_num_next)
+                PkopeningstockInfo.objects.filter(id=instance.id).update(os_stock_number=openingstock_num_next)
                 messages.success(request, 'Record Updated Successfully')
                 # return redirect(request.META['HTTP_REFERER'])
-                return redirect('/SMS/openingstock_update/'+str(last_id))
+                return redirect('/SMS/openingstock_update/'+str(instance.id))
             else:
                 print("openingstock Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')

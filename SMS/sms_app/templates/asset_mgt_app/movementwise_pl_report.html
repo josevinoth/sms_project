@@ -1,0 +1,201 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid d-flex justify-content-center py-3">
+    <div class="rounded text-center bg-info shadow-box px-4 py-2">
+        <h3>Movementwise P&L Report</h3>
+    </div>
+</div>
+<br>
+<div class="row">
+    <div class="col-2"></div>
+    <div class="col-8 message text-center">
+        {% for message in messages %}
+        <a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
+        {% endfor %}
+    </div>
+    <div class="col-2"></div>
+</div>
+
+<form method="POST" action="{% url 'movementwise_pl_report' %}" class="row g-3 align-items-end">
+    {% csrf_token %}
+
+    <!-- Branch -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Branch</label>
+        <select name="branch" class="form-select form-control" id="branchSelect">
+            <option value="">-- All Branches --</option>
+            {% for b in all_branches %}
+            <option value="{{ b.id }}" {% if branch_id == b.id %}selected{% endif %}>{{ b.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Trip Type -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Trip Type</label>
+        <select name="trip_category" class="form-select form-control" id="tripCategorySelect">
+            <option value="">-- All Types --</option>
+            {% for t in all_trip_categories %}
+            <option value="{{ t.id }}" {% if trip_category_id == t.id %}selected{% endif %}>{{ t.tr_trip_type }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Vehicle Source -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Vehicle Source</label>
+        <select name="vehicle_source" class="form-select form-control" id="vehicleSourceSelect">
+            <option value="">-- All Sources --</option>
+            {% for vs in all_vehicle_sources %}
+            <option value="{{ vs.id }}" {% if vehicle_source_id == vs.id %}selected{% endif %}>{{ vs.ow_ownership }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- From Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">From Date</label>
+        <input type="date" id="fromDate" name="from_date" class="form-control" value="{{ from_date|default_if_none:'' }}">
+    </div>
+
+    <!-- To Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">To Date</label>
+        <input type="date" id="toDate" name="to_date" class="form-control" value="{{ to_date|default_if_none:'' }}">
+    </div>
+
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary mt-3">Filter</button>
+    </div>
+</form>
+<br>
+<br>
+
+<div class="row">
+    <div class="col-auto">
+        <a href="{% url 'transport_reports' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<br>
+
+<div class="container-fluid shadow-box-table mt-4">
+    <table id="movementwise_pl_report_table" class="table table-striped table-bordered text-center align-middle"
+        width="100%" style="white-space:nowrap; font-size:14px;">
+        <thead class="thead-dark">
+            <tr>
+                {% for h in headers %}
+                <th class="text-center">{{ h }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data_rows %}
+            <tr>
+                {% for cell in row %}
+                <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    /* Force minimum width on headers to prevent squashing in scrollX mode */
+    #movementwise_pl_report_table thead th {
+        min-width: 120px !important;
+        white-space: nowrap !important;
+    }
+
+    /* Narrower S.No column to match reference */
+    #movementwise_pl_report_table thead th:first-child {
+        min-width: 40px !important;
+    }
+</style>
+
+<script>
+    $(document).ready(function () {
+        var table = $('#movementwise_pl_report_table').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "scrollX": true,
+            "scrollCollapse": true,
+            "autoWidth": false,
+            "ajax": {
+                "url": "{% url 'movementwise_pl_report_ajax' %}",
+                "type": "GET",
+                "data": function (d) {
+                    d.branch = $('#branchSelect').val();
+                    d.trip_category = $('#tripCategorySelect').val();
+                    d.vehicle_source = $('#vehicleSourceSelect').val();
+                    d.from_date = $('#fromDate').val();
+                    d.to_date = $('#toDate').val();
+                }
+            },
+            "dom": 'lBfrtip',
+            "lengthMenu": [
+                [10, 25, 50, 100, -1],
+                [10, 25, 50, 100, "All"]
+            ],
+            "pageLength": 10,
+            "buttons": [
+                'copy',
+                'csv',
+                {
+                    extend: 'excelHtml5',
+                    text: 'Excel',
+                    title: 'Movementwise P&L Report',
+                },
+                {
+                    extend: 'pdfHtml5',
+                    orientation: 'landscape',
+                    pageSize: 'A4',
+                    title: 'Movementwise P&L Report',
+                    customize: function (doc) {
+                        if (doc.styles && doc.styles.tableHeader) {
+                            doc.styles.tableHeader.fillColor = '#0A3278';
+                            doc.styles.tableHeader.color = 'white';
+                            doc.styles.tableHeader.bold = true;
+                        }
+                    }
+                },
+                {
+                    extend: 'print',
+                    title: 'Movementwise P&L Report',
+                    customize: function (win) {
+                        $(win.document.body).find('thead th')
+                            .css('background-color', '#0A3278')
+                            .css('color', 'white')
+                            .css('font-weight', 'bold');
+                    }
+                }
+            ],
+            "order": [[0, 'asc']]
+        });
+
+        // Custom Filter trigger
+        $('form').on('submit', function(e) {
+            e.preventDefault();
+            table.draw();
+        });
+
+        // Recalculate column widths on window resize and zoom
+        $(window).on('resize', function () {
+            table.columns.adjust();
+        });
+
+        // Final fix for alignment after a short delay
+        setTimeout(function () {
+            table.columns.adjust().draw();
+        }, 800);
+    });
+</script>
+
+{% endblock content %}

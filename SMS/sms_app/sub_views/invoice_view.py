@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.paginator import Paginator
-from django.db.models import Sum, Max, Q
+from django.db.models import Sum, Max, Min, Q
 from django.http import HttpResponse
 import json
 from django.contrib import messages
@@ -857,7 +857,17 @@ def shipper_invoice_export_excel(request, invoice_id):
     )
     
     all_jobs = list(qs.values_list('wh_job_no', flat=True).distinct())
-    job_no_str = ", ".join(all_jobs) if all_jobs else ""
+    
+    if is_monthly and invoice.bill_invoice_date:
+        month_abbr = invoice.bill_invoice_date.strftime('%b').lower()
+        year_yy = invoice.bill_invoice_date.strftime('%y')
+        customer_prefix = invoice.bill_customer_short_name or (invoice.bill_customer_name.cu_nameshort if invoice.bill_customer_name else "CUST")
+        # Take first word of customer name e.g. "ROHLIG INDIA" -> "ROHLIG"
+        if customer_prefix:
+            customer_prefix = customer_prefix.split(' ')[0].split('(')[0].split('-')[0].strip()
+        job_no_str = f"{customer_prefix}-{month_abbr}-{year_yy}"
+    else:
+        job_no_str = ", ".join(all_jobs) if all_jobs else ""
     
     customer = invoice.bill_customer_name
     address = customer.cu_address if (customer and customer.cu_address) else (invoice.bill_customer_address or "")
@@ -881,7 +891,7 @@ def shipper_invoice_export_excel(request, invoice_id):
         unit_no = str(lm.lm_wh_unit)
         
     branch_name = branch_name.replace("BVM ", "").strip()
-    primary_cost_category = f"{branch_name} - {unit_no}" if (branch_name and unit_no) else (branch_name or unit_no or "")
+    primary_cost_category = str(unit_no) if unit_no else str(branch_name)
 
     # For Monetary values, match the portal screen logic:
     # 1. Use job sums for activity-based costs (Storage, Loading, Crane, Forklift)
@@ -894,9 +904,12 @@ def shipper_invoice_export_excel(request, invoice_id):
         total_fumigation=Sum('wh_fumigation_cost')
     )
     
-    # Prioritize invoice header fields (UI boxes) over job sums to ensure exact matching
-    # Using "is not None" and != 0 because 0.0 is often a default that indicates missing data
-    storage_base = float(invoice.bill_wh_storage_charges if (invoice.bill_wh_storage_charges is not None and invoice.bill_wh_storage_charges != 0) else (job_totals['total_storage'] or 0))
+    # Prioritize job-level sum if db summation is greater than header overrides
+    # (Matches detailed export calculation behavior)
+    sum_storage = float(job_totals['total_storage'] or 0)
+    header_storage = float(invoice.bill_wh_storage_charges if invoice.bill_wh_storage_charges is not None else 0)
+    storage_base = sum_storage if sum_storage > header_storage else header_storage
+    
     fumigation_val = float(invoice.bill_tot_fumigation_charges if (invoice.bill_tot_fumigation_charges is not None and invoice.bill_tot_fumigation_charges != 0) else (job_totals['total_fumigation'] or 0))
     
     # Merge storage and fumigation to avoid adding new columns while keeping totals correct
@@ -919,48 +932,142 @@ def shipper_invoice_export_excel(request, invoice_id):
     # Match UI Total exactly or re-calculate
     pre_gst_total = float(invoice.bill_total_pre_gst if (invoice.bill_total_pre_gst is not None and invoice.bill_total_pre_gst != 0) else calc_pre_gst_total)
     
-    # Prioritize wh_consigner as shown in the UI "Shipper Name" column
-    shipper_list = list(qs.exclude(wh_consigner__isnull=True).exclude(wh_consigner='')
-                          .values_list('wh_consigner', flat=True).distinct())
-    
-    if not shipper_list:
-        shipper_list = list(qs.exclude(wh_gate_injob_no_id__gatein_shipper__isnull=True)
-                              .exclude(wh_gate_injob_no_id__gatein_shipper='')
-                              .values_list('wh_gate_injob_no_id__gatein_shipper', flat=True).distinct())
-                              
-    shipper_str = ", ".join(shipper_list) if shipper_list else (customer.cu_nameshort if customer else "")
-    
     # Use actual taxes from header or re-calculate
     cgst_val = float(invoice.bill_cgst if (invoice.bill_cgst is not None and invoice.bill_cgst != 0) else round(pre_gst_total * 0.09, 2))
     sgst_val = float(invoice.bill_sgst if (invoice.bill_sgst is not None and invoice.bill_sgst != 0) else round(pre_gst_total * 0.09, 2))
 
-    ws.append([
-        excel_datetime(invoice.bill_invoice_date),
-        invoice.bill_invoice_ref,
-        job_no_str,
-        invoice.bill_customer_short_name if invoice.bill_customer_short_name else (customer.cu_nameshort if customer else ""),
-        customer.cu_gst if customer else "",
-        state,
-        pincode,
-        primary_cost_category,
-        invoice.bill_customer_short_name if invoice.bill_customer_short_name else (customer.cu_nameshort if customer else ""),
-        round(storage_val, 2),
-        round(loading_val, 2),
-        round(unloading_val, 2),
-        round(handling_val, 2),
-        round(crane_val, 2),
-        round(forklift_val, 2),
-        round(packing_val, 2),
-        pre_gst_total,
-        cgst_val,
-        sgst_val,
-    ])
+    if is_monthly or not all_jobs:
+        ws.append([
+            invoice.bill_invoice_date.strftime('%d-%m-%Y') if invoice.bill_invoice_date else "",
+            invoice.bill_invoice_ref,
+            job_no_str,
+            invoice.bill_customer_short_name if invoice.bill_customer_short_name else (customer.cu_nameshort if customer else ""),
+            customer.cu_gst if customer else "",
+            state,
+            pincode,
+            primary_cost_category,
+            customer.cu_name if customer else "",
+            round(storage_val, 2),
+            round(loading_val, 2),
+            round(unloading_val, 2),
+            round(handling_val, 2),
+            round(crane_val, 2),
+            round(forklift_val, 2),
+            round(packing_val, 2),
+            pre_gst_total,
+            cgst_val,
+            sgst_val,
+        ])
+    else:
+        target_s = round(storage_val, 2)
+        target_l = round(loading_val, 2)
+        target_u = round(unloading_val, 2)
+        target_h = round(handling_val, 2)
+        target_c = round(crane_val, 2)
+        target_f = round(forklift_val, 2)
+        target_p = round(packing_val, 2)
+        target_pre = round(pre_gst_total, 2)
+        target_cgst = round(cgst_val, 2)
+        target_sgst = round(sgst_val, 2)
+
+        j_db_s = float(job_totals['total_storage'] or 0) + float(job_totals['total_fumigation'] or 0)
+        j_db_l = float(job_totals['total_loading'] or 0)
+        j_db_c = float(job_totals['total_crane'] or 0)
+        j_db_f = float(job_totals['total_forklift'] or 0)
+
+        alloc_s = alloc_l = alloc_u = alloc_h = alloc_c = alloc_f = alloc_p = alloc_pre = alloc_cgst = alloc_sgst = 0
+        num_jobs = len(all_jobs)
+
+        for i, job_no in enumerate(all_jobs):
+            is_last = (i == num_jobs - 1)
+            
+            if is_last:
+                job_s = round(target_s - alloc_s, 2)
+                job_l = round(target_l - alloc_l, 2)
+                job_u = round(target_u - alloc_u, 2)
+                job_h = round(target_h - alloc_h, 2)
+                job_c = round(target_c - alloc_c, 2)
+                job_f = round(target_f - alloc_f, 2)
+                job_p = round(target_p - alloc_p, 2)
+                job_pre = round(target_pre - alloc_pre, 2)
+                job_cgst = round(target_cgst - alloc_cgst, 2)
+                job_sgst = round(target_sgst - alloc_sgst, 2)
+            else:
+                job_qs = qs.filter(wh_job_no=job_no)
+                j_totals = job_qs.aggregate(
+                    s=Sum('wh_storage_cost_total'),
+                    fum=Sum('wh_fumigation_cost'),
+                    l=Sum('wh_total_loading_cost'),
+                    c=Sum('wh_crane_cost'),
+                    fl=Sum('wh_forklift_cost')
+                )
+                
+                db_s = float(j_totals['s'] or 0) + float(j_totals['fum'] or 0)
+                db_l = float(j_totals['l'] or 0)
+                db_c = float(j_totals['c'] or 0)
+                db_f = float(j_totals['fl'] or 0)
+                
+                def get_share(db_val, total_db_val, target_val):
+                    if total_db_val > 0:
+                        return round(target_val * (db_val / total_db_val), 2)
+                    return round(target_val / num_jobs, 2)
+                
+                job_s = round(target_s / num_jobs, 2)
+                job_l = get_share(db_l, j_db_l, target_l)
+                job_u = get_share(db_l, j_db_l, target_u)
+                job_c = get_share(db_c, j_db_c, target_c)
+                job_f = get_share(db_f, j_db_f, target_f)
+                
+                job_h = round(target_h / num_jobs, 2)
+                job_p = round(target_p / num_jobs, 2)
+                
+                job_pre = round(job_s + job_l + job_u + job_h + job_c + job_f + job_p, 2)
+                
+                if target_pre > 0:
+                    job_cgst = round(target_cgst * (job_pre / target_pre), 2)
+                    job_sgst = round(target_sgst * (job_pre / target_pre), 2)
+                else:
+                    job_cgst = round(target_cgst / num_jobs, 2)
+                    job_sgst = round(target_sgst / num_jobs, 2)
+            
+            alloc_s += job_s
+            alloc_l += job_l
+            alloc_u += job_u
+            alloc_h += job_h
+            alloc_c += job_c
+            alloc_f += job_f
+            alloc_p += job_p
+            alloc_pre += job_pre
+            alloc_cgst += job_cgst
+            alloc_sgst += job_sgst
+            
+            ws.append([
+                invoice.bill_invoice_date.strftime('%d-%m-%Y') if invoice.bill_invoice_date else "",
+                invoice.bill_invoice_ref,
+                job_no,
+                invoice.bill_customer_short_name if invoice.bill_customer_short_name else (customer.cu_nameshort if customer else ""),
+                customer.cu_gst if customer else "",
+                state,
+                pincode,
+                primary_cost_category,
+                customer.cu_name if customer else "",
+                job_s,
+                job_l,
+                job_u,
+                job_h,
+                job_c,
+                job_f,
+                job_p,
+                job_pre,
+                job_cgst,
+                job_sgst,
+            ])
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    # Filename: INVOICE-XXXX (last 4 digits of BVM invoice number)
+    # Filename: TALLY EXCEL-XXXX (last 4 digits of BVM invoice number)
     invoice_suffix = str(invoice.bill_invoice_ref)[-4:] if invoice.bill_invoice_ref else str(invoice_id)
-    response["Content-Disposition"] = f"attachment; filename=INVOICE-{invoice_suffix}.xlsx"
+    response["Content-Disposition"] = f"attachment; filename=TALLY EXCEL-{invoice_suffix}.xlsx"
 
     # Auto-adjust column widths for better visibility
     for column_cells in ws.columns:
@@ -1091,48 +1198,48 @@ def invoice_export_excel(request, invoice_id):
                   crane_val + forklift_val, 2),
         ])
     else:
-        # Pre-calculate storage split logic
+        # Pre-calculate storage split logic identically to Case-to-Case tally export
         job_totals = qs.aggregate(total_storage=Sum('wh_storage_cost_total'))
         header_storage = float(invoice.bill_wh_storage_charges if invoice.bill_wh_storage_charges is not None else 0)
         sum_storage = float(job_totals['total_storage'] or 0)
         
-        # Prioritize job-level sum if header is 450 but jobs show 1050
+        # Prioritize job-level sum if db summation is greater than header overrides
         total_storage = sum_storage if sum_storage > header_storage else header_storage
         
         distinct_jobs = list(qs.values_list('wh_job_no', flat=True).distinct())
         num_distinct_jobs = len(distinct_jobs)
         
-        # Calculate portion per distinct job
-        job_portion = total_storage / num_distinct_jobs if num_distinct_jobs > 0 else 0
+        # Calculate equal portion per distinct job exactly matched to standard export
+        job_portion = round(total_storage / num_distinct_jobs, 2) if num_distinct_jobs > 0 else 0
         
-        # Count occurrences of each job to split the job's portion among its rows
-        # Also track max per-day rate per job to avoid 0s on duplicate rows (per user request)
-        job_occurrence_counts = {}
-        job_per_day_rates = {}
-        for row in qs.values('wh_job_no', 'wh_storage_cost_per_day'):
-            job_no = row['wh_job_no']
-            job_occurrence_counts[job_no] = job_occurrence_counts.get(job_no, 0) + 1
-            rate = row['wh_storage_cost_per_day'] or 0
-            if rate > job_per_day_rates.get(job_no, 0):
-                job_per_day_rates[job_no] = rate
-
         sl = 1
-        for obj in qs:
-            # Calculate row-level storage share
-            rows_for_this_job = job_occurrence_counts.get(obj.wh_job_no, 1)
-            row_storage_share = round(job_portion / rows_for_this_job, 2)
+        for job_no in distinct_jobs:
+            job_qs = qs.filter(wh_job_no=job_no)
             
-            # Use original per-day rate (per user request: "dont split perday warehouse charges")
-            row_per_day_rate = job_per_day_rates.get(obj.wh_job_no, 0)
+            # Aggregate dynamic values directly to precisely matched distinct job representation
+            j_agg = job_qs.aggregate(
+                weight=Sum('wh_goods_weight'),
+                pieces=Sum('wh_goods_pieces'),
+                loading=Sum('wh_total_loading_cost'),
+                crane=Sum('wh_crane_cost'),
+                forklift=Sum('wh_forklift_cost'),
+                min_in=Min('wh_checkin_time'),
+                max_out=Max('wh_checkout_time'),
+                max_storage_time=Max('wh_storage_time'),
+                max_per_day_rate=Max('wh_storage_cost_per_day')
+            )
+            
+            obj = job_qs.first() # Pull meta info from the first corresponding goods instance
+            
+            # Use original max per-day rate
+            row_per_day_rate = j_agg['max_per_day_rate'] or 0
 
             # Pull unit from job first
             unit_no = str(obj.wh_unit) if obj.wh_unit else ""
-            
             if not unit_no:
                 lm = LocationmasterInfo.objects.filter(
                     lm_customer_name=invoice.bill_customer_name
                 ).select_related("lm_wh_unit").first()
-
                 if lm and lm.lm_wh_unit:
                     unit_no = str(lm.lm_wh_unit)
 
@@ -1145,41 +1252,45 @@ def invoice_export_excel(request, invoice_id):
             
             if not shipper_name and invoice.bill_customer_name:
                 shipper_name = invoice.bill_customer_name.cu_nameshort or ""
+                
+            # Aggregate Handling row format specifically applied to Row 1
+            row_handling = round((invoice.bill_handling_charges or 0) + (invoice.bill_tot_fumigation_charges or 0) + (invoice.bill_packing_charges or 0), 2) if sl == 1 else 0
 
             ws.append([
                 sl,
-                obj.wh_job_no,
+                job_no,
                 shipper_name,
                 obj.wh_gate_injob_no_id.gatein_invoice if obj.wh_gate_injob_no_id and obj.wh_gate_injob_no_id.gatein_invoice else (obj.wh_goods_invoice or "Summary"),
                 
                 # W/H CHRGS VEHICLE TYPE: Show actual type instead of status
                 str(obj.wh_gate_injob_no_id.gatein_truck_type) if obj.wh_dispatch_id and obj.wh_dispatch_id.dispatch_billing_truck_type and "In" in str(obj.wh_dispatch_id.dispatch_billing_truck_type) else (str(obj.wh_dispatch_id.dispatch_truck_type) if obj.wh_dispatch_id and obj.wh_dispatch_id.dispatch_truck_type else str(obj.wh_truck_type or "")),
                 
-                obj.wh_goods_weight or 0,
-                obj.wh_checkin_time.strftime('%m-%d-%Y') if obj.wh_checkin_time else "", # Format as string to avoid ####
-                obj.wh_checkout_time.strftime('%m-%d-%Y') if obj.wh_checkout_time else "", # Format as string to avoid ####
-                obj.wh_storage_time or 0,
+                j_agg['weight'] or 0,
+                j_agg['min_in'].strftime('%m-%d-%Y') if j_agg['min_in'] else "", # Format as string to avoid ####
+                j_agg['max_out'].strftime('%m-%d-%Y') if j_agg['max_out'] else "", # Format as string to avoid ####
+                j_agg['max_storage_time'] or 0,
                 row_per_day_rate,
-                row_storage_share,
+                job_portion,
                 
                 # Loading
-                obj.wh_goods_pieces or 0,
+                j_agg['pieces'] or 0,
                 obj.wh_loading_charge_unit or 0,
-                obj.wh_total_loading_cost or 0,
+                j_agg['loading'] or 0,
                 
                 # Unloading (defaults to wh_total_loading_cost as per UI behavior)
-                obj.wh_goods_pieces or 0,
+                j_agg['pieces'] or 0,
                 obj.wh_loading_charge_unit or 0,
-                obj.wh_total_loading_cost or 0,
+                j_agg['loading'] or 0,
                 
                 # Warehouse Handling/Misc (First row only)
-                round((invoice.bill_handling_charges or 0) + (invoice.bill_tot_fumigation_charges or 0) + (invoice.bill_packing_charges or 0), 2) if sl == 1 else 0,
-                obj.wh_crane_cost or 0,
-                obj.wh_forklift_cost or 0,
+                row_handling,
+                j_agg['crane'] or 0,
+                j_agg['forklift'] or 0,
+                
                 # Row Total (Sum of Storage + Loading + Unloading + Handling/Misc + Crane + Forklift)
-                round(row_storage_share + (obj.wh_total_loading_cost or 0) + (obj.wh_total_loading_cost or 0) + 
-                      ((invoice.bill_handling_charges or 0) + (invoice.bill_tot_fumigation_charges or 0) + (invoice.bill_packing_charges or 0) if sl == 1 else 0) + 
-                      (obj.wh_crane_cost or 0) + (obj.wh_forklift_cost or 0), 2),
+                round(job_portion + (j_agg['loading'] or 0) + (j_agg['loading'] or 0) + 
+                      row_handling + 
+                      (j_agg['crane'] or 0) + (j_agg['forklift'] or 0), 2),
             ])
             sl += 1
 

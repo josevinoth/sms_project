@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.core.exceptions import ObjectDoesNotExist
 
 from ..forms import PkreturnForm
@@ -35,22 +36,19 @@ def stockpurchases_add(request, stockpurchases_id=0):
             # Creating a new stock purchase entry
             form = PkreturnForm(request.POST, request.FILES)
             if form.is_valid():
-                form.save()  # Save the new record
-                try:
-                    # Get the latest record ID
-                    last_id = PkstockpurchasesInfo.objects.order_by('-id').values_list('id', flat=True).first()
-                    reg_number = 1000000 + last_id  # Generate a new purchase number based on last ID
-                except ObjectDoesNotExist:
-                    reg_number = 1000000  # Start with 1000000 if no records exist
+                instance = form.save()  # Save the new record and get the instance
+                # Generate Stock Purchase (Return) number based on financial year
+                fy = get_financial_year()
+                branch_id = get_session_branch_id(request)
+                branch_code = get_branch_code(branch_id)
+                prefix = f"{fy}_{branch_code}_GRN_PK_"
+                stockpurchases_num_next = generate_next_number(PkstockpurchasesInfo, 'sp_purchase_num', prefix, 6)
 
-                # Create the stock purchase number
-                stockpurchases_num_next = str('GRN/PK/') + str(reg_number)
-
-                # Update the new record with the generated stock purchase number
-                PkstockpurchasesInfo.objects.filter(id=last_id).update(sp_purchase_num=stockpurchases_num_next)
+                # Update the new record with the generated stock purchase number using the instance ID
+                PkstockpurchasesInfo.objects.filter(id=instance.id).update(sp_purchase_num=stockpurchases_num_next)
 
                 # Fetch the ID of the newly created stock purchase
-                stock_id = PkstockpurchasesInfo.objects.get(sp_purchase_num=stockpurchases_num_next).id
+                stock_id = instance.id
 
                 messages.success(request, 'Record created successfully.')
                 return redirect('/SMS/stockpurchases_update/' + str(stock_id))  # Redirect to the update page

@@ -1,104 +1,150 @@
-{% extends "asset_mgt_app/report_header_potrait.html" %}
 {% block content %}
-<h3 style="text-align:center;">GATE PASS (RETURNABLE)</h3>
-<!--<h3 style="text-align:center;">Gate Pass (Returnable)</h3>-->
-<!--<div style="padding-left:570px;">-->
-<!--    <p>Gate Pass No:</p>-->
-<!--    <p>Date:</p>-->
-<!--</div>-->
-<!--    <p>GSTIN:</p>-->
-<div>
-    <table class='report_details'>
+<style>
+    .gp-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: Arial, sans-serif;
+        font-size: 11px;
+    }
+    .gp-table th, .gp-table td {
+        border: 1px solid black;
+        padding: 5px;
+        vertical-align: top;
+    }
+    .text-center { text-align: center; }
+    .bold { font-weight: bold; }
+    .header-title { font-size: 14px; font-weight: bold; }
+    .company-name { font-size: 14px; font-weight: bold; }
+</style>
+
+<div class="container-fluid">
+    <!-- Table 1: Header and Info Section -->
+    <table class="gp-table">
+        <colgroup>
+            <col style="width: 20%;">
+            <col style="width: 30%;">
+            <col style="width: 20%;">
+            <col style="width: 30%;">
+        </colgroup>
+        <!-- Main Header -->
         <tr>
-            <th>Assessment Number</th>
-            <td>{{ gate.gp_assessment_num }}</td>
+            <td class="text-center" style="vertical-align: middle;">
+                {% if logo_path %}
+                <img src="{{ logo_path }}" style="width: 50px; height: auto;">
+                {% endif %}
+            </td>
+            <td colspan="3" class="text-center bold header-title" style="vertical-align: middle; font-size: 16px;">BVM PACK SOLUTIONS PRIVATE LIMITED</td>
         </tr>
         <tr>
-            <th>Customer Po</th>
-            <td>{{ gate.gp_customer_po }}</td>
+            <td colspan="3" class="text-center" style="font-size: 10px;">
+                No. 349/2, Thiruneermalai Main Road (Opp. Heritage), Thirumudivakkam, Chennai - 600132
+            </td>
+            <td class="bold">GATEPASS NO: <span style="font-weight: normal;">{{ gate.id }}</span></td>
         </tr>
         <tr>
-            <th>Customer Name</th>
-            <td>{{ gate.gp_customer_name }}</td>
+            <td colspan="3" class="text-center bold" style="font-size: 14px; vertical-align: middle;">GATEPASS</td>
+            <td class="bold" style="white-space: nowrap;">GATEPASS DATE:&nbsp;<span style="font-weight: normal;">{{ gate.gp_consignment_date|default:gate.gp_created_at|date:"d-m-Y" }}</span></td>
         </tr>
         <tr>
-            <th>GSTIN</th>
-            <td>{{ gate.gp_customer_gstin }}</td>
-        </tr>
-        <tr>
-            <th>Staff Name</th>
-            <td>{{ gate.gp_s_name }}</td>
+            <td colspan="4" class="text-center bold">GSTIN: 33AAKCB6640C1Z0</td>
         </tr>
 
+        <!-- Info Section -->
         <tr>
-            <th>Employee ID</th>
-            <td>{{ gate.gp_employee }}</td>
+            <td class="bold">Customer Name:</td>
+            <td>{{ gate.gp_customer_name }}</td>
+            <td class="bold">Transporter Name:</td>
+            <td>{{ gate.gp_transporter_name }}</td>
         </tr>
         <tr>
-            <th>Sales Order Ref. No.</th>
-            <td>{{ gate.gp_sales_order_po }}</td>
+            <td class="bold">Customer Address:</td>
+            <td>{{ gate.gp_customer_name.cu_address }}</td>
+            <td class="bold">Consignment Note No.:</td>
+            <td>{{ gate.gp_consignment_note_no }}</td>
+        </tr>
+        <tr>
+            <td class="bold">Customer GSTIN:</td>
+            <td>{{ gate.gp_customer_gstin }}</td>
+            <td class="bold">Consignment Date:</td>
+            <td>{{ gate.gp_consignment_date|date:"d-m-Y" }}</td>
+        </tr>
+        <tr>
+            <td class="bold">E-WAY Bill No & Date:</td>
+            <td>{{ gate.gp_eway_bill_no }}</td>
+            <td class="bold">Vehicle No.:</td>
+            <td>{{ gate.gp_veh_no }}</td>
+        </tr>
+        <tr>
+            <td class="bold">Customer PO No.:</td>
+            <td>{{ gate.gp_customer_po.po_num }}</td>
+            <td class="bold">Driver Name:</td>
+            <td>{{ gate.gp_driver_name }}</td>
+        </tr>
+        <tr>
+            <td class="bold">BVM Job No.:</td>
+            <td>{{ gate.gp_job_no }}</td>
+            <td class="bold">Driver Mobile No.:</td>
+            <td>{{ gate.gp_driver_mobile_no }}</td>
         </tr>
     </table>
-    <hr class="report_hrItem"/>
-    <table class='report_details'>
-        <tr>
-            <th>ASSESSMENT NUMBER</th>
-            <th>CUSTOMER PO</th>
-            <th>DESCRIPTION</th>
-            <th>UOM</th>
-            <th>QTY</th>
+
+    <!-- Table 2: Itemized Table (New table to have different column widths) -->
+    <table class="gp-table" style="border-top: none;">
+        <tr class="text-center bold">
+            <td style="width: 5%;">SR.<br>NO.</td>
+            <td style="width: 20%;">DESCRIPTION</td>
+            <td style="width: 8%;">UOM</td>
+            <td style="width: 8%;">QTY</td>
+            <td style="width: 12%;">HSN CODE</td>
+            <td style="width: 32%;">ITEM CODE</td>
+            <td style="width: 15%;">REMARKS</td>
         </tr>
+
+        <!-- Items -->
         {% for gatepass in gatepass_list %}
         <tr>
-            <td>{{ gatepass.pod_assess_num }}</td>
-            <td>{{ gatepass.pod_po_num }}</td>
+            <td class="text-center">{{ forloop.counter }}</td>
             <td>{{ gatepass.pod_type_of_req }}</td>
-            <td>{{ gatepass.pod_uom }}</td>
-            <td>{{ gatepass.pod_quantity }}</td>
+            <td class="text-center">{{ gatepass.pod_uom }}</td>
+            <td class="text-center">{{ gatepass.pod_quantity }}</td>
+            <td class="text-center">{{ gate.gp_hsn_code }}</td>
+            <td class="text-center">{{ gatepass.pod_item }}</td>
+            <td>{{ gate.gp_remarks }}</td>
         </tr>
         {% endfor %}
-    </table>
-    <hr class="report_hrItem"/>
-    <table class='report_details'>
-        <tr>
-            <th></th>
-            <th>NAME</th>
-            <th>SIGN</th>
-            <th>DATE</th>
-        </tr>
-        <tr>
-            <th>PREPARED BY</th>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-        <tr>
-            <th>CHECKED BY</th>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-        <tr>
-            <th>APPROVED BY</th>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-        <tr>
-            <th>GOODS OUTWARD REF.</th>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
+
+        <!-- Empty rows for spacing -->
+        {% if gatepass_list|length < 8 %}
+            {% with '1 2 3 4' as list %}
+                {% for i in list %}
+                    <tr style="height: 25px;">
+                        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                    </tr>
+                {% endfor %}
+            {% endwith %}
+        {% endif %}
     </table>
 
-    <div class="right-group">
-        <p>Super Verification</p>
-    </div>
-     <div class="center-group">
-        <p>THANK YOU FOR YOUR BUSINESS!</p>
-    </div>
-
+    <br><br>
+    <table style="width: 100%; border: none;">
+        <tr>
+            <td style="border: none; width: 33%;" class="text-center">
+                <br><br>
+                ________________<br>
+                Receiver's Signature
+            </td>
+            <td style="border: none; width: 33%;" class="text-center">
+                <br><br>
+                ________________<br>
+                Authorised Signatory
+            </td>
+            <td style="border: none; width: 33%;" class="text-center">
+                <br><br>
+                ________________<br>
+                BVM Internal Verification
+            </td>
+        </tr>
+    </table>
 </div>
 {% endblock content %}
 

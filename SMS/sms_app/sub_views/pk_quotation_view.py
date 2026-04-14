@@ -291,7 +291,9 @@ def pk_store_na_dimension_id(request):
     na_width=str(a.nad_width)
     na_height = str(a.nad_height)
     na_quantity = str(a.nad_quantity)
-
+    na_wood_type_id = a.nad_wood_type.first().id if a.nad_wood_type.exists() else ""
+    na_wood_desc_id = a.nad_wood_description.first().id if a.nad_wood_description.exists() else ""
+    na_type_of_req_id = a.nad_type_of_req.id if a.nad_type_of_req else ""
 
     data = {
         'na_dimension_box_val': na_dimension_box_val,
@@ -303,5 +305,8 @@ def pk_store_na_dimension_id(request):
         'na_width': na_width,
         'na_height': na_height,
         'na_quantity': na_quantity,
+        'na_wood_type_id': na_wood_type_id,
+        'na_wood_desc_id': na_wood_desc_id,
+        'na_type_of_req_id': na_type_of_req_id,
     }
     return JsonResponse(data)

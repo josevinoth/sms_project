@@ -51,6 +51,6 @@ class TransInvoiceForm(forms.ModelForm):
 
         if qs.exists():
             raise forms.ValidationError(
-                "This Master Invoice number already exists. Please enter a unique invoice number."
+                "Invoice number already exist"
             )
         return inv_no

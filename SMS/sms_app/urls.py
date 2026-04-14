@@ -2,9 +2,12 @@ from django.urls import path
 from django.views.generic import TemplateView
 
 from . import views
+from .sub_views.pk_purchaseorder_view import pk_create_batch_job, pk_get_po_items_for_job
 from django.contrib.auth import views as auth_views  # import this
 
 urlpatterns = [
+    path('pk_create_batch_job/', pk_create_batch_job, name='pk_create_batch_job'),
+    path('pk_get_po_items_for_job/', pk_get_po_items_for_job, name='pk_get_po_items_for_job'),
     path('print_pdf', views.print_pdf, name='print_pdf'),  # Print PDF
     path('asset_qr_id/<int:asset_qr_id>', views.qr_code_asset, name='asset_qr_id'),  # qr_code
     path('goods_qr_id/<int:goods_qr_id>', views.qr_code_goods, name='goods_qr_id'),  # goods qr_code
@@ -480,6 +483,8 @@ urlpatterns = [
     # update purchaseorder
     path('purchaseorder_delete/<int:purchaseorder_id>', views.purchaseorder_delete, name='purchaseorder_delete'),
     # delete purchaseorder
+    path('pk_get_po_items_for_job/', views.pk_get_po_items_for_job, name='pk_get_po_items_for_job'),
+    path('pk_create_batch_job/', views.pk_create_batch_job, name='pk_create_batch_job'),
     path('na_dimension_list/', views.na_dimension_list, name='na_dimension_list'),  # List Na Dimension
     path('na_dimension_insert/', views.na_dimension_add, name='na_dimension_insert'),  # Add Na Dimension
     path('na_dimension_update/<int:na_dimension_id>', views.na_dimension_add, name='na_dimension_update'),
@@ -613,6 +618,8 @@ urlpatterns = [
     path('pk_quotationsummary_list/', views.pk_quotationsummary_list, name='pk_quotationsummary_list'),
     path('pk_quotationsummary_clone/<int:pk_quotationsummary_id>/', views.pk_quotationsummary_clone,
          name='pk_quotationsummary_clone'),
+    path('pk_quotationsummary_clone_po/<int:purchaseorder_id>/', views.pk_quotationsummary_clone_po,
+         name='pk_quotationsummary_clone_po'),
     path('pk_quotationsummary_insert/', views.pk_quotationsummary_add, name='pk_quotationsummary_insert'),
     # Add pk_quotationsummary
     path('pk_quotationsummary_update/<int:pk_quotationsummary_id>', views.pk_quotationsummary_add,
@@ -702,6 +709,8 @@ urlpatterns = [
     path('packing_gate_update/<int:gate_id>/', views.gate_return_add, name='packing_gate_update'),
     path('packing_gate_delete/<int:gate_id>/', views.gate_return_delete, name='packing_gate_delete'),
     path('packing_gate_pdf/<int:gate_id>', views.gate_return_pdf, name='packing_gate_pdf'),
+    path('gate_pass_get_jobs_by_customer/', views.gate_pass_get_jobs_by_customer, name='gate_pass_get_jobs_by_customer'),
+    path('gate_pass_get_job_details/', views.gate_pass_get_job_details, name='gate_pass_get_job_details'),
     path('customer_attachment_add/', views.customer_attach_add, name='customer_attachment_add'),
     path('customer_attachment_list/', views.customer_attach_list, name='customer_attachment_list'),
     path('customer_attachment_update/<int:attach_id>/', views.customer_attach_add, name='customer_attachment_update'),
@@ -741,6 +750,9 @@ urlpatterns = [
     path('gate_out_send_email/', views.gate_out_email, name='gate_out_send_email'),
     path('profit_loss_report/', views.profit_loss_report, name='profit_loss_report'),
     path('gate_in_send_email/', views.gate_in_email, name='gate_in_send_email'),
+    path('pod_pending_report/', views.pod_pending_report_view, name='pod_pending_report'),
+    path('pod_pending_report_ajax/', views.pod_pending_report_ajax_view, name='pod_pending_report_ajax'),
+    path('time_analysis_report/', views.time_analysis_report_view, name='time_analysis_report'),
     path('dispatch_gatepass_pdf_download/<int:dispatch_id>', views.dispatch_gatepass_pdf_download,
          name='dispatch_gatepass_pdf_download'),
     path('sales_reports/', views.sales_reports, name='sales_reports'),
@@ -797,8 +809,11 @@ urlpatterns = [
     path('salesperson_wise_table/', views.salesperson_wise_table, name='salesperson_wise_table'),
     path('sales_multiple_item_add/', views.sales_multiple_item_add, name='sales_multiple_item_add'),
     path('sales_multiple_item_list/', views.sales_multiple_item_list, name='sales_multiple_item_list'),
-    path('sales_multiple_item_update/<int:sales_multiple_id>/', views.sales_multiple_item_add,
-         name='sales_multiple_item_update'),
+    path('sales_multiple_item_update/<int:sales_multiple_id>/', views.sales_multiple_item_add, name='sales_multiple_item_update'),
+    path('charge_master_list/', views.charge_master_list, name='charge_master_list'),
+    path('charge_master_insert', views.charge_master_add, name='charge_master_insert'),
+    path('charge_master_update/<int:cm_id>/', views.charge_master_add, name='charge_master_update'),
+    path('charge_master_delete/<int:cm_id>/', views.charge_master_delete, name='charge_master_delete'),
     path('sales_multiple_item_delete/<int:sales_multiple_id>/', views.sales_multiple_item_delete,
          name='sales_multiple_item_delete'),
     path('sales_multiple_item_cancel/', views.sales_multiple_item_cancel, name='sales_multiple_item_cancel'),
@@ -870,6 +885,12 @@ urlpatterns = [
     path('customer_claims_list/', views.customer_claims_list, name='customer_claims_list'),
     path('customer_claims_update/<int:claim_id>/', views.customer_claims_add, name='customer_claims_update'),
     path('customer_claims_delete/<int:claim_id>/', views.customer_claims_delete, name='customer_claims_delete'),
+    path('customer_claims_report/', views.customer_claims_report, name='customer_claims_report'),
+    path('trans_customer_claims_add/', views.trans_customer_claims_add, name='trans_customer_claims_add'),
+    path('trans_customer_claims_list/', views.trans_customer_claims_list, name='trans_customer_claims_list'),
+    path('trans_customer_claims_update/<int:claim_id>/', views.trans_customer_claims_add, name='trans_customer_claims_update'),
+    path('trans_customer_claims_delete/<int:claim_id>/', views.trans_customer_claims_delete, name='trans_customer_claims_delete'),
+    path('fetch_trip_details_by_cnote/', views.fetch_trip_details_by_cnote, name='fetch_trip_details_by_cnote'),
     path('wrong_labelling_add/', views.wrong_labelling_add, name='wrong_labelling_add'),
     path('wrong_labelling_list/', views.wrong_labelling_list, name='wrong_labelling_list'),
     path('wrong_labelling_update/<int:wrong_labelling_id>/', views.wrong_labelling_add, name='wrong_labelling_update'),
@@ -935,6 +956,7 @@ urlpatterns = [
     path("email_master_list/", views.email_master_list, name="email_master_list"),  # List page
     path("email_delete/<int:record_id>/", views.email_delete, name="email_delete"),  # Delete record
     path('get_halting_charge/', views.get_halting_charge, name='get_halting_charge'),
+    path('get_cancellation_charge/', views.get_cancellation_charge, name='get_cancellation_charge'),
     path('get_route_rate/', views.get_vendor_buy_rate, name='get_route_rate'),
     path('driver_expense_add/', views.driver_expense_add, name='driver_expense_add'),
     path('driver_expense_list/', views.driver_expense_list, name='driver_expense_list'),
@@ -1010,9 +1032,14 @@ urlpatterns = [
     path('stock_maintenance_delete/<int:pk>/', views.stock_maintenance_delete, name='stock_maintenance_delete'),
     path('stock_usage_breakdown/', views.stock_usage_breakdown, name='stock_usage_breakdown'),
     path('trans-invoice/excel/<path:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
-    path('trans-invoice/tally-excel/<int:customer_id>/', views.trans_invoice_tally_excel, name='trans_invoice_tally_excel'),
+    path('trans-invoice/tally-excel/<path:invoice_no>/', views.trans_invoice_tally_excel, name='trans_invoice_tally_excel'),
     path("maintenance/pdf/<int:id>/",views.maintenance_pdf,name="maintenance_pdf"),
     path('vehicle_log_report/', views.vehicle_log_report_view, name='vehicle_log_report'),
+    path('movementwise_pl_report/', views.movementwise_pl_report_view, name='movementwise_pl_report'),
+    path('movementwise_pl_report_ajax/', views.movementwise_pl_report_ajax_view, name='movementwise_pl_report_ajax'),
+    path('customerwise_pl_report/', views.customerwise_pl_report_view, name='customerwise_pl_report'),
+    path('customerwise_pl_report_ajax/', views.customerwise_pl_report_ajax_view, name='customerwise_pl_report_ajax'),
+    path('mileage_report/', views.mileage_report_view, name='mileage_report'),
     path('trip_cancellation_report/', views.trip_cancellation_report_view, name='trip_cancellation_report'),
     path('ref_no_pending_report/', views.ref_no_pending_report_view, name='ref_no_pending_report'),
     path('vehicle_utilization_report/', views.vehicle_utilization_report_view, name='vehicle_utilization_report'),
@@ -1023,9 +1050,13 @@ urlpatterns = [
     path('whatsapp_delivery_status_report/', views.whatsapp_delivery_status_report_view,name='whatsapp_delivery_status_report'),
     path('daily_trip_count_report/', views.daily_trip_count_report_view, name='daily_trip_count_report'),
     path('own_vehicle_pl_report/', views.own_vehicle_pl_report_view, name='own_vehicle_pl_report'),
+    path('location_pl_report/', views.location_pl_report_view, name='location_pl_report'),
     path('claim_pending_report/', views.claim_pending_report_view, name='claim_pending_report'),
     path('enquiry_pending_report/', views.enquiry_pending_report_view, name='enquiry_pending_report'),
+    path('enquiry_pending_report_ajax/', views.enquiry_pending_report_ajax_view, name='enquiry_pending_report_ajax'),
+    path('driver_balance_report/', views.driver_balance_report_view, name='driver_balance_report'),
     path('halting_report/', views.halting_report_view, name='halting_report'),
+    path('halting_report_ajax/', views.halting_report_ajax_view, name='halting_report_ajax'),
     path("trip_send_loading_report_mail/", views.trip_send_loading_report_mail, name="trip_send_loading_report_mail"),
     path("trip_send_trip_started_mail/", views.trip_send_trip_started_mail, name="trip_send_trip_started_mail"),
     path("trip_send_unloading_report_mail/", views.trip_send_unloading_report_mail, name="trip_send_unloading_report_mail"),
@@ -1057,4 +1088,9 @@ urlpatterns = [
     path('fetch_maintenance_bill_details/', views.fetch_maintenance_bill_details, name='fetch_maintenance_bill_details'),
     path('get_maintenance_records_by_vehicle/', views.get_maintenance_records_by_vehicle, name='get_maintenance_records_by_vehicle'),
     path('fuelfilling_export_excel/', views.fuelfilling_export_excel, name='fuelfilling_export_excel'),
+    path('sale_enquiry_list/', views.sale_enquiry_list, name='sale_enquiry_list'),
+    path('sale_enquiry_add/', views.sale_enquiry_add, name='sale_enquiry_add'),
+    path('sale_enquiry_update/<int:enquiry_id>/', views.sale_enquiry_add, name='sale_enquiry_update'),
+    path('sale_enquiry_delete/<int:enquiry_id>/', views.sale_enquiry_delete, name='sale_enquiry_delete'),
+    path('ajax/get_customer_code/', views.get_customer_code, name='get_customer_code'),
 ]

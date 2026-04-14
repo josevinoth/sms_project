@@ -12,6 +12,7 @@ from ..sub_models.stock_maintenance_mod import StockMaintenance
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
+from .general_utils import get_branch_code, get_session_branch_id, get_financial_year
 
 @transaction.atomic
 @login_required(login_url='login_page')
@@ -226,8 +227,11 @@ def pk_return_excess_to_stock(request, costing_id):
             sm_total_price=0,
             sm_updated_by_id=user_id
         )
-        # Auto-generate NEW GRN number for return in sm_stock_purchase_number
-        sm_return.sm_stock_purchase_number = f"GRN/PK/{1000000 + sm_return.id}"
+        # Auto-generate branch-specific GRN number for return
+        fy = get_financial_year()
+        branch_id = get_session_branch_id(request)
+        branch_code = get_branch_code(branch_id)
+        sm_return.sm_stock_purchase_number = f"GRN/{branch_code}/{fy}/{sm_return.id}"
         sm_return.save(update_fields=['sm_stock_purchase_number'])
         # Update status to Returned (assuming 5 is Returned or similar)
         # For now, let's keep it 5 but maybe add a message

@@ -52,5 +52,16 @@ class MaintenanceBillForm(forms.ModelForm):
             if isinstance(field, forms.ModelChoiceField) or isinstance(field, forms.ChoiceField):
                 field.empty_label = "--Select--"
         
+        # Explicitly set mandatory fields
+        self.fields['mnb_bill_no'].required = True
+        self.fields['mnb_bill_date'].required = True
+        self.fields['mnb_bill_amount_taxable'].required = True
+        
         # Explicitly set the expenses type choices if needed, but it should be in the model
         self.fields['mnb_expenses_type'].choices = [('Vehicle Maintenance', 'Vehicle Maintenance')]
+
+    def clean_mnb_bill_no(self):
+        bill_no = self.cleaned_data.get('mnb_bill_no')
+        if not bill_no or not str(bill_no).strip():
+            raise forms.ValidationError("Bill number is mandatory.")
+        return bill_no.strip()

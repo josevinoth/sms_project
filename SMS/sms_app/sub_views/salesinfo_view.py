@@ -1,6 +1,5 @@
-from lib2to3.fixes.fix_input import context
-
 from django.contrib import messages
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
@@ -104,10 +103,13 @@ def sales_add(request, sales_id=0):
                 # Save form but do not commit yet
                 sales_instance = form.save(commit=False)
 
-                # Assign a sale number based on the instance's ID (after saving)
-                sales_instance.save()  # Save to get the ID
-                sales_instance.s_sale_number = f"S_{1000000 + sales_instance.id}"
-                sales_instance.save(update_fields=['s_sale_number'])  # Save again to update only s_sale_number
+                # Generate Sale number based on financial year (Branch specific)
+                fy = get_financial_year()
+                branch_id = sales_instance.s_location.id if sales_instance.s_location else get_session_branch_id(request)
+                branch_code = get_branch_code(branch_id)
+                prefix = f"{fy}_{branch_code}_SL_"
+                sales_instance.s_sale_number = generate_next_number(SalesInfo, 's_sale_number', prefix, 6)
+                sales_instance.save()
 
                 messages.success(request, 'Record Saved Successfully')
                 request.session['ses_sales_id'] = sales_instance.id

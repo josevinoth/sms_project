@@ -7,11 +7,12 @@ from xhtml2pdf import pisa
 
 from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete,Pkquotation_delete,Pkquotation_summary_delete,get_tracker_flags
 from ..forms import PkcostingsummaryForm,PkquotationsummaryForm
-from ..models import pk_stock_statusinfo,PkcostingInfo,User_extInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo,PkcostingsummaryInfo,PkpurchaseorderInfo
+from ..models import pk_stock_statusinfo,PkcostingInfo,User_extInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo,PkcostingsummaryInfo,PkpurchaseorderInfo,StatusList,POdimension
 from django.shortcuts import render, redirect
 from django.db.models.aggregates import Sum
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from ..sub_models.stock_maintenance_mod import StockMaintenance
 
 
@@ -150,24 +151,18 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 instance = form.save()
                 if pk_quotationsummary_id == 0:
                     try:
-                        # Use the newly created instance id correctly
-                        new_id = instance.id
-                        quotation_number = 100000 + new_id
-                        date_to_check = datetime.now()
-                        current_year = date_to_check.year
-                        if date_to_check.month <= 3:
-                            financial_year = f"{current_year - 1}-{str(current_year)[-2:]}"
-                        else:
-                            financial_year = f"{current_year}-{str(current_year + 1)[-2:]}"
-                        
-                        quotation_number_str = f'{quotation_number:03}'
-                        quotation_num_next = f'BVM/PKG/{financial_year}/{quotation_number_str}'
+                        # Generate Quotation Summary number based on financial year (Branch specific)
+                        fy = get_financial_year()
+                        branch_id = get_session_branch_id(request)
+                        branch_code = get_branch_code(branch_id)
+                        prefix = f"{fy}_{branch_code}_QS_"
+                        quotation_num_next = generate_next_number(PkquotationsummaryInfo, 'qs_quotation_number', prefix, 6)
                         
                         # Update the instance with the generated number
                         instance.qs_quotation_number = quotation_num_next
                         instance.save()
                         messages.success(request, 'Record Created Successfully with Quotation Number: ' + quotation_num_next)
-                        last_id = new_id # For redirection
+                        last_id = instance.id # For redirection
                     except Exception as e:
                         print(f"Error generating quotation number: {str(e)}")
                         last_id = instance.id
@@ -502,3 +497,102 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
             return redirect('/SMS/costingsummary_update/' + str(costing_summary_id))
         else:
             return redirect(request.META.get('HTTP_REFERER', '/'))
+
+@login_required(login_url='login_page')
+def pk_quotationsummary_clone_po(request, purchaseorder_id):
+    """
+    Clones all items from the Purchase Order Dimensions into a single Costing Summary.
+    Uses 'Line-Level' cloning to support multiple lines of the same item with different quantities/dates.
+    """
+    po = get_object_or_404(PkpurchaseorderInfo, id=purchaseorder_id)
+    po_items = POdimension.objects.filter(pod_po_num=po)
+    
+    # Get stock status for costing (default 1)
+    try:
+        stock_status_instance = pk_stock_statusinfo.objects.get(id=1)
+    except pk_stock_statusinfo.DoesNotExist:
+        stock_status_instance = None
+
+    cloned_count = 0
+    
+    # NEW: Cleanup existing costing records for this PO that are no longer in the PO dimensions
+    # Using Line-Level ID (POdimension ID) for cleanup
+    current_pod_ids = po_items.values_list('id', flat=True)
+    PkcostingInfo.objects.filter(ct_customer_po=po).exclude(ct_po_dimension_id__in=current_pod_ids).delete()
+
+    for po_item in po_items:
+        # Find all quotation details matching this item (Nadimension)
+        quotations = PkquotationInfo.objects.filter(
+            pkqt_requirement=po_item.pod_nad
+        )
+        
+        for q in quotations:
+            # Check if already cloned to prevent duplicates for this SPECIFIC PO LINE
+            if not PkcostingInfo.objects.filter(
+                ct_customer_po=po,
+                ct_po_dimension=po_item,
+                ct_cost_type=q.pkqt_cost_type
+            ).exists():
+                PkcostingInfo.objects.create(
+                    ct_cost_type=q.pkqt_cost_type,
+                    ct_stock_description=q.pkqt_stock_description,
+                    ct_width=q.pkqt_width,
+                    ct_height=q.pkqt_height,
+                    ct_cft=q.pkqt_cft,
+                    ct_rate=q.pkqt_rate,
+                    ct_days=q.pkqt_days,
+                    ct_total_cost=q.pkqt_total_cost,
+                    ct_quantity=q.pkqt_quantity,
+                    ct_size=q.pkqt_size,
+                    ct_uom=q.pkqt_uom,
+                    ct_assessment_num=q.pkqt_assessment_num,
+                    ct_length=q.pkqt_length,
+                    ct_stock_type=q.pkqt_stock_type,
+                    ct_stock_purchase_number=q.pkqt_stock_purchase_number,
+                    ct_item=q.pkqt_item,
+                    ct_itemdescription=q.pkqt_itemdescription,
+                    ct_requirement=q.pkqt_requirement,
+                    ct_requirement_size=q.pkqt_requirement_size,
+                    ct_width_req=q.pkqt_width_req,
+                    ct_height_req=q.pkqt_height_req,
+                    ct_length_req=q.pkqt_length_req,
+                    ct_quantity_req=po_item.pod_quantity,  # IMPORTANT: Use quantity from PO line
+                    ct_sqrt_req=q.pkqt_sqrt_req,
+                    ct_stock_status=stock_status_instance,
+                    ct_customer_name=q.pkqt_customer_name,
+                    ct_customer_new_name=q.pkqt_customer_new_name2,
+                    ct_customer_po=po,
+                    ct_updated_by=request.user,
+                    ct_na_quantity=q.pkqt_na_quantity,
+                    ct_totalbox_cost=q.pkqt_totalbox_cost,
+                    ct_part_code=q.pkqt_part_code,
+                    ct_total_cft_display=q.pkqt_total_cft_display,
+                    ct_po_dimension=po_item,  # NEW: Link to the specific PO line
+                )
+                cloned_count += 1
+
+    # Ensure Costing Summary exists for this PO
+    try:
+        wip_status = StatusList.objects.get(id=6)
+    except StatusList.DoesNotExist:
+        wip_status = None
+
+    summary, created = PkcostingsummaryInfo.objects.get_or_create(
+        cs_customer_po=po,
+        defaults={
+            'cs_assessment_num': po_items.first().pod_assess_num if po_items.exists() else po.po_assessment_num,
+            'cs_customer_name': po.po_customer_name,
+            'cs_status': wip_status,
+        }
+    )
+
+    if cloned_count > 0:
+        messages.success(request, f'Successfully cloned {cloned_count} items to Costing.')
+    else:
+        messages.info(request, 'No new items found to clone for this PO (Already synced or missing quotations).')
+    
+    # Redirect to the Costing Summary update page
+    if summary:
+        return redirect('/SMS/costingsummary_update/' + str(summary.id))
+    
+    return redirect('costing_list')

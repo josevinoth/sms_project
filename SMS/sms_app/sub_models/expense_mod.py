@@ -26,7 +26,7 @@ class ExpenseInfo(models.Model):
     exp_updated_at = models.DateTimeField(null=True, auto_now=True)
     exp_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
     exp_category= models.ForeignKey(ExpenseCategoryInfo, on_delete=models.CASCADE, null=True)
-    exp_number= models.CharField(blank=True,null=True,max_length=20)
+    exp_number= models.CharField(blank=True,null=True,max_length=50)
     exp_business = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE, null=True)
     exp_iou = models.ForeignKey(iou_info, on_delete=models.CASCADE, null=True,blank=True)
 

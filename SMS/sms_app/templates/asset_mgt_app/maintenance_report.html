@@ -12,6 +12,20 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <!-- ================= CLAIM PENDING REPORT ================= -->
+<style>
+    .dataTables_length, .dt-buttons {
+        display: inline-block !important;
+        vertical-align: middle !important;
+        margin-bottom: 10px !important;
+    }
+    .dataTables_length {
+        margin-right: 20px !important;
+    }
+    .dt-button {
+        padding: 5px 12px !important;
+        margin-right: 5px !important;
+    }
+</style>
 
 <div class="container-fluid d-flex justify-content-between align-items-center py-3">
     <a href="{% url 'transport_reports' %}" class="btn btn-primary shadow-sm">
@@ -23,43 +37,51 @@
     <div style="width: 140px;"></div> <!-- Spacer to keep title centered -->
 </div>
 
-<form method="POST">
+<form method="POST" class="row g-3 align-items-end justify-content-center" id="filterForm">
     {% csrf_token %}
-    <div class="row mt-2 justify-content-center">
+    
+    <!-- Vehicle Search -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Vehicle No</label>
+        <select name="vehicle_search" id="vehicle_search" class="form-control select2">
+            <option value="">Search Vehicle No</option>
+            {% for vehicle in all_vehicles %}
+            <option value="{{ vehicle.vm_registrationnumber }}" {% if vehicle_search == vehicle.vm_registrationnumber %}selected{% endif %}>
+                {{ vehicle.vm_registrationnumber }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
 
-        <!-- Vehicle Search -->
-        <div class="col-md-2">
-            <select name="vehicle_search" id="vehicle_search" class="form-control select2">
-                <option value="">Search Vehicle No</option>
-                {% for vehicle in all_vehicles %}
-                <option value="{{ vehicle.vm_registrationnumber }}" {% if vehicle_search == vehicle.vm_registrationnumber %}selected{% endif %}>
-                    {{ vehicle.vm_registrationnumber }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
+    <!-- Branch Filter -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Branch</label>
+        <select name="branch" id="branch" class="form-control select2">
+            <option value="">-- All Branches --</option>
+            {% for branch in all_branches %}
+            <option value="{{ branch.id }}" {% if branch.id|slugify == selected_branch_id|slugify %}selected{% endif %}>
+                {{ branch.branch }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
 
-        <!-- Month Filter -->
-        <div class="col-md-2">
-            {% render_field form.month class="form-control" %}
-        </div>
+    <!-- From Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">From Date</label>
+        <input type="date" name="from_date" id="from_date" class="form-control" value="{{ from_date }}">
+    </div>
 
-        <!-- Year Filter -->
-        <div class="col-md-2">
-            {% render_field form.year class="form-control" %}
-        </div>
+    <!-- To Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">To Date</label>
+        <input type="date" name="to_date" id="to_date" class="form-control" value="{{ to_date }}">
+    </div>
 
-        <!-- Filter Button -->
-        <div class="col-md-1">
-            <button type="submit" class="btn btn-primary btn-block">
-                Filter
-            </button>
-        </div>
-
-        <!-- Clear Button -->
-        <div class="col-md-1">
-            <a href="{% url 'maintenance_report' %}" class="btn btn-secondary btn-block">Clear</a>
-        </div>
+    <!-- Buttons -->
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="{% url 'maintenance_report' %}" class="btn btn-secondary">Clear</a>
     </div>
 </form>
 
@@ -87,24 +109,6 @@
         </table>
     </div>
 
-    <!-- Pagination -->
-    <div class="pagination justify-content-center">
-        <span class="step-links">
-            {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; first</a>
-            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-            {% endif %}
-
-            <span class="current">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-            </span>
-
-            {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">next</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-            {% endif %}
-        </span>
-    </div>
 
 </div>
 
@@ -113,36 +117,34 @@
     $(document).ready(function () {
 
         const table = $('#maintenance_report_table').DataTable({
-
             scrollX: true,
-            dom: 'lBfrtip',
-
+            autoWidth: false,
+            dom: "<'row'<'col-sm-12 col-md-6'lB><'col-sm-12 col-md-6'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            
             lengthMenu: [
                 [10, 25, 50, 100, -1],
                 [10, 25, 50, 100, "All"]
             ],
-
-            pageLength: 10,
-
+            pageLength: 25,
             buttons: [
-
-                'copy',
-                'csv',
-
-                // ======================
-                // EXCEL EXPORT
-                // ======================
+                {
+                    extend: 'copy',
+                    className: 'btn btn-sm btn-info'
+                },
+                {
+                    extend: 'csv',
+                    className: 'btn btn-sm btn-info'
+                },
                 {
                     extend: 'excelHtml5',
+                    className: 'btn btn-sm btn-info',
                     text: 'Excel',
                     title: 'Maintenance Report-vehicle',
-
                     customize: function (xlsx) {
-
                         let sheet = xlsx.xl.worksheets['sheet1.xml'];
                         let styles = xlsx.xl['styles.xml'];
-
-                        // ---------- FONT ----------
                         let fonts = $('fonts', styles);
                         fonts.append(`
                         <font>
@@ -153,8 +155,6 @@
                         </font>
                     `);
                         let fontId = fonts.children().length - 1;
-
-                        // ---------- BLUE FILL ----------
                         let fills = $('fills', styles);
                         fills.append(`
                         <fill>
@@ -165,8 +165,6 @@
                         </fill>
                     `);
                         let fillId = fills.children().length - 1;
-
-                        // ---------- STYLE ----------
                         let cellXfs = $('cellXfs', styles);
                         cellXfs.append(`
                         <xf xfId="0"
@@ -176,37 +174,26 @@
                             applyFont="1"
                             applyFill="1"/>
                     `);
-
                         let styleId = cellXfs.children().length - 1;
-
-                        // APPLY STYLE TO HEADER ROW
                         $('row:eq(1) c', sheet).attr('s', styleId);
                     }
                 },
-
-                // ======================
-                // PDF EXPORT
-                // ======================
                 {
                     extend: 'pdfHtml5',
+                    className: 'btn btn-sm btn-info',
                     orientation: 'landscape',
                     pageSize: 'A4',
                     title: 'Maintenance Report-vehicle',
-
                     customize: function (doc) {
                         doc.styles.tableHeader.fillColor = '#0A3278';
                         doc.styles.tableHeader.color = 'white';
                         doc.styles.tableHeader.bold = true;
                     }
                 },
-
-                // ======================
-                // PRINT
-                // ======================
                 {
                     extend: 'print',
+                    className: 'btn btn-sm btn-info',
                     title: 'Maintenance Report-vehicle',
-
                     customize: function (win) {
                         $(win.document.body).find('thead th')
                             .css('background-color', '#0A3278')
@@ -215,8 +202,12 @@
                     }
                 }
             ],
-
             order: [[0, 'asc']]
+        });
+
+        // Handle window resize to adjust columns
+        $(window).on('resize', function () {
+            $('#maintenance_report_table').DataTable().columns.adjust();
         });
 
     });

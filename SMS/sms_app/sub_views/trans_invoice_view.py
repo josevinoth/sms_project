@@ -11,6 +11,8 @@ from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.tripdetail_mod import TripdetailInfo
 from ..sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
+from django.db.models import F, Sum, Q, Case, When, Value, FloatField
+from django.db.models.functions import Coalesce
 
 
 
@@ -31,17 +33,7 @@ def trans_invoice_add(request):
 
             # calculate total
             invoice.ti_total = 0  # Initialize to 0 as no WOH items yet
-            invoice.ti_transportation_charges = 0
-            invoice.ti_toll_charges = 0
-            invoice.ti_parking_charges = 0
-            invoice.ti_loading_charges = 0
-            invoice.ti_unloading_charges = 0
-            invoice.ti_halting_charges = 0
-            invoice.ti_docket_charges = 0
-            invoice.ti_weighment_charges = 0
-            invoice.ti_handling_charges = 0
-            invoice.ti_cancellation_charges = 0
-
+            
             # ==================================================
             # ATTACH CONSIGNMENT / TRIP / GOODS
             # ==================================================
@@ -73,6 +65,15 @@ def trans_invoice_add(request):
                 )
                 if trip:
                     invoice.ti_trip = trip
+                    invoice.ti_transportation_charges=(trip.tc_tripcost if trip.tc_tripcost_check else 0.0)
+                    invoice.ti_toll_charges=(trip.tc_tollcost if trip.tc_tollcost_check else 0.0)
+                    invoice.ti_parking_charges=(trip.tc_parkingcost if trip.tc_parkingcost_check else 0.0)
+                    invoice.ti_loading_charges=(trip.tc_loadingcost if trip.tc_loadingcost_check else 0.0)
+                    invoice.ti_unloading_charges=(trip.tc_unloadingcost if trip.tc_unloadingcost_check else 0.0)
+                    invoice.ti_halting_charges=(trip.tc_haltingcost if trip.tc_haltingcost_check else 0.0) + (trip.tc_total_halting_cost if trip.tc_total_halting_cost_check else 0.0)
+                    invoice.ti_weighment_charges=(trip.tc_weighmentcost if trip.tc_weighmentcost_check else 0.0)
+                    invoice.ti_handling_charges=(trip.tc_handlingcost if trip.tc_handlingcost_check else 0.0)
+                    invoice.ti_cancellation_charges=(trip.tc_cancellation if trip.tc_cancellation_check else 0.0)
 
             goods = None
             if cons:
@@ -119,7 +120,7 @@ def trans_invoice_add(request):
             if inv_no:
                 # Check existence across the table (case-insensitive)
                 if TransInvoiceInfo.objects.filter(ti_inv_no__iexact=inv_no).exists():
-                    messages.error(request, f"Invoice number '{inv_no}' already exists. Please use a unique invoice number.")
+                    messages.error(request, "Invoice number already exist")
                 else:
                     # assign stripped value and save
                     invoice.ti_inv_no = inv_no
@@ -131,10 +132,7 @@ def trans_invoice_add(request):
                 saved = True
 
         else:
-            messages.error(
-                request,
-                "Invoice not saved. Please correct the errors below."
-            )
+            pass
 
     else:
         form = TransInvoiceForm()
@@ -155,13 +153,6 @@ def trans_invoice_add(request):
 
 
 
-from django.db.models import Sum, F, Value, FloatField, Subquery, OuterRef
-from django.db.models.functions import Coalesce
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib import messages
-
-
 @login_required(login_url='login_page')
 def trans_invoice_edit(request, invoice_id):
     first_name = request.session.get('first_name')
@@ -176,19 +167,21 @@ def trans_invoice_edit(request, invoice_id):
         TransInvoiceInfo.objects
         .filter(
             ti_customer=customer,
+            ti_inv_no=invoice.ti_inv_no,
             is_woh=True
         )
         .annotate(
-            trip_total=Coalesce(F('ti_trip__tc_tripcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_tollcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_parkingcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_loadingcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_unloadingcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_haltingcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_rtocost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_weighmentcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_handlingcost'), 0.0) +
-                       Coalesce(F('ti_trip__tc_cancellation'), 0.0)
+            trip_total=(
+                Coalesce(F('ti_transportation_charges'), Value(0.0)) +
+                Coalesce(F('ti_toll_charges'), Value(0.0)) +
+                Coalesce(F('ti_parking_charges'), Value(0.0)) +
+                Coalesce(F('ti_loading_charges'), Value(0.0)) +
+                Coalesce(F('ti_unloading_charges'), Value(0.0)) +
+                Coalesce(F('ti_halting_charges'), Value(0.0)) +
+                Coalesce(F('ti_weighment_charges'), Value(0.0)) +
+                Coalesce(F('ti_handling_charges'), Value(0.0)) +
+                Coalesce(F('ti_cancellation_charges'), Value(0.0))
+            )
         )
     )
 
@@ -202,7 +195,6 @@ def trans_invoice_edit(request, invoice_id):
         loading=Sum('ti_trip__tc_loadingcost'),
         unloading=Sum('ti_trip__tc_unloadingcost'),
         halting=Sum('ti_trip__tc_haltingcost'),
-        docket=Sum('ti_docket_charges'), 
         weighment=Sum('ti_trip__tc_weighmentcost'),
         handling=Sum('ti_trip__tc_handlingcost'),
         cancellation=Sum('ti_trip__tc_cancellation'),
@@ -237,7 +229,6 @@ def trans_invoice_edit(request, invoice_id):
                 loading=Sum('ti_trip__tc_loadingcost'),
                 unloading=Sum('ti_trip__tc_unloadingcost'),
                 halting=Sum('ti_trip__tc_haltingcost'),
-                docket=Sum('ti_docket_charges'),
                 weighment=Sum('ti_trip__tc_weighmentcost'),
                 handling=Sum('ti_trip__tc_handlingcost'),
                 cancellation=Sum('ti_trip__tc_cancellation'),
@@ -252,7 +243,6 @@ def trans_invoice_edit(request, invoice_id):
             invoice.ti_loading_charges = get_val('loading')
             invoice.ti_unloading_charges = get_val('unloading')
             invoice.ti_halting_charges = get_val('halting')
-            invoice.ti_docket_charges = get_val('docket')
             invoice.ti_weighment_charges = get_val('weighment')
             invoice.ti_handling_charges = get_val('handling')
             invoice.ti_cancellation_charges = get_val('cancellation')
@@ -264,7 +254,6 @@ def trans_invoice_edit(request, invoice_id):
                 invoice.ti_loading_charges +
                 invoice.ti_unloading_charges +
                 invoice.ti_halting_charges +
-                invoice.ti_docket_charges +
                 invoice.ti_weighment_charges +
                 invoice.ti_handling_charges +
                 invoice.ti_cancellation_charges
@@ -301,7 +290,6 @@ def trans_invoice_edit(request, invoice_id):
         invoice.ti_loading_charges = totals['loading']
         invoice.ti_unloading_charges = totals['unloading']
         invoice.ti_halting_charges = totals['halting']
-        invoice.ti_docket_charges = totals['docket']
         invoice.ti_weighment_charges = totals['weighment']
         invoice.ti_handling_charges = totals['handling']
         invoice.ti_cancellation_charges = totals['cancellation']
@@ -335,25 +323,9 @@ def trans_invoice_edit(request, invoice_id):
 def trans_invoice_list(request):
     first_name = request.session.get('first_name')
 
-    # Subquery to get the total of related WOH invoices
-    woh_total_subquery = (
-        TransInvoiceInfo.objects.filter(
-            is_woh=True,
-            ti_inv_no=OuterRef('ti_inv_no'),
-            ti_customer=OuterRef('ti_customer')
-        )
-        .values('ti_inv_no')  # Group by invoice number
-        .annotate(total=Sum('ti_total'))
-        .values('total')
-    )
-
     queryset = (
         TransInvoiceInfo.objects
         .filter(is_woh=False)
-        .annotate(
-            # Start with 0.0, add WOH sum. Ignore Master's own ti_total as per instruction.
-            grand_total=Coalesce(Subquery(woh_total_subquery), 0.0)
-        )
         .order_by('-id')
     )
 
@@ -393,6 +365,7 @@ def fetch_customer_details(request):
             'branch': '',
             'state': '',
             'customer_name': '',
+            'pincode': '',
         })
 
     customer_name = str(customer).upper()
@@ -412,6 +385,7 @@ def fetch_customer_details(request):
         'branch': branch,
         'state': state,
         'customer_name': customer_name,
+        'pincode': customer.cu_pincode or '',
     })
 
 
@@ -515,6 +489,50 @@ def trans_invoice_list_woh(request, customer_id):
                     }
                 )
 
+            # Recalculate Master Invoice Totals
+            if master_inv:
+                woh_items = TransInvoiceInfo.objects.filter(
+                    ti_customer=customer,
+                    ti_inv_no=manual_inv_no,
+                    is_woh=True
+                )
+                from django.db.models import Sum
+                aggs = woh_items.aggregate(
+                    transport=Sum('ti_trip__tc_tripcost'),
+                    toll=Sum('ti_trip__tc_tollcost'),
+                    parking=Sum('ti_trip__tc_parkingcost'),
+                    loading=Sum('ti_trip__tc_loadingcost'),
+                    unloading=Sum('ti_trip__tc_unloadingcost'),
+                    halting=Sum('ti_trip__tc_haltingcost'),
+                    weighment=Sum('ti_trip__tc_weighmentcost'),
+                    handling=Sum('ti_trip__tc_handlingcost'),
+                    cancellation=Sum('ti_trip__tc_cancellation'),
+                )
+                def get_val(k): return aggs.get(k) or 0.0
+
+                master_inv.ti_transportation_charges = get_val('transport')
+                master_inv.ti_toll_charges = get_val('toll')
+                master_inv.ti_parking_charges = get_val('parking')
+                master_inv.ti_loading_charges = get_val('loading')
+                master_inv.ti_unloading_charges = get_val('unloading')
+                master_inv.ti_halting_charges = get_val('halting')
+                master_inv.ti_weighment_charges = get_val('weighment')
+                master_inv.ti_handling_charges = get_val('handling')
+                master_inv.ti_cancellation_charges = get_val('cancellation')
+
+                master_inv.ti_total = (
+                    master_inv.ti_transportation_charges +
+                    master_inv.ti_toll_charges +
+                    master_inv.ti_parking_charges +
+                    master_inv.ti_loading_charges +
+                    master_inv.ti_unloading_charges +
+                    master_inv.ti_halting_charges +
+                    master_inv.ti_weighment_charges +
+                    master_inv.ti_handling_charges +
+                    master_inv.ti_cancellation_charges
+                )
+                master_inv.save()
+
             return JsonResponse({'status': 'success'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
@@ -554,16 +572,20 @@ def trans_invoice_list_woh(request, customer_id):
         .filter(id__in=current_woh_trip_ids)
         .select_related('tr_enquirynumber','tr_consignmentnumber','tr_vehicletype','tr_vehiclesource')
         .annotate(
-            trip_total=Coalesce(F('tc_tripcost'), 0.0) +
-                       Coalesce(F('tc_tollcost'), 0.0) +
-                       Coalesce(F('tc_parkingcost'), 0.0) +
-                       Coalesce(F('tc_loadingcost'), 0.0) +
-                       Coalesce(F('tc_unloadingcost'), 0.0) +
-                       Coalesce(F('tc_haltingcost'), 0.0) +
-                       Coalesce(F('tc_rtocost'), 0.0) +
-                       Coalesce(F('tc_weighmentcost'), 0.0) +
-                       Coalesce(F('tc_handlingcost'), 0.0) +
-                       Coalesce(F('tc_cancellation'), 0.0)
+            trip_total=(
+                Coalesce(F('tc_tripcost'), Value(0.0)) +
+                Coalesce(F('tc_tollcost'), Value(0.0)) +
+                Coalesce(F('tc_parkingcost'), Value(0.0)) +
+                Coalesce(F('tc_loadingcost'), Value(0.0)) +
+                Coalesce(F('tc_unloadingcost'), Value(0.0)) +
+                Coalesce(F('tc_haltingcost'), Value(0.0)) +
+                Coalesce(F('tc_weighmentcost'), Value(0.0)) +
+                Coalesce(F('tc_handlingcost'), Value(0.0)) +
+                Coalesce(F('tc_supervisorcost'), Value(0.0)) +
+                Coalesce(F('tc_betacost'), Value(0.0)) +
+                Coalesce(F('tc_total_halting_cost'), Value(0.0)) +
+                Coalesce(F('tc_cancellation'), Value(0.0))
+            )
         )
         .order_by('-tr_created_at')
     )
@@ -578,16 +600,20 @@ def trans_invoice_list_woh(request, customer_id):
         .exclude(id__in=all_assigned_trip_ids)
         .select_related('tr_enquirynumber','tr_consignmentnumber','tr_vehicletype','tr_vehiclesource')
         .annotate(
-            trip_total=Coalesce(F('tc_tripcost'), 0.0) +
-                       Coalesce(F('tc_tollcost'), 0.0) +
-                       Coalesce(F('tc_parkingcost'), 0.0) +
-                       Coalesce(F('tc_loadingcost'), 0.0) +
-                       Coalesce(F('tc_unloadingcost'), 0.0) +
-                       Coalesce(F('tc_haltingcost'), 0.0) +
-                       Coalesce(F('tc_rtocost'), 0.0) +
-                       Coalesce(F('tc_weighmentcost'), 0.0) +
-                       Coalesce(F('tc_handlingcost'), 0.0) +
-                       Coalesce(F('tc_cancellation'), 0.0)
+            trip_total=(
+                Coalesce(F('tc_tripcost'), Value(0.0)) +
+                Coalesce(F('tc_tollcost'), Value(0.0)) +
+                Coalesce(F('tc_parkingcost'), Value(0.0)) +
+                Coalesce(F('tc_loadingcost'), Value(0.0)) +
+                Coalesce(F('tc_unloadingcost'), Value(0.0)) +
+                Coalesce(F('tc_haltingcost'), Value(0.0)) +
+                Coalesce(F('tc_weighmentcost'), Value(0.0)) +
+                Coalesce(F('tc_handlingcost'), Value(0.0)) +
+                Coalesce(F('tc_supervisorcost'), Value(0.0)) +
+                Coalesce(F('tc_betacost'), Value(0.0)) +
+                Coalesce(F('tc_total_halting_cost'), Value(0.0)) +
+                Coalesce(F('tc_cancellation'), Value(0.0))
+            )
         )
         .order_by('-tr_created_at')
     )
@@ -647,10 +673,62 @@ def trans_invoice_list_woh(request, customer_id):
     )
 
 
+from django.db.models import Sum
+
 @login_required(login_url='login_page')
 def trans_invoice_remove_woh(request):
     trip_ids = request.GET.getlist('invoice_list[]')
-    TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_ids).update(is_woh=False)
+    
+    # Get master invoice specs before deleting
+    woh_items = TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_ids, is_woh=True)
+    affected_pairs = list(woh_items.values('ti_inv_no', 'ti_customer_id').distinct())
+
+    # Delete the specified WOH items
+    woh_items.delete()
+
+    # Recalculate totals for the affected master invoices
+    for pair in affected_pairs:
+        inv_no = pair['ti_inv_no']
+        cid = pair['ti_customer_id']
+        master_inv = TransInvoiceInfo.objects.filter(ti_inv_no=inv_no, ti_customer_id=cid, is_woh=False).first()
+        if master_inv:
+            woh_remaining = TransInvoiceInfo.objects.filter(ti_inv_no=inv_no, ti_customer_id=cid, is_woh=True)
+            aggs = woh_remaining.aggregate(
+                transport=Sum('ti_trip__tc_tripcost'),
+                toll=Sum('ti_trip__tc_tollcost'),
+                parking=Sum('ti_trip__tc_parkingcost'),
+                loading=Sum('ti_trip__tc_loadingcost'),
+                unloading=Sum('ti_trip__tc_unloadingcost'),
+                halting=Sum('ti_trip__tc_haltingcost'),
+                weighment=Sum('ti_trip__tc_weighmentcost'),
+                handling=Sum('ti_trip__tc_handlingcost'),
+                cancellation=Sum('ti_trip__tc_cancellation'),
+            )
+            def get_val(k): return aggs.get(k) or 0.0
+
+            master_inv.ti_transportation_charges = get_val('transport')
+            master_inv.ti_toll_charges = get_val('toll')
+            master_inv.ti_parking_charges = get_val('parking')
+            master_inv.ti_loading_charges = get_val('loading')
+            master_inv.ti_unloading_charges = get_val('unloading')
+            master_inv.ti_halting_charges = get_val('halting')
+            master_inv.ti_weighment_charges = get_val('weighment')
+            master_inv.ti_handling_charges = get_val('handling')
+            master_inv.ti_cancellation_charges = get_val('cancellation')
+
+            master_inv.ti_total = (
+                master_inv.ti_transportation_charges +
+                master_inv.ti_toll_charges +
+                master_inv.ti_parking_charges +
+                master_inv.ti_loading_charges +
+                master_inv.ti_unloading_charges +
+                master_inv.ti_halting_charges +
+                master_inv.ti_weighment_charges +
+                master_inv.ti_handling_charges +
+                master_inv.ti_cancellation_charges
+            )
+            master_inv.save()
+
     return JsonResponse({'status': 'success'})
 
 @login_required(login_url='login_page')
@@ -700,7 +778,6 @@ def trans_invoice_excel(request, invoice_no):
         "Loading Charges",
         "Unloading Charges",
         "Halting Charges",
-        "Docket Charges",
         "Weighment Charges",
         "Transportation Handling Charges",
         "Cancellation Charges",
@@ -729,44 +806,37 @@ def trans_invoice_excel(request, invoice_no):
     def safe(val): return val if val is not None else ""
 
     for obj in qs:
+        # Use charges directly from TransInvoiceInfo object (obj)
         trip = obj.ti_trip
-        cons = obj.ti_consignment
         goods = obj.ti_goods
-        trip_total = 0.0
-        if trip:
-            trip_total = (
-                (trip.tc_tripcost or 0) + (trip.tc_tollcost or 0) + (trip.tc_parkingcost or 0) +
-                (trip.tc_loadingcost or 0) + (trip.tc_unloadingcost or 0) + (trip.tc_haltingcost or 0) +
-                (trip.tc_rtocost or 0) + (trip.tc_weighmentcost or 0) + (trip.tc_handlingcost or 0) +
-                (trip.tc_cancellation or 0)
-            )
 
         row = [
-            safe(trip.tr_enquirynumber.en_pickupdatetime.strftime('%d/%m/%Y') if trip and trip.tr_enquirynumber and trip.tr_enquirynumber.en_pickupdatetime else ""),
-            safe(str(cons.co_consignmentnumber) if cons else ""),
-            safe(str(trip.tr_departedlocation) if trip else ""),
-            safe(str(trip.tr_reportedlocation) if trip else ""),
+            safe(obj.ti_trip.tr_enquirynumber.en_pickupdatetime.strftime('%d/%m/%Y') if obj.ti_trip and obj.ti_trip.tr_enquirynumber and obj.ti_trip.tr_enquirynumber.en_pickupdatetime else ""),
+            safe(str(obj.ti_consignment.co_consignmentnumber) if obj.ti_consignment else ""),
+            safe(str(obj.ti_trip.tr_departedlocation) if obj.ti_trip else ""),
+            safe(str(obj.ti_trip.tr_reportedlocation) if obj.ti_trip else ""),
             safe(obj.ti_department),
-            safe(str(trip.tr_vehiclenumber) if trip else ""),
-            safe(str(trip.tr_vehicletype) if trip else ""),
-            safe(trip.tr_departeddate_pickup.strftime('%d/%m/%Y %H:%M') if trip and trip.tr_departeddate_pickup else ""),
-            safe(trip.tr_departeddate.strftime('%d/%m/%Y %H:%M') if trip and trip.tr_departeddate else ""),
-            safe(trip.tr_reporteddate.strftime('%d/%m/%Y %H:%M') if trip and trip.tr_reporteddate else ""),
-            safe(trip.tr_reporteddate_pickup.strftime('%d/%m/%Y %H:%M') if trip and trip.tr_reporteddate_pickup else ""),
-            safe(str(goods.cg_consignee) if goods else ""),
-            safe(str(cons.co_cusrefnum) if cons else ""),
-            safe(str(goods.cg_hawbno) if goods else ""),
-            safe(str(goods.cg_qty) if goods else ""),
-            safe(str(goods.cg_weight) if goods else ""),
-            safe(trip.tc_tripcost if trip else 0),
-            safe(trip.tc_tollcost if trip else 0),
-            safe(trip.tc_parkingcost if trip else 0),
-            safe(trip.tc_loadingcost if trip else 0),
-            safe(trip.tc_unloadingcost if trip else 0),
-            safe(trip.tc_haltingcost if trip else 0),
-            safe(0), safe(trip.tc_weighmentcost if trip else 0),
-            safe(trip.tc_handlingcost if trip else 0), safe(trip.tc_cancellation if trip else 0),
-            safe(trip_total),
+            safe(str(obj.ti_trip.tr_vehiclenumber) if obj.ti_trip else ""),
+            safe(str(obj.ti_trip.tr_vehicletype) if obj.ti_trip else ""),
+            safe(obj.ti_trip.tr_departeddate_pickup.strftime('%d/%m/%Y %H:%M') if obj.ti_trip and obj.ti_trip.tr_departeddate_pickup else ""),
+            safe(obj.ti_trip.tr_departeddate.strftime('%d/%m/%Y %H:%M') if obj.ti_trip and obj.ti_trip.tr_departeddate else ""),
+            safe(obj.ti_trip.tr_reporteddate.strftime('%d/%m/%Y %H:%M') if obj.ti_trip and obj.ti_trip.tr_reporteddate else ""),
+            safe(obj.ti_trip.tr_reporteddate_pickup.strftime('%d/%m/%Y %H:%M') if obj.ti_trip and obj.ti_trip.tr_reporteddate_pickup else ""),
+            safe(str(obj.ti_goods.cg_consignee) if obj.ti_goods else ""),
+            safe(str(obj.ti_consignment.co_cusrefnum) if obj.ti_consignment else ""),
+            safe(str(obj.ti_goods.cg_hawbno) if obj.ti_goods else ""),
+            safe(str(obj.ti_goods.cg_qty) if obj.ti_goods else ""),
+            safe(str(obj.ti_goods.cg_weight) if obj.ti_goods else ""),
+            safe(obj.ti_transportation_charges or 0),
+            safe(obj.ti_toll_charges or 0),
+            safe(obj.ti_parking_charges or 0),
+            safe(obj.ti_loading_charges or 0),
+            safe(obj.ti_unloading_charges or 0),
+            safe(obj.ti_halting_charges or 0),
+            safe(obj.ti_weighment_charges or 0),
+            safe(obj.ti_handling_charges or 0),
+            safe(obj.ti_cancellation_charges or 0),
+            safe(obj.ti_total or 0),
         ]
 
         extra_values = []
@@ -802,7 +872,7 @@ def trans_invoice_excel(request, invoice_no):
     wb.save(buffer)
     buffer.seek(0)
     response = HttpResponse(buffer.getvalue(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    response["Content-Disposition"] = f'attachment; filename="WOH_invoice_{invoice_no}.xlsx"'
+    response["Content-Disposition"] = f'attachment; filename="Excel_Export_{customer.cu_nameshort or customer.id}.xlsx"'
     return response
 
 
@@ -820,19 +890,23 @@ def get_tally_vehicle_no(invoice):
 
 
 @login_required(login_url='login_page')
-def trans_invoice_tally_excel(request, customer_id):
-    customer = get_object_or_404(CustomerInfo, id=customer_id)
-    qs = TransInvoiceInfo.objects.filter(ti_customer=customer, is_woh=True).select_related("ti_customer","ti_trip","ti_consignment","ti_goods")
+def trans_invoice_tally_excel(request, invoice_no):
+    first_record = TransInvoiceInfo.objects.filter(ti_inv_no=invoice_no).first()
+    if not first_record:
+        messages.warning(request, "Invoice not found.")
+        return redirect('trans_invoice_list')
+    customer = first_record.ti_customer
+    qs = TransInvoiceInfo.objects.filter(ti_customer=customer, ti_inv_no=invoice_no, is_woh=True).select_related("ti_customer","ti_trip","ti_consignment","ti_goods")
     if not qs.exists():
-        messages.warning(request, "No invoices found in WOH list for this customer.")
+        messages.warning(request, "No trips found in WOH list for this invoice.")
         return redirect('trans_invoice_list')
     wb = Workbook()
     ws = wb.active
     ws.title = "Tally Export"
     headers = [
-        "Date", "Sundry Debtors", "State", "Pincode", "Voucher No.", "Primary Cost Category", "Customer", "Job No.", "Vehicle Number",
+        "Date", "Sundry Debtors", "State", "GST No.", "Pincode", "Voucher No.", "Primary Cost Category", "Customer", "Job No.", "Vehicle Number",
         "Transportation Charges", "Toll Charges", "Parking Charges", "Loading Charges", "Unloading Charges", "Halting Charges",
-        "Docket Charges", "Weighment Charges", "Transportation Handling Charges", "Total"
+        "Weighment Charges", "Transportation Handling Charges", "Total"
     ]
     ws.append(headers)
     ws.column_dimensions["A"].width = 15
@@ -846,7 +920,7 @@ def trans_invoice_tally_excel(request, customer_id):
         total_val = (
             (obj.ti_transportation_charges or 0) + (obj.ti_toll_charges or 0) + (obj.ti_parking_charges or 0) +
             (obj.ti_loading_charges or 0) + (obj.ti_unloading_charges or 0) + (obj.ti_halting_charges or 0) +
-            (obj.ti_docket_charges or 0) + (obj.ti_weighment_charges or 0) + (obj.ti_handling_charges or 0) +
+            (obj.ti_weighment_charges or 0) + (obj.ti_handling_charges or 0) +
             (obj.ti_cancellation_charges or 0)
         )
         
@@ -857,6 +931,7 @@ def trans_invoice_tally_excel(request, customer_id):
             formatted_date,
             safe(obj.ti_customer_short_name), 
             safe(obj.ti_state), 
+            safe(obj.ti_gst_in),
             safe(obj.ti_pincode), 
             safe(obj.ti_inv_no),
             safe(str(trip.tr_vehiclesource) if trip and trip.tr_vehiclesource else ""),
@@ -869,7 +944,6 @@ def trans_invoice_tally_excel(request, customer_id):
             safe(obj.ti_loading_charges or 0), 
             safe(obj.ti_unloading_charges or 0), 
             safe(obj.ti_halting_charges or 0),
-            safe(obj.ti_docket_charges or 0), 
             safe(obj.ti_weighment_charges or 0), 
             safe(obj.ti_handling_charges or 0), 
             safe(total_val)
