@@ -28,7 +28,7 @@
         <select name="branch" class="form-select form-control" id="branchSelect">
             <option value="">-- All Branches --</option>
             {% for b in all_branches %}
-            <option value="{{ b.id }}" {% if branch_id == b.id %}selected{% endif %}>{{ b.loc_name }}</option>
+            <option value="{{ b.id }}" {% if branch_id == b.id %}selected{% endif %}>{{ b.name }}</option>
             {% endfor %}
         </select>
     </div>
