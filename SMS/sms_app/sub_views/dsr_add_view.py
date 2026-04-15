@@ -13,6 +13,8 @@ from io import BytesIO
 from datetime import datetime
 from ..sub_models.damagereport_mod import DamagereportInfo
 from ..sub_models.gatein_mod import Gatein_info
+from ..sub_models.na_dimension_mod import Nadimension
+from django.core.exceptions import ObjectDoesNotExist
 
 
 @login_required(login_url='login_page')
@@ -245,7 +247,7 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                 "HSN CODE", "GST", "GST%", "Invoice value INR", "Invoice Wt", "Wh Wt",
                 "Vol Wt /CFT", "Char. Wt", "CBM",
                 "Dimensions 1", "Dimensions 2", "Dimensions 3", "Dimensions 4", "Dimensions 5",
-                "REMARK", "E-Way Bill", "Date", "Vehicle No.", "Description",
+                "Description", "E-Way Bill", "Date", "Vehicle No.", "Remark",
                 "Qty Received (as per Shipper docs)"
             ]
         elif "DAMCO" in customer_name_str:
@@ -625,12 +627,29 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                     gate = stock_value.wh_gate_injob_no_id
                     lb = stock_value.wh_lb_job_no_id
 
-                    # aggregate total pieces for the job
+                    # aggregate total pieces for the job from Nadimension or fallback
                     same_job_rows = stock_values.filter(wh_job_no=stock_value.wh_job_no)
+                    # Compute total for summary fields (if needed)
+                    total_pieces_for_job = 0
+                    for pkg in same_job_rows:
+                        try:
+                            nad_pkg = Nadimension.objects.get(nad_item=pkg.wh_qr_rand_num)
+                            total_pieces_for_job += (nad_pkg.nad_quantity or 0)
+                        except ObjectDoesNotExist:
+                            total_pieces_for_job += (pkg.wh_goods_pieces or 0)
+
+                    # Per-dimension value for this row
                     try:
-                        total_pieces_for_job = sum((pkg.wh_goods_pieces or 0) for pkg in same_job_rows)
-                    except Exception:
-                        total_pieces_for_job = stock_value.wh_goods_pieces or 0
+                        nad_row = Nadimension.objects.get(nad_item=stock_value.wh_qr_rand_num)
+                        per_dimension_cartons = nad_row.nad_quantity or 0
+                    except ObjectDoesNotExist:
+                        per_dimension_cartons = stock_value.wh_goods_pieces or 0
+
+                    # Show QTY AS PER INV only for the first row of each job
+                    qty_as_per_inv = ""
+                    if stock_value.wh_job_no not in seen_jobs:
+                        qty_as_per_inv = getattr(gate, "gatein_no_of_pcs", "")
+                        seen_jobs.add(stock_value.wh_job_no)
 
                     # Standardized CBM and Volume Weight calculation
                     try:
@@ -641,12 +660,12 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         l_val = w_val = h_val = 0.0
 
                     try:
-                        cbm_calc = (l_val * w_val * h_val * float(stock_value.wh_goods_pieces or 0)) / 1000000.0
+                        cbm_calc = (l_val * w_val * h_val * float(per_dimension_cartons or 0)) / 1000000.0
                     except Exception:
                         cbm_calc = 0.0
 
                     try:
-                        vol_wt_calc = round((l_val * w_val * h_val * float(stock_value.wh_goods_pieces or 0)) / 6000.0, 2)
+                        vol_wt_calc = round((l_val * w_val * h_val * float(per_dimension_cartons or 0)) / 6000.0, 2)
                     except Exception:
                         vol_wt_calc = 0.0
 
@@ -666,18 +685,18 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         stock_value.wh_po_num,
                         getattr(gate, "gatein_so_number", ""),
                         getattr(gate, "gatein_destination", ""),
-                        total_pieces_for_job,
-                        getattr(gate, "gatein_no_of_pcs", ""),
+                        per_dimension_cartons,  # <-- FIXED: show per-dimension value
+                        qty_as_per_inv,
                         cbm_calc,
                         stock_value.wh_invoice_weight_unit,
                         stock_value.wh_gross_weight,
                         stock_value.wh_goods_length,
                         stock_value.wh_goods_width,
                         stock_value.wh_goods_height,
-                        stock_value.wh_goods_pieces,
+                        per_dimension_cartons,  # Cartons column also per-dimension
                         vol_wt_calc,
                         stock_value.wh_bay,
-                        format_carton_no_from_qty(total_pieces_for_job),
+                        format_carton_no_from_qty(total_pieces_for_job),  # still show total for carton no
                         getattr(lb, "lb_packing_list", ""),
                         cargo_condition,
                         getattr(gate, "gatein_otl", ""),
@@ -693,7 +712,7 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         damage_report.dam_deviation1.values_list('deviation_name', flat=True)) if damage_report else ""
                     grn_number = damage_report.dam_GRN_num if damage_report else ""
                     remarks = damage_report.dam_comments if damage_report else ""
-                    damage_check_flag = stock_value.wh_damage_check_id == 1
+                    damage_check_flag = False  # Default to False if field is not present
 
                     row = [
                         stock_value.wh_job_no,
@@ -790,4 +809,3 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
     else:
         messages.error(request, 'Invalid input in the email form.')
     return redirect(request.META['HTTP_REFERER'])
-
