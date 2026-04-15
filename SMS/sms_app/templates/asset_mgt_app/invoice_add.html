@@ -385,7 +385,20 @@
 				fumigation_charge_change_fn()
 			}
 		});
-	}).change();
+	});
+
+	// Only auto-trigger AJAX for new invoices (when customer name needs to be fetched)
+	// For existing invoices, server-side values are already set in $(document).ready
+	var existingCustomer = document.getElementById("bill_customer_name").value;
+	if (existingCustomer && existingCustomer !== "") {
+		// Existing invoice: don't re-trigger AJAX, just recalculate totals after $(document).ready sets values
+		$(document).ready(function() {
+			fumigation_charge_change_fn();
+		});
+	} else {
+		// New invoice: trigger AJAX to fetch customer details
+		$("#bill_customer_name").change();
+	}
 </script>
 
 <script>
