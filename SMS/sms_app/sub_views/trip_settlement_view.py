@@ -1,10 +1,11 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
-from ..models import  TripdetailInfo,Trip_closure_files_Info
+from ..models import  TripdetailInfo,Trip_closure_files_Info, Vehicle_allotmentInfo
 from ..forms import TripSettlementForm,TripclosurefilesForm
 from ..sub_models.trip_status_mod import Tripstatusinfo
 from django.core.paginator import Paginator
+from django.db.models import Q
 
 @login_required
 def trip_settlement_view(request):
@@ -120,6 +121,15 @@ def trip_settlement_edit(request, trip_id):
         for field in files_form.fields:
             files_form.fields[field].required = False
 
+    # Fetch Sell value from allotment
+    allotment = Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber=trip.tr_enquirynumber
+    ).filter(
+        Q(va_vehiclenumber__vm_registrationnumber=trip.tr_vehiclenumber) |
+        Q(va_vehiclenumber_mkt=trip.tr_vehiclenumber)
+    ).first()
+    va_sale = allotment.va_sale if allotment else 0
+
     return render(request, "asset_mgt_app/trip_settlement_edit.html", {
         'trip': trip,
         'tripclosure_form': form,
@@ -127,5 +137,6 @@ def trip_settlement_edit(request, trip_id):
         'status_selected': trip.tc_financestatus.id if trip.tc_financestatus else None,
         'user_id': request.user.id,
         'enquiry_num': trip.tr_enquirynumber.en_enquirynumber if trip.tr_enquirynumber else '',
-        'is_edit': True
+        'is_edit': True,
+        'va_sale': va_sale,
     })

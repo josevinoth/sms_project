@@ -12,7 +12,7 @@ class AttachedBillInfo(models.Model):
     ab_vendor = models.ForeignKey(Vendor_info, on_delete=models.PROTECT, related_name='ab_vendor_bills', db_column='ab_vendor', null=True, blank=True)
     ab_vehicle_number = models.ForeignKey(VehiclemasterInfo, on_delete=models.PROTECT, related_name='ab_vehicle_bills', db_column='ab_vehicle_number', null=True, blank=True)
     ab_vehicle_type = models.CharField(max_length=100, null=True, blank=True)
-    ab_bill_no = models.CharField(max_length=50, null=True, blank=True)
+    ab_bill_no = models.CharField(max_length=50)
     ab_bill_date = models.DateField(null=True, blank=True)
     ab_from_date = models.DateField(null=True, blank=True)
     ab_to_date = models.DateField(null=True, blank=True)

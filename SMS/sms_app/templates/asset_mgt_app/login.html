@@ -59,8 +59,11 @@
     text-align: center;
   }
 
-  .login-left img {
-    width: 120px;
+  .login-logo {
+    width: 200px;
+    height: auto;
+    max-width: 200px;
+    object-fit: contain;
     margin-bottom: 20px;
   }
 
@@ -157,8 +160,9 @@
       flex-direction: column;
     }
 
-    .login-left img {
-      width: 100px;
+    .login-logo {
+      width: 150px;
+      max-width: 150px;
     }
 
     .bvm-logo-text .montserrat-bold {
@@ -170,7 +174,7 @@
 <div class="login-container">
   <!-- Left section -->
   <div class="login-left text-center">
-    <img src="/media/logo4.0.png" alt="Logo" style="margin-bottom:20px; height:100%;width:100%;">
+    <img src="/media/logo4.0.png" alt="Logo" class="login-logo">
 
     <!-- Stylized Header -->
     <div class="bvm-logo-text">
