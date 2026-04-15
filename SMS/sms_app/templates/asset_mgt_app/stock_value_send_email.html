@@ -17,20 +17,22 @@
         <div class="input-group-prepend">
             <div class="input-group-text">To</div>
         </div>
-        <input type="text" id="recipient" name="recipient" class="form-control" value="{{ form_dsr_email.recipient.value }}" placeholder="Recipient emails">
+        <input type="text" id="recipient" name="recipient" class="form-control"
+            value="{{ form_dsr_email.recipient.value }}" placeholder="Recipient emails">
     </div>
     <div class="input-group mb-2 mr-sm-2">
         <div class="input-group-prepend">
             <div class="input-group-text">Message</div>
         </div>
-        <textarea id="message" name="message" class="form-control" rows="6" placeholder="Enter email message">{{ form_dsr_email.message.value }}</textarea>
+        <textarea id="message" name="message" class="form-control" rows="6"
+            placeholder="Enter email message">{{ form_dsr_email.message.value }}</textarea>
     </div>
     <div class="row">
         <div class="col-1"></div>
         <div class="col-10">
             <div class="message text-center">
                 {% for message in messages %}
-                <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+                <a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
                 {% endfor %}
             </div>
         </div>
@@ -54,9 +56,9 @@
 
         // 2️⃣ Set default message
         let message = "Dear Customer,\n\n" +
-                      "Please find the Stock Value report attached.\n\n" +
-                      "Regards,\n" +
-                      "BVM Warehouse Team";
+            "Please find the Stock Value report attached.\n\n" +
+            "Regards,\n" +
+            "BVM Warehouse Team";
 
         document.getElementById("message").value = message;
     }
