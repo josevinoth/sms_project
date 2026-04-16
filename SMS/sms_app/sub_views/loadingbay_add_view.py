@@ -24,8 +24,9 @@ def loadingbay_add(request, loadingbay_id=0):
         gatein_status = "No Status"
     # Loading Bay Status Check
     try:
-        loadingbay_status = Loadingbay_Info.objects.get(lb_job_no=wh_job_id).lb_status  # fetch loadingbay status
-    except ObjectDoesNotExist:
+        _lb = Loadingbay_Info.objects.filter(lb_job_no=wh_job_id).first()
+        loadingbay_status = _lb.lb_status if _lb else "No Status"
+    except Exception:
         loadingbay_status = "No Status"
     # Damage/Before Status Check
     try:
@@ -111,10 +112,10 @@ def loadingbay_add(request, loadingbay_id=0):
             }
         else:
             print("I am inside get edit loading bay")
-            loadingbay_info = Loadingbay_Info.objects.get(lb_job_no=wh_job_id)
+            loadingbay_info = Loadingbay_Info.objects.filter(lb_job_no=wh_job_id).first()
             loadingbay_form = LoadingbayddForm(instance=loadingbay_info)
-            loadingbayimg_info=Loadingbayimages_Info.objects.get(lbimg_job_no=wh_job_id)
-            loadingbayimg_form = LoadingbayImagesForm(request.FILES,instance=loadingbayimg_info)
+            loadingbayimg_info = Loadingbayimages_Info.objects.filter(lbimg_job_no=wh_job_id).first()
+            loadingbayimg_form = LoadingbayImagesForm(request.FILES, instance=loadingbayimg_info)
             forkift_status = Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_forklift
             crane_status = Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_crane
             job_id = Gatein_info.objects.get(gatein_job_no=wh_job_id).id
@@ -153,8 +154,14 @@ def loadingbay_add(request, loadingbay_id=0):
     else:
         if loadingbay_id == 0:
             print("I am inside post add Loading bay")
-            loadingbay_form = LoadingbayddForm(request.POST)
-            loadingbayimg_form=LoadingbayImagesForm(request.POST,request.FILES)
+            # Prevent duplicate records: update existing if already present
+            job_num = request.POST.get('lb_job_no')
+            existing_lb = Loadingbay_Info.objects.filter(lb_job_no=job_num).first()
+            if existing_lb:
+                loadingbay_form = LoadingbayddForm(request.POST, instance=existing_lb)
+            else:
+                loadingbay_form = LoadingbayddForm(request.POST)
+            loadingbayimg_form = LoadingbayImagesForm(request.POST, request.FILES)
             if loadingbay_form.is_valid():
                 forkift_status=request.POST.get('lb_mh_forklift')
                 crane_status=request.POST.get('lb_mh_crane')
@@ -192,15 +199,17 @@ def loadingbay_add(request, loadingbay_id=0):
             else:
                 print("Loadingbay Sub Form Not saved")
 
-            job_num = request.POST.get('lb_job_no')
-            job_id = Loadingbay_Info.objects.get(lb_job_no=job_num).id
-            url = 'loadingbay_update/' + str(job_id)
-            return redirect(url)
+            # Use filter().first() to safely get the saved record's ID
+            saved_lb = Loadingbay_Info.objects.filter(lb_job_no=job_num).first()
+            if saved_lb:
+                url = 'loadingbay_update/' + str(saved_lb.id)
+                return redirect(url)
+            return redirect(request.META['HTTP_REFERER'])
         else:
             print("I am inside post edit Loading bay")
             loadingbay_info = Loadingbay_Info.objects.get(pk=loadingbay_id)
             loadingbay_form = LoadingbayddForm(request.POST, instance=loadingbay_info)
-            loadingbayimg_info=Loadingbayimages_Info.objects.get(lbimg_job_no=wh_job_id)
+            loadingbayimg_info = Loadingbayimages_Info.objects.filter(lbimg_job_no=wh_job_id).first()
             loadingbayimg_form=LoadingbayImagesForm(request.POST,request.FILES,instance=loadingbayimg_info)
             forkift_status = Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_forklift
             crane_status = Loadingbay_Info.objects.get(pk=loadingbay_id).lb_mh_crane

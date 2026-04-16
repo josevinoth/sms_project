@@ -20,7 +20,6 @@ from ..sub_models.locationmaster_mod import LocationmasterInfo
 # Invoicecity
 @login_required(login_url='login_page')
 def invoice_add(request,invoice_id=0):
-    global min_check_in_time, max_check_out_time, max_storage_days, warehouse_charge, job_ids
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     if request.method == "GET":
@@ -42,10 +41,21 @@ def invoice_add(request,invoice_id=0):
             )
             count_stocks = goods_qs.count()
 
-            # check whether shipper details added
-            if count_stocks < 0:
-                messages.error(request, 'Add Shipper Invoice!')
-                return redirect(request.META['HTTP_REFERER'])
+            # check whether shipper details added - block if no goods linked
+            if count_stocks == 0:
+                messages.warning(request, 'No Shipper Invoices linked to this invoice. Please add goods first.')
+                # Build a minimal context so the form still renders for the user to see
+                context = {
+                    'invoice_form': invoice_form,
+                    'first_name': first_name,
+                    'user_id': user_id,
+                    'shipper_invoice_list': goods_qs,
+                    'weight_sum': 0, 'no_of_days': 0, 'no_of_pieces': 0,
+                    'crane_time': 0, 'forklift_time': 0,
+                    'min_check_in_time': '', 'max_check_out_time': '',
+                    'total_loading_cost': 0, 'wh_storage_cost_sum': 0,
+                    'crane_cost_sum': 0, 'forklift_cost_sum': 0, 'customer_type_id': 0,
+                }
             else:
                 # Calculate Warehouse Storage Charges
                 dispatch_num = goods_qs.values_list('wh_dispatch_num', flat=True).distinct()
@@ -59,22 +69,22 @@ def invoice_add(request,invoice_id=0):
 
                 # check total weight limits
                 if total_weight_val is not None:
-                    total_weight=total_weight_val
+                    total_weight = total_weight_val
                 else:
-                    total_weight=0
-                    # Only show error for non-Dedicated customers
-                    if customer_type_id != 3:
-                        messages.error(request, 'Unable to Calculate Total Weight!')
+                    total_weight = 0
+                    # Only warn if goods ARE linked but weight data is missing
+                    if count_stocks > 0 and customer_type_id != 3:
+                        messages.warning(request, 'Unable to Calculate Total Weight — please ensure all shipment goods have weight entered.')
 
                 # check total area limits
                 total_area_val = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num).aggregate(Sum('wh_goods_area'))['wh_goods_area__sum']
                 if total_area_val is not None:
-                    total_area=total_area_val
+                    total_area = total_area_val
                 else:
-                    total_area=0
-                    # Only show error for non-Dedicated customers
-                    if customer_type_id != 3:
-                        messages.error(request, 'Unable to Calculate Total Area!')
+                    total_area = 0
+                    # Only warn if goods ARE linked but area data is missing
+                    if count_stocks > 0 and customer_type_id != 3:
+                        messages.warning(request, 'Unable to Calculate Total Area — please ensure all shipment goods have area entered.')
 
                 # check warehouse charges based on customer type
                 if customer_type_id == 2:
@@ -86,14 +96,16 @@ def invoice_add(request,invoice_id=0):
                         return redirect(request.META['HTTP_REFERER'])
                     try:
                         max_wt = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1).whrm_max_wt
-                        if total_weight <= max_wt:
-                            messages.success(request, 'Total weight within customer limit!')
-                        else:
-                            messages.error(request, 'Total weight exceeds customer limit!')
+                        if count_stocks > 0:  # Only show weight limit messages when goods are linked
+                            if total_weight <= max_wt:
+                                messages.success(request, 'Total weight within customer limit!')
+                            else:
+                                messages.error(request, 'Total weight exceeds customer limit!')
                     except ObjectDoesNotExist:
                         max_wt = 0
-                        messages.error(request, 'Max Weight not available in master for selected Customer!')
-                        return redirect(request.META['HTTP_REFERER'])
+                        if count_stocks > 0:
+                            messages.error(request, 'Max Weight not available in master for selected Customer!')
+                            return redirect(request.META['HTTP_REFERER'])
                     try:
                         warehouse_charge_1 = warehouse_charge / wh_job_num_count
                     except ZeroDivisionError:
@@ -126,14 +138,16 @@ def invoice_add(request,invoice_id=0):
                         return redirect(request.META['HTTP_REFERER'])
                     try:
                         max_area = WhratemasterInfo.objects.get(whrm_customer_name=customer_id,whrm_charge_type=1).whrm_max_area
-                        if total_area <= max_area:
-                            messages.success(request, 'Total Area within customer limit!')
-                        else:
-                            messages.error(request, 'Total Area exceeds customer limit!')
+                        if count_stocks > 0:  # Only show area limit messages when goods are linked
+                            if total_area <= max_area:
+                                messages.success(request, 'Total Area within customer limit!')
+                            else:
+                                messages.error(request, 'Total Area exceeds customer limit!')
                     except ObjectDoesNotExist:
                         max_area = 0
-                        messages.error(request, 'Max Area not available in master for selected Customer!')
-                        return redirect(request.META['HTTP_REFERER'])
+                        if count_stocks > 0:
+                            messages.error(request, 'Max Area not available in master for selected Customer!')
+                            return redirect(request.META['HTTP_REFERER'])
                     try:
                         warehouse_charge_1 = warehouse_charge / wh_job_num_count
                     except ZeroDivisionError:
@@ -415,17 +429,16 @@ def invoice_add(request,invoice_id=0):
                             Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost=0)
                             Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_loading_charge_unit=0)
                             Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_total_loading_cost=0)
-                messages.success(request, 'Invoice Amount Updated Successfully!')
 
                 # Total Cost calculation
                 shipper_invoice_list = goods_qs
-                weight_sum = goods_qs.aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
-                crane_cost_sum = goods_qs.aggregate(Sum('wh_crane_cost'))['wh_crane_cost__sum']
-                forklift_cost_sum = goods_qs.aggregate(Sum('wh_forklift_cost'))['wh_forklift_cost__sum']
-                wh_storage_cost_sum = goods_qs.aggregate(Sum('wh_storage_cost_total'))['wh_storage_cost_total__sum']
-                no_of_days = goods_qs.aggregate(Max('wh_storage_time'))['wh_storage_time__max']
-                no_of_pieces = goods_qs.aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
-                total_loading_cost = goods_qs.aggregate(Sum('wh_total_loading_cost'))['wh_total_loading_cost__sum']
+                weight_sum = goods_qs.aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum'] or 0
+                crane_cost_sum = goods_qs.aggregate(Sum('wh_crane_cost'))['wh_crane_cost__sum'] or 0
+                forklift_cost_sum = goods_qs.aggregate(Sum('wh_forklift_cost'))['wh_forklift_cost__sum'] or 0
+                wh_storage_cost_sum = goods_qs.aggregate(Sum('wh_storage_cost_total'))['wh_storage_cost_total__sum'] or 0
+                no_of_days = goods_qs.aggregate(Max('wh_storage_time'))['wh_storage_time__max'] or 0
+                no_of_pieces = goods_qs.aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum'] or 0
+                total_loading_cost = goods_qs.aggregate(Sum('wh_total_loading_cost'))['wh_total_loading_cost__sum'] or 0
 
                 if customer_type_id in [2, 3]:
                     # Exclusive and Dedicated: always use full flat rate from Warehouse Rate Master
@@ -496,7 +509,7 @@ def invoice_add(request,invoice_id=0):
                 # Link goods by ID for reliable exports
                 Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).update(wh_voucher_id=invoice)
                 print("Main Form Saved")
-                messages.success(request, 'Record Addedd Successfully!')
+                messages.success(request, 'Record Added Successfully!')
             else:
                 print("Main Form Not Saved")
                 messages.error(request, 'Check all mandatory fields!')
@@ -505,6 +518,8 @@ def invoice_add(request,invoice_id=0):
             invoice = BilingInfo.objects.get(pk=invoice_id)
             invoice_form = InvoiceaddForm(request.POST, instance=invoice)
             if invoice_form.is_valid():
+                invoice = invoice_form.save()  # Save the updated form data (including bill_total_post_gst)
+                messages.success(request, 'Invoice Amount Updated and Saved Successfully!')
                 voucher_num_val = invoice.bill_invoice_ref
                 # update total invoice cost and link by ID in warehouse goods table
                 Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).update(wh_voucher_id=invoice)
@@ -641,7 +656,6 @@ def custom_serializer(obj):
 
 @login_required(login_url='login_page')
 def load_whrate_model(request):
-    global min_check_in_time, max_check_out_time, max_storage_days
     lm_customer_name_id = request.GET.get('lm_customer_name_id')
     customer_id = CustomerInfo.objects.get(cu_name=lm_customer_name_id).id
     # customer_type = CustomerInfo.objects.get(id=customer_id).cu_businessmodel
@@ -1300,9 +1314,9 @@ def invoice_export_excel(request, invoice_id):
             ])
             sl += 1
 
-    # Auto-adjust column widths for better visibility
+    # Auto-adjust column widths for better visibility (handle None cell values)
     for column_cells in ws.columns:
-        length = max(len(str(cell.value)) for cell in column_cells)
+        length = max(len(str(cell.value or "")) for cell in column_cells)
         ws.column_dimensions[column_cells[0].column_letter].width = length + 2
 
     response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

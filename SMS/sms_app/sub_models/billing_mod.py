@@ -55,40 +55,37 @@ class BilingInfo(models.Model):
 
     def save(self, *args, **kwargs):
         """
-        Override save to auto-populate bill_wh_storage_charges from WhratemasterInfo.
-        Matching priority:
-          1) Match on customer, business model and whrm_charge_type id==1
-          2) If not found, match on customer and whrm_charge_type id==1
-        If found, set bill_wh_storage_charges to the found whrm_rate. Otherwise leave existing value.
+        Override save to auto-populate bill_wh_storage_charges from WhratemasterInfo
+        ONLY when creating a new record AND no storage charge has been set yet.
+        On updates (pk is not None), the user-entered value is preserved as-is.
         """
-        try:
-            # Try exact match: customer + business model + charge type 1
-            qs = WhratemasterInfo.objects.filter(
-                whrm_customer_name=self.bill_customer_name,
-                whrm_businessmodel=self.bill_customer_type,
-                whrm_charge_type__id=1,
-            ).order_by('-id')
-            rate_entry = qs.first()
-            if not rate_entry:
-                # Fallback: customer + charge type 1
+        is_new_record = self.pk is None
+        storage_not_set = (not self.bill_wh_storage_charges or self.bill_wh_storage_charges == 0.0)
+
+        if is_new_record and storage_not_set:
+            try:
+                # Try exact match: customer + business model + charge type 1
                 qs = WhratemasterInfo.objects.filter(
                     whrm_customer_name=self.bill_customer_name,
+                    whrm_businessmodel=self.bill_customer_type,
                     whrm_charge_type__id=1,
                 ).order_by('-id')
                 rate_entry = qs.first()
+                if not rate_entry:
+                    # Fallback: customer + charge type 1 only
+                    qs = WhratemasterInfo.objects.filter(
+                        whrm_customer_name=self.bill_customer_name,
+                        whrm_charge_type__id=1,
+                    ).order_by('-id')
+                    rate_entry = qs.first()
 
-            if rate_entry:
-                # set the storage charges from the whrm_rate
-                # Only update if the value is meaningfully different to avoid unnecessary writes
-                try:
-                    new_rate = float(rate_entry.whrm_rate)
-                    # assign to bill_wh_storage_charges
-                    self.bill_wh_storage_charges = new_rate
-                except Exception:
-                    # if casting fails, ignore and keep existing value
-                    pass
-        except Exception:
-            # Any DB lookup error shouldn't block saving the billing record
-            pass
+                if rate_entry:
+                    try:
+                        self.bill_wh_storage_charges = float(rate_entry.whrm_rate)
+                    except Exception:
+                        pass
+            except Exception:
+                # Any DB lookup error shouldn't block saving the billing record
+                pass
 
         super(BilingInfo, self).save(*args, **kwargs)
