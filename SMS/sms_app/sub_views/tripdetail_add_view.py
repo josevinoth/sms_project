@@ -289,6 +289,15 @@ def tripdetail_add(request, tripdetail_id=0):
                 trip = trip_det_form.save(commit=False)
                 trip.tr_tripnumber = trip_num_next
 
+                # ✅ Synchronize KM fields for reports
+                # tr_departedkm is the 'canonical' Starting KM used in reports.
+                if not trip.tr_departedkm and trip.tr_reportedkm_pickup:
+                    trip.tr_departedkm = trip.tr_reportedkm_pickup
+
+                # tr_reportedkm is the 'canonical' Ending KM used in reports.
+                if not trip.tr_reportedkm and trip.tr_reportedkm_delivery:
+                    trip.tr_reportedkm = trip.tr_reportedkm_delivery
+
                 # KM Validation: Ensure closing KM >= opening KM
                 closing_km = trip.tr_reportedkm or 0
                 opening_km = trip.tr_reportedkm_pickup or 0
@@ -404,6 +413,15 @@ def tripdetail_add(request, tripdetail_id=0):
 
             if trip_det_form.is_valid():
                 trip = trip_det_form.save(commit=False)
+
+                # ✅ Synchronize KM fields for reports
+                # tr_departedkm is the 'canonical' Starting KM used in reports.
+                if not trip.tr_departedkm and trip.tr_reportedkm_pickup:
+                    trip.tr_departedkm = trip.tr_reportedkm_pickup
+
+                # tr_reportedkm is the 'canonical' Ending KM used in reports.
+                if not trip.tr_reportedkm and trip.tr_reportedkm_delivery:
+                    trip.tr_reportedkm = trip.tr_reportedkm_delivery
 
                 # KM Validation: Ensure closing KM >= opening KM
                 closing_km = trip.tr_reportedkm or 0

@@ -118,7 +118,7 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill):
 VEHICLE_LOG_HEADERS = [
     "SNo", "Date", "Trip Sheet No.", "Vehicle No.", "Starting Time", "Closing Time",
     "Start Km.", "Closing Km.", "Used Km.", "Starting Place", "Closing Place",
-    "Cnote No", "Customer", "Shipper", "Trip Category", "Driver Name"
+    "Cnote No", "Customer", "Shipper", "Driver Name"
 ]
 
 TRIP_CANCELLATION_HEADERS = [
@@ -384,10 +384,9 @@ def vehicle_log_report_view(request):
             max(0, (trip.tr_reportedkm_delivery or trip.tr_reportedkm or 0) - (trip.tr_departedkm or 0)),
             safe_str(trip.tr_departedlocation),
             safe_str(trip.tr_reportedlocation),
-            safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else "",
+            safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else safe_str(trip.tr_category),
             safe_str(trip.tr_enquirynumber.en_customername),
             safe_str(cons_goods.cg_consigner) if cons_goods else "",
-            safe_str(trip.tr_category),
             safe_str(trip.tr_drivername),
         ])
 
