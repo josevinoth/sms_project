@@ -8,7 +8,7 @@ from ..models import CustomerInfo, CustomerdepartmentInfo, Places, Trip_category
 class DmrForm(forms.Form):
 
     dmr_customer = forms.ModelChoiceField(
-        queryset=CustomerInfo.objects.filter(cu_business_sol_id__in=[1, 2]),
+        queryset=CustomerInfo.objects.filter(cu_business_sol_id__in=[1, 2], cu_name__icontains='(T)'),
         required=False,
         label="Customer"
     )

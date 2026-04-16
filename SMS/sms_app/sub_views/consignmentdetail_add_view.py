@@ -198,7 +198,7 @@ def consignmentdetail_list(request):
     first_name = request.session.get('first_name')
 
     # Dropdowns
-    customers = CustomerInfo.objects.all().order_by('cu_name')
+    customers = CustomerInfo.objects.filter(cu_name__icontains='(T)').order_by('cu_name')
     employees = User_extInfo.objects.filter(
         emp_organisation_id=2
     ).select_related('user').order_by('user__first_name')
