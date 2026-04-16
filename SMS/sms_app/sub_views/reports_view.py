@@ -153,78 +153,81 @@ def stock_value_reports(request):
 
 
     current_date = datetime.today().date()
-    maa_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=2,wh_check_in_out=1,wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    # Base query for summaries
+    base_qs = Warehouse_goods_info.objects.filter(wh_checkin_time__lte=current_date)
+    if customer_name:
+        base_qs = base_qs.filter(wh_customer_name=customer_name)
+
+    maa_in_stock_value_cud = base_qs.filter(wh_branch=2,wh_check_in_out=1).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if maa_in_stock_value_cud is not None:
         maa_in_stock_value_cud_val = maa_in_stock_value_cud
     else:
         maa_in_stock_value_cud_val = 0
 
-    maa_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=2,wh_check_in_out=2,wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    maa_out_stock_value_cud = base_qs.filter(wh_branch=2,wh_check_in_out=2).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if maa_out_stock_value_cud is not None:
         maa_out_stock_value_cud_val = maa_out_stock_value_cud
     else:
         maa_out_stock_value_cud_val = 0
 
-    maa_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=2, wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    maa_total_cud = base_qs.filter(wh_branch=2).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if maa_total_cud is not None:
         maa_total_cud_val = maa_total_cud
     else:
         maa_total_cud_val = 0
 
     # Bengaluru Warehouse
-    blr_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=1, wh_check_in_out=1, wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    blr_in_stock_value_cud = base_qs.filter(wh_branch=1, wh_check_in_out=1).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if blr_in_stock_value_cud is not None:
         blr_in_stock_value_cud_val = blr_in_stock_value_cud
     else:
         blr_in_stock_value_cud_val = 0
 
-    blr_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=1, wh_check_in_out=2, wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    blr_out_stock_value_cud = base_qs.filter(wh_branch=1, wh_check_in_out=2).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if blr_out_stock_value_cud is not None:
         blr_out_stock_value_cud_val = blr_out_stock_value_cud
     else:
         blr_out_stock_value_cud_val = 0
 
-    blr_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=1, wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    blr_total_cud = base_qs.filter(wh_branch=1).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if blr_total_cud is not None:
         blr_total_cud_val = blr_total_cud
     else:
         blr_total_cud_val = 0
 
     # Hyderabad Warehouse
-    hyd_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=4, wh_check_in_out=1,wh_checkin_time__lte=current_date)).aggregate(
-        Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    hyd_in_stock_value_cud = base_qs.filter(wh_branch=4, wh_check_in_out=1).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if hyd_in_stock_value_cud is not None:
         hyd_in_stock_value_cud_val = hyd_in_stock_value_cud
     else:
         hyd_in_stock_value_cud_val = 0
 
-    hyd_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=4, wh_check_in_out=2,wh_checkin_time__lte=current_date)).aggregate(
-        Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    hyd_out_stock_value_cud = base_qs.filter(wh_branch=4, wh_check_in_out=2).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if hyd_out_stock_value_cud is not None:
         hyd_out_stock_value_cud_val = hyd_out_stock_value_cud
     else:
         hyd_out_stock_value_cud_val = 0
 
-    hyd_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=4, wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    hyd_total_cud = base_qs.filter(wh_branch=4).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if hyd_total_cud is not None:
         hyd_total_cud_val = hyd_total_cud
     else:
         hyd_total_cud_val = 0
 
     # Pondichery Warehouse
-    pny_in_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=3, wh_check_in_out=1,wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    pny_in_stock_value_cud = base_qs.filter(wh_branch=3, wh_check_in_out=1).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if pny_in_stock_value_cud is not None:
         pny_in_stock_value_cud_val = pny_in_stock_value_cud
     else:
         pny_in_stock_value_cud_val = 0
 
-    pny_out_stock_value_cud = (Warehouse_goods_info.objects.filter(wh_branch=3, wh_check_in_out=2,wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    pny_out_stock_value_cud = base_qs.filter(wh_branch=3, wh_check_in_out=2).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if pny_out_stock_value_cud is not None:
         pny_out_stock_value_cud_val = pny_out_stock_value_cud
     else:
         pny_out_stock_value_cud_val = 0
 
-    pny_total_cud = (Warehouse_goods_info.objects.filter(wh_branch=3, wh_checkin_time__lte=current_date)).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
+    pny_total_cud = base_qs.filter(wh_branch=3).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
     if pny_total_cud is not None:
         pny_total_cud_val = pny_total_cud
     else:
@@ -693,8 +696,8 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
 
         # Write the headers
         headers = [
-            'Job Number', 'Stock Number', 'Customer', 'Date Of Arrival', 'Unloading Start Time',
-            'Unloading End Time', 'Transporter', 'Truck Number', 'Consignor', 'Consignee',
+            'Job Number', 'Stock Number', 'Customer', 'Date Of Arrival', 'Dock In Time','Unloading Start Time',
+            'Unloading End Time', 'Transporter', 'Truck Number', 'Truck Type(In)','Consignor', 'Consignee',
             'Docs Received', 'HAWB', 'Destination', 'Invoice Number', 'Case Number',
             'Invoice Qty', 'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight', 'CBM',
@@ -724,214 +727,230 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
 
         # three_months_ago = timezone.now() - timedelta(days=90)
 
-        # Initialize query to none
-        stock_values = None
+        # Initialize query
+        stock_values = Warehouse_goods_info.objects.all()
 
         # Build query conditions dynamically
         if customer_name and gate_in_ids.exists():
             print ("Inside first loop")
-            stock_values = Warehouse_goods_info.objects.filter(
+            stock_values = stock_values.filter(
                 wh_customer_name=customer_name,
                 wh_gate_injob_no_id__in=list(gate_in_ids)
             )
         elif customer_name:
             print ("Inside second loop")
-            stock_values = Warehouse_goods_info.objects.filter(
+            stock_values = stock_values.filter(
                 wh_customer_name=customer_name
             )
         elif gate_in_ids.exists():
             print ("Inside third loop")
-            stock_values = Warehouse_goods_info.objects.filter(
+            stock_values = stock_values.filter(
                 wh_gate_injob_no_id__in=list(gate_in_ids)
             )
-        # Add a comment or log to explain cases where it isn't used
-        if stock_values is None:
-            print("No stock values found for the given conditions.")
-        else:
-            # Step 1: Filter stock_values and ensure the date fields are timezone-free
-            stock_values = stock_values.filter(
-                Q(wh_check_in_out__in=[1, 4]) |
-                Q(wh_check_in_out=2, wh_checkout_time__isnull=False,wh_checkout_time__range=(from_date, to_date))  #wh_checkout_time__gte=three_months_ago
-            ).order_by('-wh_gate_injob_no_id__gatein_arrival_date')
+        # If no customer selected and no gate_in_ids, it takes all customers by default
+        
+        # Step 1: Filter stock_values and ensure the date fields are timezone-free
+        stock_values = stock_values.filter(
+            Q(wh_check_in_out__in=[1, 4]) |
+            Q(wh_check_in_out=2, wh_checkout_time__isnull=False,wh_checkout_time__range=(from_date, to_date))  #wh_checkout_time__gte=three_months_ago
+        ).order_by('-wh_gate_injob_no_id__gatein_arrival_date')
 
-            # Step 2: In the loop, replace the date with timezone-free date objects
-            for stock_value in stock_values:
-                date_of_arrival = None  # Default value
+        # Step 2: In the loop, replace the date with timezone-free date objects
+        for stock_value in stock_values:
+            date_of_arrival = None  # Default value
 
-                if stock_value.wh_gate_injob_no_id:  # Check if exists
-                    date_of_arrival = getattr(stock_value.wh_gate_injob_no_id, 'gatein_arrival_date', None)
-                    if date_of_arrival:
-                        date_of_arrival = date_of_arrival.replace(tzinfo=None)
-                    else:
-                        date_of_arrival = ""
+            if stock_value.wh_gate_injob_no_id:  # Check if exists
+                date_of_arrival = getattr(stock_value.wh_gate_injob_no_id, 'gatein_arrival_date', None)
+                if date_of_arrival:
+                    date_of_arrival = date_of_arrival.replace(tzinfo=None)
+                else:
+                    date_of_arrival = ""
 
-                checkin_qty = stock_value.wh_goods_pieces if stock_value.wh_goods_pieces else 0
-                # Fetch partial dispatches for this stock
-                partials = GoodsPartialDispatchInfo.objects.filter(pd_goods=stock_value)
-                dispatch_nums = []
-                truck_numbers = []
-                truck_types = []
-                departure_times = []
-                sticker_pasted_bys = []
-                mawb_list = []
+            checkin_qty = stock_value.wh_goods_pieces if stock_value.wh_goods_pieces else 0
+            # Fetch partial dispatches for this stock
+            partials = GoodsPartialDispatchInfo.objects.filter(pd_goods=stock_value)
+            dispatch_nums = []
+            truck_numbers = []
+            truck_types = []
+            departure_times = []
+            sticker_pasted_bys = []
+            mawb_list = []
 
-                dispatch_qty = 0  # initialize
-                damage_check_flag = stock_value.wh_damage_check_id == 1
-                damage_report = DamagereportInfo.objects.filter(dam_wh_job_num=stock_value.wh_job_no).first()
-                damage_names = ", ".join(
-                    damage_report.dam_damages1.values_list('damage_name', flat=True)
-                ) if damage_report else ""
-                deviation_names = ", ".join(
-                    damage_report.dam_deviation1.values_list('deviation_name', flat=True)
-                ) if damage_report else ""
-                grn_number = damage_report.dam_GRN_num if damage_report else ""
-                remarks = damage_report.dam_comments if damage_report else ""
-                for partial in partials:
-                    dispatch = partial.pd_dispatch_info
-                    if dispatch:
-                        dispatch_nums.append(dispatch.dispatch_num or "")
-                        truck_numbers.append(dispatch.dispatch_truck_number or "")
+            dispatch_qty = 0  # initialize
+            damage_check_flag = stock_value.wh_damage_check_id == 1
+            damage_report = DamagereportInfo.objects.filter(dam_wh_job_num=stock_value.wh_job_no).first()
+            damage_names = ", ".join(
+                damage_report.dam_damages1.values_list('damage_name', flat=True)
+            ) if damage_report else ""
+            deviation_names = ", ".join(
+                damage_report.dam_deviation1.values_list('deviation_name', flat=True)
+            ) if damage_report else ""
+            grn_number = damage_report.dam_GRN_num if damage_report else ""
+            remarks = damage_report.dam_comments if damage_report else ""
+            for partial in partials:
+                dispatch = partial.pd_dispatch_info
+                if dispatch:
+                    dispatch_nums.append(dispatch.dispatch_num or "")
+                    truck_numbers.append(dispatch.dispatch_truck_number or "")
 
-                        truck_type = getattr(dispatch.dispatch_truck_type, 'vt_vehicletype', "")
-                        if truck_type:
-                            truck_types.append(truck_type)
+                    truck_type = getattr(dispatch.dispatch_truck_type, 'vt_vehicletype', "")
+                    if truck_type:
+                        truck_types.append(truck_type)
 
-                        sticker = getattr(dispatch.dispatch_sticker_pasted_bvm, 'lp_name', "")
-                        if sticker:
-                            sticker_pasted_bys.append(sticker)
+                    sticker = getattr(dispatch.dispatch_sticker_pasted_bvm, 'lp_name', "")
+                    if sticker:
+                        sticker_pasted_bys.append(sticker)
 
-                        mawb_list.append(dispatch.dispatch_mawb or "")
+                    mawb_list.append(dispatch.dispatch_mawb or "")
 
-                        if dispatch.dispatch_depature_date:
-                            departure_times.append(dispatch.dispatch_depature_date.strftime('%d-%b-%Y'))
+                    if dispatch.dispatch_depature_date:
+                        departure_times.append(dispatch.dispatch_depature_date.strftime('%d-%b-%Y %H:%M:%S'))
 
-                    dispatch_qty += partial.pd_dispatch_qty or 0  # Sum total qty
+                dispatch_qty += partial.pd_dispatch_qty or 0  # Sum total qty
 
-                stock_on_hand = checkin_qty - dispatch_qty  # Subtract dispatch quantity
-                try:
-                    if stock_value.wh_dispatch_id and stock_value.wh_dispatch_id.dispatch_depature_date:
-                        dispatch_depature_time = stock_value.wh_dispatch_id.dispatch_depature_date.replace(tzinfo=None)
-                    else:
-                        dispatch_depature_time = None
-                except AttributeError:
+            stock_on_hand = checkin_qty - dispatch_qty  # Subtract dispatch quantity
+            try:
+                gatein_obj = stock_value.wh_gate_injob_no_id
+                dock_in_time = None
+                truck_type_in = ""
+                if gatein_obj:
+                    pregatein_truck_obj = gatein_obj.gatein_truck_number_n
+                    if pregatein_truck_obj:
+                        dock_in_time = pregatein_truck_obj.pregatein_dock_in_date_time
+                        if dock_in_time:
+                            dock_in_time = dock_in_time.replace(tzinfo=None)
+                        
+                        truck_type_obj = pregatein_truck_obj.pregatein_truck_type
+                        if truck_type_obj:
+                            truck_type_in = truck_type_obj.vt_vehicletype
+
+                if stock_value.wh_dispatch_id and stock_value.wh_dispatch_id.dispatch_depature_date:
+                    dispatch_depature_time = stock_value.wh_dispatch_id.dispatch_depature_date.replace(tzinfo=None)
+                else:
                     dispatch_depature_time = None
+            except AttributeError:
+                dispatch_depature_time = None
+                dock_in_time = None
+                truck_type_in = ""
 
 
-                row = [
-                    stock_value.wh_job_no,  # Index 0
-                    stock_value.wh_qr_rand_num,  # Index 1
-                    str(stock_value.wh_customer_name),  # Index 2
-                    date_of_arrival if date_of_arrival else '',  # Index 3: Only Date, no time
+            row = [
+                stock_value.wh_job_no,  # Index 0
+                stock_value.wh_qr_rand_num,  # Index 1
+                str(stock_value.wh_customer_name),  # Index 2
+                date_of_arrival if date_of_arrival else '',  # Index 3: Only Date, no time
+                dock_in_time if dock_in_time else '', # NEW: Dock In Time
 
-                    stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time.replace(tzinfo=None)
-                    if stock_value.wh_lb_job_no_id and stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time else '',
+                stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time.replace(tzinfo=None)
+                if stock_value.wh_lb_job_no_id and stock_value.wh_lb_job_no_id.lb_stock_unloading_start_time else '',
 
-                    stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time.replace(tzinfo=None)
-                    if stock_value.wh_lb_job_no_id and stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time else '',
-                    # Index 6: gatein_transporter
-                    getattr(stock_value.wh_gate_injob_no_id, 'gatein_transporter', ''),
+                stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time.replace(tzinfo=None)
+                if stock_value.wh_lb_job_no_id and stock_value.wh_lb_job_no_id.lb_stock_unloading_end_time else '',
+                # Index 6: gatein_transporter
+                getattr(stock_value.wh_gate_injob_no_id, 'gatein_transporter', ''),
 
-                    # Index 7: gatein_truck_number
-                    getattr(stock_value.wh_gate_injob_no_id, 'gatein_truck_number', ''),
+                # Index 7: gatein_truck_number
+                getattr(stock_value.wh_gate_injob_no_id, 'gatein_truck_number', ''),
+                truck_type_in, # NEW: Truck Type (In)
 
-                    stock_value.wh_consigner,  # Index 8
-                    stock_value.wh_consignee,  # Index 9
+                stock_value.wh_consigner,  # Index 8
+                stock_value.wh_consignee,  # Index 9
 
-                    # Index 10: lb_packing_list
-                    str(getattr(stock_value.wh_lb_job_no_id, 'lb_packing_list', '')),
+                # Index 10: lb_packing_list
+                str(getattr(stock_value.wh_lb_job_no_id, 'lb_packing_list', '')),
 
-                    # Index 11-13: gatein_hawb, gatein_destination, gatein_invoice
-                    getattr(stock_value.wh_gate_injob_no_id, 'gatein_hawb', ''),
-                    getattr(stock_value.wh_gate_injob_no_id, 'gatein_destination', ''),
-                    getattr(stock_value.wh_gate_injob_no_id, 'gatein_invoice', ''),
+                # Index 11-13: gatein_hawb, gatein_destination, gatein_invoice
+                getattr(stock_value.wh_gate_injob_no_id, 'gatein_hawb', ''),
+                getattr(stock_value.wh_gate_injob_no_id, 'gatein_destination', ''),
+                getattr(stock_value.wh_gate_injob_no_id, 'gatein_invoice', ''),
 
-                    stock_value.wh_po_num,  # Index 14
-                    stock_value.wh_total_qty,  # Index 15
+                stock_value.wh_po_num,  # Index 14
+                stock_value.wh_total_qty,  # Index 15
 
-                    stock_value.wh_invoice_weight_unit,  # Index 16
-                    stock_value.wh_gross_weight,  # Index 17
+                stock_value.wh_invoice_weight_unit,  # Index 16
+                stock_value.wh_gross_weight,  # Index 17
 
-                    # Index 18: wh_uom
-                    str(stock_value.wh_uom),
+                # Index 18: wh_uom
+                str(stock_value.wh_uom),
 
-                    stock_value.wh_goods_length,  # Index 19
-                    stock_value.wh_goods_width,  # Index 20
-                    stock_value.wh_goods_height,  # Index 21
-                    stock_value.wh_goods_pieces,  # Index 22
+                stock_value.wh_goods_length,  # Index 19
+                stock_value.wh_goods_width,  # Index 20
+                stock_value.wh_goods_height,  # Index 21
+                stock_value.wh_goods_pieces,  # Index 22
 
-                    # Index 23: wh_goods_package_type
-                    str(stock_value.wh_goods_package_type),
+                # Index 23: wh_goods_package_type
+                str(stock_value.wh_goods_package_type),
 
-                    stock_value.wh_chargeable_weight,  # Index 24
-                    stock_value.wh_cbm,  # Index 25
-                    stock_value.wh_invoice_value,  # Index 26
+                stock_value.wh_chargeable_weight,  # Index 24
+                stock_value.wh_cbm,  # Index 25
+                stock_value.wh_invoice_value,  # Index 26
 
-                    # Index 27: lb_stock_invoice_currency
-                    str(getattr(stock_value.wh_lb_job_no_id, 'lb_stock_invoice_currency', '')),
+                # Index 27: lb_stock_invoice_currency
+                str(getattr(stock_value.wh_lb_job_no_id, 'lb_stock_invoice_currency', '')),
 
-                    stock_value.wh_invoice_amount_inr,  # Index 28
+                stock_value.wh_invoice_amount_inr,  # Index 28
 
-                    # Index 29: lb_eway_bill
-                    getattr(stock_value.wh_lb_job_no_id, 'lb_eway_bill', ''),
+                # Index 29: lb_eway_bill
+                getattr(stock_value.wh_lb_job_no_id, 'lb_eway_bill', ''),
 
-                    # Index 30: lb_validity_date (remove tzinfo)
-                    getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', None).replace(tzinfo=None)
-                    if getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', None) else None,
+                # Index 30: lb_validity_date (remove tzinfo)
+                getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', None).replace(tzinfo=None)
+                if getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', None) else None,
 
-                    # Index 31: wh_fumigation_process
-                    str(stock_value.wh_fumigation_process or ''),
+                # Index 31: wh_fumigation_process
+                str(stock_value.wh_fumigation_process or ''),
 
-                    "Stock on Hand" if str(stock_value.wh_check_in_out) == "Checked-In" else "Checked-Out", # Index # Index 32
-                    str(stock_value.wh_branch),  # Index 33
-                    str(stock_value.wh_unit),  # Index 34
-                    str(stock_value.wh_bay),  # Index 35
-                    stock_value.wh_storage_time,# Index 36
-                    # Damage Info
-                    "Yes" if damage_check_flag else "No",  # 37: Damage/Deviation?
-                    grn_number,
-                    damage_names,# 38
-                    deviation_names,  # 39 merged damages+deviations
-                    remarks,  # 40
-                    # getattr(stock_value.wh_dispatch_id, 'dispatch_truck_number', ''),# Index 37
-                    # str(getattr(stock_value.wh_dispatch_id, 'dispatch_truck_type', '')),# Index 38
-                    # # getattr(stock_value.wh_dispatch_id, 'dispatch_depature_date', ''),# Index 39
-                    # dispatch_depature_time,
-                    # str(getattr(stock_value.wh_dispatch_id, 'dispatch_sticker_pasted_bvm', '')),# Index 40
-                    # getattr(stock_value.wh_dispatch_id, 'dispatch_mawb', ''),# Index 41
-                    # getattr(stock_value.wh_dispatch_id, 'dispatch_num', ''),# Index 42
-                    # getattr(stock_value.wh_dispatch_id, 'dispatch_total_goods', ''),# Index 43
-                    ", ".join(truck_numbers),
-                    ", ".join(truck_types),
-                    ", ".join(departure_times),
-                    ", ".join(sticker_pasted_bys),
-                    ", ".join(mawb_list),
-                    ", ".join(dispatch_nums),
-                    dispatch_qty,
+                "Stock on Hand" if str(stock_value.wh_check_in_out) == "Checked-In" else "Checked-Out", # Index # Index 32
+                str(stock_value.wh_branch),  # Index 33
+                str(stock_value.wh_unit),  # Index 34
+                str(stock_value.wh_bay),  # Index 35
+                stock_value.wh_storage_time,# Index 36
+                # Damage Info
+                "Yes" if damage_check_flag else "No",  # 37: Damage/Deviation?
+                grn_number,
+                damage_names,# 38
+                deviation_names,  # 39 merged damages+deviations
+                remarks,  # 40
+                # getattr(stock_value.wh_dispatch_id, 'dispatch_truck_number', ''),# Index 37
+                # str(getattr(stock_value.wh_dispatch_id, 'dispatch_truck_type', '')),# Index 38
+                # # getattr(stock_value.wh_dispatch_id, 'dispatch_depature_date', ''),# Index 39
+                # dispatch_depature_time,
+                # str(getattr(stock_value.wh_dispatch_id, 'dispatch_sticker_pasted_bvm', '')),# Index 40
+                # getattr(stock_value.wh_dispatch_id, 'dispatch_mawb', ''),# Index 41
+                # getattr(stock_value.wh_dispatch_id, 'dispatch_num', ''),# Index 42
+                # getattr(stock_value.wh_dispatch_id, 'dispatch_total_goods', ''),# Index 43
+                ", ".join(truck_numbers),
+                ", ".join(truck_types),
+                ", ".join(departure_times),
+                ", ".join(sticker_pasted_bys),
+                ", ".join(mawb_list),
+                ", ".join(dispatch_nums),
+                dispatch_qty,
 
-                    stock_on_hand,# Index 44
-                ]
+                stock_on_hand,# Index 44
+            ]
 
-                # # Debugging the row values
-                # for idx, value in enumerate(row):
-                #     print(f"Index {idx}: Value={value}, Type={type(value)}")
+            # # Debugging the row values
+            # for idx, value in enumerate(row):
+            #     print(f"Index {idx}: Value={value}, Type={type(value)}")
 
-                ws.append(row)  # Append the row to the worksheet
+            ws.append(row)  # Append the row to the worksheet
 
-                # Check if this row has damage/deviation
-                damage_flag = (
-                        (stock_value.wh_damages_id and stock_value.wh_damages_id != 6) or
-                        stock_value.wh_weights_deviation_id == 1 or
-                        stock_value.wh_dimension_deviation_id == 1 or
-                        stock_value.wh_no_of_units_deviation_id == 1
-                )
+            # Check if this row has damage/deviation
+            damage_flag = (
+                    (stock_value.wh_damages_id and stock_value.wh_damages_id != 6) or
+                    stock_value.wh_weights_deviation_id == 1 or
+                    stock_value.wh_dimension_deviation_id == 1 or
+                    stock_value.wh_no_of_units_deviation_id == 1
+            )
 
-                # Apply borders + font immediately for this row
-                for cell in ws[ws.max_row]:
-                    cell.border = border_style
-                    if damage_check_flag:
-                        cell.font = Font(name="Arial", bold=False, size=10, color="FF0000")  # Red font
-                    else:
-                        cell.font = Font(name="Arial", bold=False, size=10, color="000000")
+            # Apply borders + font immediately for this row
+            for cell in ws[ws.max_row]:
+                cell.border = border_style
+                if damage_check_flag:
+                    cell.font = Font(name="Arial", bold=False, size=10, color="FF0000")  # Red font
+                else:
+                    cell.font = Font(name="Arial", bold=False, size=10, color="000000")
 
         sheet = wb.active
 

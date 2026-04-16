@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from ..forms import RtratemasteraddForm
 from ..models import RtratemasterInfo
 from django.shortcuts import render, redirect
+from django.db.models import Q
+from django.core.paginator import Paginator
 
 @login_required(login_url='login_page')
 def rtratemaster_add(request,rtratemaster_id=0):
@@ -58,7 +60,38 @@ def rtratemaster_add(request,rtratemaster_id=0):
 @login_required(login_url='login_page')
 def rtratemaster_list(request):
     first_name = request.session.get('first_name')
-    context = {'rtratemaster_list' : RtratemasterInfo.objects.all(),'first_name': first_name}
+    search_query = request.GET.get('search', '').strip()
+    
+    # Base Queryset with select_related to avoid N+1 queries
+    rtratemaster_qs = RtratemasterInfo.objects.select_related(
+        'ro_fromlocation', 'ro_tolocation', 'ro_vehicletype', 
+        'ro_customer', 'ro_customerdepartment', 'ro_vehiclecategory', 'ro_updated_by'
+    ).all().order_by('-id')
+    
+    # Filter if search query exists
+    if search_query:
+        # Split search terms for multi-word search (e.g. "COMPANY NAME")
+        search_terms = search_query.split()
+        for term in search_terms:
+            rtratemaster_qs = rtratemaster_qs.filter(
+                Q(ro_fromlocation__place_name__icontains=term) |
+                Q(ro_tolocation__place_name__icontains=term) |
+                Q(ro_vehicletype__vt_vehicletype__icontains=term) |
+                Q(ro_customer__cu_name__icontains=term) |
+                Q(ro_customerdepartment__ct_customerdepartment__icontains=term) |
+                Q(ro_vehiclecategory__vc_vehiclecategory__icontains=term)
+            )
+    
+    # Pagination
+    paginator = Paginator(rtratemaster_qs, 50) # Reduced for performance
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj' : page_obj,
+        'first_name': first_name,
+        'search_query': search_query,
+    }
     return render(request,"asset_mgt_app/rtratemaster_list.html",context)
 
 #Delete rtratemaster

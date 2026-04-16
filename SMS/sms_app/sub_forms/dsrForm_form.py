@@ -9,4 +9,5 @@ class DsrForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(DsrForm,self).__init__(*args, **kwargs)
         self.fields['ds_customer'].empty_label = "--Select Customer--"
-        self.fields['ds_customer'].queryset = self.fields['ds_customer'].queryset.filter(cu_name__icontains='(T)')
+        self.fields['ds_customer'].queryset = self.fields['ds_customer'].queryset.filter(cu_name__icontains='(W)')
+        self.fields['ds_customer'].required = False

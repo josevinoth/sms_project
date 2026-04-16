@@ -21,6 +21,22 @@
         <i class="fas fa-plus"></i> Add
       </a>
     </div>
+    <div class="col-md-5"></div>
+    <div class="col-md-5">
+        <form method="GET" action="{% url 'vendorratemaster_list' %}" class="form-inline float-right">
+            <div class="input-group">
+                <input type="text" name="search" class="form-control form-control-lg" placeholder="Search across all records..." value="{{ search_query }}">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    {% if search_query %}
+                        <a href="{% url 'vendorratemaster_list' %}" class="btn btn-secondary">Clear</a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 <hr>
 <div class="container-fluid">
@@ -40,7 +56,7 @@
             <th>Delete</th>
     </thead>
     <tbody>
-        {% for vendorratemasterinfo in vendorratemaster_list %}
+        {% for vendorratemasterinfo in page_obj %}
             <tr>
                 <td> {{vendorratemasterinfo.vr1_created_at}}</td>
                 <td> {{vendorratemasterinfo.vr1_fromlocation}}</td>
@@ -70,9 +86,50 @@
     </tbody>
 </table>
 </div>
+
+<!-- Pagination Controls -->
+<div class="container-fluid mt-3">
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">&laquo; First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo; First</span></li>
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Last &raquo;</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                <li class="page-item disabled"><span class="page-link">Last &raquo;</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
 <script>
     $(document).ready(function() {
-    $('#vendorratemaster_list').DataTable();
+    $('#vendorratemaster_list').DataTable({
+        "paging": false,  // Disable DataTables pagination since we are using server-side pagination
+        "info": false,    // Disable DataTables info
+        "searching": false // Disable DataTables search since we have our own server-side search
+    });
 } );
 </script>
 
