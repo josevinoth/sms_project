@@ -10,6 +10,7 @@ from ..sub_forms.maintenance_form import MaintenanceForm
 from ..sub_models.maintenance_mod import MaintenanceInfo
 from ..sub_models.maintenance_status_mod import Maintenance_status
 from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
+from .general_utils import get_financial_year
 
 from django.views.decorators.http import require_POST
 from django.contrib import messages
@@ -56,10 +57,10 @@ def maintenance_add(request):
 
             # ===============================
             # AUTO GENERATE JOB CARD NUMBER
-            # FORMAT: WJ/25/0001
+            # FORMAT: WJ/26-27/0001
             # ===============================
-            current_year = timezone.now().year % 100  # 2025 -> 25
-            year_prefix = f"WJ/{current_year:02d}"
+            fy_str = get_financial_year()
+            year_prefix = f"WJ/{fy_str}"
 
             last_job_card = (
                 MaintenanceInfo.objects
@@ -69,8 +70,11 @@ def maintenance_add(request):
             )
 
             if last_job_card:
-                last_number = int(last_job_card.split("/")[-1])
-                new_number = last_number + 1
+                try:
+                    last_number = int(last_job_card.split("/")[-1])
+                    new_number = last_number + 1
+                except (ValueError, IndexError):
+                    new_number = 1
             else:
                 new_number = 1
 
