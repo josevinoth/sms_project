@@ -9,7 +9,7 @@
 
 <div class="row">
     <div class="col-2"></div>
-    <div class="col-2">
+   <!-- <div class="col-2">
         <div class="card  mb-3 text-center custom-card">
             <div class="card-header custom-card-header">Space Availability Report</div>
             <div class="card-body bg-light text-center">
@@ -17,8 +17,16 @@
                     <i class="fas fa-arrows-alt"></i></a></h1>
             </div>
         </div>
+    </div>!-->
+<div class="col-2">
+        <div class="card  mb-3 text-center custom-card">
+            <div class="card-header custom-card-header text-white">Space Utilization Report</div>
+            <div class="card-body bg-light text-center">
+                <h2><a href="{% url 'space_utilization_reports' %}" class="badge custom-badge">
+                    <i class="fas fa-arrows-alt"></i></a></h2>
+            </div>
+        </div>
     </div>
-
     <div class="col-2">
         <div class="card  mb-3 text-center custom-card">
             <div class="card-header custom-card-header">Goods Movement Report</div>
@@ -114,7 +122,7 @@
             </div>
         </div>
     </div>
-    <div class="col-2">
+   <!-- <div class="col-2">
         <div class="card  mb-3 text-center custom-card">
             <div class="card-header custom-card-header text-white">Space Utilization Report</div>
             <div class="card-body bg-light text-center">
@@ -122,7 +130,7 @@
                     <i class="fas fa-arrows-alt"></i></a></h2>
             </div>
         </div>
-    </div>
+    </div>!-->
     <div class="col-2">
         <div class="card mb-3 text-center custom-card">
             <div class="card-header custom-card-header text-white">Customer Dues Report</div>
@@ -167,7 +175,7 @@
 <!--        </div>-->
 <!--    </div>-->
 <br>
-<div class="container-fluid d-flex justify-content-center py-3">
+<!--<div class="container-fluid d-flex justify-content-center py-3">
     <div class="rounded text-center bg-info shadow-box px-4 py-2">
         <h3>Warehouse Graphical Reports</h3>
     </div>
@@ -228,5 +236,5 @@
         </div>
     </div>
     <div class="col-2"></div>
-</div>
+</div>!-->
 {% endblock content %}

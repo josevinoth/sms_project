@@ -279,11 +279,15 @@ def deviation_report(request):
 
 @login_required(login_url='login_page')
 def revenue_report(request):
+    from ..sub_models.billing_mod import BilingInfo
+
     first_name = request.session.get('first_name')
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
     selected_branch = request.GET.get('branch')
     branches = Location_info.objects.all()
+
+    # --- ORIGINAL FLOW (unchanged) ---
     qs = Warehouse_goods_info.objects.exclude(wh_voucher_num__isnull=True)
 
     if from_date:
@@ -302,19 +306,99 @@ def revenue_report(request):
             crane_total=Sum("wh_crane_cost"),
             total_invoice=Sum("wh_total_invoice_cost"),
         ).order_by("wh_customer_name__cu_name", "wh_branch__loc_name", "wh_unit__unit_name","month"))
-    # Aggregate customer-wise revenue (total_invoice)
-    customer_revenue = (
-        qs.values("wh_customer_name__cu_name")
-        .annotate(total_revenue=Sum("wh_total_invoice_cost"))
-        .order_by("wh_customer_name__cu_name")
+
+    # --- NEW: Pull billing charges from BilingInfo (WMS Invoice) per group ---
+    # Get distinct billing IDs per (customer, branch, unit, month) group
+    billing_qs = (
+        qs.annotate(month=TruncMonth('wh_checkout_time'))
+        .filter(wh_voucher_id__isnull=False)
+        .values("wh_customer_name__cu_name", "wh_branch__loc_name", "wh_unit__unit_name", "month", "wh_voucher_id")
+        .distinct()
     )
 
-    chart_labels = [row["wh_customer_name__cu_name"] for row in customer_revenue]
-    chart_data = [float(row["total_revenue"] or 0) / 100000 for row in customer_revenue]  # in Lakhs
+    # Collect distinct billing IDs per group key
+    billing_ids_per_group = {}
+    all_bill_ids = set()
+    for row in billing_qs:
+        key = (row['wh_customer_name__cu_name'], row['wh_branch__loc_name'], row['wh_unit__unit_name'], row['month'])
+        billing_ids_per_group.setdefault(key, set()).add(row['wh_voucher_id'])
+        all_bill_ids.add(row['wh_voucher_id'])
 
+    # Fetch all billing records in one query
+    bills_map = {}
+    if all_bill_ids:
+        for bill in BilingInfo.objects.filter(id__in=all_bill_ids):
+            bills_map[bill.id] = bill
+
+    # Aggregate billing charges per group
+    billing_totals = {}
+    for key, bill_ids in billing_ids_per_group.items():
+        totals = {
+            'wh_storage_charges': 0.0,
+            'handling_charges': 0.0,
+            'bill_loading_charges': 0.0,
+            'bill_unloading_charges': 0.0,
+            'fumigation_charges': 0.0,
+            'packing_charges': 0.0,
+            'total_crane_charges': 0.0,
+            'total_forklift_charges': 0.0,
+        }
+        for bid in bill_ids:
+            bill = bills_map.get(bid)
+            if bill:
+                totals['wh_storage_charges']     += float(bill.bill_wh_storage_charges or 0)
+                totals['handling_charges']        += float(bill.bill_handling_charges or 0)
+                totals['bill_loading_charges']    += float(bill.bill_loading_charge or 0)
+                totals['bill_unloading_charges']  += float(bill.bill_unloading_charge or 0)
+                totals['fumigation_charges']      += float(bill.bill_tot_fumigation_charges or 0)
+                totals['packing_charges']         += float(bill.bill_packing_charges or 0)
+                totals['total_crane_charges']     += float(bill.bill_tot_crane_charges or 0)
+                totals['total_forklift_charges']  += float(bill.bill_tot_forklift_charges or 0)
+        billing_totals[key] = totals
+
+    # Merge billing charges into the original revenue_summary rows
+    final_summary = []
+    for row in revenue_summary:
+        row_dict = dict(row)
+        key = (row['wh_customer_name__cu_name'], row['wh_branch__loc_name'], row['wh_unit__unit_name'], row['month'])
+        bt = billing_totals.get(key, {})
+        row_dict['bill_storage']    = bt.get('wh_storage_charges', 0.0)
+        row_dict['bill_handling']   = bt.get('handling_charges', 0.0)
+        row_dict['bill_loading']    = bt.get('bill_loading_charges', 0.0)
+        row_dict['bill_unloading']  = bt.get('bill_unloading_charges', 0.0)
+        row_dict['bill_fumigation'] = bt.get('fumigation_charges', 0.0)
+        row_dict['bill_packing']    = bt.get('packing_charges', 0.0)
+        row_dict['bill_crane']      = bt.get('total_crane_charges', 0.0)
+        row_dict['bill_forklift']   = bt.get('total_forklift_charges', 0.0)
+
+        # Revenue = total of ALL 12 charges (4 original + 8 billing)
+        row_dict['revenue'] = (
+            float(row_dict.get('storage_total') or 0) +
+            float(row_dict.get('loading_total') or 0) +
+            float(row_dict.get('forklift_total') or 0) +
+            float(row_dict.get('crane_total') or 0) +
+            row_dict['bill_storage'] +
+            row_dict['bill_handling'] +
+            row_dict['bill_loading'] +
+            row_dict['bill_unloading'] +
+            row_dict['bill_fumigation'] +
+            row_dict['bill_packing'] +
+            row_dict['bill_crane'] +
+            row_dict['bill_forklift']
+        )
+        final_summary.append(row_dict)
+
+    # Chart: customer-wise total revenue (sum of row revenue)
+    customer_revenue_dict = {}
+    for row in final_summary:
+        cust = row['wh_customer_name__cu_name']
+        customer_revenue_dict[cust] = customer_revenue_dict.get(cust, 0) + row['revenue']
+
+    chart_labels = list(customer_revenue_dict.keys())
+    chart_data = [float(v) / 100000 for v in customer_revenue_dict.values()]  # in Lakhs
 
     context = {
-        "revenue_summary": revenue_summary,
+        "revenue_summary": final_summary,
         "first_name": first_name,
         "from_date": from_date,
         "to_date": to_date,
@@ -749,11 +833,54 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
             )
         # If no customer selected and no gate_in_ids, it takes all customers by default
         
+        from collections import defaultdict
+
         # Step 1: Filter stock_values and ensure the date fields are timezone-free
         stock_values = stock_values.filter(
             Q(wh_check_in_out__in=[1, 4]) |
             Q(wh_check_in_out=2, wh_checkout_time__isnull=False,wh_checkout_time__range=(from_date, to_date))  #wh_checkout_time__gte=three_months_ago
-        ).order_by('-wh_gate_injob_no_id__gatein_arrival_date')
+        ).order_by('-wh_gate_injob_no_id__gatein_arrival_date').select_related(
+            'wh_gate_injob_no_id',
+            'wh_gate_injob_no_id__gatein_truck_number_n',
+            'wh_gate_injob_no_id__gatein_truck_number_n__pregatein_truck_type',
+            'wh_lb_job_no_id',
+            'wh_lb_job_no_id__lb_stock_invoice_currency',
+            'wh_customer_name',
+            'wh_uom',
+            'wh_goods_package_type',
+            'wh_fumigation_process',
+            'wh_dispatch_id',
+            'wh_check_in_out',
+            'wh_branch',
+            'wh_unit',
+            'wh_bay'
+        )
+
+        job_numbers = set()
+        stock_ids = set()
+        for sv in stock_values:
+            job_numbers.add(sv.wh_job_no)
+            stock_ids.add(sv.id)
+
+        damage_reports_qs = DamagereportInfo.objects.filter(
+            dam_wh_job_num__in=job_numbers
+        ).prefetch_related('dam_damages1', 'dam_deviation1')
+        
+        damage_reports_dict = {}
+        for dr in damage_reports_qs:
+            if dr.dam_wh_job_num not in damage_reports_dict:
+                damage_reports_dict[dr.dam_wh_job_num] = dr
+
+        partials_qs = GoodsPartialDispatchInfo.objects.filter(
+            pd_goods_id__in=stock_ids
+        ).select_related(
+            'pd_dispatch_info',
+            'pd_dispatch_info__dispatch_truck_type',
+            'pd_dispatch_info__dispatch_sticker_pasted_bvm'
+        )
+        partials_dict = defaultdict(list)
+        for partial in partials_qs:
+            partials_dict[partial.pd_goods_id].append(partial)
 
         # Step 2: In the loop, replace the date with timezone-free date objects
         for stock_value in stock_values:
@@ -768,7 +895,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
 
             checkin_qty = stock_value.wh_goods_pieces if stock_value.wh_goods_pieces else 0
             # Fetch partial dispatches for this stock
-            partials = GoodsPartialDispatchInfo.objects.filter(pd_goods=stock_value)
+            partials = partials_dict.get(stock_value.id, [])
             dispatch_nums = []
             truck_numbers = []
             truck_types = []
@@ -778,12 +905,12 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
 
             dispatch_qty = 0  # initialize
             damage_check_flag = stock_value.wh_damage_check_id == 1
-            damage_report = DamagereportInfo.objects.filter(dam_wh_job_num=stock_value.wh_job_no).first()
+            damage_report = damage_reports_dict.get(stock_value.wh_job_no)
             damage_names = ", ".join(
-                damage_report.dam_damages1.values_list('damage_name', flat=True)
+                [d.damage_name for d in damage_report.dam_damages1.all()]
             ) if damage_report else ""
             deviation_names = ", ".join(
-                damage_report.dam_deviation1.values_list('deviation_name', flat=True)
+                [d.deviation_name for d in damage_report.dam_deviation1.all()]
             ) if damage_report else ""
             grn_number = damage_report.dam_GRN_num if damage_report else ""
             remarks = damage_report.dam_comments if damage_report else ""
@@ -983,9 +1110,9 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                     pass
             adjusted_width = (max_length + 2)
             sheet.column_dimensions[column].width =adjusted_width  # Set column width to 20
-            # Save the workbook to a BytesIO object
-            excel_file = BytesIO()
-            wb.save(excel_file)
+        # Save the workbook to a BytesIO object
+        excel_file = BytesIO()
+        wb.save(excel_file)
         excel_file.seek(0)
         attachment = excel_file
         attachment_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

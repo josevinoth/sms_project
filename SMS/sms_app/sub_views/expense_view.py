@@ -67,7 +67,9 @@ def expense_add(request, expense_id=0):
                 saved_expense.save()
 
             messages.success(request, 'Record Updated Successfully')
-            return redirect('/SMS/expense_update/' + str(saved_expense.id))
+            # Preserve filter parameters in redirect
+            filter_params = f"?from_date={request.GET.get('from_date', '')}&to_date={request.GET.get('to_date', '')}&expense_number={request.GET.get('expense_number', '')}"
+            return redirect('/SMS/expense_update/' + str(saved_expense.id) + filter_params)
         else:
             messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
             # return redirect('expense_list')
@@ -80,9 +82,12 @@ def expense_list(request):
     organisation_id = request.session.get('ses_organisation_id')
     role_id = request.session.get('ses_role_id')
 
-    # expense_list_val = ExpenseInfo.objects.filter(exp_business=organisation_id).order_by('-id')
-    expense_list_val = ExpenseInfo.objects.all().order_by('-id')
-    paginator = Paginator(expense_list_val, 50000)  # Adjust the pagination size if needed
+    if role_id == 2:
+        expense_list_val = ExpenseInfo.objects.filter(exp_business=organisation_id).order_by('-id')
+    else:
+        expense_list_val = ExpenseInfo.objects.all().order_by('-id')
+
+    paginator = Paginator(expense_list_val, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -109,19 +114,25 @@ def expense_delete(request, expense_id):
 @login_required(login_url='login_page')
 def expense_search(request):
     first_name = request.session.get('first_name')
-    expense_number = request.GET.get('expense_number', "")  # Set a default empty string
+    expense_number = request.GET.get('expense_number', "")
     organisation_id = request.session.get('ses_organisation_id')
     role_id = request.session.get('ses_role_id')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
 
+    filters = Q()
+    if expense_number:
+        filters &= Q(exp_number__icontains=expense_number) | Q(exp_number__isnull=True)
     if role_id == 2:
-        expense_list = ExpenseInfo.objects.filter(
-            Q(exp_business=organisation_id) &
-            (Q(exp_number__icontains=expense_number) | Q(exp_number__isnull=True))
-        ).order_by('-id')
-    else:
-        expense_list = ExpenseInfo.objects.filter(
-            Q(exp_number__icontains=expense_number) | Q(exp_number__isnull=True)
-        ).order_by('-id')
+        filters &= Q(exp_business=organisation_id)
+
+    # Date filter logic
+    if from_date:
+        filters &= Q(exp_service_start_date__date__gte=from_date)
+    if to_date:
+        filters &= Q(exp_service_start_date__date__lte=to_date)
+
+    expense_list = ExpenseInfo.objects.filter(filters).order_by('-id')
 
     paginator = Paginator(expense_list, 50)
     page_number = request.GET.get('page')
