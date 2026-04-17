@@ -2715,8 +2715,9 @@ def own_vehicle_pl_report_view(request):
     # BASE QUERY – OWN VEHICLES ONLY
     # -------------------------------
     trips = TripdetailInfo.objects.filter(
-        tc_financestatus_id__in=[2, 7],     # Closed / Settled
-        tr_vehiclesource_id=1               # BVM - OWN only
+        tc_financestatus_id=7,              # Settled only
+        tr_vehiclesource_id=1,              # BVM - OWN only
+        tr_category_id=1                    # Business trips only
     ).select_related(
         'tr_vehicletype',
         'tr_departedlocation',
@@ -2740,12 +2741,17 @@ def own_vehicle_pl_report_view(request):
     if vehicletype_id:
         trips = trips.filter(tr_vehicletype_id=vehicletype_id)
 
+    from django.db.models.functions import Coalesce
+    trips = trips.annotate(
+        resolved_date=Coalesce('tr_loading_time', 'tr_departeddate', 'tr_created_at')
+    )
+
     if date_from and date_to:
-        trips = trips.filter(tr_departeddate__date__range=[date_from, date_to])
+        trips = trips.filter(resolved_date__date__range=[date_from, date_to])
     elif date_from:
-        trips = trips.filter(tr_departeddate__date__gte=date_from)
+        trips = trips.filter(resolved_date__date__gte=date_from)
     elif date_to:
-        trips = trips.filter(tr_departeddate__date__lte=date_to)
+        trips = trips.filter(resolved_date__date__lte=date_to)
 
     trips_list = list(trips.order_by('-tr_created_at'))
     trip_ids = [t.id for t in trips_list]
@@ -4725,7 +4731,7 @@ def get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date
 
     if from_date or to_date or (selected_year and selected_year != '0') or (selected_month and selected_month != '0'):
         trips = trips.annotate(
-            resolved_date=Coalesce('tr_departeddate', 'tr_loading_time', 'tr_created_at')
+            resolved_date=Coalesce('tr_loading_time', 'tr_departeddate', 'tr_created_at')
         )
         
         if from_date:
@@ -4825,6 +4831,7 @@ def movementwise_pl_report_ajax_view(request):
     selected_year = request.GET.get('year')
 
     trips = get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date, to_date, selected_year)
+    trips = trips.filter(tr_category_id=1, tc_financestatus_id=7)  # Business trips only & Settled only
     records_total = trips.count()
     
     # Simple search
@@ -4929,6 +4936,7 @@ def customerwise_pl_report_ajax_view(request):
     selected_year = request.GET.get('year')
 
     trips = get_filtered_trips(branch_id, trip_category_id, None, from_date, to_date, selected_year, customer_id=customer_id)
+    trips = trips.filter(tr_category_id=1, tc_financestatus_id=7)  # Business trips only & Settled only
     records_total = trips.count()
     
     search_value = request.GET.get('search[value]', '')
@@ -4995,7 +5003,7 @@ def customerwise_pl_report_ajax_view(request):
             idx,
             disp_date,
             safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else "",
-            safe_str(trip.tr_enquirynumber.en_customerdepartment) if trip.tr_enquirynumber else "",
+            safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
             safe_str(trip.tr_departedlocation),
             safe_str(trip.tr_reportedlocation),
             safe_str(trip.tr_vehiclesource),
