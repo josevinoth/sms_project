@@ -549,7 +549,7 @@ def export_stockreport_to_csv(request):
         'wh_lb_job_no_id__lb_eway_bill', 'eway_bill_validity',
         'wh_fumigation_process__ge_gstexcepmtion', 'wh_check_in_out__check_in_out_name', 'wh_branch__loc_name',
         'wh_unit__unit_name', 'wh_bay__bay_bayname', 'wh_storage_time','wh_comments','wh_damages__damage_name',
-        'wh_Dam_rep_job_num_id__dam_GRN_num',
+        'wh_Dam_rep_job_num_id__dam_GRN_num','wh_gate_injob_no_id__gatein_truck_number_n__pregatein_truck_type__vt_vehicletype',
 
         # 'wh_dispatch_id__dispatch_truck_number',
         # str('wh_dispatch_id__dispatch_truck_type__vt_vehicletype'),'departure_time',
@@ -561,14 +561,14 @@ def export_stockreport_to_csv(request):
     headers = [
          'Job Number', 'Stock Number', 'Customer', 'Date Of Arrival',
             'Unloading Start Time', 'Unloading End Time', 'Transporter',
-            'Truck Number', 'Consignor', 'Consignee', 'Docs Received', 'HAWB',
+            'Truck Number', 'Truck Type(In)', 'Truck Type Placed', 'Consignor', 'Consignee', 'Docs Received', 'HAWB',
             'Destination', 'Invoice Number', 'Case Number', 'Invoice Qty',
             'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight',
             'CBM', 'Invoice Value', 'Invoice Currency', 'Invoice (INR)',
             'E-Way Bill#', 'E-Way Bill Validity', 'Fumigation Status',
             'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Remarks','Damage Type','GRN Number',
-            'Truck_Number(Out)', 'Truck_Type(Out)', 'Truck_Depature_Time(Out)',
+            'Truck_Number(Out)', 'Truck_Type(Out)', 'Gatein Time(Out)', 'Dockin Time(Out)', 'Dockout Time(Out)', 'Truck_Depature_Time(Out)',
             'Labels_Pasted_By', 'MAWB', 'Dispatch Number(s)', 'Total Dispatch Qty'
     ]
 
@@ -589,6 +589,8 @@ def export_stockreport_to_csv(request):
         # Write data rows
         for row_num, row_data in enumerate(data, 2):
             goods_id = row_data[0]  # first element is ID
+            truck_type_in = row_data[-1]
+            row_data = list(row_data[:-1]) # remove truck_type_in for now to restore later or insert correctly
             try:
                 goods_obj = Warehouse_goods_info.objects.get(id=goods_id)
                 partials = GoodsPartialDispatchInfo.objects.filter(pd_goods=goods_obj).select_related(
@@ -599,7 +601,11 @@ def export_stockreport_to_csv(request):
                 dispatch_nums = []
                 truck_numbers = []
                 truck_types = []
+                truck_types_placed = []
                 departure_times = []
+                gatein_times_out = []
+                dockin_times_out = []
+                dockout_times_out = []
                 sticker_pasted_bys = []
                 mawb_list = []
 
@@ -611,6 +617,10 @@ def export_stockreport_to_csv(request):
                         dispatch_nums.append(dispatch.dispatch_num or "")
                         truck_numbers.append(dispatch.dispatch_truck_number or "")
                         truck_types.append(getattr(dispatch.dispatch_truck_type, 'vt_vehicletype', "") or "")
+                        truck_types_placed.append(dispatch.dispatch_truck_type_placed or "")
+                        gatein_times_out.append(dispatch.dispatch_gatein_time.strftime("%d-%b-%y %H:%M:%S") if dispatch.dispatch_gatein_time else "")
+                        dockin_times_out.append(dispatch.dispatch_dockin_time.strftime("%d-%b-%y %H:%M:%S") if dispatch.dispatch_dockin_time else "")
+                        dockout_times_out.append(dispatch.dispatch_dockout_time.strftime("%d-%b-%y %H:%M:%S") if dispatch.dispatch_dockout_time else "")
                         departure_times.append(
                             dispatch.dispatch_depature_date.strftime(
                                 "%d-%b-%y") if dispatch.dispatch_depature_date else ""
@@ -621,6 +631,9 @@ def export_stockreport_to_csv(request):
                     total_qty += partial.pd_dispatch_qty or 0
 
                 row_data = list(row_data[1:])  # remove ID
+                row_data.insert(8, truck_type_in)
+                row_data.insert(9, ", ".join(truck_types_placed))
+
                 weights_dev_id = goods_obj.wh_weights_deviation_id
                 dim_dev_id = goods_obj.wh_dimension_deviation_id
                 units_dev_id = goods_obj.wh_no_of_units_deviation_id
@@ -654,6 +667,9 @@ def export_stockreport_to_csv(request):
                 row_data += [
                     ", ".join(truck_numbers),
                     ", ".join(truck_types),
+                    ", ".join(gatein_times_out),
+                    ", ".join(dockin_times_out),
+                    ", ".join(dockout_times_out),
                     ", ".join(departure_times),
                     ", ".join(sticker_pasted_bys),
                     ", ".join(mawb_list),
@@ -781,13 +797,13 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
         # Write the headers
         headers = [
             'Job Number', 'Stock Number', 'Customer', 'Date Of Arrival', 'Dock In Time','Unloading Start Time',
-            'Unloading End Time', 'Transporter', 'Truck Number', 'Truck Type(In)','Consignor', 'Consignee',
+            'Unloading End Time', 'Transporter', 'Truck Number', 'Truck Type(In)', 'Truck Type Placed', 'Consignor', 'Consignee',
             'Docs Received', 'HAWB', 'Destination', 'Invoice Number', 'Case Number',
             'Invoice Qty', 'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight', 'CBM',
             'Invoice Value', 'Invoice Currency', 'Invoice (INR)', 'E-Way Bill#', 'E-Way Bill Validity',
             'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Damage/Deviation?','GRN Number','Damages','Deviations','Remarks',
-            'Truck_Number(Out)','Truck_Type(Out)','Truck_Depature_Time(Out)','Labels_Pasted_By',
+            'Truck_Number(Out)','Truck_Type(Out)','Gatein Time(Out)','Dockin Time(Out)','Dockout Time(Out)','Truck_Depature_Time(Out)','Labels_Pasted_By',
             'MAWB','Dispatch_Number','Dispatch quantity','Stock On Hand'
         ]
         ws.append(headers)
@@ -899,6 +915,10 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
             dispatch_nums = []
             truck_numbers = []
             truck_types = []
+            truck_types_placed = []
+            gatein_times_out = []
+            dockin_times_out = []
+            dockout_times_out = []
             departure_times = []
             sticker_pasted_bys = []
             mawb_list = []
@@ -924,11 +944,22 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                     if truck_type:
                         truck_types.append(truck_type)
 
+                    truck_type_pl = dispatch.dispatch_truck_type_placed or ""
+                    if truck_type_pl:
+                        truck_types_placed.append(truck_type_pl)
+
                     sticker = getattr(dispatch.dispatch_sticker_pasted_bvm, 'lp_name', "")
                     if sticker:
                         sticker_pasted_bys.append(sticker)
 
                     mawb_list.append(dispatch.dispatch_mawb or "")
+
+                    if dispatch.dispatch_gatein_time:
+                        gatein_times_out.append(dispatch.dispatch_gatein_time.strftime('%d-%b-%Y %H:%M:%S'))
+                    if dispatch.dispatch_dockin_time:
+                        dockin_times_out.append(dispatch.dispatch_dockin_time.strftime('%d-%b-%Y %H:%M:%S'))
+                    if dispatch.dispatch_dockout_time:
+                        dockout_times_out.append(dispatch.dispatch_dockout_time.strftime('%d-%b-%Y %H:%M:%S'))
 
                     if dispatch.dispatch_depature_date:
                         departure_times.append(dispatch.dispatch_depature_date.strftime('%d-%b-%Y %H:%M:%S'))
@@ -979,6 +1010,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                 # Index 7: gatein_truck_number
                 getattr(stock_value.wh_gate_injob_no_id, 'gatein_truck_number', ''),
                 truck_type_in, # NEW: Truck Type (In)
+                ", ".join(truck_types_placed), # NEW: Truck Type Placed
 
                 stock_value.wh_consigner,  # Index 8
                 stock_value.wh_consignee,  # Index 9
@@ -1048,6 +1080,9 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                 # getattr(stock_value.wh_dispatch_id, 'dispatch_total_goods', ''),# Index 43
                 ", ".join(truck_numbers),
                 ", ".join(truck_types),
+                ", ".join(gatein_times_out),
+                ", ".join(dockin_times_out),
+                ", ".join(dockout_times_out),
                 ", ".join(departure_times),
                 ", ".join(sticker_pasted_bys),
                 ", ".join(mawb_list),

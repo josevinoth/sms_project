@@ -17,6 +17,7 @@ class Dispatch_info(models.Model):
     dispatch_dockout_time = models.DateTimeField(null=True, blank=True)
     dispatch_truck_number = models.CharField(null=False, max_length=20)
     dispatch_truck_type = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='',related_name='dispatch_truck_type',db_column='dispatch_truck_type')
+    dispatch_truck_type_placed = models.CharField(null=True, blank=True, max_length=50)
     dispatch_truck_type_billing = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='',related_name='dispatch_truck_type_billing',db_column='dispatch_truck_type_billing',null=True,blank=True)
     dispatch_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6,null=False)
     dispatch_sticker_pasted_bvm= models.ForeignKey(Labels_pasted_Info, on_delete=models.CASCADE,null=True,blank=True,related_name='dispatch_sticker_pasted_bvm', db_column='dispatch_sticker_pasted_bvm')
