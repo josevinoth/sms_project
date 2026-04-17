@@ -104,6 +104,13 @@ def tripclosure_add(request,tripclosure_id=0):
             consignment_num = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_consignmentdetails
             tripclosure = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
             tripclosure_form = TripclosureaddForm(instance=tripclosure)
+            
+            # Populate Customer Name and Trip Date
+            if tripclosure.tr_enquirynumber:
+                tripclosure_form.fields['customer_name'].initial = str(tripclosure.tr_enquirynumber.en_customername)
+            if tripclosure.tr_departeddate_pickup:
+                tripclosure_form.fields['trip_date'].initial = tripclosure.tr_departeddate_pickup.strftime('%d-%m-%Y')
+
             tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
             tripclosurefiles_form = TripclosurefilesForm(instance=tripclosure_files)
             trip = TripdetailInfo.objects.get(pk=tripclosure_id)

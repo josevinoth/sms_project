@@ -100,6 +100,13 @@ def trip_settlement_edit(request, trip_id):
 
     else:
         form = TripSettlementForm(instance=trip)
+        
+        # Populate Customer Name and Trip Date
+        if trip.tr_enquirynumber:
+            form.fields['customer_name'].initial = str(trip.tr_enquirynumber.en_customername)
+        if trip.tr_departeddate_pickup:
+            form.fields['trip_date'].initial = trip.tr_departeddate_pickup.strftime('%d-%m-%Y')
+
         files_form = TripclosurefilesForm(instance=files_instance)
 
         form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7])

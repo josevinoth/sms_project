@@ -49,6 +49,19 @@
 								</div>
 							</div>
 							<div class="col-3">
+                                <div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Name</span>
+									</div>
+									{% render_field tripclosure_form.customer_name class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Trip Date</span>
+									</div>
+									{% render_field tripclosure_form.trip_date class="form-control disable_a_href" %}
+								</div>
+
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Source</span>

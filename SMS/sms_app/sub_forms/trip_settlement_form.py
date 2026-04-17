@@ -3,6 +3,9 @@ from ..models import TripdetailInfo, Tripstatusinfo,Trip_closure_files_Info
 
 
 class TripSettlementForm(forms.ModelForm):
+    customer_name = forms.CharField(label="Customer Name", required=False, disabled=True)
+    trip_date = forms.CharField(label="Trip Date", required=False, disabled=True)
+
     class Meta:
         model = TripdetailInfo
         fields = ['tr_updated_by', 'tr_enquirynumber', 'tr_consignmentnumber', 'tr_tripnumber', 'tr_vehicletype',
