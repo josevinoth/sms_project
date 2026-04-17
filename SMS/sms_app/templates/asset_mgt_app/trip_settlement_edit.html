@@ -49,6 +49,18 @@
 								</div>
 							</div>
 							<div class="col-3">
+                                <div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer Name</span>
+									</div>
+									{% render_field tripclosure_form.customer_name class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Trip Date</span>
+									</div>
+									{% render_field tripclosure_form.trip_date class="form-control disable_a_href" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vehicle Source</span>
@@ -609,6 +621,57 @@ $(document).ready(function () {
 
         // Also run if user changes consignment manually later
         $(document).on('change', '#tr_consignmentnumber', fetchCustomerRef);
+
+        // --- NEW: Trip Charges Logic (Matching Trip Closure) ---
+        getRoRate();
+
+        // Default Trip Charges to Sell value if currently zero
+        var tc_tripcost_val = $("#tc_tripcost").val();
+        if (tc_tripcost_val == "0" || tc_tripcost_val == "0.0" || tc_tripcost_val == "") {
+            $("#tc_tripcost").val("{{ va_sale }}");
+        }
+
+        function getRoRate() {
+            var selectedFromLocation = $("#tr_departedlocation").val();
+            var selectedToLocation = $("#tr_reportedlocation").val();
+            var selectedVehicleType = $("#tr_vehicletype_placed").val();
+            var selectedTripCategory = $("#tr_category").val();
+            var selectedEnquiryNumber= $("#tr_enquirynumber").val();
+
+            $.ajax({
+                url: '{% url 'transport_calculate_trip_charges' %}',
+                method: "GET",
+                data: {
+                    'from_location': selectedFromLocation,
+                    'to_location': selectedToLocation,
+                    'vehicle_type': selectedVehicleType,
+                    'trip_category': selectedTripCategory,
+                    'enquirynumber': selectedEnquiryNumber,
+                },
+                success: function(data) {
+                    if (data.ro_rate === 0 || data.ro_rate === 100) {
+                        // Fallback to Sell value if Master rate is missing or not applicable
+                        var current_val = $("#tc_tripcost").val();
+                        if (current_val == "0" || current_val == "0.0" || current_val == "") {
+                            $("#tc_tripcost").val("{{ va_sale }}");
+                        }
+                    }
+                    else {
+                        // Update the ro_rate field with the retrieved value
+                        $("#tc_tripcost").val(data.ro_rate);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', error);
+                }
+            });
+        }
+
+        // Attach event listeners for dynamic recalculation
+        $("#tr_departedlocation, #tr_reportedlocation, #tr_vehicletype_placed, #tr_category, #tr_enquirynumber").change(function() {
+            getRoRate();
+        });
+        // -----------------------------------------------------
     });
 </script>
 <script>

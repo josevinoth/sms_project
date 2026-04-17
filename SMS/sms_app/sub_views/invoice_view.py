@@ -116,6 +116,7 @@ def invoice_add(request,invoice_id=0):
                             else:
                                 Warehouse_goods_info.objects.filter(pk=exclusive_goods_ids[i]).update(wh_storage_cost_per_day=0, wh_storage_cost_total=0, wh_voucher_id=invoice)
 
+
                 elif customer_type_id == 3:
                     print("Inside Dedicated Case")
                     try:
@@ -426,8 +427,13 @@ def invoice_add(request,invoice_id=0):
                 no_of_pieces = goods_qs.aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
                 total_loading_cost = goods_qs.aggregate(Sum('wh_total_loading_cost'))['wh_total_loading_cost__sum']
 
-                if wh_storage_cost_sum is None:
-                    wh_storage_cost_sum = 0
+                if customer_type_id in [2, 3]:
+                    # Exclusive and Dedicated: always use full flat rate from Warehouse Rate Master
+                    wh_storage_cost_sum = warehouse_charge
+                else:
+                    if wh_storage_cost_sum is None:
+                        wh_storage_cost_sum = 0
+
 
                 job_num = goods_qs.values_list('wh_job_no', flat=True).distinct()
                 crane_time=0

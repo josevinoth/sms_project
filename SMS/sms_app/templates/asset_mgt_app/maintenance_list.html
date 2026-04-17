@@ -33,7 +33,7 @@
         <table class="table table-striped table-bordered" id="maintenance_list">
             <thead class="thead-dark">
                 <tr>
-                    <th>Truck Job Card No.</th>
+                    <th style="white-space: nowrap;">Truck Job Card No.</th>
                     <th>Model</th>
                     <th>Vehicle No</th>
                     <th>Registration Date</th>
@@ -61,7 +61,7 @@
             <tbody>
                 {% for m in maintenance_list %}
                 <tr>
-                    <td>{{ m.mi_job_card_no }}</td>
+                    <td style="white-space: nowrap;">{{ m.mi_job_card_no }}</td>
                     <td>{{ m.mi_make_model }}</td>
                     <td>{{ m.mi_vehicle }}</td>
                     <td>{{ m.mi_registration_date }}</td>
