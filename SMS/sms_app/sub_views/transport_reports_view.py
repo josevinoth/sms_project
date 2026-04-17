@@ -218,6 +218,7 @@ VENDOR_PL_ATTACHED_HEADERS = [
     "Weighment charges", "Halting Charges", "Handling Charges", "Selling",
     "Vendor Name", "Bill No", "Buy cost", "Toll Cost", "Parking Cost",
     "Loading cost", "Unloading cost", "Weighment cost", "Handling cost",
+    "Halting cost", "RTO cost", "Batta cost",
     "Total Buying", "Profit", "Profit %"
 ]
 
@@ -1919,17 +1920,30 @@ def vendor_p_l_attached_report_view(request):
 
     # Create mappings for matching strings to IDs
     trip_id_to_pk = {t.id: t.id for t in trips_list}
-    trip_num_to_pk = {t.tr_tripnumber: t.id for t in trips_list if t.tr_tripnumber}
-    all_query_ids = [str(t.id) for t in trips_list] + [t.tr_tripnumber for t in trips_list if t.tr_tripnumber]
+    trip_num_to_pk = {str(t.tr_tripnumber).strip(): t.id for t in trips_list if t.tr_tripnumber}
+    cnote_to_pk = {str(t.tr_consignmentnumber.co_consignmentnumber).strip(): t.id for t in trips_list if t.tr_consignmentnumber and t.tr_consignmentnumber.co_consignmentnumber}
+
+    all_query_ids = [str(t.id) for t in trips_list]
+    for t in trips_list:
+        if t.tr_tripnumber: all_query_ids.append(str(t.tr_tripnumber).strip())
+        if t.tr_consignmentnumber and t.tr_consignmentnumber.co_consignmentnumber:
+            all_query_ids.append(str(t.tr_consignmentnumber.co_consignmentnumber).strip())
+    
+    # Unique set to avoid duplicates
+    all_query_ids = list(set(all_query_ids))
 
     driver_expense_map = {}
     expenses = Driverexpense.objects.filter(trip_number__in=all_query_ids)
     for exp in expenses:
         t_id = None
-        if exp.trip_number in trip_num_to_pk:
-            t_id = trip_num_to_pk[exp.trip_number]
-        elif exp.trip_number and str(exp.trip_number).isdigit():
-            t_id = int(exp.trip_number)
+        s_key = str(exp.trip_number).strip() if exp.trip_number else ""
+        
+        if s_key in trip_num_to_pk:
+            t_id = trip_num_to_pk[s_key]
+        elif s_key in cnote_to_pk:
+            t_id = cnote_to_pk[s_key]
+        elif s_key.isdigit():
+            t_id = int(s_key)
         
         if t_id and t_id in trip_id_to_pk:
             driver_expense_map.setdefault(t_id, []).append(exp)
@@ -1953,19 +1967,36 @@ def vendor_p_l_attached_report_view(request):
     # Attached Bills
     attached_bill_map = {}
     from ..models import AttachedBillInfo
-    all_attached_bills = AttachedBillInfo.objects.all().only('ab_bill_no', 'ab_selected_trips', 'ab_buy_cost', 'ab_total_km_run')
-    for b in all_attached_bills:
+    # Fetch all attached bills that might be relevant
+    ab_bills = AttachedBillInfo.objects.all().only(
+        'ab_bill_no', 'ab_selected_trips', 'ab_buy_cost', 'ab_total_km_run', 
+        'ab_from_date', 'ab_to_date', 'ab_vehicle_number_id'
+    ).select_related('ab_vehicle_number')
+    
+    # Store bills by their ID/TripNum string (Priority)
+    for b in ab_bills:
         if b.ab_selected_trips:
             ids = [tid.strip() for tid in b.ab_selected_trips.split(',') if tid.strip()]
             for tid in ids:
                 try:
                     # Try as ID first
-                    bill_no_map[int(tid)] = b.ab_bill_no
-                    attached_bill_map[int(tid)] = b
+                    t_id_int = int(tid)
+                    bill_no_map[t_id_int] = b.ab_bill_no
+                    attached_bill_map[t_id_int] = b
                 except:
                     # Fallback to Trip Number string
                     bill_no_map[tid] = b.ab_bill_no
                     attached_bill_map[tid] = b
+
+    # Build a secondary date-based lookup for cases where ab_selected_trips is empty (Safety Net)
+    # Key: (vehicle_no, date), Value: bill
+    ab_date_map = {}
+    for b in ab_bills:
+        if b.ab_vehicle_number and b.ab_from_date and b.ab_to_date:
+            veh_no = b.ab_vehicle_number.vm_registrationnumber.strip() if b.ab_vehicle_number.vm_registrationnumber else ""
+            if veh_no:
+                # We will check date range in the loop
+                pass
 
     # Vehicle Vendor Map (Fallback for Attached)
     veh_nos = [t.tr_vehiclenumber for t in trips_list if t.tr_vehiclenumber]
@@ -2027,13 +2058,39 @@ def vendor_p_l_attached_report_view(request):
         departed_km = safe_num(trip.tr_departedkm)
         km_run = reported_km - departed_km if reported_km and departed_km else 0
 
-        ab_bill = attached_bill_map.get(trip.id) or attached_bill_map.get(trip.tr_tripnumber)
+        ab_bill = attached_bill_map.get(trip.id) or attached_bill_map.get(str(trip.tr_tripnumber).strip())
+        
+        # Fallback: Date-based matching if no explicit ID match was found
+        if not ab_bill and trip.tr_vehiclenumber and trip.tr_departeddate:
+            t_date = trip.tr_departeddate.date()
+            t_veh = trip.tr_vehiclenumber.strip()
+            for b in ab_bills:
+                if (b.ab_vehicle_number and b.ab_vehicle_number.vm_registrationnumber == t_veh and 
+                    b.ab_from_date <= t_date <= b.ab_to_date):
+                    ab_bill = b
+                    break
 
-        if ab_bill:
+        if safe_num(trip.tc_tripcost) > 0:
+            buying_trip_cost = safe_num(trip.tc_tripcost)
+        elif ab_bill:
             ab_buy_cost = safe_num(ab_bill.ab_buy_cost)
             ab_total_km = safe_num(ab_bill.ab_total_km_run)
-            ab_rate = (ab_buy_cost / ab_total_km) if ab_total_km > 0 else 0
-            buying_trip_cost = round(ab_rate * km_run, 2)
+            
+            # Use KM-based pro-rating if data is available and reasonable
+            # If km_run is missing/zero or suspiciously high (legacy bad data), use Equal Distribution
+            if 0 < km_run < 5000:
+                ab_rate = (ab_buy_cost / ab_total_km) if ab_total_km > 0 else 0
+                buying_trip_cost = round(ab_rate * km_run, 2)
+            else:
+                # Robust Fallback: Divide bill total equally among the number of selected trips
+                num_trips = 1
+                if ab_bill.ab_selected_trips:
+                    num_trips = len([it.strip() for it in ab_bill.ab_selected_trips.split(',') if it.strip()])
+                
+                # If ab_selected_trips was empty (as in user's reported bug), the bill still exist
+                # If we still get 1 or less trips, it's safer than pro-rating by 214k KM
+                if num_trips < 1: num_trips = 1
+                buying_trip_cost = round(ab_buy_cost / num_trips, 2)
         else:
             buying_trip_cost = (
                 safe_num(getattr(va_info, 'va_specialbuy', 0)) or
@@ -2152,6 +2209,9 @@ def vendor_p_l_attached_report_view(request):
             buy_unloading,
             buy_weighment,
             buy_handling,
+            buy_halting,
+            buy_rto,
+            buy_batta,
             
             round(total_buying, 2),
 
