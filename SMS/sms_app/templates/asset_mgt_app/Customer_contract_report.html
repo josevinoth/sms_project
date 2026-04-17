@@ -70,7 +70,7 @@
             <td>{{ cust.branch }}</td>
             <td>{{ cust.business_model }}</td>
             <td>{{ cust.contract_start|default:"-" }}</td>
-            <td>{{ cust.contract_end|default:"-" }}</td>
+            <td data-date="{{ cust.contract_end|date:'Y-m-d'|default:'' }}">{{ cust.contract_end|default:"-" }}</td>
             <td>{{ cust.rate_start|default:"-" }}</td>
             <td>{{ cust.rate_end|default:"-" }}</td>
             <td>{{ cust.billing_sop }}</td>
@@ -91,6 +91,51 @@
             buttons: ['copy', 'csv', 'excel', 'print']
         });
 
+        // Custom DataTables filter for the date range
+        $.fn.dataTable.ext.search.push(
+            function( settings, data, dataIndex ) {
+                if (settings.nTable.id !== 'customer_contract_report') {
+                    return true;
+                }
+
+                var minDateFilter = $('#from-date').val();
+                var maxDateFilter = $('#to-date').val();
+                
+                if (!minDateFilter && !maxDateFilter) {
+                    return true;
+                }
+                
+                var api = new $.fn.dataTable.Api(settings);
+                var node = api.cell(dataIndex, 6).node(); // index 6 is 'Contract End'
+                var dateStrStr = $(node).attr('data-date'); 
+                
+                if (!dateStrStr || dateStrStr.trim() === "") {
+                    return false; // hide rows with no date if a filter is active
+                }
+
+                var trDate = new Date(dateStrStr);
+                trDate.setHours(0,0,0,0);
+                
+                if (minDateFilter) {
+                    var minDate = new Date(minDateFilter);
+                    minDate.setHours(0,0,0,0);
+                    if (trDate < minDate) {
+                        return false;
+                    }
+                }
+                
+                if (maxDateFilter) {
+                    var maxDate = new Date(maxDateFilter);
+                    maxDate.setHours(0,0,0,0);
+                    if (trDate > maxDate) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            }
+        );
+
         $('.filter-input').on('keyup change', function () {
             var columnIndex = $(this).parent().index();
             table.column(columnIndex).search(this.value).draw();
@@ -99,31 +144,11 @@
         $('#customer_contract_report thead input').on('click', function(e) {
             e.stopPropagation();
         });
-    });
 
-    function updateFilters() {
-        const fromDate = document.getElementById('from-date').value;
-        const toDate = document.getElementById('to-date').value;
-        const url = new URL(window.location.href);
-
-        if (fromDate) {
-            url.searchParams.set('from_date', fromDate);
-        } else {
-            url.searchParams.delete('from_date');
-        }
-
-        if (toDate) {
-            url.searchParams.set('to_date', toDate);
-        } else {
-            url.searchParams.delete('to_date');
-        }
-
-        window.location.href = url.toString();
-    }
-
-    document.addEventListener("DOMContentLoaded", function () {
-        document.getElementById("from-date").addEventListener("change", updateFilters);
-        document.getElementById("to-date").addEventListener("change", updateFilters);
+        // Trigger redraw when the date inputs change
+        $('#from-date, #to-date').on('change', function() {
+            table.draw();
+        });
     });
 </script>
 {% endblock content %}
