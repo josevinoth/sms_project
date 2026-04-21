@@ -322,6 +322,16 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 if vehicle_allotment_id:
                     trip.tr_driver_master_id = va.va_driver_master_id
+                
+                # Resolve Driver Master ID if still missing (e.g. manual entry or missing in allotment)
+                if not trip.tr_driver_master_id and trip.tr_drivername:
+                    import re
+                    match = re.search(r'\((\d+)\)', trip.tr_drivername)
+                    if match:
+                        dm_id_search = match.group(1)
+                        resolved_driver = DrivermasterInfo.objects.filter(dm_id=dm_id_search).first()
+                        if resolved_driver:
+                            trip.tr_driver_master_id = resolved_driver.id
 
                 pod_data = request.POST.get('pod_signature_data')
                 if pod_data:
@@ -438,6 +448,16 @@ def tripdetail_add(request, tripdetail_id=0):
                 manual_status_id = request.POST.get('tc_financestatus')
                 if manual_status_id:
                     trip.tc_financestatus_id = int(manual_status_id)
+
+                # Resolve Driver Master ID if missing (e.g. was never set or name changed)
+                if not trip.tr_driver_master_id and trip.tr_drivername:
+                    import re
+                    match = re.search(r'\((\d+)\)', trip.tr_drivername)
+                    if match:
+                        dm_id_search = match.group(1)
+                        resolved_driver = DrivermasterInfo.objects.filter(dm_id=dm_id_search).first()
+                        if resolved_driver:
+                            trip.tr_driver_master_id = resolved_driver.id
 
                 pod_data = request.POST.get("pod_signature_data", None)
                 if pod_data:
