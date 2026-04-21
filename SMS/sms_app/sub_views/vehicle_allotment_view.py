@@ -436,10 +436,10 @@ def vehicle_allotment_list(request):
     # -----------------------------
     # SELECT ALL – No pagination
     # -----------------------------
-    if select_all == "true":
-        page_obj = enquirynote_queryset.order_by('-id')
+    if select_all == "true" or date_from or date_to:
+        page_obj = enquirynote_queryset.order_by('-en_created_at', '-id')
     else:
-        paginator = Paginator(enquirynote_queryset.order_by('-id'), 50)
+        paginator = Paginator(enquirynote_queryset.order_by('-en_created_at', '-id'), 500)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number if page_number and page_number.isdigit() else 1)
 

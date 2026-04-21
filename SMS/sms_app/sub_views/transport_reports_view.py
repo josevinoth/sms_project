@@ -5280,7 +5280,7 @@ def location_pl_report_view(request):
             pass
 
     trips = TripdetailInfo.objects.filter(
-        tc_financestatus_id__in=[2, 7]
+        tc_financestatus_id=7
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
