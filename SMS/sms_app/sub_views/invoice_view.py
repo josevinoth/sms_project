@@ -408,8 +408,13 @@ def invoice_add(request,invoice_id=0):
 
                     for i in range(0, len(invoice_id)):
                         if i == 0:
-                            # Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=round(warehouse_charge_1,2))
-                            # Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_total=storage_cost_total)
+                            # Handling, Packing, Fumigation distribution from existing invoice if any
+                            num_jobs = len(wh_job_num)
+                            h_val = float(invoice.bill_handling_charges or 0) / num_jobs if num_jobs > 0 and invoice_id != 0 else 0
+                            f_val = float(invoice.bill_tot_fumigation_charges or 0) / num_jobs if num_jobs > 0 and invoice_id != 0 else 0
+                            p_val = float(invoice.bill_packing_charges or 0) / num_jobs if num_jobs > 0 and invoice_id != 0 else 0
+
+                            # Update first record of each job
                             Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost_l2h=crane_cost_l2hr)
                             Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost_g2h=crane_cost_g2hr)
                             Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_crane_cost=crane_cost)
@@ -418,6 +423,10 @@ def invoice_add(request,invoice_id=0):
                             Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost=forklift_cost)
                             Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_loading_charge_unit=piece_rate_val)
                             Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_total_loading_cost=total_loading_cost)
+                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_unloading_cost=total_loading_cost) # Mirroring loading
+                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_handling_cost=h_val)
+                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_fumigation_cost=f_val)
+                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_packing_cost=p_val)
                         else:
                             # Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_storage_cost_per_day=0)
                             # Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update( wh_storage_cost_total=0)
@@ -429,6 +438,10 @@ def invoice_add(request,invoice_id=0):
                             Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_forklift_cost=0)
                             Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_loading_charge_unit=0)
                             Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_total_loading_cost=0)
+                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_unloading_cost=0)
+                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_handling_cost=0)
+                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_fumigation_cost=0)
+                            Warehouse_goods_info.objects.filter(pk=invoice_id[i]).update(wh_packing_cost=0)
 
                 # Total Cost calculation
                 shipper_invoice_list = goods_qs
@@ -480,6 +493,8 @@ def invoice_add(request,invoice_id=0):
                     max_check_out_time = 0
                     max_storage_days = ((max_check_out_time - min_check_in_time))
 
+                unloading_cost_sum = goods_qs.aggregate(Sum('wh_unloading_cost'))['wh_unloading_cost__sum'] or 0
+
                 context= {
                     'user_id':user_id,
                     'invoice_form': invoice_form,
@@ -494,6 +509,7 @@ def invoice_add(request,invoice_id=0):
                     'min_check_in_time':str(min_check_in_time),
                     'max_check_out_time':str(max_check_out_time),
                     'total_loading_cost':total_loading_cost,
+                    'total_unloading_cost': unloading_cost_sum or total_loading_cost, # Use aggregated or mirror loading
                     'wh_storage_cost_sum':round(wh_storage_cost_sum,2),
                     'crane_cost_sum':crane_cost_sum,
                     'forklift_cost_sum':forklift_cost_sum,

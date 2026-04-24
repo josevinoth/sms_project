@@ -106,7 +106,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">No. of Pcs Damaged</span>
 								</div>
-								{% render_field damagereport_form.dam_no_of_pcs_damaged id="dam_no_of_pcs_damaged" class="form-control" oninput="updateInvoiceQty()" %}
+								{% render_field damagereport_form.dam_no_of_pcs_damaged id="dam_no_of_pcs_damaged" class="form-control" oninput="updateQuantities()" %}
 							</div>
 						</div>
 						<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
@@ -127,7 +127,7 @@
 								<div class="input-group-prepend">
 									<span class="input-group-text">Invoice Quantity</span>
 								</div>
-								{% render_field damagereport_form.dam_invoice_qty id="dam_invoice_qty" class="form-control" %}
+								{% render_field damagereport_form.dam_invoice_qty id="dam_invoice_qty" class="form-control" readonly="True" %}
 							</div>
 							<div class="input-group input-group-sm mb-3">
 								<div class="input-group-prepend">
@@ -247,16 +247,17 @@
     }
 </script>
 <script>
-	function updateInvoiceQty() {
+	function updateQuantities() {
 		var originalInvoiceQty = parseInt('{{ invoice_qty_from_inspection|default:"0" }}') || 0;
 		var pcs_damaged = parseInt(document.getElementById('dam_no_of_pcs_damaged').value) || 0;
-		var currentInvoiceQty = originalInvoiceQty - pcs_damaged;
-		if (currentInvoiceQty < 0) currentInvoiceQty = 0;
-		document.getElementById('dam_invoice_qty').value = currentInvoiceQty;
+		var currentCheckinQty = originalInvoiceQty - pcs_damaged;
+		if (currentCheckinQty < 0) currentCheckinQty = 0;
+		document.getElementById('dam_invoice_qty').value = originalInvoiceQty;
+		document.getElementById('dam_checkin_qty').value = currentCheckinQty;
 	}
 	// Also run on page load to initialise
 	document.addEventListener('DOMContentLoaded', function() {
-		updateInvoiceQty();
+		updateQuantities();
 	});
 </script>
 <script>
