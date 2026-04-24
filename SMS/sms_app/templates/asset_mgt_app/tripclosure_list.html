@@ -36,6 +36,15 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label for="vehicle_source" class="font-weight-bold">Vehicle Source</label>
+                    <select name="vehicle_source" id="vehicle_source" class="form-control select2">
+                        <option value="">-- All Sources --</option>
+                        {% for source in ownership_list %}
+                        <option value="{{ source.id }}" {% if selected_vehicle_source == source.id|stringformat:'s' %}selected{% endif %}>{{ source.ow_ownership }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <label for="date_from" class="font-weight-bold">From Date</label>
                     <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
                 </div>
@@ -43,12 +52,12 @@
                     <label for="date_to" class="font-weight-bold">To Date</label>
                     <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-1 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary btn-block">
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-1 d-flex align-items-end">
                     <a href="{% url 'tripclosure_list' %}" class="btn btn-secondary btn-block">
                         <i class="fas fa-undo"></i>
                     </a>
@@ -96,6 +105,7 @@
                 data: function (d) {
                     d.branch = params.get('branch') || '';
                     d.trip_status = params.get('trip_status') || '';
+                    d.vehicle_source = params.get('vehicle_source') || '';
                     d.date_from = params.get('date_from') || '';
                     d.date_to = params.get('date_to') || '';
                 }

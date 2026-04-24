@@ -245,3 +245,4 @@ from .sub_models.trans_customer_claims_mod import TransCustomerClaimsInfo
 from .sub_models.charge_master_mod import ChargeMasterInfo
 from .sub_models.sale_enquiry_mod import SaleEnquiry
 from .sub_models.driver_salary_mod import DriverSalaryInfo
+from .sub_models.invoice_document_mod import InvoiceDocumentInfo

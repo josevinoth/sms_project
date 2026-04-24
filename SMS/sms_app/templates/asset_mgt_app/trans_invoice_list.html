@@ -41,6 +41,7 @@
                     <th>GST IN</th>
                     <th>State</th>
                     <th>Total Charges</th>
+                    <th>Invoice Documents</th>
                     <th>Tally to Excel</th>
                     <th>Excel</th>
                     <th>Edit</th>
@@ -59,6 +60,17 @@
                     <td>{{ invoice.ti_gst_in }}</td>
                     <td>{{ invoice.ti_state }}</td>
                     <td><strong>{{ invoice.ti_total }}</strong></td>
+
+                    <!-- Invoice Documents -->
+                    <td class="text-center">
+                        {% if invoice.ti_merged_pdf %}
+                        <a href="{{ invoice.ti_merged_pdf.url }}" target="_blank" class="btn btn-sm btn-success">
+                            <i class="fas fa-file-pdf"></i>
+                        </a>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
 
                     <!-- Tally to Excel -->
                     <td class="text-center">
