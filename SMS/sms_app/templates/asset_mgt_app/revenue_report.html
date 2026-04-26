@@ -70,20 +70,14 @@
                 <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search Customer"></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search Month"></th>
-                <!-- Original Costs -->
                 <th><input type="text" class="form-control filter-input" placeholder="Search Storage"></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search Loading"></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search Forklift"></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search Crane"></th>
-                <!-- Billing Charges -->
-                <th><input type="text" class="form-control filter-input" placeholder="Search Wh Storage"></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search Handling"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Total Loading"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Total Unloading"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Unloading"></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search Fumigation"></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search Packing"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Total Crane"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Total Forklift"></th>
                 <th><input type="text" class="form-control filter-input" placeholder="Search Revenue"></th>
             </tr>
             <tr>
@@ -91,20 +85,14 @@
                 <th>Unit</th>
                 <th>Customer</th>
                 <th>Month</th>
-                <!-- Original Flow -->
                 <th>Storage Charges</th>
                 <th>Loading Charges</th>
                 <th>Forklift Charges</th>
                 <th>Crane Charges</th>
-                <!-- New Billing Flow -->
-                <th>Wh storage charges</th>
                 <th>Handling charges</th>
-                <th>Total loading charges</th>
-                <th>Total unloading charges</th>
+                <th>Unloading charges</th>
                 <th>Fumigation charges</th>
                 <th>Packing charges</th>
-                <th>Total crane charges</th>
-                <th>Total forklift charges</th>
                 <th>Revenue</th>
             </tr>
             </thead>
@@ -121,15 +109,11 @@
                 <td>{{ row.loading_total|floatformat:2 }}</td>
                 <td>{{ row.forklift_total|floatformat:2 }}</td>
                 <td>{{ row.crane_total|floatformat:2 }}</td>
-                <!-- Billing -->
-                <td>{{ row.bill_storage|floatformat:2 }}</td>
+                <!-- Aggregated -->
                 <td>{{ row.bill_handling|floatformat:2 }}</td>
-                <td>{{ row.bill_loading|floatformat:2 }}</td>
                 <td>{{ row.bill_unloading|floatformat:2 }}</td>
                 <td>{{ row.bill_fumigation|floatformat:2 }}</td>
                 <td>{{ row.bill_packing|floatformat:2 }}</td>
-                <td>{{ row.bill_crane|floatformat:2 }}</td>
-                <td>{{ row.bill_forklift|floatformat:2 }}</td>
                 <td><strong>{{ row.revenue|floatformat:2 }}</strong></td>
             </tr>
             {% endfor %}
