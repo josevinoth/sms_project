@@ -32,35 +32,42 @@
 
     <!-- Custom CSS -->
     {% load static %}
-    <link rel="stylesheet" href="{% static 'all.css' %}">
+    <link rel="stylesheet" href="{% static 'all.css' %}?v=20260434">
     <script src="{% static 'common-chart-config.js' %}"></script>
 </head>
 
 <body style="background-color: whitesmoke;">
 <!-- Header -->
-<div class="header_style  text-white sticky-top" style="background-color: #0D2F3F;">
+<div class="header_style text-white" style="background-color: #0D2F3F;">
     <div class="container-fluid">
         <!-- Desktop layout -->
-        <div class="row align-items-center d-none d-md-flex">
+        <div class="row align-items-center d-none d-md-flex header-desktop-row">
             <div class="col-2 text-center">
                 <a href="{% url 'home_page' %}" class="btn btn-dark p-1">
                     <i class="fas fa-home fa-lg"></i>
                 </a>
             </div>
-            <div class="col-8 d-flex align-items-center justify-content-center">
+            <div class="col-6 d-flex align-items-center justify-content-center header-title-center">
                 <img src="/media/Company_Logo.png" alt="Logo" style="width:40px;height:50px;" class="mr-2">
                 <h1 class="mb-0" style="font-size:2rem; font-weight:bold;">BVM Management System</h1>
             </div>
-            <div class="col-2 text-center">
-                <div>
-                    Hi, {{ request.session.first_name }}
-                    <small class="text-warning">{{ request.session.ses_role }}</small>
-                    <small class="text-warning">{{ request.session.ses_unit_name }}</small>
+            <div class="col-2 text-left header-icon-panel">
+                <div class="header-extra-wrap">
+                    {% block header_right_extras %}{% endblock %}
                 </div>
-
-                <a href="{% url 'logout_page' %}" class="btn btn-dark p-1 m-2">
-                    <i class="fas fa-sign-out-alt fa-lg"></i>
-                </a>
+            </div>
+            <div class="col-2 text-right header-user-panel">
+                <div class="header-user-meta">
+                    <div class="header-user-row">
+                        <div class="header-user-text">
+                            <div class="header-user-name">Hi, {{ request.session.first_name }}</div>
+                            <small class="header-user-role">{{ request.session.ses_role }} {{ request.session.ses_unit_name }}</small>
+                        </div>
+                        <a href="{% url 'logout_page' %}" class="btn btn-dark p-1 header-logout-btn">
+                            <i class="fas fa-sign-out-alt fa-lg"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
         <!-- Mobile layout -->
@@ -78,7 +85,8 @@
                             <i class="fas fa-home"></i>
                         </a>
                         <small>{{ request.session.first_name }}</small>
-                        <small style="color: #3399ff;">{{ request.session.ses_role }}</small>
+                        <small class="header-user-role">{{ request.session.ses_role }}</small>
+                        {% block header_right_extras_mobile %}{% endblock %}
                         <a href="{% url 'logout_page' %}" class="btn btn-dark btn-sm ">
                             <i class="fas fa-sign-out-alt"></i>
                         </a>
