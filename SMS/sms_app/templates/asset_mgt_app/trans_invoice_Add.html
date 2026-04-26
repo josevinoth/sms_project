@@ -281,6 +281,7 @@
             <th>Weighment Charges</th>
             <th>Handling Charges</th>
             <th>Cancellation Charges</th>
+            <th>Invoice Documents</th>
             <th>TOTAL</th>
           </tr>
         </thead>
@@ -315,6 +316,15 @@
             <td>{{ inv.ti_trip.tc_weighmentcost }}</td>
             <td>{{ inv.ti_trip.tc_handlingcost }}</td>
             <td>{{ inv.ti_trip.tc_cancellation }}</td>
+            <td class="text-center">
+                {% if inv.combined_pdf_url %}
+                <a href="{{ inv.combined_pdf_url }}" target="_blank" class="btn btn-success btn-sm">
+                    <i class="fas fa-file-pdf"></i>
+                </a>
+                {% else %}
+                <span class="text-muted">—</span>
+                {% endif %}
+            </td>
             <td><strong>{{ inv.trip_total|floatformat:2 }}</strong></td>
           </tr>
           {% endfor %}

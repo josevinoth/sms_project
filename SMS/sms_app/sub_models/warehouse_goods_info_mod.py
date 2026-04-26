@@ -72,3 +72,6 @@ class Warehouse_goods_info(models.Model):
     wh_dispatch_qty = models.FloatField(blank=True, null=True,default=0.0)
     wh_voucher_id = models.ForeignKey(BilingInfo, on_delete=models.CASCADE, default='',null=True,blank=True)
     wh_fumigation_cost = models.FloatField(blank=True, null=True, default=0.0)
+    wh_unloading_cost = models.FloatField(blank=True, null=True, default=0.0)
+    wh_handling_cost = models.FloatField(blank=True, null=True, default=0.0)
+    wh_packing_cost = models.FloatField(blank=True, null=True, default=0.0)

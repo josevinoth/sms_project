@@ -256,25 +256,179 @@ def stock_value_reports(request):
 @login_required(login_url='login_page')
 def damage_reports_list(request):
     first_name = request.session.get('first_name')
-    damage_list=DamagereportInfo.objects.exclude(dam_damage_type=6)
-    gate_in_list=Gatein_info.objects.all()
-    result_list = list(chain(damage_list, gate_in_list))
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+    selected_branch = request.GET.get('branch')
+    branches = Location_info.objects.all()
+
+    damage_reports_qs = DamagereportInfo.objects.exclude(dam_damage_type=6).order_by('-id')
+    
+    # Find matching job numbers
+    if selected_branch:
+        # Warehouse_goods_info has the branch link
+        branch_jobs = Warehouse_goods_info.objects.filter(wh_branch__loc_name=selected_branch).values_list('wh_job_no', flat=True).distinct()
+        damage_reports_qs = damage_reports_qs.filter(dam_wh_job_num__in=list(branch_jobs))
+        
+    if from_date or to_date:
+        # Gatein_info is used for arrival dates
+        date_filter = {}
+        if from_date:
+            date_filter['gatein_arrival_date__date__gte'] = from_date
+        if to_date:
+            date_filter['gatein_arrival_date__date__lte'] = to_date
+        matching_date_jobs = Gatein_info.objects.filter(**date_filter).values_list('gatein_job_no', flat=True)
+        damage_reports_qs = damage_reports_qs.filter(dam_wh_job_num__in=list(matching_date_jobs))
+
+    result_list = []
+    for damage in damage_reports_qs:
+        # Normalize job number and fetch related records from multiple sources
+        job_no = damage.dam_wh_job_num.strip() if damage.dam_wh_job_num else ""
+        
+        # 1. Fetch related records
+        gatein = Gatein_info.objects.filter(gatein_job_no=job_no).select_related('gatein_customer').first()
+        if not gatein:
+            gatein = Gatein_info.objects.filter(gatein_job_no__icontains=job_no).select_related('gatein_customer').first()
+
+        goods = Warehouse_goods_info.objects.filter(wh_job_no=job_no).select_related('wh_customer_name', 'wh_gate_injob_no_id', 'wh_branch').first()
+        if not goods:
+            goods = Warehouse_goods_info.objects.filter(wh_job_no__icontains=job_no).select_related('wh_customer_name', 'wh_gate_injob_no_id', 'wh_branch').first()
+        
+        if goods and not gatein:
+            gatein = goods.wh_gate_injob_no_id
+        if gatein and not goods:
+             goods = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id=gatein).first()
+
+        # 2. Pre-calculate values for the template to avoid lookup failures
+        if gatein or goods:
+            checkin_date = None
+            if gatein and gatein.gatein_arrival_date:
+                checkin_date = gatein.gatein_arrival_date
+            elif goods and goods.wh_checkin_time:
+                checkin_date = goods.wh_checkin_time
+                
+            customer_name = "-"
+            if gatein and gatein.gatein_customer:
+                customer_name = gatein.gatein_customer.cu_name
+            elif goods and goods.wh_customer_name:
+                customer_name = goods.wh_customer_name.cu_name
+                
+            invoice_no = "-"
+            if gatein and gatein.gatein_invoice:
+                invoice_no = gatein.gatein_invoice
+            elif goods and goods.wh_goods_invoice:
+                invoice_no = goods.wh_goods_invoice
+                
+            total_pcs = "-"
+            if goods and goods.wh_total_qty:
+                total_pcs = goods.wh_total_qty
+            elif gatein:
+                total_pcs = gatein.gatein_actual_count or gatein.gatein_no_of_pkg or "-"
+
+            result_list.append({
+                'damage': damage,
+                'checkin_date': checkin_date,
+                'customer_name': customer_name,
+                'invoice_no': invoice_no,
+                'total_pcs': total_pcs,
+            })
+
     context = {
-                'result_list':result_list,
-                'damage_list': damage_list,
-                'first_name': first_name,
-                }
-    return render(request,"asset_mgt_app/damage_report.html",context)
+        'result_list': result_list,
+        'damage_list': damage_reports_qs,
+        'first_name': first_name,
+        'branches': branches,
+        'selected_branch': selected_branch,
+        'from_date': from_date,
+        'to_date': to_date,
+    }
+    return render(request, "asset_mgt_app/damage_report.html", context)
 
 @login_required(login_url='login_page')
 def deviation_report(request):
     first_name = request.session.get('first_name')
-    deviation_list=Warehouse_goods_info.objects.filter(Q(wh_weights_deviation=1) | Q(wh_dimension_deviation=1)| Q(wh_no_of_units_deviation=1)| (~Q(wh_damages=6))| Q(wh_mismatches=1))
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+    selected_branch = request.GET.get('branch')
+    branches = Location_info.objects.all()
+
+    deviation_qs = Warehouse_goods_info.objects.filter(
+        wh_damage_check=1
+    ).filter(
+        Q(wh_weights_deviation=1) | 
+        Q(wh_dimension_deviation=1) | 
+        Q(wh_no_of_units_deviation=1) | 
+        Q(wh_mismatches=1)
+    ).select_related('wh_customer_name', 'wh_Dam_rep_job_num_id', 'wh_branch').order_by('-id')
+
+    if selected_branch:
+        deviation_qs = deviation_qs.filter(wh_branch__loc_name=selected_branch)
+    if from_date:
+        deviation_qs = deviation_qs.filter(wh_checkin_time__date__gte=from_date)
+    if to_date:
+        deviation_qs = deviation_qs.filter(wh_checkin_time__date__lte=to_date)
+    
+    deviation_list = []
+    for item in deviation_qs:
+        job_no = item.wh_job_no
+        
+        # 1. Prioritize data from the linked Damage Report if it exists
+        damage = item.wh_Dam_rep_job_num_id
+        if not damage:
+            # Fallback search by job number
+            damage = DamagereportInfo.objects.filter(dam_wh_job_num=job_no).first()
+            
+        if damage:
+            invoice_qty = damage.dam_invoice_qty or 0
+            checkin_qty = damage.dam_checkin_qty or 0
+            invoice_wgt = damage.dam_invoice_weight or 0.0
+            checkin_wgt = damage.dam_checkin_weight or 0.0
+        else:
+            # 2. Fallback to Gate-In for Invoice values and aggregate Warehouse_goods for Check-in values
+            try:
+                gatein = Gatein_info.objects.filter(gatein_job_no=job_no).first()
+                if gatein:
+                    invoice_qty = gatein.gatein_no_of_pkg or 0
+                    invoice_wgt = gatein.gatein_weight or 0.0
+                else:
+                    invoice_qty = item.wh_invoice_qty or 0
+                    invoice_wgt = item.wh_invoice_weight_unit or 0.0
+            except Exception:
+                invoice_qty = item.wh_invoice_qty or 0
+                invoice_wgt = item.wh_invoice_weight_unit or 0.0
+            
+            # Aggregate check-in values from ALL records belonging to this job
+            checkin_stats = Warehouse_goods_info.objects.filter(wh_job_no=job_no).aggregate(
+                total_pcs=Sum('wh_goods_pieces'),
+                total_wgt=Sum('wh_goods_weight')
+            )
+            checkin_qty = checkin_stats['total_pcs'] or 0
+            checkin_wgt = checkin_stats['total_wgt'] or 0.0
+        
+        diff_qty = invoice_qty - checkin_qty
+        diff_wgt = invoice_wgt - checkin_wgt
+        
+        deviation_list.append({
+            'wh_checkin_time': item.wh_checkin_time,
+            'wh_job_no': item.wh_job_no,
+            'customer_name': item.wh_customer_name.cu_name if item.wh_customer_name else "-",
+            'wh_goods_invoice': item.wh_goods_invoice,
+            'invoice_qty': invoice_qty,
+            'checkin_qty': checkin_qty,
+            'diff_qty': diff_qty,
+            'invoice_wgt': invoice_wgt,
+            'checkin_wgt': checkin_wgt,
+            'diff_wgt': round(diff_wgt, 2)
+        })
+
     context = {
-                'deviation_list': deviation_list,
-                'first_name': first_name,
-                }
-    return render(request,"asset_mgt_app/deviation_report.html",context)
+        'deviation_list': deviation_list,
+        'first_name': first_name,
+        'branches': branches,
+        'selected_branch': selected_branch,
+        'from_date': from_date,
+        'to_date': to_date,
+    }
+    return render(request, "asset_mgt_app/deviation_report.html", context)
 
 
 @login_required(login_url='login_page')
@@ -304,87 +458,39 @@ def revenue_report(request):
             loading_total=Sum("wh_total_loading_cost"),
             forklift_total=Sum("wh_forklift_cost"),
             crane_total=Sum("wh_crane_cost"),
+            unloading_total=Sum("wh_unloading_cost"),
+            handling_total=Sum("wh_handling_cost"),
+            fumigation_total=Sum("wh_fumigation_cost"),
+            packing_total=Sum("wh_packing_cost"),
             total_invoice=Sum("wh_total_invoice_cost"),
         ).order_by("wh_customer_name__cu_name", "wh_branch__loc_name", "wh_unit__unit_name","month"))
 
-    # --- NEW: Pull billing charges from BilingInfo (WMS Invoice) per group ---
-    # Get distinct billing IDs per (customer, branch, unit, month) group
-    billing_qs = (
-        qs.annotate(month=TruncMonth('wh_checkout_time'))
-        .filter(wh_voucher_id__isnull=False)
-        .values("wh_customer_name__cu_name", "wh_branch__loc_name", "wh_unit__unit_name", "month", "wh_voucher_id")
-        .distinct()
-    )
-
-    # Collect distinct billing IDs per group key
-    billing_ids_per_group = {}
-    all_bill_ids = set()
-    for row in billing_qs:
-        key = (row['wh_customer_name__cu_name'], row['wh_branch__loc_name'], row['wh_unit__unit_name'], row['month'])
-        billing_ids_per_group.setdefault(key, set()).add(row['wh_voucher_id'])
-        all_bill_ids.add(row['wh_voucher_id'])
-
-    # Fetch all billing records in one query
-    bills_map = {}
-    if all_bill_ids:
-        for bill in BilingInfo.objects.filter(id__in=all_bill_ids):
-            bills_map[bill.id] = bill
-
-    # Aggregate billing charges per group
-    billing_totals = {}
-    for key, bill_ids in billing_ids_per_group.items():
-        totals = {
-            'wh_storage_charges': 0.0,
-            'handling_charges': 0.0,
-            'bill_loading_charges': 0.0,
-            'bill_unloading_charges': 0.0,
-            'fumigation_charges': 0.0,
-            'packing_charges': 0.0,
-            'total_crane_charges': 0.0,
-            'total_forklift_charges': 0.0,
-        }
-        for bid in bill_ids:
-            bill = bills_map.get(bid)
-            if bill:
-                totals['wh_storage_charges']     += float(bill.bill_wh_storage_charges or 0)
-                totals['handling_charges']        += float(bill.bill_handling_charges or 0)
-                totals['bill_loading_charges']    += float(bill.bill_loading_charge or 0)
-                totals['bill_unloading_charges']  += float(bill.bill_unloading_charge or 0)
-                totals['fumigation_charges']      += float(bill.bill_tot_fumigation_charges or 0)
-                totals['packing_charges']         += float(bill.bill_packing_charges or 0)
-                totals['total_crane_charges']     += float(bill.bill_tot_crane_charges or 0)
-                totals['total_forklift_charges']  += float(bill.bill_tot_forklift_charges or 0)
-        billing_totals[key] = totals
-
-    # Merge billing charges into the original revenue_summary rows
     final_summary = []
     for row in revenue_summary:
         row_dict = dict(row)
-        key = (row['wh_customer_name__cu_name'], row['wh_branch__loc_name'], row['wh_unit__unit_name'], row['month'])
-        bt = billing_totals.get(key, {})
-        row_dict['bill_storage']    = bt.get('wh_storage_charges', 0.0)
-        row_dict['bill_handling']   = bt.get('handling_charges', 0.0)
-        row_dict['bill_loading']    = bt.get('bill_loading_charges', 0.0)
-        row_dict['bill_unloading']  = bt.get('bill_unloading_charges', 0.0)
-        row_dict['bill_fumigation'] = bt.get('fumigation_charges', 0.0)
-        row_dict['bill_packing']    = bt.get('packing_charges', 0.0)
-        row_dict['bill_crane']      = bt.get('total_crane_charges', 0.0)
-        row_dict['bill_forklift']   = bt.get('total_forklift_charges', 0.0)
+        
+        # Original costs
+        row_dict['storage_total']    = float(row_dict.get('storage_total') or 0.0)
+        row_dict['loading_total']    = float(row_dict.get('loading_total') or 0.0)
+        row_dict['forklift_total']   = float(row_dict.get('forklift_total') or 0.0)
+        row_dict['crane_total']      = float(row_dict.get('crane_total') or 0.0)
 
-        # Revenue = total of ALL 12 charges (4 original + 8 billing)
+        # Aggregated charges (Mapped to bill_* for template compatibility)
+        row_dict['bill_unloading']  = float(row_dict.get('unloading_total') or 0.0)
+        row_dict['bill_handling']   = float(row_dict.get('handling_total') or 0.0)
+        row_dict['bill_fumigation'] = float(row_dict.get('fumigation_total') or 0.0)
+        row_dict['bill_packing']    = float(row_dict.get('packing_total') or 0.0)
+
+        # Revenue = total of exactly 8 charges aggregated from goods level
         row_dict['revenue'] = (
-            float(row_dict.get('storage_total') or 0) +
-            float(row_dict.get('loading_total') or 0) +
-            float(row_dict.get('forklift_total') or 0) +
-            float(row_dict.get('crane_total') or 0) +
-            row_dict['bill_storage'] +
-            row_dict['bill_handling'] +
-            row_dict['bill_loading'] +
+            row_dict['storage_total'] +
+            row_dict['loading_total'] +
+            row_dict['forklift_total'] +
+            row_dict['crane_total'] +
             row_dict['bill_unloading'] +
+            row_dict['bill_handling'] +
             row_dict['bill_fumigation'] +
-            row_dict['bill_packing'] +
-            row_dict['bill_crane'] +
-            row_dict['bill_forklift']
+            row_dict['bill_packing']
         )
         final_summary.append(row_dict)
 
@@ -797,13 +903,13 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
         # Write the headers
         headers = [
             'Job Number', 'Stock Number', 'Customer', 'Date Of Arrival', 'Dock In Time','Unloading Start Time',
-            'Unloading End Time', 'Transporter', 'Truck Number', 'Truck Type(In)', 'Truck Type Placed', 'Consignor', 'Consignee',
+            'Unloading End Time', 'Transporter', 'Truck Number', 'Truck Type(In)', 'Consignor', 'Consignee',
             'Docs Received', 'HAWB', 'Destination', 'Invoice Number', 'Case Number',
             'Invoice Qty', 'Invoice Weight (kg)', 'Checkin Weight (kg)', 'UOM', 'Length',
             'Width', 'Height', 'Dims Qty', 'Package Type', 'Volume Weight', 'CBM',
             'Invoice Value', 'Invoice Currency', 'Invoice (INR)', 'E-Way Bill#', 'E-Way Bill Validity',
             'Fumigation Status', 'Check In-Out?', 'Branch', 'Unit', 'Bay', 'Storage Days','Damage/Deviation?','GRN Number','Damages','Deviations','Remarks',
-            'Truck_Number(Out)','Truck_Type(Out)','Gatein Time(Out)','Dockin Time(Out)','Dockout Time(Out)','Truck_Depature_Time(Out)','Labels_Pasted_By',
+            'Truck_Number(Out)','Truck_Type(Out)','Truck Type Placed','Gatein Time(Out)','Dockin Time(Out)','Dockout Time(Out)','Truck_Depature_Time(Out)','Labels_Pasted_By',
             'MAWB','Dispatch_Number','Dispatch quantity','Stock On Hand'
         ]
         ws.append(headers)
@@ -1010,7 +1116,6 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                 # Index 7: gatein_truck_number
                 getattr(stock_value.wh_gate_injob_no_id, 'gatein_truck_number', ''),
                 truck_type_in, # NEW: Truck Type (In)
-                ", ".join(truck_types_placed), # NEW: Truck Type Placed
 
                 stock_value.wh_consigner,  # Index 8
                 stock_value.wh_consignee,  # Index 9
@@ -1080,6 +1185,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                 # getattr(stock_value.wh_dispatch_id, 'dispatch_total_goods', ''),# Index 43
                 ", ".join(truck_numbers),
                 ", ".join(truck_types),
+                ", ".join(truck_types_placed), # Truck Type Placed (next to Truck_Type(Out))
                 ", ".join(gatein_times_out),
                 ", ".join(dockin_times_out),
                 ", ".join(dockout_times_out),

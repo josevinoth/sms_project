@@ -185,3 +185,4 @@ from .sub_views.attached_bill_view import attached_bill_add, attached_bill_list,
 from .sub_views.trans_customer_claims_view import trans_customer_claims_add, trans_customer_claims_list, trans_customer_claims_delete, fetch_trip_details_by_cnote
 from .sub_views.charge_master_view import charge_master_add,charge_master_delete,charge_master_list
 from .sub_views.sale_enquiry_view import sale_enquiry_list, sale_enquiry_add, sale_enquiry_delete, get_customer_code
+from .sub_views.invoice_documents_view import invoice_documents_list, invoice_documents_add
