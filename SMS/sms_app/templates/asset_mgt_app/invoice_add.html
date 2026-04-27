@@ -296,29 +296,37 @@
 <script>
 	$(document).ready(function () {
 		document.getElementById("bill_updated_by").value = '{{ user_id }}';
-		document.getElementById("bill_weight").value = '{{ weight_sum }}';
-		document.getElementById("bill_no_of_pallets").value = '{{ no_of_pieces }}';
+		var weightVal = '{{ weight_sum }}';
+		if (weightVal > 0 || !document.getElementById("bill_weight").value) document.getElementById("bill_weight").value = weightVal;
+
+		var palletsVal = '{{ no_of_pieces }}';
+		if (palletsVal > 0 || !document.getElementById("bill_no_of_pallets").value) document.getElementById("bill_no_of_pallets").value = palletsVal;
+
 		document.getElementById("bill_tot_crane_time").value = '{{ crane_time }}';
 		document.getElementById("bill_tot_forklift_time").value = '{{ forklift_time }}';
 		document.getElementById("bill_loading_charge").value = '{{ total_loading_cost }}';
-		document.getElementById("bill_unloading_charge").value = '{{ total_loading_cost }}';
+		document.getElementById("bill_unloading_charge").value = '{{ total_loading_cost }}'; // Unloading defaults to same as loading in this module
 		document.getElementById("bill_tot_crane_charges").value = '{{ crane_cost_sum }}';
 		document.getElementById("bill_tot_forklift_charges").value = '{{ forklift_cost_sum }}';
 
 		var bvm_invoice = document.getElementById("bill_customer_name").value;
 		var customer_type_val = '{{ customer_type_id }}';
+		var storageVal = '{{ wh_storage_cost_sum }}';
 
 		// Only set bill_wh_storage_charges from template if NOT Dedicated customer (id=3)
-		// For Dedicated customers, AJAX will fetch and set the rate from WhratemasterInfo
+		// AND only if the value provided by the server is not 0 (unless the field is empty)
 		if (customer_type_val != 3) {
-			document.getElementById("bill_wh_storage_charges").value = '{{ wh_storage_cost_sum }}';
+			var currentStorage = document.getElementById("bill_wh_storage_charges").value;
+			if (parseFloat(storageVal) > 0 || (currentStorage == "" || currentStorage == "0" || currentStorage == "0.0")) {
+				document.getElementById("bill_wh_storage_charges").value = storageVal;
+			}
 		}
 
 		if (customer_type_val == 1) {
 			document.getElementById("bill_start_date").value = '{{ min_check_in_time }}';
 			document.getElementById("bill_end_date").value = '{{ max_check_out_time }}';
 			document.getElementById("bill_no_of_days").value = '{{ no_of_days }}';
-		} else {
+		} else if (document.getElementById("bill_start_date").value && document.getElementById("bill_end_date").value) {
 			no_of_days_calc();
 		}
 

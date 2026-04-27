@@ -79,6 +79,7 @@ def damagereport_add(request,damagereport_id=0):
             damagereport_form = DamagereportaddForm(initial={
                 'dam_invoice_weight': invoice_weight_from_inspection,
                 'dam_invoice_qty': invoice_qty_from_inspection,
+                'dam_checkin_qty': invoice_qty_from_inspection,
             })
             damagereportimg_form = DamagereportImagesForm()
             picture_add(request)
