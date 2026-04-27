@@ -23,7 +23,7 @@ from .send_department_email import send_department_email
 from ..forms import DispatchaddForm
 from django.contrib.auth.decorators import login_required
 from ..models import Check_in_out,Warehouse_goods_info,Dispatch_info,GoodsPartialDispatchInfo
-from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id, get_base64_image
 from django.contrib import messages
 import cv2
 import numpy as np
@@ -130,6 +130,18 @@ def dispatch_add(request, dispatch_id=0):
                 dispatch.save()
                 print("Form Saved")
                 messages.success(request, 'Record Updated Successfully')
+
+                # Automatic Email Logic
+                try:
+                    if dispatch.dispatch_status_id == 5: # Completed
+                        customer = dispatch.dispatch_customer
+                        if customer.cu_automatic_email == 'YES':
+                            recipient_list = [customer.cu_email]
+                            message = "Dear Customer,\n\nPlease find the Gate-Out Gate Pass attached.\n\nRegards,\nBVM Warehouse Team"
+                            send_gate_out_email_logic(dispatch.id, recipient_list, message, request)
+                except Exception as e:
+                    print(f"Auto-Email Error (Dispatch): {e}")
+
                 return redirect(request.META['HTTP_REFERER'])
             else:
                 print("Form Not Saved")
@@ -492,15 +504,6 @@ def dispatch_search(request):
     return render(request, "asset_mgt_app/dispatch_list.html", context)
 
 
-def get_base64_image(image_field):
-    if not image_field:
-        return None
-    try:
-        with image_field.open('rb') as img_file:
-            return 'data:image/png;base64,' + base64.b64encode(img_file.read()).decode('utf-8')
-    except (FileNotFoundError, OSError):
-        # File referenced in database but doesn't exist on disk
-        return None
 @login_required(login_url='login_page')
 def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
     dispatch_num = Dispatch_info.objects.get(id=dispatch_id).dispatch_num
@@ -604,25 +607,33 @@ def dispatch_goods_back(request):
 
     return redirect('/SMS/dispatch_update/' + str(dispatch_id))
 
+def send_gate_out_email_logic(dispatch_id, recipient_list, message, request=None):
+    dispatch = Dispatch_info.objects.get(pk=dispatch_id)
+    dispatch_number = dispatch.dispatch_num
+    subject = f"{dispatch_number}_Gate-Out Alert"
+    
+    # Generate PDF (using existing function)
+    pdf_data = dispatch_gatepass_pdf(request, dispatch_id)
+    file_name = f"WH_Gate_Pass_{dispatch_number}.pdf"
+    
+    formatted_message = message.replace('\n', '<br>')
+    
+    send_department_email('warehouse', subject, formatted_message, recipient_list, pdf_data, 'application/pdf', file_name)
+    
+    # Update email count
+    Dispatch_info.objects.filter(pk=dispatch_id).update(dispatch_email_count=F('dispatch_email_count') + 1)
+
 @login_required(login_url='login_page')
 def gate_out_email(request, dispatch_id=0):
     if request.method == 'POST':
         recipient = request.POST.get('recipient')
-        message = request.POST.get('message')
-        recipient_list = [email.strip() for email in recipient.split(',')]
-        dispatch_id=request.session.get('ses_dispatch_id')
-        # Call dispatch_gatepass_pdf to get the PDF and its filename
-        pdf_data = dispatch_gatepass_pdf(request, dispatch_id)
-        dispatch_number=Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
-        subject = f"{dispatch_number}_Gate-Out Alert"
-        gate_out_email_count = Dispatch_info.objects.get(pk=dispatch_id).dispatch_email_count
-        file_name = f"WH_Gate_Pass_{dispatch_number}.pdf"
-        message = message.replace('\n', '<br>')
-        # Send the email with the PDF attachment
-        send_department_email('warehouse', subject, message, recipient_list, pdf_data, 'application/pdf', file_name)
-        gate_out_email_count=gate_out_email_count+1
-        Dispatch_info.objects.filter(pk=dispatch_id).update(dispatch_email_count=gate_out_email_count)
-        # Redirect back to the previous page
+        message = request.POST.get('message', '')
+        recipient_list = [email.strip() for email in recipient.split(',') if email.strip()]
+        dispatch_id = request.session.get('ses_dispatch_id')
+        
+        send_gate_out_email_logic(dispatch_id, recipient_list, message, request)
+        
+        messages.success(request, "Gate-Out E-mail sent successfully.")
         return redirect(request.META['HTTP_REFERER'])
     else:
         messages.error(request, 'Invalid input in the email form.')

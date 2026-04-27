@@ -1,7 +1,7 @@
 from django.core.paginator import Paginator
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, F
 from django.shortcuts import render, redirect
 
 from ..sub_models.customer_mod import CustomerInfo
@@ -102,6 +102,17 @@ def gatein_pre_add(request, gatein_pre_id=0):
                 print("Main Form is Valid")
                 gatein_pre_form.save()
                 messages.success(request, 'Record Updated Successfully')
+
+                # Automatic Email Logic
+                try:
+                    if gatein_pre_info.gatein_pre_status_id == 5: # Completed
+                        customer_ids = list(Gatein_info.objects.filter(gatein_pre_id=gatein_pre_id).values_list('gatein_customer', flat=True))
+                        if customer_ids:
+                            customer = CustomerInfo.objects.get(pk=customer_ids[0])
+                            if customer.cu_automatic_email == 'YES':
+                                send_gate_in_email_logic(gatein_pre_id, request)
+                except Exception as e:
+                    print(f"Auto-Email Error (Pre-Gate-In): {e}")
             else:
                 print("Main Form is In-Valid")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
@@ -223,47 +234,39 @@ def pre_gatein_search(request):
 
     return render(request, "asset_mgt_app/gatein_pre_list.html", context)
 
-@login_required(login_url='login_page')
-def gate_in_email(request):
-    """
-    Handles the Gate In email functionality.
-    Retrieves the pre_gatein_id from the session, fetches associated customer names,
-    and sends an email if all customers are the same. Otherwise, returns an appropriate response.
-    """
-
-    # Retrieve the gatein ID from the session
-    pre_gatein_id = request.session.get('ses_pre_gatein_id')
-    print("gatein_id",pre_gatein_id)
-    if not pre_gatein_id:
-        return HttpResponseBadRequest("No Gate In ID found in session.")  # Return a 400 Bad Request response
-
+def send_gate_in_email_logic(pre_gatein_id, request=None):
     # Fetch the list of customer names associated with the gatein_pre_id
-    customer_id = list(Gatein_info.objects.filter(gatein_pre_id=pre_gatein_id).values_list('gatein_customer', flat=True))
-    customer_names = list(Gatein_info.objects.filter(gatein_pre_id=pre_gatein_id).values_list('gatein_customer', flat=True))
-    # Check if all customer names are identical
-    if len(customer_id) == 0:
-        # return HttpResponseBadRequest("No customers found for the given Gate In ID.")  # No customers found
-        messages.success(request, f"No customers found for the given Gate In ID")
-        return redirect(request.META['HTTP_REFERER'])
-    if len(set(customer_id)) == 1:
-        # All values are identical, get the single customer name
-        single_customer = customer_id[0]
-        customer_name=CustomerInfo.objects.get(pk=single_customer).cu_name
-        print(f"Single customer found: {single_customer}")
+    customer_ids = list(Gatein_info.objects.filter(gatein_pre_id=pre_gatein_id).values_list('gatein_customer', flat=True))
+    
+    if not customer_ids:
+        return False, "No customers found for the given Gate In ID."
+
+    if len(set(customer_ids)) == 1:
+        single_customer_id = customer_ids[0]
+        customer = CustomerInfo.objects.get(pk=single_customer_id)
+        customer_name = customer.cu_name
         subject = f"{customer_name}_Gate-In Alert"
+        
         # Call the email sending function
-        gate_in_email_count=Gatein_pre_info.objects.get(pk=pre_gatein_id).gatein_pre_email_count
-        print("gate_in_email_count",gate_in_email_count)
-        dsr_send_email_view(request, pre_gatein_id, customer_name=single_customer,subject=subject)
-        gate_in_email_count = gate_in_email_count + 1
-        Gatein_pre_info.objects.filter(pk=pre_gatein_id).update(gatein_pre_email_count=gate_in_email_count)
-        # return HttpResponse(f"Email sent to {single_customer}.")
-        messages.success(request, f"Gatein details shared to {customer_name} customer.")
-        return redirect(request.META['HTTP_REFERER'])
+        dsr_send_email_view(request, pre_gatein_id, customer_name=single_customer_id, subject=subject)
+        
+        # Update email count
+        Gatein_pre_info.objects.filter(pk=pre_gatein_id).update(gatein_pre_email_count=F('gatein_pre_email_count') + 1)
+        return True, f"Gatein details shared to {customer_name} customer."
     else:
         # More than one unique customer found
-        customer_list = ", ".join(customer_names)
-        print(f"More than one customer found: {customer_list}")
-        # return HttpResponse(f"More than one customer found: {customer_list}")
-        messages.success(request, f"More than one customer found: {customer_list}")
-        return redirect(request.META['HTTP_REFERER'])
+        return False, "More than one customer found."
+
+@login_required(login_url='login_page')
+def gate_in_email(request):
+    pre_gatein_id = request.session.get('ses_pre_gatein_id')
+    if not pre_gatein_id:
+        return HttpResponseBadRequest("No Gate In ID found in session.")
+
+    success, message = send_gate_in_email_logic(pre_gatein_id, request)
+    if success:
+        messages.success(request, message)
+    else:
+        messages.error(request, message)
+    
+    return redirect(request.META['HTTP_REFERER'])
