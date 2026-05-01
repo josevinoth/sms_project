@@ -28,17 +28,17 @@ SECRET_KEY = 'django-insecure-fy%y4cs@r2rbthvr*oge*z_sm*4a0)9!(7ya-gkiv*g0a!)d=t
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = [
-    host.strip() for host in config(
-        'ALLOWED_HOSTS',
-        default='sms.thebvmgroup.com,3.110.26.240,localhost,127.0.0.1'
-    ).split(',') if host.strip()
-]
+_default_allowed_hosts = 'sms.thebvmgroup.com,www.sms.thebvmgroup.com,3.110.26.240,13.126.40.20,172.31.9.154,localhost,127.0.0.1'
+_allowed_hosts_raw = config('ALLOWED_HOSTS', default=_default_allowed_hosts)
+if not _allowed_hosts_raw.strip():
+    _allowed_hosts_raw = _default_allowed_hosts
+
+ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts_raw.split(',') if host.strip()]
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip() for origin in config(
         'CSRF_TRUSTED_ORIGINS',
-        default='http://sms.thebvmgroup.com,http://3.110.26.240'
+        default='https://sms.thebvmgroup.com,http://sms.thebvmgroup.com,https://www.sms.thebvmgroup.com,http://www.sms.thebvmgroup.com,http://3.110.26.240,http://13.126.40.20'
     ).split(',') if origin.strip()
 ]
 
