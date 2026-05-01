@@ -89,7 +89,7 @@
                         <td class="font-weight-bold text-success">{{ quotationsummaryinfo.qs_total_cost_wm }}</td>
                         <td>{{ quotationsummaryinfo.qs_total_cft }}</td>
                         <td>{{ quotationsummaryinfo.qs_rate_per_cft }}</td>
-                        <td>{{ quotationsummaryinfo.qs_updated_at|date:"d-m-Y H:i" }}</td>
+                        <td>{{ quotationsummaryinfo.qs_updated_at|date:"d-m-Y" }}</td>
                         <td>{{ quotationsummaryinfo.qs_updated_by }}</td>
                         <td>
                             <span class="badge {% if quotationsummaryinfo.qs_status.id == 5 %}badge-success{% else %}badge-info{% endif %}">
