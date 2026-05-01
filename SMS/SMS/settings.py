@@ -26,9 +26,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-fy%y4cs@r2rbthvr*oge*z_sm*4a0)9!(7ya-gkiv*g0a!)d=t'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    host.strip() for host in config(
+        'ALLOWED_HOSTS',
+        default='sms.thebvmgroup.com,3.110.26.240,localhost,127.0.0.1'
+    ).split(',') if host.strip()
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in config(
+        'CSRF_TRUSTED_ORIGINS',
+        default='http://sms.thebvmgroup.com,http://3.110.26.240'
+    ).split(',') if origin.strip()
+]
 
 # Application definition
 
@@ -133,6 +145,18 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+# HTTPS / ALB settings
+# ALB terminates SSL and forwards HTTP to Django — so Django must NOT redirect itself.
+# SECURE_PROXY_SSL_HEADER lets Django know the original request was HTTPS.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = False   # ALB handles HTTP→HTTPS redirect, not Django
+
+# Rollback HTTPS cookie enforcement so HTTP login continues to work.
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
