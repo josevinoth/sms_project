@@ -1,151 +1,103 @@
 {% block content %}
-<hr>
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>Costing List</h3>
-        </div>
-        <div class="col-5"></div>
+<div class="table-container-modern mt-5">
+    <div class="modern-header mb-0 d-flex justify-content-between align-items-center" style="border-radius: 8px 8px 0 0;">
+        <h4 class="mb-0 text-white"><i class="fas fa-list-ul mr-2"></i> Costing Items Detail</h4>
     </div>
-</div>
-<div class="container-fluid row">
-    <!--    <div class="col-md-1">-->
-    <!--        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
-    <!--            <i class="fas fa-arrow-left"></i> Back-->
-    <!--        </a>-->
-    <!--    </div>-->
-    <div class="col-md-1.5">
-        <a href="{% url 'costing_insert' %}" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-plus"></i> Add Items
-        </a>
-    </div>
-</div>
-<br>
-<div class="container-fluid">
-    <table id="costing_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-            <tr>
-                <th>ID</th>
-                <th>Created On</th>
-                <th>Stock Purchase Number</th>
-                <th>Assessment Number</th>
-                <th>Customer Name</th>
-                <th>Customer PO</th>
-                <th>Job Type</th>
-                <th>Cost Type</th>
-                <th>Stock Type</th>
-                <th>Stock Description</th>
-                <th>Width (in)</th>
-                <th>Height (in)</th>
-                <th>Length (ft)</th>
-                <th>Quantity</th>
-                <th>Diameter</th>
-                <th>UOM</th>
-                <th>Requested CFT</th>
-                <th>Rate/QTY (CFT)</th>
-                <th>Days</th>
-                <th>Unit Cost</th>
-                <th>Job Type Quantity</th>
-                <th>Total Cost</th>
-                <th>Stock Status</th>
-                <th>Excess Status</th>
-                <th>Updated at</th>
-                <th>Updated By</th>
-                <th>Return to Stock</th>
-                <th>Edit</th>
-                <th>Delete</th>
-        </thead>
-        <tbody>
-            {% for costinginfo in costing_list %}
-            <tr>
-                <td> {{costinginfo.id}}</td>
-                <td> {{costinginfo.ct_created_at}}</td>
-                <td> {{costinginfo.ct_stock_purchase_number}}</td>
-                <td> {{costinginfo.ct_assessment_num}}</td>
-                <td> {{costinginfo.ct_customer_name}}</td>
-                <td> {{costinginfo.ct_customer_po}}</td>
-                <td> {{costinginfo.ct_requirement}}</td>
-                <td> {{costinginfo.ct_cost_type}}</td>
-                <td> {{costinginfo.ct_stock_type}}</td>
-                <td> {{costinginfo.ct_stock_description}}</td>
-                <td> {{costinginfo.ct_width_req}}</td>
-                <td> {{costinginfo.ct_height_req}}</td>
-                <td> {{costinginfo.ct_length_req}}</td>
-                <td> {{costinginfo.ct_quantity_req}}</td>
-                <td> {{costinginfo.ct_size}}</td>
-                <td> {{costinginfo.ct_uom}}</td>
-                <td> {{costinginfo.ct_sqrt_req}}</td>
-                <td> {{costinginfo.ct_rate}}</td>
-                <td> {{costinginfo.ct_days}}</td>
-                <td> {{costinginfo.ct_total_cost}}</td>
-                <td> {{costinginfo.ct_na_quantity}}</td>
-                <td> {{costinginfo.ct_totalbox_cost}}</td>
-                <td> {{costinginfo.ct_stock_status}}</td>
-                <td> {{costinginfo.ct_excess_status}}</td>
-                <td> {{costinginfo.ct_updated_at}}</td>
-                <td> {{costinginfo.ct_updated_by}}</td>
-                <td>
-                    {% if costinginfo.ct_excess_status.id == 3 %}
-                    <a class="btn btn-warning btn-sm" href="{% url 'pk_return_excess_to_stock' costinginfo.id %}"
-                        onclick="return confirm('Return excess stock of {{ costinginfo.ct_exe_quantity_req }} to ledger?');">
-                        <i class="fas fa-undo"></i> Return
-                    </a>
-                    {% else %}
-                    <span class="badge badge-secondary">N/A</span>
-                    {% endif %}
-                </td>
 
-                <td>
-                    <a class="btn btn-primary " href="{% url 'costing_update' costinginfo.id %}"
-                        class="btn btn-primary">
-                        <i class="far fa-edit"></i>
-                    </a>
-                </td>
-                <td>
-                    {% if costinginfo.ct_stock_status.id == 2 %}
-                    <form action="{% url 'costing_delete' costinginfo.id %}" method="post"
-                        onclick="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger" disabled>
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
-                    {% elif costinginfo.ct_stock_status.id == 4 %}
-                    <form action="{% url 'costing_delete' costinginfo.id %}" method="post"
-                        onclick="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger" disabled>
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
-                    {% else %}
-                    <form action="{% url 'costing_delete' costinginfo.id %}" method="post"
-                        onclick="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="p-3 bg-white shadow-sm" style="border-radius: 0 0 8px 8px;">
+        <table id="costing_list" class="modern-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Job Info</th>
+                    <th>Material Info</th>
+                    <th>Dimensions</th>
+                    <th>Req Value</th>
+                    <th>Costing</th>
+                    <th>Stock Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for costinginfo in costing_list %}
+                <tr>
+                    <td class="font-weight-bold">#{{costinginfo.id}}</td>
+                    <td>
+                        <div class="small font-weight-bold">{{costinginfo.ct_assessment_num}}</div>
+                        <div class="small text-muted">{{costinginfo.ct_customer_name}}</div>
+                        <div class="x-small text-secondary">{{costinginfo.ct_requirement}}</div>
+                    </td>
+                    <td>
+                        <div class="small font-weight-bold text-primary">{{costinginfo.ct_stock_description}}</div>
+                        <div class="x-small text-muted">{{costinginfo.ct_cost_type}} | {{costinginfo.ct_stock_type}}</div>
+                    </td>
+                    <td>
+                        <div class="small">L: {{costinginfo.ct_length_req}} ft</div>
+                        <div class="small">W: {{costinginfo.ct_width_req}} in</div>
+                        <div class="small">H: {{costinginfo.ct_height_req}} in</div>
+                    </td>
+                    <td class="text-center">
+                        <div class="font-weight-bold text-info">{{costinginfo.ct_sqrt_req}}</div>
+                        <div class="small text-muted">{{costinginfo.ct_uom}}</div>
+                    </td>
+                    <td>
+                        <div class="small">Rate: ₹{{costinginfo.ct_rate}}</div>
+                        <div class="font-weight-bold text-success">Total: ₹{{costinginfo.ct_totalbox_cost}}</div>
+                    </td>
+                    <td>
+                        <div class="small">{{costinginfo.ct_stock_status}}</div>
+                        <div class="x-small text-muted">Excess: {{costinginfo.ct_excess_status}}</div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center" style="gap: 5px;">
+                            {% if costinginfo.ct_excess_status.id == 3 %}
+                            <a class="btn btn-warning btn-sm" href="{% url 'pk_return_excess_to_stock' costinginfo.id %}"
+                                onclick="return confirm('Return excess stock of {{ costinginfo.ct_exe_quantity_req }} to ledger?');" title="Return to Stock">
+                                <i class="fas fa-undo"></i>
+                            </a>
+                            {% endif %}
+
+                            <a class="btn btn-primary btn-sm" href="{% url 'costing_update' costinginfo.id %}" title="Edit">
+                                <i class="far fa-edit"></i>
+                            </a>
+
+                            {% if costinginfo.ct_stock_status.id == 2 or costinginfo.ct_stock_status.id == 4 %}
+                            <button class="btn btn-danger btn-sm" disabled title="Cannot delete (Received/Supplied)">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                            {% else %}
+                            <form action="{% url 'costing_delete' costinginfo.id %}" method="post" class="d-inline"
+                                onclick="return confirm('Are you sure?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
+
 <script>
     $(document).ready(function () {
-        $('#costing_list').DataTable({
-            <!--        scrollY: "400px",-->
-            scrollX: true,
-            order: [0, 'asc'],
-            dom: 'Bfrtip',
-            buttons: [
-                'copy', 'csv', 'excel', 'print'
-            ],
-        });
+        if (!$.fn.DataTable.isDataTable('#costing_list')) {
+            $('#costing_list').DataTable({
+                scrollX: true,
+                order: [[0, 'desc']],
+                dom: 'Bfrtip',
+                buttons: [
+                    { extend: 'copy', className: 'btn btn-sm btn-secondary' },
+                    { extend: 'excel', className: 'btn btn-sm btn-success' },
+                    { extend: 'print', className: 'btn btn-sm btn-info' }
+                ],
+                pageLength: 10
+            });
+        }
     });
 </script>
-
-{% endblock content %}
+{% endblock content %}

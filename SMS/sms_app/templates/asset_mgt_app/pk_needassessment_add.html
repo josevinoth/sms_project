@@ -1,685 +1,623 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 
 {% block content %}
 
-<div class="row d-flex align-items-center mb-3">
-	<div class="col">
-		<div class="container-fluid">
-			<div class="pms-tracker-wrapper">
-				{% include "asset_mgt_app/pms_progress_tracker.html" with current_step=current_step %}
-			</div>
-		</div>
-	</div>
+<div class="container-fluid py-4">
+
+    <!-- Progress Tracker -->
+    <div class="pms-tracker-wrapper mb-4">
+        {% include "asset_mgt_app/pms_progress_tracker.html" with current_step=current_step %}
+    </div>
+
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center">
+        <h3 class="mb-0 text-white" style="font-size: 1.4rem; font-weight: 700; letter-spacing: 1px;">
+            <i class="fas fa-clipboard-list mr-2"></i> Add/Update Need Assessment
+        </h3>
+        {% if form.instance.id %}
+        <div class="d-flex gap-2" style="position: relative; z-index: 10;">
+            <a href="{% url 'pk_quotationsummary_insert' %}?na_id={{ form.instance.id }}" class="btn-modern btn-highlight py-2 px-4" style="font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-file-invoice-dollar"></i> CONVERT TO QUOTATION
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <form method="POST" action="" id="needassessment_add" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Section 1: Customer & Basic Info -->
+        <div class="modern-card mb-4">
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-user"></i> Customer & Basic Information</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Assessment No.</label>
+                        {% render_field form.na_assessment_num id="na_assessment_num" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Date</label>
+                        {% render_field form.na_date id="na_date" type="Date" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Existing Customer</label>
+                        {% render_field form.na_customer_name id="na_customer_name" class="form-control form-control-modern" onchange="package_type_change(); fetchCustomerDetails();" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">New Customer</label>
+                        {% render_field form.na_customer_new_name class="form-control form-control-modern disable_a_href" id="na_customer_new_name" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Sales Person</label>
+                        {% render_field form.na_sales_person class="form-control form-control-modern" id="na_sales_person" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Customer Number</label>
+                        {% render_field form.na_contactno class="form-control form-control-modern" id="na_contactno" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Customer Email</label>
+                        {% render_field form.na_email class="form-control form-control-modern" id="na_email" %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Work & Scope -->
+        <div class="modern-card mb-4">
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-briefcase"></i> Work & Scope Details</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Type Of Work</label>
+                        {% render_field form.na_type_of_work id="na_type_of_work" class="form-control form-control-modern" onchange="package_type_change()" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Others</label>
+                        {% render_field form.na_others_type_pack id="na_others_type_pack" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Scope Of Work</label>
+                        {% render_field form.na_type_of_pack1 id="na_type_of_pack1" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Wood Treatment Requirement</label>
+                        {% render_field form.na_wood_treatment_req id="na_wood_treatment_req" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Unloading</label>
+                        {% render_field form.na_unloading id="na_unloading" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Special Requirements</label>
+                        {% render_field form.na_special_requirements id="na_special_requirements" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Wood Norms</label>
+                        {% render_field form.na_wood_norms id="na_wood_norms" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Delivery Details -->
+        <div class="modern-card mb-4">
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-truck"></i> Delivery Details</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Delivery By</label>
+                        {% render_field form.na_delivery_by id="na_delivery_by" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Delivery Type</label>
+                        {% render_field form.na_delivery_type id="na_delivery_type" class="form-control form-control-modern" onchange="deliver_type()" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Delivery Location</label>
+                        {% render_field form.na_delivery_location id="na_delivery_location" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Type Of Lifting</label>
+                        {% render_field form.na_type_of_access id="na_type_of_access" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Packing Location</label>
+                        {% render_field form.na_packing_field id="na_packing_field" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Status</label>
+                        {% render_field form.na_status id="na_status" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Scope Notes & Attachment -->
+        <div class="modern-card mb-4">
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-file-alt"></i> Scope Notes & Attachment</div>
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Client Scope</label>
+                            <div id="accordion_cs">
+                                <a href="" class="text-purple font-weight-bold" data-toggle="collapse" data-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
+                                    <i class="fas fa-chevron-down mr-1"></i> Toggle Client Scope
+                                </a>
+                                <div id="collapseFive" class="collapse mt-2" aria-labelledby="headingFive">
+                                    {% render_field form.na_client_scope id="na_client_scope" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">BVM Scope</label>
+                            <div id="accordion_bs">
+                                <a href="javascript:void(0)" class="text-primary font-weight-bold" data-toggle="collapse" data-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix" style="text-decoration: none;">
+                                    <i class="fas fa-chevron-down mr-1"></i> TOGGLE BVM SCOPE
+                                </a>
+                                <div id="collapseSix" class="collapse mt-2" aria-labelledby="headingSix">
+                                    {% render_field form.na_bvm_scope id="na_bvm_scope" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Attachment</label>
+                            {% render_field form.na_attach id="na_attach" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% render_field form.na_updated_by id="na_updated_by" hidden="True" class="form-control" %}
+        {% render_field form.nad_cost_unit id="nad_cost_unit" hidden="True" class="form-control" %}
+        {% render_field form.nad_cost_total id="nad_cost_total" hidden="True" class="form-control" %}
+
+        <!-- Messages -->
+        <div class="message-container my-3">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} shadow-sm">
+                <i class="fas fa-info-circle"></i> {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="btn-group-modern">
+            <button id="na_submit_btn" type="submit" class="btn-modern btn-submit">
+                <i class="fas fa-check"></i> Submit
+            </button>
+            <a href="{% url 'needassessment_list' %}" class="btn-modern btn-cancel">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+
+    </form>
+
+    <hr class="my-4">
+
+    <!-- Accordion: Comments & Dimensions -->
+    <div id="accordion" class="modern-card mb-4" style="overflow: hidden;">
+
+        <!-- Comments -->
+        <div class="form-section" style="border-bottom: 1px solid #eee;">
+            <div class="form-section-title d-flex justify-content-between align-items-center" data-toggle="collapse" data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne" style="cursor: pointer;">
+                <span><i class="fas fa-comments"></i> Add/Edit Comments</span>
+                <i class="fas fa-chevron-down text-muted small"></i>
+            </div>
+            <div id="collapseOne" class="collapse" aria-labelledby="headingOne">
+                <div class="px-3 pb-3">
+                    <div id="comments_list_WOH">
+                        {% include "asset_mgt_app/comments_list_WOH.html" %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dimensions -->
+        <div class="form-section">
+            <div class="form-section-title d-flex justify-content-between align-items-center" style="cursor: pointer;">
+                <span data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    <i class="fas fa-ruler-combined"></i> Add/Edit Dimensions
+                </span>
+                {% if request.session.na_assessment_id %}
+                <a class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; text-decoration: none;" href="{% url 'need_assessment_print' request.session.na_assessment_id %}">
+                    <i class="fas fa-file-pdf"></i> Download PDF
+                </a>
+                {% endif %}
+            </div>
+            <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo">
+                <div class="px-3 pb-3">
+                    <div id="na_dimension_list_WOH">
+                        <div class="mb-4 d-flex justify-content-start">
+                            <a href="{% url 'na_dimension_insert' %}" id="add_dim_btn" class="btn-modern btn-submit" style="text-decoration: none;">
+                                <i class="fas fa-plus"></i> Insert Dimension
+                            </a>
+                        </div>
+                        <div class="table-container-modern p-0 border-0 shadow-none">
+                            <table id="na_dimension_list" class="table modern-table text-center">
+                                <thead>
+                                    <tr>
+                                        <th>Created On</th>
+                                        <th>Assessment Number</th>
+                                        <th>Item Number</th>
+                                        <th>Requirement Type</th>
+                                        <th>UOM</th>
+                                        <th>Length</th>
+                                        <th>Width</th>
+                                        <th>Height</th>
+                                        <th>Quantity</th>
+                                        <th>Updated On</th>
+                                        <th>Updated By</th>
+                                        <th class="text-center">Edit</th>
+                                        <th class="text-center">Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for na_dimensioninfo in na_dimension_list %}
+                                    <tr>
+                                        <td>{{ na_dimensioninfo.nad_created_at }}</td>
+                                        <td>{{ na_dimensioninfo.nad_assess_num }}</td>
+                                        <td>{{ na_dimensioninfo.nad_item }}</td>
+                                        <td>{{ na_dimensioninfo.nad_type_of_req }}</td>
+                                        <td>{{ na_dimensioninfo.nad_uom }}</td>
+                                        <td>{{ na_dimensioninfo.nad_length }}</td>
+                                        <td>{{ na_dimensioninfo.nad_width }}</td>
+                                        <td>{{ na_dimensioninfo.nad_height }}</td>
+                                        <td>{{ na_dimensioninfo.nad_quantity }}</td>
+                                        <td>{{ na_dimensioninfo.nad_updated_at }}</td>
+                                        <td>{{ na_dimensioninfo.nad_updated_by }}</td>
+                                        <td class="text-center">
+                                            <a class="btn-modern btn-submit py-1 px-3" href="{% url 'na_dimension_update' na_dimensioninfo.id %}" style="font-size: 0.8rem; text-decoration: none;">
+                                                <i class="far fa-edit"></i>
+                                            </a>
+                                        </td>
+                                        <td class="text-center">
+                                            <form action="{% url 'na_dimension_delete' na_dimensioninfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger delete-btn" style="border-radius: 8px;">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <input type="hidden" id="na_status" value="{{ na_status_id }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Linked Quotations Hub -->
+    <div class="modern-card mb-4" style="overflow: hidden;">
+        <div class="form-section-title px-4 py-3 bg-light d-flex justify-content-between align-items-center" style="margin-bottom: 0;">
+            <span class="text-primary"><i class="fas fa-link mr-2"></i> Linked Quotations</span>
+            <span class="badge badge-pill badge-primary px-3 py-2">{{ linked_quotations|length }} Records</span>
+        </div>
+        <div class="p-0">
+            {% if linked_quotations %}
+            <div class="table-responsive">
+                <table class="table modern-table text-center mb-0">
+                    <thead>
+                        <tr>
+                            <th>Quotation ID</th>
+                            <th>Date</th>
+                            <th>Total Cost</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for qs in linked_quotations %}
+                        <tr>
+                            <td class="font-weight-bold">{{ qs.qs_quotation_num }}</td>
+                            <td>{{ qs.qs_date }}</td>
+                            <td>₹{{ qs.qs_total_cost }}</td>
+                            <td>
+                                {% if qs.qs_status == 5 %}
+                                <span class="badge badge-success px-2 py-1">Completed</span>
+                                {% else %}
+                                <span class="badge badge-info px-2 py-1">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'pk_quotationsummary_update' qs.id %}" class="btn btn-sm btn-outline-primary" style="border-radius: 6px;">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="fas fa-file-invoice fa-2x mb-2 text-light"></i>
+                <p>No quotations linked to this assessment yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
 </div>
 
-			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-				<div class="card-header d-flex justify-content-between align-items-center">
-					<h3 class="mb-0">Add/Update Need Assessment</h3>
-					{% if form.instance.id %}
-					<a href="{% url 'pk_quotationsummary_insert' %}?na_id={{ form.instance.id }}"
-						class="pms-btn-convert">
-						<i class="fas fa-file-invoice-dollar"></i> Convert to Quotation
-					</a>
-					{% endif %}
-				</div>
-				<div class="card-body bg-light">
-					<form method="POST" action="" id="needassessment_add" enctype="multipart/form-data">
-						{% csrf_token %}
-						<div class="row" id="need_assessment_main">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Assessment NO.</span>
-									</div>
-									{% render_field form.na_assessment_num id="na_assessment_num" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Date</span>
-									</div>
-									{% render_field form.na_date id="na_date" type="Date" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Existing Customer</span>
-									</div>
-									{% render_field form.na_customer_name id="na_customer_name" class="form-control" onchange="package_type_change(); fetchCustomerDetails();" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">New Customer</span>
-									</div>
-									{% render_field form.na_customer_new_name class="form-control disable_a_href" id="na_customer_new_name"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Sales Person</span>
-									</div>
-									{% render_field form.na_sales_person class="form-control " id="na_sales_person"%}
-								</div>
+{% endblock content %}
 
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Number</span>
-									</div>
-									{% render_field form.na_contactno class="form-control " id="na_contactno"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Email</span>
-									</div>
-									{% render_field form.na_email class="form-control " id="na_email"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Type Of Work</span>
-									</div>
-									{% render_field form.na_type_of_work id="na_type_of_work" class="form-control " onchange="package_type_change()"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Others</span>
-									</div>
-									{% render_field form.na_others_type_pack id="na_others_type_pack" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Scope Of Work</span>
-									</div>
-									{% render_field form.na_type_of_pack1 id="na_type_of_pack1" class="form-control " %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Wood Treatment Requirement</span>
-									</div>
-									{% render_field form.na_wood_treatment_req id="na_wood_treatment_req" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Unloading</span>
-									</div>
-									{% render_field form.na_unloading id="na_unloading" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Special Requirements</span>
-									</div>
-									{% render_field form.na_special_requirements id="na_special_requirements" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Wood Norms</span>
-									</div>
-									{% render_field form.na_wood_norms id="na_wood_norms" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Delivery By</span>
-									</div>
-									{% render_field form.na_delivery_by id="na_delivery_by" class="form-control " %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Delivery Type</span>
-									</div>
-									{% render_field form.na_delivery_type id="na_delivery_type" class="form-control " onchange="deliver_type()" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Delivery Location</span>
-									</div>
-									{% render_field form.na_delivery_location id="na_delivery_location" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Type Of Lifting</span>
-									</div>
-									{% render_field form.na_type_of_access id="na_type_of_access" class="form-control" %}
-								</div>
+{% block extra_js %}
+<script>
+	$(document).ready(function () {
+        document.getElementById("na_updated_by").value = '{{ user_id }}';
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Packing Location</span>
-									</div>
-									{% render_field form.na_packing_field id="na_packing_field" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Status</span>
-									</div>
-									{% render_field form.na_status id="na_status" class="form-control " %}
-								</div>
-							</div>
-						</div>
-						<div class="container-fluid col-12 col-lg-5 p-3 bg-dark mb-2 mt-2 rounded-sm text-white">
-							<div class="input-group input-group-sm mb-3 bg-dark block">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Attachment</span>
-								</div>
-								{% render_field form.na_attach id="na_attach" class="form-control " %}
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-6">
-								<div id="accordion_cs" class="container-fluid">
-									<div class="card">
-										<div class="card-header bg-info" id="headingFive">
-											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse"
-													data-target="#collapseFive" aria-expanded="true"
-													aria-controls="collapseFive">
-													Client Scope
-												</a>
-											</h5>
-										</div>
-									</div>
-									<div id="collapseFive" class="collapse " aria-labelledby="headingFive"
-										data-parent="#accordion">
-										<div class="card-body">
-											{% render_field form.na_client_scope id="na_client_scope" class="form-control" %}
-										</div>
-									</div>
-								</div>
-							</div>
-							<div class="col-6">
-								<div id="accordion_bs" class="container-fluid mb-3">
-									<div class="card">
-										<div class="card-header bg-info" id="headingSix">
-											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse"
-													data-target="#collapseSix" aria-expanded="true"
-													aria-controls="collapseSix">
-													BVM Scope
-												</a>
-											</h5>
-										</div>
-										<div id="collapseSix" class="collapse " aria-labelledby="headingSix"
-											data-parent="#accordion">
-											<div class="card-body">
-												{% render_field form.na_bvm_scope id="na_bvm_scope" class="form-control" %}
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-							{% render_field form.na_updated_by id="na_updated_by" hidden="True" class="form-control " %}
-							{% render_field form.nad_cost_unit id="nad_cost_unit" hidden="True" class="form-control " %}
-							{% render_field form.nad_cost_total id="nad_cost_total" hidden="True" class="form-control " %}
-						</div>
+        $('#na_dimension_list').DataTable({
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
 
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<button id="na_submit_btn" type="submit" class="btn btn-success "><i class="fas fa-check"></i>
-							Submit</button>
-						<a href="{% url 'needassessment_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</form>
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
-<hr>
-<div class="row">
-	<div class="col">
-		<div id="accordion" class="container-fluid">
-			<div class="card">
-				<div class="card-header bg-info" id="headingOne">
-					<h5 class="mb-0">
-						<button class="btn btn-warning text-white" data-toggle="collapse" data-target="#collapseOne"
-							aria-expanded="true" aria-controls="collapseOne">
-							Add/Edit Comments
-						</button>
-					</h5>
-				</div>
-				<div id="collapseOne" class="collapse " aria-labelledby="headingOne" data-parent="#accordion">
-					<div class="card-body">
-						<div id="comments_list_WOH">
-							{% include "asset_mgt_app/comments_list_WOH.html" %}
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="card">
-				<div class="card-header bg-info" id="headingTwo">
-					<div class="row">
-						<div class="col-10">
-							<h5 class="mb-0">
-								<button class="btn btn-warning text-white collapsed" data-toggle="collapse"
-									data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-									Add/Edit Dimensions
-								</button>
-							</h5>
-						</div>
-						<div class="col-2">
-							{% if request.session.na_assessment_id %}
-							<a class="btn btn-warning btn-block"
-								href="{% url 'need_assessment_print' request.session.na_assessment_id %}">Download
-								PDF</a>
-							{% endif %}
-						</div>
-					</div>
-				</div>
-				<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
-					<div class="card-body">
-						<div class="card-body">
-							<div id="na_dimension_list_WOH">
-								<!--<div class="container-fluid" style="padding:15px;">-->
-								<!--    <div class="row">-->
-								<!--        <div class="col-4"></div>-->
-								<!--        <div class="col-4 rounded text-center bg-info">-->
-								<!--            <h3>Need Assessment Dimension List</h3>-->
-								<!--        </div>-->
-								<!--        <div class="col-4"></div>-->
-								<!--    </div>-->
-								<!--</div>-->
-								<div class="container-fluid row">
-									<div class="col-md-1.5">
-										<a href="{% url 'na_dimension_insert' %}" id="add_dim_btn"
-											class="btn btn-success btn-block btn-lg disable_a_href">
-											<i class="fas fa-plus"></i> Insert
-										</a>
-									</div>
-								</div>
-								<hr>
-								<div class="container-fluid">
-									<table id="na_dimension_list" class="table table-striped table-bordered">
-										<thead class="thead-dark">
-											<tr>
-												<th>Created On</th>
-												<th>Assessment Number</th>
-												<th>Item Number</th>
-												<th>Requirement Type</th>
-												<th>UOM</th>
-												<th>Length</th>
-												<th>Width</th>
-												<th>Height</th>
-												<th>Quantity</th>
-												<th>Updated On</th>
-												<th>Updated By</th>
-												<th>Edit</th>
-												<th>Delete</th>
-											</tr>
-										</thead>
-										<tbody>
-											{% for na_dimensioninfo in na_dimension_list %}
-											<tr>
-												<td>{{ na_dimensioninfo.nad_created_at }}</td>
-												<td>{{ na_dimensioninfo.nad_assess_num }}</td>
-												<td>{{ na_dimensioninfo.nad_item }}</td>
-												<td>{{ na_dimensioninfo.nad_type_of_req }}</td>
-												<td>{{ na_dimensioninfo.nad_uom }}</td>
-												<td>{{ na_dimensioninfo.nad_length }}</td>
-												<td>{{ na_dimensioninfo.nad_width }}</td>
-												<td>{{ na_dimensioninfo.nad_height }}</td>
-												<td>{{ na_dimensioninfo.nad_quantity }}</td>
-												<td>{{ na_dimensioninfo.nad_updated_at }}</td>
-												<td>{{ na_dimensioninfo.nad_updated_by }}</td>
-												<td>
-													<a class="btn btn-primary"
-														href="{% url 'na_dimension_update' na_dimensioninfo.id %}">
-														<i class="far fa-edit"></i>
-													</a>
-												</td>
-												<td>
-													<form action="{% url 'na_dimension_delete' na_dimensioninfo.id %}"
-														method="post" onclick="return confirm('Are you sure?');">
-														{% csrf_token %}
-														<button type="submit" class="btn btn-danger delete-btn">
-															<i class="fas fa-trash-alt"></i>
-														</button>
-													</form>
-												</td>
-											</tr>
-											{% endfor %}
-										</tbody>
-									</table>
-								</div>
-								<input type="hidden" id="na_status" value="{{ na_status_id }}">
+        var assessment_num = document.getElementById("na_assessment_num")?.value || "";
+        if (assessment_num === "") {
+            $('#add_dim_btn').addClass('disable_a_href');
+            $('#comments_add_btn').addClass('disable_a_href');
+            $('#comments_list_WOH').addClass('disable_a_href');
+        } else {
+            $('#add_dim_btn').removeClass('disable_a_href');
+            $('#comments_add_btn').removeClass('disable_a_href');
+            $('#comments_list_WOH').removeClass('disable_a_href');
+        }
 
-								<script>
-									$(document).ready(function () {
-										document.getElementById("na_updated_by").value = '{{ user_id }}';
+        var user_role = '{{ role }}';
+        var status = document.getElementById("na_status")?.value;
 
-										$('#na_dimension_list').DataTable({
-											dom: 'lBfrtip',
-											buttons: ['copy', 'csv', 'excel', 'print']
-										});
+        if (status == 5 && user_role == "User") {
+            alert('Since Status is Completed, you have read-only access. To edit, please contact Administrator');
+            $('#add_dim_btn').addClass('disable_a_href');
+            $('.delete-btn').prop('disabled', true);
+            $('#na_submit_btn').addClass('disable_a_href');
+            $('#need_assessment_main').addClass('disable_a_href');
+            $('#comments_list_WOH').addClass('disable_a_href');
+        }
 
-										var assessment_num = document.getElementById("na_assessment_num")?.value || "";
-										if (assessment_num === "") {
-											$('#add_dim_btn').addClass('disable_a_href');
-											$('#comments_add_btn').addClass('disable_a_href');
-											$('#comments_list_WOH').addClass('disable_a_href');
-										} else {
-											$('#add_dim_btn').removeClass('disable_a_href');
-											$('#comments_add_btn').removeClass('disable_a_href');
-											$('#comments_list_WOH').removeClass('disable_a_href');
-										}
+        package_type_change();
+    });
+</script>
 
-										var user_role = '{{ role }}';
-										var status = document.getElementById("na_status")?.value;
+<script>
+	$("#na_customer_name").select2({
+		width: 'resolve'
+	});
+</script>
 
-										if (status == 5 && user_role == "User") {
-											alert('Since Status is Completed, you have read-only access. To edit, please contact Administrator');
-											$('#add_dim_btn').addClass('disable_a_href');
-											$('.delete-btn').prop('disabled', true); // Disable all delete buttons
-											$('#na_submit_btn').addClass('disable_a_href');
-											$('#need_assessment_main').addClass('disable_a_href');
-											$('#comments_list_WOH').addClass('disable_a_href');
-										}
+<script>
+	function package_type_change() {
+		var type_packing = document.getElementById("na_type_of_work").value;
+		if (type_packing == 5) {
+			$('#na_others_type_pack').removeClass('disable_a_href');
+		} else {
+			$('#na_others_type_pack').addClass('disable_a_href');
+			document.getElementById("na_others_type_pack").value = " ";
+		}
+		var type_packing = document.getElementById("na_customer_name").value;
+		if (type_packing == 210) {
+			$('#na_customer_new_name').removeClass('disable_a_href');
+		} else {
+			$('#na_customer_new_name').addClass('disable_a_href');
+			document.getElementById("na_customer_new_name").value = " ";
+		}
+	}
+</script>
 
-										package_type_change();
-									});
-								</script>
+<script>
+	$(document).ready(function () {
+		$('#comments_list').DataTable();
+	});
+</script>
 
-								<script>
-									$("#na_customer_name").select2({
-										width: 'resolve'
-									});
+<script>
+	$(document).ready(function () {
+        $('#na_type_of_access').multiselect({
+            includeSelectAllOption: true,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
+            buttonWidth: '100%',
+            nonSelectedText: 'Select Types of Lifting',
+            buttonClass: 'custom-multiselect-button',
+            maxHeight: 250,
+            dropUp: false
+        });
 
-								</script>
+        $('#na_special_requirements').multiselect({
+            includeSelectAllOption: true,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
+            buttonWidth: '100%',
+            nonSelectedText: 'Select Requirements',
+            buttonClass: 'custom-multiselect-button',
+            maxHeight: 250,
+            dropUp: false
+        });
 
-								<script>
-									function package_type_change() {
-										var type_packing = document.getElementById("na_type_of_work").value;
-										if (type_packing == 5) {
-											$('#na_others_type_pack').removeClass('disable_a_href');
-										} else {
-											$('#na_others_type_pack').addClass('disable_a_href');
-											document.getElementById("na_others_type_pack").value = " ";
-										}
-										var type_packing = document.getElementById("na_customer_name").value;
-										if (type_packing == 210) {
-											$('#na_customer_new_name').removeClass('disable_a_href');
-										} else {
-											$('#na_customer_new_name').addClass('disable_a_href');
-											document.getElementById("na_customer_new_name").value = " ";
-										}
+        $('#na_wood_norms').multiselect({
+            includeSelectAllOption: true,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
+            buttonWidth: '100%',
+            nonSelectedText: 'Select Wood Norms',
+            buttonClass: 'custom-multiselect-button',
+            maxHeight: 250,
+            dropUp: false
+        });
 
-									}
-								</script>
+        $('#na_consumables').multiselect({
+            includeSelectAllOption: true,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
+            buttonWidth: '100%',
+            nonSelectedText: 'Select Consumables',
+            buttonClass: 'custom-multiselect-button',
+            maxHeight: 250,
+            dropUp: false
+        });
+    });
+</script>
 
-								<script>
-									$(document).ready(function () {
-										$('#comments_list').DataTable();
-									});
-								</script>
-								<script>
-									$(document).ready(function () {
+<script>
+	function deliver_type() {
+		var na_delivery_type = document.getElementById("na_delivery_type").value;
+		var na_vehicle_type = document.getElementById("na_vehicle_type");
 
+		if (na_delivery_type == 2) {
+			$('#na_vehicle_type').removeClass('disable_a_href');
+			na_vehicle_type.value = "";
+			na_vehicle_type.setAttribute("required", "required");
+		} else {
+			$('#na_vehicle_type').addClass('disable_a_href');
+			na_vehicle_type.value = "";
+			na_vehicle_type.removeAttribute("required");
+		}
+	}
+</script>
 
-										// Initialize Multiselect for Type of Lifting
-										$('#na_type_of_access').multiselect({
-											includeSelectAllOption: true,
-											enableFiltering: true,
-											enableCaseInsensitiveFiltering: true,
-											buttonWidth: '100%',
-											nonSelectedText: 'Select Types of Lifting',
-											buttonClass: 'custom-multiselect-button',
-											maxHeight: 250, // Set a max height for the dropdown with a scrollbar
-											dropUp: false
-										});
+<script>
+	function cusnewexist_enabler() {
+		var jn5 = document.getElementById("na_customer_new").value
+		if (jn5 == 2) {
+			$('#na_customer_name').removeClass('disable_a_href');
+			$('#na_customer_new_name').addClass('disable_a_href');
+			$('#na_customer_type').addClass('disable_a_href');
+			document.getElementById("na_customer_new_name").value = ""
+		} else {
+			$('#na_customer_name').addClass('disable_a_href');
+			$('#na_customer_new_name').removeClass('disable_a_href');
+			$('#na_customer_type').removeClass('disable_a_href');
+			document.getElementById("na_customer_name").value = ""
+		}
+	}
+</script>
 
-										// Initialize Multiselect for Special Requirements
-										$('#na_special_requirements').multiselect({
-											includeSelectAllOption: true,
-											enableFiltering: true,
-											enableCaseInsensitiveFiltering: true,
-											buttonWidth: '100%',
-											nonSelectedText: 'Select Requirements',
-											buttonClass: 'custom-multiselect-button',
-											maxHeight: 250, // Set a max height for the dropdown with a scrollbar
-											dropUp: false
-										});
+<style>
+	.popup-tip {
+		position: absolute;
+		background-color: #f8d7da;
+		color: #721c24;
+		padding: 6px 12px;
+		border: 1px solid #f5c6cb;
+		border-radius: 4px;
+		font-size: 13px;
+		z-index: 10000;
+	}
+</style>
 
-										// Initialize Multiselect for Wood Norms
-										$('#na_wood_norms').multiselect({
-											includeSelectAllOption: true,
-											enableFiltering: true,
-											enableCaseInsensitiveFiltering: true,
-											buttonWidth: '100%',
-											nonSelectedText: 'Select Wood Norms',
-											buttonClass: 'custom-multiselect-button',
-											maxHeight: 250, // Set a max height for the dropdown with a scrollbar
-											dropUp: false
-										});
-										// Initialize Multiselect for Wood Norms
-										$('#na_consumables').multiselect({
-											includeSelectAllOption: true,
-											enableFiltering: true,
-											enableCaseInsensitiveFiltering: true,
-											buttonWidth: '100%',
-											nonSelectedText: 'Select Consumables',
-											buttonClass: 'custom-multiselect-button',
-											maxHeight: 250, // Set a max height for the dropdown with a scrollbar
-											dropUp: false
-										});
-									});
-								</script>
-								<script>
-									function deliver_type() {
-										var na_delivery_type = document.getElementById("na_delivery_type").value;
-										var na_vehicle_type = document.getElementById("na_vehicle_type");
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+		const fields = [
+			'na_date',
+			'na_type_of_work',
+			'na_type_of_pack1',
+			'na_wood_treatment_req',
+			'na_unloading',
+			'na_special_requirements',
+			'na_wood_norms',
+			'na_delivery_by',
+			'na_delivery_type',
+			'na_delivery_location',
+			'na_type_of_access',
+			'na_packing_field',
+			'na_status',
+			'na_attach'
+		];
 
-										if (na_delivery_type == 2) {
-											$('#na_vehicle_type').removeClass('disable_a_href');
-											na_vehicle_type.value = "";
-											na_vehicle_type.setAttribute("required", "required");  // Make it mandatory
-										}
-										else {
-											$('#na_vehicle_type').addClass('disable_a_href');
-											na_vehicle_type.value = "";
-											na_vehicle_type.removeAttribute("required");  // Make it non-mandatory
-										}
-									}
-								</script>
-								<script>
-									function cusnewexist_enabler() {
-										var jn5 = document.getElementById("na_customer_new").value
-										if (jn5 == 2) {
-											$('#na_customer_name').removeClass('disable_a_href');
-											$('#na_customer_new_name').addClass('disable_a_href');
-											$('#na_customer_type').addClass('disable_a_href');
-											document.getElementById("na_customer_new_name").value = ""
-										}
-										else {
-											$('#na_customer_name').addClass('disable_a_href');
-											$('#na_customer_new_name').removeClass('disable_a_href');
-											$('#na_customer_type').removeClass('disable_a_href');
-											document.getElementById("na_customer_name").value = ""
-										}
-									}
-								</script>
-								<style>
-									.popup-tip {
-										position: absolute;
-										background-color: #f8d7da;
-										color: #721c24;
-										padding: 6px 12px;
-										border: 1px solid #f5c6cb;
-										border-radius: 4px;
-										font-size: 13px;
-										z-index: 10000;
-									}
-								</style>
+		const skipFields = ['na_assessment_num', 'na_customer_name', 'na_customer_new_name', 'na_others_type_pack'];
 
-								<script>
-									document.addEventListener("DOMContentLoaded", function () {
-										const fields = [
-											'na_date',
-											'na_type_of_work',
-											'na_type_of_pack1',
-											'na_wood_treatment_req',
-											'na_unloading',
-											'na_special_requirements',
-											'na_wood_norms',
-											'na_delivery_by',
-											'na_delivery_type',
-											'na_delivery_location',
-											'na_type_of_access',
-											'na_packing_field',
-											'na_status',
-											'na_attach'
-										];
+		for (let i = 1; i < fields.length; i++) {
+			const currentId = fields[i];
+			const prevId = fields[i - 1];
 
-										const skipFields = ['na_assessment_num', 'na_customer_name', 'na_customer_new_name', 'na_others_type_pack'];
+			if (skipFields.includes(currentId)) continue;
 
-										for (let i = 1; i < fields.length; i++) {
-											const currentId = fields[i];
-											const prevId = fields[i - 1];
+			const currentField = document.getElementById(currentId);
+			let prevField = document.getElementById(prevId);
 
-											if (skipFields.includes(currentId)) continue;
+			let j = i - 1;
+			while (prevField && skipFields.includes(fields[j])) {
+				j--;
+				prevField = document.getElementById(fields[j]);
+			}
 
-											const currentField = document.getElementById(currentId);
-											let prevField = document.getElementById(prevId);
+			if (currentField && prevField) {
+				currentField.addEventListener("focus", function (e) {
+					if (prevField.value.trim() === "") {
+						e.preventDefault();
+						currentField.blur();
+						showPopup(currentField, `Please fill ${getLabel(prevField)} first`);
+						prevField.focus();
+					}
+				});
 
-											// Go back if prevField is in skip list
-											let j = i - 1;
-											while (prevField && skipFields.includes(fields[j])) {
-												j--;
-												prevField = document.getElementById(fields[j]);
-											}
+				currentField.addEventListener("mousedown", function (e) {
+					if (prevField.value.trim() === "") {
+						e.preventDefault();
+						showPopup(currentField, `Please fill ${getLabel(prevField)} first`);
+						prevField.focus();
+					}
+				});
+			}
+		}
 
-											if (currentField && prevField) {
-												// Block focus
-												currentField.addEventListener("focus", function (e) {
-													if (prevField.value.trim() === "") {
-														e.preventDefault();
-														currentField.blur();
-														showPopup(currentField, `Please fill ${getLabel(prevField)} first`);
-														prevField.focus();
-													}
-												});
+		function showPopup(field, message) {
+			removePopup();
+			const rect = field.getBoundingClientRect();
+			const popup = document.createElement("div");
+			popup.className = "popup-tip";
+			popup.innerText = message;
+			document.body.appendChild(popup);
+			popup.style.top = (rect.top + window.scrollY - 30) + "px";
+			popup.style.left = (rect.left + window.scrollX + 10) + "px";
+			setTimeout(removePopup, 2000);
+		}
 
-												// Also block mouse click
-												currentField.addEventListener("mousedown", function (e) {
-													if (prevField.value.trim() === "") {
-														e.preventDefault();
-														showPopup(currentField, `Please fill ${getLabel(prevField)} first`);
-														prevField.focus();
-													}
-												});
-											}
-										}
+		function removePopup() {
+			document.querySelectorAll(".popup-tip").forEach(el => el.remove());
+		}
 
-										function showPopup(field, message) {
-											removePopup();
-											const rect = field.getBoundingClientRect();
-											const popup = document.createElement("div");
-											popup.className = "popup-tip";
-											popup.innerText = message;
-											document.body.appendChild(popup);
-											popup.style.top = (rect.top + window.scrollY - 30) + "px";
-											popup.style.left = (rect.left + window.scrollX + 10) + "px";
+		function getLabel(field) {
+			const labelSpan = field.closest(".form-group-modern")?.querySelector(".form-label-modern");
+			return labelSpan ? labelSpan.textContent.trim() : "previous field";
+		}
+	});
+</script>
 
-											setTimeout(removePopup, 2000);
-										}
-
-										function removePopup() {
-											document.querySelectorAll(".popup-tip").forEach(el => el.remove());
-										}
-
-										function getLabel(field) {
-											const labelSpan = field.closest(".input-group").querySelector(".input-group-text");
-											return labelSpan ? labelSpan.textContent.trim() : "previous field";
-										}
-									});
-								</script>
-
-								<script>
-									function fetchCustomerDetails() {
-										var customerId = $("#na_customer_name").val();  // Get selected customer ID
-										if (customerId == 210) {
-											$('#na_customer_new_name').removeClass('disable_a_href');
-										} else {
-											$('#na_customer_new_name').addClass('disable_a_href');
-											document.getElementById("na_customer_new_name").value = "";
-										}
-										if (customerId) {
-											$.ajax({
-												url: "{% url 'get_customer_details' %}",  // Django URL to fetch customer details
-												type: "GET",
-												data: { customer_id: customerId },
-												success: function (response) {
-													$("#na_contactno").val(response.customer_contact);
-													$("#na_email").val(response.customer_email);
-												},
-												error: function (xhr, status, error) {
-													console.log("Error fetching customer details:", error);
-												}
-											});
-										}
-									}
-								</script>
-
-
-								<div class="container-fluid mt-5">
-									<div class="pms-hub-card">
-										<div class="pms-hub-header">
-											<h4><i class="fas fa-link"></i> Linked Quotations</h4>
-											<span class="badge pms-badge-info">{{ linked_quotations|length }}
-												Records</span>
-										</div>
-										<div class="pms-hub-body">
-											{% if linked_quotations %}
-											<table class="pms-table-dark">
-												<thead>
-													<tr>
-														<th>Quotation ID</th>
-														<th>Date</th>
-														<th>Total Cost</th>
-														<th>Status</th>
-														<th>Actions</th>
-													</tr>
-												</thead>
-												<tbody>
-													{% for qs in linked_quotations %}
-													<tr>
-														<td>{{ qs.qs_quotation_num }}</td>
-														<td>{{ qs.qs_date }}</td>
-														<td>{{ qs.qs_total_cost }}</td>
-														<td>
-															{% if qs.qs_status == 5 %}
-															<span class="pms-badge pms-badge-success">Completed</span>
-															{% else %}
-															<span class="pms-badge pms-badge-info">Pending</span>
-															{% endif %}
-														</td>
-														<td>
-															<a href="{% url 'pk_quotationsummary_update' qs.id %}"
-																class="btn btn-sm btn-outline-info">
-																<i class="fas fa-eye"></i> View
-															</a>
-														</td>
-													</tr>
-													{% endfor %}
-												</tbody>
-											</table>
-											{% else %}
-											<div class="text-center p-4 text-muted">
-												No quotations linked to this assessment yet.
-											</div>
-											{% endif %}
-										</div>
-									</div>
-								</div>
-
-								{% endblock content %}
+<script>
+	function fetchCustomerDetails() {
+		var customerId = $("#na_customer_name").val();
+		if (customerId == 210) {
+			$('#na_customer_new_name').removeClass('disable_a_href');
+		} else {
+			$('#na_customer_new_name').addClass('disable_a_href');
+			document.getElementById("na_customer_new_name").value = "";
+		}
+		if (customerId) {
+			$.ajax({
+				url: "{% url 'get_customer_details' %}",
+				type: "GET",
+				data: { customer_id: customerId },
+				success: function (response) {
+					$("#na_contactno").val(response.customer_contact);
+					$("#na_email").val(response.customer_email);
+				},
+				error: function (xhr, status, error) {
+					console.log("Error fetching customer details:", error);
+				}
+			});
+		}
+	}
+</script>
+{% endblock extra_js %}

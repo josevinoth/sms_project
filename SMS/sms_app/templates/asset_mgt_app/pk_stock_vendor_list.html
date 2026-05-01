@@ -1,80 +1,86 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>Stock Purchase List</h3>
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-white"><i class="fas fa-file-invoice mr-2"></i> Stock Vendor Invoices</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 1rem; text-decoration: none;">
+                <i class="fas fa-arrow-left"></i> BACK
+            </a>
+            <a href="{% url 'pk_stock_vendor_insert' %}" class="btn-modern btn-submit py-2 px-4" style="font-size: 1rem; text-decoration: none;">
+                <i class="fas fa-plus"></i> ADD NEW INVOICE
+            </a>
         </div>
-        <div class="col-5"></div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container-modern">
+        <div class="form-section-title">
+            <i class="fas fa-list-alt"></i> Vendor Bill Registry & Purchase Tracking
+        </div>
+        <div class="table-responsive">
+            <table id="places_list" class="modern-table text-center">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Created On</th>
+                        <th>Vendor Name</th>
+                        <th>Bill Number</th>
+                        <th>Bill Date</th>
+                        <th>Update Info</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pk_stock_vendor in pk_stock_vendor_list %}
+                    <tr class="modern-tr">
+                        <td class="font-weight-bold text-muted">#{{ pk_stock_vendor.id }}</td>
+                        <td>{{ pk_stock_vendor.spv_created_at|date:"d/m/Y" }}</td>
+                        <td class="text-left font-weight-bold text-dark">{{ pk_stock_vendor.spv_vendor_name }}</td>
+                        <td><span class="badge badge-light border">{{ pk_stock_vendor.spv_vendor_bill }}</span></td>
+                        <td>{{ pk_stock_vendor.spv_vendor_bill_date|date:"d/m/Y" }}</td>
+                        <td>
+                            <div class="small">{{ pk_stock_vendor.spv_updated_by }}</div>
+                            <div class="x-small text-muted">{{ pk_stock_vendor.spv_updated_at|date:"d/m/Y" }}</div>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center" style="gap: 8px;">
+                                <a class="btn-modern btn-submit py-2 px-4" style="font-size: 1rem; text-decoration: none;" href="{% url 'pk_stock_vendor_update' pk_stock_vendor.id %}" title="Edit">
+                                    <i class="far fa-edit"></i>
+                                </a>
+                                <form action="{% url 'pk_stock_vendor_delete' pk_stock_vendor.id %}" method="post" class="d-inline" onclick="return confirm('Are you sure you want to delete this invoice?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-modern btn-cancel py-2 px-4" style="font-size: 1rem; background: #e74c3c;">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
-<div class="container-fluid row">
-    <div class="col-md-1">
-      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-        <i class="fas fa-arrow-left"></i> Back
-      </a>
-    </div>
-    <div class="col-md-1">
-      <a href="{% url 'pk_stock_vendor_insert' %}" class="btn btn-success btn-block btn-lg">
-        <i class="fas fa-plus"></i> Add
-      </a>
-    </div>
-</div>
-<hr>
-<div class="container-fluid">
-<table  id="places_list" class="table table-striped table-bordered">
-    <thead class="thead-dark">
-        <tr>
-            <th>ID</th>
-            <th>Created On</th>
-            <th>Vendor Name</th>
-            <th>Vendor Bill #</th>
-            <th>Vendor Bill Date</th>
-            <th>Updated On</th>
-            <th>Updated By</th>
-            <th>Edit</th>
-            <th>Delete</th>
-    </thead>
-    <tbody>
-        {% for pk_stock_vendor in pk_stock_vendor_list %}
-            <tr>
-                <td> {{pk_stock_vendor.id}}</td>
-                <td> {{pk_stock_vendor.spv_created_at}}</td>
-                <td> {{pk_stock_vendor.spv_vendor_name}}</td>
-                <td> {{pk_stock_vendor.spv_vendor_bill}}</td>
-                <td> {{pk_stock_vendor.spv_vendor_bill_date}}</td>
-                <td> {{pk_stock_vendor.spv_updated_at}}</td>
-                <td> {{pk_stock_vendor.spv_updated_by}}</td>
-                <td>
-                    <a class="btn btn-primary" href="{% url 'pk_stock_vendor_update' pk_stock_vendor.id %}" >
-                        <i class="far fa-edit"></i>
-                    </a>
-                </td>
-                <td>
-                    <form action="{% url 'pk_stock_vendor_delete' pk_stock_vendor.id %}" method="post" onclick="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
-</div>
+
 <script>
     $(document).ready(function() {
-    $('#places_list').DataTable({
-        order: [0, 'desc' ],
-<!--        scrollX: true,-->
-        dom: 'Bfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ],
+        if (!$.fn.DataTable.isDataTable('#places_list')) {
+            $('#places_list').DataTable({
+                order: [[0, 'desc']],
+                pageLength: 25,
+                dom: 'lBfrtip',
+                buttons: [
+                    { extend: 'copy', className: 'btn btn-sm btn-secondary' },
+                    { extend: 'excel', className: 'btn btn-sm btn-success' },
+                    { extend: 'print', className: 'btn btn-sm btn-info' }
+                ],
+            });
+        }
     });
-} );
 </script>
 
 {% endblock content %}

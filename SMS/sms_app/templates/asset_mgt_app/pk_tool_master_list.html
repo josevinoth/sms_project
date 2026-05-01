@@ -1,0 +1,102 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block content %}
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-white"><i class="fas fa-tools mr-2"></i> Tools Master List</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 1rem; text-decoration: none;">
+                <i class="fas fa-arrow-left"></i> BACK
+            </a>
+            <a href="{% url 'pk_tool_master_add' %}" class="btn-modern btn-submit py-2 px-4" style="font-size: 1rem; text-decoration: none;">
+                <i class="fas fa-plus"></i> ADD NEW TOOL
+            </a>
+        </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container-modern">
+        <div class="form-section-title">
+            <i class="fas fa-toolbox"></i> Master Tool Registry & Equipment Tracking
+        </div>
+        <div class="table-responsive">
+            <table id="tools_table" class="modern-table text-center">
+                <thead>
+                    <tr>
+                        <th>Tool ID</th>
+                        <th>Tool Name</th>
+                        <th>Brand / Model</th>
+                        <th>Status</th>
+                        <th>Location</th>
+                        <th>Usage Type</th>
+                        <th>Warranty Exp.</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tool in tools %}
+                    <tr class="modern-tr">
+                        <td class="font-weight-bold">
+                            <span class="badge" style="background: var(--bg-dark); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); padding: 5px 10px;">
+                                {{ tool.tm_tool_id }}
+                            </span>
+                        </td>
+                        <td class="text-left">
+                            <div class="font-weight-bold text-dark">{{ tool.tm_name }}</div>
+                            <div class="x-small text-muted">SN: {{ tool.tm_serial_no }}</div>
+                        </td>
+                        <td>{{ tool.tm_brand|default:"" }} / {{ tool.tm_model_no|default:"" }}</td>
+                        <td>
+                            {% if tool.tm_status == 'Available' %}
+                                <span class="badge badge-success px-3 py-2">Available</span>
+                            {% elif tool.tm_status == 'In Use' %}
+                                <span class="badge badge-warning px-3 py-2">In Use</span>
+                            {% elif tool.tm_status == 'Under Repair' %}
+                                <span class="badge badge-danger px-3 py-2">Under Repair</span>
+                            {% else %}
+                                <span class="badge badge-secondary px-3 py-2">Scrap</span>
+                            {% endif %}
+                        </td>
+                        <td><div class="small">{{ tool.tm_location.unit_name|default:"N/A" }}</div></td>
+                        <td><span class="badge badge-light border">{{ tool.tm_usage_type }}</span></td>
+                        <td><div class="x-small text-muted">{{ tool.tm_warranty_expiry|date:"d-m-Y"|default:"N/A" }}</div></td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center" style="gap: 8px;">
+                                <a class="btn-modern btn-submit py-2 px-4" style="font-size: 1rem; text-decoration: none;" href="{% url 'pk_tool_master_update' tool.id %}" title="Edit">
+                                    <i class="far fa-edit"></i>
+                                </a>
+                                <form action="{% url 'pk_tool_master_delete' tool.id %}" method="post" class="d-inline" onclick="return confirm('Are you sure you want to delete this tool?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-modern btn-cancel py-2 px-4" style="font-size: 1rem; background: #e74c3c;">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        if (!$.fn.DataTable.isDataTable('#tools_table')) {
+            $('#tools_table').DataTable({
+                order: [[0, 'desc']],
+                pageLength: 25,
+                dom: 'lBfrtip',
+                buttons: [
+                    { extend: 'copy', className: 'btn btn-sm btn-secondary' },
+                    { extend: 'excel', className: 'btn btn-sm btn-success' },
+                    { extend: 'print', className: 'btn btn-sm btn-info' }
+                ],
+            });
+        }
+    });
+</script>
+
+{% endblock content %}

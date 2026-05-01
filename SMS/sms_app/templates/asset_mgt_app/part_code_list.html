@@ -1,17 +1,41 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>Part code List</h3>
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-white"><i class="fas fa-barcode mr-2"></i> Part Code Master List</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-arrow-left"></i> BACK
+            </a>
+            <a href="{% url 'part_code_add' %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-plus"></i> ADD PART CODE
+            </a>
         </div>
-        <div class="col-5"></div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="modern-card mb-4 p-3">
+        <form action="{% url 'partcode_search' %}" method="get" class="d-flex align-items-center gap-2">
+            <div class="flex-grow-1">
+                <input type="search" class="form-control form-control-modern" id="part_code" placeholder="Enter Part Code to search..." name="part_code">
+            </div>
+            <button class="btn-modern btn-submit px-4" type="submit" style="height: 42px;">
+                <i class="fa fa-search mr-1"></i> SEARCH
+            </button>
+        </form>
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container-modern">
+        <div class="form-section-title">
+            <i class="fas fa-list-ul"></i> Master Part Code Records
+        </div>
+        <div class="table-responsive">
+            {% include "asset_mgt_app/part_code_list_woh.html" %}
+        </div>
     </div>
 </div>
-<div class="table-responsive">
-{% include "asset_mgt_app/part_code_list_woh.html" %}
-</div>
-
 
 {% endblock content %}

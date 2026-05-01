@@ -222,11 +222,24 @@ def costingsummary_delete(request, costingsummary_id):
 @login_required(login_url='login_page')
 def pk_costing_get_customer(request):
     cs_assessment_num = request.GET.get('cs_assessment_num')
-    customer_name_id=PkneedassessmentInfo.objects.get(id=cs_assessment_num).na_customer_name.id
+    cs_id = request.GET.get('cs_id')  # Might be passed
+    
+    customer_name_id = PkneedassessmentInfo.objects.get(id=cs_assessment_num).na_customer_name.id
     customer_po_qs = PkpurchaseorderInfo.objects.filter(po_assessment_num=cs_assessment_num)
-    print('customer_po',customer_po_qs)
+    
     customer_po_name = list(customer_po_qs.values_list('po_num', flat=True))
     customer_po_id = list(customer_po_qs.values_list('id', flat=True))
+    
+    # Check if there is an existing PO for this costing summary that should be included
+    if cs_id and cs_id != 'None':
+        try:
+            summary = PkcostingsummaryInfo.objects.get(id=cs_id)
+            if summary.cs_customer_po and summary.cs_customer_po.id not in customer_po_id:
+                customer_po_id.append(summary.cs_customer_po.id)
+                customer_po_name.append(summary.cs_customer_po.po_num)
+        except PkcostingsummaryInfo.DoesNotExist:
+            pass
+
     customer = CustomerInfo.objects.get(id=customer_name_id)
     job_no_qs = PkcostingsummaryInfo.objects.filter(cs_assessment_num=cs_assessment_num).values_list('cs_job_no', flat=True).distinct()
     job_no_list = list(job_no_qs)
