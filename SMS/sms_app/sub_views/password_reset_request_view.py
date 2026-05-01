@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
 import secrets
+import smtplib
 
 from django.contrib import messages
 from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.models import User
-from django.core.mail import BadHeaderError, send_mail
+from django.conf import settings
+from django.core.mail import BadHeaderError, EmailMessage, get_connection
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -22,6 +24,29 @@ def _hash_otp(user_id, otp):
 def _clear_otp_state(request):
     if OTP_SESSION_KEY in request.session:
         del request.session[OTP_SESSION_KEY]
+
+
+def _send_password_reset_otp_email(recipient_email, email_body):
+    itadmin_cfg = settings.DEPARTMENT_EMAILS.get("itadmin", {})
+    from_email = itadmin_cfg.get("EMAIL_HOST_USER") or settings.PASSWORD_RESET_FROM_EMAIL
+
+    connection = get_connection(
+        host=itadmin_cfg.get("EMAIL_HOST", settings.EMAIL_HOST),
+        port=itadmin_cfg.get("EMAIL_PORT", settings.EMAIL_PORT),
+        username=itadmin_cfg.get("EMAIL_HOST_USER", settings.EMAIL_HOST_USER),
+        password=itadmin_cfg.get("EMAIL_HOST_PASSWORD", settings.EMAIL_HOST_PASSWORD),
+        use_tls=itadmin_cfg.get("EMAIL_USE_TLS", settings.EMAIL_USE_TLS),
+        fail_silently=False,
+    )
+
+    message = EmailMessage(
+        subject="SMS Password Reset OTP",
+        body=email_body,
+        from_email=from_email,
+        to=[recipient_email],
+        connection=connection,
+    )
+    message.send(fail_silently=False)
 
 
 def password_reset_request(request):
@@ -62,15 +87,17 @@ def password_reset_request(request):
         email = render_to_string("password/password_reset_email.txt", email_context)
 
         try:
-            send_mail(
-                "SMS Password Reset OTP",
-                email,
-                "itadmin@thebvmgroup.com",
-                [user.email],
-                fail_silently=False,
-            )
+            _send_password_reset_otp_email(user.email, email)
         except BadHeaderError:
             messages.error(request, "Invalid email header. Please try again.")
+            _clear_otp_state(request)
+            return redirect("password_reset")
+        except smtplib.SMTPAuthenticationError:
+            messages.error(request, "IT admin mailbox authentication failed. Please update IT admin email password in settings.")
+            _clear_otp_state(request)
+            return redirect("password_reset")
+        except Exception:
+            messages.error(request, "Unable to send OTP email right now. Please contact IT admin.")
             _clear_otp_state(request)
             return redirect("password_reset")
 
