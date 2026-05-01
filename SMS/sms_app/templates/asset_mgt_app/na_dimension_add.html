@@ -1,143 +1,139 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<form method="POST" action="">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Need Assessment Dimension</h3></div>
-					<div class="card-body bg-light" id="nad_form" >
-						<div class="row">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Item Number</span>
-									</div>
-									{% render_field form.nad_item id="nad_item_id" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Assessment Number</span>
-									</div>
-									{% render_field form.nad_assess_num id="nad_assess_num" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Requirement Type</span>
-									</div>
-									{% render_field form.nad_type_of_req id="nad_type_of_req" onchange="requirement_type()" class="form-control" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3" id="wood_type">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Wood Type</span>
-									</div>
-									{% render_field form.nad_wood_type id="nad_wood_type"  class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3" id="wood_desc">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Wood Description</span>
-									</div>
-									{% render_field form.nad_wood_description id="nad_wood_description" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3" id="consumables">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consumables</span>
-									</div>
-									{% render_field form.nad_consumables id="nad_consumables" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3" id="vehicle_type">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Type</span>
-									</div>
-									{% render_field form.nad_vechicle_type id="nad_vechicle_type" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3" id="uom">
-									<div class="input-group-prepend">
-										<span class="input-group-text">UOM</span>
-									</div>
-									{% render_field form.nad_uom id="nad_uom" class="form-control" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Dimension Type</span>
-									</div>
-									{% render_field form.nad_dimension_type id="nad_dimension_type" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Length</span>
-									</div>
-									{% render_field form.nad_length id="nad_length" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Width</span>
-									</div>
-									{% render_field form.nad_width id="nad_width" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Height</span>
-									</div>
-									{% render_field form.nad_height id="nad_height" class="form-control" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Plywood Thickness</span>
-									</div>
-									{% render_field form.nad_plywood_thickness id="nad_plywood_thickness" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Per Job Weight</span>
-									</div>
-									{% render_field form.nad_job_weight id="nad_job_weight" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Quantity to supply</span>
-									</div>
-									{% render_field form.nad_quantity id="nad_quantity" class="form-control" %}
-								</div>
-								{% render_field form.nad_updated_by id="nad_updated_by" hidden="True" class="form-control " %}
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<button type="submit" class="btn btn-success" id="save-btn" ><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'na_dimension_cancel' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</form>
+
+<div class="container-fluid py-4">
+
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center">
+        <h3 class="mb-0 text-white" style="font-size: 1.4rem; font-weight: 700; letter-spacing: 1px;">
+            <i class="fas fa-ruler-combined mr-2"></i> Add/Update Need Assessment Dimension
+        </h3>
+        <div class="d-flex gap-2" style="position: relative; z-index: 10;">
+            <a href="{% url 'na_dimension_cancel' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK
+            </a>
+        </div>
+    </div>
+
+    <form method="POST" action="">
+        {% csrf_token %}
+
+        <div class="modern-card mb-4">
+            <!-- Section 1: Identification -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-tag"></i> Identification</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Item Number</label>
+                        {% render_field form.nad_item id="nad_item_id" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Assessment Number</label>
+                        {% render_field form.nad_assess_num id="nad_assess_num" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Requirement Type</label>
+                        {% render_field form.nad_type_of_req id="nad_type_of_req" onchange="requirement_type()" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Material Details -->
+            <div class="form-section" id="nad_form">
+                <div class="form-section-title"><i class="fas fa-boxes"></i> Material Details</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern" id="wood_type">
+                        <label class="form-label-modern">Wood Type</label>
+                        {% render_field form.nad_wood_type id="nad_wood_type" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern" id="wood_desc">
+                        <label class="form-label-modern">Wood Description</label>
+                        {% render_field form.nad_wood_description id="nad_wood_description" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern" id="consumables">
+                        <label class="form-label-modern">Consumables</label>
+                        {% render_field form.nad_consumables id="nad_consumables" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern" id="vehicle_type">
+                        <label class="form-label-modern">Vehicle Type</label>
+                        {% render_field form.nad_vechicle_type id="nad_vechicle_type" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern" id="uom">
+                        <label class="form-label-modern">UOM</label>
+                        {% render_field form.nad_uom id="nad_uom" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Dimensions -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-vector-square"></i> Dimensions</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Dimension Type</label>
+                        {% render_field form.nad_dimension_type id="nad_dimension_type" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Length</label>
+                        {% render_field form.nad_length id="nad_length" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Width</label>
+                        {% render_field form.nad_width id="nad_width" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Height</label>
+                        {% render_field form.nad_height id="nad_height" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Plywood Thickness</label>
+                        {% render_field form.nad_plywood_thickness id="nad_plywood_thickness" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Per Job Weight</label>
+                        {% render_field form.nad_job_weight id="nad_job_weight" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Quantity to Supply</label>
+                        {% render_field form.nad_quantity id="nad_quantity" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+
+                {% render_field form.nad_updated_by id="nad_updated_by" hidden="True" class="form-control" %}
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="message-container my-3">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} shadow-sm">
+                <i class="fas fa-info-circle"></i> {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="btn-group-modern mt-4">
+            <button type="submit" class="btn-modern btn-submit" id="save-btn">
+                <i class="fas fa-check"></i> SAVE DIMENSION
+            </button>
+            <a href="{% url 'na_dimension_cancel' %}" class="btn-modern btn-cancel">
+                <i class="fas fa-times"></i> CANCEL
+            </a>
+        </div>
+
+    </form>
+</div>
+
+{% endblock content %}
+
+{% block extra_js %}
 <script>
 	$(document).ready(function () {
         $('#nad_updated_by').val('{{ user_id }}');
         $('#nad_assess_num').val('{{ na_assessment_num_id }}');
 
         var user_role = '{{ role_id }}';
-
         var status = '{{ na_status }}';
 
         if (status == 5 && user_role == 2) {
@@ -177,9 +173,10 @@
        });
      });
 </script>
+
 <script>
 	function plywood_thickness() {
-    var wood_type = $('#nad_wood_type').val();  // Use jQuery to get multiselect values
+    var wood_type = $('#nad_wood_type').val();
       if (wood_type==4)
         {
             $('#nad_plywood_thickness').removeClass('disable_a_href');
@@ -188,20 +185,16 @@
         {
             $('#nad_plywood_thickness').addClass('disable_a_href');
           }
-		// Attach the event on DOM ready
 		$(document).ready(function () {
-			// Call once on page load
 			plywood_thickness();
-
-			// Attach change event handler
 			$('#nad_wood_type').on('change', function () {
 				plywood_thickness();
 			});
 		});
       endif
     }
-
 </script>
+
 <script>
 	$(document).ready(function () {
 
@@ -227,14 +220,11 @@
         dropUp: false
     });
 });
-
 </script>
+
 <script>
 	$(document).ready(function () {
-        // Run the function once to set the initial field visibility in edit mode
         requirement_type();
-
-        // Optional: if the user changes the field again
         $("#nad_type_of_req").change(function () {
             requirement_type();
         });
@@ -261,4 +251,4 @@
         }
     }
 </script>
-{% endblock content %}
+{% endblock extra_js %}

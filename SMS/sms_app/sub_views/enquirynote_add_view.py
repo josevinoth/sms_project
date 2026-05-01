@@ -6,7 +6,7 @@ from django.http import JsonResponse
 
 from ..forms import ConsignmentdetailaddForm, EnquirynoteaddForm, EnquirynotevehicleForm
 from ..models import Vehicle_allotmentInfo, User_extInfo, TripdetailInfo, ConsignmentdetailInfo, EnquirynoteInfo, \
-    Enquirynotevehicle, VehiclemasterInfo, Tripstatusinfo
+    Enquirynotevehicle, VehiclemasterInfo, Tripstatusinfo, DeletionLog
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 
@@ -446,21 +446,50 @@ def consignment_note_connect(request, enquirynote_id):
 # Delete enquirynote
 @login_required(login_url='login_page')
 def enquirynote_delete(request, enquirynote_id):
-    enquiry_num = EnquirynoteInfo.objects.get(pk=enquirynote_id).en_enquirynumber
-    enquiry_num_id = EnquirynoteInfo.objects.get(pk=enquirynote_id).id
+    enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
+    enquiry_num = enquirynote.en_enquirynumber
+    reason = request.POST.get('deletion_reason', 'No reason provided')
+    
+    # Create deletion log
+    DeletionLog.objects.create(
+        dl_model_name='EnquirynoteInfo',
+        dl_record_id=enquirynote_id,
+        dl_record_identifier=enquiry_num,
+        dl_deleted_by=request.user,
+        dl_reason=reason
+    )
+
+    # Perform cascading deletes manually as required by the existing logic
     consignment_num_list = list(
-        ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id).values_list('co_consignmentnumber',
+        ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquirynote_id).values_list('co_consignmentnumber',
                                                                                           flat=True))
     tripdetails_list = list(
-        TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id).values_list('tr_tripnumber', flat=True))
+        TripdetailInfo.objects.filter(tr_enquirynumber=enquirynote_id).values_list('tr_tripnumber', flat=True))
+    
     for i in consignment_num_list:
         consignment_note = ConsignmentdetailInfo.objects.get(co_consignmentnumber=i)
+        DeletionLog.objects.create(
+            dl_model_name='ConsignmentdetailInfo',
+            dl_record_id=consignment_note.id,
+            dl_record_identifier=i,
+            dl_deleted_by=request.user,
+            dl_reason=f"Cascaded delete from Enquiry {enquiry_num}. Reason: {reason}"
+        )
         consignment_note.delete()
+        
     for j in tripdetails_list:
         tripdetails_note = TripdetailInfo.objects.get(tr_tripnumber=j)
+        DeletionLog.objects.create(
+            dl_model_name='TripdetailInfo',
+            dl_record_id=tripdetails_note.id,
+            dl_record_identifier=j,
+            dl_deleted_by=request.user,
+            dl_reason=f"Cascaded delete from Enquiry {enquiry_num}. Reason: {reason}"
+        )
         tripdetails_note.delete()
-    enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
+
     enquirynote.delete()
+    messages.success(request, f"Enquiry {enquiry_num} deleted and logged successfully.")
     return redirect('/SMS/enquirynote_list')
 
 

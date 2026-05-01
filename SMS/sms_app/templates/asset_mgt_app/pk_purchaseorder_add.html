@@ -1,336 +1,217 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="" id="purchaseorder_add" enctype="multipart/form-data">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-<div class="container-fluid row d-flex align-items-center mb-3">
-	<div class="col-md-12">
-		<div class="pms-tracker-wrapper">
-			{% include "asset_mgt_app/pms_progress_tracker.html" with current_step=current_step %}
-		</div>
-	</div>
+<div class="container-fluid py-4">
+    <!-- Progress Tracker -->
+    <div class="pms-tracker-wrapper mb-4">
+        {% include "asset_mgt_app/pms_progress_tracker.html" with current_step=current_step %}
+    </div>
+
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-file-invoice mr-2"></i> Add/Update Sales Order</h2>
+        <div class="d-flex gap-2" style="position: relative; z-index: 10;">
+            {% if form.instance.id %}
+            <button type="button" class="btn-modern btn-highlight py-1 px-4" style="font-size: 0.95rem;" id="start_costing_btn" onclick="if(typeof openJobModal === 'function') openJobModal();">
+                <i class="fas fa-calculator"></i> START COSTING
+            </button>
+            {% endif %}
+            <a href="{% url 'purchaseorder_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <form method="POST" action="" id="purchaseorder_add" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modern-card">
+            <!-- Section 1: Customer & Quotation Refs -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-id-card"></i> Customer & Reference Details</div>
+                <div class="form-row-modern" id="purchase_order">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Assessment Number</label>
+                        {% render_field form.po_assessment_num id="po_assessment_num" class="form-control form-control-modern" placeholder="Enter Assessment #" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Sales Order NO</label>
+                        <input type="text" id="sales_order_num" name="sales_order_num" value="{{ form.instance.sales_order_num|default:'' }}" class="form-control form-control-modern bg-light" readonly="readonly">
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Customer Name</label>
+                        {% render_field form.po_customer_name id="po_customer_name" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Customer (Display Name)</label>
+                        {% render_field form.po_customer_new_name id="po_customer_new_name" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Quotation Number</label>
+                        {% render_field form.po_quotation_num id="po_quotation_num" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Order Details -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-shopping-cart"></i> Order Specification</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Customer PO / Mail Ref</label>
+                        {% render_field form.po_num id="po_num" class="form-control form-control-modern" placeholder="Enter PO Number" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Order Date</label>
+                        {% render_field form.po_date id="po_date" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">PO Value (INR)</label>
+                        {% render_field form.po_value id="po_value" class="form-control form-control-modern" oninput="calculateTotal()" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Tax %</label>
+                        {% render_field form.po_tax id="po_tax" class="form-control form-control-modern" oninput="calculateTotal()" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Total Value (INR)</label>
+                        {% render_field form.po_total_value id="po_total_value" class="form-control form-control-modern bg-light font-weight-bold" style="color: var(--primary-emerald);" readonly="readonly" %}
+                    </div>
+                </div>
+                <div class="form-row-modern mt-3">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Validity Date</label>
+                        {% render_field form.po_validity_date id="po_validity_date" class="form-control form-control-modern" type="date" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Payment Terms</label>
+                        {% render_field form.po_payment_terms id="po_payment_terms" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Status</label>
+                        {% render_field form.po_status id="po_status" class="form-control form-control-modern font-weight-bold" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">PO Attachment</label>
+                        {% render_field form.po_attach id="po_attach" class="form-control-file" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Remarks -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-comment-alt"></i> Remarks</div>
+                {% render_field form.po_comments_box id="po_comments_box" class="form-control form-control-modern" rows="3" %}
+                {% render_field form.po_updated_by id="po_updated_by" hidden="True" %}
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="p-3">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="btn-group-modern mt-4">
+                <button type="submit" id="po_submit_btn" class="btn-modern btn-submit">
+                    <i class="fas fa-check"></i> Submit Order
+                </button>
+                <a href="{% url 'purchaseorder_list' %}" class="btn-modern btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Sub-Section: Dimensions -->
+    <div class="mt-5" id="purchase_order_dims">
+        <div class="table-container-modern">
+            <div class="form-section-title d-flex justify-content-between align-items-center accordion-header-modern" data-toggle="collapse" data-target="#collapseTwo">
+                <span>
+                    <i class="fas fa-ruler-combined"></i> Ordered Dimensions
+                    <i class="fas fa-chevron-down ml-2 accordion-chevron"></i>
+                </span>
+                <button class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; background: var(--accent-blue);" id="add_edit_dimension" onclick="event.stopPropagation();">
+                    <i class="fas fa-edit"></i> Manage Dimensions
+                </button>
+            </div>
+            <div id="collapseTwo" class="collapse mt-3">
+                <div class="p-3 bg-light rounded" style="border: 1px dashed var(--primary-emerald);">
+                    {% include "asset_mgt_app/po_dimension_list_WOH.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sub-Section: Linked Costings -->
+    <div class="mt-5">
+        <div class="table-container-modern">
+            <div class="form-section-title"><i class="fas fa-link"></i> Linked Costing Summaries</div>
+            <div class="table-responsive">
+                <table class="table modern-table text-center">
+                    <thead>
+                        <tr>
+                            <th>Costing ID</th>
+                            <th>Estimation Type</th>
+                            <th>Total Cost</th>
+                            <th>Final Cost (GST)</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cs in linked_costings %}
+                        <tr class="modern-tr">
+                            <td class="font-weight-bold">#{{ cs.cs_costing_num|default:cs.id }}</td>
+                            <td><span class="badge badge-info">{{ cs.get_cs_estimation_type_display }}</span></td>
+                            <td class="font-weight-bold">{{ cs.cs_total_cost_wm }}</td>
+                            <td class="font-weight-bold text-success">{{ cs.cs_final_cost }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'costingsummary_update' cs.id %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; text-decoration: none;">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="py-5 text-muted italic">No costing summaries linked to this PO yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header d-flex justify-content-between align-items-center">
-						<h3 class="mb-0">Add/Update Sales Order</h3>
-						{% if form.instance.id %}
-						<button type="button" class="btn btn-warning text-white" id="start_costing_btn">
-							<i class="fas fa-calculator"></i> Start Costing
-						</button>
-						{% endif %}
-					</div>
-					<div class="card-body bg-light">
-						<div class="row" id="purchase_order">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Assessment Number</span>
-									</div>
-									{% render_field form.po_assessment_num id="po_assessment_num" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Sales Order NO</span>
-									</div>
-									<input type="text" id="sales_order_num" name="sales_order_num" value="{{ form.instance.sales_order_num|default:'' }}" class="form-control disable_a_href" readonly="readonly">
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Name</span>
-									</div>
-									{% render_field form.po_customer_name id="po_customer_name" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer New Name</span>
-									</div>
-									{% render_field form.po_customer_new_name id="po_customer_new_name" class="form-control disable_a_href" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Quotation Number</span>
-									</div>
-									{% render_field form.po_quotation_num id="po_quotation_num" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer PO Number / Mail</span>
-									</div>
-									{% render_field form.po_num id="po_num" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Date</span>
-									</div>
-									{% render_field form.po_date id="po_date" type="Datetime-local" class="form-control" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Value</span>
-									</div>
-									{% render_field form.po_value id="po_value" class="form-control" oninput="calculateTotal()" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Tax %</span>
-									</div>
-									{% render_field form.po_tax id="po_tax" class="form-control" oninput="calculateTotal()" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total Value</span>
-									</div>
-									{% render_field form.po_total_value id="po_total_value" class="form-control disable_a_href "%}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Validity Date</span>
-									</div>
-									{% render_field form.po_validity_date id="po_validity_date" type="Date" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Payment Terms</span>
-									</div>
-									{% render_field form.po_payment_terms id="po_payment_terms" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3 bg-dark block">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Attachment</span>
-									</div>
-									{% render_field form.po_attach id="po_attach" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3 bg-dark block">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Status</span>
-									</div>
-									{% render_field form.po_status id="po_status" class="form-control " %}
-								</div>
-							</div>
-							<div class="col">
-								<div class="input-group input-group-sm mb-3 bg-dark block">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Remarks</span>
-									</div>
-									{% render_field form.po_comments_box id="po_comments_box" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								{% render_field form.po_updated_by id="po_updated_by" hidden="True" class="form-control" %}
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<button type="submit" id="po_submit_btn" class="btn btn-success "><i class="fas fa-check"></i>
-							Submit</button>
-						<a href="{% url 'purchaseorder_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</form>
-<hr>
-<div class="row">
-	<div class="col" id="purchase_order_dims">
-		<div id="accordion" class="container-fluid">
-			<div class="card">
-				<div class="card-header bg-info" id="headingTwo">
-					<h5 class="mb-0">
-						<button class="btn btn-warning text-white collapsed" id="add_edit_dimension"
-							data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false"
-							aria-controls="collapseTwo">
-							Add/Edit Dimensions
-						</button>
-					</h5>
-				</div>
-				<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
-					<div class="card-body">
-						<div class="card-body">
-							<div id="na_dimension_list_WOH">
-								{% include "asset_mgt_app/po_dimension_list_WOH.html" %}
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
-<script>
-	$(document).ready(function () {
-		document.getElementById("po_updated_by").value = '{{user_id}}';
-		var user_role = '{{role_id}}'
-		var status = document.getElementById("po_status").value
-		if (status == 5) {
-			if (user_role == 2) {
-				alert('Since Status is Completed,you have read-only access. To edit, please contact Administrator')
-				$('#purchase_order').addClass('disable_a_href');
-				$('#po_submit_btn').addClass('disable_a_href');
-				$('#purchase_order_dims').addClass('disable_a_href');
-			}
-			else {
-				$('#purchase_order').removeClass('disable_a_href');
-				$('#po_submit_btn').removeClass('disable_a_href');
-				$('#purchase_order_dims').removeClass('disable_a_href');
-			}
-		}
-		else {
-			var po_num = document.getElementById("po_num").value
-			if (po_num == "") {
-				$('#add_edit_dimension').addClass('disable_a_href');
-			}
-			else {
-				$('#add_edit_dimension').removeClass('disable_a_href');
-			}
-		}
-
-		$('#na_dimension_list').DataTable({
-			dom: 'lBfrtip',
-			buttons: [
-				'copy', 'csv', 'excel', 'print'
-			]
-		});
-		calculateTotal()
-	});
-</script>
-
-<script>
-	$(document).ready(function () {
-		$("#po_assessment_num").change(function () {
-			var assessment_num = $(this).val().trim(); // Ensure no leading/trailing spaces
-
-			if (!assessment_num) {
-				console.warn("Assessment number is empty or invalid.");
-				return; // Exit if input is invalid
-			}
-
-			// Perform AJAX request
-			$.ajax({
-				url: '{% url "pk_get_customer" %}',
-				data: {
-					'assessment_num': assessment_num,
-				},
-				dataType: 'json', // Expect JSON response
-				success: function (data) {
-					console.log(data); // Log response for debugging
-
-					if (data.error) {
-						console.error("Server Error: " + data.error);
-						alert("Assessment not found or invalid."); // Notify user
-						return;
-					}
-
-					// Safely update the fields with data
-					document.getElementById("po_customer_name").value = data.customer_id || '';
-					document.getElementById("po_customer_new_name").value = data.customer_new_name || '';
-					document.getElementById("po_quotation_num").value = data.quotation_num_id || '';
-				},
-				error: function (xhr, status, error) {
-					console.error("AJAX Error: " + status + " - " + error);
-					alert("An error occurred while fetching the customer details. Please try again.");
-				}
-			});
-		});
-	});
-</script>
-<script>
-	function calculateTotal() {
-		var value = parseFloat(document.getElementById('po_value').value) || 0;
-		var tax = parseFloat(document.getElementById('po_tax').value) || 0;
-		var total = value + (value * tax / 100);
-		document.getElementById('po_total_value').value = total.toFixed(2);
-	}
-</script>
-
-
-
-<div class="container-fluid mt-5">
-	<div class="pms-hub-card">
-		<div class="pms-hub-header">
-			<h4><i class="fas fa-link"></i> Linked Costing Summaries</h4>
-			<span class="badge pms-badge-info">{{ linked_costings|length }} Records</span>
-		</div>
-		<div class="pms-hub-body">
-			{% if linked_costings %}
-			<table class="pms-table-dark">
-				<thead>
-					<tr>
-						<th>Costing ID</th>
-						<th>Estimation Type</th>
-						<th>Total Cost</th>
-						<th>Final Cost (GST)</th>
-						<th>Actions</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for cs in linked_costings %}
-					<tr>
-						<td>{{ cs.cs_costing_num|default:cs.id }}</td>
-						<td>{{ cs.get_cs_estimation_type_display }}</td>
-						<td>{{ cs.cs_total_cost_wm }}</td>
-						<td>{{ cs.cs_final_cost }}</td>
-						<td>
-							<a href="{% url 'costingsummary_update' cs.id %}" class="btn btn-sm btn-outline-info">
-								<i class="fas fa-eye"></i> View
-							</a>
-						</td>
-					</tr>
-					{% endfor %}
-				</tbody>
-			</table>
-			{% else %}
-			<div class="text-center p-4 text-muted">
-				No costing summaries linked to this PO yet.
-			</div>
-			{% endif %}
-		</div>
-	</div>
-</div>
-
-
-
-
-<!-- Job Creation Modal -->
+<!-- Job Creation Modal (Preserved & Styled) -->
 <div class="modal fade" id="jobCreationModal" tabindex="-1" role="dialog" aria-labelledby="jobCreationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="jobCreationModalLabel"><i class="fas fa-industry"></i> Create Production Batch Job</h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+        <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+            <div class="modal-header bg-white py-4" style="border-bottom: 2px solid var(--border-light) !important;">
+                <h5 class="modal-title font-weight-bold text-dark" id="jobCreationModalLabel">
+                    <i class="fas fa-industry mr-2 text-primary"></i> Create Production Batch Job
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <p class="text-muted">Enter the quantities you want to release for this production job.</p>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered" id="modal_job_table">
-                        <thead class="thead-light">
+            <div class="modal-body p-4 bg-light">
+                <div class="alert alert-info border-0 shadow-sm mb-4" style="border-radius: 12px; background: white; border-left: 5px solid var(--primary-emerald) !important; color: #1e293b; font-weight: 600;">
+                    <i class="fas fa-info-circle mr-2 text-primary"></i> Release quantities for this production job. Items with 0 quantity will be skipped.
+                </div>
+                <div class="table-responsive rounded shadow-sm">
+                    <table class="table table-hover bg-white mb-0" id="modal_job_table">
+                        <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
                             <tr>
-                                <th>Item Name</th>
-                                <th>Ordered Qty</th>
-                                <th style="width: 150px;">Job Qty</th>
+                                <th class="text-dark font-weight-800" style="color: #000 !important; font-weight: 800 !important;">Item Specification</th>
+                                <th class="text-dark font-weight-800" style="color: #000 !important; font-weight: 800 !important;">Order Balance</th>
+                                <th class="text-dark font-weight-800" style="color: #000 !important; font-weight: 800 !important; width: 160px;">Job Release Qty</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -339,30 +220,82 @@
                     </table>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" id="confirm_batch_job_btn">
-                    <i class="fas fa-check"></i> Create Job & Map Items
+            <div class="modal-footer bg-white border-top-0 py-4">
+                <button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-modern btn-submit" id="confirm_batch_job_btn">
+                    <i class="fas fa-check-circle"></i> Create Job & Map Items
                 </button>
             </div>
         </div>
     </div>
 </div>
 
+{% endblock content %}
+
+{% block extra_js %}
 <script>
-	$(document).ready(function () {
-        // Function to open modal and populate items
-        function openJobModal() {
-            var po_id = '{{ purchaseorder_id }}' || '{{ form.instance.id }}';
-            if (!po_id) {
-                alert('Purchase Order ID not found.');
+(function($) {
+    console.log("PMS Sales Order Script Initializing...");
+    $(document).ready(function () {
+        console.log("PMS Sales Order Ready.");
+        
+        // Initialize user tracking
+        const poUpdatedBy = document.getElementById("po_updated_by");
+        if (poUpdatedBy) poUpdatedBy.value = '{{user_id}}';
+
+        const userRole = '{{role_id}}';
+        const poStatusField = document.getElementById("po_status");
+        const status = poStatusField ? poStatusField.value : null;
+
+        if (status == 5) {
+            if (userRole == 2) {
+                alert('Since Status is Completed, you have read-only access. To edit, please contact Administrator');
+                $('#purchase_order').addClass('disable_a_href');
+                $('#po_submit_btn').addClass('disable_a_href').prop('disabled', true);
+                $('#purchase_order_dims').addClass('disable_a_href');
+            }
+        } else {
+            const poNumField = document.getElementById("po_num");
+            if (poNumField && poNumField.value === "") {
+                $('#add_edit_dimension').addClass('disable_a_href');
+            }
+        }
+
+        // Global calculation call
+        if (typeof calculateTotal === 'function') calculateTotal();
+
+        // Assessment Change Logic
+        $("#po_assessment_num").on('change', function () {
+            const assessment_num = $(this).val().trim();
+            if (!assessment_num) return;
+
+            $.ajax({
+                url: '{% url "pk_get_customer" %}',
+                data: { 'assessment_num': assessment_num },
+                dataType: 'json',
+                success: function (data) {
+                    if (data.error) {
+                        alert("Assessment not found.");
+                        return;
+                    }
+                    $("#po_customer_name").val(data.customer_id || '');
+                    $("#po_customer_new_name").val(data.customer_new_name || '');
+                    $("#po_quotation_num").val(data.quotation_num_id || '');
+                }
+            });
+        });
+
+        // Modal Logic for Job Creation
+        window.openJobModal = function() {
+            console.log("Opening Job Modal...");
+            const po_id = '{{ purchaseorder_id }}' || '{{ form.instance.id }}';
+            if (!po_id || po_id === 'None' || po_id === '') {
+                alert('Please save the Sales Order first before starting costing.');
                 return;
             }
 
-            var tbody = $('#modal_job_table tbody');
-            tbody.empty();
-            tbody.append('<tr><td colspan="3" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading items...</td></tr>');
-            
+            const tbody = $('#modal_job_table tbody');
+            tbody.empty().append('<tr><td colspan="3" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i> Fetching items...</td></tr>');
             $('#jobCreationModal').modal('show');
 
             $.ajax({
@@ -373,99 +306,100 @@
                     tbody.empty();
                     if (response.success && response.items.length > 0) {
                         response.items.forEach(function(item) {
-                            var tr = $('<tr>');
-                            tr.append($('<td>').text(item.item_name));
-                            tr.append($('<td>').html(
-                                'Total: ' + item.ordered_qty + '<br>' +
-                                '<span class="text-primary">Remaining: <strong>' + item.remaining_qty + '</strong></span>'
+                            const tr = $('<tr class="align-middle">');
+                            tr.append($('<td class="font-weight-bold text-dark" style="color: #000 !important; font-weight: 700;">').text(item.item_name));
+                            tr.append($('<td class="text-dark">').html(
+                                '<div class="small font-weight-bold" style="color: #475569;">Total: ' + item.ordered_qty + '</div>' +
+                                '<div class="badge badge-primary" style="background-color: var(--accent-blue);">Rem: ' + item.remaining_qty + '</div>'
                             ));
                             tr.append($('<td>').append(
                                 $('<input>').attr({
-                                    'type': 'number',
-                                    'step': '0.01',
-                                    'class': 'form-control form-control-sm modal-job-qty',
-                                    'data-id': item.id,
-                                    'data-max': item.remaining_qty,
-                                    'value': item.remaining_qty > 0 ? '0' : '0',
-                                    'min': '0',
-                                    'max': item.remaining_qty
+                                    'type': 'number', 'step': '0.01',
+                                    'class': 'form-control form-control-modern modal-job-qty text-center',
+                                    'data-id': item.id, 'data-max': item.remaining_qty,
+                                    'value': '0', 'min': '0', 'max': item.remaining_qty,
+                                    'style': 'height: 38px !important; border-radius: 8px;'
                                 })
                             ));
                             tbody.append(tr);
                         });
                     } else {
-                        tbody.append('<tr><td colspan="3" class="text-center">No items found or all items already jobbed.</td></tr>');
+                        tbody.append('<tr><td colspan="3" class="text-center py-4 text-muted">No items available for job creation.</td></tr>');
                     }
                 },
                 error: function() {
-                    tbody.empty();
-                    tbody.append('<tr><td colspan="3" class="text-center text-danger">Error loading items.</td></tr>');
+                    tbody.html('<tr><td colspan="3" class="text-center py-4 text-danger">Error loading items.</td></tr>');
                 }
             });
-        }
+        };
 
+        // Confirmation logic
         $('#confirm_batch_job_btn').on('click', function () {
-            var po_id = '{{ purchaseorder_id }}' || '{{ form.instance.id }}';
-            var items = [];
-            var hasError = false;
+            const po_id = '{{ purchaseorder_id }}' || '{{ form.instance.id }}';
+            const items = [];
+            let hasError = false;
 
             $('.modal-job-qty').each(function () {
-                var qty = parseFloat($(this).val()) || 0;
-                var maxQty = parseFloat($(this).data('max')) || 0;
-                
+                const qty = parseFloat($(this).val()) || 0;
+                const maxQty = parseFloat($(this).data('max')) || 0;
                 if (qty > maxQty) {
-                    alert('Quantity for ' + $(this).closest('tr').find('td:first').text() + ' exceeds remaining quantity (' + maxQty + ').');
-                    hasError = true;
-                    return false;
+                    alert('Quantity exceeds balance for some items.');
+                    hasError = true; return false;
                 }
-
-                if (qty > 0) {
-                    items.push({
-                        'id': $(this).data('id'),
-                        'qty': qty
-                    });
-                }
+                if (qty > 0) { items.push({ 'id': $(this).data('id'), 'qty': qty }); }
             });
 
-            if (hasError) return;
+            if (hasError || items.length === 0) {
+                if(!hasError) alert('Please release at least one item.');
+                return;
+            }
 
-			if (items.length === 0) {
-				alert('Please enter at least one quantity for the job.');
-				return;
-			}
+            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
 
-			$.ajax({
-				url: '/SMS/pk_create_batch_job/',
-				method: 'POST',
-				data: JSON.stringify({
-					'po_id': po_id,
-					'items': items
-				}),
-				contentType: 'application/json',
-				headers: {
-					'X-CSRFToken': '{{ csrf_token }}'
-				},
-				success: function (response) {
-					if (response.success) {
-						window.location.href = response.redirect_url;
-					} else {
-						alert('Error: ' + response.message);
-					}
-				},
-				error: function (xhr) {
-                    var errorMsg = 'An error occurred while creating the batch job.';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMsg = xhr.responseJSON.message;
+            $.ajax({
+                url: '/SMS/pk_create_batch_job/',
+                method: 'POST',
+                data: JSON.stringify({ 'po_id': po_id, 'items': items }),
+                contentType: 'application/json',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                success: function (response) {
+                    if (response.success) { 
+                        window.location.href = response.redirect_url; 
+                    } else { 
+                        alert('Error: ' + response.message); 
+                        $('#confirm_batch_job_btn').prop('disabled', false).text('Create Job'); 
                     }
-					alert(errorMsg);
-				}
-			});
-		});
-
-        // Re-bind the trigger buttons
-        $('#start_costing_btn, #create_batch_job_btn').on('click', function() {
-            openJobModal();
+                }
+            });
         });
-	});
+
+        // Event Binding for Start Costing (Backup listener)
+        $(document).on('click', '#start_costing_btn, #create_batch_job_btn', function(e) {
+            console.log("Button clicked via jQuery delegate.");
+            if (typeof window.openJobModal === 'function') window.openJobModal();
+        });
+
+        // Accordion Animation
+        $('#collapseTwo').on('show.bs.collapse', function () {
+            $('.accordion-chevron').css('transform', 'rotate(180deg)');
+        });
+        $('#collapseTwo').on('hide.bs.collapse', function () {
+            $('.accordion-chevron').css('transform', 'rotate(0deg)');
+        });
+    });
+})(jQuery);
+
+function calculateTotal() {
+    const valField = document.getElementById('po_value');
+    const taxField = document.getElementById('po_tax');
+    const totalField = document.getElementById('po_total_value');
+    
+    if (valField && taxField && totalField) {
+        const value = parseFloat(valField.value) || 0;
+        const tax = parseFloat(taxField.value) || 0;
+        const total = value + (value * tax / 100);
+        totalField.value = total.toFixed(2);
+    }
+}
 </script>
-{% endblock content %}
+{% endblock extra_js %}

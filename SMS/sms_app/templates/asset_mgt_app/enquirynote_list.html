@@ -465,9 +465,10 @@ Trip Settlement</th>
                 </a>
             </td>
             <td>
-                <form action="{% url 'enquirynote_delete' data.enquiry.id %}" method="post" onclick="return confirm('Are you sure?');">
+                <form id="delete-form-{{ data.enquiry.id }}" action="{% url 'enquirynote_delete' data.enquiry.id %}" method="post">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
+                    <input type="hidden" name="deletion_reason" id="reason-{{ data.enquiry.id }}">
+                    <button type="button" class="btn btn-danger" onclick="confirmDeletion('{{ data.enquiry.id }}', '{{ data.enquiry.en_enquirynumber }}')">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </form>
@@ -576,6 +577,16 @@ Trip Settlement</th>
             }
         }
     });
+
+    function confirmDeletion(id, identifier) {
+        let reason = prompt("⚠️ Warning: You are about to delete record " + identifier + ".\n\nPlease provide a reason for this deletion:");
+        if (reason !== null && reason.trim() !== "") {
+            document.getElementById("reason-" + id).value = reason;
+            document.getElementById("delete-form-" + id).submit();
+        } else if (reason !== null) {
+            alert("Deletion cancelled. A reason is required to delete records.");
+        }
+    }
 </script>
 
 

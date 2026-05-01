@@ -5,7 +5,7 @@ from .places_mod import Places
 from ..models import EnquirynoteInfo,Vehicle_allotmentInfo,CustomerInfo,MyUser,GST_payable_info,StatusList
 
 class ConsignmentdetailInfo(models.Model):
-    co_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.CASCADE,blank=True,null=True)
+    co_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.PROTECT,blank=True,null=True)
     co_vehicelnumber = models.CharField(max_length=20,blank=True,null=True)
     co_vehicletype = models.CharField(max_length=100, blank=True, null=True)
     co_consignmentnumber = models.CharField(max_length=50,blank=True,null=True)

@@ -1,195 +1,220 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 
 {% block content %}
-<form method="POST" action="" id="packing_gatepass_return_add" enctype="multipart/form-data">
-    {% csrf_token %}
-    <input type="hidden" name="gp_assessment_num" id="gp_assessment_num">
-    
-    <div class="row">
-        <div class="col">
-            <div class="container-fluid">
-                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="card-header text-center">
-                        <h3>Add/Update Packing GatePass</h3>
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white" id="doc_title"><i class="fas fa-truck-moving mr-2"></i> Add/Update Gate Pass</h2>
+        <div style="position: relative; z-index: 10;">
+            <a href="{% url 'packing_gate_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK TO LIST
+            </a>
+        </div>
+    </div>
+
+    <form method="POST" action="" id="packing_gatepass_return_add" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="gp_assessment_num" id="gp_assessment_num">
+        
+        <div class="modern-card mb-4">
+            <!-- Section 1: Document & Customer Info -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-file-invoice"></i> Basic Information</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Document Category</label>
+                        {% render_field form.gp_document_category id="gp_document_category" class="form-control form-control-modern font-weight-bold" style="border-left: 5px solid var(--primary-emerald);" %}
                     </div>
-                    <div class="card-body bg-light">
-                        <div class="row">
-                            <!-- Column 1: Customer Name, Packing Location, Job No, PO No -->
-                            <div class="col-3">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Customer Name</span>
-                                    </div>
-                                    {% render_field form.gp_customer_name id="gp_customer_name" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Packing Location</span>
-                                    </div>
-                                    {% render_field form.gp_packing_location id="gp_packing_location" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Job No</span>
-                                    </div>
-                                    {% render_field form.gp_job_no id="gp_job_no" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Customer Po</span>
-                                    </div>
-                                    {% render_field form.gp_customer_po id="gp_customer_po" class="form-control" %}
-                                </div>
-                            </div>
-
-                            <!-- Column 2: Sales order No, GST No, Bvm Inv No, Bvm Inv Value, HSN -->
-                            <div class="col-3">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Sales Order</span>
-                                    </div>
-                                    {% render_field form.gp_sales_order_po id="gp_sales_order_po" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">GSTIN</span>
-                                    </div>
-                                    {% render_field form.gp_customer_gstin id="gp_customer_gstin" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Bvm Inv No</span>
-                                    </div>
-                                    {% render_field form.gp_bvm_inv_no id="gp_bvm_inv_no" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Bvm Inv Value</span>
-                                    </div>
-                                    {% render_field form.gp_bvm_inv_value id="gp_bvm_inv_value" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">HSN Code</span>
-                                    </div>
-                                    {% render_field form.gp_hsn_code id="gp_hsn_code" class="form-control" %}
-                                </div>
-                            </div>
-
-                            <!-- Column 3: Staff Name, Emp Id, Transporter, Consignment details -->
-                            <div class="col-3">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Staff Name</span>
-                                    </div>
-                                    {% render_field form.gp_s_name id="gp_s_name" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Employee ID</span>
-                                    </div>
-                                    {% render_field form.gp_employee id="gp_employee" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Transporter name</span>
-                                    </div>
-                                    {% render_field form.gp_transporter_name id="gp_transporter_name" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Consignment No</span>
-                                    </div>
-                                    {% render_field form.gp_consignment_note_no id="gp_consignment_note_no" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Gate Pass Date</span>
-                                    </div>
-                                    {% render_field form.gp_consignment_date id="gp_consignment_date" class="form-control" %}
-                                </div>
-                            </div>
-
-                            <!-- Column 4: Veh info, Driver info -->
-                            <div class="col-3">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Veh No</span>
-                                    </div>
-                                    {% render_field form.gp_veh_no id="gp_veh_no" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Veh Type</span>
-                                    </div>
-                                    {% render_field form.gp_veh_type id="gp_veh_type" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Eway Bill no</span>
-                                    </div>
-                                    {% render_field form.gp_eway_bill_no id="gp_eway_bill_no" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Driver Name</span>
-                                    </div>
-                                    {% render_field form.gp_driver_name id="gp_driver_name" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Driver mobile</span>
-                                    </div>
-                                    {% render_field form.gp_driver_mobile_no id="gp_driver_mobile_no" class="form-control" %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Full-width Remarks -->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Remarks</span>
-                                    </div>
-                                    {% render_field form.gp_remarks id="gp_remarks" class="form-control" %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-1"></div>
-                            <div class="col-10">
-                                <div class="message text-center">
-                                    {% if messages %}
-                                    <ul class="messages">
-                                        {% for message in messages %}
-                                        <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-                                        {% endfor %}
-                                    </ul>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-1"></div>
-                        </div>
-
-                        <!-- Buttons -->
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-check"></i> Submit
-                        </button>
-                        <a href="{% url 'packing_gate_list' %}" class="btn btn-danger float-right">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Customer Name</label>
+                        {% render_field form.gp_customer_name id="gp_customer_name" class="form-control form-control-modern select2" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Packing Location</label>
+                        {% render_field form.gp_packing_location id="gp_packing_location" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Job No</label>
+                        {% render_field form.gp_job_no id="gp_job_no" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Customer PO</label>
+                        {% render_field form.gp_customer_po id="gp_customer_po" class="form-control form-control-modern" %}
                     </div>
                 </div>
             </div>
+
+            <!-- Section 2: Reference & Taxation Details -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-percentage"></i> Reference & GST Details</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Sales Order</label>
+                        {% render_field form.gp_sales_order_po id="gp_sales_order_po" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">GSTIN (General)</label>
+                        {% render_field form.gp_customer_gstin id="gp_customer_gstin" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern dc-field">
+                        <label class="form-label-modern">Bill To GSTIN</label>
+                        {% render_field form.gp_customer_bill_to_gstin id="gp_customer_bill_to_gstin" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern dc-field">
+                        <label class="form-label-modern">Ship To GSTIN</label>
+                        {% render_field form.gp_customer_ship_to_gstin id="gp_customer_ship_to_gstin" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">BVM Inv No</label>
+                        {% render_field form.gp_bvm_inv_no id="gp_bvm_inv_no" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">BVM Inv Value</label>
+                        {% render_field form.gp_bvm_inv_value id="gp_bvm_inv_value" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">HSN Code</label>
+                        {% render_field form.gp_hsn_code id="gp_hsn_code" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern dc-field">
+                        <label class="form-label-modern">Sales Order Ref</label>
+                        {% render_field form.gp_sales_order_ref id="gp_sales_order_ref" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern dc-field">
+                        <label class="form-label-modern">GRN Ref</label>
+                        {% render_field form.gp_grn_ref id="gp_grn_ref" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern dc-field">
+                        <label class="form-label-modern">Stock Register Ref</label>
+                        {% render_field form.gp_stock_register_ref id="gp_stock_register_ref" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern dc-field">
+                        <label class="form-label-modern">Returnable Status</label>
+                        {% render_field form.gp_returnable_status id="gp_returnable_status" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Staff & Transportation -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-shuttle-van"></i> Staff & Logistics</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Staff Name</label>
+                        {% render_field form.gp_s_name id="gp_s_name" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Employee ID</label>
+                        {% render_field form.gp_employee id="gp_employee" class="form-control form-control-modern bg-light" readonly="readonly" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Transporter</label>
+                        {% render_field form.gp_transporter_name id="gp_transporter_name" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Consignment No</label>
+                        {% render_field form.gp_consignment_note_no id="gp_consignment_note_no" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern" id="date_label">Date</label>
+                        {% render_field form.gp_consignment_date id="gp_consignment_date" class="form-control form-control-modern" type="date" %}
+                    </div>
+                </div>
+                <div class="form-row-modern mt-3">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Vehicle No</label>
+                        {% render_field form.gp_veh_no id="gp_veh_no" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Vehicle Type</label>
+                        {% render_field form.gp_veh_type id="gp_veh_type" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Eway Bill No</label>
+                        {% render_field form.gp_eway_bill_no id="gp_eway_bill_no" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Driver Name</label>
+                        {% render_field form.gp_driver_name id="gp_driver_name" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Driver Mobile</label>
+                        {% render_field form.gp_driver_mobile_no id="gp_driver_mobile_no" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- On-Site Tools Selection -->
+            <div id="tools_section" class="form-section" {% if pack_type != 'On-Site' %}style="display:none;"{% endif %}>
+                <div class="form-section-title text-warning"><i class="fas fa-tools"></i> Tools Management (On-Site Jobs)</div>
+                <div class="form-group-modern">
+                    <label class="form-label-modern">Selected Tools</label>
+                    {% render_field form.gp_tools id="gp_tools" class="form-control select2" multiple="multiple" %}
+                </div>
+            </div>
+
+            <!-- Remarks -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-comment-alt"></i> Additional Remarks</div>
+                {% render_field form.gp_remarks id="gp_remarks" class="form-control form-control-modern" rows="3" %}
+            </div>
+
+            <!-- Messages Area -->
+            {% if messages %}
+            <div class="p-3">
+                {% for message in messages %}
+                <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="btn-group-modern mt-4">
+                <button type="submit" class="btn-modern btn-submit">
+                    <i class="fas fa-check"></i> SUBMIT DOCUMENT
+                </button>
+                <a href="{% url 'packing_gate_list' %}" class="btn-modern btn-cancel">
+                    <i class="fas fa-times"></i> CANCEL
+                </a>
+            </div>
         </div>
-    </div>
-</form>
-{% include "asset_mgt_app/pk_gate_pass_returnable_WOH.html" %}
+    </form>
+
+    <!-- Embedded Details -->
+    {% include "asset_mgt_app/pk_gate_pass_returnable_WOH.html" %}
+</div>
+
 <script>
     $(document).ready(function() {
+        // Initialize Select2 for Multi-select Tools
+        $('#gp_tools').select2({
+            placeholder: "--Select Tools--",
+            allowClear: true,
+            width: '100%'
+        });
+
+        $('#gp_document_category').on('change', function () {
+            var category = $(this).val();
+            if (category === 'Delivery Challan') {
+                $('#doc_title').html('<i class="fas fa-file-invoice mr-2"></i> Add/Update Delivery Challan');
+                $('#date_label').text('Delivery Challan Date');
+                $('.dc-field').show();
+            } else {
+                $('#doc_title').html('<i class="fas fa-truck-moving mr-2"></i> Add/Update Gate Pass');
+                $('#date_label').text('Gate Pass Date');
+                $('.dc-field').hide();
+            }
+        });
+
+        // Trigger change on load to set initial title
+        $('#gp_document_category').trigger('change');
+
         // Track the initial customer to prevent clearing on load
         var initial_customer = $('#gp_customer_name').val();
 
@@ -265,6 +290,16 @@
                         
                         // Hidden Assessment ID
                         $("#gp_assessment_num").val(data.assessment_id);
+                        
+                        // Update Document Category and trigger title change
+                        $("#gp_document_category").val(data.document_category).trigger('change');
+                        
+                        // Toggle Tools Section based on Pack Type
+                        if(data.pack_type === 'On-Site') {
+                            $('#tools_section').show();
+                        } else {
+                            $('#tools_section').hide();
+                        }
                     }
                 });
             }
@@ -285,6 +320,14 @@
                 $('#gp_employee').val('');
             }
         });
+        
+        // Trigger initial state
+        $('#gp_document_category').trigger('change');
+        
+        // If Job No is pre-populated from URL, trigger change to load PO and SO
+        if ($('#gp_job_no').val() !== "") {
+            $('#gp_job_no').trigger('change');
+        }
     });
 </script>
-{% endblock content %}
+{% endblock %}

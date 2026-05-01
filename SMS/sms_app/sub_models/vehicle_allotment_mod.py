@@ -5,7 +5,7 @@ from .vehicle_replacement_status_mod import Replacementstatus
 from ..models import EnquirynoteInfo,MyUser,VehiclemasterInfo,VehicletypeInfo,OwnershipInfo,Vendor_info,StatusList
 
 class Vehicle_allotmentInfo(models.Model):
-    va_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.CASCADE)
+    va_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.PROTECT)
     va_vehiclesource = models.ForeignKey(OwnershipInfo, on_delete=models.CASCADE)
     va_vehicletype = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE,related_name='va_vehicletype', db_column='va_vehicletype')
     va_vehicletype_placed = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE,related_name='va_vehicletype_placed', db_column='va_vehicletype_placed')

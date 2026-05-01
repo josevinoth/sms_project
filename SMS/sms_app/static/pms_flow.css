@@ -1,12 +1,13 @@
-/* PMS Progress Tracker & Hub Styling */
+/* PMS Progress Tracker & Hub Styling - Unified Emerald Theme */
 :root {
     --pms-bg: #ffffff;
-    --pms-card: #17a2b8; /* Matches form bg-info */
-    --pms-accent: #0D2F3F; /* Dark navy for active icon text to pop, or we can use white */
-    --pms-accent-border: #8de4e9; /* Light cyan from form labels */
-    --pms-success: #28a745; /* Green success color */
+    --pms-card: #14b8a6; /* Emerald base */
+    --pms-gradient: linear-gradient(135deg, #2dd4bf 0%, #3b82f6 100%);
+    --pms-accent: #111827;
+    --pms-accent-border: #ccfbf1;
+    --pms-success: #10b981;
     --pms-text: #ffffff;
-    --pms-muted: rgba(255, 255, 255, 0.7);
+    --pms-muted: rgba(255, 255, 255, 0.8);
     --glass-border: rgba(255, 255, 255, 0.3);
 }
 
@@ -14,14 +15,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.35rem 1.5rem; /* Ultra compact padding */
-    background: var(--pms-card);
-    border: 1px solid var(--pms-card);
-    border-radius: 50px; /* Pill-shaped rounded ends */
+    padding: 0.75rem 2rem; /* Reduced vertical padding */
+    background: var(--pms-gradient);
+    border: none;
+    border-radius: 20px;
     margin-bottom: 2rem;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); /* Stronger drop shadow */
+    box-shadow: 0 10px 25px rgba(20, 184, 166, 0.2);
 }
 
 .pms-progress-container::before {
@@ -48,9 +49,9 @@
 }
 
 .pms-step-icon {
-    width: 2.1rem; /* Ultra compact icon size */
-    height: 2.1rem; /* Ultra compact icon size */
-    border-radius: 50%;
+    width: 42px; /* Reduced from 56px */
+    height: 42px; /* Reduced from 56px */
+    border-radius: 14px;
     background: var(--pms-bg);
     border: 3px solid var(--glass-border);
     display: flex;
@@ -58,15 +59,15 @@
     justify-content: center;
     color: var(--pms-card);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-size: 0.85rem; /* Smallest font size for icon */
+    font-size: 0.9rem; /* Slightly smaller icon font */
 }
 
 .pms-step.active .pms-step-icon {
-    border-color: var(--pms-accent-border);
+    border-color: #ffffff;
     color: var(--pms-accent);
-    box-shadow: 0 0 0 5px rgba(141, 228, 233, 0.3); /* Uses 8de4e9 */
-    background: var(--pms-accent-border); /* Highlight icon in light cyan */
-    transform: scale(1.1);
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.3);
+    background: #ffffff;
+    transform: scale(1.15);
 }
 
 .pms-step.completed .pms-step-icon {
@@ -109,9 +110,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: var(--pms-card); /* Match teal header */
-    border-top-left-radius: 0.25rem;
-    border-top-right-radius: 0.25rem;
+    background: var(--pms-gradient); /* Match emerald header */
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
 }
 
 .pms-hub-header h4 {

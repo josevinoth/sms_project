@@ -101,6 +101,7 @@ def needassessment_add(request,needassessment_id=0):
                 # Save the form but don't commit immediately
                 instance = form.save(commit=False)
                 instance.save()  # Now the ID is generated
+                form.save_m2m()  # CRITICAL: Save Many-to-Many fields when using commit=False
 
                 # Generate assessment number based on the financial year and next sequence (Branch specific)
                 fy = get_financial_year()
@@ -298,26 +299,31 @@ def na_dimension_add(request, na_dimension_id=0):
 
     if request.method == "GET":
         if na_dimension_id == 0:
-            # Get session values
-            wood_type_ids = request.session.get('last_nad_wood_type_list', [])
-            wood_desc_ids = request.session.get('last_nad_wood_description_list', [])
+            # Get session values and only prefill if it's the SAME assessment
+            last_assessment_id = request.session.get('last_nad_assessment_id')
+            
+            if last_assessment_id and str(last_assessment_id) == str(na_assessment_num_id):
+                wood_type_ids = request.session.get('last_nad_wood_type_list', [])
+                wood_desc_ids = request.session.get('last_nad_wood_description_list', [])
 
-            initial_data = {
-                'nad_type_of_req': Natypeofreq.objects.filter(id=request.session.get('last_nad_type_of_req')).first(),
-                'nad_quantity': request.session.get('last_nad_quantity'),
-                'nad_consumables': Naconsumables.objects.filter(id=request.session.get('last_nad_consumables')).first(),
-                'nad_vechicle_type': VehicletypeInfo.objects.filter(id=request.session.get('last_nad_vechicle_type')).first(),
-                'nad_uom': Unitofmeasure.objects.filter(id=request.session.get('last_nad_uom')).first(),
-                'nad_dimension_type': Nadimensiontype.objects.filter(id=request.session.get('last_nad_dimension_type')).first(),
-            }
+                initial_data = {
+                    'nad_type_of_req': Natypeofreq.objects.filter(id=request.session.get('last_nad_type_of_req')).first(),
+                    'nad_quantity': request.session.get('last_nad_quantity'),
+                    'nad_consumables': Naconsumables.objects.filter(id=request.session.get('last_nad_consumables')).first(),
+                    'nad_vechicle_type': VehicletypeInfo.objects.filter(id=request.session.get('last_nad_vechicle_type')).first(),
+                    'nad_uom': Unitofmeasure.objects.filter(id=request.session.get('last_nad_uom')).first(),
+                    'nad_dimension_type': Nadimensiontype.objects.filter(id=request.session.get('last_nad_dimension_type')).first(),
+                }
 
-            form = NadimensionForm(initial=initial_data)
+                form = NadimensionForm(initial=initial_data)
 
-            # Prefill ManyToMany after form init
-            if wood_type_ids:
-                form.fields['nad_wood_type'].initial = Pkstocktype.objects.filter(id__in=wood_type_ids)
-            if wood_desc_ids:
-                form.fields['nad_wood_description'].initial = Pkwooddescription.objects.filter(id__in=wood_desc_ids)
+                # Prefill ManyToMany after form init
+                if wood_type_ids:
+                    form.fields['nad_wood_type'].initial = Pkstocktype.objects.filter(id__in=wood_type_ids)
+                if wood_desc_ids:
+                    form.fields['nad_wood_description'].initial = Pkwooddescription.objects.filter(id__in=wood_desc_ids)
+            else:
+                form = NadimensionForm()
 
         else:
             na_dimensioninfo = Nadimension.objects.get(pk=na_dimension_id)
@@ -358,6 +364,7 @@ def na_dimension_add(request, na_dimension_id=0):
                 request.session['last_nad_vechicle_type'] = form.cleaned_data['nad_vechicle_type'].id if form.cleaned_data.get('nad_vechicle_type') else None
                 request.session['last_nad_uom'] = form.cleaned_data['nad_uom'].id if form.cleaned_data.get('nad_uom') else None
                 request.session['last_nad_dimension_type'] = form.cleaned_data['nad_dimension_type'].id if form.cleaned_data.get('nad_dimension_type') else None
+                request.session['last_nad_assessment_id'] = na_assessment_num_id
 
                 messages.success(request, "Record Saved Successfully")
             else:

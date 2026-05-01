@@ -1,275 +1,216 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<div class="container-fluid row">
-	<div class="col-md-1">
-		<a href="{% url 'costing_cancel' %}" class="btn btn-primary btn-block btn-lg">
-			<i class="fas fa-arrow-left"></i> Back
-		</a>
-	</div>
-	<!--    <div class="col-md-1.5">-->
-	<!--        <a href="{% url 'costing_insert' %}" class="btn btn-success btn-block btn-lg">-->
-	<!--            <i class="fas fa-plus"></i> Add Items-->
-	<!--        </a>-->
-	<!--    </div>-->
-</div>
-<div class="row">
-	<div class="col-1"></div>
-	<div class="col-8">
-		<form method="POST" action="" id="costing_add" data-stock_description-url="{% url 'load_stock_description' %}"  >
-			{% csrf_token %}
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Excess</h3></div>
-					<div class="card-body bg-light" id="costing_form">
-						<div class="row" >
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Assessment Number</span>
-									</div>
-									{% render_field form.ct_assessment_num id="ct_assessment_num"  class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Name</span>
-									</div>
-									{% render_field form.ct_customer_name id="ct_customer_name"  class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer New Name</span>
-									</div>
-									{% render_field form.ct_customer_new_name id="ct_customer_new_name"  class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer PO</span>
-									</div>
-									{% render_field form.ct_customer_po id="ct_customer_po"  class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Cost Type</span>
-									</div>
-									{% render_field form.ct_cost_type id="ct_cost_type" onchange="onChangeHandler()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Job Type</span>
-									</div>
-									{% render_field form.ct_requirement id="ct_requirement" onchange="pk_store_na_dimension_id()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Job Type Quantity</span>
-									</div>
-									{% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Requirement Name & Size</span>
-									</div>
-									{% render_field form.ct_requirement_size id="ct_requirement_size" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Stock Type</span>
-									</div>
-									{% render_field form.ct_stock_type id="ct_stock_type" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Stock Description</span>
-									</div>
-									{% render_field form.ct_stock_description id="ct_stock_description" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Item</span>
-									</div>
-									{% render_field form.ct_item id="ct_item" onchange="changeItemDescription()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Item Description</span>
-									</div>
-									{% render_field form.ct_itemdescription id="ct_itemdescription" class="form-control disable_a_href" %}
-								</div>
-								<div class="row ">
-									<div class="col-9">
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Height Req (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
-											</div>
-											{% render_field form.ct_height_req id="ct_height_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
-										</div>
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Width Req (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
-											</div>
-											{% render_field form.ct_width_req id="ct_width_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
-										</div>
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Length Req (ft) </span>
-											</div>
-											{% render_field form.ct_length_req id="ct_length_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
-										</div>
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Quantity Req</span>
-											</div>
-											{% render_field form.ct_quantity_req id="ct_quantity_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
-										</div>
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<span class="input-group-text">CFT/Sqft Req <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
-											</div>
-											{% render_field form.ct_sqrt_req id="ct_sqrt_req" onchange="change_cost_type()" class="form-control disable_a_href" %}
-										</div>
-										<div class="input-group input-group-sm mb-3">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Days/Hours</span>
-											</div>
-											{% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control disable_a_href" %}
-										</div>
-									</div>
-								</div>
 
-							</div>
-							<div class="col-6">
-								<div class="bg-warning border border-2 border-warning rounded p-3">
-									<h3 class="text-white text-center align-middle rounded bg-info p-1">Stock supplied</h3>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Height (in/mm)<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood mm"></i></span>
-										</div>
-										{% render_field form.ct_height id="ct_height" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Width (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood inch. For Plywood ft"></i></span>
-										</div>
-										{% render_field form.ct_width id="ct_width" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Length (Ft)</span>
-										</div>
-										{% render_field form.ct_length id="ct_length" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">UOM</span>
-										</div>
-										{% render_field form.ct_uom id="ct_uom" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Size</span>
-										</div>
-										{% render_field form.ct_size id="ct_size" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Quantity</span>
-										</div>
-										{% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">CFT/SQFT <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Consumables, Plywood SQFT"></i></span>
-										</div>
-										{% render_field form.ct_cft id="ct_cft" onchange="change_cost_type()" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Rate / (Qty/CFT/SQFT)</span>
-										</div>
-										{% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control disable_a_href" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Stock Purchase Number</span>
-										</div>
-										{% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control disable_a_href" %}
-									</div>
-								</div>
-								<br>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Unit Cost</span>
-									</div>
-									{% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total CFT/SQFT Required</span>
-									</div>
-									<span id="ct_cft_sqft_req" class="form-control disable_a_href"></span>
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total Cost</span>
-									</div>
-									{% render_field form.ct_totalbox_cost id="ct_totalbox_cost" readonly="True" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Stock Status</span>
-									</div>
-									{% render_field form.ct_stock_status id="ct_stock_status" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Excess Stock Status</span>
-									</div>
-									{% render_field form.ct_excess_status id="ct_excess_status" class="form-control " %}
-								</div>
-								{% render_field form.ct_exe_height_req id="ct_exe_height_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								{% render_field form.ct_exe_width_req id="ct_exe_width_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								{% render_field form.ct_exe_length_req id="ct_exe_length_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								{% render_field form.ct_exe_quantity_req id="ct_exe_quantity_req"  hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								{% render_field form.ct_exe_sqrt_req id="ct_exe_sqrt_req" hidden="True" onchange="change_cost_type()" class="form-control disable_a_href" %}
-								{% render_field form.ct_updated_by id="ct_updated_by" hidden="True" class="form-control" %}
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						{% if form.errors %}
-						<div class="alert alert-danger">
-							<ul>
-								{% for field, errors in form.errors.items %}
-								<li>{{ field }}: {{ errors|join:", " }}</li>
-								{% endfor %}
-							</ul>
-						</div>
-						{% endif %}
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'pk_excess_stock_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</form>
-	</div>
-	<div class="col-3">
-	</div>
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-white"><i class="fas fa-undo mr-2"></i> Add/Update Excess Stock</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'costing_cancel' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK
+            </a>
+        </div>
+    </div>
 
+    <form method="POST" action="" id="costing_add" data-stock_description-url="{% url 'load_stock_description' %}">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="modern-card">
+                    <!-- Section 1: Basic Information -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-info-circle"></i> Basic Information</div>
+                        <div class="form-row-modern">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Assessment Number</label>
+                                {% render_field form.ct_assessment_num id="ct_assessment_num" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Customer Name</label>
+                                {% render_field form.ct_customer_name id="ct_customer_name" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Customer New Name</label>
+                                {% render_field form.ct_customer_new_name id="ct_customer_new_name" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Customer PO</label>
+                                {% render_field form.ct_customer_po id="ct_customer_po" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Job & Stock Details -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-box"></i> Job & Stock Details</div>
+                        <div class="form-row-modern">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Cost Type</label>
+                                {% render_field form.ct_cost_type id="ct_cost_type" onchange="onChangeHandler()" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Job Type</label>
+                                {% render_field form.ct_requirement id="ct_requirement" onchange="pk_store_na_dimension_id()" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Job Type Quantity</label>
+                                {% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Requirement Name & Size</label>
+                                {% render_field form.ct_requirement_size id="ct_requirement_size" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                        </div>
+                        <div class="form-row-modern">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Stock Type</label>
+                                {% render_field form.ct_stock_type id="ct_stock_type" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Stock Description</label>
+                                {% render_field form.ct_stock_description id="ct_stock_description" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Item</label>
+                                {% render_field form.ct_item id="ct_item" onchange="changeItemDescription()" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Item Description</label>
+                                {% render_field form.ct_itemdescription id="ct_itemdescription" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Requirements -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-tasks"></i> Requirements</div>
+                        <div class="form-row-modern">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Height Req (in/mm)</label>
+                                {% render_field form.ct_height_req id="ct_height_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Width Req (in/ft)</label>
+                                {% render_field form.ct_width_req id="ct_width_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Length Req (ft)</label>
+                                {% render_field form.ct_length_req id="ct_length_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Quantity Req</label>
+                                {% render_field form.ct_quantity_req id="ct_quantity_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">CFT/Sqft Req</label>
+                                {% render_field form.ct_sqrt_req id="ct_sqrt_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Days/Hours</label>
+                                {% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Stock Supplied (The Highlighted Box) -->
+                    <div class="form-section stock-info-box p-4" style="background: rgba(16, 185, 129, 0.05); border: 2px dashed #10b981; border-radius: 12px;">
+                        <div class="form-section-title" style="color: #047857; border-bottom-color: #10b981;"><i class="fas fa-truck-loading"></i> Stock Supplied Information</div>
+                        <div class="form-row-modern">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Height (in/mm)</label>
+                                {% render_field form.ct_height id="ct_height" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Width (in/ft)</label>
+                                {% render_field form.ct_width id="ct_width" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Length (Ft)</label>
+                                {% render_field form.ct_length id="ct_length" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">UOM</label>
+                                {% render_field form.ct_uom id="ct_uom" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                        </div>
+                        <div class="form-row-modern">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Size</label>
+                                {% render_field form.ct_size id="ct_size" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Quantity</label>
+                                {% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">CFT/SQFT</label>
+                                {% render_field form.ct_cft id="ct_cft" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Rate</label>
+                                {% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Stock Purchase #</label>
+                                {% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 5: Costs & Status -->
+                    <div class="form-section mt-4">
+                        <div class="form-section-title"><i class="fas fa-rupee-sign"></i> Costs & Status</div>
+                        <div class="form-row-modern">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Unit Cost</label>
+                                {% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Total CFT/SQFT Required</label>
+                                <span id="ct_cft_sqft_req" class="form-control form-control-modern disable_a_href" style="background: #f3f4f6;"></span>
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Total Cost</label>
+                                {% render_field form.ct_totalbox_cost id="ct_totalbox_cost" readonly="True" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                        </div>
+                        <div class="form-row-modern">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Stock Status</label>
+                                {% render_field form.ct_stock_status id="ct_stock_status" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Excess Stock Status</label>
+                                {% render_field form.ct_excess_status id="ct_excess_status" class="form-control form-control-modern" %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% render_field form.ct_exe_height_req id="ct_exe_height_req" hidden="True" %}
+                    {% render_field form.ct_exe_width_req id="ct_exe_width_req" hidden="True" %}
+                    {% render_field form.ct_exe_length_req id="ct_exe_length_req" hidden="True" %}
+                    {% render_field form.ct_exe_quantity_req id="ct_exe_quantity_req" hidden="True" %}
+                    {% render_field form.ct_exe_sqrt_req id="ct_exe_sqrt_req" hidden="True" %}
+                    {% render_field form.ct_updated_by id="ct_updated_by" hidden="True" %}
+
+                    <div class="btn-group-modern">
+                        <button type="submit" class="btn-modern btn-submit">
+                            <i class="fas fa-check"></i> SUBMIT
+                        </button>
+                        <a href="{% url 'pk_excess_stock_list' %}" class="btn-modern btn-cancel" style="text-align: center; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                            <i class="fas fa-times"></i> CANCEL
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
+
+{% block extra_js %}
 <script>
-	$(document).ready(function() {
+    $(document).ready(function() {
         document.getElementById("ct_updated_by").value ='{{user_id}}';
         var stock_status=document.getElementById("ct_stock_status").value;
         var assessment_num=document.getElementById("ct_assessment_num").value;
@@ -277,44 +218,83 @@
         var customer_new_name=document.getElementById("ct_customer_new_name").value;
         var customer_po=document.getElementById("ct_customer_po").value;
 
+        if (assessment_num=="") {
+            document.getElementById("ct_assessment_num").value ='{{na_assessment_num_id}}';
+        }
+        if (customer_po=="") {
+            document.getElementById("ct_customer_po").value ='{{ses_customer_po_id}}';
+        }
+        if (customer_name=="") {
+            document.getElementById("ct_customer_name").value ='{{na_customer_name_id}}';
+        }
+        if (customer_new_name=="") {
+            document.getElementById("ct_customer_new_name").value ='{{na_customer_new_name_id}}';
+        }
+        
+        change_cost_type();
+    });
 
-        if (assessment_num=="")
-            {
-                document.getElementById("ct_assessment_num").value ='{{na_assessment_num_id}}';
-            }
-        else
-            {
-                document.getElementById("ct_assessment_num").value =assessment_num;
-            }
+    function onChangeHandler() {
+        change_cost_type();
+    }
 
-        if (customer_po=="")
-            {
-                document.getElementById("ct_customer_po").value ='{{ses_customer_po_id}}';
-            }
-        else
-            {
-                document.getElementById("ct_customer_po").value =customer_po;
-            }
+    function pk_store_na_dimension_id() {
+        change_cost_type();
+    }
 
-        if (customer_name=="")
-            {
-                document.getElementById("ct_customer_name").value ='{{na_customer_name_id}}';
-            }
-        else
-            {
-                document.getElementById("ct_customer_name").value = customer_name;
-            }
-            if (customer_new_name=="")
-            {
-                document.getElementById("ct_customer_new_name").value ='{{na_customer_new_name_id}}';
-            }
-        else
-            {
-                document.getElementById("ct_customer_new_name").value = customer_new_name;
-            }
+    function change_cost_type() {
+        var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+        var quantity = parseFloat(document.getElementById("ct_quantity").value) || 0;
+        var cft = parseFloat(document.getElementById("ct_cft").value) || 0;
+        var stock_type = document.getElementById("ct_stock_type").value;
 
+        var unitCost = 0;
+        if (stock_type == "1" || stock_type == "4") {
+            unitCost = rate * cft;
+        } else {
+            unitCost = rate * quantity;
+        }
 
+        document.getElementById("ct_total_cost").value = unitCost.toFixed(2);
+        
+        var na_quantity = parseFloat(document.getElementById("ct_na_quantity").value) || 1;
+        document.getElementById("ct_totalbox_cost").value = (unitCost * na_quantity).toFixed(2);
+
+        calculateExcess();
+    }
+
+    function calculateExcess() {
+        var length = parseFloat(document.getElementById("ct_length").value) || 0;
+        var width = parseFloat(document.getElementById("ct_width").value) || 0;
+        var height = parseFloat(document.getElementById("ct_height").value) || 0;
+        var quantity = parseFloat(document.getElementById("ct_quantity").value) || 0;
+        var cft = parseFloat(document.getElementById("ct_cft").value) || 0;
+
+        var length_req = parseFloat(document.getElementById("ct_length_req").value) || 0;
+        var width_req = parseFloat(document.getElementById("ct_width_req").value) || 0;
+        var height_req = parseFloat(document.getElementById("ct_height_req").value) || 0;
+        var quantity_req = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
+        var cft_req = parseFloat(document.getElementById("ct_sqrt_req").value) || 0;
+
+        var excess_length = length - length_req;
+        var excess_width = width - width_req;
+        var excess_height = height - height_req;
+        var excess_quantity = quantity - quantity_req;
+        var excess_cft = cft - cft_req;
+
+        document.getElementById("ct_exe_length_req").value = excess_length.toFixed(2);
+        document.getElementById("ct_exe_width_req").value = excess_width.toFixed(2);
+        document.getElementById("ct_exe_height_req").value = excess_height.toFixed(2);
+        document.getElementById("ct_exe_quantity_req").value = excess_quantity.toFixed(2);
+        document.getElementById("ct_exe_sqrt_req").value = excess_cft.toFixed(2);
+
+        if (excess_length > 0 || excess_width > 0 || excess_height > 0 || excess_quantity > 0 || excess_cft > 0) {
+            document.getElementById("ct_excess_status").value = "3";
+        } else {
+            document.getElementById("ct_excess_status").value = "5";
+        }
+    }
 </script>
+{% endblock extra_js %}
 
-
-{% endblock content %}
+{% endblock content %}

@@ -19,6 +19,12 @@ urlpatterns = [
     path('driver/logout/', views.driver_logout, name='driver_logout'),
     path('driver/dashboard/', views.driver_dashboard, name='driver_dashboard'),
     path('home_page', views.home_page, name='home_page'),  # Home_page
+    path('privacy-policy/', views.privacy_policy, name='privacy_policy'), # Privacy Policy
+    path('pk_production_dashboard/', views.pk_production_dashboard, name='pk_production_dashboard'),
+    path('update_production_status/', views.update_production_status, name='update_production_status'),
+    path('pk_quality_check_list/', views.pk_quality_check_list, name='pk_quality_check_list'),
+    path('pk_quality_check_add/', views.pk_quality_check_add, name='pk_quality_check_add'),
+    path('get_job_details_for_qc/', views.get_job_details_for_qc, name='get_job_details_for_qc'),
     path('asset_insert', views.assetinfo_add, name='asset_insert'),  # Add Asset
     path('asset_update/<int:asset_id>/', views.assetinfo_add, name='asset_update'),  # Update asset
     path('asset_delete/<int:asset_id>/', views.asset_delete, name='asset_delete'),  # Delete asset
@@ -711,6 +717,7 @@ urlpatterns = [
     path('packing_gate_pdf/<int:gate_id>', views.gate_return_pdf, name='packing_gate_pdf'),
     path('gate_pass_get_jobs_by_customer/', views.gate_pass_get_jobs_by_customer, name='gate_pass_get_jobs_by_customer'),
     path('gate_pass_get_job_details/', views.gate_pass_get_job_details, name='gate_pass_get_job_details'),
+    path('update_dc_item_financials/', views.update_dc_item_financials, name='update_dc_item_financials'),
     path('customer_attachment_add/', views.customer_attach_add, name='customer_attachment_add'),
     path('customer_attachment_list/', views.customer_attach_list, name='customer_attachment_list'),
     path('customer_attachment_update/<int:attach_id>/', views.customer_attach_add, name='customer_attachment_update'),
@@ -1093,4 +1100,23 @@ urlpatterns = [
     path('sale_enquiry_update/<int:enquiry_id>/', views.sale_enquiry_add, name='sale_enquiry_update'),
     path('sale_enquiry_delete/<int:enquiry_id>/', views.sale_enquiry_delete, name='sale_enquiry_delete'),
     path('ajax/get_customer_code/', views.get_customer_code, name='get_customer_code'),
+    path('pk_tool_master_list/', views.pk_tool_master_list, name='pk_tool_master_list'),
+    path('pk_tool_master_add/', views.pk_tool_master_add, name='pk_tool_master_add'),
+    path('pk_tool_master_update/<int:tool_id>/', views.pk_tool_master_add, name='pk_tool_master_update'),
+    path('pk_tool_master_delete/<int:tool_id>/', views.pk_tool_master_delete, name='pk_tool_master_delete'),
+
+    # PMS Gate Pass & Delivery Challan
+    path('packing_gate/', views.gate_return_add, name='packing_gate'),
+    path('packing_gate_list/', views.gate_return_list, name='packing_gate_list'),
+    path('packing_gate_delete/<int:gate_id>/', views.gate_return_delete, name='packing_gate_delete'),
+    path('packing_gate_pdf/<int:gate_id>/', views.gate_return_pdf, name='packing_gate_pdf'),
+    path('packing_gate_get_jobs/', views.gate_pass_get_jobs_by_customer, name='packing_gate_get_jobs'),
+    path('packing_gate_get_details/', views.gate_pass_get_job_details, name='packing_gate_get_details'),
+    path('update_dc_item_financials/', views.update_dc_item_financials, name='update_dc_item_financials'),
+    
+    path('packing_delivery/', views.delivery_challan_add, name='packing_delivery'),
+    path('packing_delivery_list/', views.delivery_challan_list, name='packing_delivery_list'),
+    path('packing_delivery_delete/<int:delivery_id>/', views.delivery_challan_delete, name='packing_delivery_delete'),
+    path('packing_delivery_pdf/<int:delivery_id>/', views.delivery_challan_pdf, name='packing_delivery_pdf'),
+    path('deletion_log_list/', views.deletion_log_list, name='deletion_log_list'),
 ]

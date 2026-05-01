@@ -1,95 +1,103 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% block content %}
 
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>Packing Gatepass List</h3>
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-white"><i class="fas fa-gate mr-2"></i> Gate Pass & DC Management</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <a href="{% url 'packing_gate' %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-plus"></i> New Gate Pass
+            </a>
         </div>
-        <div class="col-5"></div>
     </div>
-</div>
-<div class="container-fluid row">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
+
+    <!-- List Table -->
+    <div class="table-container-modern">
+        <div class="form-section-title">
+            <i class="fas fa-list-ul"></i> Issued Gate Passes & Delivery Challans
+        </div>
+        <div class="table-responsive">
+            <table id="gate_list" class="modern-table text-center">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Job Reference</th>
+                        <th>Customer Details</th>
+                        <th>Staff Info</th>
+                        <th>Sales Ref</th>
+                        <th class="text-center">Print</th>
+                        <th class="text-center">Edit</th>
+                        <th class="text-center">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for gate in gate_list %}
+                    <tr class="modern-tr">
+                        <td class="font-weight-bold">#{{ gate.id }}</td>
+                        <td>
+                            <div class="font-weight-bold">{{ gate.gp_job_no }}</div>
+                            <div class="small text-muted">PO: {{ gate.gp_customer_po }}</div>
+                        </td>
+                        <td>
+                            <div class="font-weight-bold text-dark">{{ gate.gp_customer_name }}</div>
+                            <div class="x-small text-muted">GST: {{ gate.gp_customer_gstin }}</div>
+                        </td>
+                        <td>
+                            <div class="small">{{ gate.gp_s_name }}</div>
+                            <div class="x-small text-secondary">ID: {{ gate.gp_employee }}</div>
+                        </td>
+                        <td>
+                            <div class="small">{{ gate.gp_sales_order_po|default:"N/A" }}</div>
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'packing_gate_pdf' gate.id %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; background: var(--accent-orange); text-decoration: none;" title="Download PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'packing_gate_update' gate.id %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; text-decoration: none;" title="Edit">
+                                <i class="far fa-edit"></i>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <form action="{% url 'packing_gate_delete' gate.id %}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this entry?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.8rem; background: #e74c3c;">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="py-5 text-muted italic">No Gate Pass records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-    <div class="col-md-1">
-        <a href="{% url 'packing_gate' %}" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-plus"></i> Add
-        </a>
-    </div>
-    <div class="col-md-2">
-        <a href="#" class="btn btn-warning btn-block btn-lg">
-            <i class="fas fa-plus"></i> Select All
-        </a>
-    </div>
-</div>
-<hr>
-<div class="container-fluid">
-    <table id="gate_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-        <tr>
-            <th>ID</th>
-            <th>Job Number</th>
-            <th>Customer Po</th>
-            <th>Customer Name</th>
-            <th>GSTIN</th>
-            <th>Staff Name</th>
-            <th>Employee ID</th>
-            <th>Sales Order</th>
-            <th>Gate Pass</th>
-            <th>Edit</th>
-            <th>Delete</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for gate in gate_list %}
-        <tr>
-            <td>{{ gate.id }}</td>
-            <td>{{ gate.gp_job_no }}</td>
-            <td>{{ gate.gp_customer_po }}</td>
-            <td>{{ gate.gp_customer_name }}</td>
-            <td>{{ gate.gp_customer_gstin }}</td>
-            <td>{{ gate.gp_s_name }}</td>
-            <td>{{ gate.gp_employee }}</td>
-            <td>{{ gate.gp_sales_order_po }}</td>
-            <td>
-                <a class="btn btn-warning" href="{% url 'packing_gate_pdf' gate.id %}" >
-                    <i class="fas fa-luggage-cart"></i>
-                </a>
-            </td>
-            <td>
-                <a class="btn btn-primary" href="{% url 'packing_gate_update' gate.id %}">
-                    <i class="far fa-edit"></i>
-                </a>
-            </td>
-            <td>
-                <form action="{% url 'packing_gate_delete' gate.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this entry?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
 </div>
 
 <script>
     $(document).ready(function() {
-        $('#gate_list').DataTable({
-            order: [0, 'desc'],
-            dom: 'lBfrtip',
-            buttons: [
-                'copy', 'csv', 'excel', 'print'
-            ],
-        });
+        if (!$.fn.DataTable.isDataTable('#gate_list')) {
+            $('#gate_list').DataTable({
+                order: [[0, 'desc']],
+                pageLength: 25,
+                dom: 'lBfrtip',
+                buttons: [
+                    { extend: 'copy', className: 'btn btn-sm btn-secondary' },
+                    { extend: 'excel', className: 'btn btn-sm btn-success' },
+                    { extend: 'print', className: 'btn btn-sm btn-info' }
+                ],
+            });
+        }
     });
 </script>
 
-{% endblock content %}
+{% endblock %}
