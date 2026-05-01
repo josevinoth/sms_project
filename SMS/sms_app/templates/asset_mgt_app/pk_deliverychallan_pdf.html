@@ -1,140 +1,192 @@
-{% extends "asset_mgt_app/report_header_potrait.html" %}
 {% block content %}
-<h3 style="text-align:center;">DELIVERY CHALLAN (NON RETURNABLE)</h3>
-<!--<div style="padding-left:570px;">-->
-<!--    <p>Gate Pass No:</p>-->
-<!--    <p>Date:</p>-->
-<!--</div>-->
-<div>
-    <table class='report_details'>
+<style>
+    @page {
+        margin: 25px;
+        size: A4;
+    }
+    body {
+        font-family: 'Helvetica', 'Arial', sans-serif;
+        font-size: 10px;
+        color: #1e293b;
+        line-height: 1.4;
+    }
+    .main-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1.5px solid #0f172a;
+    }
+    .main-table td {
+        border: 1px solid #94a3b8;
+        padding: 6px 8px;
+        vertical-align: top;
+    }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .bold { font-weight: bold; }
+    .bg-modern { background-color: #f1f5f9; }
+    
+    /* Header Styles */
+    .company-title { 
+        font-size: 16px; 
+        color: #1e40af; 
+        margin-bottom: 2px;
+        letter-spacing: 0.5px;
+    }
+    .doc-type-header { 
+        background-color: #1e293b; 
+        color: white;
+        font-size: 13px; 
+        padding: 8px; 
+        text-align: center;
+        letter-spacing: 2px;
+    }
+    
+    /* Item Table Styles */
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1.5px solid #0f172a;
+        border-top: none;
+    }
+    .items-table th {
+        background-color: #334155;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+        text-transform: uppercase;
+        font-size: 9px;
+        padding: 8px 4px;
+        border: 1px solid #0f172a;
+    }
+    .items-table td {
+        border: 1px solid #cbd5e1;
+        padding: 8px 6px;
+        height: 25px;
+    }
+    .section-title {
+        background-color: #e2e8f0;
+        font-weight: bold;
+        font-size: 9px;
+        padding: 4px 8px;
+        border-bottom: 1px solid #94a3b8;
+    }
+</style>
+
+<div class="container">
+    <table class="main-table">
         <tr>
-            <th>Assessment Number</th>
-            <td>{{ delivery.dc_assessment_num }}</td>
+            <td colspan="6" class="doc-type-header bold">DELIVERY CHALLAN</td>
         </tr>
         <tr>
-            <th>Customer PO</th>
-            <td>{{ delivery.dc_customer_po }}</td>
+            <td colspan="3" style="width: 50%; border-right: 1.5px solid #0f172a;">
+                <div class="company-title bold">BVM PACK SOLUTIONS PRIVATE LIMITED</div>
+                <div style="font-size: 9px; color: #475569;">
+                    No. 70 Adam Nagar Road, Nagalkeni, Chrompet, Chennai - 600 044<br>
+                    <strong>GSTIN: 33AAKCB6640C1Z0</strong>
+                </div>
+            </td>
+            <td colspan="3" style="width: 50%;">
+                <table style="width: 100%; border: none;">
+                    <tr>
+                        <td style="border: none; padding: 2px; color: #64748b;" class="bold">CHALLAN NO</td>
+                        <td style="border: none; padding: 2px;" class="bold">: DP-{{ delivery.id }}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: none; padding: 2px; color: #64748b;" class="bold">CHALLAN DATE</td>
+                        <td style="border: none; padding: 2px;">: {{ delivery.dc_created_at|date:"d.m.Y" }}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: none; padding: 2px; color: #64748b;" class="bold">JOB NO</td>
+                        <td style="border: none; padding: 2px;" class="bold">: {{ delivery.dc_job_no }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="3" class="section-title">CONSIGNEE (SHIP TO)</td>
+            <td colspan="3" class="section-title">TRANSPORTER & VEHICLE INFO</td>
         </tr>
         <tr>
-            <th>Customer Name</th>
-            <td>{{ delivery.dc_customer_name }}</td>
-        </tr>
-        <tr>
-            <th>Customer Address</th>
-            <td>{{ delivery.dc_customer_address }}</td>
-        </tr>
-        <tr>
-            <th>Customer GSTIN</th>
-            <td>{{ delivery.dc_customer_gstin }}</td>
-        </tr>
-        <tr>
-            <th>E-WAY Bill no</th>
-            <td>{{ delivery.dc_eway_billno }}</td>
-        </tr>
-        <tr>
-            <th>E-WAY Bill Date</th>
-            <td>{{ delivery.dc_eway_date }}</td>
-        </tr>
-        <tr>
-            <th>GRN</th>
-            <td>{{ delivery.dc_grn }}</td>
-        </tr>
-        <tr>
-            <th>Sales Order</th>
-            <td>{{ delivery.dc_sales_order_po }}</td>
-        </tr>
-        <tr>
-            <th>Stock Register</th>
-            <td>{{ delivery.dc_stock_register }}</td>
-        </tr>
-        <tr>
-            <th>Transport Name</th>
-            <td>{{ delivery.dc_transporter_name }}</td>
-        </tr>
-        <tr>
-            <th>Consignment Note</th>
-            <td>{{ delivery.dc_consignment_note }}</td>
-        </tr>
-        <tr>
-            <th>Date</th>
-            <td>{{ delivery.dc_date }}</td>
-        </tr>
-        <tr>
-            <th>Vehicle No</th>
-            <td>{{ delivery.dc_vehicle_no }}</td>
-        </tr>
-        <tr>
-            <th>Driver Name</th>
-            <td>{{ delivery.dc_driver_name }}</td>
-        </tr>
-        <tr>
-            <th>Driver Mobile No</th>
-            <td>{{ delivery.dc_driver_mobile_num }}</td>
-        </tr>
-    </table>
-    <hr class="report_hrItem"/>
-    <table class='report_details'>
-        <tr>
-            <th>DESCRIPTION</th>
-            <th>UOM</th>
-            <th>QTY</th>
-            <th>HSN CODE</th>
-            <th>ITEM CODE</th>
-            <th>BASE VALUE</th>
-            <th>GST RATE</th>
-            <th>GST AMOUNT</th>
-            <th>TOTAL VALUE</th>
-        </tr>
-        {% for challan in challan_list %}
-        <tr>
-            <td>{{ challan.pod_type_of_req }}</td>
-            <td>{{ challan.pod_uom }}</td>
-            <td>{{ challan.pod_quantity }}</td>
-            <td></td>
-            <td>{{ challan.pod_item }}</td>
-            <td>{{ challan.pod_cost_unit }}</td>
-            <td></td>
-            <td></td>
-            <td>{{ challan.pod_cost_total }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    <hr class="report_hrItem"/>
-    <table class='report_details'>
-        <tr>
-            <th></th>
-            <th>NAME</th>
-            <th>SIGN</th>
-            <th>DATE</th>
-        </tr>
-        <tr>
-            <th>PREPARED BY</th>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-        <tr>
-            <th>APPROVED BY</th>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-        <tr>
-            <th>GOODS OUTWARD REF.</th>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td colspan="3" style="height: 65px; border-right: 1.5px solid #0f172a;">
+                <div class="bold" style="font-size: 11px; color: #1e3a8a;">{{ delivery.dc_customer_name.cu_name }}</div>
+                <div style="margin-top: 4px;">{{ delivery.dc_customer_name.cu_address|linebreaksbr }}</div>
+                <div style="margin-top: 5px;"><strong>GSTIN:</strong> {{ delivery.dc_customer_name.cu_gst }}</div>
+            </td>
+            <td colspan="3">
+                <table style="width: 100%; border: none;">
+                    <tr>
+                        <td style="border: none; padding: 2px; color: #64748b; width: 40%;" class="bold">Vehicle No</td>
+                        <td style="border: none; padding: 2px;">: {{ delivery.dc_veh_no|default:'---' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: none; padding: 2px; color: #64748b;" class="bold">Driver Name</td>
+                        <td style="border: none; padding: 2px;">: {{ delivery.dc_driver_name|default:'---' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: none; padding: 2px; color: #64748b;" class="bold">E-Way Bill</td>
+                        <td style="border: none; padding: 2px;">: {{ delivery.dc_eway_bill_no|default:'---' }}</td>
+                    </tr>
+                </table>
+            </td>
         </tr>
     </table>
 
-    <div class="right-group">
-        <p>Super Verification</p>
-    </div>
-     <div class="center-group">
-        <p>THANK YOU FOR YOUR BUSINESS!</p>
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 5%;">SR.</th>
+                <th style="width: 35%;">DESCRIPTION OF GOODS</th>
+                <th style="width: 10%;">UOM</th>
+                <th style="width: 10%;">QTY</th>
+                <th style="width: 15%;">HSN CODE</th>
+                <th style="width: 25%;">REMARKS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in challan_list %}
+            <tr>
+                <td class="text-center" style="color: #64748b;">{{ forloop.counter }}</td>
+                <td class="bold">{{ item.pod_item }}</td>
+                <td class="text-center">{{ item.pod_uom }}</td>
+                <td class="text-center bold">{{ item.pod_quantity }}</td>
+                <td class="text-center">4415</td>
+                <td>{{ item.pod_returnable_status|default:'' }}</td>
+            </tr>
+            {% endfor %}
+            
+            {% if challan_list|length < 8 %}
+                {% with "12345" as filler %}
+                {% for i in filler %}
+                <tr>
+                    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                </tr>
+                {% endfor %}
+                {% endwith %}
+            {% endif %}
+        </tbody>
+    </table>
+
+    <div style="margin-top: 20px; font-size: 9px; padding: 10px; background-color: #f8fafc; border: 1px solid #cbd5e1;">
+        <strong style="color: #475569;">TERMS & CONDITIONS:</strong><br>
+        <div style="margin-top: 5px;">
+            1. Goods once sold will not be taken back.<br>
+            2. We are not responsible for any damage after the goods leave our premises.<br>
+            3. Subject to Chennai Jurisdiction.
+        </div>
     </div>
 
+    <table style="width: 100%; border: none; margin-top: 60px;">
+        <tr>
+            <td style="border: none; width: 50%;" class="text-center">
+                <div style="height: 60px;"></div>
+                <div style="border-top: 1.5px solid #0f172a; padding-top: 8px; color: #475569; width: 200px; margin: 0 auto;" class="bold">RECEIVER'S SIGNATURE</div>
+            </td>
+            <td style="border: none; width: 50%;" class="text-center">
+                <div style="color: #64748b; font-size: 8px; margin-bottom: 40px;">For BVM PACK SOLUTIONS PVT LTD</div>
+                <div style="border-top: 1.5px solid #0f172a; padding-top: 8px; color: #1e3a8a; width: 200px; margin: 0 auto;" class="bold">AUTHORISED SIGNATORY</div>
+            </td>
+        </tr>
+    </table>
 </div>
 {% endblock content %}
-
-

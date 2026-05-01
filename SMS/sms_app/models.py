@@ -246,3 +246,6 @@ from .sub_models.charge_master_mod import ChargeMasterInfo
 from .sub_models.sale_enquiry_mod import SaleEnquiry
 from .sub_models.driver_salary_mod import DriverSalaryInfo
 from .sub_models.invoice_document_mod import InvoiceDocumentInfo
+from .sub_models.pk_quality_check_mod import PkQualityCheck, PkQualityCheckItem
+from .sub_models.pk_tool_master_mod import PkToolMaster
+from .sub_models.deletion_log_mod import DeletionLog

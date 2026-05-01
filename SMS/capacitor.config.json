@@ -3,14 +3,16 @@
   "appName": "BVM SMS",
   "webDir": "sms_app/templates",
   "server": {
-    "url": "http://3.110.26.240/SMS/customer_login/2/",
+    "url": "https://app.bvmsms.com/SMS/customer_login/2/",
     "allowNavigation": [
-      "3.110.26.240",
+      "app.bvmsms.com",
       "localhost"
-    ],
-    "cleartext": true
+    ]
   },
   "android": {
-    "allowMixedContent": true
+    "allowMixedContent": false
+  },
+  "ios": {
+    "allowsLinkPreview": false
   }
 }

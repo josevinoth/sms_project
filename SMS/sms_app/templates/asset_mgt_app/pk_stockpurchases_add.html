@@ -1,196 +1,157 @@
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="" id="stockpurchases_add" data-stock_description-url="{% url 'load_stock_description' %}" >
-	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Stock Purchases</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Bill Reference</span>
-									</div>
-									{% render_field form.sp_vendor_bill_id id="sp_vendor_bill_id" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Stock Purchases Number</span>
-									</div>
-									{% render_field form.sp_purchase_num id="sp_purchase_num"  class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Category</span>
-									</div>
-									{% render_field form.sp_category id="sp_category" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Source</span>
-									</div>
-									{% render_field form.sp_source id="sp_source" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Stock In Date</span>
-									</div>
-									{% render_field form.sp_stock_in_date id="sp_stock_in_date" type="Date" class="form-control " %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Part Code</span>
-									</div>
-									{% render_field form.sp_part_code id="sp_part_code" onchange="fetchPartCodeDetails()" class="form-control select2" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Stock Type</span>
-									</div>
-									{% render_field form.sp_stock_type id="sp_stock_type" onchange="toggleFields()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Stock Description</span>
-									</div>
-									{% render_field form.sp_stock_description id="sp_stock_description" onchange="change_charge_type()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3" id="height_group">
-									<div class="input-group-prepend">
-										<!--										<span class="input-group-text">Thick (mm)/Height (In)</span>-->
-										<span class="input-group-text">Thick (mm)/Height (In) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood in. For Plywood mm" ></i></span>
-									</div>
-									{% render_field form.sp_thick_height id="sp_thick_height" onchange="change_charge_type()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3" id="width_group">
-									<div class="input-group-prepend">
-										<!--										<span class="input-group-text">Width (In/Ft)</span>-->
-										<span class="input-group-text">Width (In/Ft) <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood in. For Plywood ft" ></i></span>
-									</div>
-									{% render_field form.sp_width id="sp_width" onchange="change_charge_type()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3" id="length_group">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Length (Ft)</span>
-									</div>
-									{% render_field form.sp_length id="sp_length" onchange="change_charge_type()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3" id="uom_group">
-									<div class="input-group-prepend">
-										<span class="input-group-text">UOM </span>
-									</div>
-									{% render_field form.sp_uom id="sp_uom" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3" id="diameter_width_group">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Diameter/Width</span>
-									</div>
-									{% render_field form.sp_size id="sp_size" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3" id="con_length_group">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Length</span>
-									</div>
-									{% render_field form.sp_con_length id="sp_con_length" class="form-control disable_a_href" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3"  id="weight_group">
-									<div class="input-group-prepend">
-										<span class="input-group-text">UOM-Purchased Type </span>
-									</div>
-									{% render_field form.sp_weight_convention id="sp_weight_convention" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Purchased value <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For wood CFT. For Plywood SQFT"></i></span>
-									</div>
-									{% render_field form.sp_cft id="sp_cft" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3" >
-									<div class="input-group-prepend">
-										<span class="input-group-text">UOM-Consumption Type</span>
-									</div>
-									{% render_field form.sp_weight_Consumption id="sp_weight_Consumption" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Convertion Value</span>
-									</div>
-									{% render_field form.sp_weight_sqft id="sp_weight_sqft" onchange="change_charge_type()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Quantity (Nos)</span>
-									</div>
-									{% render_field form.sp_quantity id="sp_quantity" onchange="change_charge_type()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Purchased qty (UOM)</span>
-									</div>
-									{% render_field form.sp_total_cft  id="sp_total_cft" class="form-control " %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<!--										<span class="input-group-text">Rate (INR)</span>-->
-										<span class="input-group-text">Rate<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="For Wood,Plywood enter Rate/CFT. For Consumbales enter Rate/sq.mt.For Reused wood enter Rate/KG"></i></span>
-									</div>
-									{% render_field form.sp_rate id="sp_rate" onchange="change_charge_type()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Item value (INR)</span>
-									</div>
-									{% render_field form.sp_price id="sp_price" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">GST (%)</span>
-									</div>
-									{% render_field form.sp_gst id="sp_gst" onchange="change_charge_type()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">GST Amount (INR)</span>
-									</div>
-									{% render_field form.sp_gst_amount id="sp_gst_amount"  class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total Bill Amount (INR)</span>
-									</div>
-									{% render_field form.sp_totalbill_amount id="sp_totalbill_amount" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Status</span>
-									</div>
-									{% render_field form.sp_status id="sp_status" class="form-control " %}
-								</div>
-							</div>
-							{% render_field form.sp_updated_by id="sp_updated_by" hidden="True" class="form-control" %}
-						</div>
-						<input type="hidden" id="hidden_pc_stock_description">
-						<div class="input-group input-group-sm mb-3">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Remarks</span>
-							</div>
-							{% render_field form.sp_remarks id="sp_remarks" class="form-control" %}
-						</div>
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-shopping-cart mr-2"></i> Add/Update Stock Purchases</h2>
+        <div style="position: relative; z-index: 10;">
+            <a href="{% url 'stockpurchases_cancel' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK TO LIST
+            </a>
+        </div>
+    </div>
+
+    <form method="POST" action="" id="stockpurchases_add" data-stock_description-url="{% url 'load_stock_description' %}">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="alert alert-danger shadow-sm border-0 mb-4" style="border-radius: 1rem; background: rgba(220, 53, 69, 0.1); border-left: 5px solid #dc3545 !important;">
+            <div class="d-flex align-items-center mb-2">
+                <i class="fas fa-exclamation-circle text-danger mr-2" style="font-size: 1.2rem;"></i>
+                <h6 class="mb-0 text-danger font-weight-bold">Please correct the following errors:</h6>
+            </div>
+            <ul class="mb-0 pl-4 text-danger small">
+                {% for field, errors in form.errors.items %}
+                    <li><strong>{{ field|title }}:</strong> {{ errors|join:", " }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        <div class="modern-card">
+            <!-- Section 1: Bill & Source -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-file-invoice-dollar"></i> Bill & Source Info</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Bill Reference</label>
+                        {% render_field form.sp_vendor_bill_id id="sp_vendor_bill_id" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Stock Purchase No</label>
+                        {% render_field form.sp_purchase_num id="sp_purchase_num" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Category</label>
+                        {% render_field form.sp_category id="sp_category" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Source</label>
+                        {% render_field form.sp_source id="sp_source" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Stock In Date</label>
+                        {% render_field form.sp_stock_in_date id="sp_stock_in_date" type="Date" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Part & Dimensions -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-cube"></i> Part & Dimensions</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Part Code</label>
+                        {% render_field form.sp_part_code id="sp_part_code" onchange="fetchPartCodeDetails()" class="form-control form-control-modern select2" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Stock Type</label>
+                        {% render_field form.sp_stock_type id="sp_stock_type" onchange="toggleFields()" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Stock Description</label>
+                        {% render_field form.sp_stock_description id="sp_stock_description" onchange="change_charge_type()" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                </div>
+                <div class="form-row-modern mt-3">
+                    <div class="form-group-modern" id="height_group">
+                        <label class="form-label-modern">Thick (mm)/Height (In)</label>
+                        {% render_field form.sp_thick_height id="sp_thick_height" onchange="change_charge_type()" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern" id="width_group">
+                        <label class="form-label-modern">Width (In/Ft)</label>
+                        {% render_field form.sp_width id="sp_width" onchange="change_charge_type()" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern" id="length_group">
+                        <label class="form-label-modern">Length (Ft)</label>
+                        {% render_field form.sp_length id="sp_length" onchange="change_charge_type()" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern" id="uom_group">
+                        <label class="form-label-modern">UOM</label>
+                        {% render_field form.sp_uom id="sp_uom" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern" id="diameter_width_group">
+                        <label class="form-label-modern">Diameter/Width</label>
+                        {% render_field form.sp_size id="sp_size" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern" id="con_length_group">
+                        <label class="form-label-modern">Length</label>
+                        {% render_field form.sp_con_length id="sp_con_length" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Quantity & Costing -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-calculator"></i> Quantity & Costing</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Quantity (Nos)</label>
+                        {% render_field form.sp_quantity id="sp_quantity" onchange="change_charge_type()" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Purchased Qty (UOM)</label>
+                        {% render_field form.sp_total_cft id="sp_total_cft" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Rate</label>
+                        {% render_field form.sp_rate id="sp_rate" onchange="change_charge_type()" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Item Value</label>
+                        {% render_field form.sp_price id="sp_price" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                </div>
+                <div class="form-row-modern mt-3">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">GST (%)</label>
+                        {% render_field form.sp_gst id="sp_gst" onchange="change_charge_type()" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">GST Amount</label>
+                        {% render_field form.sp_gst_amount id="sp_gst_amount" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Total Bill Amount</label>
+                        {% render_field form.sp_totalbill_amount id="sp_totalbill_amount" class="form-control form-control-modern disable_a_href font-weight-bold text-primary" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Status</label>
+                        {% render_field form.sp_status id="sp_status" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Remarks -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-comment"></i> Remarks</div>
+                {% render_field form.sp_remarks id="sp_remarks" class="form-control form-control-modern" rows="3" %}
+            </div>
+
+            <input type="hidden" id="hidden_pc_stock_description">
+            {% render_field form.sp_updated_by id="sp_updated_by" hidden="True" %}
 
 						<div class="row">
 							<div class="col-1"></div>
@@ -204,16 +165,17 @@
 							<div class="col-1"></div>
 						</div>
 
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'stockpurchases_cancel' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</form>
+            <div class="btn-group-modern mt-4">
+                <button type="submit" class="btn-modern btn-submit">
+                    <i class="fas fa-check"></i> SAVE PURCHASE
+                </button>
+                <a href="{% url 'stockpurchases_cancel' %}" class="btn-modern btn-cancel">
+                    <i class="fas fa-times"></i> CANCEL
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
 <script>
 	$(document).ready(function() {
         document.getElementById("sp_vendor_bill_id").value ='{{stock_vendor_id}}';
@@ -534,34 +496,22 @@
     });
 </script>
 <script>
-    // Enable select2 for part code field
+    // Enable select2 for part code field (AJAX search)
     $('#sp_part_code').select2({
         ajax: {
             url: "{% url 'get_part_code' %}",
             dataType: 'json',
             delay: 250,
-            data: function (params) {
-                return {
-                    q: params.term // Send search term
-                };
-            },
+            data: function (params) { return { q: params.term }; },
             processResults: function (data) {
-                console.log("Received Data:", data); // Debugging
-                return {
-                    results: data.map(item => ({
-                        id: item.id,
-                        text: item.pc_code
-                    }))
-                };
-            },
-            error: function (xhr, status, error) {
-                console.error("AJAX Error:", error);
-                console.log("Response:", xhr.responseText); // Log full response
+                return { results: data.map(item => ({ id: item.id, text: item.pc_code })) };
             },
             cache: true
         },
-        placeholder: "Search Part Code",
-        minimumInputLength: 1,
+        width: '100%',
+        placeholder: "Type 2+ letters to search...",
+        allowClear: true,
+        minimumInputLength: 2
     });
 </script>
 

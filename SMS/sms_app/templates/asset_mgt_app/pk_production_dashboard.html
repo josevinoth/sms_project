@@ -1,0 +1,170 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block content %}
+
+<div class="container-fluid py-4">
+    <!-- Workflow Tracker Inclusion -->
+    <div class="pms-tracker-wrapper mb-4">
+        {% load pk_workflow_tags %}
+        {% pk_workflow_tracker assessment_id current_stage %}
+    </div>
+
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-industry mr-2"></i> Production Command Center</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-home"></i> Home
+            </a>
+        </div>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div class="table-container-modern">
+        <div class="alert alert-info py-2 mb-3 border-0 shadow-sm" style="background: rgba(var(--primary-glow-rgb), 0.1); border-left: 4px solid var(--primary-emerald) !important;">
+            <i class="fas fa-info-circle mr-2"></i> 
+            <small class="font-weight-bold">Track production lifecycle. Jobs MUST pass Quality Check (QC) before Gate Pass issuance.</small>
+        </div>
+
+        <div class="table-responsive">
+            <table id="production_dashboard" class="table modern-table text-center">
+                <thead>
+                    <tr>
+                        <th width="3%">#</th>
+                        <th width="12%">Job No.</th>
+                        <th width="20%">Customer</th>
+                        <th width="12%">Ref. Assessment</th>
+                        <th width="15%" style="background: rgba(255,255,255,0.05);">Production Status</th>
+                        <th width="15%" style="background: rgba(255,255,255,0.05);">Material Loop</th>
+                        <th width="10%">QC Status</th>
+                        <th width="13%">Gate Pass Access</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in dashboard_rows %}
+                    {% with job=row.costing tracker=row.tracker %}
+                    <tr class="modern-tr" id="row-{{ job.cs_job_no }}">
+                        <td class="text-muted">{{ forloop.counter }}</td>
+                        <td class="font-weight-bold">
+                            <span class="badge" style="background: var(--bg-dark); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); font-size: 0.85rem; padding: 5px 10px;">
+                                {{ job.cs_job_no }}
+                            </span>
+                        </td>
+                        <td class="text-left">
+                            <div class="font-weight-bold">{% if job.cs_customer_name %}{{ job.cs_customer_name.cu_name }}{% else %}{{ job.cs_customer_new_name }}{% endif %}</div>
+                        </td>
+                        <td><small class="text-muted font-weight-bold">{{ job.cs_assessment_num.na_assessment_num }}</small></td>
+
+                        <!-- Production Toggle -->
+                        <td class="px-2">
+                            <select class="form-control form-control-modern status-toggle py-0" 
+                                    style="height: 32px !important; font-size: 0.85rem; border-color: var(--primary-emerald);"
+                                    data-job-no="{{ job.cs_job_no }}"
+                                    data-type="production">
+                                <option value="Pending"   {% if tracker.pj_production_completed_flag == 'Pending' %}selected{% endif %}>⏳ Pending</option>
+                                <option value="Completed" {% if tracker.pj_production_completed_flag == 'Completed' %}selected{% endif %}>✅ Completed</option>
+                            </select>
+                        </td>
+
+                        <td class="px-2">
+                            <select class="form-control form-control-modern status-toggle py-0"
+                                    style="height: 32px !important; font-size: 0.85rem; border-color: var(--accent-blue);"
+                                    data-job-no="{{ job.cs_job_no }}"
+                                    data-type="material">
+                                <option value="Pending"   {% if tracker.pj_material_returned_flag == 'Pending' %}selected{% endif %}>⏳ Pending</option>
+                                <option value="Yes"       {% if tracker.pj_material_returned_flag == 'Yes' %}selected{% endif %}>🔼 Return Needed</option>
+                                <option value="No"        {% if tracker.pj_material_returned_flag == 'No' %}selected{% endif %}>⏺️ No Return</option>
+                            </select>
+                        </td>
+
+                        <!-- Quality Check Status -->
+                        <td id="qc-column-{{ job.cs_job_no|slugify }}">
+                            {% if tracker.pj_production_completed_flag == 'Completed' %}
+                                {% if tracker.pj_qc_completed_flag == 'Completed' %}
+                                    <span class="badge badge-success px-3 py-2" style="border-radius: 20px;"><i class="fas fa-check-circle"></i> Passed</span>
+                                {% else %}
+                                    <a href="{% url 'pk_quality_check_add' %}?job_no={{ job.cs_job_no }}" class="btn-modern btn-highlight py-1 px-3" style="font-size: 0.75rem; text-decoration: none;">
+                                        <i class="fas fa-clipboard-check"></i> START QC
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted small italic">Awaiting Prod.</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Gate Pass Lock Indicator -->
+                        <td id="gp-status-{{ job.cs_job_no|slugify }}">
+                            {% if tracker.pj_production_completed_flag == 'Completed' and tracker.pj_qc_completed_flag == 'Completed' %}
+                                <div class="text-success font-weight-bold small">
+                                    <i class="fas fa-unlock mr-1"></i> Ready
+                                </div>
+                            {% else %}
+                                <div class="text-danger font-weight-bold small opacity-5">
+                                    <i class="fas fa-lock mr-1"></i> Locked
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endwith %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted italic">
+                            No active jobs found in the production pipeline.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#production_dashboard').DataTable({
+        pageLength: 25,
+        dom: 'Bfrtip',
+        buttons: ['copy', 'excel', 'print'],
+        order: [[1, 'desc']]
+    });
+
+    // AJAX status update
+    $(document).on('change', '.status-toggle', function() {
+        var dropdown = $(this);
+        var jobNo    = dropdown.data('job-no');
+        var fieldType = dropdown.data('type');
+        var newValue  = dropdown.val();
+
+        dropdown.css('opacity', '0.5');
+        var row = dropdown.closest('tr');
+        row.addClass('bg-light');
+
+        $.ajax({
+            type: 'POST',
+            url: '{% url "update_production_status" %}',
+            data: {
+                'job_no': jobNo,
+                'production_status': (fieldType === 'production' ? newValue : ''),
+                'material_status': (fieldType === 'material' ? newValue : ''),
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    setTimeout(function() {
+                        location.reload(); 
+                    }, 300);
+                } else {
+                    alert('Error: ' + response.message);
+                    dropdown.css('opacity', '1');
+                    row.removeClass('bg-light');
+                }
+            },
+            error: function() {
+                dropdown.css('opacity', '1');
+                row.removeClass('bg-light');
+                alert('Error updating status. Please try again.');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,535 +1,484 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="" id="quotationsummary_add">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-<div class="container-fluid row d-flex align-items-center mb-3">
-	<div class="col-md-12">
-		<div class="pms-tracker-wrapper">
-			{% include "asset_mgt_app/pms_progress_tracker.html" with current_step=current_step %}
-		</div>
-	</div>
-</div>
+<div class="container-fluid py-4">
+    <!-- Progress Tracker -->
+    <div class="pms-tracker-wrapper mb-4">
+        {% include "asset_mgt_app/pms_progress_tracker.html" with current_step=current_step %}
+    </div>
 
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header d-flex justify-content-between align-items-center">
-						<h3 class="mb-0">Quotation Summary</h3>
-						<div class="d-flex align-items-center" style="gap: 10px;">
-							{% if form.instance.id %}
-							<a href="{% url 'purchaseorder_insert' %}?qs_id={{ form.instance.id }}"
-								class="pms-btn-convert">
-								<i class="fas fa-shopping-cart"></i> Generate Purchase Order
-							</a>
-							{% endif %}
-							<a href="{% url 'bvm_quotation_pdf' %}" class="btn btn-warning" id="quotation_report_btn">
-								<i class="fa fa-download" aria-hidden="true"> Quotation</i>
-							</a>
-						</div>
-					</div>
-					<div class="card-body bg-light">
-						<div class="row" id="quotation_summary">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Assessment Number</span>
-									</div>
-									{% render_field form.qs_assessment_num id="qs_assessment_num" name="qs_assessment_num" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Name</span>
-									</div>
-									{% render_field form.qs_customer_name_2 id="qs_customer_name_2" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">New Customer Name</span>
-									</div>
-									{% render_field form.pkqt_customer_new_name id="pkqt_customer_new_name" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Wood Cost</span>
-									</div>
-									{% render_field form.qs_wood_cost id="qs_wood_cost" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Engineer Cost</span>
-									</div>
-									{% render_field form.qs_engineer_cost id="qs_engineer_cost" class="form-control disable_a_href" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Labour Cost</span>
-									</div>
-									{% render_field form.qs_labour_cost id="qs_labour_cost" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Crane Cost</span>
-									</div>
-									{% render_field form.qs_crane_cost id="qs_crane_cost" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">HT Cost</span>
-									</div>
-									{% render_field form.qs_ht_cost id="qs_ht_cost" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Management Cost</span>
-									</div>
-									{% render_field form.qs_management_cost id="qs_management_cost" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consumables Cost</span>
-									</div>
-									{% render_field form.qs_material_cost id="qs_material_cost" class="form-control disable_a_href" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Transport Cost</span>
-									</div>
-									{% render_field form.qs_transport_cost id="qs_transport_cost" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total Cost (W/O Margin)</span>
-									</div>
-									{% render_field form.qs_total_cost_wom id="qs_total_cost_wom" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Margin (%)</span>
-									</div>
-									{% render_field form.qs_margin id="qs_margin" onchange="change_charge_type()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total Cost (With Margin)</span>
-									</div>
-									{% render_field form.qs_total_cost_wm id="qs_total_cost_wm" class="form-control disable_a_href " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total CFT</span>
-									</div>
-									{% render_field form.qs_total_cft id="qs_total_cft" onchange="change_charge_type()" class="form-control disable_a_href" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">GST %</span>
-									</div>
-									{% render_field form.qs_gst id="qs_gst" onchange="change_charge_type()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Final Cost</span>
-									</div>
-									{% render_field form.qs_final_cost id="qs_final_cost" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Rate Per CFT</span>
-									</div>
-									{% render_field form.qs_rate_per_cft id="qs_rate_per_cft" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Quotation Status</span>
-									</div>
-									{% render_field form.qs_status id="qs_status" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Quotation Number</span>
-									</div>
-									{% render_field form.qs_quotation_number id="qs_quotation_number" class="form-control disable_a_href" %}
-								</div>
-							</div>
-							<div class="col-6">
-								<div id="accordion" class="container-fluid">
-									<div class="card">
-										<div class="card-header bg-info" id="headingOne">
-											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse"
-													data-target="#collapseOne" aria-expanded="true"
-													aria-controls="collapseOne">
-													Address
-												</a>
-											</h5>
-										</div>
-										<div id="collapseOne" class="collapse " aria-labelledby="headingOne"
-											data-parent="#accordion">
-											<div class="card-body">
-												{% render_field form.qs_address id="qs_address" class="form-control" %}
-											</div>
-										</div>
-									</div>
-									<div class="card">
-										<div class="card-header bg-info" id="headingTwo">
-											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse"
-													data-target="#collapseTwo" aria-expanded="true"
-													aria-controls="collapseTwo">
-													Cost Includes
-												</a>
-											</h5>
-										</div>
-										<div id="collapseTwo" class="collapse " aria-labelledby="headingTwo"
-											data-parent="#accordion">
-											<div class="card-body">
-												{% render_field form.qs_cost_includes id="qs_cost_includes" class="form-control" %}
-											</div>
-										</div>
-									</div>
-									<div class="card">
-										<div class="card-header bg-info" id="headingThree">
-											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse"
-													data-target="#collapseThree" aria-expanded="true"
-													aria-controls="collapseThree">
-													Notes
-												</a>
-											</h5>
-										</div>
-										<div id="collapseThree" class="collapse " aria-labelledby="headingThree"
-											data-parent="#accordion">
-											<div class="card-body">
-												{% render_field form.qs_notes id="qs_notes" class="form-control" %}
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-							<div class="col-6">
-								<div id="accordion_1" class="container-fluid mb-3">
-									<div class="card">
-										<div class="card-header bg-info" id="headingFour">
-											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse"
-													data-target="#collapseFour" aria-expanded="true"
-													aria-controls="collapseFour">
-													Terms & Conditions
-												</a>
-											</h5>
-										</div>
-										<div id="collapseFour" class="collapse " aria-labelledby="headingFour"
-											data-parent="#accordion">
-											<div class="card-body">
-												{% render_field form.qs_terms_condition id="qs_terms_condition" class="form-control" %}
-											</div>
-										</div>
-									</div>
-									<div class="card">
-										<div class="card-header bg-info" id="headingFive">
-											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse"
-													data-target="#collapseFive" aria-expanded="true"
-													aria-controls="collapseFive">
-													Client Scope
-												</a>
-											</h5>
-										</div>
-										<div id="collapseFive" class="collapse " aria-labelledby="headingFive"
-											data-parent="#accordion">
-											<div class="card-body">
-												{% render_field form.qs_client_scope id="qs_client_scope" class="form-control" %}
-											</div>
-										</div>
-									</div>
-									<div class="card">
-										<div class="card-header bg-info" id="headingSix">
-											<h5 class="mb-0">
-												<a href="" class=" text-white" data-toggle="collapse"
-													data-target="#collapseSix" aria-expanded="true"
-													aria-controls="collapseSix">
-													BVM Scope
-												</a>
-											</h5>
-										</div>
-										<div id="collapseSix" class="collapse " aria-labelledby="headingSix"
-											data-parent="#accordion">
-											<div class="card-body">
-												{% render_field form.qs_bvm_scope id="qs_bvm_scope" class="form-control" %}
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-							{% render_field form.qs_updated_by id="qs_updated_by" hidden="True" class="form-control" %}
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
-									{% endfor %}
-									<span id="unique_field_error" style="color: red;"></span>
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<button id="qs_submit_btn" type="submit" class="btn btn-success "><i class="fas fa-check"></i>
-							Submit</button>
-						<a href="{% url 'pk_quotationsummary_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</form>
-<div class="container-fluid row">
-	<!--    <div class="col-md-1">-->
-	<!--        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
-	<!--            <i class="fas fa-arrow-left"></i> Back-->
-	<!--        </a>-->
-	<!--    </div>-->
-	<div class="col-md-2">
-		<a href="{% url 'pk_quotation_insert' %}" id="add_quotation" class="btn btn-success btn-block btn-lg">
-			<i class="fas fa-plus"></i> Add/Modify Items
-		</a>
-	</div>
-</div>
-<hr>
-<div class="container-fluid">
-	<table id="quotation_list" class="table table-striped table-bordered">
-		<thead class="thead-dark">
-			<tr>
-				<th>Created On</th>
-				<th>Stock Purchase Number</th>
-				<th>Assessment Number</th>
-				<th>Customer Name</th>
-				<th>Job Type</th>
-				<th>Cost Type</th>
-				<th>Stock Type</th>
-				<th>Stock Description</th>
-				<th>Item Name</th>
-				<th>Item Description</th>
-				<th>Width (in)</th>
-				<th>Height (in)</th>
-				<th>Length (ft)</th>
-				<th>Quantity</th>
-				<th>Diameter</th>
-				<th>UOM</th>
-				<th>Total CFT</th>
-				<th>Rate/QTY (CFT)</th>
-				<th>Days</th>
-				<th>Job Type Quantity</th>
-				<th>Unit Cost</th>
-				<th>Total Cost</th>
-				<th>Updated at</th>
-				<th>Updated By</th>
-				<!--			<th>Edit</th>-->
-				<!--			<th>Delete</th>-->
-		</thead>
-		<tbody>
-			{% for quotationinfo in quotation_list %}
-			<tr>
-				<td> {{quotationinfo.pkqt_created_at}}</td>
-				<td> {{quotationinfo.pkqt_stock_purchase_number}}</td>
-				<td> {{quotationinfo.pkqt_assessment_num}}</td>
-				<td> {{quotationinfo.pkqt_customer_name}}</td>
-				<td> {{quotationinfo.pkqt_requirement}}</td>
-				<td> {{quotationinfo.pkqt_cost_type}}</td>
-				<td> {{quotationinfo.pkqt_stock_type}}</td>
-				<td> {{quotationinfo.pkqt_stock_description}}</td>
-				<td> {{quotationinfo.pkqt_item}}</td>
-				<td> {{quotationinfo.pkqt_itemdescription}}</td>
-				<td> {{quotationinfo.pkqt_width_req}}</td>
-				<td> {{quotationinfo.pkqt_height_req}}</td>
-				<td> {{quotationinfo.pkqt_length_req}}</td>
-				<td> {{quotationinfo.pkqt_quantity_req}}</td>
-				<td> {{quotationinfo.pkqt_size}}</td>
-				<td> {{quotationinfo.pkqt_uom}}</td>
-				<td> {{quotationinfo.pkqt_sqrt_req}}</td>
-				<td> {{quotationinfo.pkqt_rate}}</td>
-				<td> {{quotationinfo.pkqt_days}}</td>
-				<td> {{quotationinfo.pkqt_na_quantity}}</td>
-				<td> {{quotationinfo.pkqt_total_cost}}</td>
-				<td> {{quotationinfo.pkqt_totalbox_cost}}</td>
-				<td> {{quotationinfo.pkqt_updated_at}}</td>
-				<td> {{quotationinfo.pkqt_updated_by}}</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-	</table>
-</div>
-<script>
-	$(document).ready(function () {
-		document.getElementById("qs_updated_by").value = '{{user_id}}';
-		document.getElementById("qs_wood_cost").value = '{{wood_cost}}';
-		document.getElementById("qs_engineer_cost").value = '{{engineer_cost}}';
-		document.getElementById("qs_labour_cost").value = '{{labour_cost}}';
-		document.getElementById("qs_crane_cost").value = '{{crane_cost}}';
-		document.getElementById("qs_ht_cost").value = '{{ht_cost}}';
-		document.getElementById("qs_management_cost").value = '{{management_cost}}';
-		document.getElementById("qs_material_cost").value = '{{material_cost}}';
-		document.getElementById("qs_transport_cost").value = '{{transport_cost}}';
-		change_charge_type()
+    <form method="POST" action="" id="quotationsummary_add">
+        {% csrf_token %}
+        
+        <div class="modern-header d-flex justify-content-between align-items-center">
+            <h2 class="mb-0 text-white"><i class="fas fa-file-invoice-dollar mr-2"></i> Quotation Summary</h2>
+            <div class="d-flex align-items-center" style="gap: 12px; position: relative; z-index: 10;">
+                {% if form.instance.id %}
+                <a href="{% url 'purchaseorder_insert' %}?qs_id={{ form.instance.id }}" class="btn-modern btn-highlight py-2 px-4" style="font-size: 0.9rem; text-decoration: none;">
+                    <i class="fas fa-shopping-cart"></i> GENERATE PURCHASE ORDER
+                </a>
+                {% endif %}
+                <a href="{% url 'bvm_quotation_pdf' %}" class="btn-modern btn-submit py-2 px-4" id="quotation_report_btn" style="text-decoration: none; background: #f59e0b;">
+                    <i class="fa fa-download"></i> QUOTATION PDF
+                </a>
+            </div>
+        </div>
 
-		var user_role = '{{role_id}}'
-		var status = document.getElementById("qs_status").value
-		if (status == 5) {
-			$('#quotation_report_btn').removeClass('disable_a_href');
-			if (user_role == 2) {
-				alert('Since Status is Completed,you have read-only access. To edit, please contact Administrator')
-				$('#quotation_summary').addClass('disable_a_href');
-				$('#qs_submit_btn').addClass('disable_a_href');
-				$('#add_quotation').addClass('disable_a_href');
-			}
-			else {
-				$('#quotation_summary').removeClass('disable_a_href');
-				$('#qs_submit_btn').removeClass('disable_a_href');
-				$('#add_quotation').removeClass('disable_a_href');
+        <div class="modern-card" id="quotation_summary">
+            <!-- Section 1: Quotation Details -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-info-circle"></i> Quotation Details</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Assessment Number</label>
+                        {% render_field form.qs_assessment_num id="qs_assessment_num" name="qs_assessment_num" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Customer Name</label>
+                        {% render_field form.qs_customer_name_2 id="qs_customer_name_2" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">New Customer Name</label>
+                        {% render_field form.pkqt_customer_new_name id="pkqt_customer_new_name" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Quotation Number</label>
+                        {% render_field form.qs_quotation_number id="qs_quotation_number" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Quotation Status</label>
+                        {% render_field form.qs_status id="qs_status" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
 
-			}
-		}
-		else {
-			$('#quotation_report_btn').addClass('disable_a_href');
-			var assessment_num = document.getElementById("qs_assessment_num").value
-			if (assessment_num == "") {
-				$('#add_quotation').addClass('disable_a_href');
-			}
-			else {
-				$('#add_quotation').removeClass('disable_a_href');
-			}
-		}
+            <!-- Section 2: Cost Components -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-list-ul"></i> Cost Components</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Wood Cost</label>
+                        {% render_field form.qs_wood_cost id="qs_wood_cost" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Engineer Cost</label>
+                        {% render_field form.qs_engineer_cost id="qs_engineer_cost" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Labour Cost</label>
+                        {% render_field form.qs_labour_cost id="qs_labour_cost" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Crane Cost</label>
+                        {% render_field form.qs_crane_cost id="qs_crane_cost" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">HT Cost</label>
+                        {% render_field form.qs_ht_cost id="qs_ht_cost" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Management Cost</label>
+                        {% render_field form.qs_management_cost id="qs_management_cost" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Consumables Cost</label>
+                        {% render_field form.qs_material_cost id="qs_material_cost" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Transport Cost</label>
+                        {% render_field form.qs_transport_cost id="qs_transport_cost" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                </div>
+            </div>
 
-		$('#quotation_list').DataTable({
-			scrollX: true,
-			dom: 'lBfrtip',
-			buttons: [
-				'copy', 'csv', 'excel', 'print'
-			]
-		});
-	});
-</script>
+            <!-- Section 3: Calculation & Margin -->
+            <div class="form-section stock-info-box">
+                <div class="form-section-title" style="color: #856404; border-color: #ffeeba;"><i class="fas fa-calculator"></i> Calculation & Margin</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Total Cost (W/O Margin)</label>
+                        {% render_field form.qs_total_cost_wom id="qs_total_cost_wom" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Margin (%)</label>
+                        {% render_field form.qs_margin id="qs_margin" onchange="change_charge_type()" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Total Cost (With Margin)</label>
+                        {% render_field form.qs_total_cost_wm id="qs_total_cost_wm" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Total CFT</label>
+                        {% render_field form.qs_total_cft id="qs_total_cft" onchange="change_charge_type()" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Rate Per CFT</label>
+                        {% render_field form.qs_rate_per_cft id="qs_rate_per_cft" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">GST %</label>
+                        {% render_field form.qs_gst id="qs_gst" onchange="change_charge_type()" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Final Cost</label>
+                        {% render_field form.qs_final_cost id="qs_final_cost" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                </div>
+            </div>
 
-<script>
-	function change_charge_type() {
-		var wood_cost = parseFloat(document.getElementById("qs_wood_cost").value) || 0;
-		var engineer_cost = parseFloat(document.getElementById("qs_engineer_cost").value) || 0;
-		var labour_cost = parseFloat(document.getElementById("qs_labour_cost").value) || 0;
-		var crane_cost = parseFloat(document.getElementById("qs_crane_cost").value) || 0;
-		var ht_cost = parseFloat(document.getElementById("qs_ht_cost").value) || 0;
-		var management_cost = parseFloat(document.getElementById("qs_management_cost").value) || 0;
-		var material_cost = parseFloat(document.getElementById("qs_material_cost").value) || 0;
-		var transport_cost = parseFloat(document.getElementById("qs_transport_cost").value) || 0;
-		var margin = parseFloat(document.getElementById("qs_margin").value) || 0;
-		var total_cost_wo_m = wood_cost + engineer_cost + labour_cost + crane_cost + ht_cost + management_cost + material_cost + transport_cost
-		document.getElementById("qs_total_cost_wom").value = total_cost_wo_m.toFixed(2)
-		var margin_value = total_cost_wo_m * (margin / 100)
-		var total_cost = Math.round(margin_value + total_cost_wo_m)
-		document.getElementById("qs_total_cost_wm").value = total_cost.toFixed(0)
+            <!-- Section 4: Additional Information (Accordions) -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-file-alt"></i> Additional Information</div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div id="accordion_left" class="mb-3">
+                            <div class="card mb-2" style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+                                <div class="card-header" style="background: var(--section-bg); border-bottom: 1px solid var(--border-color);" id="headingOne">
+                                    <h5 class="mb-0">
+                                        <a href="#" class="text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="text-decoration: none; display: block;">
+                                            Address <i class="fas fa-chevron-down float-right mt-1" style="font-size: 12px; color: #6c3ef4;"></i>
+                                        </a>
+                                    </h5>
+                                </div>
+                                <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordion_left">
+                                    <div class="card-body">
+                                        {% render_field form.qs_address id="qs_address" class="form-control form-control-modern" rows="3" %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card mb-2" style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+                                <div class="card-header" style="background: var(--section-bg); border-bottom: 1px solid var(--border-color);" id="headingTwo">
+                                    <h5 class="mb-0">
+                                        <a href="#" class="text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo" style="text-decoration: none; display: block;">
+                                            Cost Includes <i class="fas fa-chevron-down float-right mt-1" style="font-size: 12px; color: #6c3ef4;"></i>
+                                        </a>
+                                    </h5>
+                                </div>
+                                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion_left">
+                                    <div class="card-body">
+                                        {% render_field form.qs_cost_includes id="qs_cost_includes" class="form-control form-control-modern" rows="3" %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card mb-2" style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+                                <div class="card-header" style="background: var(--section-bg); border-bottom: 1px solid var(--border-color);" id="headingThree">
+                                    <h5 class="mb-0">
+                                        <a href="#" class="text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree" style="text-decoration: none; display: block;">
+                                            Notes <i class="fas fa-chevron-down float-right mt-1" style="font-size: 12px; color: #6c3ef4;"></i>
+                                        </a>
+                                    </h5>
+                                </div>
+                                <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion_left">
+                                    <div class="card-body">
+                                        {% render_field form.qs_notes id="qs_notes" class="form-control form-control-modern" rows="3" %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="accordion_right" class="mb-3">
+                            <div class="card mb-2" style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+                                <div class="card-header" style="background: var(--section-bg); border-bottom: 1px solid var(--border-color);" id="headingFour">
+                                    <h5 class="mb-0">
+                                        <a href="#" class="text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour" style="text-decoration: none; display: block;">
+                                            Terms & Conditions <i class="fas fa-chevron-down float-right mt-1" style="font-size: 12px; color: #6c3ef4;"></i>
+                                        </a>
+                                    </h5>
+                                </div>
+                                <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordion_right">
+                                    <div class="card-body">
+                                        {% render_field form.qs_terms_condition id="qs_terms_condition" class="form-control form-control-modern" rows="3" %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card mb-2" style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+                                <div class="card-header" style="background: var(--section-bg); border-bottom: 1px solid var(--border-color);" id="headingFive">
+                                    <h5 class="mb-0">
+                                        <a href="#" class="text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive" style="text-decoration: none; display: block;">
+                                            Client Scope <i class="fas fa-chevron-down float-right mt-1" style="font-size: 12px; color: #6c3ef4;"></i>
+                                        </a>
+                                    </h5>
+                                </div>
+                                <div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#accordion_right">
+                                    <div class="card-body">
+                                        {% render_field form.qs_client_scope id="qs_client_scope" class="form-control form-control-modern" rows="3" %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card mb-2" style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
+                                <div class="card-header" style="background: var(--section-bg); border-bottom: 1px solid var(--border-color);" id="headingSix">
+                                    <h5 class="mb-0">
+                                        <a href="#" class="text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix" style="text-decoration: none; display: block;">
+                                            BVM Scope <i class="fas fa-chevron-down float-right mt-1" style="font-size: 12px; color: #6c3ef4;"></i>
+                                        </a>
+                                    </h5>
+                                </div>
+                                <div id="collapseSix" class="collapse" aria-labelledby="headingSix" data-parent="#accordion_right">
+                                    <div class="card-body">
+                                        {% render_field form.qs_bvm_scope id="qs_bvm_scope" class="form-control form-control-modern" rows="3" %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% render_field form.qs_updated_by id="qs_updated_by" hidden="True" %}
 
-		var gst = parseFloat(document.getElementById("qs_gst").value) || 0;
-		var final_cost = total_cost + (total_cost * gst / 100)
-		document.getElementById("qs_final_cost").value = final_cost.toFixed(2)
+            <!-- Message Area -->
+            <div class="message-container my-3 text-center">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} shadow-sm d-inline-block">
+                    <i class="fas fa-info-circle"></i> {{ message }}
+                </div>
+                {% endfor %}
+                <span id="unique_field_error" class="d-block mt-2 font-weight-bold" style="color: #dc3545;"></span>
+            </div>
 
-		var total_cft = parseFloat(document.getElementById("qs_total_cft").value) || 0;
-		var rate_per_cft_val = parseFloat(total_cost / total_cft)
-		if (isNaN(rate_per_cft_val)) {
-			rate_per_cft = 0;
-		}
-		else {
-			rate_per_cft = rate_per_cft_val;
-		}
-		document.getElementById("qs_rate_per_cft").value = rate_per_cft.toFixed(2)
-	}
-</script>
-<!--Unique Field validation-->
-<script>
-	$(document).ready(function () {
-		$('#qs_assessment_num').on('change', function () {
-			var qs_assessment_num = document.getElementById("qs_assessment_num").value;
-			$.ajax({
-				url: '{% url "pk_quotation_summary_check_unique_field" %}',
-				data: {
-					'qs_assessment_num': qs_assessment_num,
-				},
-				dataType: 'json',
-				success: function (data) {
-					var customer_name_id = data.customer_name_id;
-					document.getElementById("qs_customer_name_2").value = customer_name_id;
-					var customer_new_name = data.customer_new_name;
-					document.getElementById("pkqt_customer_new_name").value = customer_new_name;
-					if (data.exists) {
-						$('#unique_field_error').text('This Record already exists.');
-					} else {
-						$('#unique_field_error').text('');
-					}
-				}
-			});
-		});
-	});
-</script>
+            <!-- Action Buttons -->
+            <div class="btn-group-modern">
+                <button id="qs_submit_btn" type="submit" class="btn-modern btn-submit">
+                    <i class="fas fa-check"></i> Submit Summary
+                </button>
+                <a href="{% url 'pk_quotationsummary_list' %}" class="btn-modern btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </div>
+    </form>
 
-<div class="container-fluid mt-5">
-	<div class="pms-hub-card">
-		<div class="pms-hub-header">
-			<h4><i class="fas fa-link"></i> Linked Purchase Orders</h4>
-			<span class="badge pms-badge-info">{{ linked_pos|length }} Records</span>
-		</div>
-		<div class="pms-hub-body">
-			{% if linked_pos %}
-			<table class="pms-table-dark">
-				<thead>
-					<tr>
-						<th>PO Number</th>
-						<th>SO Number</th>
-						<th>Date</th>
-						<th>Total Value</th>
-						<th>Status</th>
-						<th>Actions</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for po in linked_pos %}
-					<tr>
-						<td>{{ po.po_num }}</td>
-						<td>{{ po.sales_order_num }}</td>
-						<td>{{ po.po_date|date:"d-M-Y" }}</td>
-						<td>{{ po.po_total_value }}</td>
-						<td>
-							{% if po.po_status.id == 5 %}
-							<span class="pms-badge pms-badge-success">Completed</span>
-							{% else %}
-							<span class="pms-badge pms-badge-info">{{ po.po_status.status_name }}</span>
-							{% endif %}
-						</td>
-						<td>
-							<a href="{% url 'purchaseorder_update' po.id %}" class="btn btn-sm btn-outline-info">
-								<i class="fas fa-eye"></i> View
-							</a>
-						</td>
-					</tr>
-					{% endfor %}
-				</tbody>
-			</table>
-			{% else %}
-			<div class="text-center p-4 text-muted">
-				No Purchase Orders linked to this quotation yet.
-			</div>
-			{% endif %}
-		</div>
-	</div>
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{% url 'pk_quotation_insert' %}" id="add_quotation" class="btn-modern btn-submit" style="text-decoration: none;">
+            <i class="fas fa-plus"></i> Add/Modify Items
+        </a>
+    </div>
+
+    <!-- Quotation List Table -->
+    <div class="table-container-modern mt-4">
+        <div class="form-section-title">
+            <i class="fas fa-list-ul"></i> Quotation List
+        </div>
+        <table id="quotation_list" class="table modern-table text-center">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Created On</th>
+                    <th>Stock Purchase Number</th>
+                    <th>Assessment Number</th>
+                    <th>Customer Name</th>
+                    <th>Job Type</th>
+                    <th>Cost Type</th>
+                    <th>Stock Type</th>
+                    <th>Stock Description</th>
+                    <th>Item Name</th>
+                    <th>Item Description</th>
+                    <th>Width (in)</th>
+                    <th>Height (in)</th>
+                    <th>Length (ft)</th>
+                    <th>Quantity</th>
+                    <th>Diameter</th>
+                    <th>UOM</th>
+                    <th>Total CFT</th>
+                    <th>Rate/QTY (CFT)</th>
+                    <th>Days</th>
+                    <th>Job Type Quantity</th>
+                    <th>Unit Cost</th>
+                    <th>Total Cost</th>
+                    <th>Updated at</th>
+                    <th>Updated By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quotationinfo in quotation_list %}
+                <tr>
+                    <td> {{quotationinfo.pkqt_created_at}}</td>
+                    <td> {{quotationinfo.pkqt_stock_purchase_number}}</td>
+                    <td> {{quotationinfo.pkqt_assessment_num}}</td>
+                    <td> {{quotationinfo.pkqt_customer_name}}</td>
+                    <td> {{quotationinfo.pkqt_requirement}}</td>
+                    <td> {{quotationinfo.pkqt_cost_type}}</td>
+                    <td> {{quotationinfo.pkqt_stock_type}}</td>
+                    <td> {{quotationinfo.pkqt_stock_description}}</td>
+                    <td> {{quotationinfo.pkqt_item}}</td>
+                    <td> {{quotationinfo.pkqt_itemdescription}}</td>
+                    <td> {{quotationinfo.pkqt_width_req}}</td>
+                    <td> {{quotationinfo.pkqt_height_req}}</td>
+                    <td> {{quotationinfo.pkqt_length_req}}</td>
+                    <td> {{quotationinfo.pkqt_quantity_req}}</td>
+                    <td> {{quotationinfo.pkqt_size}}</td>
+                    <td> {{quotationinfo.pkqt_uom}}</td>
+                    <td> {{quotationinfo.pkqt_sqrt_req}}</td>
+                    <td> {{quotationinfo.pkqt_rate}}</td>
+                    <td> {{quotationinfo.pkqt_days}}</td>
+                    <td> {{quotationinfo.pkqt_na_quantity}}</td>
+                    <td> {{quotationinfo.pkqt_total_cost}}</td>
+                    <td> {{quotationinfo.pkqt_totalbox_cost}}</td>
+                    <td> {{quotationinfo.pkqt_updated_at}}</td>
+                    <td> {{quotationinfo.pkqt_updated_by}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Linked Purchase Orders -->
+    <div class="table-container-modern">
+        <div class="form-section-title">
+            <i class="fas fa-link"></i> Linked Purchase Orders
+            <span class="badge badge-pill badge-primary ml-2 px-3">{{ linked_pos|length }}</span>
+        </div>
+        
+        {% if linked_pos %}
+        <table class="table modern-table text-center">
+            <thead class="thead-dark">
+                <tr>
+                    <th>PO Number</th>
+                    <th>SO Number</th>
+                    <th>Date</th>
+                    <th>Total Value</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for po in linked_pos %}
+                <tr>
+                    <td class="font-weight-bold">{{ po.po_num }}</td>
+                    <td>{{ po.sales_order_num }}</td>
+                    <td>{{ po.po_date|date:"d-M-Y" }}</td>
+                    <td class="font-weight-bold">₹{{ po.po_total_value }}</td>
+                    <td>
+                        {% if po.po_status.id == 5 %}
+                        <span class="badge badge-success px-3 py-2">Completed</span>
+                        {% else %}
+                        <span class="badge badge-info px-3 py-2">{{ po.po_status.status_name }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <a href="{% url 'purchaseorder_update' po.id %}" class="btn-modern btn-submit btn-sm" style="text-decoration: none; padding: 0.5rem 1rem;">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-clipboard-list fa-3x mb-3 opacity-25"></i>
+            <h6>No Purchase Orders linked yet.</h6>
+        </div>
+        {% endif %}
+    </div>
+
 </div>
 
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        document.getElementById("qs_updated_by").value = '{{user_id}}';
+        document.getElementById("qs_wood_cost").value = '{{wood_cost}}';
+        document.getElementById("qs_engineer_cost").value = '{{engineer_cost}}';
+        document.getElementById("qs_labour_cost").value = '{{labour_cost}}';
+        document.getElementById("qs_crane_cost").value = '{{crane_cost}}';
+        document.getElementById("qs_ht_cost").value = '{{ht_cost}}';
+        document.getElementById("qs_management_cost").value = '{{management_cost}}';
+        document.getElementById("qs_material_cost").value = '{{material_cost}}';
+        document.getElementById("qs_transport_cost").value = '{{transport_cost}}';
+        change_charge_type();
+
+        var user_role = '{{role_id}}';
+        var status = document.getElementById("qs_status").value;
+        
+        if (status == 5) {
+            $('#quotation_report_btn').removeClass('disable_a_href');
+            if (user_role == 2) {
+                alert('Since Status is Completed, you have read-only access. To edit, please contact Administrator');
+                $('#quotation_summary').addClass('disable_a_href');
+                $('#qs_submit_btn').addClass('disable_a_href');
+                $('#add_quotation').addClass('disable_a_href');
+            } else {
+                $('#quotation_summary').removeClass('disable_a_href');
+                $('#qs_submit_btn').removeClass('disable_a_href');
+                $('#add_quotation').removeClass('disable_a_href');
+            }
+        } else {
+            $('#quotation_report_btn').addClass('disable_a_href');
+            var assessment_num = document.getElementById("qs_assessment_num").value;
+            if (assessment_num == "") {
+                $('#add_quotation').addClass('disable_a_href');
+            } else {
+                $('#add_quotation').removeClass('disable_a_href');
+            }
+        }
+
+        $('#quotation_list').DataTable({
+            scrollX: true,
+            dom: '<"d-flex justify-content-between align-items-center mb-3"lBf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
+            buttons: [
+                { extend: 'copy', className: 'btn btn-sm btn-outline-secondary' },
+                { extend: 'csv', className: 'btn btn-sm btn-outline-secondary' },
+                { extend: 'excel', className: 'btn btn-sm btn-outline-secondary' },
+                { extend: 'print', className: 'btn btn-sm btn-outline-secondary' }
+            ],
+            language: {
+                search: "",
+                searchPlaceholder: "Search records..."
+            }
+        });
+        
+        // Style DataTable search and length inputs
+        $('.dataTables_filter input').addClass('form-control form-control-sm form-control-modern d-inline-block w-auto ml-2');
+        $('.dataTables_length select').addClass('form-control form-control-sm form-control-modern d-inline-block w-auto mx-2');
+    });
+
+    function change_charge_type() {
+        var wood_cost = parseFloat(document.getElementById("qs_wood_cost").value) || 0;
+        var engineer_cost = parseFloat(document.getElementById("qs_engineer_cost").value) || 0;
+        var labour_cost = parseFloat(document.getElementById("qs_labour_cost").value) || 0;
+        var crane_cost = parseFloat(document.getElementById("qs_crane_cost").value) || 0;
+        var ht_cost = parseFloat(document.getElementById("qs_ht_cost").value) || 0;
+        var management_cost = parseFloat(document.getElementById("qs_management_cost").value) || 0;
+        var material_cost = parseFloat(document.getElementById("qs_material_cost").value) || 0;
+        var transport_cost = parseFloat(document.getElementById("qs_transport_cost").value) || 0;
+        var margin = parseFloat(document.getElementById("qs_margin").value) || 0;
+        
+        var total_cost_wo_m = wood_cost + engineer_cost + labour_cost + crane_cost + ht_cost + management_cost + material_cost + transport_cost;
+        document.getElementById("qs_total_cost_wom").value = total_cost_wo_m.toFixed(2);
+        
+        var margin_value = total_cost_wo_m * (margin / 100);
+        var total_cost = Math.round(margin_value + total_cost_wo_m);
+        document.getElementById("qs_total_cost_wm").value = total_cost.toFixed(0);
+
+        var gst = parseFloat(document.getElementById("qs_gst").value) || 0;
+        var final_cost = total_cost + (total_cost * gst / 100);
+        document.getElementById("qs_final_cost").value = final_cost.toFixed(2);
+
+        var total_cft = parseFloat(document.getElementById("qs_total_cft").value) || 0;
+        var rate_per_cft = isNaN(total_cost / total_cft) ? 0 : (total_cost / total_cft);
+        document.getElementById("qs_rate_per_cft").value = rate_per_cft.toFixed(2);
+    }
+
+    $('#qs_assessment_num').on('change', function () {
+        var qs_assessment_num = document.getElementById("qs_assessment_num").value;
+        $.ajax({
+            url: '{% url "pk_quotation_summary_check_unique_field" %}',
+            data: { 'qs_assessment_num': qs_assessment_num },
+            dataType: 'json',
+            success: function (data) {
+                document.getElementById("qs_customer_name_2").value = data.customer_name_id;
+                document.getElementById("pkqt_customer_new_name").value = data.customer_new_name;
+                if (data.exists) {
+                    $('#unique_field_error').text('This Record already exists.');
+                } else {
+                    $('#unique_field_error').text('');
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

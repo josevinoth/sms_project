@@ -48,8 +48,8 @@
         <li
             class="workflow-step {% if forloop.counter == current_stage %}active{% elif stage.id %}completed{% endif %}">
             {% if stage.id %}
-            <a href="{% url stage.url_name stage.id %}">
-                <i class="fas {% if stage.id %}fa-check-circle{% else %}fa-circle{% endif %}"></i>
+            <a href="{% if stage.url_name == 'pk_production_dashboard' or stage.url_name == 'pk_quality_check_list' or stage.url_name == 'packing_gate_list' or stage.url_name == 'invoice_list' or stage.url_name == 'pk_acceptance_list' %}{% url stage.url_name %}{% else %}{% url stage.url_name stage.id %}{% endif %}">
+                <i class="fas fa-check-circle"></i>
                 {{ stage.name }}
             </a>
             {% else %}

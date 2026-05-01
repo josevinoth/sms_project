@@ -2,7 +2,7 @@ from django.db import models
 from ..models import MyUser,VehicletypeInfo,EnquirynoteInfo,VehiclecategoryInfo
 
 class Enquirynotevehicle(models.Model):
-    env_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.CASCADE, default='')
+    env_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.PROTECT, default='')
     env_vehicletype = models.ForeignKey(VehicletypeInfo,on_delete=models.CASCADE, default='')
     env_quantity = models.IntegerField(blank=True, null=True, default=0)
     env_vehiclecategory = models.ForeignKey(VehiclecategoryInfo,on_delete=models.CASCADE, default='')

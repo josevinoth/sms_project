@@ -26,6 +26,13 @@ class POdimension(models.Model):
     pod_nad = models.ForeignKey('Nadimension', on_delete=models.CASCADE, blank=True, null=True,
                                        related_name='pod_nad', db_column='pod_nad', )
     pod_nad1 = models.CharField(max_length=255, blank=True, null=True)
+    
+    # Financial fields for DC
+    pod_base_value = models.FloatField(default=0.0, blank=True, null=True)
+    pod_gst_rate = models.FloatField(default=0.0, blank=True, null=True)
+    pod_gst_amount = models.FloatField(default=0.0, blank=True, null=True)
+    pod_total_value = models.FloatField(default=0.0, blank=True, null=True)
+    pod_returnable_status = models.CharField(max_length=50, choices=[('Returnable', 'Returnable'), ('Non-Returnable', 'Non-Returnable')], default='Non-Returnable')
 
     class Meta:
         ordering = ["pod_assess_num"]

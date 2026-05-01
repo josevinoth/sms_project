@@ -85,23 +85,29 @@ def part_code_delete(request, pc_id):
 
 @login_required(login_url='login_page')
 def get_stock_descriptions(request):
-    query = request.GET.get('q', '')  # Get search term
-    descriptions = Stockdescription.objects.filter(stock_description__icontains=query).values("id", "stock_description")
+    query = request.GET.get('q', '')
+    if len(query) < 2:
+        return JsonResponse([], safe=False)
+        
+    descriptions = Stockdescription.objects.filter(stock_description__icontains=query).values("id", "stock_description")[:20]
 
-    # Ensure uniqueness in case of duplicate descriptions
-    descriptions_list = list({desc["stock_description"]: desc for desc in descriptions}.values())
+    # Convert to list for JSON response
+    results = [{"id": item["id"], "stock_description": item["stock_description"]} for item in descriptions]
 
-    return JsonResponse(descriptions_list, safe=False)
+    return JsonResponse(results, safe=False)
 
 @login_required(login_url='login_page')
 def get_part_code(request):
     query = request.GET.get('q', '')
-    part_codes = PkpartcodeInfo.objects.filter(pc_code__icontains=query).values("id", "pc_code")
+    if len(query) < 2:
+        return JsonResponse([], safe=False)
+        
+    part_codes = PkpartcodeInfo.objects.filter(pc_code__icontains=query).values("id", "pc_code")[:20]
 
-    # Remove duplicates (though pc_code is already unique by model definition)
-    code_list = list({code["pc_code"]: code for code in part_codes}.values())
+    # Convert to list for JSON response
+    results = [{"id": item["id"], "pc_code": item["pc_code"]} for item in part_codes]
 
-    return JsonResponse(code_list, safe=False)
+    return JsonResponse(results, safe=False)
 
 @login_required(login_url='login_page')
 def export_partcodes_excel(request):

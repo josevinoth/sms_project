@@ -1,114 +1,98 @@
 {% block content %}
-<div class="container-fluid row" style="padding-left:500px;">
-    <div class="col">
-        <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto" action="{% url 'partcode_search' %}" method="get">
-            <div class="form-group">
-                <input type="search" class="form-control" id="part_code" placeholder="Part Code" name="part_code">
-                <button class="btn btn-primary" type="submit"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
-            </div>
-        </form>
-
-    </div>
-</div>
-<div class="container-fluid row">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-warning btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-    <div class="col-md-1">
-        <a href="{% url 'part_code_add' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-plus"></i> Add
-        </a>
-    </div>
-
-</div>
-<hr>
-<div class="container-fluid">
-    <table id="part_code_List_woh" class="table table-striped table-bordered">
-        <thead class="thead-dark">
+<table id="part_code_List_woh" class="modern-table text-center">
+    <thead>
         <tr>
             <th>ID</th>
-            <th>Created On</th>
-            <th>Part Code</th>
+            <th>Part Info</th>
             <th>Stock Type</th>
             <th>Description</th>
-            <th>Length</th>
-            <th>Width</th>
-            <th>Height</th>
-            <th>Diameter/Width</th>
-            <th>Con Length</th>
+            <th>Dimensions (L x W x H)</th>
+            <th>Additional Specs</th>
             <th>UOM</th>
-            <th>Updated On</th>
-            <th>Updated By</th>
-            <th>Edit</th>
-            <th>Delete</th>
+            <th>Update Info</th>
+            <th class="text-center">Actions</th>
         </tr>
-        </thead>
-        <tbody>
+    </thead>
+    <tbody>
         {% for part_code in page_obj %}
-        <tr>
-            <td>{{ part_code.id }}</td>
-            <td>{{ part_code.pc_created_at }}</td>
-            <td>{{ part_code.pc_code }}</td>
-            <td>{{ part_code.pc_stock_type }}</td>
-            <td>{{ part_code.pc_stock_description }}</td>
-            <td>{{ part_code.pc_length }}</td>
-            <td>{{ part_code.pc_width }}</td>
-            <td>{{ part_code.pc_height }}</td>
-            <td>{{ part_code.pc_diameter_width }}</td>
-            <td>{{ part_code.pc_con_length }}</td>
-            <td>{{ part_code.pc_uom }}</td>
-            <td>{{ part_code.pc_updated_at }}</td>
-            <td>{{ part_code.pc_updated_by }}</td>
+        <tr class="modern-tr">
+            <td class="font-weight-bold">#{{ part_code.id }}</td>
             <td>
-                <a class="btn btn-primary" href="{% url 'part_code_edit' part_code.id %}">
-                    <i class="far fa-edit"></i>
-                </a>
+                <div class="font-weight-bold text-dark">{{ part_code.pc_code }}</div>
+                <div class="x-small text-muted">Created: {{ part_code.pc_created_at|date:"d/m/Y" }}</div>
+            </td>
+            <td><span class="badge badge-info">{{ part_code.pc_stock_type }}</span></td>
+            <td class="text-left" style="max-width: 200px; white-space: normal;">{{ part_code.pc_stock_description }}</td>
+            <td>
+                {% if part_code.pc_length or part_code.pc_width or part_code.pc_height %}
+                    {{ part_code.pc_length|default:"0" }} x {{ part_code.pc_width|default:"0" }} x {{ part_code.pc_height|default:"0" }}
+                {% else %}
+                    -
+                {% endif %}
             </td>
             <td>
-                <form action="{% url 'part_code_delete' part_code.id %}" method="post" onclick="return confirm('Are you sure?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </form>
+                <div class="small">Dia: {{ part_code.pc_diameter_width|default:"-" }}</div>
+                <div class="small">Con L: {{ part_code.pc_con_length|default:"-" }}</div>
+            </td>
+            <td><span class="badge badge-secondary">{{ part_code.pc_uom }}</span></td>
+            <td>
+                <div class="small text-dark">{{ part_code.pc_updated_by }}</div>
+                <div class="x-small text-muted">{{ part_code.pc_updated_at|date:"d/m/Y H:i" }}</div>
+            </td>
+            <td class="text-center">
+                <div class="d-flex justify-content-center" style="gap: 8px;">
+                    <a class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; text-decoration: none;" href="{% url 'part_code_edit' part_code.id %}" title="Edit">
+                        <i class="far fa-edit"></i>
+                    </a>
+                    <form action="{% url 'part_code_delete' part_code.id %}" method="post" class="d-inline" onclick="return confirm('Are you sure you want to delete this part code?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.8rem; background: #e74c3c;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </div>
             </td>
         </tr>
         {% endfor %}
-        </tbody>
-    </table>
-    <div class="pagination">
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-            <a class="btn btn-warning" href="?page=1">First</a>
-            <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-        {% endif %}
+    </tbody>
+</table>
 
-        <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
+<!-- Pagination -->
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="d-flex justify-content-center mt-4">
+    <nav aria-label="Page navigation">
+        <ul class="pagination pagination-modern">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+            {% endif %}
 
-        {% if page_obj.has_next %}
-            <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
-            <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
-        {% endif %}
-    </span>
-    </div>
+            <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</a></li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a></li>
+            {% endif %}
+        </ul>
+    </nav>
 </div>
+{% endif %}
 
 <script>
     $(document).ready(function() {
-    $('#part_code_List_woh').DataTable({
-        scrollY: "600px",
-<!--        scrollX: true,-->
-        order: [0, 'desc' ],
-        dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ]
+        if (!$.fn.DataTable.isDataTable('#part_code_List_woh')) {
+            $('#part_code_List_woh').DataTable({
+                order: [[0, 'desc']],
+                pageLength: 50,
+                dom: 'lBfrtip',
+                buttons: [
+                    { extend: 'copy', className: 'btn btn-sm btn-secondary' },
+                    { extend: 'excel', className: 'btn btn-sm btn-success' },
+                    { extend: 'print', className: 'btn btn-sm btn-info' }
+                ],
+            });
+        }
     });
-} );
 </script>
 
 {% endblock content %}
