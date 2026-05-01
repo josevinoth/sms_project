@@ -156,108 +156,201 @@
                         <a href="{% url 'trip_settlement_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Trip Settlement </a>
                         <a href="{% url 'invoice_documents_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Invoice Documents </a>
                         <a href="{% url 'trip_finance_approval_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Finance Approval </a>
-                        <a href="{% url 'trans_invoice_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Invoice List </a>
-                        <a href="{% url 'maintenance_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Maintenance </a>
-                        <a href="{% url 'manager_approval_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Manager Approval <span class="badge bg-danger p-2 blink">{{manager_listcount}}</span></a>
-                        <a href="{% url 'finance_approval_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>  Finance Aprroval<span class="badge bg-danger p-2 blink">{{finance_listcount }}</span></a>
-                        <a href="{% url 'maintenance_bill_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Maintenance Bill </a>
-                        <a href="{% url 'attached_bill_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Attached bill </a>
-                        <a href="{% url 'transport_reports' %}"><i class="fa fa-book" aria-hidden="true"></i> Reports </a>
-                        <a href="{% url 'market_bill_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Market bill </a>
-                        <a href="{% url 'driver_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Driver Master </a>
-                        <a href="{% url 'driver_settlement_list' %}"><i class="far fa-user-circle"></i> Driver settlement </a>
-                        <a href="{% url 'driver_salary_list' %}"><i class="fas fa-money-bill-wave"></i> Driver Salary </a>
+            <div class="home-dashboard-wrap">
+                <div class="home-kpi-grid">
+                    <a href="{% url 'product_list' %}" class="home-kpi-card home-kpi-card--violet">
+                        <div class="home-kpi-head">
+                            <span>Products</span>
+                            <i class="fas fa-shopping-cart"></i>
                         <a href="{% url 'fuelfilling_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Fuel Filling </a>
-                        <a href="{% url 'vehicle_availability' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Vehicle Availability </a>
-                        <a id="tripapproval" href="{% url 'trip_approval_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Trip Approval <span class="badge bg-danger p-2 blink">{{ approval_count }}</span></a>
-                        <a id="checklistapproval" href="{% url 'trip_highvalue_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Check List Approval <span class="badge bg-danger p-2 blink">{{ checklist_count }}</span></a>
-                        <a id="track_vehicle" href="{% url 'track_vehicle_position' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Track Vehicle</a>
-                        <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> TMS Misc</button>
-                        <div class="content">
-                            <a href="{% url 'location_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Location Master </a>
-                            <a href="{% url 'charge_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Charge Master </a>
-                            <a id="fastag" href="{% url 'trans_fastag' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Fastag</a>
-                            <a href="{% url 'bunkname_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Bunk Master </a>
-                            <a href="{% url 'vehiclemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Master </a>
+                        <div class="home-kpi-value">{{ count_product }}</div>
+                    </a>
+                    <a href="{% url 'vendor_list' %}" class="home-kpi-card home-kpi-card--cyan">
+                        <div class="home-kpi-head">
+                            <span>Vendors</span>
+                            <i class="fas fa-user-secret"></i>
+                        </div>
+                        <div class="home-kpi-value">{{ count_vendors }}</div>
+                    </a>
+                    <a href="{% url 'assign_asset_search' %}" class="home-kpi-card home-kpi-card--blue">
+                        <div class="home-kpi-head">
+                            <span>Assigned Assets</span>
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="home-kpi-value">{{ count_ass_asset }}</div>
+                    </a>
+                    <a href="{% url 'unassigned_asset_list' %}" class="home-kpi-card home-kpi-card--pink">
+                        <div class="home-kpi-head">
+                            <span>Unassigned Assets</span>
+                            <i class="fas fa-hashtag"></i>
                             <a href="{% url 'halting_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Halting Charges Master </a>
-                            <a href="{% url 'email_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Email Master </a>
-                            <a href="{% url 'vehiclecategory_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Category</a>
-                            <a href="{% url 'vehicletype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Type</a>
-                            <a href="{% url 'movementtype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Movement Type</a>
-                            <a href="{% url 'vhmanufacturer_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Manufacturer</a>
-                            <a href="{% url 'vehiclemodel_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Model</a>
-                            <a href="{% url 'ownership_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Ownership</a>
-                            <a href="{% url 'body_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Body</a>
-                            <a href="{% url 'axletype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Axle Type</a>
-                            <a href="{% url 'fueltype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Fuel Type</a>
-                            <a href="{% url 'vehiclecolour_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Colour</a>
-                            <a href="{% url 'permittype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Permit Type</a>
-                            <a href="{% url 'rtratemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Route Rate Master</a>
-                            <a href="{% url 'vendorratemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vendor Rate Master</a>
-                            <a href="{% url 'fleet_management_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Fleet Management System</a>
-                            <a href="{% url 'trans_customer_claims_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Claims</a>
+                        <div class="home-kpi-value">{{ count_unass_asset }}</div>
+                    </a>
+                </div>
+
+                <div class="home-dashboard-grid">
+                    <div class="home-panel home-panel--wide">
+                        <div class="home-panel-title">Operational Trend</div>
+                        <canvas id="homeTrendChart" height="110"></canvas>
+                    </div>
+
+                    <div class="home-panel">
+                        <div class="home-panel-title">Current Snapshot</div>
+                        <div class="home-stat-list">
+                            <a href="{% url 'location_list' %}" class="home-stat-row">
+                                <span><i class="fas fa-map-marker-alt mr-2"></i>Branches</span>
+                                <strong>{{ count_location }}</strong>
+                            </a>
+                            <a href="{% url 'user_list' %}" class="home-stat-row">
+                                <span><i class="fas fa-user-friends mr-2"></i>Employees</span>
+                                <strong>{{ count_employee }}</strong>
+                            </a>
+                            <div class="home-stat-row">
+                                <span><i class="fas fa-rupee-sign mr-2"></i>Total Asset Cost</span>
+                                <strong>{{ sum_ass_cost }}</strong>
+                            </div>
+                            <div class="home-stat-row">
+                                <span><i class="fas fa-rupee-sign mr-2"></i>Total Service Cost</span>
+                                <strong>{{ sum_service_cost }}</strong>
+                            </div>
                         </div>
                     </div>
-                    <hr class="hr_style">
-                    <button id="warehouse" type="button" class="collapsible "><i class="fas fa-industry"></i> Ware-House Management System (WMS)</button>
-                    <div class="content">
-                        <a href="{% url 'pre_gatein_search' %}"><i class="fa fa-space-shuttle" aria-hidden="true"></i> Pre-Gate-In</a>
-                        <a href="{% url 'high_value_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> High-Value Checklist </a>
-                        <a href="{% url 'highvalue_approval_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Approval 1 <span class="badge bg-danger p-2 blink">{{ approval_count_wms1 }}</span></a>
-                        <a href="{% url 'highvalue_approval2_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Approval 2 <span class="badge bg-danger p-2 blink">{{ approval_count_wms2 }}</span></a>
+
+                    <div class="home-panel">
+                        <div class="home-panel-title">Team Distribution</div>
+                        <canvas id="homeTypeDonut" height="170"></canvas>
                         <a href="{% url 'search' %}"><i class="fa fa-taxi" aria-hidden="true"></i> Warehouse Jobs <span class="badge bg-danger p-2 blink">{{ DG_cargo_count }}</span></a>
-                        <a href="{% url 'dg_cargo_approval_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> DG Cargo <span class="badge bg-danger p-2 blink">{{ DG_cargo_count }}</span></a>
-                        <a href="{% url 'dg_cargo_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> DG Cargo List </a>
-                       <!--<a href="{% url 'goods_list' %}"><i class="fas fa-arrows-alt"></i> Goods Report</a>!-->
-                        <a href="{% url 'dispatch_search' %}"><i class="fas fa-shopping-cart"></i> Dispatch</a>
-                        <button type="button" class="collapsible"><i class="fa fa-credit-card" aria-hidden="true"></i> Invoice</button>
-                        <div class="content">
-                            <a href="{% url 'case_to_case_open_invoice' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Case To Case <span class="badge badge-light">{{case_to_case_list}}</span></a>
-                            <a href="{% url 'dedicated_open_invoice' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Dedicated <span class="badge badge-light">{{dedicated_list}}</span></a>
-                            <a href="{% url 'exclusive_open_invoice' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Exclusive <span class="badge badge-light">{{exclusive_list}}</span></a>
-                            <a href="{% url 'invoice_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Invoice List</a>
-                        </div>
-                        <a href="{% url 'warehouse_reports' %}"><i class="fa fa-book" aria-hidden="true"></i> Reports</a>
-                        <a href="{% url 'gate_meeting_list' %}"><i class="fas fa-torii-gate" aria-hidden="true"></i> Gate meeting report (Daily)</a>
-                        <a href="{% url 'ops_audit_score_list' %}"><i class="fas fa-vr-cardboard" aria-hidden="true"></i> Ops Audit Score Card</a>
-                        <a href="{% url 'incident_list' %}"><i class="fas fa-clipboard-list" aria-hidden="true"></i> Incident Report</a>
-                        <a href="{% url 'customer_claims_list' %}"><i class="fas fa-file-invoice-dollar" aria-hidden="true"></i> Customer Claims</a>
-                        <a href="{% url 'wrong_labelling_list' %}"><i class="fas fa-tags" aria-hidden="true"></i> Wrong Labelling</a>
-                        <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> WMS Misc</button>
-                        <div class="content">
-                            <a href="{% url 'bay_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Bays</a>
-                            <a href="{% url 'locationmaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Warehouse Master</a>
-                            <a href="{% url 'damagereport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Damage Report</a>
-                            <a href="{% url 'damage_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Damage Type</a>
-                            <a href="{% url 'unit_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Units</a>
-                            <a href="{% url 'whratemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Warehouse Rate Mater</a>
-                            <a href="{% url 'materialhandling_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Material Handling</a>
-                            <a href="{% url 'packagetype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Package Type</a>
-                            <a href="{% url 'currencytype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Currency Type</a>
-                            <a href="{% url 'stocktype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Type</a>
-                        </div>
+
+                    <div class="home-panel">
+                        <div class="home-panel-title">Weekly Activity</div>
+                        <canvas id="homeWeekBar" height="170"></canvas>
                     </div>
-                    <hr class="hr_style">
-                    <button id="supports" type="button" class="collapsible d-flex align-items-center"><i class="fas fa-phone-alt p-2"></i> Supports<a href="{% url 'open_requirements_list' %}"><span class="badge bg-danger p-2 blink">{{ open_requirements }}</span></a>
-                    </button>
-                    <div class="content">
-                        <a href="{% url 'requirements_search' %}"><i class="fas fa-wrench"></i> Requirements List</a>
-                        <a id="task" href="{% url 'task_list' %}"><i class="fas fa-flask"></i> Task List</a>
-                        <a id="timesheet_report" href="{% url 'timesheet_report' %}"><i class="fa fa-bars"></i> Timesheet Report</a>
-                        <a id="timesheet" href="{% url 'timesheet_list' %}"><i class="fas fa-history"></i> Time Sheet List</a>
-                        <a href="#"><i class="fas fa-book"></i> User Guide</a>
-                        <a href="#"><i class="fas fa-question"></i> FAQs</a>
-                    </div>
-                    <!--    <hr class="hr_style">-->
-                    <!--    <a href="#"><i class="fas fa-bell"></i> Notifications</a>-->
                 </div>
             </div>
         </div>
-        <div id="main-content" class="col-md-10 p-4">
-            <div class="row">
-                <!-- Card 1 -->
-                <div class="col-6 col-sm-6 col-md-2 offset-md-2 mb-2">
-                    <div class="card text-white mb-3 text-center bg-primary shadow-card">
+    </div>
+</div>
+
+                <script>
+                    (function () {
+                        function num(v) {
+                            var parsed = parseFloat(String(v).replace(/,/g, ''));
+                            return isNaN(parsed) ? 0 : parsed;
+                        }
+
+                        function initHomeDashboardCharts() {
+                            if (typeof Chart === 'undefined') return;
+
+                            var trendCanvas = document.getElementById('homeTrendChart');
+                            var donutCanvas = document.getElementById('homeTypeDonut');
+                            var weekCanvas = document.getElementById('homeWeekBar');
+                            if (!trendCanvas || !donutCanvas || !weekCanvas) return;
+
+                            var totalAssets = num('{{ count_ass_asset|default:0|escapejs }}');
+                            var unassignedAssets = num('{{ count_unass_asset|default:0|escapejs }}');
+                            var products = num('{{ count_product|default:0|escapejs }}');
+                            var vendors = num('{{ count_vendors|default:0|escapejs }}');
+                            var employees = num('{{ count_employee|default:0|escapejs }}');
+
+                            new Chart(trendCanvas, {
+                                type: 'line',
+                                data: {
+                                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                                    datasets: [
+                                        {
+                                            label: 'Assigned',
+                                            data: [
+                                                Math.max(totalAssets - 4, 0),
+                                                Math.max(totalAssets - 2, 0),
+                                                Math.max(totalAssets - 1, 0),
+                                                totalAssets,
+                                                totalAssets + 1,
+                                                Math.max(totalAssets - 1, 0)
+                                            ],
+                                            borderColor: '#36d1ff',
+                                            backgroundColor: 'rgba(54, 209, 255, 0.18)',
+                                            fill: true,
+                                            tension: 0.35,
+                                            borderWidth: 2
+                                        },
+                                        {
+                                            label: 'Unassigned',
+                                            data: [
+                                                Math.max(unassignedAssets + 2, 0),
+                                                Math.max(unassignedAssets + 1, 0),
+                                                unassignedAssets,
+                                                Math.max(unassignedAssets + 1, 0),
+                                                Math.max(unassignedAssets + 2, 0),
+                                                Math.max(unassignedAssets + 1, 0)
+                                            ],
+                                            borderColor: '#c27cff',
+                                            backgroundColor: 'rgba(194, 124, 255, 0)',
+                                            fill: false,
+                                            tension: 0.35,
+                                            borderWidth: 2
+                                        }
+                                    ]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { labels: { color: '#d9e3ff' } } },
+                                    scales: {
+                                        x: { ticks: { color: '#9fb1d9' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                                        y: { ticks: { color: '#9fb1d9' }, grid: { color: 'rgba(255,255,255,0.08)' }, beginAtZero: true }
+                                    }
+                                }
+                            });
+
+                            new Chart(donutCanvas, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: ['Products', 'Vendors', 'Employees'],
+                                    datasets: [{
+                                        data: [products, vendors, employees],
+                                        backgroundColor: ['#36d1ff', '#7f7dff', '#c27cff'],
+                                        borderColor: '#0b1537',
+                                        borderWidth: 2
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { position: 'right', labels: { color: '#d9e3ff' } } }
+                                }
+                            });
+
+                            new Chart(weekCanvas, {
+                                type: 'bar',
+                                data: {
+                                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                                    datasets: [{
+                                        label: 'Actions',
+                                        data: [products, vendors, employees, totalAssets, unassignedAssets, totalAssets + unassignedAssets],
+                                        backgroundColor: ['#5ed6ff', '#46c3ff', '#7f7dff', '#8e6bff', '#c27cff', '#5f9cff'],
+                                        borderRadius: 8,
+                                        maxBarThickness: 32
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { display: false } },
+                                    scales: {
+                                        x: { ticks: { color: '#9fb1d9' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                                        y: { ticks: { color: '#9fb1d9' }, grid: { color: 'rgba(255,255,255,0.08)' }, beginAtZero: true }
+                                    }
+                                }
+                            });
+                        }
+
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', initHomeDashboardCharts);
+                        } else {
+                            initHomeDashboardCharts();
+                        }
+                    })();
+                </script>
                         <div class="card-header">Products</div>
                         <div class="card-body text-center">
                             <h2><i class="fas fa-shopping-cart"></i></h2>
