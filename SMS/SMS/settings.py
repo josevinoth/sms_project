@@ -175,6 +175,15 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
+ITADMIN_EMAIL_HOST = config('ITADMIN_EMAIL_HOST', default='smtp.office365.com')
+ITADMIN_EMAIL_PORT = config('ITADMIN_EMAIL_PORT', default=587, cast=int)
+ITADMIN_EMAIL_USE_TLS = config('ITADMIN_EMAIL_USE_TLS', default=True, cast=bool)
+ITADMIN_EMAIL_HOST_USER = config('ITADMIN_EMAIL_HOST_USER', default='itadmin@thebvmgroup.com')
+ITADMIN_EMAIL_HOST_PASSWORD = config('ITADMIN_EMAIL_HOST_PASSWORD', default='')
+
+# Sender used by forgot-password OTP emails.
+PASSWORD_RESET_FROM_EMAIL = config('PASSWORD_RESET_FROM_EMAIL', default=ITADMIN_EMAIL_HOST_USER)
+
 DEPARTMENT_EMAILS = {
     'sales': {
         'EMAIL_HOST': 'smtp.gmail.com',
@@ -198,11 +207,11 @@ DEPARTMENT_EMAILS = {
         'EMAIL_HOST_PASSWORD' : 'F!220749109956aq',
     },
     'itadmin': {
-        'EMAIL_HOST' : 'smtp.office365.com',
-        'EMAIL_PORT' : 587,
-        'EMAIL_USE_TLS' : True,
-        'EMAIL_HOST_USER' : 'itadmin@thebvmgroup.com',
-        'EMAIL_HOST_PASSWORD' : 'N/403017869523up',
+        'EMAIL_HOST' : ITADMIN_EMAIL_HOST,
+        'EMAIL_PORT' : ITADMIN_EMAIL_PORT,
+        'EMAIL_USE_TLS' : ITADMIN_EMAIL_USE_TLS,
+        'EMAIL_HOST_USER' : ITADMIN_EMAIL_HOST_USER,
+        'EMAIL_HOST_PASSWORD' : ITADMIN_EMAIL_HOST_PASSWORD,
     }
 }
 
