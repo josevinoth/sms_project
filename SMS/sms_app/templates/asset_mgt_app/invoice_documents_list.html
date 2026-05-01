@@ -1,0 +1,136 @@
+{% extends "asset_mgt_app/base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="padding:15px;">
+    <div class="row">
+        <div class="col-5"></div>
+        <div class="col-2 rounded text-center bg-info">
+            <h3>Invoice Documents</h3>
+        </div>
+        <div class="col-5"></div>
+    </div>
+</div>
+<div class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-md-1">
+            <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+        <div class="col-md-10">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-9">
+                    <form method="get" action="{% url 'invoice_documents_list' %}">
+                        <div class="row g-2 justify-content-center">
+                            <div class="col-12 col-sm-4">
+                                <input type="text" class="form-control" name="veh_no"
+                                    placeholder="Vehicle Number" value="{{ veh_no }}">
+                            </div>
+                            <div class="col-12 col-sm-3">
+                                <input type="date" class="form-control" name="date_from"
+                                    value="{{ date_from }}">
+                            </div>
+                            <div class="col-12 col-sm-3">
+                                <input type="date" class="form-control" name="date_to"
+                                    value="{{ date_to }}">
+                            </div>
+                        </div>
+                        <div class="row g-2 justify-content-center mt-2">
+                            <div class="col-12 col-sm-5">
+                                <button class="btn btn-primary w-100" type="submit">
+                                    <i class="fa fa-search mr-1"></i> Search
+                                </button>
+                            </div>
+                            <div class="col-12 col-sm-5">
+                                <a href="{% url 'invoice_documents_list' %}" class="btn btn-secondary w-100">
+                                    <i class="fa fa-times-circle mr-1"></i> Clear
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr>
+
+<div class="container-fluid">
+    <table id="invoice_documents_table" class="table table-striped table-bordered">
+        <thead class="thead-dark">
+            <tr style="white-space: nowrap;">
+                <th>S.No</th>
+                <th>Enquiry Number</th>
+                <th>Consignment Number</th>
+                <th>Trip Number</th>
+                <th>Customer Name</th>
+                <th>Vehicle Number</th>
+                <th>From Location</th>
+                <th>To Location</th>
+                <th>Trip Date</th>
+                <th>Settlement Status</th>
+                <th>Invoice Status</th>
+                <th>Combined PDF</th>
+                <th>Edit</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in trips_with_docs %}
+            <tr style="white-space: nowrap;">
+                <td>{{ forloop.counter }}</td>
+                <td>{{ row.trip.tr_enquirynumber }}</td>
+                <td>{{ row.trip.tr_consignmentnumber }}</td>
+                <td>{{ row.trip.tr_tripnumber }}</td>
+                <td>{{ row.trip.tr_enquirynumber.en_customername }}</td>
+                <td>{{ row.trip.tr_vehiclenumber }}</td>
+                <td>{{ row.trip.tr_departedlocation }}</td>
+                <td>{{ row.trip.tr_reportedlocation }}</td>
+                <td>{{ row.trip.tr_departeddate_pickup|date:"d-m-Y" }}</td>
+                <td>{{ row.trip.tc_financestatus.status }}</td>
+                <td>
+                    {% if row.invoice_doc %}
+                        {{ row.invoice_doc.id_status.status|default:"-" }}
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if row.invoice_doc and row.invoice_doc.id_merged_pdf %}
+                        <a href="{{ row.invoice_doc.id_merged_pdf.url }}"
+                           target="_blank" class="btn btn-success btn-sm">
+                            <i class="fas fa-file-pdf"></i> Download PDF
+                        </a>
+                    {% else %}
+                        <span class="text-muted">Not generated</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a class="btn btn-primary btn-sm"
+                       href="{% url 'invoice_documents_add' row.trip.id %}">
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    $('#invoice_documents_table').DataTable({
+        order: [[3, 'desc']],
+        scrollX: true,
+        scrollCollapse: true,
+        pageLength: 10,
+        lengthMenu: [
+            [10, 25, 50, 100, -1],
+            [10, 25, 50, 100, "All"]
+        ],
+        dom: 'lBfrtip',
+        buttons: ['copy', 'csv', 'excel', 'print']
+    });
+});
+</script>
+{% endblock content %}

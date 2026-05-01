@@ -56,6 +56,12 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
+										<span class="input-group-text">Gatein Time</span>
+									</div>
+									{% render_field dispatch_form.dispatch_gatein_time type="datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
 										<span class="input-group-text">Truck Number</span>
 									</div>
 									{% render_field dispatch_form.dispatch_truck_number class="form-control" %}
@@ -74,6 +80,12 @@
 									</div>
 									{% render_field dispatch_form.dispatch_billing_truck_type id="dispatch_billing_truck_type" class="form-control" %}
 									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Truck type placed </span>
+									</div>
+									{% render_field dispatch_form.dispatch_truck_type_placed class="form-control" %}
 								</div>
 							</div>
 							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
@@ -100,10 +112,15 @@
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
-										<span class="input-group-text">OTL</span>
+										<span class="input-group-text">Dockin Time</span>
 									</div>
-									{% render_field dispatch_form.dispatch_otl class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+									{% render_field dispatch_form.dispatch_dockin_time type="datetime-local" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Dockout Time</span>
+									</div>
+									{% render_field dispatch_form.dispatch_dockout_time type="datetime-local" class="form-control" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -113,6 +130,12 @@
 								</div>
 							</div>
 							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">OTL</span>
+									</div>
+									{% render_field dispatch_form.dispatch_otl class="form-control" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Depature Date & Time</span>

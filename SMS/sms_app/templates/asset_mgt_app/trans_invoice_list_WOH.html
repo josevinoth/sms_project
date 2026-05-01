@@ -87,6 +87,7 @@
                 <th>Handling Charges</th>
                 <th>Cancellation Charges</th>
 
+                <th>Invoice Documents</th>
                 <th>TOTAL</th>
             </tr>
         </thead>
@@ -154,7 +155,16 @@
                 <td>{{ trip.tc_handlingcost }}</td>
                 <td>{{ trip.tc_cancellation }}</td>
 
-                <!-- ================= TOTAL ================= -->
+                <!-- ================= Invoice Documents ================= -->
+                <td class="text-center">
+                    {% if trip.combined_pdf_url %}
+                    <a href="{{ trip.combined_pdf_url }}" target="_blank" class="btn btn-success btn-sm">
+                        <i class="fas fa-file-pdf"></i>
+                    </a>
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
                 <td><strong>{{ trip.trip_total|floatformat:2 }}</strong></td>
 
             </tr>

@@ -13,6 +13,7 @@ class RtratemasteraddForm(forms.ModelForm):
         self.fields['ro_tolocation'].empty_label = "--Select--"
         self.fields['ro_vehicletype'].empty_label = "--Select--"
         self.fields['ro_customer'].empty_label = "--Select--"
+        self.fields['ro_customer'].queryset = self.fields['ro_customer'].queryset.filter(cu_name__icontains='(T)')
         self.fields['ro_customerdepartment'].empty_label = "--Select--"
         self.fields['ro_vehiclecategory'].empty_label = "--Select--"
         self.fields['ro_touchpoint'].empty_label = "--Select--"

@@ -282,7 +282,9 @@
                     if (data.trips && data.trips.length > 0) {
                         var savedIds = ($('#id_ab_selected_trips').val() || "").split(',');
                         $.each(data.trips, function (index, trip) {
-                            var isChecked = savedIds.includes(String(trip.trip_no)) ? "checked" : "";
+                            // If it's the initial load of an edit page, use saved IDs. 
+                            // Otherwise (new selection), check ALL trips by default.
+                            var isChecked = (isInitialLoad ? savedIds.includes(String(trip.trip_no)) : true) ? "checked" : "";
                             var displayCnote = trip.cnote || "";
                             var row = `<tr data-id="${trip.trip_no}" data-trip-id="${trip.id}" data-km="${trip.trip_km}" data-parking="${trip.parking_cost}" data-toll="${trip.toll_cost}" data-selling="${trip.buy_cost}">
                                     <td><input type="checkbox" class="trip-checkbox" value="${trip.trip_no}" ${isChecked}></td>
@@ -315,7 +317,7 @@
 
                     // Now calculate — rows are in the DOM so Buy Cost cells can be updated
                     isInitialLoad = false; 
-                    calculateAmounts();
+                    syncTableToHeader(); // This now handles total amounts and hidden field sync
                 },
                 error: function (xhr, status, error) {
                     console.error("AJAX Error:", status, error);
@@ -441,13 +443,18 @@
         });
     }
 
-    // NEW: Sync table Toll Cost back to header
+    // NEW: Sync table Toll Cost and Selected Trip IDs back to header
     function syncTableToHeader() {
         var totalToll = 0;
+        var selectedIds = [];
         $('.trip-checkbox:checked').each(function() {
             var $row = $(this).closest('tr');
+            selectedIds.push($(this).val());
             totalToll += parseFloat($row.find('.trip-toll-cost').val()) || 0;
         });
+        
+        // Sync to hidden fields
+        $('#id_ab_selected_trips').val(selectedIds.join(','));
         $('#id_ab_toll_cost').val(totalToll.toFixed(2));
         
         // After syncing up, we must trigger header-based recalculation for the final bill total

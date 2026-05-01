@@ -39,6 +39,12 @@ class TransInvoiceForm(forms.ModelForm):
             "ti_cancellation_charges": forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly"}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super(TransInvoiceForm, self).__init__(*args, **kwargs)
+        if 'ti_customer' in self.fields:
+            self.fields['ti_customer'].queryset = self.fields['ti_customer'].queryset.filter(cu_name__icontains='(T)')
+            self.fields['ti_customer'].empty_label = "--Select--"
+
     def clean_ti_inv_no(self):
         inv_no = self.cleaned_data.get("ti_inv_no")
         if not inv_no:

@@ -25,6 +25,15 @@
             <i class="fa fa-eye" aria-hidden="true"></i> Show All
         </a>
     </div>
+    <div class="col-md-8 d-flex align-items-center">
+        <form id="date-filter-form" class="d-flex align-items-center w-100" method="get" action="">
+            <input type="date" class="form-control mr-3" name="from_date" value="{{ request.GET.from_date|default_if_none:'' }}" placeholder="From Date" style="max-width: 180px;">
+            <span class="mr-3" style="font-weight: bold;">to</span>
+            <input type="date" class="form-control mr-3" name="to_date" value="{{ request.GET.to_date|default_if_none:'' }}" placeholder="To Date" style="max-width: 180px;">
+            <button type="submit" class="btn btn-primary mr-3" id="filter-btn" style="min-width: 90px;">Filter</button>
+            <a href="?{% if request.GET.expense_number %}expense_number={{ request.GET.expense_number }}{% endif %}" class="btn btn-secondary" id="cancel-btn" style="min-width: 90px;">Cancel</a>
+        </form>
+    </div>
 </div>
 <hr>
 <div class="container-fluid">
@@ -85,7 +94,7 @@
             <td>{{ expenseinfo.exp_updated_by }}</td>
             <td>{{ expenseinfo.exp_updated_at }}</td>
             <td>
-                <a class="btn btn-primary" href="{% url 'expense_update' expenseinfo.id %}">
+                <a class="btn btn-primary" href="{% url 'expense_update' expenseinfo.id %}?from_date={{ request.GET.from_date|urlencode }}&to_date={{ request.GET.to_date|urlencode }}&expense_number={{ request.GET.expense_number|urlencode }}">
                     <i class="far fa-edit"></i>
                 </a>
             </td>

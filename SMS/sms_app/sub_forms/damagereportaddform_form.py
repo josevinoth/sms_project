@@ -3,6 +3,33 @@ from django.forms import ClearableFileInput, HiddenInput
 from ..models import DamagereportInfo, DamagereportImages
 
 class DamagereportaddForm(forms.ModelForm):
+    # New fields
+    dam_no_of_pcs_damaged = forms.IntegerField(
+        required=False,
+        initial=0,
+        widget=forms.NumberInput(attrs={'id': 'dam_no_of_pcs_damaged', 'class': 'form-control', 'min': '0'})
+    )
+    dam_invoice_weight = forms.FloatField(
+        required=False,
+        initial=0.0,
+        widget=forms.NumberInput(attrs={'id': 'dam_invoice_weight', 'class': 'form-control', 'readonly': 'readonly', 'step': 'any'})
+    )
+    dam_checkin_weight = forms.FloatField(
+        required=False,
+        initial=0.0,
+        widget=forms.NumberInput(attrs={'id': 'dam_checkin_weight', 'class': 'form-control', 'step': 'any'})
+    )
+    dam_invoice_qty = forms.IntegerField(
+        required=False,
+        initial=0,
+        widget=forms.NumberInput(attrs={'id': 'dam_invoice_qty', 'class': 'form-control', 'readonly': 'readonly'})
+    )
+    dam_checkin_qty = forms.IntegerField(
+        required=False,
+        initial=0,
+        widget=forms.NumberInput(attrs={'id': 'dam_checkin_qty', 'class': 'form-control'})
+    )
+
     class Meta:
         model = DamagereportInfo
         fields = '__all__'

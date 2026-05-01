@@ -11,9 +11,51 @@ from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.tripdetail_mod import TripdetailInfo
 from ..sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
+from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
+from ..sub_models.trip_status_mod import Tripstatusinfo
 from django.db.models import F, Sum, Q, Case, When, Value, FloatField
 from django.db.models.functions import Coalesce
+from ..utils.pdf_utils import merge_pdf_files
 
+
+
+# ==================================================
+# PDF SYNC HELPER
+# ==================================================
+def _sync_trans_invoice_pdf(invoice_no, customer_id):
+    """
+    Merge PDFs of all trips assigned (is_woh=True) to a given invoice number
+    and save the result to the main TransInvoiceInfo record (is_woh=False).
+    """
+    from ..sub_models.trans_invoice_mod import TransInvoiceInfo
+    from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
+
+    master_inv = TransInvoiceInfo.objects.filter(
+        ti_inv_no=invoice_no, ti_customer_id=customer_id, is_woh=False
+    ).first()
+    if not master_inv:
+        return
+
+    # Get all detail records
+    woh_items = TransInvoiceInfo.objects.filter(
+        ti_inv_no=invoice_no, ti_customer_id=customer_id, is_woh=True
+    ).exclude(ti_trip_id__isnull=True).select_related('ti_trip')
+    
+    trip_numbers = [item.ti_trip.tr_tripnumber for item in woh_items if item.ti_trip and item.ti_trip.tr_tripnumber]
+    
+    # Get individual trip PDFs (already merged in Invoice Document module)
+    trip_docs = InvoiceDocumentInfo.objects.filter(id_tripnumber__in=trip_numbers)
+    pdf_fields = [doc.id_merged_pdf for doc in trip_docs if doc.id_merged_pdf]
+    
+    if pdf_fields:
+        success, pdf_file = merge_pdf_files(pdf_fields, f"invoice_{invoice_no}.pdf")
+        if success:
+            master_inv.ti_merged_pdf.save(pdf_file.name, pdf_file, save=True)
+    else:
+        # If no trip PDFs exist, clear the master PDF
+        if master_inv.ti_merged_pdf:
+            master_inv.ti_merged_pdf = None
+            master_inv.save()
 
 
 # ==================================================
@@ -126,10 +168,14 @@ def trans_invoice_add(request):
                     invoice.ti_inv_no = inv_no
                     invoice.save()
                     saved = True
+                    # Trigger PDF merge
+                    _sync_trans_invoice_pdf(invoice.ti_inv_no, invoice.ti_customer.id)
             else:
                 # No invoice number provided; save as before
                 invoice.save()
                 saved = True
+                if invoice.ti_inv_no:
+                     _sync_trans_invoice_pdf(invoice.ti_inv_no, invoice.ti_customer.id)
 
         else:
             pass
@@ -274,6 +320,8 @@ def trans_invoice_edit(request, invoice_id):
 
             invoice.save()
             messages.success(request, "Transportation Invoice Updated Successfully!")
+            # Trigger PDF merge
+            _sync_trans_invoice_pdf(invoice.ti_inv_no, invoice.ti_customer.id)
             return redirect("trans_invoice_list")
 
         else:
@@ -298,23 +346,25 @@ def trans_invoice_edit(request, invoice_id):
 
         form = TransInvoiceForm(instance=invoice)
 
-    return render(
-        request,
-        "asset_mgt_app/trans_invoice_Add.html",
-        {
-            'total_charges': invoice.ti_total,
-            'form': form,
-            'first_name': first_name,
-            'invoice': invoice,
-            'is_edit': True,
-            'invoice_list': invoice_list.select_related(
-                "ti_customer",
-                "ti_trip",
-                "ti_consignment",
-                "ti_goods"
-            ).order_by("-id"),
-        }
-    )
+    context = {
+        'total_charges': invoice.ti_total,
+        'form': form,
+        'first_name': first_name,
+        'invoice': invoice,
+        'is_edit': True,
+        'invoice_list': invoice_list.select_related("ti_customer", "ti_trip", "ti_consignment", "ti_goods").order_by("-id"),
+    }
+
+    # Attach individual trip PDF links for display on edit page
+    woh_items = context['invoice_list']
+    trip_numbers = [item.ti_trip.tr_tripnumber for item in woh_items if item.ti_trip and item.ti_trip.tr_tripnumber]
+    pdf_docs = InvoiceDocumentInfo.objects.filter(id_tripnumber__in=trip_numbers)
+    pdf_map = {doc.id_tripnumber: doc.id_merged_pdf.url if doc.id_merged_pdf else None for doc in pdf_docs}
+    for item in woh_items:
+        if item.ti_trip:
+            item.combined_pdf_url = pdf_map.get(item.ti_trip.tr_tripnumber)
+    
+    return render(request, "asset_mgt_app/trans_invoice_Add.html", context)
 
 # ==================================================
 # LIST TRANS INVOICE
@@ -532,6 +582,8 @@ def trans_invoice_list_woh(request, customer_id):
                     master_inv.ti_cancellation_charges
                 )
                 master_inv.save()
+                # Trigger PDF merge
+                _sync_trans_invoice_pdf(manual_inv_no, customer.id)
 
             return JsonResponse({'status': 'success'})
         except Exception as e:
@@ -589,11 +641,18 @@ def trans_invoice_list_woh(request, customer_id):
         )
         .order_by('-tr_created_at')
     )
+
+    # Attach PDF links to Current Invoice trips (Top Table)
+    curr_trip_numbers = [t.tr_tripnumber for t in trans_invoice_list if t.tr_tripnumber]
+    curr_pdf_docs = InvoiceDocumentInfo.objects.filter(id_tripnumber__in=curr_trip_numbers)
+    curr_pdf_map = {doc.id_tripnumber: doc.id_merged_pdf.url if doc.id_merged_pdf else None for doc in curr_pdf_docs}
+    for trip in trans_invoice_list:
+        trip.combined_pdf_url = curr_pdf_map.get(trip.tr_tripnumber)
     invoice_list_master = (
         TripdetailInfo.objects
         .filter(
             tr_enquirynumber__en_customername_id=customer_id,
-            tc_financestatus_id=7  # Only show settled trips
+            tc_financestatus_id=9  # Only show Ready for Invoice trips
         )
         .exclude(tr_consignmentnumber__co_consignmentnumber__isnull=True)
         .exclude(tr_consignmentnumber__co_consignmentnumber='')
@@ -617,6 +676,13 @@ def trans_invoice_list_woh(request, customer_id):
         )
         .order_by('-tr_created_at')
     )
+
+    # Attach PDF links to master list trips
+    master_trip_numbers = [t.tr_tripnumber for t in invoice_list_master if t.tr_tripnumber]
+    invoice_docs = InvoiceDocumentInfo.objects.filter(id_tripnumber__in=master_trip_numbers)
+    pdf_map = {doc.id_tripnumber: doc.id_merged_pdf.url if doc.id_merged_pdf else None for doc in invoice_docs}
+    for trip in invoice_list_master:
+        trip.combined_pdf_url = pdf_map.get(trip.tr_tripnumber)
 
     invoice_qs = TransInvoiceInfo.objects.filter(ti_trip_id__in=current_woh_trip_ids, ti_customer_id=customer_id, is_woh=True)
     invoice_map = {inv.ti_trip_id: inv for inv in invoice_qs}
@@ -728,6 +794,8 @@ def trans_invoice_remove_woh(request):
                 master_inv.ti_cancellation_charges
             )
             master_inv.save()
+            # Trigger PDF merge after removal
+            _sync_trans_invoice_pdf(inv_no, cid)
 
     return JsonResponse({'status': 'success'})
 

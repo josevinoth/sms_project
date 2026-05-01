@@ -44,51 +44,84 @@
 </div>
 
 <br>
-<div class="container-fluid shadow-box-table p-4">
-    <table  id="revenue_report" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-        <tr>
-           <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
-             <th><input type="text" class="form-control filter-input" placeholder="Search Customer"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Month"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Storage"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Loading"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Forklift"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Crane"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Revenue"></th>
-        </tr>
-        <tr>
-            <th>Branch</th>
-            <th>Unit</th>
-            <th>Customer</th>
-            <th>Month</th>
-            <th>Storage Charges</th>
-            <th>Loading Charges</th>
-            <th>Forklift Charges</th>
-            <th>Crane Charges</th>
-            <th>Revenue</th>
-        </tr>
+<style>
+    .shadow-box-table {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #fff;
+    }
+    #revenue_report th, #revenue_report td {
+        white-space: nowrap;
+    }
+    .filter-input {
+        width: 100%;
+        min-width: 100px;
+        box-sizing: border-box;
+    }
+</style>
 
-        </thead>
+<div class="container-fluid py-4">
+    <div class="shadow-box-table p-3">
+        <table id="revenue_report" class="table table-striped table-bordered w-100">
+            <thead class="thead-dark">
+            <tr>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Unit"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Customer"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Month"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Storage"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Loading"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Forklift"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Crane"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Handling"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Unloading"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Fumigation"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Packing"></th>
+                <th><input type="text" class="form-control filter-input" placeholder="Search Revenue"></th>
+            </tr>
+            <tr>
+                <th>Branch</th>
+                <th>Unit</th>
+                <th>Customer</th>
+                <th>Month</th>
+                <th>Storage Charges</th>
+                <th>Loading Charges</th>
+                <th>Forklift Charges</th>
+                <th>Crane Charges</th>
+                <th>Handling charges</th>
+                <th>Unloading charges</th>
+                <th>Fumigation charges</th>
+                <th>Packing charges</th>
+                <th>Revenue</th>
+            </tr>
+            </thead>
 
-        <tbody>
-        {% for row in revenue_summary %}
-        <tr>
-            <td>{{ row.wh_branch__loc_name }}</td>
-            <td>{{ row.wh_unit__unit_name }}</td>
-            <td>{{ row.wh_customer_name__cu_name }}</td>
-            <td>{{ row.month|date:"F Y" }}</td>
-            <td>{{ row.storage_total|floatformat:2 }}</td>
-            <td>{{ row.loading_total|floatformat:2 }}</td>
-            <td>{{ row.forklift_total|floatformat:2 }}</td>
-            <td>{{ row.crane_total|floatformat:2 }}</td>
-            <td>{{ row.total_invoice |floatformat:2 }}</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+            <tbody>
+            {% for row in revenue_summary %}
+            <tr>
+                <td>{{ row.wh_branch__loc_name }}</td>
+                <td>{{ row.wh_unit__unit_name }}</td>
+                <td>{{ row.wh_customer_name__cu_name }}</td>
+                <td>{{ row.month|date:"F Y" }}</td>
+                <!-- Original -->
+                <td>{{ row.storage_total|floatformat:2 }}</td>
+                <td>{{ row.loading_total|floatformat:2 }}</td>
+                <td>{{ row.forklift_total|floatformat:2 }}</td>
+                <td>{{ row.crane_total|floatformat:2 }}</td>
+                <!-- Aggregated -->
+                <td>{{ row.bill_handling|floatformat:2 }}</td>
+                <td>{{ row.bill_unloading|floatformat:2 }}</td>
+                <td>{{ row.bill_fumigation|floatformat:2 }}</td>
+                <td>{{ row.bill_packing|floatformat:2 }}</td>
+                <td><strong>{{ row.revenue|floatformat:2 }}</strong></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
+
 <br>
 <div>
     <canvas id="revenueChart" width="300" height="100" class="bg-white box-shadow rounded"></canvas>
@@ -114,20 +147,31 @@
     $(document).ready(function() {
 
     var table = $('#revenue_report').DataTable({
-        scrollY: "600px",
+        scrollX: true,
         scrollCollapse: true,
+        autoWidth: false,
+        orderCellsTop: true,
         dom: 'lBfrtip',
         buttons: [
             'copy', 'csv', 'excel', 'pdf', 'print'
-        ]
+        ],
+        initComplete: function() {
+            var api = this.api();
+            setTimeout(function() {
+                api.columns.adjust().draw();
+            }, 500);
+        }
     });
 
+    // Adjust columns on window resize
+    $(window).on('resize', function () {
+        table.columns.adjust();
+    });
 
     $('.filter-input').on('keyup change', function () {
         var columnIndex = $(this).parent().index();
         table.column(columnIndex).search(this.value).draw();
     });
-
 
     $('#revenue_report thead input').on('click', function(e) {
         e.stopPropagation();

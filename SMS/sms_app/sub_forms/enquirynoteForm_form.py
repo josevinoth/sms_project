@@ -10,6 +10,7 @@ class EnquirynoteaddForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(EnquirynoteaddForm,self).__init__(*args, **kwargs)
         self.fields['en_customername'].empty_label = "--Select--"
+        self.fields['en_customername'].queryset = self.fields['en_customername'].queryset.filter(cu_name__icontains='(T)')
         self.fields['en_customerdepartment'].empty_label = "--Select--"
         self.fields['en_assignedto'].empty_label = "--Select--"
         self.fields['en_status'].empty_label = "--Select--"

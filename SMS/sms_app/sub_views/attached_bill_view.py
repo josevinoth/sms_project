@@ -37,7 +37,7 @@ def attached_bill_add(request):
                     t_toll = request.POST.get(f'trip_toll_cost_{tid}')
 
                     if t_buy is not None:
-                        pass  # buy cost is calculated dynamically in report from ab_buy_cost/total_km
+                        trip.tc_tripcost = float(t_buy or 0)
                     if t_parking is not None: trip.tc_parkingcost = float(t_parking or 0)
                     if t_toll is not None: trip.tc_tollcost = float(t_toll or 0)
                     trip.save()
@@ -101,7 +101,7 @@ def attached_bill_edit(request, id):
                     t_toll = request.POST.get(f'trip_toll_cost_{tid}')
 
                     if t_buy is not None:
-                        pass  # buy cost is calculated dynamically in report from ab_buy_cost/total_km
+                        trip.tc_tripcost = float(t_buy or 0)
                     if t_parking is not None: trip.tc_parkingcost = float(t_parking or 0)
                     if t_toll is not None: trip.tc_tollcost = float(t_toll or 0)
                     trip.save()

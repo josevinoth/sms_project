@@ -25,6 +25,11 @@ class DamagereportInfo(models.Model):
                                    related_name='dam_damages', db_column='dam_damages', default=6)
     dam_damages1 = models.ManyToManyField(DamageInfo, blank=True,related_name='dam_damages1', db_column='dam_damages1', default=6)
     dam_deviation1 = models.ManyToManyField(DeviationInfo, blank=True,related_name='dam_deviation1', db_column='dam_deviation1', default=4)
+    dam_no_of_pcs_damaged = models.IntegerField(blank=True, null=True, default=0)
+    dam_invoice_weight = models.FloatField(blank=True, null=True, default=0.0)
+    dam_checkin_weight = models.FloatField(blank=True, null=True, default=0.0)
+    dam_invoice_qty = models.IntegerField(blank=True, null=True, default=0)
+    dam_checkin_qty = models.IntegerField(blank=True, null=True, default=0)
     def __str__(self):
         return self.dam_wh_job_num
 

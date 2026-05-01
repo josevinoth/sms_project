@@ -132,6 +132,7 @@
           <th>Transporter</th>
           <th>Truck Number</th>
           <th>Truck Type(In)</th>
+          <th>Truck Type Placed</th>
           <th>Consignor</th>
           <th>Consignee</th>
           <th>Docs Received</th>
@@ -163,6 +164,9 @@
           <th>Storage Days</th>
           <th>Truck_Number(Out)</th>
           <th>Truck_Type(Out)</th>
+          <th>Gatein Time(Out)</th>
+          <th>Dockin Time(Out)</th>
+          <th>Dockout Time(Out)</th>
           <th>Truck_Depature_Time(Out)</th>
           <th>Labels_Pasted_By</th>
           <th>MAWB</th>
@@ -185,6 +189,7 @@
           <td> {{stock_value.wh_gate_injob_no_id.gatein_transporter}}</td>
           <td> {{stock_value.wh_gate_injob_no_id.gatein_truck_number}}</td>
           <td> {{stock_value.wh_gate_injob_no_id.gatein_truck_number_n.pregatein_truck_type}}</td>
+          <td> {{stock_value.wh_dispatch_id.dispatch_truck_type_placed}}</td>
           <td> {{stock_value.wh_consigner}}</td>
           <td> {{stock_value.wh_consignee}}</td>
           <td> {{stock_value.wh_lb_job_no_id.lb_packing_list}}</td>
@@ -216,6 +221,9 @@
           <td> {{stock_value.wh_storage_time }}</td>
           <td> {{stock_value.wh_dispatch_id.dispatch_truck_number}}</td>
           <td> {{stock_value.wh_dispatch_id.dispatch_truck_type}}</td>
+          <td> {{stock_value.wh_dispatch_id.dispatch_gatein_time|date:"d-M-Y H:i:s"}}</td>
+          <td> {{stock_value.wh_dispatch_id.dispatch_dockin_time|date:"d-M-Y H:i:s"}}</td>
+          <td> {{stock_value.wh_dispatch_id.dispatch_dockout_time|date:"d-M-Y H:i:s"}}</td>
           <td> {{stock_value.wh_dispatch_id.dispatch_depature_date|date:"d-M-Y H:i:s"}}</td>
           <td> {{stock_value.wh_dispatch_id.dispatch_sticker_pasted_bvm}}</td>
           <td> {{stock_value.wh_dispatch_id.dispatch_mawb}}</td>

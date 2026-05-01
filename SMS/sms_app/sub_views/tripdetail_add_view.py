@@ -10,8 +10,9 @@ from django.utils.timezone import make_aware
 from django.utils import timezone
 
 from .send_department_email import send_department_email
-from ..forms import TripclosurefilesForm,TripdetailaddForm
-from ..models import Vehicle_allotmentInfo,ConsignmentdetailInfo,Tripstatusinfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,VehiclemasterInfo,TripHighvalueInfo, Emailmaster, Email_type
+from ..forms import TripclosurefilesForm, TripdetailaddForm
+from ..models import Vehicle_allotmentInfo, ConsignmentdetailInfo, Tripstatusinfo, Trip_closure_files_Info, \
+    EnquirynoteInfo, TripdetailInfo, VehiclemasterInfo, TripHighvalueInfo, Emailmaster, Email_type
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
@@ -46,8 +47,9 @@ def tripdetail_enquiry(request, enquiry_id, trip_num):
         # If trip_id is provided, redirect to update
         return redirect('tripdetail_update', tripdetail_id=trip_id)  # tripdetail_id is a keyword argument in the URL
 
+
 @login_required(login_url='login_page')
-def tripdetail_nav(request,tripdetail_id=0):
+def tripdetail_nav(request, tripdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     print("I am inside Get add tripetails")
@@ -55,8 +57,8 @@ def tripdetail_nav(request,tripdetail_id=0):
     tripclosurefiles_form = TripclosurefilesForm()
     enquiry_num_id = tripdetail_id
     request.session['enquiry_num_id'] = enquiry_num_id
-    tripdetail_list=TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id)
-    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3,8])
+    tripdetail_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id)
+    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8])
     consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
     context = {
         'first_name': first_name,
@@ -70,6 +72,7 @@ def tripdetail_nav(request,tripdetail_id=0):
     }
     return render(request, "asset_mgt_app/tripdetail_add.html", context)
 
+
 @login_required(login_url='login_page')
 def tripdetail_add(request, tripdetail_id=0):
     first_name = request.session.get('first_name')
@@ -78,7 +81,7 @@ def tripdetail_add(request, tripdetail_id=0):
     # ✅ Get enquiry_num_id safely from URL or session
     # Prioritize 'enquiry_num_id' (integer) over 'ses_enqiury_id' (string)
     enquiry_num_id = request.GET.get('enquiry_num_id') or request.session.get('enquiry_num_id')
-    
+
     # Fallback to string-based session key if needed (though we should avoid this)
     if not enquiry_num_id:
         string_enq_num = request.session.get('ses_enqiury_id')
@@ -127,10 +130,10 @@ def tripdetail_add(request, tripdetail_id=0):
                 # Determine the vehicle number string for querying TripdetailInfo (which uses CharField for vehiclenumber)
                 v_obj = initial_data['tr_vehiclenumber']
                 # If it's an object (Foreign Key from allotment), get the registration number
-                if hasattr(v_obj, 'vm_registrationnumber'): 
+                if hasattr(v_obj, 'vm_registrationnumber'):
                     search_vehicle_num = v_obj.vm_registrationnumber
                 else:
-                    search_vehicle_num = str(v_obj) # Market vehicle or already a string
+                    search_vehicle_num = str(v_obj)  # Market vehicle or already a string
 
                 last_trip = TripdetailInfo.objects.filter(
                     tr_vehiclenumber=search_vehicle_num
@@ -289,16 +292,28 @@ def tripdetail_add(request, tripdetail_id=0):
                 trip = trip_det_form.save(commit=False)
                 trip.tr_tripnumber = trip_num_next
 
+                # ✅ Synchronize KM fields for reports
+                # tr_departedkm is the 'canonical' Starting KM used in reports.
+                if not trip.tr_departedkm and trip.tr_reportedkm_pickup:
+                    trip.tr_departedkm = trip.tr_reportedkm_pickup
+
+                # tr_reportedkm is the 'canonical' Ending KM used in reports.
+                if not trip.tr_reportedkm and trip.tr_reportedkm_delivery:
+                    trip.tr_reportedkm = trip.tr_reportedkm_delivery
+
                 # KM Validation: Ensure closing KM >= opening KM
                 closing_km = trip.tr_reportedkm or 0
                 opening_km = trip.tr_reportedkm_pickup or 0
                 if closing_km > 0 and closing_km < opening_km:
-                    messages.error(request, f"Error: Closing KM ({closing_km}) cannot be less than Opening KM ({opening_km})")
+                    messages.error(request,
+                                   f"Error: Closing KM ({closing_km}) cannot be less than Opening KM ({opening_km})")
                     return redirect(request.META.get('HTTP_REFERER', 'tripdetail_list'))
-                
+
                 # ✅ Robust Status Matching
-                status_open = Tripstatusinfo.objects.filter(Q(status__iexact='Open') | Q(status__iexact='Started')).first()
-                status_closed = Tripstatusinfo.objects.filter(Q(status__iexact='Closed') | Q(status__iexact='Trip Closed')).first()
+                status_open = Tripstatusinfo.objects.filter(
+                    Q(status__iexact='Open') | Q(status__iexact='Started')).first()
+                status_closed = Tripstatusinfo.objects.filter(
+                    Q(status__iexact='Closed') | Q(status__iexact='Trip Closed')).first()
                 status_pending = Tripstatusinfo.objects.filter(status__iexact='Pending Approval').first()
 
                 # Manual capture of status from POST
@@ -329,17 +344,18 @@ def tripdetail_add(request, tripdetail_id=0):
                     try:
                         import json
                         request.session['ses_tripdetail_id'] = trip.id
-                        
+
                         # Fetch recipients
                         recipients = get_auto_recipients(trip)
-                        
+
                         if not recipients:
-                            messages.warning(request, f"Alert Skipped: {label} - No email ID found for this customer in the email master.")
+                            messages.warning(request,
+                                             f"Alert Skipped: {label} - No email ID found for this customer in the email master.")
                             return
 
                         response = alert_func(request)
                         rec_str = ", ".join(recipients)
-                        
+
                         # Inspect JsonResponse
                         try:
                             data = json.loads(response.content.decode('utf-8'))
@@ -405,16 +421,28 @@ def tripdetail_add(request, tripdetail_id=0):
             if trip_det_form.is_valid():
                 trip = trip_det_form.save(commit=False)
 
+                # ✅ Synchronize KM fields for reports
+                # tr_departedkm is the 'canonical' Starting KM used in reports.
+                if not trip.tr_departedkm and trip.tr_reportedkm_pickup:
+                    trip.tr_departedkm = trip.tr_reportedkm_pickup
+
+                # tr_reportedkm is the 'canonical' Ending KM used in reports.
+                if not trip.tr_reportedkm and trip.tr_reportedkm_delivery:
+                    trip.tr_reportedkm = trip.tr_reportedkm_delivery
+
                 # KM Validation: Ensure closing KM >= opening KM
                 closing_km = trip.tr_reportedkm or 0
                 opening_km = trip.tr_reportedkm_pickup or 0
                 if closing_km > 0 and closing_km < opening_km:
-                    messages.error(request, f"Error: Closing KM ({closing_km}) cannot be less than Opening KM ({opening_km})")
+                    messages.error(request,
+                                   f"Error: Closing KM ({closing_km}) cannot be less than Opening KM ({opening_km})")
                     return redirect(request.META.get('HTTP_REFERER', 'tripdetail_list'))
 
                 # ✅ Robust Status Matching Lookups
-                status_open = Tripstatusinfo.objects.filter(Q(status__iexact='Open') | Q(status__iexact='Started')).first()
-                status_closed = Tripstatusinfo.objects.filter(Q(status__iexact='Closed') | Q(status__iexact='Trip Closed')).first()
+                status_open = Tripstatusinfo.objects.filter(
+                    Q(status__iexact='Open') | Q(status__iexact='Started')).first()
+                status_closed = Tripstatusinfo.objects.filter(
+                    Q(status__iexact='Closed') | Q(status__iexact='Trip Closed')).first()
 
                 # Manual capture since it's a raw select tag in HTML
                 manual_status_id = request.POST.get('tc_financestatus')
@@ -436,17 +464,18 @@ def tripdetail_add(request, tripdetail_id=0):
                     try:
                         import json
                         request.session['ses_tripdetail_id'] = trip.id
-                        
+
                         # Fetch recipients
                         recipients = get_auto_recipients(trip)
-                        
+
                         if not recipients:
-                            messages.warning(request, f"Alert Skipped: {label} - No email ID found for this customer in the email master.")
+                            messages.warning(request,
+                                             f"Alert Skipped: {label} - No email ID found for this customer in the email master.")
                             return
 
                         response = alert_func(request)
                         rec_str = ", ".join(recipients)
-                        
+
                         # Inspect JsonResponse
                         try:
                             data = json.loads(response.content.decode('utf-8'))
@@ -461,8 +490,10 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 # Boolean checks for status
                 # Fallback to IDs 1/2 if name lookup fails, but prioritize names
-                is_open = (status_open and trip.tc_financestatus_id == status_open.id) or (not status_open and trip.tc_financestatus_id == 1)
-                is_closed = (status_closed and trip.tc_financestatus_id == status_closed.id) or (not status_closed and trip.tc_financestatus_id == 2)
+                is_open = (status_open and trip.tc_financestatus_id == status_open.id) or (
+                            not status_open and trip.tc_financestatus_id == 1)
+                is_closed = (status_closed and trip.tc_financestatus_id == status_closed.id) or (
+                            not status_closed and trip.tc_financestatus_id == 2)
 
                 # ✅ Only send email alerts for trip category 1
                 if trip.tr_category_id == 1:
@@ -597,7 +628,7 @@ def tripdetail_list_ajax(request):
         8: 'tr_reportedlocation__place_name',
         9: 'tr_reportedkm',
         10: 'tr_reporteddate',
-        11: 'id', # Placeholder for Track
+        11: 'id',  # Placeholder for Track
         12: 'tc_financestatus__status',
         13: 'tr_updated_by__first_name',
         14: 'tr_updated_at',
@@ -648,42 +679,61 @@ def tripdetail_list_ajax(request):
     })
 
 
-#Delete tripdetail
+# Delete tripdetail
 @login_required(login_url='login_page')
-def tripdetail_delete(request,tripdetail_id):
+def tripdetail_delete(request, tripdetail_id):
     tripdetail = TripdetailInfo.objects.get(pk=tripdetail_id)
     enquiry_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_enquirynumber
     trip_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_tripnumber
     tripdetail.delete()
     try:
-        tripdetail_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num).values_list('tr_tripnumber',flat=True)
+        tripdetail_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num).values_list('tr_tripnumber',
+                                                                                                  flat=True)
         EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_tripdetails=list(tripdetail_list))
     except ObjectDoesNotExist:
         tripdetail_list = []
         EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_tripdetails=list(tripdetail_list))
-    trip_closure_files=list(Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).values_list('tcf_tripnumber',flat=True))
+    trip_closure_files = list(
+        Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).values_list('tcf_tripnumber', flat=True))
     for i in trip_closure_files:
         trip_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=i)
         trip_files.delete()
     # return redirect('/SMS/tripdetail_list')
     return redirect(request.META['HTTP_REFERER'])
 
+
 @login_required(login_url='login_page')
 def load_vehicle_details(request):
     enquiry_number = request.GET.get('enquiry_number')
     consignment_number = request.GET.get('consignment_number')
-    count=0
-    trip_number=list(TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_number,tr_consignmentnumber=consignment_number,tc_financestatus=1).values_list('tr_tripnumber',flat=True))
-    if len(trip_number)>0:
-        count=count+1
-    if count<1:
-        vehicle_type_requested=list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_vehicletype',flat=True))
-        vehicle_type_placed=list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_vehicletype_placed',flat=True))
-        vehicletype_source = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_vehiclesource', flat=True))
-        vehicletype_number = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_vehiclenumber', flat=True))
-        driver_name = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_drivername', flat=True))
-        driver_number = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_driver_lic', flat=True))
-        driver_license = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,va_consignmentnumber=consignment_number).values_list('va_drivernumber', flat=True))
+    count = 0
+    trip_number = list(
+        TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_number, tr_consignmentnumber=consignment_number,
+                                      tc_financestatus=1).values_list('tr_tripnumber', flat=True))
+    if len(trip_number) > 0:
+        count = count + 1
+    if count < 1:
+        vehicle_type_requested = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,
+                                                                           va_consignmentnumber=consignment_number).values_list(
+            'va_vehicletype', flat=True))
+        vehicle_type_placed = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,
+                                                                        va_consignmentnumber=consignment_number).values_list(
+            'va_vehicletype_placed', flat=True))
+        vehicletype_source = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,
+                                                                       va_consignmentnumber=consignment_number).values_list(
+            'va_vehiclesource', flat=True))
+        vehicletype_number = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,
+                                                                       va_consignmentnumber=consignment_number).values_list(
+            'va_vehiclenumber', flat=True))
+        driver_name = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,
+                                                                va_consignmentnumber=consignment_number).values_list(
+            'va_drivername', flat=True))
+        driver_number = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,
+                                                                  va_consignmentnumber=consignment_number).values_list(
+            'va_driver_lic', flat=True))
+        driver_license = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number,
+                                                                   va_consignmentnumber=consignment_number).values_list(
+            'va_drivernumber', flat=True))
         count_val = count
         data = {
             'vehicle_type_requested': vehicle_type_requested,
@@ -696,22 +746,23 @@ def load_vehicle_details(request):
             'count_val': count_val,
         }
     else:
-        count_val=count
+        count_val = count
         data = {
-            'count_val':count_val,
+            'count_val': count_val,
         }
     return HttpResponse(json.dumps(data))
+
 
 @login_required(login_url='login_page')
 def trip_email(request):
     if request.method != "POST":
-         return JsonResponse({"success": False, "msg": "Invalid request method"})
+        return JsonResponse({"success": False, "msg": "Invalid request method"})
 
     recipient = request.POST.get('recipient')
-    message_from_user = request.POST.get('message', '') 
-    alert_type = request.POST.get('alert_type', '') 
+    message_from_user = request.POST.get('message', '')
+    alert_type = request.POST.get('alert_type', '')
     tripdetail_id = request.session.get('ses_tripdetail_id')
-    
+
     # Save manual recipient to session
     request.session["trip_manual_recipient"] = recipient
 
@@ -732,12 +783,13 @@ def trip_email(request):
             return None
 
     try:
-        enquiry = EnquirynoteInfo.objects.select_related('en_customername','en_customerdepartment').get(en_enquirynumber=trip.tr_enquirynumber)
+        enquiry = EnquirynoteInfo.objects.select_related('en_customername', 'en_customerdepartment').get(
+            en_enquirynumber=trip.tr_enquirynumber)
     except EnquirynoteInfo.DoesNotExist:
         enquiry = None
 
     customer_name = enquiry.en_customername.cu_name if enquiry and enquiry.en_customername else "N/A"
-    
+
     # Common Data Points
     from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
     reported_dt = format_email_date(trip.tr_departeddate_pickup)
@@ -755,7 +807,7 @@ def trip_email(request):
     recipient_list = [email.strip() for email in recipient.split(',') if email.strip()]
 
     email_content = ""
-    
+
     # Mail 1: Loading Reported
     if "Loading Reported" in alert_type:
         email_content = f"""
@@ -846,7 +898,7 @@ def trip_email(request):
             </tbody>
         </table>
         """
-    
+
     # Fallback / Default Format
     else:
         email_content = f"""
@@ -905,6 +957,7 @@ def trip_email(request):
         return JsonResponse({"success": True, "msg": "Email sent successfully."})
     except Exception as e:
         return JsonResponse({"success": False, "msg": f"Error sending email: {str(e)}"})
+
 
 @login_required(login_url='login_page')
 def load_truck_details(request):
@@ -995,10 +1048,11 @@ def fleet_management_view(request):
         {'vehicle_status_list': vehicle_status_list}
     )
 
+
 @login_required(login_url='login_page')
 def get_sim_tracking_data(request):
-    trip_details = TripdetailInfo.objects.filter(tr_vehiclesource=3,tc_financestatus=1).values(
-        'tr_vehiclenumber', 'tr_drivername', 'tr_drivernumber', 'tr_track_link','tc_financestatus'
+    trip_details = TripdetailInfo.objects.filter(tr_vehiclesource=3, tc_financestatus=1).values(
+        'tr_vehiclenumber', 'tr_drivername', 'tr_drivernumber', 'tr_track_link', 'tc_financestatus'
     )
 
     sim_data = []
@@ -1007,11 +1061,12 @@ def get_sim_tracking_data(request):
             'sim_number': trip['tr_drivernumber'] or 'NA',
             'imei': trip['tr_vehiclenumber'],
             'status': trip['tc_financestatus'],
-            'track_url': trip['tr_track_link'] ,
+            'track_url': trip['tr_track_link'],
             'driver_name': trip['tr_drivername'] or 'NA'
         })
 
     return JsonResponse(sim_data, safe=False)
+
 
 @login_required(login_url='login_page')
 def get_customer_ref(request):
@@ -1024,7 +1079,6 @@ def get_customer_ref(request):
     return JsonResponse(data)
 
 
-
 @login_required(login_url='login_page')
 def get_last_reported_km(request):
     vehicle = request.GET.get("vehicle")
@@ -1034,13 +1088,14 @@ def get_last_reported_km(request):
         .filter(tr_vehiclenumber=vehicle)
         .exclude(tr_reportedkm__isnull=True)
         .exclude(tr_reportedkm=0)
-        .order_by('-id')      # most recent trip globally
+        .order_by('-id')  # most recent trip globally
         .first()
     )
 
     return JsonResponse({
         "reported_km": last_trip.tr_reportedkm if last_trip else None
     })
+
 
 def get_auto_recipients(trip):
     """
@@ -1050,20 +1105,21 @@ def get_auto_recipients(trip):
     try:
         # Refresh trip to ensure relationships are up to date
         trip.refresh_from_db()
-        enquiry = EnquirynoteInfo.objects.select_related('en_customername', 'en_customerdepartment').get(id=trip.tr_enquirynumber_id)
-        
+        enquiry = EnquirynoteInfo.objects.select_related('en_customername', 'en_customerdepartment').get(
+            id=trip.tr_enquirynumber_id)
+
         customer = enquiry.en_customername
         department = enquiry.en_customerdepartment
-        
+
         # 1. Filtered Search: Type 2 (Alerts) or 'For alert' by name
         type_obj = Email_type.objects.filter(Q(id=2) | Q(email_type__iexact='For alert')).first()
         tid = type_obj.id if type_obj else 2
-        
+
         email_qs = Emailmaster.objects.filter(
-            Q(em_Customer_name_id=customer.id) & 
+            Q(em_Customer_name_id=customer.id) &
             (Q(em_emailtype_id=tid) | Q(em_emailtype__email_type__iexact='For alert'))
         )
-        
+
         if department:
             dept_qs = email_qs.filter(em_customerdepartment_id=department.id)
             if dept_qs.exists():
@@ -1079,23 +1135,26 @@ def get_auto_recipients(trip):
             recipients = [x.strip() for x in to.split(",") if x.strip()]
             if cc:
                 recipients.extend([x.strip() for x in cc.split(",") if x.strip()])
-                
+
             return recipients
-                
+
     except Exception as e:
         print(f"Error fetching auto recipients: {e}")
-        
+
     return None
+
 
 def get_trip_recipients(request, trip):
     recipients = get_auto_recipients(trip)
     return recipients or []
+
 
 def get_manual_recipients_backup(request):
     recipient = request.session.get("trip_manual_recipient")
     if not recipient:
         return ["itadmin@bvm.com"]
     return [x.strip() for x in recipient.split(",") if x.strip()]
+
 
 @login_required(login_url='login_page')
 def trip_send_loading_report_mail(request):
@@ -1167,6 +1226,7 @@ def trip_send_loading_report_mail(request):
     trip.save(update_fields=["tr_loading_report_mail_sent"])
 
     return JsonResponse({"success": True})
+
 
 @login_required(login_url='login_page')
 def trip_send_trip_started_mail(request):
@@ -1257,6 +1317,7 @@ def trip_send_trip_started_mail(request):
 
     return JsonResponse({"success": True})
 
+
 @login_required(login_url='login_page')
 def trip_send_unloading_report_mail(request):
     trip_id = request.session.get("ses_tripdetail_id")
@@ -1336,6 +1397,7 @@ def trip_send_unloading_report_mail(request):
 
     return JsonResponse({"success": True})
 
+
 @login_required(login_url='login_page')
 def trip_send_trip_closed_mail(request):
     trip_id = request.session.get("ses_tripdetail_id")
@@ -1359,7 +1421,7 @@ def trip_send_trip_closed_mail(request):
     consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
     started_dt = format_email_date(trip.tr_departeddate) or "N/A"
     reported_dt = format_email_date(trip.tr_reporteddate) or "N/A"
-    
+
     # POD Status Logic - Check both file attachment and signature
     pod_status = "POD Received" if (trip.tc_pod_attachment or trip.td_pod) else "POD Not Received"
 
@@ -1437,6 +1499,7 @@ def trip_send_trip_closed_mail(request):
 
     return JsonResponse({"success": True})
 
+
 @login_required(login_url='login_page')
 def get_trip_email_recipients(request):
     enquiry_id = request.GET.get("enquiry_id")
@@ -1453,7 +1516,7 @@ def get_trip_email_recipients(request):
         tid = email_type_obj.id if email_type_obj else 2
 
         email_qs = Emailmaster.objects.filter(em_Customer_name=customer, em_emailtype_id=tid)
-        
+
         if department:
             dept_qs = email_qs.filter(em_customerdepartment=department)
             if dept_qs.exists():
@@ -1475,7 +1538,8 @@ def get_trip_email_recipients(request):
             return JsonResponse({"success": True, "recipients": recipients})
         else:
             # Fallback for UI consistency
-            return JsonResponse({"success": True, "recipients": "itadmin@bvm.com", "msg": f"No alert contact found for {customer}"})
+            return JsonResponse(
+                {"success": True, "recipients": "itadmin@bvm.com", "msg": f"No alert contact found for {customer}"})
 
     except Exception as e:
         return JsonResponse({"success": False, "msg": str(e)})

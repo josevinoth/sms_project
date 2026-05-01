@@ -2,6 +2,7 @@ from django.contrib import messages
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.db.models import Sum
 from ..forms import DamagereportaddForm,DamagereportImagesForm
 from ..models import PictureImage,Location_info,DamagereportInfo,Loadingbay_Info,Gatein_info,Warehouse_goods_info,DamagereportImages,damage_image_type_info
 from django.shortcuts import render, redirect
@@ -64,10 +65,22 @@ def damagereport_add(request,damagereport_id=0):
     except ObjectDoesNotExist:
         warehousein_status = "No Status"
 
+    # Aggregate invoice weight and qty from Inspection (Warehouse_goods_info)
+    goods_totals = Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).aggregate(
+        total_invoice_weight=Sum('wh_invoice_weight_unit'),
+        total_invoice_qty=Sum('wh_invoice_qty'),
+    )
+    invoice_weight_from_inspection = goods_totals.get('total_invoice_weight') or 0.0
+    invoice_qty_from_inspection = goods_totals.get('total_invoice_qty') or 0
+
     if request.method == "GET":
         if damagereport_id == 0:
             print("I am inside Get add damagereport")
-            damagereport_form = DamagereportaddForm()
+            damagereport_form = DamagereportaddForm(initial={
+                'dam_invoice_weight': invoice_weight_from_inspection,
+                'dam_invoice_qty': invoice_qty_from_inspection,
+                'dam_checkin_qty': invoice_qty_from_inspection,
+            })
             damagereportimg_form = DamagereportImagesForm()
             picture_add(request)
             context = {
@@ -84,11 +97,16 @@ def damagereport_add(request,damagereport_id=0):
                 'damage_before_status': damage_before_status,
                 'warehousein_status': warehousein_status,
                 'user_branch': user_branch,
+                'invoice_weight_from_inspection': invoice_weight_from_inspection,
+                'invoice_qty_from_inspection': invoice_qty_from_inspection,
             }
         else:
             print("I am inside get edit damagereport")
             request.session['ses_damagereport_id'] = damagereport_id
             damagereport_info=DamagereportInfo.objects.get(dam_wh_job_num=wh_job_id)
+            # On edit: keep the saved values but refresh invoice weight/qty from Inspection
+            damagereport_info.dam_invoice_weight = invoice_weight_from_inspection
+            damagereport_info.dam_invoice_qty = invoice_qty_from_inspection
             damagereport_form = DamagereportaddForm(instance=damagereport_info)
             damagereportimg_info = DamagereportImages.objects.get(damimage_wh_job_num=wh_job_id)
             damagereportimg_form = DamagereportImagesForm(request.FILES, instance=damagereportimg_info)
@@ -111,6 +129,8 @@ def damagereport_add(request,damagereport_id=0):
                 'picture_list': picture_list,
                 'damagereport_id': damagereport_id,
                 'pictures' : pictures,
+                'invoice_weight_from_inspection': invoice_weight_from_inspection,
+                'invoice_qty_from_inspection': invoice_qty_from_inspection,
             }
         return render(request, "asset_mgt_app/damagereport_add.html", context)
     else:

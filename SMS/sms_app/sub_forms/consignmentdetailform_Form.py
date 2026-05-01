@@ -14,6 +14,7 @@ class ConsignmentdetailaddForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ConsignmentdetailaddForm,self).__init__(*args, **kwargs)
         self.fields['co_customer'].empty_label = "--Select--"
+        self.fields['co_customer'].queryset = self.fields['co_customer'].queryset.filter(cu_name__icontains='(T)')
         self.fields['co_status'].empty_label = "--Select--"
         self.fields['co_cusrefnum'].empty_label = "--Select--"
         self.fields['co_gst_payable_by'].empty_label = "--Select--"

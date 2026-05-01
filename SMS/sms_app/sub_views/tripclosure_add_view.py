@@ -10,6 +10,7 @@ from django.views.decorators.http import require_GET
 
 from ..forms import TripclosurefilesForm,TripclosureaddForm
 from ..models import RtratemasterInfo,User_extInfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,Tripstatusinfo, Vehicle_allotmentInfo
+from ..sub_models.ownership_mod import OwnershipInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Q
@@ -104,6 +105,13 @@ def tripclosure_add(request,tripclosure_id=0):
             consignment_num = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_consignmentdetails
             tripclosure = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
             tripclosure_form = TripclosureaddForm(instance=tripclosure)
+            
+            # Populate Customer Name and Trip Date
+            if tripclosure.tr_enquirynumber:
+                tripclosure_form.fields['customer_name'].initial = str(tripclosure.tr_enquirynumber.en_customername)
+            if tripclosure.tr_departeddate_pickup:
+                tripclosure_form.fields['trip_date'].initial = tripclosure.tr_departeddate_pickup.strftime('%d-%m-%Y')
+
             tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
             tripclosurefiles_form = TripclosurefilesForm(instance=tripclosure_files)
             trip = TripdetailInfo.objects.get(pk=tripclosure_id)
@@ -196,8 +204,10 @@ def tripclosure_list(request):
     selected_status = request.GET.get('trip_status', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
+    selected_vehicle_source = request.GET.get('vehicle_source', '')
 
     status_list = Tripstatusinfo.objects.filter(id__in=[4, 5, 6, 7])
+    ownership_list = OwnershipInfo.objects.all()
 
     context = {
         'first_name': first_name,
@@ -206,6 +216,8 @@ def tripclosure_list(request):
         'selected_status': int(selected_status) if selected_status else None,
         'date_from': date_from,
         'date_to': date_to,
+        'ownership_list': ownership_list,
+        'selected_vehicle_source': selected_vehicle_source,
     }
 
     return render(request, "asset_mgt_app/tripclosure_list.html", context)
@@ -225,6 +237,7 @@ def tripclosure_list_ajax(request):
     selected_status = request.GET.get('trip_status', '').strip()
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
+    vehicle_source = request.GET.get('vehicle_source', '').strip()
 
     qs = TripdetailInfo.objects.select_related(
         'tr_enquirynumber', 'tr_consignmentnumber', 'tc_financestatus'
@@ -238,6 +251,9 @@ def tripclosure_list_ajax(request):
 
     if selected_status:
         qs = qs.filter(tc_financestatus_id=selected_status)
+
+    if vehicle_source:
+        qs = qs.filter(tr_vehiclesource_id=vehicle_source)
 
     if date_from:
         qs = qs.filter(tr_created_at__date__gte=date_from)

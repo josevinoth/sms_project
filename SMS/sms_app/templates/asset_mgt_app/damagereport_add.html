@@ -30,10 +30,10 @@
 
 			{% if damagereport_list %}
 			{% for damagecheckinfo in damagereport_list %}
-			<a class="btn  border focus border-dark mb-2" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage Check</a>
+			<a class="btn  border focus border-dark mb-2" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage/Deviation</a>
 			{% endfor %}
 			{% else %}
-			<a class="btn  border focus border-dark mb-2" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage Check</a>
+			<a class="btn  border focus border-dark mb-2" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage/Deviation</a>
 			{% endif %}
 
 			<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}" >Warehouse In</a>-->
@@ -102,6 +102,12 @@
 								</div>
 								{% render_field damagereport_form.dam_damages1 id="dam_damages1" class="form-control"%}
 							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">No. of Pcs Damaged</span>
+								</div>
+								{% render_field damagereport_form.dam_no_of_pcs_damaged id="dam_no_of_pcs_damaged" class="form-control" oninput="updateQuantities()" %}
+							</div>
 						</div>
 						<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
 
@@ -117,6 +123,34 @@
 								</div>
 								{% render_field damagereport_form.dam_marks_numbers id="dam_marks_numbers" onchange="challan_damage_btn_active()" class="form-control"%}
 							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Invoice Quantity</span>
+								</div>
+								{% render_field damagereport_form.dam_invoice_qty id="dam_invoice_qty" class="form-control" readonly="True" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Check-in Quantity</span>
+								</div>
+								{% render_field damagereport_form.dam_checkin_qty id="dam_checkin_qty" class="form-control" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Invoice Weight</span>
+								</div>
+								{% render_field damagereport_form.dam_invoice_weight id="dam_invoice_weight" class="form-control" %}
+							</div>
+							<div class="input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Check-in Weight</span>
+								</div>
+								{% render_field damagereport_form.dam_checkin_weight id="dam_checkin_weight" class="form-control" %}
+							</div>
+							{% render_field damagereportimg_form.damimage_wh_job_num name="damimage_wh_job_num" id="damimage_wh_job_num" value=request.session.ses_gatein_id_nam class="form-control" %}
+
+						</div>
+						<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
 							<div class="input-group input-group mb-3 bg-dark">
 								<div class="input-group-prepend">
 									<span class="input-group-text">OTL Pic</span>
@@ -129,10 +163,6 @@
 								</div>
 								{% render_field damagereportimg_form.dam_document name="dam_document" id="dam_document" class="form-control" %}
 							</div>
-							{% render_field damagereportimg_form.damimage_wh_job_num name="damimage_wh_job_num" id="damimage_wh_job_num" value=request.session.ses_gatein_id_nam class="form-control" %}
-
-						</div>
-						<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
 							<div class="input-group input-group-sm mb-3 bg-dark block">
 								<div class="input-group-prepend">
 									<span class="input-group-text">Closed Door Pic</span>
@@ -215,6 +245,20 @@
              $('#dam_customer_approval').addClass('disable_a_href');
          }
     }
+</script>
+<script>
+	function updateQuantities() {
+		var originalInvoiceQty = parseInt('{{ invoice_qty_from_inspection|default:"0" }}') || 0;
+		var pcs_damaged = parseInt(document.getElementById('dam_no_of_pcs_damaged').value) || 0;
+		var currentCheckinQty = originalInvoiceQty - pcs_damaged;
+		if (currentCheckinQty < 0) currentCheckinQty = 0;
+		document.getElementById('dam_invoice_qty').value = originalInvoiceQty;
+		document.getElementById('dam_checkin_qty').value = currentCheckinQty;
+	}
+	// Also run on page load to initialise
+	document.addEventListener('DOMContentLoaded', function() {
+		updateQuantities();
+	});
 </script>
 <script>
 	$(document).ready(function() {

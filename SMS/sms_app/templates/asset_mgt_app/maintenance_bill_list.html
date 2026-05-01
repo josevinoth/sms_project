@@ -41,6 +41,7 @@
         <table id="maintenanceBillTable" class="table table-striped table-bordered" style="width:100%">
             <thead class="thead-dark">
                 <tr>
+                    <th></th>
                     <th><input type="text" class="form-control filter-input" placeholder="Search Bill No"></th>
                     <th><input type="text" class="form-control filter-input" placeholder="Search Date"></th>
                     <th><input type="text" class="form-control filter-input" placeholder="Search Vehicle"></th>
@@ -55,6 +56,7 @@
                     <th></th>
                 </tr>
                 <tr>
+                    <th>S.No</th>
                     <th>Bill No</th>
                     <th>Bill Date</th>
                     <th>Vehicle No</th>
@@ -72,6 +74,7 @@
             <tbody>
                 {% for bill in bills %}
                 <tr>
+                    <td>{{ forloop.counter }}</td>
                     <td class="font-weight-bold">{{ bill.mnb_bill_no }}</td>
                     <td>{{ bill.mnb_bill_date|date:"d-m-Y" }}</td>
                     <td><span class="badge badge-info">{{ bill.mnb_maintenance.mi_vehicle.vm_registrationnumber }}</span>
@@ -114,7 +117,7 @@
         var table = $('#maintenanceBillTable').DataTable({
             dom: 'lBfrtip',
             buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
-            order: [[1, 'desc']],
+            order: [[2, 'desc']],
             pageLength: 25,
             responsive: true,
             initComplete: function () {
