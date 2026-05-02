@@ -22,6 +22,23 @@ class PackingGateReturn(models.Model):
     gp_consignment_date = models.DateField(blank=True, null=True)
     gp_hsn_code = models.CharField(max_length=50, blank=True, null=True)
     gp_remarks = models.TextField(blank=True, null=True)
+    gp_document_category = models.CharField(max_length=50, choices=[('Gate Pass', 'Gate Pass'), ('Delivery Challan', 'Delivery Challan')], default='Gate Pass')
+    gp_tools = models.ManyToManyField('PkToolMaster', blank=True)
+    
+    # New DC Format Fields
+    gp_customer_ship_to_gstin = models.CharField(max_length=50, blank=True, null=True)
+    gp_customer_bill_to_gstin = models.CharField(max_length=50, blank=True, null=True)
+    gp_grn_ref = models.CharField(max_length=100, blank=True, null=True)
+    gp_stock_register_ref = models.CharField(max_length=100, blank=True, null=True)
+    gp_sales_order_ref = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Financial fields for DC
+    gp_base_value = models.FloatField(default=0.0, blank=True, null=True)
+    gp_gst_rate = models.FloatField(default=0.0, blank=True, null=True)
+    gp_gst_amount = models.FloatField(default=0.0, blank=True, null=True)
+    gp_total_value = models.FloatField(default=0.0, blank=True, null=True)
+    gp_returnable_status = models.CharField(max_length=50, choices=[('Returnable', 'Returnable'), ('Non-Returnable', 'Non-Returnable')], default='Non-Returnable')
+    
     gp_created_at = models.DateTimeField(auto_now_add=True, null=True)
     def __str__(self):
         return f"gate pass at {self.gp_employee}"

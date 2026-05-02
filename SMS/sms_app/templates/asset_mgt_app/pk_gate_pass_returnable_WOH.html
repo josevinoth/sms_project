@@ -1,40 +1,109 @@
-{% block content %}
-<hr>
-<div class="container-fluid">
-    <table  id="dispatch_goods_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-        <tr>
-            <th>Customer PO</th>
-            <th>Job No</th>
-            <th>Description</th>
-            <th>Length</th>
-            <th>Width</th>
-            <th>Height</th>
-            <th>UOM</th>
-            <th>Weight</th>
-            <th>Quantity</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for gatepassreturn in gatepassreturn_list %}
-        <tr>
-            <td>{{ gatepassreturn.pod_po_num }}</td>
-            <td>{{ gate.gp_job_no }}</td>
-            <td>{{ gatepassreturn.pod_type_of_req }}</td>
-            <td>{{ gatepassreturn.pod_length }}</td>
-            <td>{{ gatepassreturn.pod_width }}</td>
-            <td>{{ gatepassreturn.pod_height }}</td>
-            <td>{{ gatepassreturn.pod_uom }}</td>
-            <td>{{ gatepassreturn.pod_job_weight }}</td>
-            <td>{{ gatepassreturn.pod_quantity }}</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+<div class="table-container-modern">
+    <div class="form-section-title">
+        <i class="fas fa-boxes"></i> Dispatched Item Details (Financials)
+    </div>
+    <div class="table-responsive">
+        <table id="dispatch_goods_list" class="table modern-table text-center">
+            <thead>
+                <tr>
+                    <th width="5%">#</th>
+                    <th>Description</th>
+                    <th>UOM</th>
+                    <th>Qty</th>
+                    <th width="15%">Type</th>
+                    <th width="12%">Base Val</th>
+                    <th width="8%">GST %</th>
+                    <th width="12%">GST Amt</th>
+                    <th width="12%">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gatepassreturn in gatepassreturn_list %}
+                <tr data-id="{{ gatepassreturn.id }}" class="modern-tr">
+                    <td class="font-weight-bold">{{ forloop.counter }}</td>
+                    <td class="text-left font-weight-bold">{{ gatepassreturn.pod_type_of_req }}</td>
+                    <td>{{ gatepassreturn.pod_uom }}</td>
+                    <td class="font-weight-bold text-dark">{{ gatepassreturn.pod_quantity }}</td>
+                    <td>
+                        <select class="form-control form-control-modern py-0 returnable-input" style="height: 34px !important; font-size: 0.85rem;">
+                            <option value="Non-Returnable" {% if gatepassreturn.pod_returnable_status == 'Non-Returnable' %}selected{% endif %}>Non-Returnable</option>
+                            <option value="Returnable" {% if gatepassreturn.pod_returnable_status == 'Returnable' %}selected{% endif %}>Returnable</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" class="form-control form-control-modern py-0 base-value-input" 
+                               value="{{ gatepassreturn.pod_base_value|default:0 }}" style="height: 34px !important; font-size: 0.85rem; text-align: center;">
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" class="form-control form-control-modern py-0 gst-rate-input" 
+                               value="{{ gatepassreturn.pod_gst_rate|default:18 }}" style="height: 34px !important; font-size: 0.85rem; text-align: center;">
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" class="form-control form-control-modern py-0 gst-amount-input bg-light" 
+                               value="{{ gatepassreturn.pod_gst_amount|default:0 }}" style="height: 34px !important; font-size: 0.85rem; text-align: center;" readonly>
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" class="form-control form-control-modern py-0 total-value-input bg-light font-weight-bold text-success" 
+                               value="{{ gatepassreturn.pod_total_value|default:0 }}" style="height: 34px !important; font-size: 0.85rem; text-align: center;" readonly>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center py-4 text-muted italic">No items found for this gate pass.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
+
 <script>
     $(document).ready(function() {
-    $('#dispatch_goods_list').DataTable();
-} );
+        if (!$.fn.DataTable.isDataTable('#dispatch_goods_list')) {
+            $('#dispatch_goods_list').DataTable({
+                "paging": false,
+                "info": false,
+                "searching": false,
+                "ordering": false
+            });
+        }
+
+        function calculateAndSave(row) {
+            var pod_id = row.data('id');
+            var baseValue = parseFloat(row.find('.base-value-input').val()) || 0;
+            var gstRate = parseFloat(row.find('.gst-rate-input').val()) || 0;
+            var returnable = row.find('.returnable-input').val();
+            
+            var gstAmount = baseValue * (gstRate / 100);
+            var totalValue = baseValue + gstAmount;
+            
+            row.find('.gst-amount-input').val(gstAmount.toFixed(2));
+            row.find('.total-value-input').val(totalValue.toFixed(2));
+            
+            $.ajax({
+                url: '{% url "update_dc_item_financials" %}',
+                method: 'POST',
+                data: {
+                    'pod_id': pod_id,
+                    'base_value': baseValue,
+                    'gst_rate': gstRate,
+                    'gst_amount': gstAmount,
+                    'total_value': totalValue,
+                    'returnable': returnable,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    console.log('Saved successfully');
+                },
+                error: function() {
+                    console.error('Error saving item financials');
+                }
+            });
+        }
+
+        $(document).on('change input', '.base-value-input, .gst-rate-input, .returnable-input', function() {
+            var row = $(this).closest('tr');
+            calculateAndSave(row);
+        });
+    });
 </script>
-{% endblock content %}

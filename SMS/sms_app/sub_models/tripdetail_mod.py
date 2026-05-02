@@ -16,7 +16,7 @@ class Trip_category_info(models.Model):
     def __str__(self):
         return self.category
 class TripdetailInfo(models.Model):
-    tr_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.CASCADE, default='')
+    tr_enquirynumber = models.ForeignKey(EnquirynoteInfo, on_delete=models.PROTECT, default='')
     tr_consignmentnumber = models.ForeignKey(ConsignmentdetailInfo, on_delete=models.CASCADE, null=True,blank=True)
     tr_tripnumber = models.CharField(max_length=30,default = '',blank=True,null=True)
     tr_vehiclesource = models.ForeignKey(OwnershipInfo, on_delete=models.CASCADE, default='')

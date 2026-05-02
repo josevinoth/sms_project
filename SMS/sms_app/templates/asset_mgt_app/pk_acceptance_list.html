@@ -1,77 +1,85 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% block content %}
-<div class="row d-flex align-items-center mb-3">
-    <div class="col-md-12 text-center">
-        <div class="pms-tracker-wrapper">
-            {% include "asset_mgt_app/pms_progress_tracker.html" with current_step=current_step %}
+
+<div class="container-fluid py-4">
+    <!-- Progress Tracker -->
+    <div class="pms-tracker-wrapper mb-4">
+        {% include "asset_mgt_app/pms_progress_tracker.html" with current_step=current_step %}
+    </div>
+
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-warehouse mr-2"></i> Material Acceptance Queue</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 1rem; text-decoration: none;">
+                <i class="fas fa-home"></i> Home
+            </a>
+        </div>
+    </div>
+
+    <!-- List Table -->
+    <div class="table-container-modern">
+        <div class="table-responsive">
+            <table id="pk_retrival_list" class="table modern-table text-center">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Created</th>
+                        <th>Job Number</th>
+                        <th>PO Number</th>
+                        <th>Stock ID</th>
+                        <th>Details</th>
+                        <th>Status</th>
+                        <th>Updated at</th>
+                        <th>Updated By</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pk_retrivalinfo in pk_retrival_list %}
+                    <tr class="modern-tr">
+                        <td class="text-muted">{{ pk_retrivalinfo.id }}</td>
+                        <td>{{ pk_retrivalinfo.ct_created_at|date:"d-m-Y" }}</td>
+                        <td class="font-weight-bold">
+                            <span class="badge" style="background: var(--bg-dark); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); font-size: 0.85rem; padding: 5px 10px;">
+                                {{ pk_retrivalinfo.ct_job_no }}
+                            </span>
+                        </td>
+                        <td><small class="text-muted font-weight-bold">{{ pk_retrivalinfo.ct_customer_po }}</small></td>
+                        <td><span class="badge badge-light border">{{ pk_retrivalinfo.ct_stock_purchase_number }}</span></td>
+                        <td class="text-left">
+                            <div class="font-weight-bold">{{ pk_retrivalinfo.ct_cost_type }}</div>
+                            <div class="small text-muted">{{ pk_retrivalinfo.ct_stock_description }}</div>
+                        </td>
+                        <td>
+                            <span class="badge {% if pk_retrivalinfo.ct_stock_status == 'Ready' %}badge-success{% else %}badge-info{% endif %} px-3 py-2">
+                                {{ pk_retrivalinfo.ct_stock_status }}
+                            </span>
+                        </td>
+                        <td>{{ pk_retrivalinfo.ct_updated_at|date:"d-m-Y H:i" }}</td>
+                        <td>{{ pk_retrivalinfo.ct_updated_by }}</td>
+                        <td class="text-center">
+                            <a class="btn-modern btn-submit py-2 px-4" href="{% url 'pk_acceptance_update' pk_retrivalinfo.id %}" style="font-size: 1rem; text-decoration: none;">
+                                <i class="far fa-edit"></i> ACCEPT
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
-<div class="container-fluid row">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-    <!--    <div class="col-md-1">-->
-    <!--        <a href="{% url 'pk_retrival_insert' %}" class="btn btn-success btn-block btn-lg">-->
-    <!--            <i class="fas fa-plus"></i> Add-->
-    <!--        </a>-->
-    <!--    </div>-->
-</div>
-<hr>
-<div class="container-fluid">
-    <table id="pk_retrival_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-            <tr>
-                <th>ID</th>
-                <th>Created On</th>
-                <th>Assessment Number</th>
-                <th>Customer PO Number</th>
-                <th>Stock Purchase Number</th>
-                <th>Cost Type</th>
-                <th>Stock Type</th>
-                <th>Stock Description</th>
-                <th>Stock Status</th>
-                <th>Updated at</th>
-                <th>Updated By</th>
-                <th>Edit</th>
-        </thead>
-        <tbody>
-            {% for pk_retrivalinfo in pk_retrival_list %}
-            <tr>
-                <td> {{pk_retrivalinfo.id}}</td>
-                <td> {{pk_retrivalinfo.ct_created_at}}</td>
-                <td> {{pk_retrivalinfo.ct_assessment_num}}</td>
-                <td> {{pk_retrivalinfo.ct_customer_po}}</td>
-                <td> {{pk_retrivalinfo.ct_stock_purchase_number}}</td>
-                <td> {{pk_retrivalinfo.ct_cost_type}}</td>
-                <td> {{pk_retrivalinfo.ct_stock_type}}</td>
-                <td> {{pk_retrivalinfo.ct_stock_description}}</td>
-                <td> {{pk_retrivalinfo.ct_stock_status}}</td>
-                <td> {{pk_retrivalinfo.ct_updated_at}}</td>
-                <td> {{pk_retrivalinfo.ct_updated_by}}</td>
-                <td>
-                    <a class="btn btn-primary" href="{% url 'pk_acceptance_update' pk_retrivalinfo.id %}"
-                        class="btn btn-primary">
-                        <i class="far fa-edit"></i>
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+
 <script>
     $(document).ready(function () {
         $('#pk_retrival_list').DataTable({
-            order: [0, 'desc'],
-            dom: 'Bfrtip',
-            buttons: [
-                'copy', 'csv', 'excel', 'print'
-            ],
+            order: [[0, 'desc']],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print'],
+            pageLength: 25,
+            responsive: true
         });
     });
 </script>
-
-{% endblock content %}
+{% endblock %}

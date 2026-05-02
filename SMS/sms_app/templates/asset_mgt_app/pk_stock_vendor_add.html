@@ -1,149 +1,131 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="">
-    {% csrf_token %}
-    <div class="row">
-        <div class="col">
-            <div class="container-fluid">
-                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="card-header text-center"><h3>Add/Update Stock Purchases</h3></div>
-                    <div class="card-body bg-light">
-                        <div class="row">
-                            <div class="col-4">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Vendor Name</span>
-                                    </div>
-                                    {% render_field psv_form.spv_vendor_name id="spv_vendor_name" class="form-control" required="required" %}
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Bill Reference</span>
-                                    </div>
-                                    {% render_field psv_form.spv_vendor_bill id="spv_vendor_bill" class="form-control" %}
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Bill Date</span>
-                                    </div>
-                                    {% render_field psv_form.spv_vendor_bill_date type="Date" class="form-control" %}
-                                </div>
-                                {% render_field psv_form.spv_updated_by id="spv_updated_by" hidden="True" class="form-control" %}
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-1"></div>
-                            <div class="col-10">
-                                <div class="message text-center">
-                                    {% for message in messages %}
-                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="col-1"></div>
-                        </div>
-                        <button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-                        <a href="{% url 'pk_stock_vendor_list' %}" class="btn btn-danger float-right">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <br>
-    <!--Stock Item List-->
-    <div class="container-fluid row">
-        <div class="col-md-1.5">
-            <a href="{% url 'stock_maintenance_add_for_vendor' %}?new=1" id="stock_purchase_item_add" class="btn btn-primary btn-block btn-lg">
-                <i class="fas fa-plus"></i> Add Stocks
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-white"><i class="fas fa-file-invoice mr-2"></i> Add/Update Stock Purchases</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'pk_stock_vendor_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK
             </a>
         </div>
     </div>
-    <hr>
-    
-    <div class="container-fluid">
-        <h4 class="mb-3">Stock Maintenance </h4>
-        <div class="table-responsive shadow-box-table pb-3">
-            <table id="stock_maintenance_table" class="table table-striped table-bordered text-center p-3">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>Created On</th>
-                        <th>GRN Number</th>
-                        <th>Stock Type</th>
-                        <th>Partcode</th>
-                        <th>Description</th>
-                        <th>Thickness</th>
-                        <th>Width</th>
-                        <th>Length</th>
-                        <th>UOM</th>
-                        <th>Count</th>
-                        <th>CFT</th>
-                        <th>Cost</th>
-                        <th>Updated at</th>
-                        <th>Updated By</th>
-                        <th>Edit</th>
-                        <th>Delete</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in stockmaintenance_list %}
-                    <tr>
-                        <td>{{ item.sm_created_at|date:"M d, Y" }}</td>
-                        <td><span class="badge badge-secondary">{{ item.sm_stock_purchase_number|default:"-" }}</span></td>
-                        <td>{{ item.sm_stock_type.stock_type_maintenance }}</td>
-                        <td>{{ item.sm_partcode.pc_code }}</td>
-                        <td>{{ item.sm_description }}</td>
-                        <td>{{ item.sm_thickness }}</td>
-                        <td>{{ item.sm_width }}</td>
-                        <td>{{ item.sm_length }}</td>
-                        <td>{{ item.sm_uom.unit_of_measure }}</td>
-                        <td>{{ item.sm_count }}</td>
-                        <td>{{ item.sm_total_cft }}</td>
-                        <td>{{ item.sm_total_price }}</td>
-                        <td>{{ item.sm_updated_at|date:"M d, Y" }}</td>
-                        <td>{{ item.sm_updated_by }}</td>
 
-                        <td class="text-center">
-                            <a href="{% url 'stock_maintenance_edit' item.id %}" class="btn btn-primary btn-sm">
-                                <i class="far fa-edit"></i>
-                            </a>
-                        </td>
+    <form method="POST" action="">
+        {% csrf_token %}
+        <!-- Vendor Info Card -->
+        <div class="modern-card mb-4">
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-truck"></i> Vendor & Bill Details</div>
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Vendor Name</label>
+                        {% render_field psv_form.spv_vendor_name id="spv_vendor_name" class="form-control form-control-modern" required="required" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Bill Reference</label>
+                        {% render_field psv_form.spv_vendor_bill id="spv_vendor_bill" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Bill Date</label>
+                        {% render_field psv_form.spv_vendor_bill_date type="Date" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+                {% render_field psv_form.spv_updated_by id="spv_updated_by" hidden="True" %}
 
-                        <td class="text-center">
-                            <form method="POST" action="{% url 'stock_maintenance_delete' item.id %}" onsubmit="return confirm('Are you sure you want to delete this GRN entry?');">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger btn-sm">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
+                {% if messages %}
+                <div class="mt-3">
+                    {% for message in messages %}
+                    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}">
+                        {{ message }}
+                    </div>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    
-</form>
+                </div>
+                {% endif %}
 
+                <div class="btn-group-modern mt-3">
+                    <button type="submit" class="btn-modern btn-submit px-4">
+                        <i class="fas fa-check"></i> SAVE PURCHASE
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Maintenance List Section -->
+        <div class="table-container-modern mt-4">
+            <div class="form-section-title d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-boxes"></i> Stock Maintenance Entries</span>
+                <a href="{% url 'stock_maintenance_add_for_vendor' %}?new=1" id="stock_purchase_item_add" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.9rem; text-decoration: none;">
+                    <i class="fas fa-plus"></i> ADD STOCKS
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table id="stock_maintenance_table" class="table table-striped table-bordered display nowrap" style="width:100%">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Created On</th>
+                            <th>GRN Number</th>
+                            <th>Stock Type</th>
+                            <th>Partcode</th>
+                            <th>Description</th>
+                            <th>Thickness</th>
+                            <th>Width</th>
+                            <th>Length</th>
+                            <th>UOM</th>
+                            <th>Count</th>
+                            <th>CFT</th>
+                            <th>Cost</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in stockmaintenance_list %}
+                        <tr>
+                            <td>{{ item.sm_created_at|date:"M d, Y" }}</td>
+                            <td><span class="badge badge-secondary">{{ item.sm_stock_purchase_number|default:"-" }}</span></td>
+                            <td>{{ item.sm_stock_type.stock_type_maintenance }}</td>
+                            <td class="font-weight-bold text-teal">{{ item.sm_partcode.pc_code }}</td>
+                            <td>{{ item.sm_description }}</td>
+                            <td>{{ item.sm_thickness }}</td>
+                            <td>{{ item.sm_width }}</td>
+                            <td>{{ item.sm_length }}</td>
+                            <td>{{ item.sm_uom.unit_of_measure }}</td>
+                            <td class="text-primary font-weight-bold">{{ item.sm_count }}</td>
+                            <td>{{ item.sm_total_cft }}</td>
+                            <td class="text-success font-weight-bold">{{ item.sm_total_price }}</td>
+                            <td>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <a href="{% url 'stock_maintenance_edit' item.id %}" class="btn btn-outline-primary btn-sm" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" title="Delete" onclick="if(confirm('Are you sure?')) document.getElementById('delete-form-{{ item.id }}').submit();">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <form id="delete-form-{{ item.id }}" method="POST" action="{% url 'stock_maintenance_delete' item.id %}" style="display:none;">
+                                        {% csrf_token %}
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
 <script>
     $(document).ready(function() {
         var updatedByElem = document.getElementById("spv_updated_by");
         if(updatedByElem) {
             updatedByElem.value ='{{user_id}}';
         }
-    });
-</script>
 
-<script>
-    $(document).ready(function() {
         $('#stock_maintenance_table').DataTable({
             order: [[0, 'desc']],
             scrollX: true,
@@ -151,22 +133,17 @@
             buttons: [
                 'copy', 'csv', 'excel', 'print'
             ],
+            pageLength: 10
         });
     });
-</script>
 
-
-
-<script>
     function spv_stock_Purchasetype_change() {
         var jn = document.getElementById("spv_stock_Purchasetype").value;
         if (jn == 1) {
             $('#spv_vendor_name').removeClass('disable_a_href');
             $('#spv_vendor_bill').removeClass('disable_a_href');
-            spv_vendor_name.setAttribute("required", "required");  // Make it mandatory
-        }
-        else
-        {
+            spv_vendor_name.setAttribute("required", "required");
+        } else {
             $('#spv_vendor_name').addClass('disable_a_href');
             var v_name = document.getElementById("spv_vendor_name");
             if (v_name) { v_name.value=""; }
@@ -179,5 +156,7 @@
         }
     }
 </script>
+{% endblock extra_js %}
 
-{% endblock %}
+
+

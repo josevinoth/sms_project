@@ -3,10 +3,13 @@ from django.contrib.messages.context_processors import messages
 from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.utils import timezone
+from django.db.models.functions import Coalesce, TruncMonth
 from ..models import Customerattach,PkcostingInfo,RequirementsInfo,Pregateintruckinfo,PkstockpurchasesInfo,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info,TripdetailInfo,TripHighvalueInfo
 from django.shortcuts import render, redirect
-from django.db.models import Sum, Q
-from datetime import timedelta
+from django.db.models import Count, Sum, Q
+from datetime import datetime, timedelta
+from collections import defaultdict
+import json
 
 from ..sub_models.DG_cargo_checklist_mod import DGcargovalueInfo
 from ..sub_models.maintenance_mod import MaintenanceInfo
@@ -54,6 +57,99 @@ def home_page(request):
     manager_listcount =MaintenanceInfo.objects.filter(mi_approval_status_id=1).count()
     finance_listcount =MaintenanceInfo.objects.filter(mi_approval_status_id=2).count()
     need_assessment_count= PkneedassessmentInfo.objects.filter(na_status_id=5).count()
+
+    # Last 6 months labels used across monthly warehouse charts.
+    now = timezone.now()
+    month_starts = []
+    for index in range(5, -1, -1):
+        month = now.month - index
+        year = now.year
+        while month <= 0:
+            month += 12
+            year -= 1
+        month_starts.append(datetime(year, month, 1, tzinfo=now.tzinfo))
+
+    month_labels = [month.strftime('%b %Y') for month in month_starts]
+    month_keys = [month.strftime('%Y-%m') for month in month_starts]
+    filter_start_date = month_starts[0]
+
+    usage_qs = (
+        Warehouse_goods_info.objects
+        .filter(wh_checkin_time__isnull=False, wh_checkin_time__gte=filter_start_date)
+        .annotate(month=TruncMonth('wh_checkin_time'))
+        .values('month')
+        .annotate(total=Coalesce(Sum('wh_goods_volume_weight'), 0.0))
+        .order_by('month')
+    )
+    usage_map = {
+        item['month'].strftime('%Y-%m'): float(item['total'] or 0.0)
+        for item in usage_qs if item.get('month')
+    }
+    monthly_warehouse_usage = [round(usage_map.get(key, 0.0), 2) for key in month_keys]
+
+    department_qs = (
+        User_extInfo.objects
+        .values('department__dept_name')
+        .annotate(total=Count('id'))
+        .order_by('-total')
+    )
+    team_department_labels = []
+    team_department_values = []
+    for item in department_qs:
+        team_department_labels.append(item.get('department__dept_name') or 'Unassigned')
+        team_department_values.append(item.get('total') or 0)
+
+    if not team_department_labels:
+        team_department_labels = ['No Data']
+        team_department_values = [0]
+
+    region_totals_qs = (
+        Warehouse_goods_info.objects
+        .filter(wh_checkin_time__isnull=False, wh_checkin_time__gte=filter_start_date)
+        .values('wh_branch__loc_city__city_name')
+        .annotate(total=Coalesce(Sum('wh_goods_volume_weight'), 0.0))
+        .order_by('-total')
+    )
+
+    top_regions = []
+    for item in region_totals_qs:
+        region_name = item.get('wh_branch__loc_city__city_name') or 'Unknown Region'
+        if region_name not in top_regions:
+            top_regions.append(region_name)
+        if len(top_regions) == 4:
+            break
+
+    region_month_map = defaultdict(dict)
+    if top_regions:
+        region_month_qs = (
+            Warehouse_goods_info.objects
+            .filter(
+                wh_checkin_time__isnull=False,
+                wh_checkin_time__gte=filter_start_date,
+                wh_branch__loc_city__city_name__in=top_regions,
+            )
+            .annotate(month=TruncMonth('wh_checkin_time'))
+            .values('month', 'wh_branch__loc_city__city_name')
+            .annotate(total=Coalesce(Sum('wh_goods_volume_weight'), 0.0))
+            .order_by('month')
+        )
+
+        for item in region_month_qs:
+            region_name = item.get('wh_branch__loc_city__city_name') or 'Unknown Region'
+            month_obj = item.get('month')
+            if not month_obj:
+                continue
+            region_month_map[region_name][month_obj.strftime('%Y-%m')] = float(item.get('total') or 0.0)
+
+    region_month_datasets = []
+    for region in top_regions:
+        region_month_datasets.append({
+            'label': region,
+            'data': [round(region_month_map.get(region, {}).get(key, 0.0), 2) for key in month_keys],
+        })
+
+    if not region_month_datasets:
+        region_month_datasets = [{'label': 'No Region', 'data': [0 for _ in month_keys]}]
     context = {'count_asset': AssetInfo.objects.all().count(),
                'count_vendors': Vendor_info.objects.filter(vend_status=1).count(),
                'count_ass_asset': AssetInfo.objects.filter(asset_assignedto__isnull=False).count(),
@@ -90,6 +186,12 @@ def home_page(request):
                'approval_count_wms2':approval_count_wms2,
                'DG_cargo_count':DG_cargo_count,
                'need_assessment_count': need_assessment_count,
+               'warehouse_month_labels_json': json.dumps(month_labels),
+               'monthly_warehouse_usage_json': json.dumps(monthly_warehouse_usage),
+               'team_department_labels_json': json.dumps(team_department_labels),
+               'team_department_values_json': json.dumps(team_department_values),
+               'region_month_labels_json': json.dumps(month_labels),
+               'region_month_datasets_json': json.dumps(region_month_datasets),
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
 

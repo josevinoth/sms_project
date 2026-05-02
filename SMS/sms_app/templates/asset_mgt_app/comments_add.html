@@ -1,57 +1,78 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+
 {% block content %}
-<form method="POST" action="" id="comments_add">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update comments</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Reference</span>
-									</div>
-									{% render_field form.comments_ref id="comments_ref" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Comments</span>
-									</div>
-									{% render_field form.comments_remarks id="comments_remarks" class="form-control" %}
-								</div>
-								{% render_field form.comments_updated_by id="comments_updated_by" hidden="True" class="form-control" %}
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'comments_cancel' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-3"></div>
-	</div>
-</form>
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-white" style="font-size: 1.4rem; font-weight: 700; letter-spacing: 1px;">
+            <i class="fas fa-comments mr-2"></i> Add/Update Comments
+        </h3>
+        <div class="d-flex gap-2">
+            <a href="{% url 'comments_cancel' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <form method="POST" action="" id="comments_add">
+                {% csrf_token %}
+                
+                <div class="modern-card">
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-edit"></i> Comment Details</div>
+                        
+                        <div class="form-group-modern mb-4">
+                            <label class="form-label-modern">Reference</label>
+                            {% render_field form.comments_ref id="comments_ref" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+
+                        <div class="form-group-modern mb-4">
+                            <label class="form-label-modern">Comments</label>
+                            {% render_field form.comments_remarks id="comments_remarks" class="form-control form-control-modern" placeholder="Enter your comments here..." rows="4" %}
+                        </div>
+
+                        {% render_field form.comments_updated_by id="comments_updated_by" hidden="True" %}
+                    </div>
+
+                    <!-- Messages -->
+                    {% if messages %}
+                    <div class="message-container mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} shadow-sm border-0" style="border-radius: 12px;">
+                            <i class="fas fa-info-circle mr-2"></i> {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="btn-group-modern mt-2">
+                        <button type="submit" class="btn-modern btn-submit px-5">
+                            <i class="fas fa-check"></i> SUBMIT COMMENT
+                        </button>
+                        <a href="{% url 'comments_cancel' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times"></i> CANCEL
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
 <script>
 $(document).ready(function() {
-	document.getElementById("comments_updated_by").value ='{{user_id}}';
-  });
+    var updatedBy = document.getElementById("comments_updated_by");
+    if (updatedBy) {
+        updatedBy.value = '{{user_id}}';
+    }
+});
 </script>
+{% endblock extra_js %}
+
 {% endblock content %}

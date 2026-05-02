@@ -14,3 +14,4 @@ class SalescommentForm(forms.ModelForm):
         self.fields['sc_call_type'].empty_label = "--Select--"
         self.fields['sc_call_nature'].empty_label = "--Select--"
         self.fields['sc_call_purpose'].empty_label = "--Select--"
+        self.fields['sc_joint_call_name'].queryset = MyUser.objects.filter(user_extinfo__department=5)

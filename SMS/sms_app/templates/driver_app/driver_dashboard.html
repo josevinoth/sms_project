@@ -236,8 +236,11 @@
 
         <!-- Trip Details Card -->
         <div class="card">
-            <div class="card-header">
-                Trip: {{ trip.tr_tripnumber }}
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Trip: {{ trip.tr_tripnumber }}</span>
+                <span class="status-badge" style="background: rgba(240, 147, 251, 0.1); color: #f093fb; text-transform: none;">
+                    {{ trip.tr_category|default:"Business Trip" }}
+                </span>
             </div>
             <div class="card-body">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">

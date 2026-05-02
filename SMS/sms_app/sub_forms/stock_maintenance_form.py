@@ -36,16 +36,35 @@ class StockMaintenanceForm(forms.ModelForm):
         self.fields['sm_stock_type'].empty_label = "--Select Stock Type--"
         self.fields['sm_partcode'].empty_label = "--Select Partcode--"
 
-        # SPEED UP: Don't load all partcodes into the HTML dropdown.
-        # Select2 AJAX handles the searching. We only need the selected one for validation.
-        if 'sm_partcode' in self.fields:
-            if self.instance and self.instance.sm_partcode_id:
-                self.fields['sm_partcode'].queryset = PkpartcodeInfo.objects.filter(pk=self.instance.sm_partcode_id)
-            elif self.data and self.data.get('sm_partcode'):
-                # During POST, allow the submitted ID
-                self.fields['sm_partcode'].queryset = PkpartcodeInfo.objects.filter(pk=self.data.get('sm_partcode'))
-            else:
-                self.fields['sm_partcode'].queryset = PkpartcodeInfo.objects.none()
+        # Forcibly clear choices to prevent rendering 10k options in HTML
+        self.fields['sm_partcode'].queryset = PkpartcodeInfo.objects.none()
+        self.fields['sm_partcode'].choices = [('', '--Select Partcode--')]
+
+        # Handle submission (POST) - Allow the submitted ID to pass validation
+        if args and args[0] and 'sm_partcode' in args[0]:
+            pid = args[0].get('sm_partcode')
+            if pid:
+                self.fields['sm_partcode'].queryset = PkpartcodeInfo.objects.filter(pk=pid)
+
+        # If editing (instance exists), add the current partcode back
+        elif self.instance and self.instance.pk and self.instance.sm_partcode:
+            self.fields['sm_partcode'].queryset = PkpartcodeInfo.objects.filter(pk=self.instance.sm_partcode.pk)
+            self.fields['sm_partcode'].choices = [
+                ('', '--Select Partcode--'),
+                (self.instance.sm_partcode.pk, str(self.instance.sm_partcode.pc_code))
+            ]
+        # If initial data (sticky data) exists
+        elif 'sm_partcode' in self.initial and self.initial['sm_partcode']:
+            try:
+                pid = self.initial['sm_partcode']
+                part = PkpartcodeInfo.objects.get(pk=pid)
+                self.fields['sm_partcode'].queryset = PkpartcodeInfo.objects.filter(pk=pid)
+                self.fields['sm_partcode'].choices = [
+                    ('', '--Select Partcode--'),
+                    (part.pk, str(part.pc_code))
+                ]
+            except:
+                pass
 
         # ===================================
         # READONLY FIELDS (Auto-filled)

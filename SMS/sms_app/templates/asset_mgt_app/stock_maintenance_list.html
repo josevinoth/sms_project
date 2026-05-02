@@ -1,226 +1,184 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% block content %}
 
-<script>
-    var $jq = jQuery.noConflict();
-</script>
-
-<!-- Select2 CSS -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"
-    rel="stylesheet">
-
-<!-- Select2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-<!-- ================= HEADER ================= -->
-<div class="container-fluid py-3">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-4 rounded text-center bg-info shadow-box">
-            <h3 class="mb-0 text-white">Stock Maintenance List</h3>
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-white"><i class="fas fa-list-alt mr-2"></i> Stock Maintenance Records</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 1rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK
+            </a>
+            <a href="{% url 'stock_maintenance_add' %}?new=1" class="btn-modern btn-submit py-2 px-4" style="font-size: 1rem; text-decoration: none;">
+                <i class="fas fa-plus"></i> ADD MAINTENANCE
+            </a>
         </div>
     </div>
-    
-    <!-- MESSAGES DISPLAY -->
-    {% if messages %}
-    <div class="row justify-content-center mt-3">
-        <div class="col-md-8">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
-                <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %} mr-2"></i>
-                {{ message }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-</div>
 
-<!-- ================= ACTION BAR ================= -->
-<div class="container-fluid mb-3">
-    <div class="row align-items-center">
-        <div class="col-md-1">
-            <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-                <i class="fas fa-arrow-left"></i> Back
-            </a>
-        </div>
-
-        <div class="col-md-1">
-            <a href="{% url 'stock_maintenance_add' %}?new=1" class="btn btn-success btn-block btn-lg">
-                <i class="fas fa-plus"></i> Add
-            </a>
-        </div>
-
-        <div class="col-md-2">
-            <a href="{% url 'stock_maintenance_list' %}?select_all=true" class="btn btn-warning btn-block btn-lg">
-                <i class="fas fa-check-double"></i> Show All
-            </a>
-        </div>
-<!--        <div class="col-md-2">-->
-<!--            <a href="{% url 'stockpurchases_list' %}" class="btn btn-info btn-block btn-lg">-->
-<!--                <i class="fas fa-list-ol"></i> Partwise Summary-->
-<!--            </a>-->
-<!--        </div>-->
-
-        <div class="col-md-8">
-            <form method="GET" action="{% url 'stock_maintenance_list' %}" class="form-inline justify-content-end">
-                <div class="form-group mb-0" style="flex-grow: 1; max-width: 500px;">
-                    <select id="partcode_filter" name="partcode" class="form-control select2 w-100">
+    <!-- Filters & Dashboard Actions -->
+    <div class="modern-card mb-4 p-3">
+        <form method="GET" action="{% url 'stock_maintenance_list' %}" class="row align-items-center g-3">
+            <div class="col-md-5">
+                <div class="form-group mb-0">
+                    <select id="partcode_filter" name="partcode" class="form-control select2">
                         <option value="">-- All Partcodes --</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-secondary px-4 ml-2">
-                    <i class="fas fa-search"></i>
+            </div>
+            <div class="col-md-7 d-flex justify-content-end gap-2">
+                <button type="submit" class="btn-modern btn-submit px-4" style="height: 42px;">
+                    <i class="fas fa-search"></i> SEARCH
                 </button>
-                <a href="{% url 'stock_maintenance_list' %}" class="btn btn-secondary px-4 ml-2">
-                    Reset
+                <a href="{% url 'stock_maintenance_list' %}?select_all=true" class="btn-modern px-4" style="height: 42px; background: var(--secondary-cyan); color: white; text-decoration: none; display: flex; align-items: center;">
+                    <i class="fas fa-list mr-1"></i> SHOW ALL
                 </a>
-            </form>
+                <a href="{% url 'stock_maintenance_list' %}" class="btn-modern btn-cancel px-4" style="height: 42px; text-decoration: none; display: flex; align-items: center;">
+                    RESET
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Message Display -->
+    {% if messages %}
+    <div class="message-container mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} shadow-sm text-center">
+            <i class="fas fa-info-circle"></i> {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Table Container -->
+    <div class="table-container-modern">
+        <div class="form-section-title">
+            <i class="fas fa-table"></i> Inventory Maintenance History
+        </div>
+        <div class="table-responsive">
+            <table id="stock_maintenance_table" class="modern-table text-center">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Purchase Ref</th>
+                        <th>Invoice Details</th>
+                        <th>Stock Type</th>
+                        <th>Part Code</th>
+                        <th>Description</th>
+                        <th>Dim (T x W x L)</th>
+                        <th>Qty/Count</th>
+                        <th>Total Val</th>
+                        <th>Rate</th>
+                        <th>Total Price</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr class="modern-tr">
+                        <td class="font-weight-bold text-muted">#{{ item.id }}</td>
+                        <td><span class="badge badge-secondary">{{ item.sm_stock_purchase_number|default:"-" }}</span></td>
+                        <td class="text-left">
+                            <div class="font-weight-bold text-dark">{{ item.sm_invoice_no }}</div>
+                            <div class="x-small text-muted">{{ item.sm_invoice_date }}</div>
+                        </td>
+                        <td>{{ item.sm_stock_type.stock_type_maintenance }}</td>
+                        <td class="font-weight-bold text-dark">{{ item.sm_partcode.pc_code }}</td>
+                        <td class="text-left" style="max-width: 180px; white-space: normal;">{{ item.sm_description }}</td>
+                        <td>{{ item.sm_thickness }}x{{ item.sm_width }}x{{ item.sm_length }}</td>
+                        <td class="font-weight-bold">{{ item.sm_count }}</td>
+                        <td class="font-weight-bold text-teal">{{ item.sm_total_cft }}</td>
+                        <td>₹{{ item.sm_per_unit_cost }}</td>
+                        <td class="font-weight-bold text-primary">₹{{ item.sm_total_price }}</td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center" style="gap: 8px;">
+                                <a href="{% url 'stock_maintenance_edit' item.id %}" class="btn-modern btn-submit py-2 px-4" style="font-size: 1rem; text-decoration: none;" title="Edit">
+                                    <i class="far fa-edit"></i>
+                                </a>
+                                <form method="POST" action="{% url 'stock_maintenance_delete' item.id %}" onsubmit="return confirm('Are you sure?');" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-modern btn-cancel py-2 px-4" style="font-size: 1rem; background: #e74c3c;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<hr>
-
-<!-- ================= TABLE ================= -->
-<div class="container-fluid">
-    <div class="table-responsive shadow-box-table p-3">
-        <table id="stock_maintenance_table" class="table table-striped table-bordered">
-            <thead class="thead-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Stock Purchase No</th>
-                    <th>Invoice No</th>
-                    <th>Invoice Date</th>
-                    <th>Stock Type</th>
-                    <th>Partcode</th>
-                    <th>Description</th>
-                    <th>Thickness</th>
-                    <th>Width</th>
-                    <th>Length</th>
-                    <th>UOM</th>
-                    <th>Count</th>
-                    <th>CFT</th>
-                    <th>Total CFT</th>
-                    <th>Per Unit Cost</th>
-                    <th>Total Price</th>
-                    <th>Updated By</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in items %}
-                <tr>
-                    <td>{{ item.id }}</td>
-                    <td><span class="badge badge-secondary">{{ item.sm_stock_purchase_number|default:"-" }}</span></td>
-                    <td>{{ item.sm_invoice_no }}</td>
-                    <td>{{ item.sm_invoice_date }}</td>
-                    <td>{{ item.sm_stock_type.stock_type_maintenance }}</td>
-                    <td>{{ item.sm_partcode.pc_code }}</td>
-                    <td>{{ item.sm_description }}</td>
-                    <td>{{ item.sm_thickness }}</td>
-                    <td>{{ item.sm_width }}</td>
-                    <td>{{ item.sm_length }}</td>
-                    <td>{{ item.sm_uom.unit_of_measure }}</td>
-                    <td>{{ item.sm_count }}</td>
-                    <td>{{ item.sm_cft }}</td>
-                    <td>{{ item.sm_total_cft }}</td>
-                    <td>{{ item.sm_per_unit_cost }}</td>
-                    <td>{{ item.sm_total_price }}</td>
-                    <td>{{ item.sm_updated_by }}</td>
-
-                    <td class="text-center">
-                        <a href="{% url 'stock_maintenance_edit' item.id %}" class="btn btn-primary btn-sm">
-                            <i class="far fa-edit"></i>
-                        </a>
-                    </td>
-
-                    <td class="text-center">
-                        <form method="POST" action="{% url 'stock_maintenance_delete' item.id %}"
-                            onsubmit="return confirm('Are you sure?');">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-sm">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
+<script>
+    $(document).ready(function() {
+        if (!$.fn.DataTable.isDataTable('#stock_maintenance_table')) {
             $('#stock_maintenance_table').DataTable({
-                order: [[2, 'desc']],
-                scrollCollapse: true,
+                order: [[0, 'desc']],
+                pageLength: 25,
                 dom: 'lBfrtip',
                 buttons: [
-                    'copy', 'csv', 'excel', 'print'
-                ]
+                    { extend: 'copy', className: 'btn btn-sm btn-secondary' },
+                    { extend: 'excel', className: 'btn btn-sm btn-success' },
+                    { extend: 'print', className: 'btn btn-sm btn-info' }
+                ],
             });
-        });
-    </script>
+        }
 
-
-    <script>
-        $jq(document).ready(function () {
-            $jq('#partcode_filter').select2({
-                theme: 'bootstrap4',
-                width: '100%',
-                placeholder: 'Search partcode...',
-                allowClear: true,
-                ajax: {
-                    url: "{% url 'get_part_code' %}",
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return {
-                            q: params.term // search term
-                        };
-                    },
-                    processResults: function (data) {
-                        return {
-                            results: $jq.map(data, function (item) {
-                                return {
-                                    text: item.pc_code,
-                                    id: item.id
-                                }
-                            })
-                        };
-                    },
-                    cache: true
-                }
-            });
-
-            // If a partcode is already selected (from GET params), we need to fetch its text
-            var selectedId = "{{ selected_partcode }}";
-            if (selectedId && selectedId !== "None") {
-                $jq.ajax({
-                    url: "/SMS/get_part_details/",
-                    data: { 'part_id': selectedId },
-                    success: function (data) {
-                        if (!data.error) {
-                            var option = new Option(data.partCodeText || selectedId, selectedId, true, true);
-                            $jq('#partcode_filter').append(option).trigger('change');
-                        }
-                    }
-                });
+        // Initialize Select2 for partcode filter
+        $('#partcode_filter').select2({
+            theme: 'bootstrap4',
+            width: '100%',
+            placeholder: 'Search partcode...',
+            allowClear: true,
+            ajax: {
+                url: "{% url 'get_part_code' %}",
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return { q: params.term };
+                },
+                processResults: function (data) {
+                    return {
+                        results: $.map(data, function (item) {
+                            return { text: item.pc_code, id: item.id }
+                        })
+                    };
+                },
+                cache: true
             }
         });
-    </script>
 
-    <style>
-        /* Force Select2 width */
-        .select2-container {
-            min-width: 340px !important;
+        // Set selected value if exists
+        var selectedId = "{{ selected_partcode }}";
+        if (selectedId && selectedId !== "None") {
+            $.ajax({
+                url: "/SMS/get_part_details/",
+                data: { 'part_id': selectedId },
+                success: function (data) {
+                    if (!data.error) {
+                        var option = new Option(data.partCodeText || selectedId, selectedId, true, true);
+                        $('#partcode_filter').append(option).trigger('change');
+                    }
+                }
+            });
         }
-    </style>
+    });
+</script>
 
-    {% endblock content %}
+<style>
+    .select2-container--bootstrap4 .select2-selection--single {
+        height: 42px !important;
+        border-radius: 8px !important;
+        border: 1px solid rgba(0,0,0,0.1) !important;
+        background: #f8fafc !important;
+    }
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+        line-height: 40px !important;
+        padding-left: 15px !important;
+    }
+    .text-teal { color: #0d9488 !important; }
+</style>
+
+{% endblock content %}
