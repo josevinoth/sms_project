@@ -14,6 +14,10 @@ class TripclosureaddForm(forms.ModelForm):
         self.fields['tr_consignmentnumber'].empty_label = "--Select--"
         self.fields['tc_financestatus'].empty_label = "--Select--"
         self.fields['tr_iou'].empty_label = "--Select--"
+        
+        # Default "Trip Charges" checkbox to True
+        if 'tc_tripcost_check' in self.fields:
+            self.fields['tc_tripcost_check'].initial = True
 
 class TripclosurefilesForm(forms.ModelForm):
     class Meta:

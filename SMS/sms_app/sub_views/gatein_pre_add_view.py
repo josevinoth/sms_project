@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect
 from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.gatein_mod import Gatein_info
 from ..sub_models.unit_info_mod import UnitInfo
-from ..views import dsr_send_email_view
+from .dsr_add_view import dsr_send_email_view
 from ..forms import Gatein_preaddForm
 from django.contrib.auth.decorators import login_required
 from ..models import Pregateintruckinfo,Gatein_pre_info
@@ -51,6 +51,9 @@ def gatein_pre_add(request, gatein_pre_id=0):
             print('gatein_pre_id',gatein_pre_id)
             gatein_pre_form = Gatein_preaddForm(instance=gatein_pre_info)
             pregateintruck_list = Pregateintruckinfo.objects.filter(pregatein_number=gatein_num_id)
+            # Count trucks vs actual gate-in jobs to control Status field editability
+            truck_count = pregateintruck_list.count()
+            job_count = Gatein_info.objects.filter(gatein_pre_id=gatein_pre_id).count()
             context = {
             'first_name': first_name,
             'gatein_pre_email_count': gatein_pre_email_count,
@@ -61,6 +64,8 @@ def gatein_pre_add(request, gatein_pre_id=0):
             'pregateintruck_list': pregateintruck_list,
             'role': role,
             'role_id': role_id,
+            'truck_count': truck_count,
+            'job_count': job_count,
         }
         return render(request, "asset_mgt_app/gatein_pre_add.html", context)
     else:
@@ -100,7 +105,7 @@ def gatein_pre_add(request, gatein_pre_id=0):
             request.session['ses_pre_gatein_id'] = gatein_pre_id
             if gatein_pre_form.is_valid():
                 print("Main Form is Valid")
-                gatein_pre_form.save()
+                gatein_pre_info = gatein_pre_form.save()
                 messages.success(request, 'Record Updated Successfully')
 
                 # Automatic Email Logic
@@ -247,8 +252,28 @@ def send_gate_in_email_logic(pre_gatein_id, request=None):
         customer_name = customer.cu_name
         subject = f"{customer_name}_Gate-In Alert"
         
+        # Fetch email from Email Master List instead of Customer List
+        from ..sub_models.emailmaster_mod import Emailmaster
+        try:
+            # Look for an Email Master entry for this customer with 'For Alert' type
+            email_master = Emailmaster.objects.filter(
+                em_Customer_name=customer, 
+                em_emailtype__email_type__icontains='Alert'
+            ).first()
+            
+            if email_master and email_master.em_to_names:
+                recipient_list = [email.strip() for email in email_master.em_to_names.split(',') if email.strip()]
+            else:
+                # Fallback to customer list if not found
+                recipient_list = [customer.cu_email]
+        except Exception as e:
+            print(f"Error fetching from Email Master: {e}")
+            recipient_list = [customer.cu_email]
+            
+        message = f"Dear Customer,\n\nPlease find the Gate-In DSR report for {customer_name} attached.\n\nRegards,\nBVM Warehouse Team"
+        
         # Call the email sending function
-        dsr_send_email_view(request, pre_gatein_id, customer_name=single_customer_id, subject=subject)
+        dsr_send_email_view(request, pre_gatein_id, customer_name=single_customer_id, subject=subject, recipient_list=recipient_list, message=message)
         
         # Update email count
         Gatein_pre_info.objects.filter(pk=pre_gatein_id).update(gatein_pre_email_count=F('gatein_pre_email_count') + 1)

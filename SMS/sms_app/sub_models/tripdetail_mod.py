@@ -69,7 +69,7 @@ class TripdetailInfo(models.Model):
     tc_cancellation = models.FloatField(default=0.0)
 
     # Bill to Customer Checkboxes (Specifically for Trans Invoice)
-    tc_tripcost_check = models.BooleanField(default=False)
+    tc_tripcost_check = models.BooleanField(default=True)
     tc_parkingcost_check = models.BooleanField(default=False)
     tc_tollcost_check = models.BooleanField(default=False)
     tc_loadingcost_check = models.BooleanField(default=False)

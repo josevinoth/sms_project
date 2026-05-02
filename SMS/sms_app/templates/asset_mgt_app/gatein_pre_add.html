@@ -85,7 +85,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Status</span>
 									</div>
-									{% render_field gatein_pre_form.gatein_pre_status class="form-control disable_a_href" %}
+									{% render_field gatein_pre_form.gatein_pre_status class="form-control" %}
 								</div>
 							</div>
 						</div>
@@ -162,6 +162,30 @@
 
 			// allow Cancel button only
 			$('a.btn-danger').removeClass('disable_a_href disabled-colour').prop('disabled', false);
+		}
+
+		// --- Status lock: disable until job count matches truck count ---
+		var jobCount = {{ job_count|default:0 }};
+		var truckCount = {{ truck_count|default:0 }};
+		var statusDropdown = document.getElementById("id_gatein_pre_status");
+
+		if (statusDropdown && (truckCount === 0 || jobCount < truckCount)) {
+			// Auto-select 'Work in Progress' option by matching text
+			var opts = statusDropdown.options;
+			for (var i = 0; i < opts.length; i++) {
+				var optText = opts[i].text.toLowerCase();
+				if (optText.indexOf('work') !== -1 && optText.indexOf('progress') !== -1) {
+					statusDropdown.value = opts[i].value;
+					break;
+				}
+			}
+			// Visually lock the field (do NOT use disabled so value still submits)
+			statusDropdown.style.pointerEvents = 'none';
+			statusDropdown.style.backgroundColor = '#e9ecef';
+			statusDropdown.style.color = '#6c757d';
+			statusDropdown.style.cursor = 'not-allowed';
+			statusDropdown.style.opacity = '0.85';
+			statusDropdown.title = 'Status is locked until all ' + truckCount + ' truck job(s) are created. Currently ' + jobCount + ' job(s) exist.';
 		}
 	});
 </script>

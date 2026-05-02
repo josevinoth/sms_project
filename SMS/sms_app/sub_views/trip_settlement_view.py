@@ -69,7 +69,11 @@ def trip_settlement_edit(request, trip_id):
             'tc_tollcost', 'tc_loadingcost', 'tc_unloadingcost', 
             'tc_weighmentcost', 'tc_handlingcost', 'tc_supervisorcost', 
             'tc_haltingcost', 'tc_no_of_days_halting','tc_rtocost','tc_betacost',
-            'tc_cancellation', 'tc_cancellation_check'
+            'tc_cancellation', 'tc_tripcost_check', 'tc_parkingcost_check', 'tc_tollcost_check',
+            'tc_loadingcost_check', 'tc_unloadingcost_check', 'tc_weighmentcost_check',
+            'tc_supervisorcost_check', 'tc_handlingcost_check', 'tc_haltingcost_check',
+            'tc_total_halting_cost_check', 'tc_rtocost_check', 'tc_betacost_check',
+            'tc_cancellation_check'
         ]
 
         # Disable and un-require all other fields
@@ -117,7 +121,11 @@ def trip_settlement_edit(request, trip_id):
             'tc_tollcost', 'tc_loadingcost', 'tc_unloadingcost', 
             'tc_weighmentcost', 'tc_handlingcost', 'tc_supervisorcost', 
             'tc_haltingcost', 'tc_no_of_days_halting','tc_rtocost','tc_betacost',
-            'tc_cancellation', 'tc_cancellation_check'
+            'tc_cancellation', 'tc_tripcost_check', 'tc_parkingcost_check', 'tc_tollcost_check',
+            'tc_loadingcost_check', 'tc_unloadingcost_check', 'tc_weighmentcost_check',
+            'tc_supervisorcost_check', 'tc_handlingcost_check', 'tc_haltingcost_check',
+            'tc_total_halting_cost_check', 'tc_rtocost_check', 'tc_betacost_check',
+            'tc_cancellation_check'
         ]
 
         for field in form.fields:

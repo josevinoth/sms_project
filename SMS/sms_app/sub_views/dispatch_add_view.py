@@ -31,7 +31,7 @@ import numpy as np
 qr_detector = cv2.QRCodeDetector()
 
 from ..sub_models.loadingbay_mod import Loadingbay_Info
-from ..views import warehousevolme_area_calc
+from .locationmaster_add_view import warehousevolme_area_calc
 from io import BytesIO
 from django.views.decorators.http import require_POST
 from django.db.models import F, ExpressionWrapper, IntegerField
