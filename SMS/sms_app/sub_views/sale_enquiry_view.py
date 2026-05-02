@@ -117,7 +117,52 @@ def get_customer_code(request):
     if customer_id:
         try:
             customer = CustomerInfo.objects.get(pk=customer_id)
-            return JsonResponse({'status': 'success', 'customer_code': customer.cu_customercode})
+            
+            # Fetch the latest sales record for this customer to get the sales number
+            from ..models import SalesInfo
+            latest_sale = SalesInfo.objects.filter(s_customer_name=customer).order_by('-s_created_at').first()
+            sales_number = latest_sale.s_sale_number if latest_sale else ''
+            
+            # Prepare data to return
+            data = {
+                'status': 'success',
+                'customer_code': customer.cu_customercode,
+                'sales_number': sales_number,
+                'contact_person': customer.cu_customerperson,
+                'contact_no': customer.cu_contactno,
+                'mail': customer.cu_email,
+                'service_type': str(customer.cu_type) if customer.cu_type else '',
+                'address': customer.cu_address
+            }
+            return JsonResponse(data)
         except CustomerInfo.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Customer not found'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+def get_sale_details(request):
+    sale_number = request.GET.get('sale_number')
+    if sale_number:
+        try:
+            from ..models import SalesInfo
+            sale = SalesInfo.objects.filter(s_sale_number=sale_number).first()
+            if sale:
+                # If s_customer_new_name exists, it's a new customer scenario
+                is_new_customer = bool(sale.s_customer_new_name)
+                
+                data = {
+                    'status': 'success',
+                    'customer_id': '' if is_new_customer else (sale.s_customer_name.id if sale.s_customer_name else ''),
+                    'new_customer_name': sale.s_customer_new_name or '',
+                    'customer_code': sale.s_customer_code or (sale.s_customer_name.cu_customercode if sale.s_customer_name else ''),
+                    'contact_person': sale.s_Person_name or '',
+                    'contact_no': sale.s_contact_no or '',
+                    'mail': sale.s_email_id or '',
+                    'service_type': str(sale.s_industry_type) if sale.s_industry_type else '',
+                    'address': sale.s_customer_name.cu_address if sale.s_customer_name else ''
+                }
+                return JsonResponse(data)
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Sale number not found'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'})

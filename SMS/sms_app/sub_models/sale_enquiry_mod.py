@@ -13,6 +13,12 @@ from .shipment_type_mod import Shipment_type
 from .delivery_type_mod import Delivery_type
 from .travel_type_mod import Travel_type
 
+import os
+
+def sale_enquiry_path(instance, filename):
+    # This will upload to MEDIA_ROOT/SaleEnquiryAttachments/<enquiry_id>/<filename>
+    return os.path.join('SaleEnquiryAttachments', str(instance.enquiry_id), filename)
+
 class SaleEnquiry(models.Model):
     enquiry_id = models.CharField(max_length=100, default='', blank=True, null=True)
     enquiry_date_time = models.DateTimeField(null=True, blank=True)
@@ -86,6 +92,13 @@ class SaleEnquiry(models.Model):
     mc_package_req = models.CharField(max_length=100, default='', blank=True, null=True)
     mc_hotel_req = models.CharField(max_length=100, default='', blank=True, null=True)
     mc_rfq_closed_date = models.DateField(blank=True, null=True)
+
+    wh_attachment = models.FileField(upload_to=sale_enquiry_path, null=True, blank=True)
+    tr_attachment = models.FileField(upload_to=sale_enquiry_path, null=True, blank=True)
+    pa_attachment = models.FileField(upload_to=sale_enquiry_path, null=True, blank=True)
+    ex_attachment = models.FileField(upload_to=sale_enquiry_path, null=True, blank=True)
+    su_attachment = models.FileField(upload_to=sale_enquiry_path, null=True, blank=True)
+    mc_attachment = models.FileField(upload_to=sale_enquiry_path, null=True, blank=True)
 
     created_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True, related_name='saleenquiry_created_by')
     updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True, related_name='saleenquiry_updated_by')

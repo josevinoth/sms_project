@@ -2,6 +2,8 @@ from django import forms
 from ..models import SaleEnquiry
 
 class SaleEnquiryForm(forms.ModelForm):
+    sales_number = forms.CharField(required=False)
+    
     class Meta:
         model = SaleEnquiry
         fields = [
@@ -15,7 +17,8 @@ class SaleEnquiryForm(forms.ModelForm):
             'pa_customer_type', 'pa_inhouse_onsite', 'pa_lul_scope', 'pa_transport_scope', 'pa_no_of_boxes_per_month', 'pa_rfq_closed_date',
             'ex_customer_type', 'ex_veh_type', 'ex_no_of_vehicles', 'ex_pickup', 'ex_delivery', 'ex_shipment_type', 'ex_no_of_shipments', 'ex_avg_weight_per_shipment', 'ex_delivery_type', 'ex_rfq_closed_date',
             'su_customer_type', 'su_no_of_manpowers', 'su_shift_type', 'su_working_days', 'su_supervisors', 'su_loaders', 'su_rfq_closed_date',
-            'mc_customer_type', 'mc_travel_type', 'mc_from', 'mc_to', 'mc_no_of_passengers', 'mc_travel_date', 'mc_return_date', 'mc_vehicle_type', 'mc_package_req', 'mc_hotel_req', 'mc_rfq_closed_date'
+            'mc_customer_type', 'mc_travel_type', 'mc_from', 'mc_to', 'mc_no_of_passengers', 'mc_travel_date', 'mc_return_date', 'mc_vehicle_type', 'mc_package_req', 'mc_hotel_req', 'mc_rfq_closed_date',
+            'wh_attachment', 'tr_attachment', 'pa_attachment', 'ex_attachment', 'su_attachment', 'mc_attachment'
         ]
         widgets = {
             'enquiry_id': forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
@@ -79,3 +82,23 @@ class SaleEnquiryForm(forms.ModelForm):
             'mc_hotel_req': forms.TextInput(attrs={'class': 'form-control'}),
             'mc_rfq_closed_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super(SaleEnquiryForm, self).__init__(*args, **kwargs)
+        from ..models import SalesInfo
+        # Fetch all sales records to populate the dropdown
+        sales_records = SalesInfo.objects.all().order_by('-s_created_at')
+        sales_choices = [('', '---------')]
+        for record in sales_records:
+            if not record.s_sale_number:
+                continue
+            trimmed_sale_number = record.s_sale_number.replace('26-27_', '')
+            if record.s_customer_new_name:
+                label = f"{trimmed_sale_number} ({record.s_customer_new_name})"
+            elif record.s_customer_name:
+                label = f"{trimmed_sale_number} ({record.s_customer_name})"
+            else:
+                label = trimmed_sale_number
+            sales_choices.append((record.s_sale_number, label))
+
+        self.fields['sales_number'].widget = forms.Select(choices=sales_choices, attrs={'class': 'form-control select2', 'id': 'sales_number_input'})

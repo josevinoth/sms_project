@@ -1100,6 +1100,7 @@ urlpatterns = [
     path('sale_enquiry_update/<int:enquiry_id>/', views.sale_enquiry_add, name='sale_enquiry_update'),
     path('sale_enquiry_delete/<int:enquiry_id>/', views.sale_enquiry_delete, name='sale_enquiry_delete'),
     path('ajax/get_customer_code/', views.get_customer_code, name='get_customer_code'),
+    path('ajax/get_sale_details/', views.get_sale_details, name='get_sale_details'),
     path('invoice_documents_list/', views.invoice_documents_list, name='invoice_documents_list'),
     path('invoice_documents_add/<int:trip_id>/', views.invoice_documents_add, name='invoice_documents_add'),
 ]

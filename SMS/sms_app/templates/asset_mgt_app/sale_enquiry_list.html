@@ -60,6 +60,7 @@
                 <th>Customer Name</th>
                 <th>Customer Code</th>
                 <th>Product</th>
+                <th>Attachments</th>
                 <th>Contact Person Name</th>
                 <th>Contact No</th>
                 <th>Mail</th>
@@ -81,6 +82,16 @@
                 <td>{{enquiry.customer_name}}</td>
                 <td>{{enquiry.customer_code}}</td>
                 <td>{{enquiry.get_product_names}}</td>
+                <td>
+                    <ul class="list-unstyled mb-0" style="font-size: 0.85em;">
+                        {% if enquiry.wh_attachment %}<li><a href="{{ enquiry.wh_attachment.url }}" target="_blank"><i class="fas fa-file-alt text-info"></i> Warehouse</a></li>{% endif %}
+                        {% if enquiry.tr_attachment %}<li><a href="{{ enquiry.tr_attachment.url }}" target="_blank"><i class="fas fa-file-alt text-info"></i> Transport</a></li>{% endif %}
+                        {% if enquiry.pa_attachment %}<li><a href="{{ enquiry.pa_attachment.url }}" target="_blank"><i class="fas fa-file-alt text-info"></i> Packing</a></li>{% endif %}
+                        {% if enquiry.ex_attachment %}<li><a href="{{ enquiry.ex_attachment.url }}" target="_blank"><i class="fas fa-file-alt text-info"></i> Express</a></li>{% endif %}
+                        {% if enquiry.su_attachment %}<li><a href="{{ enquiry.su_attachment.url }}" target="_blank"><i class="fas fa-file-alt text-info"></i> Support</a></li>{% endif %}
+                        {% if enquiry.mc_attachment %}<li><a href="{{ enquiry.mc_attachment.url }}" target="_blank"><i class="fas fa-file-alt text-info"></i> MC Tours</a></li>{% endif %}
+                    </ul>
+                </td>
                 <td>{{enquiry.contact_person_name}}</td>
                 <td>{{enquiry.contact_no}}</td>
                 <td>{{enquiry.mail}}</td>
