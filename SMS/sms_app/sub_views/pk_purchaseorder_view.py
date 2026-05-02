@@ -328,6 +328,7 @@ def pk_create_batch_job(request):
         data = json.loads(request.body)
         po_id = data.get('po_id')
         items = data.get('items', [])
+        pack_type = data.get('pack_type', 'In-House')
 
         if not po_id or not items:
             return JsonResponse({'success': False, 'message': 'Missing PO ID or items'}, status=400)
@@ -348,15 +349,16 @@ def pk_create_batch_job(request):
             wip_status = None
 
         # 3. Create the Costing Summary (The Job)
-        # Using the first item's assessment as the primary one for the summary
+        # Using the PO's assessment as the primary one for the summary
         first_pod = POdimension.objects.get(id=items[0]['id'])
         summary = PkcostingsummaryInfo.objects.create(
             cs_customer_po=po,
-            cs_assessment_num=first_pod.pod_assess_num,
+            cs_assessment_num=po.po_assessment_num if po.po_assessment_num else first_pod.pod_assess_num,
             cs_customer_name=po.po_customer_name,
             cs_customer_new_name=po.po_customer_new_name,
             cs_status=wip_status,
             cs_job_no=job_no,
+            cs_pack_type=pack_type,
             cs_updated_by_id=request.session.get('ses_userID')
         )
 

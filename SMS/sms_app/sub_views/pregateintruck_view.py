@@ -15,7 +15,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from itertools import groupby
 from operator import itemgetter
-from .dispatch_add_view import get_base64_image
+from .general_utils import get_base64_image
 from ..forms import PregateintruckForm
 from ..models import Pregateintruckinfo,Gatein_pre_info,HighvalueInfo,Gatein_info,Warehouse_goods_info
 from django.shortcuts import render, redirect, get_object_or_404
@@ -102,6 +102,24 @@ def pregateintruck_add(request, pregateintruck_id=0):
 
                 pregateintruck.save()
                 messages.success(request, 'Record Updated Successfully')
+
+                # Automatic Email Logic
+                try:
+                    invoice_count = int(pregateintruck.pregatein_invoice_ref or 0)
+                    job_count = Gatein_info.objects.filter(gatein_truck_number_n=pregateintruck).count()
+                    if invoice_count == job_count and invoice_count > 0:
+                        gateins = Gatein_info.objects.filter(gatein_truck_number_n=pregateintruck)
+                        for g in gateins:
+                            customer = g.gatein_customer
+                            if customer.cu_automatic_email == 'YES':
+                                recipient_list = [customer.cu_email]
+                                subject = f"{customer.cu_name} - Truck Wise Report (Auto)"
+                                message = "Dear Customer,\n\nPlease find the Gate-In Truck report attached.\n\nRegards,\nBVM Warehouse Team"
+                                send_truck_wise_report_logic(gatein_num_id, recipient_list, subject, message)
+                                break
+                except Exception as e:
+                    print(f"Auto-Email Error: {e}")
+
                 last_id = pregateintruck.id
                 pregateintruckdetails_list(request, gatein_num_id)
                 return redirect('/SMS/pregateintruck_update/' + str(last_id))
@@ -133,6 +151,24 @@ def pregateintruck_add(request, pregateintruck_id=0):
 
                 pregateintruck.save()
                 messages.success(request, 'Record Updated Successfully')
+
+                # Automatic Email Logic
+                try:
+                    invoice_count = int(pregateintruck.pregatein_invoice_ref or 0)
+                    job_count = Gatein_info.objects.filter(gatein_truck_number_n=pregateintruck).count()
+                    if invoice_count == job_count and invoice_count > 0:
+                        gateins = Gatein_info.objects.filter(gatein_truck_number_n=pregateintruck)
+                        for g in gateins:
+                            customer = g.gatein_customer
+                            if customer.cu_automatic_email == 'YES':
+                                recipient_list = [customer.cu_email]
+                                subject = f"{customer.cu_name} - Truck Wise Report (Auto)"
+                                message = "Dear Customer,\n\nPlease find the Gate-In Truck report attached.\n\nRegards,\nBVM Warehouse Team"
+                                send_truck_wise_report_logic(gatein_num_id, recipient_list, subject, message)
+                                break
+                except Exception as e:
+                    print(f"Auto-Email Error: {e}")
+
                 pregateintruckdetails_list(request, gatein_num_id)
                 return redirect(request.META['HTTP_REFERER'])
             else:
@@ -240,16 +276,89 @@ def pregatein_gatepass_pdf_download(request, pregatein_id):
 
 from datetime import datetime
 
+def send_truck_wise_report_logic(pre_gatein_id, recipient_list, subject, message):
+    # --- Excel setup ---
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Truck Wise Details"
+
+    headers = [
+        "Vehicle No", "Shipper", "Shipper Value", "Invoice No",
+        "Loading Start Time", "Loading End Time", "No. of Pieces",
+        "Damage (Yes/No)", "WH Job No", "Stock No", "GRN Number",
+        "Damage Names", "Deviation Names", "Remarks",
+    ]
+    ws.append(headers)
+
+    header_font = Font(name="Arial", bold=True)
+    fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+    border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                    top=Side(style='thin'), bottom=Side(style='thin'))
+
+    # --- Step 1: Get all trucks for this pre-gate-in ---
+    trucks = Pregateintruckinfo.objects.filter(pregatein_number_id=pre_gatein_id)
+
+    # --- Step 2: Collect detailed goods data for each truck ---
+    for truck in trucks:
+        gateins = Gatein_info.objects.filter(gatein_truck_number_n=truck)
+        for g in gateins:
+            goods = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id=g)
+            for item in goods:
+                shipper = item.wh_consigner or ""
+                shipper_value = item.wh_invoice_value or ""
+                invoice = getattr(item.wh_gate_injob_no_id, 'gatein_invoice', '')
+                loading_start = getattr(item.wh_lb_job_no_id, "lb_stock_unloading_start_time", "")
+                loading_end = getattr(item.wh_lb_job_no_id, "lb_stock_unloading_end_time", "")
+                pieces = item.wh_goods_pieces or 0
+                damage = "Yes" if getattr(item, 'wh_damage_check_id', 0) == 1 else "No"
+                wh_job_no = getattr(item, 'wh_job_no', "")
+                stock_no = getattr(item, 'wh_qr_rand_num', "")
+
+                damage_report = DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_no).first()
+                if damage_report:
+                    grn_number = damage_report.dam_GRN_num or ""
+                    remarks = damage_report.dam_comments or ""
+                    damage_names = ", ".join(damage_report.dam_damages1.values_list('damage_name', flat=True))
+                    deviation_names = ", ".join(damage_report.dam_deviation1.values_list('deviation_name', flat=True))
+                else:
+                    grn_number = remarks = damage_names = deviation_names = ""
+
+                ws.append([
+                    truck.pregatein_truck_number, shipper, shipper_value, invoice,
+                    timezone.localtime(loading_start).strftime("%d-%b-%Y %H:%M") if loading_start else "",
+                    timezone.localtime(loading_end).strftime("%d-%b-%Y %H:%M") if loading_end else "",
+                    pieces, damage, wh_job_no, stock_no, grn_number, damage_names, deviation_names, remarks,
+                ])
+
+    for cell in ws[1]:
+        cell.font = header_font
+        cell.fill = fill
+        cell.border = border
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    for col in ws.columns:
+        max_len = max(len(str(c.value)) for c in col if c.value)
+        ws.column_dimensions[col[0].column_letter].width = max_len + 2
+
+    excel_file = BytesIO()
+    wb.save(excel_file)
+    wb.close()
+    excel_file.seek(0)
+
+    send_department_email(
+        department='warehouse',
+        subject=subject,
+        message=message.replace('\n', '<br>'),
+        recipient_list=recipient_list,
+        attachment=excel_file,
+        attachment_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        file_name='Truck_Wise_Report.xlsx'
+    )
+
 @login_required(login_url='login_page')
 def truck_send_email_view(request, pre_gatein_id=None):
     if request.method == 'POST':
-
-        pre_gatein_id = (
-            pre_gatein_id
-            or request.POST.get('pre_gatein_id')
-            or request.session.get('gatein_num_id')
-        )
-
+        pre_gatein_id = pre_gatein_id or request.POST.get('pre_gatein_id') or request.session.get('gatein_num_id')
         if not pre_gatein_id:
             messages.error(request, "Missing Pre-Gate-In ID.")
             return redirect(request.META.get('HTTP_REFERER', '/'))
@@ -259,122 +368,9 @@ def truck_send_email_view(request, pre_gatein_id=None):
         message = request.POST.get('message', '')
         recipient_list = [r.strip() for r in recipient.split(',') if r.strip()]
 
-        # --- Excel setup ---
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Truck Wise Details"
-
-        headers = [
-            "Vehicle No",
-            "Shipper",
-            "Shipper Value",
-            "Invoice No",
-            "Loading Start Time",
-            "Loading End Time",
-            "No. of Pieces",
-            "Damage (Yes/No)",
-            "WH Job No",
-            "Stock No",
-            "GRN Number",
-            "Damage Names",
-            "Deviation Names",
-            "Remarks",
-        ]
-        ws.append(headers)
-
-        header_font = Font(name="Arial", bold=True)
-        fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
-        border = Border(left=Side(style='thin'), right=Side(style='thin'),
-                        top=Side(style='thin'), bottom=Side(style='thin'))
-
-        # --- Step 1: Get all trucks for this pre-gate-in ---
-        trucks = Pregateintruckinfo.objects.filter(pregatein_number_id=pre_gatein_id)
-
-        # --- Step 2: Collect detailed goods data for each truck ---
-        for truck in trucks:
-            gateins = Gatein_info.objects.filter(gatein_truck_number_n=truck)
-            for g in gateins:
-                load = Loadingbay_Info.objects.filter(lb_job_no_id=g).first()
-                goods = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id=g)
-
-                for item in goods:
-
-                    shipper = item.wh_consigner or ""
-                    shipper_value = item.wh_invoice_value or ""
-                    invoice = getattr(item.wh_gate_injob_no_id, 'gatein_invoice', '')
-                    loading_start = getattr(item.wh_lb_job_no_id, "lb_stock_unloading_start_time", "")
-                    loading_end = getattr(item.wh_lb_job_no_id, "lb_stock_unloading_end_time", "")
-                    pieces = item.wh_goods_pieces or 0
-                    damage_flag = getattr(item, 'wh_damage_check_id', 0) == 1
-                    damage = "Yes" if damage_flag else "No"
-                    wh_job_no = getattr(item, 'wh_job_no', "")
-                    stock_no = getattr(item, 'wh_qr_rand_num', "")
-
-                    #Fetch related damage info (if any)
-                    damage_report = DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_no).first()
-                    if damage_report:
-                        grn_number = damage_report.dam_GRN_num or ""
-                        remarks = damage_report.dam_comments or ""
-                        damage_names = ", ".join(damage_report.dam_damages1.values_list('damage_name', flat=True))
-                        deviation_names = ", ".join(damage_report.dam_deviation1.values_list('deviation_name', flat=True))
-                    else:
-                        grn_number = ""
-                        remarks = ""
-                        damage_names = ""
-                        deviation_names = ""
-
-                    # Add row to Excel
-                    ws.append([
-                        truck.pregatein_truck_number,
-                        shipper,
-                        shipper_value,
-                        invoice,
-                        timezone.localtime(loading_start).strftime("%d-%b-%Y %H:%M") if loading_start else "",
-                        timezone.localtime(loading_end).strftime("%d-%b-%Y %H:%M") if loading_end else "",
-                        pieces,
-                        damage,
-                        wh_job_no,
-                        stock_no,
-                        grn_number,
-                        damage_names,
-                        deviation_names,
-                        remarks,
-                    ])
-
-        # --- Format header row ---
-        for cell in ws[1]:
-            cell.font = header_font
-            cell.fill = fill
-            cell.border = border
-            cell.alignment = Alignment(horizontal='center', vertical='center')
-
-        # Auto column width
-        for col in ws.columns:
-            max_len = max(len(str(c.value)) for c in col if c.value)
-            ws.column_dimensions[col[0].column_letter].width = max_len + 2
-
-        # --- Save Excel to memory ---
-        excel_file = BytesIO()
-        wb.save(excel_file)
-        wb.close()
-        excel_file.seek(0)
-
-        # --- Send email ---
-        send_department_email(
-            department='warehouse',
-            subject=subject,
-            message=message.replace('\n', '<br>'),
-            recipient_list=recipient_list,
-            attachment=excel_file,
-            attachment_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            file_name='Truck_Wise_Report.xlsx'
-        )
-
+        send_truck_wise_report_logic(pre_gatein_id, recipient_list, subject, message)
         messages.success(request, "Truck-wise E-mail sent successfully.")
         return redirect(request.META.get('HTTP_REFERER', '/'))
-
-    else:
-        messages.error(request, "Invalid request method.")
-        return redirect(request.META.get('HTTP_REFERER', '/'))
+    return redirect(request.META.get('HTTP_REFERER', '/'))
 
 

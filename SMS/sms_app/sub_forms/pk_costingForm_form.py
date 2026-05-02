@@ -1,5 +1,5 @@
 from django import forms
-from ..models import PkcostingInfo, Nadimension, PkpurchaseorderInfo, POdimension
+from ..models import PkcostingInfo, Nadimension, PkpurchaseorderInfo, POdimension, PkpartcodeInfo
 
 class PkcostingForm(forms.ModelForm):
 
@@ -15,6 +15,28 @@ class PkcostingForm(forms.ModelForm):
             assessment_id = kwargs['data'].get('ct_assessment_num')
 
         super().__init__(*args, **kwargs)
+        
+        # Restrict PartCode to prevent loading 10k items
+        self.fields['ct_part_code'].queryset = PkpartcodeInfo.objects.none()
+        self.fields['ct_part_code'].choices = []
+
+        # Handle submission (POST)
+        submitted_data = args[0] if args else kwargs.get('data')
+        if submitted_data and 'ct_part_code' in submitted_data:
+            pid = submitted_data.get('ct_part_code')
+            if pid:
+                self.fields['ct_part_code'].queryset = PkpartcodeInfo.objects.filter(pk=pid)
+
+        # If we have an instance (editing), ensure the current value is available
+        if self.instance and self.instance.pk and self.instance.ct_part_code:
+            self.fields['ct_part_code'].queryset = PkpartcodeInfo.objects.filter(pk=self.instance.ct_part_code.pk)
+            self.fields['ct_part_code'].choices = [(self.instance.ct_part_code.pk, str(self.instance.ct_part_code))]
+        
+        # Also check initial for part_code (standard for these modules)
+        if 'ct_part_code' in self.initial and self.initial['ct_part_code']:
+            part_id = self.initial['ct_part_code']
+            self.fields['ct_part_code'].queryset = PkpartcodeInfo.objects.filter(pk=part_id)
+            # choices will be set by widget or manually if needed
 
         if assessment_id:
             self.fields['ct_requirement'].queryset = Nadimension.objects.filter(nad_assess_num=assessment_id)

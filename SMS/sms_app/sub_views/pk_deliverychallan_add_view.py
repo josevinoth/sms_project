@@ -74,7 +74,15 @@ def delivery_challan_delete(request,delivery_id):
 @login_required(login_url='login_page')
 def delivery_challan_pdf(request, delivery_id):
     delivery = Pkdeliverychallan.objects.filter(id=delivery_id).first()
-    challan_list = POdimension.objects.filter(pod_assess_num=delivery.dc_assessment_num,pod_po_num=delivery.dc_customer_po)
+    
+    # Use direct link via Job No in Costing for more accurate item listing
+    job_no = PkcostingsummaryInfo.objects.filter(cs_customer_po=delivery.dc_customer_po, cs_assessment_num=delivery.dc_assessment_num).values_list('cs_job_no', flat=True).first()
+    
+    if job_no:
+        pod_ids = PkcostingInfo.objects.filter(ct_job_no=job_no).values_list('ct_po_dimension', flat=True).distinct()
+        challan_list = POdimension.objects.filter(id__in=pod_ids)
+    else:
+        challan_list = POdimension.objects.filter(pod_assess_num=delivery.dc_assessment_num,pod_po_num=delivery.dc_customer_po)
     if not delivery:
         messages.error(request, "Record not found.")
         return redirect('/SMS/packing_delivery_list')

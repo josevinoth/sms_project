@@ -3,7 +3,6 @@ from django.views.generic import TemplateView
 
 from . import views
 from .sub_views.pk_purchaseorder_view import pk_create_batch_job, pk_get_po_items_for_job
-from django.contrib.auth import views as auth_views  # import this
 
 urlpatterns = [
     path('pk_create_batch_job/', pk_create_batch_job, name='pk_create_batch_job'),
@@ -19,6 +18,12 @@ urlpatterns = [
     path('driver/logout/', views.driver_logout, name='driver_logout'),
     path('driver/dashboard/', views.driver_dashboard, name='driver_dashboard'),
     path('home_page', views.home_page, name='home_page'),  # Home_page
+    path('privacy-policy/', views.privacy_policy, name='privacy_policy'), # Privacy Policy
+    path('pk_production_dashboard/', views.pk_production_dashboard, name='pk_production_dashboard'),
+    path('update_production_status/', views.update_production_status, name='update_production_status'),
+    path('pk_quality_check_list/', views.pk_quality_check_list, name='pk_quality_check_list'),
+    path('pk_quality_check_add/', views.pk_quality_check_add, name='pk_quality_check_add'),
+    path('get_job_details_for_qc/', views.get_job_details_for_qc, name='get_job_details_for_qc'),
     path('asset_insert', views.assetinfo_add, name='asset_insert'),  # Add Asset
     path('asset_update/<int:asset_id>/', views.assetinfo_add, name='asset_update'),  # Update asset
     path('asset_delete/<int:asset_id>/', views.asset_delete, name='asset_delete'),  # Delete asset
@@ -163,15 +168,13 @@ urlpatterns = [
     path('role_update/<int:role_id>/', views.role_add, name='role_update'),  # Update role
     path('role_delete/<int:role_id>/', views.role_delete, name='role_delete'),  # Delete role
     path('password_reset/', views.password_reset_request, name='password_reset'),
-    path('password_reset/done/',
-         auth_views.PasswordResetDoneView.as_view(template_name="password/password_reset_done.html"),
-         name='password_reset_done'),  # Password Reset
-    path('reset/<uidb64>/<token>/',
-         auth_views.PasswordResetConfirmView.as_view(template_name="password/password_reset_confirm.html"),
-         name='password_reset_confirm'),  # Password Reset
-    path('reset/done/',
-         auth_views.PasswordResetCompleteView.as_view(template_name='password/password_reset_complete.html'),
-         name='password_reset_complete'),  # Password Reset
+    path('password_reset/verify-otp/', views.password_reset_otp_verify, name='password_reset_otp_verify'),
+    path('password_reset/confirm/', views.password_reset_confirm, name='password_reset_confirm'),
+    path(
+        'password_reset/complete/',
+        TemplateView.as_view(template_name='password/password_reset_complete.html'),
+        name='password_reset_complete',
+    ),
     path('gatein_insert', views.gatein_add, name='gatein_insert'),  # gatein add
     path('gatein_list/', views.gatein_list, name='gatein_list'),  # List gatein,
     path('gatein_update/<int:gatein_id>/', views.gatein_add, name='gatein_update'),  # Update gatein
@@ -1103,4 +1106,23 @@ urlpatterns = [
     path('ajax/get_sale_details/', views.get_sale_details, name='get_sale_details'),
     path('invoice_documents_list/', views.invoice_documents_list, name='invoice_documents_list'),
     path('invoice_documents_add/<int:trip_id>/', views.invoice_documents_add, name='invoice_documents_add'),
+    path('pk_tool_master_list/', views.pk_tool_master_list, name='pk_tool_master_list'),
+    path('pk_tool_master_add/', views.pk_tool_master_add, name='pk_tool_master_add'),
+    path('pk_tool_master_update/<int:tool_id>/', views.pk_tool_master_add, name='pk_tool_master_update'),
+    path('pk_tool_master_delete/<int:tool_id>/', views.pk_tool_master_delete, name='pk_tool_master_delete'),
+
+    # PMS Gate Pass & Delivery Challan
+    path('packing_gate/', views.gate_return_add, name='packing_gate'),
+    path('packing_gate_list/', views.gate_return_list, name='packing_gate_list'),
+    path('packing_gate_delete/<int:gate_id>/', views.gate_return_delete, name='packing_gate_delete'),
+    path('packing_gate_pdf/<int:gate_id>/', views.gate_return_pdf, name='packing_gate_pdf'),
+    path('packing_gate_get_jobs/', views.gate_pass_get_jobs_by_customer, name='packing_gate_get_jobs'),
+    path('packing_gate_get_details/', views.gate_pass_get_job_details, name='packing_gate_get_details'),
+    path('update_dc_item_financials/', views.update_dc_item_financials, name='update_dc_item_financials'),
+
+    path('packing_delivery/', views.delivery_challan_add, name='packing_delivery'),
+    path('packing_delivery_list/', views.delivery_challan_list, name='packing_delivery_list'),
+    path('packing_delivery_delete/<int:delivery_id>/', views.delivery_challan_delete, name='packing_delivery_delete'),
+    path('packing_delivery_pdf/<int:delivery_id>/', views.delivery_challan_pdf, name='packing_delivery_pdf'),
+    path('deletion_log_list/', views.deletion_log_list, name='deletion_log_list'),
 ]

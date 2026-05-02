@@ -43,7 +43,11 @@ from .sub_views.whratemasteradd_view import whratemaster_add,whratemaster_list,w
 from .sub_views.designation_add_view import designation_add,designation_list,designation_delete
 from .sub_views.whstoragetype_add_view import whstoragetype_add,whstoragetype_list,whstoragetype_delete
 from .sub_views.role_add_view import role_add,role_list,role_delete
-from .sub_views.password_reset_request_view import password_reset_request
+from .sub_views.password_reset_request_view import (
+	password_reset_confirm,
+	password_reset_otp_verify,
+	password_reset_request,
+)
 from .sub_views.wh_job_add_view import wh_job_add,wh_job_list,wh_job_delete
 from .sub_views.gatein_add_view import gatein_add,gatein_list,gatein_delete,load_pre_gate_in,get_queryset,load_pre_gate_in_truck_details,get_shippers,get_consignees,gatein_pdf,gatein_pdf_download,gatein_upload_attachment,gatein_delete_attachment
 from .sub_views.loadingbay_add_view import loadingbay_add,load_currency_value
@@ -120,7 +124,7 @@ from .sub_views.task_add_view import task_add,task_list,task_delete,get_requirem
 from .sub_views.timesheet_add_view import timesheet_add,timesheet_list,timesheet_delete,timesheet_nav,timesheet_report
 from .sub_views.ml_category_view import create_product,ml_product_list,ml_product_delete
 from .sub_views.businessrevenue_view import business_revenue_add,business_revenue_list,business_revenue_delete
-from .sub_views.pk_gate_pass_returnable_view import gate_return_add,gate_return_list,gate_return_delete,gate_return_pdf,gate_return_employee_id,gate_pass_get_jobs_by_customer,gate_pass_get_job_details
+from .sub_views.pk_gate_pass_returnable_view import gate_return_add,gate_return_list,gate_return_delete,gate_return_pdf,gate_return_employee_id,gate_pass_get_jobs_by_customer,gate_pass_get_job_details,update_dc_item_financials
 from .sub_views.pk_deliverychallan_add_view import delivery_challan_add,delivery_challan_list,delivery_challan_delete,delivery_challan_pdf
 from .sub_views.budgetform_add_view import budgetform_add,budgetform_list,budgetform_delete,budgetform_clone
 from .sub_views.pk_Excess_Stock_view import pk_excess_stock_add,pk_excess_stock_list
@@ -186,3 +190,8 @@ from .sub_views.trans_customer_claims_view import trans_customer_claims_add, tra
 from .sub_views.charge_master_view import charge_master_add,charge_master_delete,charge_master_list
 from .sub_views.sale_enquiry_view import sale_enquiry_list, sale_enquiry_add, sale_enquiry_delete, get_customer_code, get_sale_details
 from .sub_views.invoice_documents_view import invoice_documents_list, invoice_documents_add
+from .sub_views.pk_production_dashboard_view import pk_production_dashboard, update_production_status
+from .sub_views.pk_quality_check_view import pk_quality_check_list, pk_quality_check_add, get_job_details_for_qc
+from .sub_views.pk_tool_master_view import pk_tool_master_list, pk_tool_master_add, pk_tool_master_delete
+from .sub_views.privacy_policy_view import privacy_policy
+from .sub_views.deletion_log_view import deletion_log_list

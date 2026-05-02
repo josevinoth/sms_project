@@ -1,95 +1,97 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>Stock Purchases List</h3>
-        </div>
-        <div class="col-5"></div>
-    </div>
-</div>
-<!-- ================= ACTION BAR ================= -->
-<div class="container-fluid mb-3">
-    <div class="row align-items-center">
-        <div class="col-md-2">
-            <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg shadow-sm">
-                <i class="fas fa-arrow-left"></i> Back
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-white"><i class="fas fa-warehouse mr-2"></i> Stock Inventory Summary</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 1rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK
+            </a>
+            <a href="{% url 'stockpurchases_add' %}" class="btn-modern btn-submit py-2 px-4" style="font-size: 1rem; text-decoration: none;">
+                <i class="fas fa-plus"></i> ADD NEW PURCHASE
             </a>
         </div>
-        <div class="col-md-10 text-right text-muted small">
-            <em>Showing aggregated stock totals (In - Retrieved = Balance) across all part codes.</em>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="alert alert-info shadow-sm mb-4 border-0" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); color: #0d47a1;">
+        <i class="fas fa-info-circle mr-2"></i>
+        <strong>Inventory Logic:</strong> Total Balance is calculated as (Total Purchased Qty - Total Retrieved Qty) across all part codes.
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container-modern">
+        <div class="form-section-title">
+            <i class="fas fa-chart-pie"></i> Part-wise Stock Availability
+        </div>
+        <div class="table-responsive">
+            <table id="stockpurchases_list" class="modern-table text-center">
+                <thead>
+                    <tr>
+                        <th width="5%">#</th>
+                        <th width="15%">Part Code</th>
+                        <th width="30%">Description</th>
+                        <th width="10%">UOM</th>
+                        <th class="bg-emerald-soft text-dark" width="10%">Total IN</th>
+                        <th class="bg-warning-soft text-dark" width="10%">Retrieved</th>
+                        <th class="bg-cyan-soft text-dark" width="20%">Available Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in summary_data %}
+                    <tr class="modern-tr">
+                        <td class="font-weight-bold text-muted">{{ forloop.counter }}</td>
+                        <td>
+                            <span class="badge badge-info px-3 py-2" style="font-size: 0.85rem; border-radius: 4px;">{{ item.part_code }}</span>
+                        </td>
+                        <td class="text-left" style="max-width: 250px; white-space: normal;">
+                            {{ item.description }}
+                        </td>
+                        <td><span class="badge badge-secondary">{{ item.uom }}</span></td>
+                        <td>
+                            <div class="h5 mb-0 font-weight-bold text-emerald">{{ item.total_in|floatformat:"-2" }}</div>
+                        </td>
+                        <td>
+                            <div class="h5 mb-0 font-weight-bold">
+                                {% if item.total_retrieved > 0 %}
+                                <a href="javascript:void(0);" class="text-warning view-usage" data-part-id="{{ item.part_id }}" data-part-code="{{ item.part_code }}" title="Click to view breakdown">
+                                    {{ item.total_retrieved|floatformat:"-2" }}
+                                    <i class="fas fa-search-plus ml-1" style="font-size: 0.8rem;"></i>
+                                </a>
+                                {% else %}
+                                <span class="text-muted">0</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="h4 mb-0 font-weight-bold text-primary">{{ item.available_balance|floatformat:"-2" }}</div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="py-5 text-muted">
+                            <i class="fas fa-box-open fa-3x mb-3 text-light"></i><br>
+                            No stock data available to summarize.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<hr>
-
-<!-- ================= SUMMARY TABLE ================= -->
-<div class="container-fluid">
-    <div class="table-responsive shadow-box-table p-3 bg-white rounded">
-        <table id="stockpurchases_list" class="table table-hover table-bordered table-striped w-100">
-            <thead class="thead-dark">
-                <tr>
-                    <th class="align-middle text-center" width="5%">#</th>
-                    <th class="align-middle" width="15%">Part Code</th>
-                    <th class="align-middle" width="30%">Description</th>
-                    <th class="align-middle text-center" width="10%">UOM</th>
-                    <th class="align-middle text-center bg-teal text-white" width="10%">Total IN<br><small>(Qty)</small></th>
-                    <th class="align-middle text-center bg-warning text-dark" width="10%">Retrieved<br><small>(Qty)</small></th>
-                    <th class="align-middle text-center bg-success text-white" width="20%">Available Balance<br><small>(Qty)</small></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in summary_data %}
-                <tr>
-                    <td class="text-center font-weight-bold text-muted">{{ forloop.counter }}</td>
-                    <td class="font-weight-bold">
-                        <span class="badge badge-info" style="font-size: 0.9rem;">{{ item.part_code }}</span>
-                    </td>
-                    <td class="text-truncate" style="max-width: 250px;" title="{{ item.description }}">
-                        {{ item.description }}
-                    </td>
-                    <td class="text-center"><span class="badge badge-light border">{{ item.uom }}</span></td>
-                    <td class="text-center font-weight-bold" style="color: #00897b; font-size: 1.1rem;">
-                        {{ item.total_in|floatformat:"-2" }}
-                    </td>
-                    <td class="text-center font-weight-bold text-warning" style="font-size: 1.1rem;">
-                        {% if item.total_retrieved > 0 %}
-                        <a href="javascript:void(0);" class="text-warning view-usage" data-part-id="{{ item.part_id }}" data-part-code="{{ item.part_code }}">
-                            {{ item.total_retrieved|floatformat:"-2" }}
-                            <i class="fas fa-search-plus ml-1" style="font-size: 0.8rem;"></i>
-                        </a>
-                        {% else %}
-                        0
-                        {% endif %}
-                    </td>
-                    <td class="text-center font-weight-bold text-success" style="font-size: 1.25rem;">
-                        {{ item.available_balance|floatformat:"-2" }}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7" class="text-center py-5 text-muted">
-                        <i class="fas fa-box-open fa-3x mb-3 text-light"></i><br>
-                        No stock data available to summarize.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- ================= USAGE BREAKDOWN MODAL ================= -->
-<div class="modal fade" id="usageModal" tabindex="-1" role="dialog" aria-labelledby="usageModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content shadow-lg border-0">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title font-weight-bold" id="usageModalLabel">
-                    <i class="fas fa-history mr-2"></i> Usage Breakdown: <span id="modalPartCode"></span>
+<!-- Usage Modal Modernized -->
+<div class="modal fade" id="usageModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); border: none;">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-history mr-2"></i> Usage History: <span id="modalPartCode"></span>
                 </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -100,62 +102,74 @@
                     </div>
                 </div>
                 <div id="modalContent" style="display: none;">
-                    <table class="table table-striped table-hover mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="border-top-0">Job / Assessment #</th>
-                                <th class="border-top-0">Customer / Remarks</th>
-                                <th class="border-top-0 text-center">Qty Used</th>
-                                <th class="border-top-0 text-center">Source</th>
-                                <th class="border-top-0 text-right">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody id="usageTableBody">
-                            <!-- Rows will be injected here -->
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="modern-table table-sm mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Ref No</th>
+                                    <th>Customer / Remarks</th>
+                                    <th class="text-center">Qty Used</th>
+                                    <th class="text-center">Type</th>
+                                    <th class="text-right">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usageTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
                 <div id="modalEmpty" class="text-center py-5 text-muted" style="display: none;">
-                    No detailed usage records found for this part code.
+                    <i class="fas fa-info-circle fa-2x mb-2"></i><br>
+                    No detailed usage records found.
                 </div>
             </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">Close</button>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn-modern btn-cancel px-5 py-3" style="font-size: 1.1rem;" data-dismiss="modal">CLOSE</button>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .bg-teal { background-color: #00897b !important; }
-    #stockpurchases_list th { border-bottom: 2px solid #dee2e6; letter-spacing: 0.5px; }
-    #stockpurchases_list td { vertical-align: middle; }
-    .shadow-box-table { box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; border: 1px solid rgba(0,0,0,.125); }
-    .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #17a2b8; color: white !important; border: none; }
-    .dataTables_wrapper .dataTables_paginate .paginate_button:hover { background: #138496; color: white !important; border: none; }
-    .shadow-box { box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .bg-emerald-soft { background-color: rgba(16, 185, 129, 0.1) !important; }
+    .bg-warning-soft { background-color: rgba(245, 158, 11, 0.1) !important; }
+    .bg-cyan-soft { background-color: rgba(6, 182, 212, 0.1) !important; }
+    .text-emerald { color: #10b981 !important; }
     
-    .view-usage { text-decoration: none !important; transition: opacity 0.2s; }
-    .view-usage:hover { opacity: 0.7; }
+    .view-usage { text-decoration: none !important; transition: all 0.2s; cursor: pointer; }
+    .view-usage:hover { color: #d35400 !important; transform: scale(1.05); }
+    
+    .pagination-modern .page-link {
+        border-radius: 4px;
+        margin: 0 3px;
+        color: var(--primary-emerald);
+        border-color: rgba(16, 185, 129, 0.2);
+    }
+    .pagination-modern .active .page-link {
+        background-color: var(--primary-emerald);
+        border-color: var(--primary-emerald);
+        color: white;
+    }
 </style>
 
 <script>
     $(document).ready(function() {
-        $('#stockpurchases_list').DataTable({
-            order: [[1, 'asc']], // Order by Part Code by default
-            pageLength: 25,
-            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-            scrollCollapse: true,
-            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
-                 '<"row"<"col-sm-12"tr>>' +
-                 '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search Part Codes..."
-            }
-        });
+        if (!$.fn.DataTable.isDataTable('#stockpurchases_list')) {
+            $('#stockpurchases_list').DataTable({
+                order: [[1, 'asc']],
+                pageLength: 25,
+                dom: 'lBfrtip',
+                buttons: [
+                    { extend: 'copy', className: 'btn btn-sm btn-secondary' },
+                    { extend: 'excel', className: 'btn btn-sm btn-success' },
+                    { extend: 'print', className: 'btn btn-sm btn-info' }
+                ],
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search part codes..."
+                }
+            });
+        }
 
-        // Use event delegation for dynamically loaded rows (pagination)
         $('#stockpurchases_list').on('click', '.view-usage', function() {
             var partId = $(this).data('part-id');
             var partCode = $(this).data('part-code');
@@ -177,24 +191,20 @@
                         var totalModal = 0;
                         data.usage.forEach(function(item) {
                             totalModal += parseFloat(item.quantity || 0);
-                            
                             var typeBadge = '<span class="badge badge-secondary">Manual</span>';
                             if (item.type === 'Automated') typeBadge = '<span class="badge badge-success">Auto</span>';
-                            if (item.type === 'Historical') typeBadge = '<span class="badge badge-info">Hist</span>';
-
                             var displayRef = item.job_no !== 'N/A' ? item.job_no : item.assessment_num;
-                            var refBadgeClass = item.job_no !== 'N/A' ? 'badge-info' : 'badge-primary';
-
-                            html += '<tr>' +
-                                '<td><span class="badge ' + refBadgeClass + '">' + displayRef + '</span></td>' +
-                                '<td>' + item.customer_name + '<br><small class="text-muted">' + (item.remarks || "") + '</small></td>' +
-                                '<td class="text-center font-weight-bold">' + (item.quantity || 0) + '</td>' +
+                            
+                            html += '<tr class="modern-tr">' +
+                                '<td><span class="badge badge-info">' + displayRef + '</span></td>' +
+                                '<td class="text-left">' + item.customer_name + '<br><small class="text-muted">' + (item.remarks || "") + '</small></td>' +
+                                '<td class="text-center font-weight-bold text-dark">' + (item.quantity || 0) + '</td>' +
                                 '<td class="text-center">' + typeBadge + '</td>' +
                                 '<td class="text-right small text-muted">' + item.date + '</td>' +
                                 '</tr>';
                         });
                         
-                        html += '<tr class="bg-light"><td colspan="2" class="text-right font-weight-bold">Total Detailed:</td><td class="text-center font-weight-bold text-primary" style="font-size:1.1rem;">' + totalModal.toFixed(2) + '</td><td colspan="2"></td></tr>';
+                        html += '<tr class="bg-light"><td colspan="2" class="text-right font-weight-bold">Total Detailed:</td><td class="text-center font-weight-bold text-primary">' + totalModal.toFixed(2) + '</td><td colspan="2"></td></tr>';
                         
                         $('#usageTableBody').html(html);
                         $('#modalContent').show();
@@ -210,5 +220,7 @@
         });
     });
 </script>
+
+{% endblock content %}
 
 {% endblock content %}

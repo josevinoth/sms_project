@@ -69,7 +69,6 @@
                 <th>From Location</th>
                 <th>To Location</th>
                 <th>Trip Date</th>
-                <th>Settlement Status</th>
                 <th>Invoice Status</th>
                 <th>Combined PDF</th>
                 <th>Edit</th>
@@ -87,7 +86,6 @@
                 <td>{{ row.trip.tr_departedlocation }}</td>
                 <td>{{ row.trip.tr_reportedlocation }}</td>
                 <td>{{ row.trip.tr_departeddate_pickup|date:"d-m-Y" }}</td>
-                <td>{{ row.trip.tc_financestatus.status }}</td>
                 <td>
                     {% if row.invoice_doc %}
                         {{ row.invoice_doc.id_status.status|default:"-" }}

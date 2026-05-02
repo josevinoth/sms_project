@@ -1,151 +1,273 @@
 {% block content %}
 <style>
-    .gp-table {
+    @page {
+        margin: 25px;
+        size: A4;
+    }
+    body {
+        font-family: 'Helvetica', 'Arial', sans-serif;
+        font-size: 10px;
+        color: #1e293b;
+        line-height: 1.4;
+    }
+    .main-table {
         width: 100%;
         border-collapse: collapse;
-        font-family: Arial, sans-serif;
-        font-size: 11px;
+        border: 1.5px solid #0f172a;
     }
-    .gp-table th, .gp-table td {
-        border: 1px solid black;
-        padding: 5px;
+    .main-table td {
+        border: 1px solid #94a3b8;
+        padding: 6px 8px;
         vertical-align: top;
     }
     .text-center { text-align: center; }
+    .text-right { text-align: right; }
     .bold { font-weight: bold; }
-    .header-title { font-size: 14px; font-weight: bold; }
-    .company-name { font-size: 14px; font-weight: bold; }
+    .bg-modern { background-color: #f1f5f9; }
+    .bg-accent { background-color: #2563eb; color: white; }
+    
+    /* Header Styles */
+    .company-title { 
+        font-size: 16px; 
+        color: #1e40af; 
+        margin-bottom: 2px;
+        letter-spacing: 0.5px;
+    }
+    .doc-type-header { 
+        background-color: #1e293b; 
+        color: white;
+        font-size: 13px; 
+        padding: 8px; 
+        text-align: center;
+        letter-spacing: 2px;
+    }
+    
+    /* Item Table Styles */
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1.5px solid #0f172a;
+        border-top: none;
+    }
+    .items-table th {
+        background-color: #334155;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+        text-transform: uppercase;
+        font-size: 9px;
+        padding: 8px 4px;
+        border: 1px solid #0f172a;
+    }
+    .items-table td {
+        border: 1px solid #cbd5e1;
+        padding: 8px 6px;
+        height: 25px;
+    }
+    .section-title {
+        background-color: #e2e8f0;
+        font-weight: bold;
+        font-size: 9px;
+        padding: 4px 8px;
+        border-bottom: 1px solid #94a3b8;
+    }
 </style>
 
-<div class="container-fluid">
-    <!-- Table 1: Header and Info Section -->
-    <table class="gp-table">
-        <colgroup>
-            <col style="width: 20%;">
-            <col style="width: 30%;">
-            <col style="width: 20%;">
-            <col style="width: 30%;">
-        </colgroup>
-        <!-- Main Header -->
+<div class="container">
+    <!-- Main Info Grid -->
+    <table class="main-table">
+        <!-- HEADER ROW -->
         <tr>
-            <td class="text-center" style="vertical-align: middle;">
+            <td colspan="6" class="doc-type-header bold">
+                {{ gate.gp_document_category|upper|default:'GATE PASS' }}
+            </td>
+        </tr>
+        <tr>
+            <!-- Company Details -->
+            <td colspan="3" style="width: 50%; border-right: 1.5px solid #0f172a;">
+                <div class="company-title bold">BVM PACK SOLUTIONS PRIVATE LIMITED</div>
+                <div style="font-size: 9px; color: #475569;">
+                    No. 70 Adam Nagar Road, Nagalkeni, Chrompet, Chennai - 600 044<br>
+                    <strong>GSTIN: 33AAKCB6640C1Z0</strong>
+                </div>
+            </td>
+            <!-- DC No/Date -->
+            <td colspan="2" style="width: 35%;">
+                <table style="width: 100%; border: none;">
+                    <tr>
+                        <td style="border: none; padding: 2px; color: #64748b;" class="bold">{{ gate.gp_document_category|upper|default:'DC' }} NO</td>
+                        <td style="border: none; padding: 2px;" class="bold">: {{ gate.gp_document_category|slice:":1"|upper }}P-{{ gate.id }}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: none; padding: 2px; color: #64748b;" class="bold">{{ gate.gp_document_category|upper|default:'DC' }} DATE</td>
+                        <td style="border: none; padding: 2px;">: {{ gate.gp_consignment_date|default:gate.gp_created_at|date:"d.m.Y" }}</td>
+                    </tr>
+                </table>
+            </td>
+            <!-- Logo -->
+            <td style="width: 15%;" class="text-center">
                 {% if logo_path %}
-                <img src="{{ logo_path }}" style="width: 50px; height: auto;">
+                <img src="{{ logo_path }}" style="width: 55px; height: auto;">
+                {% else %}
+                <div style="padding: 10px; color: #94a3b8; font-size: 8px;">BVM LOGO</div>
                 {% endif %}
             </td>
-            <td colspan="3" class="text-center bold header-title" style="vertical-align: middle; font-size: 16px;">BVM PACK SOLUTIONS PRIVATE LIMITED</td>
+        </tr>
+
+        <!-- CUSTOMER & TRANSPORTER SECTION -->
+        <tr>
+            <td colspan="3" class="section-title">CUSTOMER ADDRESS</td>
+            <td colspan="3" class="section-title">TRANSPORTER INFO</td>
         </tr>
         <tr>
-            <td colspan="3" class="text-center" style="font-size: 10px;">
-                No. 349/2, Thiruneermalai Main Road (Opp. Heritage), Thirumudivakkam, Chennai - 600132
+            <td colspan="3" style="height: 65px; border-right: 1.5px solid #0f172a;">
+                <div class="bold" style="font-size: 11px; color: #1e3a8a;">{{ gate.gp_customer_name.cu_name }}</div>
+                <div style="margin-top: 4px;">{{ gate.gp_customer_name.cu_address|linebreaksbr }}</div>
             </td>
-            <td class="bold">GATEPASS NO: <span style="font-weight: normal;">{{ gate.id }}</span></td>
-        </tr>
-        <tr>
-            <td colspan="3" class="text-center bold" style="font-size: 14px; vertical-align: middle;">GATEPASS</td>
-            <td class="bold" style="white-space: nowrap;">GATEPASS DATE:&nbsp;<span style="font-weight: normal;">{{ gate.gp_consignment_date|default:gate.gp_created_at|date:"d-m-Y" }}</span></td>
-        </tr>
-        <tr>
-            <td colspan="4" class="text-center bold">GSTIN: 33AAKCB6640C1Z0</td>
-        </tr>
-
-        <!-- Info Section -->
-        <tr>
-            <td class="bold">Customer Name:</td>
-            <td>{{ gate.gp_customer_name }}</td>
-            <td class="bold">Transporter Name:</td>
-            <td>{{ gate.gp_transporter_name }}</td>
-        </tr>
-        <tr>
-            <td class="bold">Customer Address:</td>
-            <td>{{ gate.gp_customer_name.cu_address }}</td>
-            <td class="bold">Consignment Note No.:</td>
-            <td>{{ gate.gp_consignment_note_no }}</td>
-        </tr>
-        <tr>
-            <td class="bold">Customer GSTIN:</td>
-            <td>{{ gate.gp_customer_gstin }}</td>
-            <td class="bold">Consignment Date:</td>
-            <td>{{ gate.gp_consignment_date|date:"d-m-Y" }}</td>
-        </tr>
-        <tr>
-            <td class="bold">E-WAY Bill No & Date:</td>
-            <td>{{ gate.gp_eway_bill_no }}</td>
-            <td class="bold">Vehicle No.:</td>
-            <td>{{ gate.gp_veh_no }}</td>
-        </tr>
-        <tr>
-            <td class="bold">Customer PO No.:</td>
-            <td>{{ gate.gp_customer_po.po_num }}</td>
-            <td class="bold">Driver Name:</td>
-            <td>{{ gate.gp_driver_name }}</td>
-        </tr>
-        <tr>
-            <td class="bold">BVM Job No.:</td>
-            <td>{{ gate.gp_job_no }}</td>
-            <td class="bold">Driver Mobile No.:</td>
-            <td>{{ gate.gp_driver_mobile_no }}</td>
-        </tr>
-    </table>
-
-    <!-- Table 2: Itemized Table (New table to have different column widths) -->
-    <table class="gp-table" style="border-top: none;">
-        <tr class="text-center bold">
-            <td style="width: 5%;">SR.<br>NO.</td>
-            <td style="width: 20%;">DESCRIPTION</td>
-            <td style="width: 8%;">UOM</td>
-            <td style="width: 8%;">QTY</td>
-            <td style="width: 12%;">HSN CODE</td>
-            <td style="width: 32%;">ITEM CODE</td>
-            <td style="width: 15%;">REMARKS</td>
-        </tr>
-
-        <!-- Items -->
-        {% for gatepass in gatepass_list %}
-        <tr>
-            <td class="text-center">{{ forloop.counter }}</td>
-            <td>{{ gatepass.pod_type_of_req }}</td>
-            <td class="text-center">{{ gatepass.pod_uom }}</td>
-            <td class="text-center">{{ gatepass.pod_quantity }}</td>
-            <td class="text-center">{{ gate.gp_hsn_code }}</td>
-            <td class="text-center">{{ gatepass.pod_item }}</td>
-            <td>{{ gate.gp_remarks }}</td>
-        </tr>
-        {% endfor %}
-
-        <!-- Empty rows for spacing -->
-        {% if gatepass_list|length < 8 %}
-            {% with '1 2 3 4' as list %}
-                {% for i in list %}
-                    <tr style="height: 25px;">
-                        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+            <td colspan="3">
+                <table style="width: 100%; border: none;">
+                    <tr>
+                        <td style="border: none; padding: 2px; color: #64748b; width: 40%;" class="bold">Transporter Name</td>
+                        <td style="border: none; padding: 2px;">: {{ gate.gp_transporter_name.vendor_name|default:'---' }}</td>
                     </tr>
-                {% endfor %}
-            {% endwith %}
-        {% endif %}
+                    <tr>
+                        <td style="border: none; padding: 2px; color: #64748b;" class="bold">Consignment Note</td>
+                        <td style="border: none; padding: 2px;">: {{ gate.gp_consignment_note_no|default:'---' }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- REFERENCE GRID -->
+        <tr class="bg-modern">
+            <td class="bold" style="width: 20%; color: #475569;">Ship To GSTIN</td>
+            <td colspan="2" style="width: 30%;">{{ gate.gp_customer_ship_to_gstin|default:gate.gp_customer_gstin|default:'---' }}</td>
+            <td class="bold" style="width: 20%; color: #475569;">Bill To GSTIN</td>
+            <td colspan="2" style="width: 30%;">{{ gate.gp_customer_bill_to_gstin|default:gate.gp_customer_gstin|default:'---' }}</td>
+        </tr>
+        <tr>
+            <td class="bold" style="color: #475569;">E-WAY Bill & Date</td>
+            <td colspan="2">{{ gate.gp_eway_bill_no|default:'---' }}</td>
+            <td class="bold" style="color: #475569;">Vehicle No.</td>
+            <td colspan="2" class="bold">{{ gate.gp_veh_no|default:'---' }}</td>
+        </tr>
+        <tr class="bg-modern">
+            <td class="bold" style="color: #475569;">GRN Ref.</td>
+            <td colspan="2">{{ gate.gp_grn_ref|default:'---' }}</td>
+            <td class="bold" style="color: #475569;">Driver Name</td>
+            <td colspan="2">{{ gate.gp_driver_name|default:'---' }}</td>
+        </tr>
+        <tr>
+            <td class="bold" style="color: #475569;">Sales Order Ref.</td>
+            <td colspan="2">{{ gate.gp_sales_order_ref|default:gate.gp_sales_order_po|default:'---' }}</td>
+            <td class="bold" style="color: #475569;">Driver Mobile</td>
+            <td colspan="2">{{ gate.gp_driver_mobile_no|default:'---' }}</td>
+        </tr>
+        <tr class="bg-modern">
+            <td class="bold" style="color: #475569;">Stock Register</td>
+            <td colspan="2">{{ gate.gp_stock_register_ref|default:'---' }}</td>
+            <td class="bold" style="color: #1e3a8a;">BVM JOB NO.</td>
+            <td colspan="2" class="bold" style="font-size: 11px; color: #1e3a8a;">{{ gate.gp_job_no|default:'---' }}</td>
+        </tr>
     </table>
 
-    <br><br>
-    <table style="width: 100%; border: none;">
+    <!-- ITEM TABLE -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 5%;">SR.</th>
+                <th style="width: 28%;">DESCRIPTION OF GOODS</th>
+                <th style="width: 8%;">UOM</th>
+                <th style="width: 8%;">QTY</th>
+                {% if gate.gp_document_category == 'Delivery Challan' %}
+                    <th style="width: 10%;">HSN CODE</th>
+                    <th style="width: 12%;">TYPE</th>
+                    <th style="width: 10%;">BASE VAL</th>
+                    <th style="width: 9%;">GST AMT</th>
+                    <th style="width: 10%;">TOTAL</th>
+                {% else %}
+                    <th style="width: 12%;">HSN CODE</th>
+                    <th colspan="3" style="width: 27%;">ITEM CODE / REMARKS</th>
+                    <th style="width: 12%;">REMARKS</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in gatepass_list %}
+            <tr>
+                <td class="text-center" style="color: #64748b;">{{ forloop.counter }}</td>
+                <td class="bold">{{ item.pod_type_of_req|default:item.pod_item }}</td>
+                <td class="text-center">{{ item.pod_uom }}</td>
+                <td class="text-center bold">{{ item.pod_quantity }}</td>
+                
+                {% if gate.gp_document_category == 'Delivery Challan' %}
+                    <td class="text-center">{{ gate.gp_hsn_code|default:'4415' }}</td>
+                    <td class="text-center" style="font-size: 8px;">{{ item.pod_returnable_status|default:'Non-Returnable' }}</td>
+                    <td class="text-right">{{ item.pod_base_value|floatformat:2|default:'0.00' }}</td>
+                    <td class="text-right">{{ item.pod_gst_amount|floatformat:2|default:'0.00' }}</td>
+                    <td class="text-right bold" style="background-color: #f8fafc;">{{ item.pod_total_value|floatformat:2|default:'0.00' }}</td>
+                {% else %}
+                    <td class="text-center">{{ gate.gp_hsn_code|default:'4415' }}</td>
+                    <td colspan="3" style="font-size: 9px;">{{ item.pod_item }}</td>
+                    <td>{{ gate.gp_remarks|default:'' }}</td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            
+            <!-- Fill empty space to maintain layout -->
+            {% if gatepass_list|length < 8 %}
+                {% with "12345" as filler %}
+                {% for i in filler %}
+                <tr>
+                    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                    {% if gate.gp_document_category == 'Delivery Challan' %}
+                        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                    {% else %}
+                        <td colspan="3">&nbsp;</td><td>&nbsp;</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+                {% endwith %}
+            {% endif %}
+            
+            {% if gate.gp_document_category == 'Delivery Challan' %}
+            <tr>
+                <td colspan="8" class="text-right bold" style="padding: 10px; background-color: #f1f5f9;">TOTAL CONSIGNMENT VALUE (INR):</td>
+                <td class="text-right bold" style="padding: 10px; background-color: #f1f5f9; font-size: 11px; color: #1e3a8a;">
+                    {% if gatepass_list %}
+                        {{ total_sum|floatformat:2 }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <div style="margin-top: 20px; font-size: 9px; padding: 10px; background-color: #f8fafc; border: 1px solid #cbd5e1;">
+        <strong style="color: #475569;">REMARKS / SPECIAL INSTRUCTIONS:</strong><br>
+        <div style="margin-top: 5px;">{{ gate.gp_remarks|default:'Goods delivered in good condition. Please acknowledge receipt.' }}</div>
+    </div>
+
+    <!-- SIGNATURE SECTION -->
+    <table style="width: 100%; border: none; margin-top: 50px;">
         <tr>
             <td style="border: none; width: 33%;" class="text-center">
-                <br><br>
-                ________________<br>
-                Receiver's Signature
+                <div style="height: 60px;"></div>
+                <div style="border-top: 1.5px solid #0f172a; padding-top: 8px; color: #475569;" class="bold">RECEIVER'S SIGNATURE</div>
             </td>
             <td style="border: none; width: 33%;" class="text-center">
-                <br><br>
-                ________________<br>
-                Authorised Signatory
+                <div style="color: #64748b; font-size: 8px; margin-bottom: 40px;">For BVM PACK SOLUTIONS PVT LTD</div>
+                <div style="border-top: 1.5px solid #0f172a; padding-top: 8px; color: #1e3a8a;" class="bold">AUTHORISED SIGNATORY</div>
             </td>
             <td style="border: none; width: 33%;" class="text-center">
-                <br><br>
-                ________________<br>
-                BVM Internal Verification
+                <div style="height: 60px;"></div>
+                <div style="border-top: 1.5px solid #0f172a; padding-top: 8px; color: #475569;" class="bold">INTERNAL VERIFICATION</div>
             </td>
         </tr>
     </table>
+    
+    <div style="position: absolute; bottom: 0; width: 100%; text-align: center; font-size: 8px; color: #94a3b8; border-top: 0.5px solid #e2e8f0; padding-top: 5px;">
+        This is a computer generated document. No signature required unless specified.
+    </div>
 </div>
 {% endblock content %}
-
-

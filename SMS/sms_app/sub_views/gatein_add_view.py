@@ -11,7 +11,7 @@ from django.template.loader import get_template
 from django.views.decorators.csrf import csrf_exempt
 from xhtml2pdf import pisa
 
-from .dispatch_add_view import get_base64_image
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id, get_base64_image
 from ..forms import GateinaddForm
 from django.contrib.auth.decorators import login_required
 from ..models import VehicletypeInfo,Pregateintruckinfo,Location_info,Gatein_info,Loadingbay_Info,DamagereportInfo,Warehouse_goods_info,DamagereportImages,Gatein_pre_info
