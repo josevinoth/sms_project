@@ -87,7 +87,14 @@
                                     </a>
                                 {% endif %}
                             {% else %}
-                                <span class="text-muted small italic">Awaiting Prod.</span>
+                                <div class="d-flex flex-column align-items-center">
+                                    <span class="text-muted small italic mb-1">Awaiting Prod.</span>
+                                    <button class="btn btn-xs btn-outline-info force-save-btn" 
+                                            data-job-no="{{ job.cs_job_no }}"
+                                            style="font-size: 0.65rem; padding: 2px 5px;">
+                                        <i class="fas fa-sync"></i> Verify
+                                    </button>
+                                </div>
                             {% endif %}
                         </td>
 
@@ -149,19 +156,48 @@ $(document).ready(function() {
             },
             success: function(response) {
                 if (response.status === 'success') {
+                    // Success highlight
+                    row.css('background-color', '#dcfce7'); 
                     setTimeout(function() {
-                        location.reload(); 
-                    }, 300);
+                        window.location.href = window.location.pathname + "?refresh=" + new Date().getTime();
+                    }, 400);
                 } else {
                     alert('Error: ' + response.message);
                     dropdown.css('opacity', '1');
                     row.removeClass('bg-light');
+                    row.css('background-color', 'transparent');
                 }
             },
             error: function() {
                 dropdown.css('opacity', '1');
                 row.removeClass('bg-light');
                 alert('Error updating status. Please try again.');
+            }
+        });
+    // Force save button for reliability
+    $(document).on('click', '.force-save-btn', function() {
+        var btn = $(this);
+        var jobNo = btn.data('job-no');
+        var row = btn.closest('tr');
+        var prodStatus = row.find('select[data-type="production"]').val();
+        
+        btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+        
+        $.ajax({
+            type: 'POST',
+            url: '{% url "update_production_status" %}',
+            data: {
+                'job_no': jobNo,
+                'production_status': prodStatus,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    row.css('background-color', '#dcfce7');
+                    setTimeout(function() {
+                        window.location.href = window.location.pathname + "?refresh=" + new Date().getTime();
+                    }, 400);
+                }
             }
         });
     });

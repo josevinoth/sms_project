@@ -62,8 +62,8 @@
                 </a>
             </div>
             <div class="table-responsive">
-                <table id="stock_maintenance_table" class="table table-striped table-bordered display nowrap" style="width:100%">
-                    <thead class="thead-dark">
+                <table id="stock_maintenance_table" class="table modern-table display nowrap" style="width:100%">
+                    <thead>
                         <tr>
                             <th>Created On</th>
                             <th>GRN Number</th>
@@ -77,31 +77,34 @@
                             <th>Count</th>
                             <th>CFT</th>
                             <th>Cost</th>
-                            <th>Actions</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in stockmaintenance_list %}
                         <tr>
-                            <td>{{ item.sm_created_at|date:"M d, Y" }}</td>
-                            <td><span class="badge badge-secondary">{{ item.sm_stock_purchase_number|default:"-" }}</span></td>
-                            <td>{{ item.sm_stock_type.stock_type_maintenance }}</td>
+                            <td>
+                                <div class="font-weight-bold">{{ item.sm_created_at|date:"d-m-Y" }}</div>
+                                <div class="small text-muted">{{ item.sm_created_at|date:"H:i" }}</div>
+                            </td>
+                            <td><span class="badge badge-info shadow-sm">{{ item.sm_stock_purchase_number|default:"-" }}</span></td>
+                            <td><span class="badge badge-secondary">{{ item.sm_stock_type.stock_type_maintenance }}</span></td>
                             <td class="font-weight-bold text-teal">{{ item.sm_partcode.pc_code }}</td>
-                            <td>{{ item.sm_description }}</td>
+                            <td class="small">{{ item.sm_description }}</td>
                             <td>{{ item.sm_thickness }}</td>
                             <td>{{ item.sm_width }}</td>
                             <td>{{ item.sm_length }}</td>
                             <td>{{ item.sm_uom.unit_of_measure }}</td>
                             <td class="text-primary font-weight-bold">{{ item.sm_count }}</td>
                             <td>{{ item.sm_total_cft }}</td>
-                            <td class="text-success font-weight-bold">{{ item.sm_total_price }}</td>
+                            <td class="text-success font-weight-bold">₹{{ item.sm_total_price }}</td>
                             <td>
                                 <div class="d-flex gap-2 justify-content-center">
-                                    <a href="{% url 'stock_maintenance_edit' item.id %}" class="btn btn-outline-primary btn-sm" title="Edit">
+                                    <a href="{% url 'stock_maintenance_edit' item.id %}" class="btn-modern btn-submit py-1 px-2" style="font-size: 0.75rem; min-width: 35px;" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" class="btn btn-outline-danger btn-sm" title="Delete" onclick="if(confirm('Are you sure?')) document.getElementById('delete-form-{{ item.id }}').submit();">
-                                        <i class="fas fa-trash"></i>
+                                    <button type="button" class="btn btn-outline-danger btn-sm p-1" style="border-radius: 8px; width: 35px;" title="Delete" onclick="if(confirm('Are you sure?')) document.getElementById('delete-form-{{ item.id }}').submit();">
+                                        <i class="fas fa-trash-alt"></i>
                                     </button>
                                     <form id="delete-form-{{ item.id }}" method="POST" action="{% url 'stock_maintenance_delete' item.id %}" style="display:none;">
                                         {% csrf_token %}
