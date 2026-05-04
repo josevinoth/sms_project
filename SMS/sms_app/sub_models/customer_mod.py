@@ -32,6 +32,7 @@ class CustomerInfo(models.Model):
     cu_updated_at = models.DateTimeField(null=True, auto_now=True)
     cu_business_sol = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE,blank=True,null=True)
     cu_industry_type = models.ForeignKey(Industrytype, blank=True, null=True, on_delete=models.CASCADE, default='')
+    cu_automatic_email = models.CharField(max_length=3, choices=(('YES', 'YES'), ('NO', 'NO')), default='NO')
     class Meta:
         ordering = ["cu_name"]
 

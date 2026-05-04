@@ -77,3 +77,14 @@ def generate_next_number(model_class, field_name, prefix, padding, filter_prefix
         new_num = f"{prefix}{str(next_num).zfill(padding)}"
         
     return new_num
+
+import base64
+def get_base64_image(image_field):
+    if not image_field:
+        return None
+    try:
+        with image_field.open('rb') as img_file:
+            return 'data:image/png;base64,' + base64.b64encode(img_file.read()).decode('utf-8')
+    except (FileNotFoundError, OSError):
+        # File referenced in database but doesn't exist on disk
+        return None

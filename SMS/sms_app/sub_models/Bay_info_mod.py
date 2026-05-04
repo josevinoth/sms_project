@@ -10,4 +10,4 @@ class BayInfo(models.Model):
         ordering = ["bay_bayname"]
 
     def __str__(self):
-        return self.bay_bayname
+        return self.bay_bayname 

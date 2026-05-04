@@ -3,7 +3,6 @@ from django.views.generic import TemplateView
 
 from . import views
 from .sub_views.pk_purchaseorder_view import pk_create_batch_job, pk_get_po_items_for_job
-from django.contrib.auth import views as auth_views  # import this
 
 urlpatterns = [
     path('pk_create_batch_job/', pk_create_batch_job, name='pk_create_batch_job'),
@@ -169,15 +168,13 @@ urlpatterns = [
     path('role_update/<int:role_id>/', views.role_add, name='role_update'),  # Update role
     path('role_delete/<int:role_id>/', views.role_delete, name='role_delete'),  # Delete role
     path('password_reset/', views.password_reset_request, name='password_reset'),
-    path('password_reset/done/',
-         auth_views.PasswordResetDoneView.as_view(template_name="password/password_reset_done.html"),
-         name='password_reset_done'),  # Password Reset
-    path('reset/<uidb64>/<token>/',
-         auth_views.PasswordResetConfirmView.as_view(template_name="password/password_reset_confirm.html"),
-         name='password_reset_confirm'),  # Password Reset
-    path('reset/done/',
-         auth_views.PasswordResetCompleteView.as_view(template_name='password/password_reset_complete.html'),
-         name='password_reset_complete'),  # Password Reset
+    path('password_reset/verify-otp/', views.password_reset_otp_verify, name='password_reset_otp_verify'),
+    path('password_reset/confirm/', views.password_reset_confirm, name='password_reset_confirm'),
+    path(
+        'password_reset/complete/',
+        TemplateView.as_view(template_name='password/password_reset_complete.html'),
+        name='password_reset_complete',
+    ),
     path('gatein_insert', views.gatein_add, name='gatein_insert'),  # gatein add
     path('gatein_list/', views.gatein_list, name='gatein_list'),  # List gatein,
     path('gatein_update/<int:gatein_id>/', views.gatein_add, name='gatein_update'),  # Update gatein

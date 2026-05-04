@@ -43,7 +43,11 @@ from .sub_views.whratemasteradd_view import whratemaster_add,whratemaster_list,w
 from .sub_views.designation_add_view import designation_add,designation_list,designation_delete
 from .sub_views.whstoragetype_add_view import whstoragetype_add,whstoragetype_list,whstoragetype_delete
 from .sub_views.role_add_view import role_add,role_list,role_delete
-from .sub_views.password_reset_request_view import password_reset_request
+from .sub_views.password_reset_request_view import (
+	password_reset_confirm,
+	password_reset_otp_verify,
+	password_reset_request,
+)
 from .sub_views.wh_job_add_view import wh_job_add,wh_job_list,wh_job_delete
 from .sub_views.gatein_add_view import gatein_add,gatein_list,gatein_delete,load_pre_gate_in,get_queryset,load_pre_gate_in_truck_details,get_shippers,get_consignees,gatein_pdf,gatein_pdf_download,gatein_upload_attachment,gatein_delete_attachment
 from .sub_views.loadingbay_add_view import loadingbay_add,load_currency_value

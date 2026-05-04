@@ -166,7 +166,7 @@ def compute_cargo_condition_for_job(job_no):
 
 
 @login_required(login_url='login_page')
-def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject=None):
+def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject=None, recipient_list=None, message=None):
     print('Entering dsr_send_email_view')
     header_font = Font(name="Arial", bold=True, size=11)  # Make the header row bold
     cell_font = Font(name="Arial", bold=False, size=10)  # settings fro cells
@@ -178,15 +178,21 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
         bottom=Side(style='thin'),
     )
     if request.method == 'POST' or pre_gatein_id:
-        recipient = request.POST.get('recipient')
-        message = request.POST.get('message')
+        if recipient_list is None:
+            recipient = request.POST.get('recipient')
+            if recipient:
+                recipient_list = [email.strip() for email in recipient.split(',')]
+            else:
+                recipient_list = []
+        
+        if message is None:
+            message = request.POST.get('message', '')
+            
         customer_name_1 = customer_name
         if customer_name_1 is None:
             customer_name = request.POST.get('ds_customer')
         else:
             customer_name = customer_name
-
-        recipient_list = [email.strip() for email in recipient.split(',')]
 
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -801,7 +807,8 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
             subject = f"{customer_obj.cu_name}_DSR Report"
 
         message = message.replace('\n', '<br>')
-        pre_gatein_id = request.session.get('ses_pre_gatein_id')
+        if pre_gatein_id is None:
+            pre_gatein_id = request.session.get('ses_pre_gatein_id')
         send_department_email('warehouse', subject, message, recipient_list, attachment, attachment_type, file_name)
         messages.success(request, "E-mail sent successfully")
         return redirect(request.META['HTTP_REFERER'])

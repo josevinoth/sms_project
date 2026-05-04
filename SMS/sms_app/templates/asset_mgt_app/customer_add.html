@@ -26,6 +26,12 @@
 									</div>
 									{% render_field form.cu_name id="cu_name" class="form-control" %}
 								</div>
+								<div class="input-group input-group-sm mb-3" id="auto_email_div" style="display:none;">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Automatic Email</span>
+									</div>
+									{% render_field form.cu_automatic_email class="form-control" %}
+								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Customer Code</span>
@@ -215,6 +221,18 @@
 
 <script>
 	$(document).ready(function () {
+		function toggleAutoEmail() {
+			var cuName = $('#cu_name').val();
+			if (cuName && cuName.includes('(W)')) {
+				$('#auto_email_div').show();
+			} else {
+				$('#auto_email_div').hide();
+			}
+		}
+
+		$('#cu_name').on('input change', toggleAutoEmail);
+		toggleAutoEmail(); // Initial check
+
 		{
 			var cu_name = document.getElementById("cu_name").value
 			if (cu_name == "") {

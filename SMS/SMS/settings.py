@@ -26,9 +26,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-fy%y4cs@r2rbthvr*oge*z_sm*4a0)9!(7ya-gkiv*g0a!)d=t'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+_default_allowed_hosts = 'sms.thebvmgroup.com,www.sms.thebvmgroup.com,3.110.26.240,13.126.40.20,172.31.9.154,localhost,127.0.0.1'
+_allowed_hosts_raw = config('ALLOWED_HOSTS', default=_default_allowed_hosts)
+if not _allowed_hosts_raw.strip():
+    _allowed_hosts_raw = _default_allowed_hosts
+
+ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts_raw.split(',') if host.strip()]
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in config(
+        'CSRF_TRUSTED_ORIGINS',
+        default='https://sms.thebvmgroup.com,http://sms.thebvmgroup.com,https://www.sms.thebvmgroup.com,http://www.sms.thebvmgroup.com,http://3.110.26.240,http://13.126.40.20'
+    ).split(',') if origin.strip()
+]
 
 # Application definition
 
@@ -133,6 +145,18 @@ USE_L10N = True
 
 USE_TZ = True
 
+# HTTPS / ALB settings
+# ALB terminates SSL and forwards HTTP to Django — so Django must NOT redirect itself.
+# SECURE_PROXY_SSL_HEADER lets Django know the original request was HTTPS.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = False   # ALB handles HTTP→HTTPS redirect, not Django
+
+# Rollback HTTPS cookie enforcement so HTTP login continues to work.
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
@@ -150,6 +174,15 @@ EMAIL_PORT = config('EMAIL_PORT', cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
+ITADMIN_EMAIL_HOST = config('ITADMIN_EMAIL_HOST', default='smtp.office365.com')
+ITADMIN_EMAIL_PORT = config('ITADMIN_EMAIL_PORT', default=587, cast=int)
+ITADMIN_EMAIL_USE_TLS = config('ITADMIN_EMAIL_USE_TLS', default=True, cast=bool)
+ITADMIN_EMAIL_HOST_USER = config('ITADMIN_EMAIL_HOST_USER', default='itadmin@thebvmgroup.com')
+ITADMIN_EMAIL_HOST_PASSWORD = config('ITADMIN_EMAIL_HOST_PASSWORD', default='')
+
+# Sender used by forgot-password OTP emails.
+PASSWORD_RESET_FROM_EMAIL = config('PASSWORD_RESET_FROM_EMAIL', default=ITADMIN_EMAIL_HOST_USER)
 
 DEPARTMENT_EMAILS = {
     'sales': {
@@ -171,14 +204,14 @@ DEPARTMENT_EMAILS = {
         'EMAIL_PORT' : 587,
         'EMAIL_USE_TLS' : True,
         'EMAIL_HOST_USER' : 'wms@thebvmgroup.com',
-        'EMAIL_HOST_PASSWORD' : 'Bvm!123456789',
+        'EMAIL_HOST_PASSWORD' : 'F!220749109956aq',
     },
     'itadmin': {
-        'EMAIL_HOST' : 'smtp.office365.com',
-        'EMAIL_PORT' : 587,
-        'EMAIL_USE_TLS' : True,
-        'EMAIL_HOST_USER' : 'itadmin@thebvmgroup.com',
-        'EMAIL_HOST_PASSWORD' : 'Bvm!123456789',
+        'EMAIL_HOST' : ITADMIN_EMAIL_HOST,
+        'EMAIL_PORT' : ITADMIN_EMAIL_PORT,
+        'EMAIL_USE_TLS' : ITADMIN_EMAIL_USE_TLS,
+        'EMAIL_HOST_USER' : ITADMIN_EMAIL_HOST_USER,
+        'EMAIL_HOST_PASSWORD' : ITADMIN_EMAIL_HOST_PASSWORD,
     }
 }
 
