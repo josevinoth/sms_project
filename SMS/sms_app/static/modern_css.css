@@ -1,19 +1,44 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
+    /* Light Theme (Default) */
     --primary-glow: linear-gradient(135deg, #2dd4bf 0%, #3b82f6 100%);
     --accent-emerald: #14b8a6;
     --accent-blue: #3b82f6;
     --accent-orange: #f59e0b;
     --accent-orange-glow: rgba(245, 158, 11, 0.4);
-    --btn-primary: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); /* Vibrant Orange Sunset */
+    --btn-primary: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
     --btn-primary-hover: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
-    --btn-secondary: #1e293b; /* Deep Navy */
+    --btn-secondary: #1e293b;
+    
     --bg-page: #f0fdfa;
     --bg-card: #ffffff;
+    --bg-section: #ffffff;
     --text-main: #1e293b;
     --text-muted: #64748b;
+    --text-white: #ffffff;
     --border-light: #ccfbf1;
+    --input-bg: #ffffff;
+    --input-border: #94a3b8;
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --header-text: #ffffff;
+    --shadow-main: rgba(20, 184, 166, 0.1);
+}
+
+[data-theme="dark"] {
+    --bg-page: #0f172a; /* Deep Midnight */
+    --bg-card: #1e293b; /* Navy Slate */
+    --bg-section: rgba(30, 41, 59, 0.7);
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-light: #334155;
+    --input-bg: #0f172a;
+    --input-border: #475569;
+    --glass-bg: rgba(15, 23, 42, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --header-text: #f1f5f9;
+    --shadow-main: rgba(0, 0, 0, 0.4);
 }
 
 body {
@@ -60,7 +85,7 @@ body {
     font-weight: 800;
     font-size: 1.8rem;
     letter-spacing: -0.5px;
-    color: #ffffff;
+    color: var(--header-text);
     text-shadow: 0 2px 10px rgba(0,0,0,0.05);
     position: relative;
     z-index: 2;
@@ -73,32 +98,34 @@ body {
     border-top: none;
     padding: 2.5rem;
     margin-bottom: 3rem;
-    box-shadow: 0 10px 30px rgba(20, 184, 166, 0.05);
+    box-shadow: 0 10px 30px var(--shadow-main);
 }
 
-/* Glassy Sections in Light Mode */
+/* Glassy Sections */
 .form-section {
-    background: #ffffff;
-    border: 1px solid var(--border-light);
+    background: var(--bg-section);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
     border-radius: 18px;
     padding: 2rem;
     margin-bottom: 2rem;
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     position: relative;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .form-section:hover {
     transform: translateY(-5px);
-    box-shadow: 0 20px 40px rgba(20, 184, 166, 0.1);
-    border-color: rgba(20, 184, 166, 0.4);
+    box-shadow: 0 20px 40px var(--shadow-main);
+    border-color: var(--accent-emerald);
 }
 
 .form-section-title {
     font-family: 'Outfit', sans-serif;
     font-size: 0.95rem;
     font-weight: 800;
-    color: #0f172a; /* Deep Navy for maximum authority */
+    color: var(--text-main);
     text-transform: uppercase;
     letter-spacing: 2px;
     margin-bottom: 1.8rem;
@@ -124,7 +151,7 @@ body {
     font-family: 'Outfit', sans-serif;
     font-size: 0.9rem;
     font-weight: 800;
-    color: #000000; /* Pure black for maximum contrast */
+    color: var(--text-main);
     margin-bottom: 0.8rem;
     margin-left: 2px;
     text-transform: uppercase;
@@ -133,13 +160,13 @@ body {
 
 /* Fixed Height Professional Inputs */
 .form-control-modern {
-    background: #ffffff; /* Pure white for better contrast */
-    border: 1.5px solid #94a3b8; /* Darker slate border for better definition */
+    background: var(--input-bg);
+    border: 1.5px solid var(--input-border);
     border-radius: 12px;
     padding: 0.85rem 1.1rem;
     font-size: 1rem;
-    font-weight: 700; /* Bolder text for better visibility */
-    color: #000000 !important; /* Pure black for maximum readability */
+    font-weight: 700;
+    color: var(--text-main) !important;
     transition: all 0.3s;
     height: 52px !important;
     line-height: 1.2;
@@ -323,11 +350,12 @@ select.form-control-modern:focus {
 }
 
 .table-container-modern {
-    background: #ffffff;
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
     border-radius: 24px;
     padding: 2rem;
     border: 1px solid var(--border-light);
-    box-shadow: 0 15px 40px rgba(0,0,0,0.03);
+    box-shadow: 0 15px 40px var(--shadow-main);
     margin-bottom: 3rem;
 }
 
@@ -339,7 +367,7 @@ select.form-control-modern:focus {
 }
 
 .modern-table thead th {
-    background: #1e293b !important; /* Dark Slate for headers */
+    background: var(--btn-secondary) !important;
     color: #ffffff !important;
     font-weight: 700;
     text-transform: uppercase;
@@ -354,18 +382,18 @@ select.form-control-modern:focus {
 
 .modern-table tbody tr {
     transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+    box-shadow: 0 2px 4px var(--shadow-main);
 }
 
 .modern-table tbody td {
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 1.2rem 1rem !important;
     border: none !important;
-    border-top: 1px solid #f1f5f9 !important;
-    border-bottom: 1px solid #f1f5f9 !important;
+    border-top: 1px solid var(--border-light) !important;
+    border-bottom: 1px solid var(--border-light) !important;
     font-size: 1.05rem;
     font-weight: 600;
-    color: #334155;
+    color: var(--text-main);
     vertical-align: middle;
 }
 
@@ -380,8 +408,8 @@ select.form-control-modern:focus {
 }
 
 .modern-table tbody tr:hover td {
-    background-color: #f0fdfa !important; /* Light Mint highlight */
-    color: #000000;
+    background-color: var(--bg-page) !important;
+    color: var(--accent-emerald);
     transform: scale(1.002);
 }
 
@@ -402,15 +430,15 @@ select.form-control-modern:focus {
 }
 
 .dt-button {
-    background: #ffffff !important;
-    border: 1.5px solid #e2e8f0 !important;
+    background: var(--bg-card) !important;
+    border: 1.5px solid var(--border-light) !important;
     border-radius: 10px !important;
     padding: 0.6rem 1.2rem !important;
     font-weight: 700 !important;
     font-size: 0.85rem !important;
-    color: #64748b !important;
+    color: var(--text-muted) !important;
     transition: all 0.3s !important;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
+    box-shadow: 0 2px 5px var(--shadow-main) !important;
 }
 
 .dt-button:hover {
@@ -422,16 +450,17 @@ select.form-control-modern:focus {
 
 /* Modern Search Box */
 .dataTables_filter input {
-    background: #f8fafc !important;
-    border: 1.5px solid #e2e8f0 !important;
+    background: var(--input-bg) !important;
+    border: 1.5px solid var(--input-border) !important;
     border-radius: 12px !important;
     padding: 0.6rem 1.2rem !important;
     width: 280px !important;
     transition: all 0.3s !important;
+    color: var(--text-main) !important;
 }
 
 .dataTables_filter input:focus {
-    background: #ffffff !important;
+    background: var(--bg-card) !important;
     border-color: var(--accent-emerald) !important;
     box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1) !important;
     outline: none !important;
@@ -440,10 +469,11 @@ select.form-control-modern:focus {
 /* Modern Pagination */
 .dataTables_paginate .paginate_button {
     border-radius: 10px !important;
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid var(--border-light) !important;
     margin: 0 4px !important;
     padding: 0.5rem 1rem !important;
     font-weight: 700 !important;
+    color: var(--text-main) !important;
 }
 
 .dataTables_paginate .paginate_button.current {
@@ -626,4 +656,69 @@ select.form-control-modern:focus {
 .multiselect-container .multiselect-option.active {
     background-color: var(--bg-page) !important;
     color: var(--accent-emerald) !important;
+}
+
+/* Theme Toggle Switch */
+.theme-switch-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.theme-switch {
+    display: inline-block;
+    height: 24px;
+    position: relative;
+    width: 45px;
+}
+
+.theme-switch input {
+    display: none;
+}
+
+.slider {
+    background-color: #475569;
+    bottom: 0;
+    cursor: pointer;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    background-color: #fff;
+    bottom: 3px;
+    content: "";
+    height: 18px;
+    left: 3px;
+    position: absolute;
+    transition: .4s;
+    width: 18px;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+input:checked + .slider {
+    background: var(--primary-glow);
+}
+
+input:checked + .slider:before {
+    transform: translateX(21px);
+}
+
+.theme-icon {
+    font-size: 0.9rem;
+    color: #cbd5e1;
+    transition: color 0.3s;
+}
+
+[data-theme="dark"] .theme-icon.fa-moon { color: #f59e0b; }
+[data-theme="light"] .theme-icon.fa-sun { color: #f59e0b; }
+
+/* Transitions for Theme Switch */
+body, .modern-card, .form-section, .form-control-modern, .modern-table td, .table-container-modern, .modern-header, .header_style_modern {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, background 0.4s ease;
 }
