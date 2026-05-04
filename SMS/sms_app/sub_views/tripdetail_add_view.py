@@ -146,13 +146,34 @@ def tripdetail_add(request, tripdetail_id=0):
             if vehicle_allotment_id:
                 trip_det_form.fields['tr_category'].widget.attrs['readonly'] = True
 
-            previous_trip = TripdetailInfo.objects.filter(
-                tr_enquirynumber_id=enquiry_num_id
-            ).order_by('-tr_created_at').first()
-            if previous_trip and previous_trip.tr_reportedlocation:
-                trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
+            # Ensure departed location matches the vehicle's last reported location
+            location_locked = False
+            if vehicle_allotment_id and 'tr_vehiclenumber' in initial_data:
+                last_trip_loc = TripdetailInfo.objects.filter(
+                    tr_vehiclenumber=search_vehicle_num
+                ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
+                
+                if last_trip_loc:
+                    trip_det_form.fields['tr_departedlocation'].initial = last_trip_loc.tr_reportedlocation
+                    trip_det_form.fields['tr_departedlocation'].widget.attrs.update({
+                        'style': 'pointer-events: none; background-color: #e9ecef;',
+                        'onmousedown': 'return false;',
+                        'onkeydown': 'return false;',
+                        'readonly': 'readonly'
+                    })
+                    location_locked = True
+                else:
+                    previous_trip = TripdetailInfo.objects.filter(
+                        tr_enquirynumber_id=enquiry_num_id
+                    ).order_by('-tr_created_at').first()
+                    if previous_trip and previous_trip.tr_reportedlocation:
+                        trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
             else:
-                print("No previous trip or reported location found.")
+                previous_trip = TripdetailInfo.objects.filter(
+                    tr_enquirynumber_id=enquiry_num_id
+                ).order_by('-tr_created_at').first()
+                if previous_trip and previous_trip.tr_reportedlocation:
+                    trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
 
             tripclosurefiles_form = TripclosurefilesForm()
             trip_list = TripdetailInfo.objects.select_related(
@@ -180,6 +201,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 'consignment_list': consignment_list,
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
                 'status_selected': 8,
+                'location_locked': location_locked,
             }
 
         else:
@@ -242,6 +264,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 'checklist': checklist,
                 'trip_approvallist': trip_approvallist,
                 'trip_instance': trip_instance,
+                'location_locked': False,
             }
 
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
@@ -280,6 +303,22 @@ def tripdetail_add(request, tripdetail_id=0):
                             'A trip for this vehicle is still open. Please close it before creating a new one.'
                         )
                         return redirect(request.META['HTTP_REFERER'])
+
+                # ✅ NEW LOCATION MATCHING VALIDATION HERE
+                if vehicle_number:
+                    last_trip_for_loc = TripdetailInfo.objects.filter(
+                        tr_vehiclenumber=vehicle_number
+                    ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
+
+                    if last_trip_for_loc:
+                        departed_loc_id = request.POST.get('tr_departedlocation')
+                        if departed_loc_id and str(departed_loc_id) != str(last_trip_for_loc.tr_reportedlocation.id):
+                            last_loc_name = last_trip_for_loc.tr_reportedlocation.place_name if hasattr(last_trip_for_loc.tr_reportedlocation, 'place_name') else str(last_trip_for_loc.tr_reportedlocation)
+                            messages.error(
+                                request,
+                                f"Warning: Vehicle's last destination was '{last_loc_name}'. Please create an 'Empty Trip' or 'Business Empty Trip' from '{last_loc_name}' first."
+                            )
+                            return redirect(request.META.get('HTTP_REFERER', 'tripdetail_list'))
 
                 # Generate trip number with financial year (Branch specific)
                 # Example format: 26-27_MAA_TN_0000001

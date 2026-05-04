@@ -202,10 +202,9 @@ def invoice_documents_add(request, trip_id):
         files_form = TripclosurefilesForm(request.POST, request.FILES, instance=files_instance)
         invoice_form = InvoiceDocumentForm(request.POST, request.FILES, instance=invoice_doc)
 
-        # Restrict status dropdown: Trip Settled (id=7) + Ready for Invoice
-        settlement_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(
-            id__in=[7]
-        ) | Tripstatusinfo.objects.filter(status='Ready for Invoice')
+        # Only show 'Ready for Invoice' (ID 9 or by name)
+        settlement_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(Q(id=9) | Q(status='Ready for Invoice'))
+        invoice_form.fields['id_status'].queryset = Tripstatusinfo.objects.filter(Q(id=9) | Q(status='Ready for Invoice'))
 
         # Disable all settlement fields except status
         for field in settlement_form.fields:
@@ -249,11 +248,19 @@ def invoice_documents_add(request, trip_id):
         settlement_form = TripSettlementForm(instance=trip)
         files_form = TripclosurefilesForm(instance=files_instance)
 
-        # If no invoice doc exists yet, create an initial form with status defaulted to Trip Settled (7)
+        # Default status to Ready for Invoice (ID 9 or by name)
+        ready_status = Tripstatusinfo.objects.filter(Q(id=9) | Q(status='Ready for Invoice')).first()
+        ready_status_id = ready_status.id if ready_status else 9
+
         if not invoice_doc:
-            invoice_form = InvoiceDocumentForm(initial={'id_status': 7})
+            invoice_form = InvoiceDocumentForm(initial={'id_status': ready_status_id})
         else:
             invoice_form = InvoiceDocumentForm(instance=invoice_doc)
+
+        # Strictly enforce only 'Ready for Invoice' in the dropdown
+        invoice_form.fields['id_status'].queryset = Tripstatusinfo.objects.filter(
+            Q(id=9) | Q(status='Ready for Invoice')
+        )
 
         # Pre-populate read-only display fields
         if trip.tr_enquirynumber:
@@ -265,10 +272,8 @@ def invoice_documents_add(request, trip_id):
                 trip.tr_departeddate_pickup.strftime('%d-%m-%Y')
             )
 
-        # Restrict status dropdown: Trip Settled (id=7) + Ready for Invoice
-        settlement_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(
-            id__in=[7]
-        ) | Tripstatusinfo.objects.filter(status='Ready for Invoice')
+        # Only show 'Ready for Invoice' (ID 9 or by name)
+        settlement_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(Q(id=9) | Q(status='Ready for Invoice'))
 
         # Disable all settlement fields except status
         for field in settlement_form.fields:

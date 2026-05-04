@@ -1,26 +1,7 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<style>
-  .doc-col {
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 5px;
-  }
-  .doc-group .input-group-text {
-    width: 140px;
-    background-color: #8de4e9;
-    color: black;
-    font-weight: 600;
-  }
-  .view-link {
-    margin-top: -10px;
-    margin-bottom: 15px;
-    display: block;
-    padding-left: 10px;
-    font-size: 0.85rem;
-  }
-</style>
+
 <form method="POST" action="" enctype="multipart/form-data">
 	{% csrf_token %}
 	<div class="row">
@@ -398,7 +379,6 @@
 <script>
 	$(document).ready(function () {
 		document.getElementById("tr_updated_by").value = '{{ user_id }}';
-		document.getElementById("id_status").value = '';
 		var tr_enquirynumber_val = document.getElementById("tr_enquirynumber").value;
 		if (tr_enquirynumber_val === "") {
 			document.getElementById("tr_enquirynumber").value = '{{ enquiry_num }}';
@@ -409,4 +389,25 @@
 		{% endif %}
 	});
 </script>
+
+<style>
+  .doc-col {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  .doc-group .input-group-text {
+    width: 140px;
+    background-color: #8de4e9;
+    color: black;
+    font-weight: 600;
+  }
+  .view-link {
+    margin-top: -10px;
+    margin-bottom: 15px;
+    display: block;
+    padding-left: 10px;
+    font-size: 0.85rem;
+  }
+</style>
 {% endblock content %}
