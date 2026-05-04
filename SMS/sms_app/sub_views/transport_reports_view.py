@@ -2977,13 +2977,14 @@ def own_vehicle_pl_report_view(request):
         v.vm_registrationnumber: v
         for v in VehiclemasterInfo.objects.all()
     }
-
     # -------------------------------
     # BUILD TABLE
     # -------------------------------
     data_rows = []
+    filtered_trips_list = []
+    current_idx = 1
 
-    for idx, trip in enumerate(trips_list, start=1):
+    for trip in trips_list:
 
         # Filter-aware date selection
         dates = [
@@ -3111,38 +3112,44 @@ def own_vehicle_pl_report_view(request):
             weighment_expense + handling_expense + vehicle_hire
         )
 
-        row = [
-            idx,
-            date_val,
-            safe_str(trip.tr_consignmentnumber),
-            safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
-            safe_str(trip.tr_departedlocation),
-            safe_str(trip.tr_reportedlocation),
-            safe_num(trip.tc_tripcost),
-            safe_num(trip.tc_tollcost),
-            safe_num(trip.tc_parkingcost),
-            safe_num(trip.tc_loadingcost),
-            safe_num(trip.tc_unloadingcost),
-            safe_num(trip.tc_weighmentcost),
-            safe_num(trip.tc_handlingcost),
-            safe_num(trip.tc_haltingcost) * safe_num(trip.tc_no_of_days_halting),
+        if selling_total > 0 and total_expense > 0:
+            row = [
+                current_idx,
+                date_val,
+                safe_str(trip.tr_consignmentnumber),
+                safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
+                safe_str(trip.tr_departedlocation),
+                safe_str(trip.tr_reportedlocation),
+                safe_num(trip.tc_tripcost),
+                safe_num(trip.tc_tollcost),
+                safe_num(trip.tc_parkingcost),
+                safe_num(trip.tc_loadingcost),
+                safe_num(trip.tc_unloadingcost),
+                safe_num(trip.tc_weighmentcost),
+                safe_num(trip.tc_handlingcost),
+                safe_num(trip.tc_haltingcost) * safe_num(trip.tc_no_of_days_halting),
 
-            selling_total,
-            driver_salary,
-            fuel_expense,
-            acting_driver,
-            driver_bata,
-            toll_expense,
-            parking_expense,
-            loading_expense,
-            unloading_expense,
-            weighment_expense,
-            handling_expense,
-            vehicle_hire,
-            total_expense,
-        ]
+                selling_total,
+                driver_salary,
+                fuel_expense,
+                acting_driver,
+                driver_bata,
+                toll_expense,
+                parking_expense,
+                loading_expense,
+                unloading_expense,
+                weighment_expense,
+                handling_expense,
+                vehicle_hire,
+                total_expense,
+            ]
 
-        data_rows.append(row)
+            data_rows.append(row)
+            filtered_trips_list.append(trip)
+            current_idx += 1
+
+    trips_list = filtered_trips_list
+
 
     # -------------------------------
     # SUMMARY AGGREGATION
@@ -5019,32 +5026,16 @@ def movementwise_pl_report_ajax_view(request):
 
     trips = get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date, to_date, selected_year)
     trips = trips.filter(tr_category_id=1, tc_financestatus_id=7)  # Business trips only & Settled only
-    records_total = trips.count()
     
-    # Simple search
-    search_value = request.GET.get('search[value]', '')
-    if search_value:
-        trips = trips.filter(
-            Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
-            Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
-            Q(tr_vehiclenumber__icontains=search_value)
-        )
+    # Fetch all matching trips to apply Revenue/Expense logic globally
+    all_matching_trips = list(trips)
     
-    records_filtered = trips.count()
-    
-    # Pagination
-    if length == -1:
-        page_trips = list(trips[start:])
-    else:
-        page_trips = list(trips[start:start+length])
-    
-    # --- PRE-FETCH Logic (Scoped to Page) ---
-    trip_id_to_pk = {t.id: t.id for t in page_trips}
-    trip_num_to_pk = {str(t.tr_tripnumber).strip().upper(): t.id for t in page_trips if t.tr_tripnumber}
-    all_query_ids = [str(t.id) for t in page_trips] + [str(t.tr_tripnumber).strip() for t in page_trips if t.tr_tripnumber]
+    # --- PRE-FETCH Logic (Scoped to All Matching Trips) ---
+    trip_id_to_pk = {t.id: t.id for t in all_matching_trips}
+    trip_num_to_pk = {str(t.tr_tripnumber).strip().upper(): t.id for t in all_matching_trips if t.tr_tripnumber}
+    all_query_ids = [str(t.id) for t in all_matching_trips] + [str(t.tr_tripnumber).strip() for t in all_matching_trips if t.tr_tripnumber]
     
     invoice_obj_map = {i.ti_trip_id: i for i in TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_id_to_pk.keys())}
-    
     expenses = Driverexpense.objects.filter(trip_number__in=all_query_ids).select_related('de_expense_type')
     expense_map = {}
     for e in expenses:
@@ -5054,7 +5045,7 @@ def movementwise_pl_report_ajax_view(request):
         elif s_key.isdigit(): t_id = int(s_key)
         if t_id and t_id in trip_id_to_pk: expense_map.setdefault(t_id, []).append(e)
 
-    va_map = {va.va_enquirynumber_id: va for va in Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=[t.tr_enquirynumber_id for t in page_trips if t.tr_enquirynumber_id]).select_related('va_vendor')}
+    va_map = {va.va_enquirynumber_id: va for va in Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=[t.tr_enquirynumber_id for t in all_matching_trips if t.tr_enquirynumber_id]).select_related('va_vendor')}
     vendor_ids = set(a.va_vendor_id for a in va_map.values() if a.va_vendor_id)
     
     bill_no_map = {}
@@ -5071,9 +5062,9 @@ def movementwise_pl_report_ajax_view(request):
                 try: attached_bill_map[int(tid)] = b
                 except: pass
 
-    data_rows = []
-    for idx, trip in enumerate(page_trips, start=start+1):
-        # Detailed P&L Calculation
+    # Calculate P&L for all and filter by Revenue > 0 and Expense > 0
+    all_valid_data = []
+    for trip in all_matching_trips:
         inv = invoice_obj_map.get(trip.id)
         trip_expenses = expense_map.get(trip.id, [])
         va_info = va_map.get(trip.tr_enquirynumber_id)
@@ -5084,28 +5075,63 @@ def movementwise_pl_report_ajax_view(request):
             trip, inv, trip_expenses, va_info, ab_bill, mb_bill
         )
 
-        data_rows.append([
-            idx,
-            disp_date,
-            safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else "",
-            safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
-            safe_str(trip.tr_departedlocation),
-            safe_str(trip.tr_reportedlocation),
-            safe_str(trip.tr_vehiclesource),
-            safe_str(trip.tr_vehiclenumber),
-            safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype),
-            round(selling, 2),
-            round(buying, 2),
-            round(profit, 2),
-            f"{round(profit_pct, 2)}%"
-        ])
+        if selling > 0 and buying > 0:
+            all_valid_data.append({
+                'trip': trip,
+                'data': [
+                    0, # placeholder for SNo
+                    disp_date,
+                    safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else "",
+                    safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
+                    safe_str(trip.tr_departedlocation),
+                    safe_str(trip.tr_reportedlocation),
+                    safe_str(trip.tr_vehiclesource),
+                    safe_str(trip.tr_vehiclenumber),
+                    safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype),
+                    round(selling, 2),
+                    round(buying, 2),
+                    round(profit, 2),
+                    f"{round(profit_pct, 2)}%"
+                ]
+            })
+
+    records_total = len(all_valid_data)
+    
+    # Simple search on the calculated list
+    search_value = request.GET.get('search[value]', '').strip().lower()
+    if search_value:
+        final_filtered_data = []
+        for item in all_valid_data:
+            # Check searchable columns: Cnote, Customer, Vehicle No
+            cnote = str(item['data'][2]).lower()
+            customer = str(item['data'][3]).lower()
+            veh_no = str(item['data'][7]).lower()
+            if search_value in cnote or search_value in customer or search_value in veh_no:
+                final_filtered_data.append(item)
+        all_valid_data = final_filtered_data
+    
+    records_filtered = len(all_valid_data)
+    
+    # Pagination
+    if length == -1:
+        page_data = all_valid_data[start:]
+    else:
+        page_data = all_valid_data[start:start+length]
+    
+    # Final format for DataTables (add SNo)
+    final_data_rows = []
+    for idx, item in enumerate(page_data, start=start+1):
+        row = item['data']
+        row[0] = idx
+        final_data_rows.append(row)
 
     return JsonResponse({
         'draw': draw,
         'recordsTotal': records_total,
         'recordsFiltered': records_filtered,
-        'data': data_rows,
+        'data': final_data_rows,
     })
+
 
 def customerwise_pl_report_ajax_view(request):
     from django.http import JsonResponse
@@ -5124,27 +5150,14 @@ def customerwise_pl_report_ajax_view(request):
 
     trips = get_filtered_trips(branch_id, trip_category_id, None, from_date, to_date, selected_year, customer_id=customer_id)
     trips = trips.filter(tr_category_id=1, tc_financestatus_id=7)  # Business trips only & Settled only
-    records_total = trips.count()
     
-    search_value = request.GET.get('search[value]', '')
-    if search_value:
-        trips = trips.filter(
-            Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
-            Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
-            Q(tr_vehiclenumber__icontains=search_value)
-        )
-    
-    records_filtered = trips.count()
-    
-    if length == -1:
-        page_trips = list(trips[start:])
-    else:
-        page_trips = list(trips[start:start+length])
+    # Fetch all matching trips globally for filtering
+    all_matching_trips = list(trips)
     
     # Scoped Pre-fetch
-    trip_id_to_pk = {t.id: t.id for t in page_trips}
-    trip_num_to_pk = {str(t.tr_tripnumber).strip().upper(): t.id for t in page_trips if t.tr_tripnumber}
-    all_query_ids = [str(t.id) for t in page_trips] + [str(t.tr_tripnumber).strip() for t in page_trips if t.tr_tripnumber]
+    trip_id_to_pk = {t.id: t.id for t in all_matching_trips}
+    trip_num_to_pk = {str(t.tr_tripnumber).strip().upper(): t.id for t in all_matching_trips if t.tr_tripnumber}
+    all_query_ids = [str(t.id) for t in all_matching_trips] + [str(t.tr_tripnumber).strip() for t in all_matching_trips if t.tr_tripnumber]
     
     invoice_obj_map = {i.ti_trip_id: i for i in TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_id_to_pk.keys())}
     expenses = Driverexpense.objects.filter(trip_number__in=all_query_ids).select_related('de_expense_type')
@@ -5156,7 +5169,7 @@ def customerwise_pl_report_ajax_view(request):
         elif s_key.isdigit(): t_id = int(s_key)
         if t_id and t_id in trip_id_to_pk: expense_map.setdefault(t_id, []).append(e)
 
-    va_map = {va.va_enquirynumber_id: va for va in Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=[t.tr_enquirynumber_id for t in page_trips if t.tr_enquirynumber_id]).select_related('va_vendor')}
+    va_map = {va.va_enquirynumber_id: va for va in Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=[t.tr_enquirynumber_id for t in all_matching_trips if t.tr_enquirynumber_id]).select_related('va_vendor')}
     vendor_ids = set(a.va_vendor_id for a in va_map.values() if a.va_vendor_id)
     
     bill_no_map = {}
@@ -5173,9 +5186,9 @@ def customerwise_pl_report_ajax_view(request):
                 try: attached_bill_map[int(tid)] = b
                 except: pass
 
-    data_rows = []
-    for idx, trip in enumerate(page_trips, start=start+1):
-        # Detailed P&L Calculation
+    # Calculate P&L for all and filter
+    all_valid_data = []
+    for trip in all_matching_trips:
         inv = invoice_obj_map.get(trip.id)
         trip_expenses = expense_map.get(trip.id, [])
         va_info = va_map.get(trip.tr_enquirynumber_id)
@@ -5186,28 +5199,62 @@ def customerwise_pl_report_ajax_view(request):
             trip, inv, trip_expenses, va_info, ab_bill, mb_bill
         )
 
-        data_rows.append([
-            idx,
-            disp_date,
-            safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else "",
-            safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
-            safe_str(trip.tr_departedlocation),
-            safe_str(trip.tr_reportedlocation),
-            safe_str(trip.tr_vehiclesource),
-            safe_str(trip.tr_vehiclenumber),
-            safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype),
-            round(selling, 2),
-            round(buying, 2),
-            round(profit, 2),
-            f"{round(profit_pct, 2)}%"
-        ])
+        if selling > 0 and buying > 0:
+            all_valid_data.append({
+                'trip': trip,
+                'data': [
+                    0, # placeholder for SNo
+                    disp_date,
+                    safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else "",
+                    safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
+                    safe_str(trip.tr_departedlocation),
+                    safe_str(trip.tr_reportedlocation),
+                    safe_str(trip.tr_vehiclesource),
+                    safe_str(trip.tr_vehiclenumber),
+                    safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype),
+                    round(selling, 2),
+                    round(buying, 2),
+                    round(profit, 2),
+                    f"{round(profit_pct, 2)}%"
+                ]
+            })
+
+    records_total = len(all_valid_data)
+    
+    # Simple search on the calculated list
+    search_value = request.GET.get('search[value]', '').strip().lower()
+    if search_value:
+        final_filtered_data = []
+        for item in all_valid_data:
+            cnote = str(item['data'][2]).lower()
+            customer = str(item['data'][3]).lower()
+            veh_no = str(item['data'][7]).lower()
+            if search_value in cnote or search_value in customer or search_value in veh_no:
+                final_filtered_data.append(item)
+        all_valid_data = final_filtered_data
+    
+    records_filtered = len(all_valid_data)
+    
+    # Pagination
+    if length == -1:
+        page_data = all_valid_data[start:]
+    else:
+        page_data = all_valid_data[start:start+length]
+    
+    # Final format
+    final_data_rows = []
+    for idx, item in enumerate(page_data, start=start+1):
+        row = item['data']
+        row[0] = idx
+        final_data_rows.append(row)
 
     return JsonResponse({
         'draw': draw,
         'recordsTotal': records_total,
         'recordsFiltered': records_filtered,
-        'data': data_rows,
+        'data': final_data_rows,
     })
+
 
 @login_required(login_url='/')
 def customerwise_pl_report_view(request):
