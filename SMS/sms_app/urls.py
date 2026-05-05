@@ -811,6 +811,7 @@ urlpatterns = [
     path('send_performance_audit_email/', views.send_performance_audit_email, name='send_performance_audit_email'),
     path('salesperson_wise_table/', views.salesperson_wise_table, name='salesperson_wise_table'),
     path('sales_multiple_item_add/', views.sales_multiple_item_add, name='sales_multiple_item_add'),
+    path('sales_multiple_item_add/<int:enquiry_id>/', views.sales_multiple_item_add, name='sales_multiple_item_add_with_enquiry'),
     path('sales_multiple_item_list/', views.sales_multiple_item_list, name='sales_multiple_item_list'),
     path('sales_multiple_item_update/<int:sales_multiple_id>/', views.sales_multiple_item_add, name='sales_multiple_item_update'),
     path('charge_master_list/', views.charge_master_list, name='charge_master_list'),

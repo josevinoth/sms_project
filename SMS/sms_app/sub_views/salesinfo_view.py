@@ -319,7 +319,7 @@ def sales_reports(request):
     return render(request,"asset_mgt_app/sales_reports.html",context)
 
 @login_required(login_url='login_page')
-def sales_multiple_item_add(request, sales_multiple_id=0):
+def sales_multiple_item_add(request, sales_multiple_id=0, enquiry_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     sales_id = request.session.get('ses_sales_id')
@@ -334,6 +334,7 @@ def sales_multiple_item_add(request, sales_multiple_id=0):
                     'form': form,
                     'first_name': first_name,
                     'sales_id': sales_id,
+                    'enquiry_id': enquiry_id,
                     'user_id': user_id
                 }
         return render(request, "asset_mgt_app/salesmultipleitem_add.html", context)

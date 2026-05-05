@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
 from ..forms import SaleEnquiryForm
-from ..models import SaleEnquiry, RoleInfo, User_extInfo
+from ..models import SaleEnquiry, RoleInfo, User_extInfo, SalesmultipleitemInfo
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from ..sub_models.customer_mod import CustomerInfo
 
@@ -30,6 +30,13 @@ def sale_enquiry_list(request):
         sale_enquiry_query = sale_enquiry_query.filter(enquiry_date_time__date__lte=to_date)
 
     enquiry_list = sale_enquiry_query.order_by('-created_at')
+    
+    from ..models import SalesmultipleitemInfo
+    for enquiry in enquiry_list:
+        quotes = SalesmultipleitemInfo.objects.filter(sm_enquiry_num=enquiry)
+        enquiry.quote_count = quotes.count()
+        latest_quote = quotes.order_by('-sm_updated_at').first()
+        enquiry.latest_quote_status = latest_quote.sm_quote_status if latest_quote else '-'
 
     page_number = request.GET.get('page')
     paginator = Paginator(enquiry_list, 10000)
@@ -64,6 +71,13 @@ def sale_enquiry_add(request, enquiry_id=0):
             'enquiry_id': enquiry_id,
             'first_name': first_name,
         }
+        
+        if enquiry_id != 0:
+
+            context['Salesmultipleitem_list'] = SalesmultipleitemInfo.objects.filter(sm_enquiry_num=enquiry_id)
+        else:
+            context['Salesmultipleitem_list'] = []
+
         return render(request, "asset_mgt_app/sale_enquiry_add.html", context)
     else:
         if enquiry_id == 0:

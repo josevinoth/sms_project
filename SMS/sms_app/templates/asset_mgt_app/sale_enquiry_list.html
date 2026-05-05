@@ -61,9 +61,11 @@
                 <th>Customer Code</th>
                 <th>Product</th>
                 <th>Attachments</th>
-                <th>Contact Person Name</th>
-                <th>Contact No</th>
-                <th>Mail</th>
+                <th style="display: none;">Contact Person Name</th>
+                <th style="display: none;">Contact No</th>
+                <th style="display: none;">Mail</th>
+                <th>No. of Quotes</th>
+                <th>Quote Status</th>
                 <th>Created By</th>
                 <th>Updated By</th>
                 <th>Updated On</th>
@@ -92,9 +94,11 @@
                         {% if enquiry.mc_attachment %}<li><a href="{{ enquiry.mc_attachment.url }}" target="_blank"><i class="fas fa-file-alt text-info"></i> MC Tours</a></li>{% endif %}
                     </ul>
                 </td>
-                <td>{{enquiry.contact_person_name}}</td>
-                <td>{{enquiry.contact_no}}</td>
-                <td>{{enquiry.mail}}</td>
+                <td style="display: none;">{{enquiry.contact_person_name}}</td>
+                <td style="display: none;">{{enquiry.contact_no}}</td>
+                <td style="display: none;">{{enquiry.mail}}</td>
+                <td>{{enquiry.quote_count}}</td>
+                <td>{{enquiry.latest_quote_status}}</td>
                 <td>{{enquiry.created_by}}</td>
                 <td>{{enquiry.updated_by|default:"-"}}</td>
                 <td>{{enquiry.updated_at|date:"Y-m-d H:i"}}</td>
