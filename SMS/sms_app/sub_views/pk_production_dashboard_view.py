@@ -69,28 +69,21 @@ def update_production_status(request):
             return JsonResponse({'status': 'error', 'message': 'job_no is required'})
 
         try:
-            # Normalize job_no to prevent mismatches
             job_no = job_no.strip()
             
-            # Get or create the Packingjobs tracker record for this job_no
-            # We use filter().first() to be more resilient than get()
-            job = Packingjobs.objects.filter(pj_job_no=job_no).first()
+            # Atomic update_or_create to prevent any ghost record issues
+            update_data = {}
+            if production_status and production_status != '':
+                update_data['pj_production_completed_flag'] = production_status
+            if material_status and material_status != '':
+                update_data['pj_material_returned_flag'] = material_status
+                
+            job, created = Packingjobs.objects.update_or_create(
+                pj_job_no__iexact=job_no,
+                defaults=update_data
+            )
             
-            if not job:
-                job = Packingjobs.objects.create(
-                    pj_job_no=job_no,
-                    pj_production_completed_flag='Pending',
-                    pj_material_returned_flag='Pending',
-                    pj_qc_completed_flag='Pending',
-                    pj_pack_type=PkcostingsummaryInfo.objects.filter(cs_job_no=job_no).values_list('cs_pack_type', flat=True).first() or 'In-House'
-                )
-            
-            if production_status:
-                job.pj_production_completed_flag = production_status
-            if material_status:
-                job.pj_material_returned_flag = material_status
-            job.save()
-            return JsonResponse({'status': 'success', 'message': 'Status updated successfully.'})
+            return JsonResponse({'status': 'success', 'message': 'Status updated.'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
 

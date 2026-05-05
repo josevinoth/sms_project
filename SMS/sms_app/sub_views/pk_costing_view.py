@@ -504,11 +504,16 @@ def pk_get_po_requirement_type(request):
 def pk_store_po_dimension_id(request):
     po_dimension_box_val = []
     ct_requirement_id = request.GET.get('ct_requirement_id')
-    print('ct_requirement_id_Po', ct_requirement_id)
     po_number = request.GET.get('ct_customer_po')
-    print('po_number', po_number)
+    
+    # Validation: Return empty response if required parameters are missing
+    if not ct_requirement_id or not po_number:
+        return JsonResponse({'error': 'Missing parameters'}, status=200)
 
-    b = POdimension.objects.get(pod_nad=ct_requirement_id,pod_po_num=po_number)
+    try:
+        b = POdimension.objects.get(pod_nad=ct_requirement_id, pod_po_num=po_number)
+    except (POdimension.DoesNotExist, ValueError):
+        return JsonResponse({'error': 'Not found'}, status=200)
 
     po_dimension_box_val.append(f"{b.pod_type_of_req} ({b.pod_length}x{b.pod_width}x{b.pod_height})")
     print('po_dimension_box_val',po_dimension_box_val)
