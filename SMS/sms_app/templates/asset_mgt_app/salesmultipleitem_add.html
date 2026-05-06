@@ -23,6 +23,12 @@
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
+                                        <span class="input-group-text">Enquiry No.</span>
+                                    </div>
+                                    {% render_field form.sm_enquiry_num id="sm_enquiry_num" class="form-control disable_a_href" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
                                         <span class="input-group-text">Date of Quote</span>
                                     </div>
                                     {% render_field form.sm_Date_of_Quote id="sm_Date_of_Quote" type="date" class="form-control" %}
@@ -39,6 +45,18 @@
                                         <span class="input-group-text">Rate Approval</span>
                                     </div>
                                     {% render_field form.sm_Rate_Approval id="sm_Rate_Approval" class="form-control"  %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Quote Status</span>
+                                    </div>
+                                    {% render_field form.sm_quote_status id="sm_quote_status" class="form-control"  %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Reason</span>
+                                    </div>
+                                    {% render_field form.sm_reason id="sm_reason" class="form-control" rows="2" %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3 bg-dark block">
 									<div class="input-group-prepend">
@@ -68,7 +86,7 @@
                         <button type="submit" class="btn btn-success" id="save-btn">
                             <i class="fas fa-check"></i> Submit
                         </button>
-                        <a href="{% url 'sales_multiple_item_cancel' %}" class="btn btn-danger float-right">
+                        <a href="{% url 'sale_enquiry_list' %}" class="btn btn-danger float-right">
                             <i class="fas fa-times"></i> Cancel
                         </a>
                     </div>
@@ -81,6 +99,9 @@
 <script>
     $(document).ready(function() {
         document.getElementById("sm_sales_num").value ='{{sales_id}}';
+        if ('{{enquiry_id}}' != '0') {
+            document.getElementById("sm_enquiry_num").value ='{{enquiry_id}}';
+        }
         document.getElementById("sm_lastmodifiedby").value ='{{user_id}}';
         });
 </script>
