@@ -227,7 +227,7 @@ def po_dimension_add(request, po_dimension_id=0):
 
     if request.method == "GET":
         if po_dimension_id == 0:
-            form = POdimensionForm()
+            form = POdimensionForm(initial={'pod_po_num': purchaseorder_id})
             form.fields['pod_assess_num'].queryset = PkneedassessmentInfo.objects.filter(na_customer_name=po.po_customer_name)
             na_assessment_num_id = request.session.get('ses_na_id')
             context = {
@@ -235,6 +235,7 @@ def po_dimension_add(request, po_dimension_id=0):
                 'first_name': first_name,
                 'user_id': user_id,
                 'purchaseorder_id': purchaseorder_id,
+                'po': po,
                 'na_assessment_num_id': na_assessment_num_id,
             }
         else:
@@ -256,24 +257,45 @@ def po_dimension_add(request, po_dimension_id=0):
         
         form.fields['pod_assess_num'].queryset = PkneedassessmentInfo.objects.filter(na_customer_name=po.po_customer_name)
 
-            # Check if form is valid
+        # Check if form is valid
         if form.is_valid():
-            form.save()
+            dimension = form.save(commit=False)
+            # Force link to the current PO from session
+            dimension.pod_po_num = po
+            
+            # Set the updated_by field from session directly on server-side
+            from ..models import MyUser
+            try:
+                dimension.pod_updated_by = MyUser.objects.get(id=user_id)
+            except:
+                pass
+                
+            dimension.save()
+            
             if po_dimension_id == 0:
-                messages.success(request, 'Record Saved Successfully')
+                messages.success(request, 'Dimension Saved Successfully')
             else:
-                messages.success(request, 'Record Updated Successfully')
+                messages.success(request, 'Dimension Updated Successfully')
+            
+            # Redirect back to the Purchase Order update page
+            return redirect('/SMS/purchaseorder_update/' + str(purchaseorder_id))
         else:
             # Debug errors and show to the user
             messages.error(request, 'Error: Please correct the errors below.')
             for field, errors in form.errors.items():
                 for error in errors:
-                    print(f"Error in {field}: {error}")
-                    messages.error(request, f"Error in {field}: {error}")
+                    messages.error(request, f"{field}: {error}")
 
-            # Redirect back to the previous page
-        return redirect(request.META.get('HTTP_REFERER', '/'))
-        # return redirect('/SMS/needassessment_list')
+        # Redefine context for rendering in case of validation errors
+        context = {
+            'form': form,
+            'first_name': first_name,
+            'user_id': user_id,
+            'purchaseorder_id': purchaseorder_id,
+            'po': po,
+            'na_assessment_num_id': request.session.get('ses_na_id'),
+        }
+        return render(request, "asset_mgt_app/po_dimension_add.html", context)
 @login_required(login_url='login_page')
 def po_dimension_list(request):
     first_name = request.session.get('first_name')

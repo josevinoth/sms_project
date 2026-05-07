@@ -157,7 +157,9 @@
             $('#stockpurchases_list').DataTable({
                 order: [[1, 'asc']],
                 pageLength: 25,
-                dom: 'lBfrtip',
+                dom: "<'row mb-2'<'col-sm-6'B><'col-sm-6'f>>" +
+             "<'row'<'col-sm-12'tr>>" +
+             "<'row mt-2'<'col-sm-5'i><'col-sm-7'p>>",
                 buttons: [
                     { extend: 'copy', className: 'btn btn-sm btn-secondary' },
                     { extend: 'excel', className: 'btn btn-sm btn-success' },

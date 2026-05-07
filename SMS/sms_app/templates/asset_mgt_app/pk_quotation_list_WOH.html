@@ -98,12 +98,16 @@
 <script>
     $(document).ready(function() {
     $('#quotation_list').DataTable({
-<!--        scrollY: "400px",-->
         scrollX: true,
         order: [0, 'desc' ],
-        dom: 'Bfrtip',
+        dom: "<'row mb-2'<'col-sm-6'B><'col-sm-6'f>>" +
+             "<'row'<'col-sm-12'tr>>" +
+             "<'row mt-2'<'col-sm-5'i><'col-sm-7'p>>",
         buttons: [
-            'copy', 'csv', 'excel', 'print'
+            { extend: 'copy', className: 'btn btn-sm btn-secondary' },
+            { extend: 'csv',  className: 'btn btn-sm btn-info' },
+            { extend: 'excel',className: 'btn btn-sm btn-success' },
+            { extend: 'print',className: 'btn btn-sm btn-warning' }
         ],
     });
 } );
