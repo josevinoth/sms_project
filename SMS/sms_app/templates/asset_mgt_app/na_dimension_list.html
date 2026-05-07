@@ -56,7 +56,9 @@
     $(document).ready(function() {
         $('#na_dimension_list_main').DataTable({
             order: [[0, 'desc']],
-            dom: 'lBfrtip',
+            dom: "<'row mb-2'<'col-sm-6'B><'col-sm-6'f>>" +
+             "<'row'<'col-sm-12'tr>>" +
+             "<'row mt-2'<'col-sm-5'i><'col-sm-7'p>>",
             buttons: [
                 'copy', 'csv', 'excel', 'print'
             ],

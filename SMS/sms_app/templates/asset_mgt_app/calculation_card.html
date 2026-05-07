@@ -188,13 +188,27 @@
     }
 
     function calculateDimensions(na_uom_id_val, l, w, h) {
+        if (!na_uom_id_val) return; // Prevent crash if UOM is missing
         var UOM = parseInt(na_uom_id_val);
-        var box_id_clearance_l = parseFloat(document.getElementById("pkqt_box_id_clearance_l").value) || 0;
-        var box_id_clearance_w = parseFloat(document.getElementById("pkqt_box_id_clearance_w").value) || 0;
-        var box_id_clearance_h = parseFloat(document.getElementById("pkqt_box_id_clearance_h").value) || 0;
-        var box_od_clearance_l = parseFloat(document.getElementById("pkqt_box_od_clearance_l").value) || 0;
-        var box_od_clearance_w = parseFloat(document.getElementById("pkqt_box_od_clearance_w").value) || 0;
-        var box_od_clearance_h = parseFloat(document.getElementById("pkqt_box_od_clearance_h").value) || 0;
+        
+        // Ensure l, w, h are numbers
+        l = parseFloat(l) || 0;
+        w = parseFloat(w) || 0;
+        h = parseFloat(h) || 0;
+
+        var box_id_clearance_l_el = document.getElementById("pkqt_box_id_clearance_l");
+        var box_id_clearance_w_el = document.getElementById("pkqt_box_id_clearance_w");
+        var box_id_clearance_h_el = document.getElementById("pkqt_box_id_clearance_h");
+        var box_od_clearance_l_el = document.getElementById("pkqt_box_od_clearance_l");
+        var box_od_clearance_w_el = document.getElementById("pkqt_box_od_clearance_w");
+        var box_od_clearance_h_el = document.getElementById("pkqt_box_od_clearance_h");
+
+        var box_id_clearance_l = box_id_clearance_l_el ? (parseFloat(box_id_clearance_l_el.value) || 0) : 0;
+        var box_id_clearance_w = box_id_clearance_w_el ? (parseFloat(box_id_clearance_w_el.value) || 0) : 0;
+        var box_id_clearance_h = box_id_clearance_h_el ? (parseFloat(box_id_clearance_h_el.value) || 0) : 0;
+        var box_od_clearance_l = box_od_clearance_l_el ? (parseFloat(box_od_clearance_l_el.value) || 0) : 0;
+        var box_od_clearance_w = box_od_clearance_w_el ? (parseFloat(box_od_clearance_w_el.value) || 0) : 0;
+        var box_od_clearance_h = box_od_clearance_h_el ? (parseFloat(box_od_clearance_h_el.value) || 0) : 0;
 
         let l_cm = l + box_id_clearance_l + box_od_clearance_l;
         let w_cm = w + box_id_clearance_w + box_od_clearance_w;

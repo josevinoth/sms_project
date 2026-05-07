@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-    /* Light Theme (Default) */
+    /* Light Theme (Clean & Professional) */
     --primary-glow: linear-gradient(135deg, #2dd4bf 0%, #3b82f6 100%);
     --accent-emerald: #14b8a6;
     --accent-blue: #3b82f6;
@@ -11,19 +11,19 @@
     --btn-primary-hover: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
     --btn-secondary: #1e293b;
     
-    --bg-page: #f0fdfa;
+    --bg-page: #f8fafc; /* Softer slate instead of mint */
     --bg-card: #ffffff;
     --bg-section: #ffffff;
     --text-main: #1e293b;
     --text-muted: #64748b;
     --text-white: #ffffff;
-    --border-light: #ccfbf1;
+    --border-light: #e2e8f0;
     --input-bg: #ffffff;
     --input-border: #94a3b8;
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.3);
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(203, 213, 225, 0.5);
     --header-text: #ffffff;
-    --shadow-main: rgba(20, 184, 166, 0.1);
+    --shadow-main: rgba(0, 0, 0, 0.05);
 }
 
 [data-theme="dark"] {
@@ -55,7 +55,7 @@ body {
 /* Premium Header with Emerald/Cyan Gradient */
 .modern-header {
     background: var(--primary-glow);
-    padding: 2.5rem 2rem;
+    padding: 1.5rem 2rem; /* Reduced from 2.5rem */
     border-radius: 20px 20px 0 0;
     position: relative;
     overflow: hidden;
@@ -96,8 +96,8 @@ body {
     border-radius: 0 0 24px 24px;
     border: 1px solid var(--border-light);
     border-top: none;
-    padding: 2.5rem;
-    margin-bottom: 3rem;
+    padding: 1.5rem 2rem; /* Reduced from 2.5rem */
+    margin-bottom: 1.5rem; /* Reduced from 3rem */
     box-shadow: 0 10px 30px var(--shadow-main);
 }
 
@@ -108,8 +108,8 @@ body {
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border);
     border-radius: 18px;
-    padding: 2rem;
-    margin-bottom: 2rem;
+    padding: 1.5rem; /* Reduced from 2rem */
+    margin-bottom: 1rem; /* Reduced from 2rem */
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     position: relative;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -545,23 +545,23 @@ select.form-control-modern:focus {
 
 .disable_a_href { 
     pointer-events: none; 
-    background-color: #ccfbf1 !important; 
-    opacity: 1 !important;
-    color: #000000 !important;
+    background-color: #f1f5f9 !important; /* Soft gray instead of bright cyan */
+    opacity: 0.8 !important;
+    color: var(--text-main) !important;
     font-weight: 700 !important;
-    -webkit-text-fill-color: #000000 !important;
+    -webkit-text-fill-color: var(--text-main) !important;
 }
 
 /* Select2 High Contrast */
 .select2-container--default .select2-selection--single .select2-selection__rendered {
-    color: #000000 !important;
+    color: var(--text-main) !important;
     font-weight: 700 !important;
     line-height: 40px !important;
 }
 
 .select2-container--default .select2-selection--single {
-    background-color: #ffffff !important;
-    border: 1.5px solid #94a3b8 !important;
+    background-color: var(--input-bg) !important;
+    border: 1.5px solid var(--input-border) !important;
     border-radius: 12px !important;
     height: 52px !important;
 }

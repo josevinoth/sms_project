@@ -59,7 +59,9 @@
 $(document).ready(function() {
     if (!$.fn.DataTable.isDataTable('#po_dimension_list')) {
         $('#po_dimension_list').DataTable({
-            dom: 'Bfrtip',
+            dom: "<'row mb-2'<'col-sm-6'B><'col-sm-6'f>>" +
+             "<'row'<'col-sm-12'tr>>" +
+             "<'row mt-2'<'col-sm-5'i><'col-sm-7'p>>",
             buttons: ['copy', 'csv', 'excel', 'print'],
             pageLength: 5,
             searching: false,

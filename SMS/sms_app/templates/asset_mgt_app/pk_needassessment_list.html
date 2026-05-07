@@ -15,6 +15,14 @@
         </div>
     </div>
 
+    <!-- Search Bar ABOVE the table -->
+    <div class="mb-3 d-flex justify-content-end">
+        <input type="text" id="needassessment_search"
+               class="form-control"
+               placeholder="🔍 Search any column..."
+               style="max-width:400px; border-radius:8px; border:2px solid #17a2b8; font-size:1rem;">
+    </div>
+
     <!-- List Table -->
     <div class="table-container-modern">
         <div class="table-responsive">
@@ -89,16 +97,14 @@
     </div>
 </div>
 
+<!-- Pure JS search — no library dependency -->
 <script>
-    $(document).ready(function() {
-        $('#needassessment_list').DataTable({
-            order: [[0, 'desc']],
-            dom: 'lBfrtip',
-            buttons: [
-                'copy', 'csv', 'excel', 'print'
-            ],
-            pageLength: 10,
-            responsive: true
+    document.getElementById('needassessment_search').addEventListener('keyup', function() {
+        var term = this.value.toLowerCase();
+        var rows = document.querySelectorAll('#needassessment_list tbody tr');
+        rows.forEach(function(row) {
+            var text = row.innerText.toLowerCase();
+            row.style.display = text.includes(term) ? '' : 'none';
         });
     });
 </script>
