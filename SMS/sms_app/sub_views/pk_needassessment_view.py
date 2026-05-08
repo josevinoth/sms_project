@@ -146,7 +146,7 @@ def needassessment_list(request):
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
     context = {
-            'needassessment_list' : PkneedassessmentInfo.objects.all(),
+            'needassessment_list' : PkneedassessmentInfo.objects.all().order_by('-na_updated_at'),
             'first_name': first_name,
             'role': role,
         }

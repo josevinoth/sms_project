@@ -61,77 +61,87 @@ def costingsummary_add(request,costingsummary_id=0):
                 output = 0
 
             # Combined Wood Cost
-            wood_cost = PkcostingInfo.objects.filter(ct_stock_type__in=[1, 4], ct_cost_type=8, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
-            if wood_cost is not None:
-                wood_cost = round(wood_cost, 2)
-            else:
-                wood_cost = 0.0
-            PkcostingsummaryInfo.objects.filter(pk=costingsummary_id).update(cs_wood_cost=wood_cost)
+            wood_cost = PkcostingInfo.objects.filter(ct_stock_type__in=[1, 4], ct_cost_type=8, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            wood_cost = round(wood_cost, 2)
 
             # Combined Total CFT
-            total_cft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type=1, **base_filter).aggregate(Sum('ct_sqrt_req'))['ct_sqrt_req__sum']
-            if total_cft is not None:
-                total_cft = round(total_cft, 2)
-            else:
-                total_cft = 0.0
-            PkcostingsummaryInfo.objects.filter(pk=costingsummary_id).update(cs_total_cft=total_cft)
+            total_cft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type=1, **base_filter).aggregate(Sum('ct_sqrt_req'))['ct_sqrt_req__sum'] or 0.0
+            total_cft = round(total_cft, 2)
 
             # Combined Engineer Cost
-            engineer_cost = PkcostingInfo.objects.filter(ct_cost_type=2, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
-            if engineer_cost is not None:
-                engineer_cost = round(engineer_cost, 2)
-            else:
-                engineer_cost = 0.0
-            PkcostingsummaryInfo.objects.filter(pk=costingsummary_id).update(cs_engineer_cost=engineer_cost)
+            engineer_cost = PkcostingInfo.objects.filter(ct_cost_type=2, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            engineer_cost = round(engineer_cost, 2)
 
             # Combined Packing/Labour Cost
-            packing_labour_cost = PkcostingInfo.objects.filter(ct_cost_type=3, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
-            if packing_labour_cost is not None:
-                packing_labour_cost = round(packing_labour_cost, 2)
-            else:
-                packing_labour_cost = 0.0
-            labour_cost = packing_labour_cost
-            PkcostingsummaryInfo.objects.filter(pk=costingsummary_id).update(cs_labour_cost=labour_cost)
+            packing_labour_cost = PkcostingInfo.objects.filter(ct_cost_type=3, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            labour_cost = round(packing_labour_cost, 2)
 
             # Combined Crane Cost
-            crane_cost = PkcostingInfo.objects.filter(ct_cost_type=6, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
-            if crane_cost is not None:
-                crane_cost = round(crane_cost, 2)
-            else:
-                crane_cost = 0.0
-            PkcostingsummaryInfo.objects.filter(pk=costingsummary_id).update(cs_crane_cost=crane_cost)
+            crane_cost = PkcostingInfo.objects.filter(ct_cost_type=6, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            crane_cost = round(crane_cost, 2)
 
             # Combined HT Cost
-            ht_cost = PkcostingInfo.objects.filter(ct_cost_type=5, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
-            if ht_cost is not None:
-                ht_cost = round(ht_cost, 2)
-            else:
-                ht_cost = 0.0
-            PkcostingsummaryInfo.objects.filter(pk=costingsummary_id).update(cs_ht_cost=ht_cost)
+            ht_cost = PkcostingInfo.objects.filter(ct_cost_type=5, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            ht_cost = round(ht_cost, 2)
 
             # Combined Management Cost
-            management_cost = PkcostingInfo.objects.filter(ct_cost_type=7, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
-            if management_cost is not None:
-                management_cost = round(management_cost, 2)
-            else:
-                management_cost = 0.0
-            PkcostingsummaryInfo.objects.filter(pk=costingsummary_id).update(cs_management_cost=management_cost)
+            management_cost = PkcostingInfo.objects.filter(ct_cost_type=7, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            management_cost = round(management_cost, 2)
 
             # Combined Material Cost (Consumables)
-            material_cost = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type=2, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
-            if material_cost is not None:
-                material_cost = round(material_cost, 2)
-            else:
-                material_cost = 0.0
-            PkcostingsummaryInfo.objects.filter(pk=costingsummary_id).update(cs_material_cost=material_cost)
+            material_cost = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type=2, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            material_cost = round(material_cost, 2)
 
             # Combined Transport Cost
-            transport_cost = PkcostingInfo.objects.filter(ct_cost_type=4, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum']
-            if transport_cost is not None:
-                transport_cost = round(transport_cost, 2)
-            else:
-                transport_cost = 0.0
-            PkcostingsummaryInfo.objects.filter(pk=costingsummary_id).update(cs_transport_cost=transport_cost)
+            transport_cost = PkcostingInfo.objects.filter(ct_cost_type=4, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            transport_cost = round(transport_cost, 2)
+
+            # Others Cost (from existing model record)
+            others_cost = costingsummary.cs_others_cost or 0.0
+
+            # Calculate Total (W/O Margin)
+            total_cost_wom = (
+                wood_cost + engineer_cost + labour_cost + crane_cost + 
+                ht_cost + management_cost + material_cost + transport_cost + others_cost
+            )
+            total_cost_wom = round(total_cost_wom, 2)
+
+            # Calculate Total (W/ Margin)
+            margin = costingsummary.cs_margin or 0.0
+            total_cost_wm = total_cost_wom + (total_cost_wom * margin / 100)
+            total_cost_wm = round(total_cost_wm, 2)
+
+            # Rate per CFT
+            rate_per_cft = total_cost_wm / total_cft if total_cft > 0 else 0.0
+            rate_per_cft = round(rate_per_cft, 2)
+
+            # Final Cost (with GST)
+            gst_percent = costingsummary.cs_gst or 0.0
+            gst_amount = total_cost_wm * gst_percent / 100
+            final_cost = round(total_cost_wm + gst_amount, 2)
+
+            # UPDATE DATABASE
+            PkcostingsummaryInfo.objects.filter(pk=costingsummary_id).update(
+                cs_wood_cost=wood_cost,
+                cs_total_cft=total_cft,
+                cs_engineer_cost=engineer_cost,
+                cs_labour_cost=labour_cost,
+                cs_crane_cost=crane_cost,
+                cs_ht_cost=ht_cost,
+                cs_management_cost=management_cost,
+                cs_material_cost=material_cost,
+                cs_transport_cost=transport_cost,
+                cs_others_cost=others_cost,
+                cs_total_cost_wom=total_cost_wom,
+                cs_total_cost_wm=total_cost_wm,
+                cs_rate_per_cft=rate_per_cft,
+                cs_final_cost=final_cost
+            )
+
+            # Re-fetch instance to ensure form has latest database values
+            costingsummary.refresh_from_db()
+            form = PkcostingsummaryForm(instance=costingsummary)
+
             context={
                     'form': form,
                     'first_name': first_name,
@@ -145,6 +155,8 @@ def costingsummary_add(request,costingsummary_id=0):
                     'management_cost': management_cost,
                     'material_cost': material_cost,
                     'transport_cost': transport_cost,
+                    'others_cost': others_cost,
+                    'total_cost_wom': total_cost_wom,
                     'role_id': role_id,
                     'output': output,
                     'current_step': 'costing',
@@ -159,11 +171,17 @@ def costingsummary_add(request,costingsummary_id=0):
             print("Inside pk_costing_summary post add")
             form = PkcostingsummaryForm(request.POST)
             if form.is_valid():
-                form.save()
+                summary = form.save()
                 print("PkcostingsummaryInfo Form is Valid")
-                last_id = (PkcostingsummaryInfo.objects.latest('id')).id
+                
+                # Set session variables immediately after creation so they are available in costing_add
+                request.session['na_assessment_id'] = summary.cs_assessment_num.id if summary.cs_assessment_num else None
+                request.session['na_customer_name_id'] = summary.cs_customer_name.id if summary.cs_customer_name else None
+                request.session['ses_customer_po_id'] = summary.cs_customer_po.id if summary.cs_customer_po else None
+                request.session['ses_costing_summary_id'] = summary.id
+                
                 messages.success(request, 'Record Updated Successfully')
-                return redirect('/SMS/costingsummary_update/' + str(last_id))
+                return redirect('/SMS/costingsummary_update/' + str(summary.id))
             else:
                 print("PkcostingsummaryInfo Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
@@ -173,12 +191,43 @@ def costingsummary_add(request,costingsummary_id=0):
             costingsummary = PkcostingsummaryInfo.objects.get(pk=costingsummary_id)
             form = PkcostingsummaryForm(request.POST,instance=costingsummary)
             if form.is_valid():
-                form.save()
+                summary = form.save()
                 print("PkcostingsummaryForm Form is Valid")
+                
+                # RECALCULATE ITEM COSTS BASED ON NEW MARGIN
+                job_no = summary.cs_job_no
+                cs_po_num = summary.cs_customer_po
+                margin = summary.cs_margin or 0
+                
+                if job_no:
+                    base_filter = {'ct_job_no': job_no, 'ct_customer_po': cs_po_num}
+                else:
+                    base_filter = {'ct_assessment_num': summary.cs_assessment_num, 'ct_customer_po': cs_po_num}
+                
+                # Get unique items (requirements) for this job
+                item_reqs = PkcostingInfo.objects.filter(**base_filter).values('ct_requirement').distinct()
+                for req in item_reqs:
+                    k = req['ct_requirement']
+                    if not k: continue
+                    
+                    # Sum base costs (W/O margin) for this item
+                    total_cost_wom = PkcostingInfo.objects.filter(ct_requirement=k, **base_filter).aggregate(total=Sum('ct_total_cost'))['total'] or 0
+                    total_cost_with_margin = total_cost_wom + (total_cost_wom * margin / 100)
+                    
+                    # Get quantity from first line
+                    rep_line = PkcostingInfo.objects.filter(ct_requirement=k, **base_filter).first()
+                    qty = rep_line.ct_na_quantity if rep_line else 1
+                    
+                    # Update all lines for this item in this job
+                    PkcostingInfo.objects.filter(ct_requirement=k, **base_filter).update(
+                        ct_total_cost=round(total_cost_with_margin, 2),
+                        ct_totalbox_cost=round(total_cost_with_margin * qty, 2)
+                    )
+
                 messages.success(request, 'Record Updated Successfully')
             else:
-                print("PkcostingsummaryForm Form is Not Valid")
-                messages.error(request, 'Record Not Updated Successfully')
+                print("PkcostingsummaryForm Errors:", form.errors)
+                messages.error(request, f'Record Not Updated Successfully: {form.errors.as_text()}')
             return redirect(request.META['HTTP_REFERER'])
         # return redirect('/SMS/costingsummary_list')
 
@@ -397,13 +446,15 @@ def pk_bvm_invoice_excel(request, invoice_id=0):
     # Write the header
     ws.append([
         "Address", "Cost Includes", "Notes", "Terms & Conditions",
-        "Client Scope", "BVM Scope", "PO Number", "Total Sum",
+        "Client Scope", "BVM Scope", "Others Description", "PO Number", "Others Cost", "Total Sum",
         "GST Value", "GST", "Final Cost", "Date"
     ])
     # Write the summary info
     ws.append([
         summary.cs_address, summary.cs_cost_includes, summary.cs_notes, summary.cs_terms_condition,
-        summary.cs_client_scope, summary.cs_bvm_scope, summary.cs_customer_po.po_num if summary.cs_customer_po else '', 
+        summary.cs_client_scope, summary.cs_bvm_scope, summary.cs_others_description,
+        summary.cs_customer_po.po_num if summary.cs_customer_po else '', 
+        summary.cs_others_cost,
         round(totalbox_cost, 2),
         gst_val, gst, final_cost, today
     ])
@@ -432,31 +483,36 @@ def pk_bvm_invoice_excel(request, invoice_id=0):
 @login_required(login_url='login_page')
 def pk_store_na_dimension_id(request):
     na_dimension_box_val = []
-    ct_requirement_id= request.GET.get('ct_requirement_id')
-    print('ct_requirement_id',ct_requirement_id)
-    # Fetch requirement type from need assessment
+    ct_requirement_id = request.GET.get('ct_requirement_id')
+    print('ct_requirement_id', ct_requirement_id)
 
-    a = Nadimension.objects.get(pk=ct_requirement_id)
+    empty_response = {
+        'na_dimension_box_val': [],
+        'na_dimension_type': '', 'na_dimension_type_id': '',
+        'na_uom': '', 'na_uom_id': '',
+        'na_length': 0, 'na_width': 0, 'na_height': 0,
+    }
 
-    na_dimension_box_val.append(str(a.nad_type_of_req)+str(' (')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))
-    na_dimension_type =str(a.nad_dimension_type)
-    na_dimension_type_id = str(a.nad_dimension_type.id)
-    na_uom=str(a.nad_uom)
-    na_uom_id=str(a.nad_uom.id)
-    na_length=str(a.nad_length)
-    na_width=str(a.nad_width)
-    na_height = str(a.nad_height)
+    if not ct_requirement_id or not str(ct_requirement_id).strip().isdigit():
+        return JsonResponse(empty_response)
 
+    try:
+        a = Nadimension.objects.get(pk=ct_requirement_id)
+    except Nadimension.DoesNotExist:
+        return JsonResponse(empty_response)
 
+    na_dimension_box_val.append(
+        str(a.nad_type_of_req) + ' (' + str(a.nad_length) + 'x' + str(a.nad_width) + 'x' + str(a.nad_height) + ')'
+    )
     data = {
         'na_dimension_box_val': na_dimension_box_val,
-        'na_dimension_type': na_dimension_type,
-        'na_dimension_type_id': na_dimension_type_id,
-        'na_uom': na_uom,
-        'na_uom_id': na_uom_id,
-        'na_length': na_length,
-        'na_width': na_width,
-        'na_height': na_height,
+        'na_dimension_type': str(a.nad_dimension_type),
+        'na_dimension_type_id': str(a.nad_dimension_type.id),
+        'na_uom': str(a.nad_uom),
+        'na_uom_id': str(a.nad_uom.id),
+        'na_length': str(a.nad_length),
+        'na_width': str(a.nad_width),
+        'na_height': str(a.nad_height),
     }
     return JsonResponse(data)
 

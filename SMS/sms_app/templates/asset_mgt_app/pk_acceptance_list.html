@@ -17,6 +17,13 @@
         </div>
     </div>
 
+    <!-- Search Bar -->
+    <div class="mb-3 d-flex justify-content-end">
+        <input type="text" id="acceptance_search" class="form-control"
+               placeholder="🔍 Search any column..."
+               style="max-width:400px; border-radius:8px; border:2px solid #17a2b8; font-size:1rem;">
+    </div>
+
     <!-- List Table -->
     <div class="table-container-modern">
         <div class="table-responsive">
@@ -72,14 +79,11 @@
 </div>
 
 <script>
-    $(document).ready(function () {
-        $('#pk_retrival_list').DataTable({
-            order: [[0, 'desc']],
-            dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print'],
-            pageLength: 25,
-            responsive: true
+    document.getElementById('acceptance_search').addEventListener('keyup', function() {
+        var term = this.value.toLowerCase();
+        document.querySelectorAll('#pk_retrival_list tbody tr').forEach(function(row) {
+            row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
         });
     });
 </script>
-{% endblock %}
+{% endblock %}

@@ -4,7 +4,7 @@ from ..models import POdimension,Nadimension
 class POdimensionForm(forms.ModelForm):
     class Meta:
         model = POdimension
-        fields = '__all__'
+        exclude = ['pod_updated_by']
 
     def __init__(self, *args, **kwargs):
         super(POdimensionForm,self).__init__(*args, **kwargs)

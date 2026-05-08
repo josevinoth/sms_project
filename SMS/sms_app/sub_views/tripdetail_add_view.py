@@ -120,7 +120,7 @@ def tripdetail_add(request, tripdetail_id=0):
                         'tr_vehicletype_placed': va.va_vehicletype_placed,
                         'tr_drivernumber': va.va_drivernumber,
                         'tr_driver_lic': va.va_driver_lic,
-                        'tr_category': 2,
+                        'tr_category': 1 if va.va_vehiclesource_id == 3 else 2,
                     }
                 except Vehicle_allotmentInfo.DoesNotExist:
                     pass
@@ -143,12 +143,12 @@ def tripdetail_add(request, tripdetail_id=0):
                     initial_data['tr_reportedkm_pickup'] = last_trip.tr_reportedkm
 
             trip_det_form = TripdetailaddForm(initial=initial_data)
-            if vehicle_allotment_id:
+            if vehicle_allotment_id and va.va_vehiclesource_id != 3:
                 trip_det_form.fields['tr_category'].widget.attrs['readonly'] = True
 
             # Ensure departed location matches the vehicle's last reported location
             location_locked = False
-            if vehicle_allotment_id and 'tr_vehiclenumber' in initial_data:
+            if vehicle_allotment_id and 'tr_vehiclenumber' in initial_data and va.va_vehiclesource_id != 3:
                 last_trip_loc = TripdetailInfo.objects.filter(
                     tr_vehiclenumber=search_vehicle_num
                 ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
@@ -305,7 +305,9 @@ def tripdetail_add(request, tripdetail_id=0):
                         return redirect(request.META['HTTP_REFERER'])
 
                 # ✅ NEW LOCATION MATCHING VALIDATION HERE
-                if vehicle_number:
+                # Skip for Market Vehicles (Source 3)
+                v_source_id = request.POST.get('tr_vehiclesource')
+                if vehicle_number and str(v_source_id) != "3":
                     last_trip_for_loc = TripdetailInfo.objects.filter(
                         tr_vehiclenumber=vehicle_number
                     ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()

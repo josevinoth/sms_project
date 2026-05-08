@@ -33,7 +33,7 @@
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">PO Number</label>
-                        {% render_field form.pod_po_num id="pod_po_num" class="form-control form-control-modern disable_a_href" %}
+                        {% render_field form.pod_po_num id="pod_po_num" class="form-control form-control-modern" readonly="True" %}
                     </div>
                 </div>
             </div>
@@ -44,7 +44,7 @@
                 <div class="form-row-modern">
                     <div class="form-group-modern">
                         <label class="form-label-modern">Delivery Schedule Date</label>
-                        {% render_field form.pod_delivery_schedule_date id="pod_delivery_schedule_date" type="Date" class="form-control form-control-modern" %}
+                        {% render_field form.pod_delivery_schedule_date id="pod_delivery_schedule_date" type="date" class="form-control form-control-modern" %}
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">Requirement Type</label>
@@ -56,7 +56,7 @@
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">Wood Description</label>
-                        {% render_field form.pod_wood_description id="pod_wood_description" class="form-control form-control-modern disable_a_href" %}
+                        {% render_field form.pod_wood_description id="pod_wood_description" class="form-control form-control-modern" readonly="True" %}
                     </div>
                 </div>
             </div>
@@ -112,11 +112,11 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="btn-group-modern mt-4">
-                <button type="submit" class="btn-modern btn-submit" id="save-btn">
+            <div class="btn-group-modern mt-4" style="position: relative; z-index: 5;">
+                <button type="submit" class="btn btn-modern btn-submit shadow-lg" id="save-btn" onclick="this.form.submit();" style="pointer-events: auto; cursor: pointer; position: relative; z-index: 10;">
                     <i class="fas fa-check"></i> SAVE PO DIMENSION
                 </button>
-                <a href="{% url 'po_dimension_cancel' %}" class="btn-modern btn-cancel">
+                <a href="{% url 'po_dimension_cancel' %}" class="btn btn-modern btn-cancel shadow-sm" style="pointer-events: auto; cursor: pointer;">
                     <i class="fas fa-times"></i> CANCEL
                 </a>
             </div>
@@ -136,14 +136,9 @@ $(document).ready(function() {
 		document.getElementById("pod_assess_num").value=na_assessment_num_id_val
 	}
 
-	var purchaseorder_id_val=document.getElementById("pod_po_num").value
-	if (purchaseorder_id_val=="")
-	{
-		document.getElementById("pod_po_num").value='{{purchaseorder_id}}'
-	}
-	else
-	{
-		document.getElementById("pod_po_num").value=purchaseorder_id_val
+	var purchaseorder_id_val = '{{purchaseorder_id}}';
+	if (purchaseorder_id_val != '' && purchaseorder_id_val != '0') {
+		$('#pod_po_num').val(purchaseorder_id_val);
 	}
 
 load_pk_requirement_type();

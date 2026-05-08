@@ -52,11 +52,29 @@ def costing_add(request, costing_id=0):
             # print("Initial Data:", initial_data)
 
             form = PkcostingForm(
-                assessment_id=na_assessment_num_id
+                assessment_id=na_assessment_num_id,
+                initial={'ct_customer_po': ses_customer_po_id}
             )
         else:
             costing = get_object_or_404(PkcostingInfo, pk=costing_id)
             form = PkcostingForm(instance=costing)
+
+        # Build job list and current job no explicitly for debugging and clarity
+        job_no_list_qs = list(PkcostingsummaryInfo.objects.filter(cs_assessment_num=na_assessment_num_id, cs_customer_po=ses_customer_po_id).values_list('cs_job_no', flat=True).distinct())
+        # Fallback: if no jobs found for assessment+PO, try by assessment only
+        if not job_no_list_qs and na_assessment_num_id:
+            job_no_list_qs = list(PkcostingsummaryInfo.objects.filter(cs_assessment_num=na_assessment_num_id).values_list('cs_job_no', flat=True).distinct())
+        current_job_no_val = None
+        ses_cs_id = request.session.get('ses_costing_summary_id')
+        if ses_cs_id:
+            current_job_no_val = PkcostingsummaryInfo.objects.filter(id=ses_cs_id).values_list('cs_job_no', flat=True).first()
+        # If still not available, pick the first job from the job list if present
+        if not current_job_no_val and job_no_list_qs:
+            current_job_no_val = job_no_list_qs[0]
+
+        # Debug prints to understand why job list may be empty
+        print('DEBUG: na_assessment_num_id=', na_assessment_num_id, 'ses_customer_po_id=', ses_customer_po_id, 'ses_costing_summary_id=', request.session.get('ses_costing_summary_id'))
+        print('DEBUG: job_no_list_qs=', job_no_list_qs)
 
         context = {
             'form': form,
@@ -66,14 +84,21 @@ def costing_add(request, costing_id=0):
             'na_customer_name_id': na_customer_name_id,
             'na_customer_new_name_id': na_customer_new_name_id,
             'ses_customer_po_id': ses_customer_po_id,
-            'costing_list': PkcostingInfo.objects.filter(ct_assessment_num=na_assessment_num_id, ct_customer_po=ses_customer_po_id),
+            'costing_list': PkcostingInfo.objects.filter(
+                ct_assessment_num=na_assessment_num_id, 
+                ct_customer_po=ses_customer_po_id,
+                ct_job_no=current_job_no_val
+            ),
             'excess_costing_list': PkcostingInfo.objects.all(),
             'total_cft_display': request.session.get('ct_total_cft_display', 0),
-
+            'job_no_list': job_no_list_qs,
+            # Preserve user's selected job number (if any) so the manual select keeps the choice on error
+            'current_job_no': current_job_no_val
         }
         return render(request, "asset_mgt_app/pk_costing_add.html", context)
 
     else:
+        print('POST data:', dict(request.POST))
         if costing_id == 0:
             print("Inside PK Costing post add")
             form = PkcostingForm(request.POST,assessment_id=request.POST.get('ct_assessment_num'))
@@ -86,9 +111,14 @@ def costing_add(request, costing_id=0):
             )
         if form.is_valid():
             print('Form is valid')
-            cost_type_id = request.POST.get('ct_cost_type')
+            # Be defensive: ct_cost_type may be missing or empty (e.g. placeholder). Default to 0.
+            cost_type_raw = request.POST.get('ct_cost_type') or '0'
+            try:
+                cost_type_id = int(cost_type_raw)
+            except (ValueError, TypeError):
+                cost_type_id = 0
 
-            if int(cost_type_id) == 8:  # For stock-related cost types
+            if cost_type_id == 8:  # For stock-related cost types
                 stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
                 print('stock_purchase_num_id',stock_purchase_num_id)
                 if stock_purchase_num_id:
@@ -110,8 +140,12 @@ def costing_add(request, costing_id=0):
                                 messages.error(request, 'Invalid quantity value. It should be a number.')
                                 return redirect(request.META.get('HTTP_REFERER', '/'))
 
-                            # Save the record
-                            costing = form.save()
+                            # Save the record - ensure we don't lose the stock reference
+                            costing = form.save(commit=False)
+                            if stock_purchase_num_id:
+                                costing.ct_stock_purchase_number_id = stock_purchase_num_id
+                            costing.save()
+                            form.save_m2m()
                             # Extract relevant fields
                             cost_type = costing.ct_cost_type.id
                             stock_type = costing.ct_stock_type.id
@@ -140,7 +174,7 @@ def costing_add(request, costing_id=0):
                                             sm_invoice_no=ref_no, # Standardizing: Putting original GRN here
                                             sm_description=f"Retrieved via Costing for Assessment {costing.ct_assessment_num.na_assessment_num if costing.ct_assessment_num else 'N/A'} (Costing ID: {costing.id})",
                                             sm_partcode=stock_purchase.sm_partcode,
-                                            sm_count=float(costing.ct_na_quantity or stock_qty),
+                                            sm_count=float(costing.ct_quantity or stock_qty),
                                             sm_uom=stock_purchase.sm_uom,
                                             sm_updated_by_id=user_id
                                         )
@@ -156,7 +190,12 @@ def costing_add(request, costing_id=0):
 
                 else:
                     # No stock purchase number provided, still save the record
-                    costing=form.save()
+                    costing = form.save(commit=False)
+                    # Check if it was sent in POST even if not in cleaned_data
+                    if request.POST.get('ct_stock_purchase_number'):
+                        costing.ct_stock_purchase_number_id = request.POST.get('ct_stock_purchase_number')
+                    costing.save()
+                    form.save_m2m()
                     # Extract relevant fields
                     cost_type = costing.ct_cost_type.id
                     stock_type = costing.ct_stock_type.id
@@ -195,13 +234,47 @@ def costing_add(request, costing_id=0):
             print("Costing form is not valid.")
             messages.error(request, 'Record Not Updated Successfully')
 
-            # Display form errors
+            # Display form errors in server logs and flash messages
             for field, errors in form.errors.items():
                 for error in errors:
                     print(f"Error in {field}: {error}")
                     messages.error(request, f"Error in {field}: {error}")
 
-        return redirect(request.META.get('HTTP_REFERER', 'redirect_if_referer_not_found'))
+            # Rebuild job list and current value for rendering with errors
+            job_no_list_qs = list(PkcostingsummaryInfo.objects.filter(cs_assessment_num=na_assessment_num_id, cs_customer_po=ses_customer_po_id).values_list('cs_job_no', flat=True).distinct())
+            if not job_no_list_qs and na_assessment_num_id:
+                job_no_list_qs = list(PkcostingsummaryInfo.objects.filter(cs_assessment_num=na_assessment_num_id).values_list('cs_job_no', flat=True).distinct())
+            current_job_no_val = request.POST.get('ct_job_no') or None
+            if not current_job_no_val:
+                ses_cs_id = request.session.get('ses_costing_summary_id')
+                if ses_cs_id:
+                    current_job_no_val = PkcostingsummaryInfo.objects.filter(id=ses_cs_id).values_list('cs_job_no', flat=True).first()
+            if not current_job_no_val and job_no_list_qs:
+                current_job_no_val = job_no_list_qs[0]
+            print('DEBUG (POST error render): na_assessment_num_id=', na_assessment_num_id, 'ses_customer_po_id=', ses_customer_po_id)
+            print('DEBUG (POST error render): job_no_list_qs=', job_no_list_qs, 'current_job_no_val=', current_job_no_val)
+
+            context = {
+                'form': form,
+                'first_name': first_name,
+                'user_id': user_id,
+                'na_assessment_num_id': na_assessment_num_id,
+                'na_customer_name_id': na_customer_name_id,
+                'na_customer_new_name_id': na_customer_new_name_id,
+                'ses_customer_po_id': ses_customer_po_id,
+                'costing_list': PkcostingInfo.objects.filter(
+                    ct_assessment_num=na_assessment_num_id,
+                    ct_customer_po=ses_customer_po_id,
+                    ct_job_no=current_job_no_val
+                ),
+                'excess_costing_list': PkcostingInfo.objects.all(),
+                'total_cft_display': request.session.get('ct_total_cft_display', 0),
+                'job_no_list': job_no_list_qs,
+                'current_job_no': current_job_no_val
+            }
+
+            return render(request, "asset_mgt_app/pk_costing_add.html", context)
+        # End of POST handling - everything either redirected or rendered above
 
 
 @login_required(login_url='login_page')
@@ -482,50 +555,99 @@ def pk_get_item_description(request):
 def pk_get_po_requirement_type(request):
     ct_assessment_num_id = request.GET.get('ct_assessment_num_id')
     ct_customer_po_id = request.GET.get('ct_customer_po_id')
+    job_no = request.GET.get('job_no')
+    print('job_no', job_no)
+
+    # Initial filtering by assessment and customer PO
+    po_dimensions = POdimension.objects.filter(pod_assess_num=ct_assessment_num_id, pod_po_num=ct_customer_po_id)
+
+    # If job_no is provided, narrow down to items used in that specific job
+    if job_no:
+        po_dimensions = po_dimensions.filter(pkcostinginfo__ct_job_no=job_no).distinct()
 
     # Fetch requirement type from Need Assessment dimension
-    po_dimensions = POdimension.objects.filter(pod_assess_num=ct_assessment_num_id, pod_po_num=ct_customer_po_id)
+    # Try to filter by ID first, then by PO Number string if ID is not found or invalid
+    try:
+        if not po_dimensions.exists():
+            po_dimensions = POdimension.objects.filter(pod_assess_num=ct_assessment_num_id, pod_po_num__po_num=ct_customer_po_id)
+    except:
+        po_dimensions = POdimension.objects.filter(pod_assess_num=ct_assessment_num_id, pod_po_num__po_num=ct_customer_po_id)
 
     po_requirement_type_id = []
     po_requirement_type_val = []
+    po_dimension_id = []  # Keep track of POdimension IDs for pk_store_po_dimension_id
 
     for dimension in po_dimensions:
-        po_requirement_type_id.append(dimension.id)
+        # Use the linked Nadimension ID (pod_nad) as the option value so ct_requirement
+        # saves a valid Nadimension FK. Fall back to POdimension ID if pod_nad is missing.
+        nad_id = dimension.pod_nad.id if dimension.pod_nad else dimension.id
+        po_requirement_type_id.append(nad_id)
         po_requirement_type_val.append(f"{dimension.pod_item} ({dimension.pod_type_of_req} {dimension.pod_length}x{dimension.pod_width}x{dimension.pod_height})")
-        # po_requirement_type_val.append(dimension.pod_item)
+        po_dimension_id.append(dimension.id)  # POdimension ID stored separately for JS
 
     data = {
         'po_requirement_type_val': po_requirement_type_val,
         'po_requirement_type_id': po_requirement_type_id,
+        'po_dimension_id': po_dimension_id,
     }
     return JsonResponse(data)
 
 @login_required(login_url='login_page')
 def pk_store_po_dimension_id(request):
-    po_dimension_box_val = []
     ct_requirement_id = request.GET.get('ct_requirement_id')
-    po_number = request.GET.get('ct_customer_po')
+    ct_customer_po = request.GET.get('ct_customer_po')
+    job_no = request.GET.get('job_no')
+    print('ct_requirement_id',ct_requirement_id, 'job_no', job_no)
     
     # Validation: Return empty response if required parameters are missing
-    if not ct_requirement_id or not po_number:
+    if not ct_requirement_id or not ct_customer_po:
         return JsonResponse({'error': 'Missing parameters'}, status=200)
 
     try:
-        b = POdimension.objects.get(pod_nad=ct_requirement_id, pod_po_num=po_number)
+        b = POdimension.objects.get(id=ct_requirement_id)
     except (POdimension.DoesNotExist, ValueError):
         return JsonResponse({'error': 'Not found'}, status=200)
 
-    po_dimension_box_val.append(f"{b.pod_type_of_req} ({b.pod_length}x{b.pod_width}x{b.pod_height})")
-    print('po_dimension_box_val',po_dimension_box_val)
+    # Prioritize job-specific data if job_no is provided
+    pod_quantity = b.pod_quantity
+    pod_item_id = ""
+    pod_itemdescription_id = ""
+    
+    if job_no:
+        # Robust multi-layered search
+        # 1. Try by requirement link
+        costing_record = PkcostingInfo.objects.filter(ct_job_no=job_no, ct_requirement=b.pod_nad).first()
+        
+        # 2. Try by dimension link
+        if not costing_record:
+            costing_record = PkcostingInfo.objects.filter(ct_job_no=job_no, ct_po_dimension=b).first()
+            
+        # 3. Fallback: Try by assessment and item name/uom match
+        if not costing_record:
+            costing_record = PkcostingInfo.objects.filter(
+                ct_job_no=job_no, 
+                ct_assessment_num=b.pod_assess_num,
+                ct_uom=b.pod_uom
+            ).first()
+            
+        if costing_record:
+            pod_quantity = costing_record.ct_quantity_req
+            if costing_record.ct_item:
+                pod_item_id = str(costing_record.ct_item.id)
+            if costing_record.ct_itemdescription:
+                pod_itemdescription_id = str(costing_record.ct_itemdescription.id)
+
+    po_dimension_box_val = f"{b.pod_item} ({b.pod_type_of_req} {b.pod_length}x{b.pod_width}x{b.pod_height})"
     pod_dimension_type = str(b.pod_dimension_type)
-    print(pod_dimension_type)
     pod_dimension_type_id = str(b.pod_type_of_req.id)
     pod_uom = str(b.pod_uom)
     pod_uom_id = str(b.pod_uom.id)
     pod_length = str(b.pod_length)
     pod_width = str(b.pod_width)
     pod_height = str(b.pod_height)
-    pod_quantity = str(b.pod_quantity)
+
+    # Return the Nadimension ID (pod_nad) so the form field ct_requirement is set correctly
+    pod_nad_id = str(b.pod_nad.id) if b.pod_nad else ""
 
     data = {
         'po_dimension_box_val': po_dimension_box_val,
@@ -536,8 +658,15 @@ def pk_store_po_dimension_id(request):
         'pod_length': pod_length,
         'pod_width': pod_width,
         'pod_height': pod_height,
-        'pod_quantity': pod_quantity,
+        'pod_quantity': str(pod_quantity),
+        'pod_item_id': pod_item_id,
+        'pod_itemdescription_id': pod_itemdescription_id,
+        'pod_nad_id': pod_nad_id,
     }
 
     return JsonResponse(data)
+
+
+
+
 

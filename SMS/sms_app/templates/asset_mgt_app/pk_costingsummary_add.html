@@ -97,6 +97,10 @@
                         {% render_field form.cs_transport_cost id="cs_transport_cost" class="form-control form-control-modern disable_a_href" %}
                     </div>
                     <div class="form-group-modern">
+                        <label class="form-label-modern">Others Cost</label>
+                        {% render_field form.cs_others_cost id="cs_others_cost" onchange="change_charge_type()" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
                         <label class="form-label-modern">Total (W/O Margin)</label>
                         {% render_field form.cs_total_cost_wom id="cs_total_cost_wom" class="form-control form-control-modern bg-light font-weight-bold" readonly="readonly" %}
                     </div>
@@ -137,6 +141,10 @@
                         <label class="form-label-modern">Workflow Status</label>
                         {% render_field form.cs_status id="cs_status" class="form-control form-control-modern font-weight-bold" %}
                     </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Packing Type</label>
+                        {% render_field form.cs_pack_type id="cs_pack_type" class="form-control form-control-modern" %}
+                    </div>
                 </div>
             </div>
 
@@ -153,7 +161,10 @@
                                     </button>
                                 </div>
                                 <div id="collapseAddr" class="collapse" data-parent="#termsAccordion">
-                                    <div class="card-body">{% render_field form.cs_address id="cs_address" class="form-control" rows="3" %}</div>
+                                    <div class="card-body">
+                                        <label class="form-label-modern mb-2">Billing/Shipping Address</label>
+                                        {% render_field form.cs_address id="cs_address" class="form-control" rows="3" %}
+                                    </div>
                                 </div>
                             </div>
                             <div class="card border-0 mb-2 shadow-sm rounded">
@@ -163,7 +174,10 @@
                                     </button>
                                 </div>
                                 <div id="collapseInc" class="collapse" data-parent="#termsAccordion">
-                                    <div class="card-body">{% render_field form.cs_cost_includes id="cs_cost_includes" class="form-control" rows="3" %}</div>
+                                    <div class="card-body">
+                                        <label class="form-label-modern mb-2">Cost Inclusions</label>
+                                        {% render_field form.cs_cost_includes id="cs_cost_includes" class="form-control" rows="3" %}
+                                    </div>
                                 </div>
                             </div>
                             <div class="card border-0 mb-2 shadow-sm rounded">
@@ -173,7 +187,10 @@
                                     </button>
                                 </div>
                                 <div id="collapseTerms" class="collapse" data-parent="#termsAccordion">
-                                    <div class="card-body">{% render_field form.cs_terms_condition id="cs_terms_condition" class="form-control" rows="3" %}</div>
+                                    <div class="card-body">
+                                        <label class="form-label-modern mb-2">Terms & Conditions</label>
+                                        {% render_field form.cs_terms_condition id="cs_terms_condition" class="form-control" rows="3" %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -190,7 +207,10 @@
                                     </button>
                                 </div>
                                 <div id="collapseNotes" class="collapse" data-parent="#scopeAccordion">
-                                    <div class="card-body">{% render_field form.cs_notes id="cs_notes" class="form-control" rows="3" %}</div>
+                                    <div class="card-body">
+                                        <label class="form-label-modern mb-2">Engineering Notes</label>
+                                        {% render_field form.cs_notes id="cs_notes" class="form-control" rows="3" %}
+                                    </div>
                                 </div>
                             </div>
                             <div class="card border-0 mb-2 shadow-sm rounded">
@@ -200,7 +220,10 @@
                                     </button>
                                 </div>
                                 <div id="collapseClient" class="collapse" data-parent="#scopeAccordion">
-                                    <div class="card-body">{% render_field form.cs_client_scope id="cs_client_scope" class="form-control" rows="3" %}</div>
+                                    <div class="card-body">
+                                        <label class="form-label-modern mb-2">Client Scope</label>
+                                        {% render_field form.cs_client_scope id="cs_client_scope" class="form-control" rows="3" %}
+                                    </div>
                                 </div>
                             </div>
                             <div class="card border-0 mb-2 shadow-sm rounded">
@@ -210,7 +233,23 @@
                                     </button>
                                 </div>
                                 <div id="collapseBvm" class="collapse" data-parent="#scopeAccordion">
-                                    <div class="card-body">{% render_field form.cs_bvm_scope id="cs_bvm_scope" class="form-control" rows="3" %}</div>
+                                    <div class="card-body">
+                                        <label class="form-label-modern mb-2">BVM Scope</label>
+                                        {% render_field form.cs_bvm_scope id="cs_bvm_scope" class="form-control" rows="3" %}
+                                    </div>
+                                </div>
+                                <div class="card border-0 mb-2 shadow-sm rounded">
+                                    <div class="card-header bg-white p-0">
+                                        <button class="btn btn-link btn-block text-left font-weight-bold text-dark py-3" type="button" data-toggle="collapse" data-target="#collapseOthers">
+                                            <i class="fas fa-chevron-right mr-2 small"></i> Miscellaneous Description
+                                        </button>
+                                    </div>
+                                    <div id="collapseOthers" class="collapse" data-parent="#scopeAccordion">
+                                        <div class="card-body">
+                                            <label class="form-label-modern mb-2">Miscellaneous (Others) Description</label>
+                                            {% render_field form.cs_others_description id="cs_others_description" class="form-control" rows="3" %}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -257,42 +296,8 @@
             </div>
         </div>
         
-        <div class="table-container-modern">
-            <div class="table-responsive">
-                <table id="costing_list" class="table modern-table text-center">
-                    <thead>
-                        <tr>
-                            <th>Job No</th>
-                            <th>Assessment</th>
-                            <th>Part Details</th>
-                            <th>Item Name</th>
-                            <th>Dimensions (L x W x H)</th>
-                            <th>Qty</th>
-                            <th>UOM</th>
-                            <th>CFT</th>
-                            <th>Total Cost</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for costinginfo in costing_list %}
-                        <tr class="modern-tr">
-                            <td class="font-weight-bold">{{ costinginfo.ct_job_no }}</td>
-                            <td>{{ costinginfo.ct_assessment_num }}</td>
-                            <td>
-                                <div class="font-weight-bold small">{{ costinginfo.ct_part_code }}</div>
-                                <div class="x-small text-muted">{{ costinginfo.ct_stock_description }}</div>
-                            </td>
-                            <td class="font-weight-bold text-dark">{{ costinginfo.ct_item }}</td>
-                            <td>{{ costinginfo.ct_length_req }} x {{ costinginfo.ct_width_req }} x {{ costinginfo.ct_height_req }}</td>
-                            <td class="font-weight-bold">{{ costinginfo.ct_quantity }}</td>
-                            <td>{{ costinginfo.ct_uom }}</td>
-                            <td>{{ costinginfo.ct_sqrt_req }}</td>
-                            <td class="font-weight-bold text-primary">{{ costinginfo.ct_totalbox_cost }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <div class="table-container-modern p-0" style="border: none; background: transparent; box-shadow: none;">
+            {% include "asset_mgt_app/pk_costing_list_WOH.html" %}
         </div>
     </div>
 
@@ -423,10 +428,11 @@
         var mgt = parseFloat($("#cs_management_cost").val()) || 0;
         var mat = parseFloat($("#cs_material_cost").val()) || 0;
         var tra = parseFloat($("#cs_transport_cost").val()) || 0;
+        var others = parseFloat($("#cs_others_cost").val()) || 0;
         var margin = parseFloat($("#cs_margin").val()) || 0;
         var gst = parseFloat($("#cs_gst").val()) || 0;
 
-        var wom = wood + eng + lab + cra + ht + mgt + mat + tra;
+        var wom = wood + eng + lab + cra + ht + mgt + mat + tra + others;
         $("#cs_total_cost_wom").val(wom.toFixed(2));
         var wm = wom + (wom * margin / 100);
         $("#cs_total_cost_wm").val(wm.toFixed(2));
