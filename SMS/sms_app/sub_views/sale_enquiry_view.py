@@ -180,3 +180,50 @@ def get_sale_details(request):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+
+@login_required(login_url='login_page')
+def mc_tours_calendar_events(request):
+    enquiries = SaleEnquiry.objects.filter(mc_customer_type__isnull=False)
+    events = []
+
+    # Keys are lowercase for case-insensitive matching
+    STATUS_CONFIG = {
+        'business won':  {'label': 'Business Won',  'bg': '#28a745', 'border': '#28a745'},
+        'in discussion': {'label': 'In Discussion', 'bg': '#fd7e14', 'border': '#fd7e14'},
+    }
+
+    for enq in enquiries:
+        latest_quote = SalesmultipleitemInfo.objects.filter(sm_enquiry_num=enq).order_by('-sm_updated_at').first()
+        if not latest_quote or not latest_quote.sm_quote_status:
+            continue
+
+        raw_status = latest_quote.sm_quote_status.quote_status
+        status_key = raw_status.strip().lower()
+        if status_key not in STATUS_CONFIG:
+            continue
+
+        if not enq.mc_travel_date:
+            continue
+
+        cust_name = enq.effective_customer_name
+        cfg = STATUS_CONFIG[status_key]
+        vehicle_source = str(enq.mc_vehicle_source) if enq.mc_vehicle_source else '-'
+        vehicle_type = enq.mc_vehicle_type or '-'
+        description = (
+            f"<b>[{cfg['label']}]</b><br>"
+            f"Customer: {cust_name}<br>"
+            f"Destination: {enq.mc_to or '-'}<br>"
+            f"Vehicle: {vehicle_source} / {vehicle_type}"
+        )
+        events.append({
+            'title': f"{enq.enquiry_id} - {cust_name}",
+            'start': enq.mc_travel_date.isoformat(),
+            'description': description,
+            'url': f"/SMS/sale_enquiry_update/{enq.id}",
+            'backgroundColor': cfg['bg'],
+            'borderColor': cfg['border'],
+            'textColor': '#fff'
+        })
+
+    return JsonResponse(events, safe=False)
