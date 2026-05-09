@@ -180,6 +180,12 @@
                             </div>
                             {% render_field form.address class="form-control" rows="3" id="address_input" %}
                         </div>
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Remarks</span>
+                            </div>
+                            {% render_field form.remarks class="form-control" rows="3" id="remarks_input" %}
+                        </div>
                     </div>
 
                 </div>
@@ -564,8 +570,17 @@
                                 {% render_field form.mc_customer_type class="form-control" %}
                             </div>
                             <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Tour Type</span>
+                                </div>
+                                {% render_field form.mc_tour_type class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
                                 <div class="input-group-prepend"><span class="input-group-text">Travel Type</span></div>
                                 {% render_field form.mc_travel_type class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Mode of Transport</span></div>
+                                {% render_field form.mc_mode_of_transport class="form-control" %}
                             </div>
                             <div class="input-group input-group-sm mb-3">
                                 <div class="input-group-prepend"><span class="input-group-text">From</span></div>
@@ -589,6 +604,11 @@
                             <div class="input-group input-group-sm mb-3">
                                 <div class="input-group-prepend"><span class="input-group-text">Return Date</span></div>
                                 {% render_field form.mc_return_date type="date" class="form-control" %}
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend"><span class="input-group-text">Vehicle Source</span>
+                                </div>
+                                {% render_field form.mc_vehicle_source class="form-control" %}
                             </div>
                             <div class="input-group input-group-sm mb-3">
                                 <div class="input-group-prepend"><span class="input-group-text">Vehicle Type</span>
@@ -860,16 +880,19 @@
                 allowClear: true,
                 width: 'resolve'
             });
+
+            // Remove 'ATTACHED' (ID 2) from Vehicle Source for this page only
+            $('#mc_vehicle_source_select option[value="2"]').remove();
         }
 
         // On page load: set correct state and colors based on existing selection
-        if ($('#customer_name_select').val()) {
-            $('#customer_code_input').prop('readonly', true);
-            $('#new_customer_name_input').prop('readonly', true);
+        var customerVal = $('#customer_name_select').val();
+        var newCustomerVal = $('#new_customer_name_input').val();
+        var salesNumberVal = $('#sales_number_input').val();
+
+        if (customerVal || newCustomerVal || salesNumberVal) {
             toggleFieldBackground(true);
         } else {
-            $('#customer_code_input').prop('readonly', false);
-            $('#new_customer_name_input').prop('readonly', false);
             toggleFieldBackground(false);
         }
 
@@ -888,6 +911,40 @@
             // Slide toggle the target section
             $('#' + target).slideToggle();
         });
+
+        // MC Tours & Travels: Toggle Tour Type / Travel Type / Mode of Transport visibility based on Customer Type
+        // 1 = Tours, 2 = Travels, 3 = Tours&Travels
+        function toggleMcFields() {
+            var customerType = $('#mc_customer_type_select').val();
+            if (customerType === '1') {
+                // Tours: show Tour Type + Mode of Transport, hide Travel Type
+                $('#mc_tour_type_select').closest('.input-group').show();
+                $('#mc_travel_type_select').closest('.input-group').hide();
+                $('#mc_mode_of_transport_select').closest('.input-group').show();
+            } else if (customerType === '2') {
+                // Travels: hide Tour Type + Mode of Transport, show Travel Type
+                $('#mc_tour_type_select').closest('.input-group').hide();
+                $('#mc_travel_type_select').closest('.input-group').show();
+                $('#mc_mode_of_transport_select').closest('.input-group').hide();
+            } else if (customerType === '3') {
+                // Tours & Travels: show both Tour Type and Travel Type, hide Mode of Transport
+                $('#mc_tour_type_select').closest('.input-group').show();
+                $('#mc_travel_type_select').closest('.input-group').show();
+                $('#mc_mode_of_transport_select').closest('.input-group').hide();
+            } else {
+                // No selection: hide Tour Type + Mode of Transport, show Travel Type
+                $('#mc_tour_type_select').closest('.input-group').hide();
+                $('#mc_travel_type_select').closest('.input-group').show();
+                $('#mc_mode_of_transport_select').closest('.input-group').hide();
+            }
+        }
+
+        $('#mc_customer_type_select').change(function() {
+            toggleMcFields();
+        });
+
+        // Run on load
+        toggleMcFields();
 
         // Initialize DataTable for added quotes
         if ($.fn.DataTable) {

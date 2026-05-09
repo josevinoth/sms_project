@@ -30,13 +30,14 @@
                 <thead>
                     <tr>
                         <th width="3%">#</th>
-                        <th width="12%">Job No.</th>
-                        <th width="20%">Customer</th>
-                        <th width="12%">Ref. Assessment</th>
-                        <th width="15%" style="background: rgba(255,255,255,0.05);">Production Status</th>
-                        <th width="15%" style="background: rgba(255,255,255,0.05);">Material Loop</th>
+                        <th width="10%">Job No.</th>
+                        <th width="18%">Customer</th>
+                        <th width="10%">Ref. Assessment</th>
+                        <th width="12%" style="background: rgba(255,255,255,0.05);">Production Status</th>
+                        <th width="12%" style="background: rgba(255,255,255,0.05);">Material Loop</th>
                         <th width="10%">QC Status</th>
-                        <th width="13%">Gate Pass Access</th>
+                        <th width="12%">Gate Pass Access</th>
+                        <th width="13%">REPORTS</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -54,12 +55,12 @@
                         </td>
                         <td><small class="text-muted font-weight-bold">{{ job.cs_assessment_num.na_assessment_num }}</small></td>
 
-                        <!-- Production Toggle -->
                         <td class="px-2">
                             <select class="form-control form-control-modern status-toggle py-0" 
                                     style="height: 32px !important; font-size: 0.85rem; border-color: var(--primary-emerald);"
                                     data-job-no="{{ job.cs_job_no }}"
-                                    data-type="production">
+                                    data-type="production"
+                                    onchange="handleStatusChange(this)">
                                 <option value="Pending"   {% if tracker.pj_production_completed_flag == 'Pending' %}selected{% endif %}>⏳ Pending</option>
                                 <option value="Completed" {% if tracker.pj_production_completed_flag == 'Completed' %}selected{% endif %}>✅ Completed</option>
                             </select>
@@ -69,7 +70,8 @@
                             <select class="form-control form-control-modern status-toggle py-0"
                                     style="height: 32px !important; font-size: 0.85rem; border-color: var(--accent-blue);"
                                     data-job-no="{{ job.cs_job_no }}"
-                                    data-type="material">
+                                    data-type="material"
+                                    onchange="handleStatusChange(this)">
                                 <option value="Pending"   {% if tracker.pj_material_returned_flag == 'Pending' %}selected{% endif %}>⏳ Pending</option>
                                 <option value="Yes"       {% if tracker.pj_material_returned_flag == 'Yes' %}selected{% endif %}>🔼 Return Needed</option>
                                 <option value="No"        {% if tracker.pj_material_returned_flag == 'No' %}selected{% endif %}>⏺️ No Return</option>
@@ -89,11 +91,6 @@
                             {% else %}
                                 <div class="d-flex flex-column align-items-center">
                                     <span class="text-muted small italic mb-1">Awaiting Prod.</span>
-                                    <button class="btn btn-xs btn-outline-info force-save-btn" 
-                                            data-job-no="{{ job.cs_job_no }}"
-                                            style="font-size: 0.65rem; padding: 2px 5px;">
-                                        <i class="fas fa-sync"></i> Verify
-                                    </button>
                                 </div>
                             {% endif %}
                         </td>
@@ -110,11 +107,52 @@
                                 </div>
                             {% endif %}
                         </td>
+
+                        <!-- Dedicated Reports Column -->
+                        <td>
+                            <div class="d-flex flex-column gap-1 align-items-center">
+                                {% if row.qc_record %}
+                                    <a href="{% url 'pk_quality_check_pdf' row.qc_record.id %}" class="btn btn-sm btn-outline-info w-100 py-1" style="font-size: 0.7rem; text-decoration: none;">
+                                        <i class="fas fa-file-pdf mr-1"></i> QC Report
+                                    </a>
+                                {% endif %}
+                                
+                                {% if tracker.pj_production_completed_flag == 'Completed' and tracker.pj_qc_completed_flag == 'Completed' %}
+                                    {% if row.is_onsite %}
+                                        {# On-Site -> Delivery Challan #}
+                                        {% if row.dc_record %}
+                                            <a href="{% url 'packing_delivery_pdf' row.dc_record.id %}" class="btn btn-sm btn-outline-success w-100 py-1" style="font-size: 0.7rem; text-decoration: none;">
+                                                <i class="fas fa-file-invoice mr-1"></i> DC PDF
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'packing_delivery' %}?assessment_id={{ job.cs_assessment_num.id }}&po_id={{ job.cs_customer_po.id }}" class="btn btn-sm btn-primary w-100 py-1" style="font-size: 0.7rem; text-decoration: none; background: var(--accent-blue); border: none;">
+                                                <i class="fas fa-plus mr-1"></i> Create DC
+                                            </a>
+                                        {% endif %}
+                                    {% else %}
+                                        {# In-House -> Gate Pass #}
+                                        {% if row.gp_record %}
+                                            <a href="{% url 'packing_gate_pdf' row.gp_record.id %}" class="btn btn-sm btn-outline-warning w-100 py-1" style="font-size: 0.7rem; text-decoration: none;">
+                                                <i class="fas fa-file-alt mr-1"></i> GP PDF
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'packing_gate' %}?job_no={{ job.cs_job_no }}" class="btn btn-sm btn-info w-100 py-1" style="font-size: 0.7rem; text-decoration: none;">
+                                                <i class="fas fa-plus mr-1"></i> Create GP
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endif %}
+                                
+                                {% if not row.qc_record and not row.dc_record %}
+                                    <span class="text-muted small italic">---</span>
+                                {% endif %}
+                            </div>
+                        </td>
                     </tr>
                     {% endwith %}
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center py-5 text-muted italic">
+                        <td colspan="9" class="text-center py-5 text-muted italic">
                             No active jobs found in the production pipeline.
                         </td>
                     </tr>
@@ -134,73 +172,149 @@ $(document).ready(function() {
         order: [[1, 'desc']]
     });
 
-    // AJAX status update
-    $(document).on('change', '.status-toggle', function() {
-        var dropdown = $(this);
-        var jobNo    = dropdown.data('job-no');
-        var fieldType = dropdown.data('type');
-        var newValue  = dropdown.val();
+    // End document ready
+});
 
-        dropdown.css('opacity', '0.5');
-        var row = dropdown.closest('tr');
-        row.addClass('bg-light');
+function handleStatusChange(element) {
+    var dropdown = $(element);
+    var jobNo    = dropdown.data('job-no');
+    var fieldType = dropdown.data('type');
+    var newValue  = dropdown.val();
 
-        $.ajax({
-            type: 'POST',
-            url: '{% url "update_production_status" %}',
-            data: {
-                'job_no': jobNo,
-                'production_status': (fieldType === 'production' ? newValue : ''),
-                'material_status': (fieldType === 'material' ? newValue : ''),
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function(response) {
-                if (response.status === 'success') {
-                    // Success highlight
-                    row.css('background-color', '#dcfce7'); 
-                    setTimeout(function() {
-                        window.location.href = window.location.pathname + "?refresh=" + new Date().getTime();
-                    }, 400);
-                } else {
-                    alert('Error: ' + response.message);
-                    dropdown.css('opacity', '1');
-                    row.removeClass('bg-light');
-                    row.css('background-color', 'transparent');
-                }
-            },
-            error: function() {
+    dropdown.css('opacity', '0.5');
+    var row = dropdown.closest('tr');
+    row.addClass('bg-light');
+
+    $.ajax({
+        type: 'POST',
+        url: '{% url "update_production_status" %}',
+        data: {
+            'job_no': jobNo,
+            'production_status': (fieldType === 'production' ? newValue : ''),
+            'material_status': (fieldType === 'material' ? newValue : ''),
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            if (response.status === 'success') {
+                row.css('background-color', '#dcfce7'); 
+                setTimeout(function() {
+                    window.location.href = window.location.pathname + "?refresh=" + new Date().getTime();
+                }, 400);
+            } else {
+                alert('Error: ' + response.message);
                 dropdown.css('opacity', '1');
                 row.removeClass('bg-light');
-                alert('Error updating status. Please try again.');
+                row.css('background-color', 'transparent');
             }
-        });
-    // Force save button for reliability
-    $(document).on('click', '.force-save-btn', function() {
-        var btn = $(this);
-        var jobNo = btn.data('job-no');
-        var row = btn.closest('tr');
-        var prodStatus = row.find('select[data-type="production"]').val();
-        
-        btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
-        
-        $.ajax({
-            type: 'POST',
-            url: '{% url "update_production_status" %}',
-            data: {
-                'job_no': jobNo,
-                'production_status': prodStatus,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function(response) {
-                if (response.status === 'success') {
-                    row.css('background-color', '#dcfce7');
-                    setTimeout(function() {
-                        window.location.href = window.location.pathname + "?refresh=" + new Date().getTime();
-                    }, 400);
+        },
+        error: function() {
+            dropdown.css('opacity', '1');
+            row.removeClass('bg-light');
+            alert('Error updating status. Please try again.');
+        }
+    });
+}
+
+
+// Force save button for reliability
+$(document).on('click', '.force-save-btn', function() {
+    var btn = $(this);
+    var jobNo = btn.data('job-no');
+    var row = btn.closest('tr');
+    var prodStatus = row.find('select[data-type="production"]').val();
+
+    btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
+    $.ajax({
+        type: 'POST',
+        url: '{% url "update_production_status" %}',
+        data: {
+            'job_no': jobNo,
+            'production_status': prodStatus,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            if (response.status === 'success') {
+                row.css('background-color', '#dcfce7');
+                setTimeout(function() {
+                    window.location.href = window.location.pathname + "?refresh=" + new Date().getTime();
+                }, 400);
+            } else {
+                alert('Error: ' + response.message);
+                btn.html('<i class="fas fa-sync"></i> Verify');
+            }
+        },
+        error: function() {
+            alert('Server error occurred.');
+            btn.html('<i class="fas fa-sync"></i> Verify');
+        }
+    });
+});
+</script>
+<script>
+// Client-side enhancement: show 'Start QC' button for rows that are ready
+// This avoids changing server-side logic while we validate conditions.
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        var table = document.getElementById('production_dashboard');
+        if (!table) return;
+        // Determine column indexes by header names (robust to column reordering)
+        var headers = Array.from(table.querySelectorAll('thead th')).map(h => h.innerText.trim().toLowerCase());
+        var prodIdx = headers.findIndex(h => h.indexOf('production') >= 0);
+        var qcIdx = headers.findIndex(h => h.indexOf('qc') >= 0 || h.indexOf('quality') >= 0);
+
+        // If we can't find expected columns, fall back to assumed positions
+        if (prodIdx === -1) prodIdx = 4; // default as in template: 0:#,1:job,2:cust,3:ref,4:prod
+        if (qcIdx === -1) qcIdx = 6;   // default QC column index
+
+        var rows = table.querySelectorAll('tbody tr');
+        rows.forEach(function(row) {
+            var cells = row.querySelectorAll('td');
+            if (!cells || cells.length <= Math.max(prodIdx, qcIdx)) return;
+            var prodText = cells[prodIdx].innerText || '';
+            var qcText = cells[qcIdx].innerText || '';
+
+            // Normalize
+            prodText = prodText.trim().toLowerCase();
+            qcText = qcText.trim().toLowerCase();
+
+            // Conditions: production completed and QC pending (not passed/completed)
+            var prodReady = prodText.indexOf('completed') !== -1 || prodText.indexOf('ready') !== -1;
+            var qcPending = qcText.indexOf('pending') !== -1 || qcText === '' || qcText.indexOf('not started') !== -1;
+
+            if (prodReady && qcPending) {
+                // If a Start QC button isn't present, inject one
+                var existing = row.querySelector('.start-qc-btn');
+                if (!existing) {
+                    // Create button element
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn btn-warning start-qc-btn';
+                    btn.style.marginLeft = '8px';
+                    btn.innerText = 'START QC';
+
+                    // Attach click handler: open QC add page for this job (try find job number in row)
+                    btn.addEventListener('click', function() {
+                        // Try to extract job no from row (cell contains job link/text)
+                        var jobCell = row.querySelectorAll('td')[1];
+                        var jobNo = jobCell ? jobCell.innerText.trim() : '';
+                        if (!jobNo) {
+                            alert('Job number not found for this row.');
+                            return;
+                        }
+                        // Redirect to QC add page with job param (existing view handles get_job_details_for_qc via ajax or querystring)
+                        var url = '/SMS/pk_quality_check_add/?job_no=' + encodeURIComponent(jobNo);
+                        window.location.href = url;
+                    });
+
+                    // Insert into QC column cell (append so existing badges remain)
+                    cells[qcIdx].appendChild(btn);
                 }
             }
         });
-    });
+    } catch (e) {
+        console.error('Start QC enhancer error:', e);
+    }
 });
 </script>
 {% endblock %}

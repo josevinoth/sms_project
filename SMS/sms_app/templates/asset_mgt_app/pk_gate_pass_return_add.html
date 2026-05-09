@@ -3,91 +3,91 @@
 
 {% block content %}
 <div class="container-fluid py-4">
+    <!-- Progress Tracker -->
+    <div class="pms-tracker-wrapper mb-4">
+        {% include "asset_mgt_app/pms_progress_tracker.html" with current_step='gate_pass' tracker_flags=tracker_flags %}
+    </div>
+
     <!-- Page Header -->
-    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
-        <h2 class="mb-0 text-white" id="doc_title"><i class="fas fa-truck-moving mr-2"></i> Add/Update Gate Pass</h2>
-        <div style="position: relative; z-index: 10;">
-            <a href="{% url 'packing_gate_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6);">
+        <h2 class="mb-0 text-white" id="doc_title"><i class="fas fa-truck-moving mr-2"></i> Gate Pass Management</h2>
+        <div class="d-flex gap-2" style="position: relative; z-index: 10;">
+            {% if gate %}
+            <a href="{% url 'packing_gate_pdf' gate.id %}" class="btn-modern btn-submit py-2 px-4" style="background: #f59e0b; text-decoration: none;">
+                <i class="fas fa-file-pdf"></i> PRINT DOCUMENT
+            </a>
+            {% endif %}
+            <a href="{% url 'packing_gate_list' %}" class="btn-modern btn-cancel py-2 px-4" style="text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
                 <i class="fas fa-arrow-left"></i> BACK TO LIST
             </a>
         </div>
     </div>
 
-    <form method="POST" action="" id="packing_gatepass_return_add" enctype="multipart/form-data">
+    <form method="POST" action="" id="packing_gatepass_form" enctype="multipart/form-data">
         {% csrf_token %}
-        <input type="hidden" name="gp_assessment_num" id="gp_assessment_num">
+        <input type="hidden" name="gp_assessment_num" id="gp_assessment_num" value="{{ assessment_id }}">
         
         <div class="modern-card mb-4">
-            <!-- Section 1: Document & Customer Info -->
+            <!-- Section 1: Document & Core Info -->
             <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-file-invoice"></i> Basic Information</div>
+                <div class="form-section-title"><i class="fas fa-file-contract"></i> Document & Customer Details</div>
                 <div class="form-row-modern">
                     <div class="form-group-modern">
                         <label class="form-label-modern">Document Category</label>
-                        {% render_field form.gp_document_category id="gp_document_category" class="form-control form-control-modern font-weight-bold" style="border-left: 5px solid var(--primary-emerald);" %}
+                        {% render_field form.gp_document_category id="gp_document_category" class="form-control form-control-modern font-weight-bold" style="border-left: 5px solid #3b82f6;" %}
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">Customer Name</label>
                         {% render_field form.gp_customer_name id="gp_customer_name" class="form-control form-control-modern select2" %}
                     </div>
                     <div class="form-group-modern">
+                        <label class="form-label-modern">Job Number</label>
+                        {% render_field form.gp_job_no id="gp_job_no" class="form-control form-control-modern font-weight-bold" style="background-color: #f0f9ff; border-color: #bae6fd;" %}
+                    </div>
+                    <div class="form-group-modern">
                         <label class="form-label-modern">Packing Location</label>
                         {% render_field form.gp_packing_location id="gp_packing_location" class="form-control form-control-modern" %}
                     </div>
                     <div class="form-group-modern">
-                        <label class="form-label-modern">Job No</label>
-                        {% render_field form.gp_job_no id="gp_job_no" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
                         <label class="form-label-modern">Customer PO</label>
-                        {% render_field form.gp_customer_po id="gp_customer_po" class="form-control form-control-modern" %}
+                        {% render_field form.gp_customer_po id="gp_customer_po" class="form-control form-control-modern select2" %}
                     </div>
                 </div>
             </div>
 
-            <!-- Section 2: Reference & Taxation Details -->
+            <!-- Section 2: Financial & Reference Details -->
             <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-percentage"></i> Reference & GST Details</div>
+                <div class="form-section-title"><i class="fas fa-receipt"></i> Reference & GST Compliance</div>
                 <div class="form-row-modern">
                     <div class="form-group-modern">
-                        <label class="form-label-modern">Sales Order</label>
+                        <label class="form-label-modern">Sales Order Ref</label>
                         {% render_field form.gp_sales_order_po id="gp_sales_order_po" class="form-control form-control-modern" %}
                     </div>
                     <div class="form-group-modern">
-                        <label class="form-label-modern">GSTIN (General)</label>
+                        <label class="form-label-modern">General GSTIN</label>
                         {% render_field form.gp_customer_gstin id="gp_customer_gstin" class="form-control form-control-modern" %}
                     </div>
                     <div class="form-group-modern dc-field">
-                        <label class="form-label-modern">Bill To GSTIN</label>
+                        <label class="form-label-modern">Bill-To GSTIN</label>
                         {% render_field form.gp_customer_bill_to_gstin id="gp_customer_bill_to_gstin" class="form-control form-control-modern" %}
                     </div>
                     <div class="form-group-modern dc-field">
-                        <label class="form-label-modern">Ship To GSTIN</label>
+                        <label class="form-label-modern">Ship-To GSTIN</label>
                         {% render_field form.gp_customer_ship_to_gstin id="gp_customer_ship_to_gstin" class="form-control form-control-modern" %}
                     </div>
                     <div class="form-group-modern">
-                        <label class="form-label-modern">BVM Inv No</label>
+                        <label class="form-label-modern">BVM Invoice No</label>
                         {% render_field form.gp_bvm_inv_no id="gp_bvm_inv_no" class="form-control form-control-modern" %}
                     </div>
+                </div>
+                <div class="form-row-modern mt-3">
                     <div class="form-group-modern">
-                        <label class="form-label-modern">BVM Inv Value</label>
+                        <label class="form-label-modern">BVM Invoice Value</label>
                         {% render_field form.gp_bvm_inv_value id="gp_bvm_inv_value" class="form-control form-control-modern" %}
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">HSN Code</label>
                         {% render_field form.gp_hsn_code id="gp_hsn_code" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern dc-field">
-                        <label class="form-label-modern">Sales Order Ref</label>
-                        {% render_field form.gp_sales_order_ref id="gp_sales_order_ref" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern dc-field">
-                        <label class="form-label-modern">GRN Ref</label>
-                        {% render_field form.gp_grn_ref id="gp_grn_ref" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern dc-field">
-                        <label class="form-label-modern">Stock Register Ref</label>
-                        {% render_field form.gp_stock_register_ref id="gp_stock_register_ref" class="form-control form-control-modern" %}
                     </div>
                     <div class="form-group-modern dc-field">
                         <label class="form-label-modern">Returnable Status</label>
@@ -96,20 +96,26 @@
                 </div>
             </div>
 
-            <!-- Section 3: Staff & Transportation -->
+            <!-- Section 3: Staff & Logistics -->
             <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-shuttle-van"></i> Staff & Logistics</div>
+                <div class="form-section-title"><i class="fas fa-truck-loading"></i> Personnel & Logistics</div>
                 <div class="form-row-modern">
                     <div class="form-group-modern">
-                        <label class="form-label-modern">Staff Name</label>
-                        {% render_field form.gp_s_name id="gp_s_name" class="form-control form-control-modern" %}
+                        <label class="form-label-modern">Personnel / Staff Name</label>
+                        {% render_field form.gp_s_name id="gp_s_name" class="form-control form-control-modern select2" %}
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">Employee ID</label>
-                        {% render_field form.gp_employee id="gp_employee" class="form-control form-control-modern bg-light" readonly="readonly" %}
+                        {# Render explicit input to enforce consistent styling with other controls #}
+                        <input type="text" id="gp_employee" name="gp_employee" readonly
+                               class="form-control form-control-modern disable_a_href text-center"
+                               style="height:44px; padding:10px 12px;"
+                               value="{% if form.gp_employee.value %}{{ form.gp_employee.value }}{% elif gp_employee %}{{ gp_employee }}{% elif user_id %}{{ user_id }}{% else %}{% endif %}">
+                        <div id="js_message" class="small mt-1 font-weight-bold" style="min-height: 1.2rem;"></div>
                     </div>
+
                     <div class="form-group-modern">
-                        <label class="form-label-modern">Transporter</label>
+                        <label class="form-label-modern">Transporter Name</label>
                         {% render_field form.gp_transporter_name id="gp_transporter_name" class="form-control form-control-modern" %}
                     </div>
                     <div class="form-group-modern">
@@ -117,13 +123,13 @@
                         {% render_field form.gp_consignment_note_no id="gp_consignment_note_no" class="form-control form-control-modern" %}
                     </div>
                     <div class="form-group-modern">
-                        <label class="form-label-modern" id="date_label">Date</label>
+                        <label class="form-label-modern" id="date_label">Movement Date</label>
                         {% render_field form.gp_consignment_date id="gp_consignment_date" class="form-control form-control-modern" type="date" %}
                     </div>
                 </div>
                 <div class="form-row-modern mt-3">
                     <div class="form-group-modern">
-                        <label class="form-label-modern">Vehicle No</label>
+                        <label class="form-label-modern">Vehicle Number</label>
                         {% render_field form.gp_veh_no id="gp_veh_no" class="form-control form-control-modern" %}
                     </div>
                     <div class="form-group-modern">
@@ -131,53 +137,50 @@
                         {% render_field form.gp_veh_type id="gp_veh_type" class="form-control form-control-modern" %}
                     </div>
                     <div class="form-group-modern">
-                        <label class="form-label-modern">Eway Bill No</label>
+                        <label class="form-label-modern">E-Way Bill No</label>
                         {% render_field form.gp_eway_bill_no id="gp_eway_bill_no" class="form-control form-control-modern" %}
                     </div>
                     <div class="form-group-modern">
-                        <label class="form-label-modern">Driver Name</label>
-                        {% render_field form.gp_driver_name id="gp_driver_name" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Driver Mobile</label>
-                        {% render_field form.gp_driver_mobile_no id="gp_driver_mobile_no" class="form-control form-control-modern" %}
+                        <label class="form-label-modern">Driver Details</label>
+                        <div class="input-group">
+                            {% render_field form.gp_driver_name id="gp_driver_name" class="form-control form-control-modern" placeholder="Name" %}
+                            {% render_field form.gp_driver_mobile_no id="gp_driver_mobile_no" class="form-control form-control-modern" placeholder="Mobile" %}
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- On-Site Tools Selection -->
             <div id="tools_section" class="form-section" {% if pack_type != 'On-Site' %}style="display:none;"{% endif %}>
-                <div class="form-section-title text-warning"><i class="fas fa-tools"></i> Tools Management (On-Site Jobs)</div>
+                <div class="form-section-title text-warning"><i class="fas fa-toolbox"></i> Tools Inventory (On-Site Deployment)</div>
                 <div class="form-group-modern">
-                    <label class="form-label-modern">Selected Tools</label>
+                    <label class="form-label-modern">Assigned Tools</label>
                     {% render_field form.gp_tools id="gp_tools" class="form-control select2" multiple="multiple" %}
                 </div>
             </div>
 
             <!-- Remarks -->
             <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-comment-alt"></i> Additional Remarks</div>
-                {% render_field form.gp_remarks id="gp_remarks" class="form-control form-control-modern" rows="3" %}
+                <div class="form-section-title"><i class="fas fa-comment-dots"></i> Additional Documentation Remarks</div>
+                {% render_field form.gp_remarks id="gp_remarks" class="form-control form-control-modern" rows="3" placeholder="Enter any additional movement details here..." %}
             </div>
 
-            <!-- Messages Area -->
-            {% if messages %}
-            <div class="p-3">
+            <!-- Messages Area (Standard Django Messages) -->
+            <div class="px-3 text-center">
+                {% if messages %}
                 {% for message in messages %}
-                <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                <div class="alert alert-{% if message.tags == 'success' %}success{% else %}danger{% endif %} d-inline-block shadow-sm py-1 px-3">
+                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} mr-1"></i> {{ message }}
                 </div>
                 {% endfor %}
+                {% endif %}
             </div>
-            {% endif %}
+
 
             <!-- Action Buttons -->
             <div class="btn-group-modern mt-4">
                 <button type="submit" class="btn-modern btn-submit">
-                    <i class="fas fa-check"></i> SUBMIT DOCUMENT
+                    <i class="fas fa-save"></i> SAVE DOCUMENT
                 </button>
                 <a href="{% url 'packing_gate_list' %}" class="btn-modern btn-cancel">
                     <i class="fas fa-times"></i> CANCEL
@@ -186,148 +189,228 @@
         </div>
     </form>
 
-    <!-- Embedded Details -->
-    {% include "asset_mgt_app/pk_gate_pass_returnable_WOH.html" %}
+    <!-- Dispatch Breakdown Section -->
+    <div class="mt-5">
+        <div class="modern-header d-flex justify-content-between align-items-center mb-4" style="background: linear-gradient(135deg, #1e293b, #475569);">
+            <h4 class="mb-0 text-white"><i class="fas fa-boxes mr-2"></i> Financial Item Breakdown</h4>
+            <div class="badge badge-light px-3 py-2">{% if gatepassreturn_list %}{{ gatepassreturn_list|length }} Items{% else %}Detailed View{% endif %}</div>
+        </div>
+        
+        <div class="table-container-modern p-0" style="border: none; background: transparent; box-shadow: none;">
+            {% include "asset_mgt_app/pk_gate_pass_returnable_WOH.html" %}
+        </div>
+    </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    $(document).ready(function() {
-        // Initialize Select2 for Multi-select Tools
-        $('#gp_tools').select2({
-            placeholder: "--Select Tools--",
-            allowClear: true,
-            width: '100%'
-        });
+    console.log("Reworked Gate Pass Script Loading...");
+    $jq(document).ready(function() {
+        console.log("Gate Pass Script Ready");
+        $jq('#gp_remarks').val('Gate Pass Logic Active v3'); 
+        
+        // --- 1. Utility Functions ---
+        function showMessage(msg, type='info') {
+            const color = type === 'success' ? '#059669' : (type === 'error' ? '#dc2626' : '#2563eb');
+            $jq('#js_message').text(msg).css('color', color).fadeIn().delay(3000).fadeOut();
+        }
 
-        $('#gp_document_category').on('change', function () {
-            var category = $(this).val();
-            if (category === 'Delivery Challan') {
-                $('#doc_title').html('<i class="fas fa-file-invoice mr-2"></i> Add/Update Delivery Challan');
-                $('#date_label').text('Delivery Challan Date');
-                $('.dc-field').show();
-            } else {
-                $('#doc_title').html('<i class="fas fa-truck-moving mr-2"></i> Add/Update Gate Pass');
-                $('#date_label').text('Gate Pass Date');
-                $('.dc-field').hide();
-            }
-        });
+        // --- 2. Event Listeners ---
 
-        // Trigger change on load to set initial title
-        $('#gp_document_category').trigger('change');
-
-        // Track the initial customer to prevent clearing on load
-        var initial_customer = $('#gp_customer_name').val();
-
-        // Event for Customer Name Change -> Filter Jobs
-        $('#gp_customer_name').on('change', function() {
-            var customer_id = $(this).val();
+        // Staff Name -> Employee ID Lookup
+        // Aggressive event delegation for Select2
+        $jq(document).on('change select2:select select2:clearing', '#gp_s_name', function() {
+            var userID = $jq(this).val();
+            var $empField = $jq('#gp_employee');
             
-            // If it's the same as initial and we already have a job selected, don't clear
-            if (customer_id === initial_customer && $('#gp_job_no').val() !== "") {
-                return;
-            }
-
-            // Clear downstream fields
-            $("#gp_job_no").empty().append("<option value=''>--Select--</option>");
-            $("#gp_customer_po").empty().append("<option value=''>--Select--</option>");
-            $("#gp_sales_order_po").val("");
-            $("#gp_customer_gstin").val("");
-            $("#gp_assessment_num").val("");
-
-            if(customer_id) {
-                $.ajax({
-                    url: '{% url "gate_pass_get_jobs_by_customer" %}',
-                    data: {
-                        'customer_id': customer_id,
-                    },
-                    dataType: 'json',
-                    success: function(data) {
-                        $('#gp_customer_gstin').val(data.customer_gstin);
-                        
-                        var job_no_list = data.job_no_list;
-                        var len = job_no_list.length;
-                        for(var j = 0; j < len; j++) {
-                            $("#gp_job_no").append("<option value='" + job_no_list[j] + "'>" + job_no_list[j] + "</option>");
-                        }
-                    }
-                });
-            }
-        });
-
-        // Event for Job No Selection -> Pull PO and SO
-        $('#gp_job_no').on('change', function() {
-            var job_no = $(this).val();
-            var customer_id = $('#gp_customer_name').val();
+            console.log("Staff change detected. Value:", userID);
             
-            // Clear PO and SO
-            $("#gp_customer_po").empty().append("<option value=''>--Select--</option>");
-            $("#gp_sales_order_po").val("");
-            $("#gp_assessment_num").val("");
-
-            if(job_no && customer_id) {
-                $.ajax({
-                    url: '{% url "gate_pass_get_job_details" %}',
-                    data: {
-                        'job_no': job_no,
-                        'customer_id': customer_id
-                    },
-                    dataType: 'json',
-                    success: function(data) {
-                        // Populate PO List and select the correct one
-                        var po_list_id = data.po_list_id;
-                        var po_list_name = data.po_list_name;
-                        for(var i = 0; i < po_list_id.length; i++) {
-                            $("#gp_customer_po").append("<option value='" + po_list_id[i] + "'>" + po_list_name[i] + "</option>");
-                        }
-                        
-                        // Select the linked PO
-                        if(data.po_id) {
-                            $("#gp_customer_po").val(data.po_id);
-                        }
-                        
-                        // Auto-fill Sales Order
-                        $("#gp_sales_order_po").val(data.sales_order);
-                        
-                        // Hidden Assessment ID
-                        $("#gp_assessment_num").val(data.assessment_id);
-                        
-                        // Update Document Category and trigger title change
-                        $("#gp_document_category").val(data.document_category).trigger('change');
-                        
-                        // Toggle Tools Section based on Pack Type
-                        if(data.pack_type === 'On-Site') {
-                            $('#tools_section').show();
-                        } else {
-                            $('#tools_section').hide();
-                        }
-                    }
-                });
-            }
-        });
-
-        // Existing Staff Name logic
-        $('#gp_s_name').on('change', function() {
-            var userID = $(this).val();
             if(userID) {
-                $.ajax({
+                $empField.val('Fetching...').css('background-color', '#fff3cd');
+                $jq.ajax({
                     url: "{% url 'gate_return_employee_id' %}",
                     data: { 'id': userID },
                     success: function(data) {
-                        $('#gp_employee').val(data.employee);
+                        console.log("Response received:", data);
+                        $empField.css('background-color', '');
+                        if (data.employee) {
+                            $empField.val(data.employee);
+                            // Also try direct DOM set for stability
+                            document.getElementById('gp_employee').value = data.employee;
+                            showMessage("Employee ID loaded", "success");
+                        } else {
+                            $empField.val('Not Found');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error:", error);
+                        $empField.val('Error').css('background-color', '#f8d7da');
                     }
                 });
             } else {
-                $('#gp_employee').val('');
+                $empField.val('').css('background-color', '');
             }
         });
-        
-        // Trigger initial state
-        $('#gp_document_category').trigger('change');
-        
-        // If Job No is pre-populated from URL, trigger change to load PO and SO
-        if ($('#gp_job_no').val() !== "") {
-            $('#gp_job_no').trigger('change');
+
+        // Document Category Toggle
+        $jq(document).on('change', '#gp_document_category', function () {
+            var category = $jq(this).val();
+            if (category === 'Delivery Challan') {
+                $jq('#doc_title').html('<i class="fas fa-file-invoice mr-2"></i> Delivery Challan Management');
+                $jq('#date_label').text('Delivery Challan Date');
+                $jq('.dc-field').fadeIn();
+            } else {
+                $jq('#doc_title').html('<i class="fas fa-truck-moving mr-2"></i> Gate Pass Management');
+                $jq('#date_label').text('Gate Pass Date');
+                $jq('.dc-field').fadeOut();
+            }
+        });
+
+        // Customer Selection -> Job Filtering
+        $jq(document).on('change', '#gp_customer_name', function() {
+            var customer_id = $jq(this).val();
+            if(customer_id) {
+                $jq.ajax({
+                    url: '{% url "gate_pass_get_jobs_by_customer" %}',
+                    data: { 'customer_id': customer_id },
+                    success: function(data) {
+                        var gstin = (data.customer_gstin && data.customer_gstin !== "-") ? data.customer_gstin : "";
+                        $jq('#gp_customer_gstin').val(gstin);
+                        $jq('#gp_customer_bill_to_gstin').val(gstin);
+                        
+                        var $jobSelect = $jq("#gp_job_no");
+                        $jobSelect.empty().append("<option value=''>--Select Job--</option>");
+                        if(data.job_no_list) {
+                            data.job_no_list.forEach(job => {
+                                $jobSelect.append(new Option(job, job));
+                            });
+                        }
+                        showMessage("Jobs filtered for customer", "info");
+                    }
+                });
+            }
+        });
+
+        // Job Selection -> Auto-populate Details
+        $jq(document).on('change', '#gp_job_no', function() {
+            var job_no = $jq(this).val();
+            var customer_id = $jq('#gp_customer_name').val();
+            if(job_no && customer_id) {
+                $jq.ajax({
+                    url: '{% url "gate_pass_get_job_details" %}',
+                    data: { 'job_no': job_no, 'customer_id': customer_id },
+                    success: function(data) {
+                        var $poSelect = $jq("#gp_customer_po");
+                        $poSelect.empty().append("<option value=''>--Select PO--</option>");
+                        if(data.po_list_id) {
+                            for(var i=0; i<data.po_list_id.length; i++) {
+                                $poSelect.append(new Option(data.po_list_name[i], data.po_list_id[i]));
+                            }
+                        }
+                        if(data.po_id) $poSelect.val(data.po_id).trigger('change');
+                        
+                        $jq("#gp_sales_order_po").val(data.sales_order);
+                        $jq("#gp_assessment_num").val(data.assessment_id);
+                        
+                        var gstin = (data.customer_gstin && data.customer_gstin !== "-") ? data.customer_gstin : "";
+                        $jq("#gp_customer_gstin").val(gstin);
+                        $jq("#gp_customer_bill_to_gstin").val(gstin);
+                        $jq("#gp_bvm_inv_no").val(data.bvm_inv_no);
+                        $jq("#gp_hsn_code").val(data.hsn_code);
+                        
+                        if(data.document_category) $jq("#gp_document_category").val(data.document_category).trigger('change');
+                        
+                        if(data.pack_type === 'On-Site') $jq('#tools_section').slideDown();
+                        else $jq('#tools_section').slideUp();
+                        
+                        showMessage("Job details synchronized", "success");
+                    }
+                });
+            }
+        });
+
+        // --- 3. Initializations ---
+
+        // Select2 Enhancement
+        if ($jq.fn.select2) {
+            $jq('.select2').select2({ theme: 'bootstrap4', width: '100%' });
+            // Sync Select2 select event with standard change
+            $jq(document).on('select2:select', '.select2', function() {
+                $jq(this).trigger('change');
+            });
         }
+
+        // --- 4. Initial Triggers ---
+        $jq('#gp_document_category').trigger('change');
+
+        // Delayed check for pre-selected values
+        setTimeout(function() {
+            console.log("Running delayed triggers...");
+            if ($jq('#gp_s_name').val()) $jq('#gp_s_name').trigger('change');
+        }, 1000);
     });
 </script>
+<style>
+    /* Ensure readonly inputs visually match other inputs */
+    .disable_a_href[readonly], input[readonly].disable_a_href {
+        background-color: #ffffff !important;
+        border: 1px solid rgba(27,40,59,0.08) !important;
+        box-shadow: none !important;
+        color: #111827 !important;
+        height: 44px !important;
+        padding: 10px 12px !important;
+        border-radius: 8px !important;
+        line-height: 1.2 !important;
+    }
+     /* Premium Switch Design */
+     .pms-switch {
+         position: relative;
+         display: inline-block;
+         width: 60px;
+         height: 34px;
+         margin-right: 10px;
+     }
+
+     .pms-switch input {
+         opacity: 0;
+         width: 0;
+         height: 0;
+     }
+
+     .slider {
+         position: absolute;
+         cursor: pointer;
+         top: 0;
+         left: 0;
+         right: 0;
+         bottom: 0;
+         background-color: #ccc;
+         transition: .4s;
+         border-radius: 34px;
+     }
+
+     .slider:before {
+         position: absolute;
+         content: "";
+         height: 26px;
+         width: 26px;
+         left: 4px;
+         bottom: 4px;
+         background-color: white;
+         transition: .4s;
+         border-radius: 50%;
+     }
+
+     input:checked + .slider {
+         background-color: #4caf50;
+     }
+
+     input:checked + .slider:before {
+         transform: translateX(26px);
+     }
+
+     /* End Premium Switch Design */
+</style>
 {% endblock %}

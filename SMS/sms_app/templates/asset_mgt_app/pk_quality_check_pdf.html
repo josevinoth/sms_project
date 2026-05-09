@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    @page {
+        size: A4 portrait;
+        margin: 1.5cm;
+    }
+    body {
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: 10px;
+        color: #000;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    th, td {
+        border: 1px solid #000;
+        padding: 8px;
+        text-align: left;
+        vertical-align: top;
+    }
+    .bg-gray { background-color: #f2f2f2; }
+    .bg-blue { background-color: #d9e1f2; }
+    .text-center { text-align: center; }
+    .bold { font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div style="text-align: center;">
+    <h2 style="color: #4472c4;">QUALITY CHECK REPORT</h2>
+</div>
+
+<table>
+    <tr>
+        <td class="bg-blue" width="25%">Customer Name</td>
+        <td colspan="3" class="bold">{{ customer }}</td>
+    </tr>
+    <tr>
+        <td class="bg-blue">Purchase Order No</td>
+        <td width="25%">{{ po.po_num|default:"N/A" }}</td>
+        <td class="bg-blue" width="25%">PO Date</td>
+        <td width="25%">{{ po.po_date|date:"d-m-Y"|default:"N/A" }}</td>
+    </tr>
+    <tr>
+        <td class="bg-blue">Job Number</td>
+        <td class="bold">{{ qc_master.qc_job_no }}</td>
+        <td class="bg-blue">Indent No</td>
+        <td>{{ qc_master.qc_indent_no|default:"N/A" }}</td>
+    </tr>
+</table>
+
+<div class="bold" style="margin-bottom: 5px;">1. ITEM SPECIFICATIONS</div>
+<table>
+    <tr class="bg-gray">
+        <th width="5%">#</th>
+        <th width="35%">Item Code</th>
+        <th width="10%">L</th>
+        <th width="10%">W</th>
+        <th width="10%">H</th>
+        <th width="10%">Qty</th>
+        <th width="10%">Acc</th>
+        <th width="10%">Rej</th>
+    </tr>
+    {% for item in items_data %}
+    <tr>
+        <td class="text-center">{{ forloop.counter }}</td>
+        <td class="bold">{{ item.item_code }}</td>
+        <td class="text-center">{{ item.length }}</td>
+        <td class="text-center">{{ item.width }}</td>
+        <td class="text-center">{{ item.height }}</td>
+        <td class="text-center">{{ item.qty }}</td>
+        <td class="text-center bold">{{ item.q_item.qc_accepted_qty }}</td>
+        <td class="text-center bold">{{ item.q_item.qc_rejected_qty }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="bold" style="margin-bottom: 5px;">2. TECHNICAL CHECKLIST</div>
+<table>
+    <tr class="bg-gray">
+        <th width="30%">Inspection Parameter</th>
+        <th width="50%">Reference Requirement</th>
+        <th width="20%">Result</th>
+    </tr>
+    {% for item in items_data %}
+    <tr style="background-color: #e9eef6;">
+        <td colspan="3" class="bold">ITEM {{ forloop.counter }}: {{ item.item_code }}</td>
+    </tr>
+    <tr>
+        <td>Type of Work</td>
+        <td>{{ item.desc_type_of_work|default:'N/A' }}</td>
+        <td class="text-center bold">{% if item.q_item.check_type_of_work %}PASS{% else %}FAIL{% endif %}</td>
+    </tr>
+    <tr>
+        <td>Scope of work</td>
+        <td>{{ item.desc_scope_of_work|default:'N/A' }}</td>
+        <td class="text-center bold">{% if item.q_item.check_scope_of_work %}PASS{% else %}FAIL{% endif %}</td>
+    </tr>
+    <tr>
+        <td>Wood Treatment</td>
+        <td>{{ item.desc_wood_treatment|default:'N/A' }}</td>
+        <td class="text-center bold">{% if item.q_item.check_wood_treatment %}PASS{% else %}FAIL{% endif %}</td>
+    </tr>
+    <tr>
+        <td>Wood Norms</td>
+        <td>{{ item.desc_wood_norms|default:'N/A' }}</td>
+        <td class="text-center bold">{% if item.q_item.check_wood_norms %}PASS{% else %}FAIL{% endif %}</td>
+    </tr>
+    <tr>
+        <td>Lifting Specs</td>
+        <td>{{ item.desc_lifting|default:'N/A' }}</td>
+        <td class="text-center bold">{% if item.q_item.check_lifting %}PASS{% else %}FAIL{% endif %}</td>
+    </tr>
+    <tr>
+        <td>Requirement Type</td>
+        <td>{{ item.desc_req_type|default:'N/A' }}</td>
+        <td class="text-center bold">{% if item.q_item.check_req_type %}PASS{% else %}FAIL{% endif %}</td>
+    </tr>
+    <tr>
+        <td>Wood Type</td>
+        <td>{{ item.desc_wood_type|default:'N/A' }}</td>
+        <td class="text-center bold">{% if item.q_item.check_wood_type %}PASS{% else %}FAIL{% endif %}</td>
+    </tr>
+    <tr>
+        <td>Wood Description</td>
+        <td>{{ item.desc_wood_description|default:'N/A' }}</td>
+        <td class="text-center bold">{% if item.q_item.check_wood_description %}PASS{% else %}FAIL{% endif %}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="bold" style="margin-bottom: 5px;">3. FINAL AUDIT</div>
+<table style="width: 70%;">
+    <tr>
+        <td class="bg-blue" width="60%">Wood Twist Check</td>
+        <td class="text-center bold">{% if qc_master.qc_wood_twist %}OK{% else %}FAIL{% endif %}</td>
+    </tr>
+    <tr>
+        <td class="bg-blue">Seal Branding Check</td>
+        <td class="text-center bold">{% if qc_master.qc_seal %}OK{% else %}FAIL{% endif %}</td>
+    </tr>
+    <tr>
+        <td class="bg-blue">Cracks Check</td>
+        <td class="text-center bold">{% if qc_master.qc_cracks %}OK{% else %}FAIL{% endif %}</td>
+    </tr>
+    <tr>
+        <td class="bg-blue">Pasting Finishing Check</td>
+        <td class="text-center bold">{% if qc_master.qc_pasting %}OK{% else %}FAIL{% endif %}</td>
+    </tr>
+    <tr style="background-color: #4472c4; color: white;">
+        <td class="bold">OVERALL STATUS</td>
+        <td class="text-center bold">{{ qc_master.qc_status|upper }}</td>
+    </tr>
+</table>
+
+{% if qc_master.qc_remarks %}
+<div style="margin-top: 10px; padding: 10px; border: 1px solid #000;">
+    <strong>Remarks:</strong> {{ qc_master.qc_remarks }}
+</div>
+{% endif %}
+
+<div style="margin-top: 60px;">
+    <table style="border: none;">
+        <tr>
+            <td style="border: none; text-align: center; width: 33%;">
+                <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
+                QC INSPECTOR
+            </td>
+            <td style="border: none; text-align: center; width: 33%;">
+                <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
+                PRODUCTION HEAD
+            </td>
+            <td style="border: none; text-align: center; width: 33%;">
+                <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
+                CUSTOMER SIGN
+            </td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>
