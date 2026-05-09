@@ -191,7 +191,7 @@ from .sub_views.charge_master_view import charge_master_add,charge_master_delete
 from .sub_views.sale_enquiry_view import sale_enquiry_list, sale_enquiry_add, sale_enquiry_delete, get_customer_code, get_sale_details
 from .sub_views.invoice_documents_view import invoice_documents_list, invoice_documents_add
 from .sub_views.pk_production_dashboard_view import pk_production_dashboard, update_production_status
-from .sub_views.pk_quality_check_view import pk_quality_check_list, pk_quality_check_add, get_job_details_for_qc
+from .sub_views.pk_quality_check_view import pk_quality_check_list, pk_quality_check_add, get_job_details_for_qc, pk_quality_check_pdf
 from .sub_views.pk_tool_master_view import pk_tool_master_list, pk_tool_master_add, pk_tool_master_delete
 from .sub_views.privacy_policy_view import privacy_policy
 from .sub_views.deletion_log_view import deletion_log_list

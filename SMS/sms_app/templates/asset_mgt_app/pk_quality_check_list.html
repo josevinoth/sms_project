@@ -51,6 +51,9 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 {% if qc.qc_status == 'Passed' %}
+                                <a href="{% url 'pk_quality_check_pdf' qc.id %}" class="btn-modern py-1 px-3" style="font-size: 0.8rem; background: var(--accent-emerald); color: white; text-decoration: none;" title="Download PDF Report">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
                                 <a href="{% url 'packing_gate' %}?job_no={{ qc.qc_job_no }}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; background: var(--accent-blue); text-decoration: none;" title="Go to Gate Pass">
                                     <i class="fas fa-arrow-right"></i>
                                 </a>

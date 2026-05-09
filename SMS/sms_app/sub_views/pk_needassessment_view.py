@@ -16,7 +16,6 @@ from .general_utils import get_financial_year, generate_next_number, get_branch_
 def get_tracker_flags(na_id):
     """
     Return a dict of completed flags for each PMS stage.
-    A stage is 'done' (green) if its status FK has id == 5 (Completed).
     """
     flags = {
         'assessment_done': False,
@@ -24,33 +23,46 @@ def get_tracker_flags(na_id):
         'po_done': False,
         'costing_done': False,
         'acceptance_done': False,
+        'gate_pass_done': False,
     }
     if not na_id:
         return flags
-    try:
-        na = PkneedassessmentInfo.objects.get(pk=na_id)
+        
+    # 1. Assessment
+    na = PkneedassessmentInfo.objects.filter(pk=na_id).first()
+    if na:
         flags['assessment_done'] = bool(na.na_status and na.na_status.id == 5)
-    except PkneedassessmentInfo.DoesNotExist:
-        pass
 
+    # 2. Quotation
     qs = PkquotationsummaryInfo.objects.filter(qs_assessment_num=na_id).first()
     if qs:
         flags['quotation_done'] = bool(qs.qs_status and qs.qs_status.id == 5)
 
+    # 3. Purchase Order
     po = PkpurchaseorderInfo.objects.filter(po_assessment_num=na_id).first()
     if po:
         flags['po_done'] = bool(po.po_status and po.po_status.id == 5)
 
+    # 4. Costing
     cs = PkcostingsummaryInfo.objects.filter(cs_assessment_num=na_id).first()
     if cs:
         flags['costing_done'] = bool(cs.cs_status and cs.cs_status.id == 5)
+        
+    # 5. Acceptance (All costing items must be accepted, status id 5)
+    from ..models import PkcostingInfo
+    has_items = PkcostingInfo.objects.filter(ct_assessment_num=na_id).exists()
+    if has_items:
+        pending = PkcostingInfo.objects.filter(ct_assessment_num=na_id).exclude(ct_stock_status_id=5).exists()
+        flags['acceptance_done'] = not pending
+    else:
+        flags['acceptance_done'] = False
 
-    # Acceptance: all stock items (cost_type=8) are received (status=4)
-    stock_items = PkcostingInfo.objects.filter(ct_assessment_num=na_id, ct_cost_type=8)
-    if stock_items.exists() and all(i.ct_stock_status_id == 4 for i in stock_items):
-        flags['acceptance_done'] = True
+    # 6. Gate Pass / DC
+    from ..models import PackingGateReturn
+    flags['gate_pass_done'] = PackingGateReturn.objects.filter(gp_assessment_num=na_id).exists()
 
     return flags
+
 
 
 @login_required(login_url='login_page')

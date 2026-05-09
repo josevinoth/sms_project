@@ -24,6 +24,7 @@ urlpatterns = [
     path('pk_quality_check_list/', views.pk_quality_check_list, name='pk_quality_check_list'),
     path('pk_quality_check_add/', views.pk_quality_check_add, name='pk_quality_check_add'),
     path('get_job_details_for_qc/', views.get_job_details_for_qc, name='get_job_details_for_qc'),
+    path('pk_quality_check_pdf/<int:qc_id>/', views.pk_quality_check_pdf, name='pk_quality_check_pdf'),
     path('asset_insert', views.assetinfo_add, name='asset_insert'),  # Add Asset
     path('asset_update/<int:asset_id>/', views.assetinfo_add, name='asset_update'),  # Update asset
     path('asset_delete/<int:asset_id>/', views.asset_delete, name='asset_delete'),  # Delete asset

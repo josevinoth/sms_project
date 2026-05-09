@@ -100,6 +100,7 @@
             <th>Updated On</th>
             <th>Updated By</th>
             <th>Status</th>
+            <th>Edit</th>
 
         </tr>
         </thead>
@@ -182,7 +183,11 @@
             <td>{{ data.enquiry.en_updatedon }}</td>
             <td>{{ data.enquiry.en_updated_by }}</td>
             <td>{{ data.enquiry.en_status }}</td>
-
+<td>
+                <a class="btn btn-primary" href="{% url 'enquirynote_update' data.enquiry.id %}">
+                    <i class="far fa-edit"></i>
+                </a>
+            </td>
         </tr>
         {% endfor %}
         </tbody>

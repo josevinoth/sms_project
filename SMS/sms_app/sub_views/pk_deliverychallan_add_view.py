@@ -97,10 +97,19 @@ def delivery_challan_pdf(request, delivery_id):
     if not wh_location:
         wh_location = "BVM Chennai"
 
+    total_qty = sum(item.pod_quantity or 0 for item in challan_list)
+    total_base = sum(item.pod_base_value or 0 for item in challan_list)
+    total_gst = sum(item.pod_gst_amount or 0 for item in challan_list)
+    total_amount = sum(item.pod_total_value or 0 for item in challan_list)
+
     context = {
         'delivery': delivery,
         'challan_list': challan_list,
         'wh_location': wh_location,
+        'total_qty': total_qty,
+        'total_base': total_base,
+        'total_gst': total_gst,
+        'total_amount': total_amount,
     }
 
     file_name = f"Delivery_Challan_{delivery_id}.pdf"

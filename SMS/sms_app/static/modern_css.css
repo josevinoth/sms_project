@@ -115,10 +115,12 @@ body {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.form-section:hover {
+.form-section:hover,
+.form-section:focus-within {
     transform: translateY(-5px);
     box-shadow: 0 20px 40px var(--shadow-main);
     border-color: var(--accent-emerald);
+    z-index: 10;
 }
 
 .form-section-title {
@@ -173,10 +175,21 @@ body {
 }
 
 .form-control-modern:disabled, .form-control-modern[readonly] {
-    color: #000000 !important; /* Keep text black even for read-only fields */
+    background-color: #f8fafc !important; /* Soft slate bg */
+    color: #1e293b !important;
+    cursor: not-allowed;
+    border-style: dashed; /* Visual cue for read-only */
     opacity: 1 !important;
-    -webkit-text-fill-color: #000000 !important; /* Safari fix */
 }
+
+.modern-readonly {
+    background-color: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+    font-size: 1.1rem !important;
+    text-align: center; /* Center ID value */
+}
+
 
 .form-control-modern:focus {
     background: #fff7ed !important; /* Light orange tint on focus */
@@ -651,6 +664,7 @@ select.form-control-modern:focus {
     padding: 10px !important;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
     border: 1px solid var(--border-light) !important;
+    z-index: 9999 !important;
 }
 
 .multiselect-container .multiselect-option.active {
