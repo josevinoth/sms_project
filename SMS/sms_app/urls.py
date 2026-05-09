@@ -1101,6 +1101,7 @@ urlpatterns = [
     path('get_maintenance_records_by_vehicle/', views.get_maintenance_records_by_vehicle, name='get_maintenance_records_by_vehicle'),
     path('fuelfilling_export_excel/', views.fuelfilling_export_excel, name='fuelfilling_export_excel'),
     path('sale_enquiry_list/', views.sale_enquiry_list, name='sale_enquiry_list'),
+    path('mc_tours_calendar_events/', views.mc_tours_calendar_events, name='mc_tours_calendar_events'),
     path('sale_enquiry_add/', views.sale_enquiry_add, name='sale_enquiry_add'),
     path('sale_enquiry_update/<int:enquiry_id>/', views.sale_enquiry_add, name='sale_enquiry_update'),
     path('sale_enquiry_delete/<int:enquiry_id>/', views.sale_enquiry_delete, name='sale_enquiry_delete'),

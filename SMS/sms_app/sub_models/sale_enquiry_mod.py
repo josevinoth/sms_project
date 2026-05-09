@@ -1,7 +1,9 @@
 from django.db import models
 from ..models import (MyUser, Location_info, Enquiry_source, CustomerInfo, Whrequirementinfo,
                      Packreuqirementinfo, Toursrequirementinfo, Express_info, Trans_info, 
-                     Support_info, Shipment_type, Delivery_type, Travel_type)
+                     Support_info, Shipment_type, Delivery_type, Travel_type, OwnershipInfo)
+from .tour_type_mod import Tour_type
+from .transport_mode_mod import Transport_mode
 
 import os
 
@@ -21,7 +23,9 @@ class SaleEnquiry(models.Model):
     contact_no = models.CharField(max_length=20, default='', blank=True, null=True)
     mail = models.EmailField(max_length=100, default='', blank=True, null=True)
     address = models.TextField(default='', blank=True, null=True)
+    remarks = models.TextField(default='', blank=True, null=True)
     service_type = models.CharField(max_length=100, default='', blank=True, null=True)
+    sales_number = models.CharField(max_length=100, default='', blank=True, null=True)
 
     # Warehouse Fields
     wh_customer_type = models.ForeignKey(Whrequirementinfo, on_delete=models.CASCADE, null=True, blank=True)
@@ -77,12 +81,15 @@ class SaleEnquiry(models.Model):
 
     # MC Fields
     mc_customer_type = models.ForeignKey(Toursrequirementinfo, on_delete=models.CASCADE, null=True, blank=True)
+    mc_tour_type = models.ForeignKey(Tour_type, on_delete=models.CASCADE, null=True, blank=True)
     mc_travel_type = models.ForeignKey(Travel_type, on_delete=models.CASCADE, null=True, blank=True)
+    mc_mode_of_transport = models.ForeignKey(Transport_mode, on_delete=models.CASCADE, null=True, blank=True)
     mc_from = models.CharField(max_length=100, default='', blank=True, null=True)
     mc_to = models.CharField(max_length=100, default='', blank=True, null=True)
     mc_no_of_passengers = models.IntegerField(blank=True, null=True)
     mc_travel_date = models.DateField(blank=True, null=True)
     mc_return_date = models.DateField(blank=True, null=True)
+    mc_vehicle_source = models.ForeignKey(OwnershipInfo, on_delete=models.CASCADE, null=True, blank=True)
     mc_vehicle_type = models.CharField(max_length=100, default='', blank=True, null=True)
     mc_package_req = models.CharField(max_length=100, default='', blank=True, null=True)
     mc_hotel_req = models.CharField(max_length=100, default='', blank=True, null=True)
@@ -103,6 +110,12 @@ class SaleEnquiry(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+    @property
+    def effective_customer_name(self):
+        if self.customer_name:
+            return self.customer_name.cu_name
+        return self.new_customer_name or "-"
 
     @property
     def get_product_names(self):

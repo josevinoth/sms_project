@@ -253,6 +253,8 @@ from .sub_models.attached_bill_mod import AttachedBillInfo
 from .sub_models.trans_customer_claims_mod import TransCustomerClaimsInfo
 from .sub_models.charge_master_mod import ChargeMasterInfo
 from .sub_models.sale_enquiry_mod import SaleEnquiry
+from .sub_models.tour_type_mod import Tour_type
+from .sub_models.transport_mode_mod import Transport_mode
 from .sub_models.driver_salary_mod import DriverSalaryInfo
 from .sub_models.invoice_document_mod import InvoiceDocumentInfo
 from .sub_models.pk_quality_check_mod import PkQualityCheck, PkQualityCheckItem

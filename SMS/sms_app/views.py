@@ -188,7 +188,7 @@ from .sub_views.customer_login_view import customer_login, ajax_get_customer_dep
 from .sub_views.attached_bill_view import attached_bill_add, attached_bill_list, attached_bill_edit, attached_bill_delete, get_attached_vehicle_details, get_vehicles_by_vendor, attached_bill_upload, attached_bill_summary
 from .sub_views.trans_customer_claims_view import trans_customer_claims_add, trans_customer_claims_list, trans_customer_claims_delete, fetch_trip_details_by_cnote
 from .sub_views.charge_master_view import charge_master_add,charge_master_delete,charge_master_list
-from .sub_views.sale_enquiry_view import sale_enquiry_list, sale_enquiry_add, sale_enquiry_delete, get_customer_code, get_sale_details
+from .sub_views.sale_enquiry_view import sale_enquiry_list, sale_enquiry_add, sale_enquiry_delete, get_customer_code, get_sale_details, mc_tours_calendar_events
 from .sub_views.invoice_documents_view import invoice_documents_list, invoice_documents_add
 from .sub_views.pk_production_dashboard_view import pk_production_dashboard, update_production_status
 from .sub_views.pk_quality_check_view import pk_quality_check_list, pk_quality_check_add, get_job_details_for_qc, pk_quality_check_pdf
