@@ -96,7 +96,7 @@
                 <table style="width: 100%; border: none;">
                     <tr>
                         <td style="border: none; padding: 2px; color: #64748b;" class="bold">{{ gate.gp_document_category|upper|default:'DC' }} NO</td>
-                        <td style="border: none; padding: 2px;" class="bold">: {{ gate.gp_document_category|slice:":1"|upper }}P-{{ gate.id }}</td>
+                        <td style="border: none; padding: 2px;" class="bold">: {% if 'Challan' in gate.gp_document_category %}DC{% else %}GP{% endif %}-{{ gate.id }}</td>
                     </tr>
                     <tr>
                         <td style="border: none; padding: 2px; color: #64748b;" class="bold">{{ gate.gp_document_category|upper|default:'DC' }} DATE</td>
@@ -197,8 +197,8 @@
             <tr>
                 <td class="text-center" style="color: #64748b;">{{ forloop.counter }}</td>
                 <td class="bold">{{ item.pod_type_of_req|default:item.pod_item }}</td>
-                <td class="text-center">{{ item.pod_uom }}</td>
-                <td class="text-center bold">{{ item.pod_quantity }}</td>
+                <td class="text-center">{{ item.pod_uom|default:item.pod_nad.nad_uom|default:'---' }}</td>
+                <td class="text-center bold">{{ item.pod_quantity|default:item.pod_nad.nad_quantity|default:'0' }}</td>
                 
                 {% if gate.gp_document_category == 'Delivery Challan' %}
                     <td class="text-center">{{ gate.gp_hsn_code|default:'4415' }}</td>
