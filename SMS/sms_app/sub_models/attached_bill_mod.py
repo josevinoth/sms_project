@@ -34,6 +34,12 @@ class AttachedBillInfo(models.Model):
     ab_created_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True, blank=True, related_name='ab_created_by', db_column='ab_created_by')
     ab_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True, blank=True, related_name='ab_updated_by', db_column='ab_updated_by')
 
+    @property
+    def ab_total_buy_cost(self):
+        """Bill Amount - Extra KM Amount - Toll Cost"""
+        return (self.ab_bill_amount or 0) - (self.ab_extra_km_amount or 0) - (self.ab_toll_cost or 0)
+
+
     class Meta:
         ordering = ['-ab_created_at']
 

@@ -57,6 +57,20 @@ def to_crores(value):
 
 
 @register.filter
+def subtract(value, arg):
+    try:
+        return float(value or 0) - float(arg or 0)
+    except (ValueError, TypeError):
+        return 0
+
+@register.filter
+def multiply(value, arg):
+    try:
+        return float(value or 0) * float(arg or 0)
+    except (ValueError, TypeError):
+        return 0
+
+@register.filter
 def get_item(dictionary, key):
     if isinstance(dictionary, dict):  # Ensure it's a dictionary
         return dictionary.get(key, 0)

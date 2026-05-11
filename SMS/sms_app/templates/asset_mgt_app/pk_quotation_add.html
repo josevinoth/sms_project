@@ -28,8 +28,9 @@
                 </div>
                 {% endif %}
                 
-                <div class="modern-header">
-                    <h2><i class="fas fa-file-invoice-dollar"></i> Add/Update Quotation</h2>
+                <div class="modern-header d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0 text-white"><i class="fas fa-file-invoice-dollar mr-2"></i> Add/Update Quotation</h2>
+                    <a href="{% url 'pk_quotation_insert' %}" class="btn-modern btn-submit" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);"><i class="fas fa-plus"></i> New Item</a>
                 </div>
                 
                 <div class="modern-card">
@@ -388,10 +389,10 @@
             $('#pkqt_days').removeClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
             var quantity = parseInt(document.getElementById("pkqt_quantity_req").value) || 0;
-            var days = parseInt(document.getElementById("pkqt_days").value) || 0;
+            var days = parseInt(document.getElementById("pkqt_days").value) || 1; // Default to 1 to avoid 0 cost
             var totalCost = rate * days * quantity;
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
-            var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+            var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
             var totalboxCost = totalCost * na_quantity;
             document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
 
@@ -412,10 +413,13 @@
             var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
             document.getElementById("pkqt_total_cft_display").value = "{{ total_cft_display }}";
             var total_cft = parseFloat(document.getElementById("pkqt_total_cft_display").value) || 0;
+            var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
 
-            var totalCost = rate * total_cft;
+            // If total_cft is the project total, we divide by na_quantity to get unit cost per box
+            var unit_cft = total_cft / na_quantity;
+            var totalCost = rate * unit_cft;
+            
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
-            var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
             var totalboxCost = totalCost * na_quantity;
             document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
         }
@@ -444,7 +448,7 @@
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
             var totalCost = rate;
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
-            var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+            var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
             var totalboxCost = totalCost * na_quantity;
             document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
         }
