@@ -203,6 +203,15 @@ from .sub_models.gate_meeting_mod import Gatemeetinginfo
 from .sub_models.opsauditscorecard_mod import OpsauditscorecardInfo
 from .sub_models.ab_info_mod import ABInfo
 from .sub_models.performance_audit_mod import PerformanceauditInfo
+from .sub_models.enquiry_source_mod import Enquiry_source
+from .sub_models.express_info_mod import Express_info
+from .sub_models.trans_info_mod import Trans_info
+from .sub_models.support_info_mod import Support_info
+from .sub_models.shipment_type_mod import Shipment_type
+from .sub_models.delivery_type_mod import Delivery_type
+from .sub_models.travel_type_mod import Travel_type
+from .sub_models.sale_enquiry_mod import SaleEnquiry
+from .sub_models.quote_status_mod import Quote_status
 from .sub_models.salesmultipleitem_mod import SalesmultipleitemInfo
 from .sub_models.part_code_mod import PkpartcodeInfo
 from .sub_models.pkweightconvention_mod import Pkweightconvention
@@ -244,6 +253,8 @@ from .sub_models.attached_bill_mod import AttachedBillInfo
 from .sub_models.trans_customer_claims_mod import TransCustomerClaimsInfo
 from .sub_models.charge_master_mod import ChargeMasterInfo
 from .sub_models.sale_enquiry_mod import SaleEnquiry
+from .sub_models.tour_type_mod import Tour_type
+from .sub_models.transport_mode_mod import Transport_mode
 from .sub_models.driver_salary_mod import DriverSalaryInfo
 from .sub_models.invoice_document_mod import InvoiceDocumentInfo
 from .sub_models.pk_quality_check_mod import PkQualityCheck, PkQualityCheckItem

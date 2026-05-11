@@ -1,17 +1,15 @@
 from django.db import models
-from .my_user_mod import MyUser
-from .location_info_mod import Location_info
-from .enquiry_source_mod import Enquiry_source
-from .customer_mod import CustomerInfo
-from .wh_requirement_mod import Whrequirementinfo
-from .pack_requirement_mod import Packreuqirementinfo
-from .tours_requirement_mod import Toursrequirementinfo
-from .express_info_mod import Express_info
-from .trans_info_mod import Trans_info
-from .support_info_mod import Support_info
-from .shipment_type_mod import Shipment_type
-from .delivery_type_mod import Delivery_type
-from .travel_type_mod import Travel_type
+from ..models import (MyUser, Location_info, Enquiry_source, CustomerInfo, Whrequirementinfo,
+                     Packreuqirementinfo, Toursrequirementinfo, Express_info, Trans_info, 
+                     Support_info, Shipment_type, Delivery_type, Travel_type, OwnershipInfo)
+from .tour_type_mod import Tour_type
+from .transport_mode_mod import Transport_mode
+
+import os
+
+def sale_enquiry_path(instance, filename):
+    # This will upload to MEDIA_ROOT/SaleEnquiryAttachments/<enquiry_id>/<filename>
+    return os.path.join('SaleEnquiryAttachments', str(instance.enquiry_id), filename)
 
 class SaleEnquiry(models.Model):
     enquiry_id = models.CharField(max_length=100, default='', blank=True, null=True)
@@ -25,7 +23,9 @@ class SaleEnquiry(models.Model):
     contact_no = models.CharField(max_length=20, default='', blank=True, null=True)
     mail = models.EmailField(max_length=100, default='', blank=True, null=True)
     address = models.TextField(default='', blank=True, null=True)
+    remarks = models.TextField(default='', blank=True, null=True)
     service_type = models.CharField(max_length=100, default='', blank=True, null=True)
+    sales_number = models.CharField(max_length=100, default='', blank=True, null=True)
 
     # Warehouse Fields
     wh_customer_type = models.ForeignKey(Whrequirementinfo, on_delete=models.CASCADE, null=True, blank=True)
@@ -34,6 +34,7 @@ class SaleEnquiry(models.Model):
     wh_tonnage = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     wh_no_of_months_req = models.IntegerField(blank=True, null=True)
     wh_rfq_closed_date = models.DateField(blank=True, null=True)
+    wh_remarks = models.TextField(default='', blank=True, null=True)
 
     # Transport Fields
     tr_customer_type = models.ForeignKey(Trans_info, on_delete=models.CASCADE, null=True, blank=True)
@@ -42,6 +43,7 @@ class SaleEnquiry(models.Model):
     tr_from = models.CharField(max_length=100, default='', blank=True, null=True)
     tr_to = models.CharField(max_length=100, default='', blank=True, null=True)
     tr_rfq_closed_date = models.DateField(blank=True, null=True)
+    tr_remarks = models.TextField(default='', blank=True, null=True)
     tr_no_of_avg_trips_per_month = models.IntegerField(blank=True, null=True)
     tr_tonnage = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
@@ -52,6 +54,7 @@ class SaleEnquiry(models.Model):
     pa_transport_scope = models.CharField(max_length=100, default='', blank=True, null=True)
     pa_no_of_boxes_per_month = models.IntegerField(blank=True, null=True)
     pa_rfq_closed_date = models.DateField(blank=True, null=True)
+    pa_remarks = models.TextField(default='', blank=True, null=True)
 
     # Express Fields
     ex_customer_type = models.ForeignKey(Express_info, on_delete=models.CASCADE, null=True, blank=True)
@@ -64,6 +67,7 @@ class SaleEnquiry(models.Model):
     ex_avg_weight_per_shipment = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     ex_delivery_type = models.ForeignKey(Delivery_type, on_delete=models.CASCADE, null=True, blank=True)
     ex_rfq_closed_date = models.DateField(blank=True, null=True)
+    ex_remarks = models.TextField(default='', blank=True, null=True)
 
     # Support Fields
     su_customer_type = models.ForeignKey(Support_info, on_delete=models.CASCADE, null=True, blank=True)
@@ -73,19 +77,31 @@ class SaleEnquiry(models.Model):
     su_supervisors = models.IntegerField(blank=True, null=True)
     su_loaders = models.IntegerField(blank=True, null=True)
     su_rfq_closed_date = models.DateField(blank=True, null=True)
+    su_remarks = models.TextField(default='', blank=True, null=True)
 
     # MC Fields
     mc_customer_type = models.ForeignKey(Toursrequirementinfo, on_delete=models.CASCADE, null=True, blank=True)
+    mc_tour_type = models.ForeignKey(Tour_type, on_delete=models.CASCADE, null=True, blank=True)
     mc_travel_type = models.ForeignKey(Travel_type, on_delete=models.CASCADE, null=True, blank=True)
+    mc_mode_of_transport = models.ForeignKey(Transport_mode, on_delete=models.CASCADE, null=True, blank=True)
     mc_from = models.CharField(max_length=100, default='', blank=True, null=True)
     mc_to = models.CharField(max_length=100, default='', blank=True, null=True)
     mc_no_of_passengers = models.IntegerField(blank=True, null=True)
     mc_travel_date = models.DateField(blank=True, null=True)
     mc_return_date = models.DateField(blank=True, null=True)
+    mc_vehicle_source = models.ForeignKey(OwnershipInfo, on_delete=models.CASCADE, null=True, blank=True)
     mc_vehicle_type = models.CharField(max_length=100, default='', blank=True, null=True)
     mc_package_req = models.CharField(max_length=100, default='', blank=True, null=True)
     mc_hotel_req = models.CharField(max_length=100, default='', blank=True, null=True)
     mc_rfq_closed_date = models.DateField(blank=True, null=True)
+    mc_remarks = models.TextField(default='', blank=True, null=True)
+
+    wh_attachment = models.FileField(upload_to=sale_enquiry_path, null=True, blank=True)
+    tr_attachment = models.FileField(upload_to=sale_enquiry_path, null=True, blank=True)
+    pa_attachment = models.FileField(upload_to=sale_enquiry_path, null=True, blank=True)
+    ex_attachment = models.FileField(upload_to=sale_enquiry_path, null=True, blank=True)
+    su_attachment = models.FileField(upload_to=sale_enquiry_path, null=True, blank=True)
+    mc_attachment = models.FileField(upload_to=sale_enquiry_path, null=True, blank=True)
 
     created_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True, related_name='saleenquiry_created_by')
     updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True, related_name='saleenquiry_updated_by')
@@ -94,6 +110,12 @@ class SaleEnquiry(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+    @property
+    def effective_customer_name(self):
+        if self.customer_name:
+            return self.customer_name.cu_name
+        return self.new_customer_name or "-"
 
     @property
     def get_product_names(self):

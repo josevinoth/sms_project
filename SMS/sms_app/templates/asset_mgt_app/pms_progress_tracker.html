@@ -64,4 +64,16 @@
         </div>
         <div class="pms-step-label">Acceptance</div>
     </div>
+
+    <!-- Step 6: Gate Pass / DC -->
+    <div class="pms-step {% if tracker_flags.gate_pass_done %}completed{% endif %} {% if current_step == 'gate_pass' %}active{% endif %}">
+        <div class="pms-step-icon">
+            {% if tracker_flags.gate_pass_done %}
+            <i class="fas fa-check"></i>
+            {% else %}
+            <i class="fas fa-truck-moving"></i>
+            {% endif %}
+        </div>
+        <div class="pms-step-label">Gate Pass / DC</div>
+    </div>
 </div>

@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
 from ..forms import SaleEnquiryForm
-from ..models import SaleEnquiry, RoleInfo, User_extInfo
+from ..models import SaleEnquiry, RoleInfo, User_extInfo, SalesmultipleitemInfo
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 from ..sub_models.customer_mod import CustomerInfo
 
@@ -30,6 +30,13 @@ def sale_enquiry_list(request):
         sale_enquiry_query = sale_enquiry_query.filter(enquiry_date_time__date__lte=to_date)
 
     enquiry_list = sale_enquiry_query.order_by('-created_at')
+    
+    from ..models import SalesmultipleitemInfo
+    for enquiry in enquiry_list:
+        quotes = SalesmultipleitemInfo.objects.filter(sm_enquiry_num=enquiry)
+        enquiry.quote_count = quotes.count()
+        latest_quote = quotes.order_by('-sm_updated_at').first()
+        enquiry.latest_quote_status = latest_quote.sm_quote_status if latest_quote else '-'
 
     page_number = request.GET.get('page')
     paginator = Paginator(enquiry_list, 10000)
@@ -64,6 +71,13 @@ def sale_enquiry_add(request, enquiry_id=0):
             'enquiry_id': enquiry_id,
             'first_name': first_name,
         }
+        
+        if enquiry_id != 0:
+
+            context['Salesmultipleitem_list'] = SalesmultipleitemInfo.objects.filter(sm_enquiry_num=enquiry_id)
+        else:
+            context['Salesmultipleitem_list'] = []
+
         return render(request, "asset_mgt_app/sale_enquiry_add.html", context)
     else:
         if enquiry_id == 0:
@@ -117,7 +131,99 @@ def get_customer_code(request):
     if customer_id:
         try:
             customer = CustomerInfo.objects.get(pk=customer_id)
-            return JsonResponse({'status': 'success', 'customer_code': customer.cu_customercode})
+            
+            # Fetch the latest sales record for this customer to get the sales number
+            from ..models import SalesInfo
+            latest_sale = SalesInfo.objects.filter(s_customer_name=customer).order_by('-s_created_at').first()
+            sales_number = latest_sale.s_sale_number if latest_sale else ''
+            
+            # Prepare data to return
+            data = {
+                'status': 'success',
+                'customer_code': customer.cu_customercode,
+                'sales_number': sales_number,
+                'contact_person': customer.cu_customerperson,
+                'contact_no': customer.cu_contactno,
+                'mail': customer.cu_email,
+                'service_type': str(customer.cu_type) if customer.cu_type else '',
+                'address': customer.cu_address
+            }
+            return JsonResponse(data)
         except CustomerInfo.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Customer not found'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+def get_sale_details(request):
+    sale_number = request.GET.get('sale_number')
+    if sale_number:
+        try:
+            from ..models import SalesInfo
+            sale = SalesInfo.objects.filter(s_sale_number=sale_number).first()
+            if sale:
+                # If s_customer_new_name exists, it's a new customer scenario
+                is_new_customer = bool(sale.s_customer_new_name)
+                
+                data = {
+                    'status': 'success',
+                    'customer_id': '' if is_new_customer else (sale.s_customer_name.id if sale.s_customer_name else ''),
+                    'new_customer_name': sale.s_customer_new_name or '',
+                    'customer_code': sale.s_customer_code or (sale.s_customer_name.cu_customercode if sale.s_customer_name else ''),
+                    'contact_person': sale.s_Person_name or '',
+                    'contact_no': sale.s_contact_no or '',
+                    'mail': sale.s_email_id or '',
+                    'service_type': str(sale.s_industry_type) if sale.s_industry_type else '',
+                    'address': sale.s_customer_name.cu_address if sale.s_customer_name else ''
+                }
+                return JsonResponse(data)
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Sale number not found'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+
+@login_required(login_url='login_page')
+def mc_tours_calendar_events(request):
+    enquiries = SaleEnquiry.objects.filter(mc_customer_type__isnull=False)
+    events = []
+
+    # Keys are lowercase for case-insensitive matching
+    STATUS_CONFIG = {
+        'business won':  {'label': 'Business Won',  'bg': '#28a745', 'border': '#28a745'},
+        'in discussion': {'label': 'In Discussion', 'bg': '#fd7e14', 'border': '#fd7e14'},
+    }
+
+    for enq in enquiries:
+        latest_quote = SalesmultipleitemInfo.objects.filter(sm_enquiry_num=enq).order_by('-sm_updated_at').first()
+        if not latest_quote or not latest_quote.sm_quote_status:
+            continue
+
+        raw_status = latest_quote.sm_quote_status.quote_status
+        status_key = raw_status.strip().lower()
+        if status_key not in STATUS_CONFIG:
+            continue
+
+        if not enq.mc_travel_date:
+            continue
+
+        cust_name = enq.effective_customer_name
+        cfg = STATUS_CONFIG[status_key]
+        vehicle_source = str(enq.mc_vehicle_source) if enq.mc_vehicle_source else '-'
+        vehicle_type = enq.mc_vehicle_type or '-'
+        description = (
+            f"<b>[{cfg['label']}]</b><br>"
+            f"Customer: {cust_name}<br>"
+            f"Destination: {enq.mc_to or '-'}<br>"
+            f"Vehicle: {vehicle_source} / {vehicle_type}"
+        )
+        events.append({
+            'title': f"{enq.enquiry_id} - {cust_name}",
+            'start': enq.mc_travel_date.isoformat(),
+            'description': description,
+            'url': f"/SMS/sale_enquiry_update/{enq.id}",
+            'backgroundColor': cfg['bg'],
+            'borderColor': cfg['border'],
+            'textColor': '#fff'
+        })
+
+    return JsonResponse(events, safe=False)

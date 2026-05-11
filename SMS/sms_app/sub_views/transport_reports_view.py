@@ -417,17 +417,12 @@ def _duration_str(start, end, round_to_minute=True):
     hours, remainder = divmod(total_seconds, 3600)
     minutes = remainder // 60
     
-    res = ""
-    if hours > 0:
-        res = f"{hours} hrs {minutes} mins"
-    else:
-        res = f"{minutes} mins"
-        
+    res = f"{hours:02d}:{minutes:02d}"
     return f"-{res}" if is_neg else res
 
 
 TIME_ANALYSIS_HEADERS = [
-    "SNo", "Enquiry No", "Cnote No", "Customer Name", "Vehicle No",
+    "SNo", "Enquiry No", "Cnote No", "Customer Name", "Vehicle No", "Vehicle Type",
     "Enquiry Created Date & Time", "Pickup Date & Time",
     "Vehicle Allotted Date & Time", "Time Taken for Veh Allotment",
     "Cnote Created Date & Time", "Time Taken for Cnote Entry",
@@ -5996,8 +5991,9 @@ def time_analysis_report_view(request):
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_consignmentnumber',
+        'tr_vehicletype',
     ).only(
-        'tr_vehiclenumber', 'tr_created_at', 'tr_departeddate', 'tr_loading_time',
+        'tr_vehiclenumber', 'tr_vehicletype__vt_vehicletype', 'tr_created_at', 'tr_departeddate', 'tr_loading_time',
         'tr_dock_in_time', 'tr_dock_out_time', 'tr_reporteddate', 'tr_departeddate_delivery',
         'tr_unloading_time', 'tr_reporteddate_pickup', 'tr_departeddate_pickup',
         'tr_enquirynumber__en_enquirynumber', 'tr_enquirynumber__en_customername__cu_name',
@@ -6108,12 +6104,12 @@ def time_analysis_report_view(request):
         # 2. Time taken for allotment = allotted dt - enquiry created dt
         time_for_allotment = _duration_str(enquiry_created, veh_allotted_dt)
 
-        # 3. Time Taken for Cnote Entry = cnote created - enquiry created
-        time_for_cnote = _duration_str(enquiry_created, cnote_created)
+        # 3. Time Taken for Cnote Entry = cnote created - veh allotted dt
+        time_for_cnote = _duration_str(veh_allotted_dt, cnote_created)
 
-        # 4. Trip Sheet Entry Time
+        # 4. Trip Sheet Entry Time = trip created - veh allotted dt
         trip_created = trip.tr_created_at
-        time_for_trip = _duration_str(enquiry_created, trip_created)
+        time_for_trip = _duration_str(veh_allotted_dt, trip_created)
 
         # ---- LOADING POINT TIMINGS ----
         veh_reported_loading = trip.tr_departeddate_pickup
@@ -6137,6 +6133,7 @@ def time_analysis_report_view(request):
             cnote_no,
             customer_name,
             safe_str(trip.tr_vehiclenumber),
+            safe_str(trip.tr_vehicletype),
             _fmt_dt(enquiry_created),
             _fmt_dt(pickup_dt),
             _fmt_dt(veh_allotted_dt),

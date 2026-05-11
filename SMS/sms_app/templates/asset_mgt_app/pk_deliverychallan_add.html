@@ -132,6 +132,21 @@
 
 <script>
     $(document).ready(function() {
+        // Handle pre-filling from query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const assessmentId = urlParams.get('assessment_id');
+        const poId = urlParams.get('po_id');
+
+        if (assessmentId) {
+            $('#dc_assessment_num').val(assessmentId).trigger('change');
+            // We wait a bit for the PO dropdown to populate before setting the PO ID
+            if (poId) {
+                setTimeout(function() {
+                    $('#dc_customer_po').val(poId);
+                }, 800);
+            }
+        }
+
         $('#dc_assessment_num').on('change', function() {
             var dc_assessment_num = document.getElementById("dc_assessment_num").value;
             $.ajax({
@@ -155,6 +170,11 @@
                     }
                     $('#dc_customer_address').val(data.customer_address);
                     $('#dc_customer_gstin').val(data.customer_gstin);
+                    
+                    // If we were pre-filling PO ID, set it now if it was already populated
+                    if (poId) {
+                        $('#dc_customer_po').val(poId);
+                    }
                 }
             });
         });
