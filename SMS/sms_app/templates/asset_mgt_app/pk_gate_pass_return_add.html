@@ -9,7 +9,7 @@
     </div>
 
     <!-- Page Header -->
-    <div class="modern-header mb-4 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6);">
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
         <h2 class="mb-0 text-white" id="doc_title"><i class="fas fa-truck-moving mr-2"></i> Gate Pass Management</h2>
         <div class="d-flex gap-2" style="position: relative; z-index: 10;">
             {% if gate %}
@@ -34,7 +34,7 @@
                 <div class="form-row-modern">
                     <div class="form-group-modern">
                         <label class="form-label-modern">Document Category</label>
-                        {% render_field form.gp_document_category id="gp_document_category" class="form-control form-control-modern font-weight-bold" style="border-left: 5px solid #3b82f6;" %}
+                        {% render_field form.gp_document_category id="gp_document_category" class="form-control form-control-modern font-weight-bold" %}
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">Customer Name</label>
@@ -42,7 +42,7 @@
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">Job Number</label>
-                        {% render_field form.gp_job_no id="gp_job_no" class="form-control form-control-modern font-weight-bold" style="background-color: #f0f9ff; border-color: #bae6fd;" %}
+                        {% render_field form.gp_job_no id="gp_job_no" class="form-control form-control-modern font-weight-bold" %}
                     </div>
                     <div class="form-group-modern">
                         <label class="form-label-modern">Packing Location</label>
@@ -109,7 +109,6 @@
                         {# Render explicit input to enforce consistent styling with other controls #}
                         <input type="text" id="gp_employee" name="gp_employee" readonly
                                class="form-control form-control-modern disable_a_href text-center"
-                               style="height:44px; padding:10px 12px;"
                                value="{% if form.gp_employee.value %}{{ form.gp_employee.value }}{% elif gp_employee %}{{ gp_employee }}{% elif user_id %}{{ user_id }}{% else %}{% endif %}">
                         <div id="js_message" class="small mt-1 font-weight-bold" style="min-height: 1.2rem;"></div>
                     </div>
@@ -191,8 +190,9 @@
 
     <!-- Dispatch Breakdown Section -->
     <div class="mt-5">
-        <div class="modern-header d-flex justify-content-between align-items-center mb-4" style="background: linear-gradient(135deg, #1e293b, #475569);">
-            <h4 class="mb-0 text-white"><i class="fas fa-boxes mr-2"></i> Financial Item Breakdown</h4>
+        <div class="form-section-title mb-4" style="font-size: 1.4rem;">
+            <i class="fas fa-boxes mr-2"></i> Financial Item Breakdown
+        </div>
             <div class="badge badge-light px-3 py-2">{% if gatepassreturn_list %}{{ gatepassreturn_list|length }} Items{% else %}Detailed View{% endif %}</div>
         </div>
         
@@ -355,14 +355,9 @@
 <style>
     /* Ensure readonly inputs visually match other inputs */
     .disable_a_href[readonly], input[readonly].disable_a_href {
-        background-color: #ffffff !important;
-        border: 1px solid rgba(27,40,59,0.08) !important;
-        box-shadow: none !important;
-        color: #111827 !important;
-        height: 44px !important;
-        padding: 10px 12px !important;
-        border-radius: 8px !important;
-        line-height: 1.2 !important;
+        background-color: #f8fafc !important;
+        border: 1.5px dashed var(--input-border) !important;
+        color: var(--text-main) !important;
     }
      /* Premium Switch Design */
      .pms-switch {
