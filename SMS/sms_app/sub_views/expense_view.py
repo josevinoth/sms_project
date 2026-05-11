@@ -36,6 +36,7 @@ def expense_add(request, expense_id=0):
                 'first_name': first_name,
                 'user_id': user_id,
                 'expense_ext_list': expense_ext_list,
+                'parent_business': expense.exp_business.bvm_business if expense.exp_business else "",
             }
         return render(request, "asset_mgt_app/expense_add.html", context)
 
@@ -163,12 +164,16 @@ def expense_ext_add(request, expense_ext_id=0):
                 messages.error(request, 'Expense attachment not found.')
                 return redirect('/SMS/expense_ext_list')
 
+        expense_ext_list = ExpenseExtinfo.objects.filter(exp_ext_expense_number=expense_id)
+        parent_expense = ExpenseInfo.objects.get(pk=expense_id)
+
         context = {
             'form': form,
             'first_name': first_name,
             'user_id': user_id,
             'expense_id': expense_id,
             'expense_ext_list': expense_ext_list,
+            'parent_business': parent_expense.exp_business.bvm_business if parent_expense.exp_business else "",
         }
         return render(request, "asset_mgt_app/expense_ext_add.html", context)
 

@@ -259,4 +259,89 @@
 	}
 </script>
 
+<script>
+		function normalizeString(str) {
+			return str.toLowerCase().trim().replace(/\s+/g, ' ');
+		}
+
+		var bvmExpensesRaw = [
+			"GPRS Access & Service", "Insurance-Vehicles", "Vehicle-Hire", "Acting Driver", 
+			"CNG", "Diesel-Vehicle", "Driver Betta", "Extra Hrs", "Extra KM", "Halting", 
+			"Loading", "Parking", "Rates & Taxes", "Toll", "Transportation", "Unloading", 
+			"Vehicle Maintenance", "Weighment", "AMC", "Depreciation", "Internet & Data Card", 
+			"Rent-Plant & Machinery", "Software AMC", "CGST Ineligible ITC", "Conveyance Expenses", 
+			"Handling Expenses", "Hotel, Boarding & Lodging", "IGST Ineligible ITC", "Postage & Courier", 
+			"Printing & Stationery", "SGST Ineligible ITC", "Staff Welfare", "Supplies & General", 
+			"Telephone & Mobile", "Training", "Travelling", "Power and Fuel Expenses", "Bonus-Corp Staff", 
+			"EDLI Contribution-Corp Staff", "Employer Contribution to ESI-Corp Staff", 
+			"Employer Contribution to PF-Corp Staff", "EPF Admin-Corp Staff", "Ex-Gratia-Corp Staff", 
+			"Gratuity-Corp Staff", "Incentive-Corp Staff", "Insurance-Corp Staff", "LWF-Corp Staff", 
+			"Salaries & Wages-Corp Staff", "Bonus-Staff", "EDLI Contribution-Staff", 
+			"Employer Contribution to ESI-Staff", "Employer Contribution to PF-Staff", 
+			"EPF Admin-Staff", "Ex-Gratia-Staff", "Gratuity-Staff", "Incentive-Staff", 
+			"Insurance-Staff", "LWF-Staff", "Salaries & Wages-Staff", "Bonus-Drivers", 
+			"EDLI Contribution-Drivers", "Employer Contribution to ESI-Drivers", 
+			"Employer Contribution to PF-Drivers", "EPF Admin-Drivers", "Ex-Gratia-Drivers", 
+			"Gratuity-Drivers", "Incentive-Drivers", "Insurance-Drivers", "LWF-Drivers", 
+			"Salaries & Wages-Drivers", "Advertisement & Business Promotion", "Bank Charges", 
+			"Celebration", "Consultancy", "Directors Remuneration", "Interest On Statutory Dues", 
+			"Office Repairs & Maintenance", "Professional & Legal", "Rent-Furniture & Fittings", 
+			"Rent-Office", "Subscription & Membership", "Interest on Borrowings", "Interest on vehicle loan"
+		];
+		
+		var bvmExpenses = bvmExpensesRaw.map(normalizeString);
+
+		var allExpenseOptions = $('#exp_expense_type option').clone();
+
+		function filterExpenseTypes() {
+			var businessName = $('#exp_business option:selected').text().toLowerCase();
+			var currentVal = $('#exp_expense_type').val();
+			
+			$('#exp_expense_type').empty();
+			
+			if (businessName.includes('bvm trans')) {
+				allExpenseOptions.each(function() {
+					var rawOptText = $(this).text().trim().toLowerCase();
+					var optTextNorm = normalizeString(rawOptText);
+					
+					if (rawOptText === '---------' || rawOptText === '--select--' || rawOptText === '' || bvmExpenses.includes(optTextNorm)) {
+						$('#exp_expense_type').append($(this).clone());
+					}
+				});
+			} else {
+				$('#exp_expense_type').append(allExpenseOptions.clone());
+			}
+			
+			// Restore value if it still exists in the dropdown
+			if ($('#exp_expense_type option[value="' + currentVal + '"]').length > 0) {
+				$('#exp_expense_type').val(currentVal);
+			} else {
+				$('#exp_expense_type').val(''); // Or whatever the default empty value is
+			}
+		}
+
+		$('#exp_business').change(filterExpenseTypes);
+		
+		// Run once on load to filter if it's already selected
+		filterExpenseTypes();
+	});
+</script>
+<style>
+    .input-group-text {
+        width: 150px;
+        font-size: 13px;
+        white-space: normal;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 0.2rem 0.5rem;
+        background-color: #9fe9f0 !important;
+        color: #333;
+        font-weight: 600;
+        border: 1px solid #7ed2d9;
+        line-height: 1.2;
+    }
+</style>
+
 {% endblock content %}

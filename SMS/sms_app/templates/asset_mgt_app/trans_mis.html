@@ -1,0 +1,644 @@
+{% extends "asset_mgt_app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+{% load crispy_forms_tags %}
+{% load currency_format %}
+
+<div class="container-fluid d-flex align-items-center justify-content-between py-3">
+    <div>
+        <a href="{% url 'transport_reports' %}" class="btn btn-primary shadow-sm">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="flex-grow-1 d-flex justify-content-center">
+        <div class="mis-title-banner">
+            <h3>Transport MIS Report</h3>
+        </div>
+    </div>
+    <div style="width: 80px;"></div>
+</div>
+<br>
+
+<div class="container-fluid">
+    <div class="row align-items-center">
+        <div class="col-md-2">
+            <label for="branch-filter"><b>Branch:</b></label>
+            <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for branch in branches %}
+                <option value="{{ branch.loc_name }}" {% if branch.loc_name == selected_branch %} selected {% endif %}>
+                    {{ branch.loc_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="year"><b>Year:</b></label>
+            <select name="year" id="year" class="form-control box-shadow rounded">
+                {% for year in years %}
+                <option value="{{ year }}" {% if year == selected_year %} selected {% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="from-date"><b>From:</b></label>
+            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+        </div>
+
+        <div class="col-md-2">
+            <label for="to-date"><b>To:</b></label>
+            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
+        </div>
+
+        <div class="col-md-2">
+            <label for="vehicle-source"><b>Vehicle Source:</b></label>
+            <select id="vehicle-source" name="vehicle_source" class="form-control box-shadow rounded">
+                <option value="">All</option>
+                {% for source in vehicle_sources %}
+                <option value="{{ source.ow_ownership }}" {% if source.ow_ownership == selected_vehicle_source %} selected {% endif %}>
+                    {{ source.ow_ownership }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 mt-4 d-flex">
+            <button onclick="updateFilters()" class="btn btn-primary w-100">
+                <i class="fas fa-search"></i> Search
+            </button>
+            <button onclick="clearFilters()" class="btn btn-secondary w-100 ml-2">
+                <i class="fas fa-redo"></i> Clear
+            </button>
+        </div>
+    </div>
+</div>
+
+<br>
+<!-- Show Entries + Export Buttons (DataTables style) -->
+<div class="px-3 pb-2 d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center" style="gap: 6px;">
+        <label style="font-size:13px; margin-bottom:0;">Show</label>
+        <select id="page-size-select" onchange="changePageSize()" style="padding:3px 6px; border:1px solid #ccc; border-radius:3px; font-size:13px;">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="all">All</option>
+        </select>
+        <label style="font-size:13px; margin-bottom:0;">entries</label>
+        &nbsp;
+        <button onclick="copyTable()" class="dt-export-btn">Copy</button>
+        <button onclick="printTable()" class="dt-export-btn">Print</button>
+        <button onclick="exportCSV()" class="dt-export-btn">CSV</button>
+        <button onclick="exportExcel()" class="dt-export-btn">Excel</button>
+    </div>
+</div>
+
+<style>
+    .dt-export-btn {
+        background: #f8f9fa;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        padding: 5px 14px;
+        font-size: 13px;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        color: #333;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .dt-export-btn:hover {
+        background: #e9ecef;
+        border-color: #aaa;
+    }
+</style>
+
+<div class="table-responsive p-3" style="overflow-x: auto;">
+<table id="mis-table" class="table table-bordered" style="min-width: max-content;">
+    <thead>
+    <tr style="text-align:center;">
+        <th colspan="2" style="background-color: #343a40 !important;">Transport</th>
+        <th class="warehouse-budget-header" colspan="{{ months|length|add:1 }}">Budget</th>
+        <th class="warehouse-actuals-header" colspan="{{ months|length|add:1 }}">Actuals</th>
+        <th class="warehouse-budget-header" colspan="{{ months|length|add:1 }}">Variance</th>
+    </tr>
+    <tr>
+        <th colspan="2">Category</th>
+        {% for m_idx in months %}
+        <th>{{ month_names_display|get_item:m_idx }}</th>
+        {% endfor %}
+        <th>Total Budget</th>
+        {% for m_idx in months %}
+        <th>{{ month_names_display|get_item:m_idx }}</th>
+        {% endfor %}
+        <th>Total Actuals</th>
+        {% for m_idx in months %}
+        <th>{{ month_names_display|get_item:m_idx }}</th>
+        {% endfor %}
+        <th>Total Variance</th>
+    </tr>
+</thead>
+    <tbody>
+
+    <!-- INCOME SECTION -->
+    <tr class="category-row">
+        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">INCOME</td>
+    </tr>
+    {% for summary in income_summary %}
+    <tr class="{% if summary.is_total %}total{% endif %}">
+        <td colspan="2">{{ summary.expense_type }}</td>
+        {% for m_idx in months %}
+        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+    </tr>
+    {% endfor %}
+
+    <!-- OPERATIONAL FIXED SECTION -->
+    <tr class="category-row">
+        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">OPERATIONAL EXPENSES - FIXED</td>
+    </tr>
+    {% for summary in op_fixed_summary %}
+    <tr class="{% if summary.is_total %}total{% endif %}">
+        <td colspan="2">{{ summary.expense_type }}</td>
+        {% for m_idx in months %}
+        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+    </tr>
+    {% endfor %}
+
+    <!-- OPERATIONAL VARIABLE SECTION -->
+    <tr class="category-row">
+        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">OPERATIONAL EXPENSES - VARIABLE</td>
+    </tr>
+    {% for summary in op_variable_summary %}
+    <tr class="{% if summary.is_total %}total{% endif %}">
+        <td colspan="2">{{ summary.expense_type }}</td>
+        {% for m_idx in months %}
+        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+    </tr>
+    {% endfor %}
+
+    <!-- NON-OPERATIONAL FIXED SECTION -->
+    <tr class="category-row">
+        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">NON-OPERATIONAL EXPENSES - FIXED</td>
+    </tr>
+    {% for summary in non_op_fixed_summary %}
+    <tr class="{% if summary.is_total %}total{% endif %}">
+        <td colspan="2">{{ summary.expense_type }}</td>
+        {% for m_idx in months %}
+        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+    </tr>
+    {% endfor %}
+
+    <!-- NON-OPERATIONAL VARIABLE SECTION -->
+    <tr class="category-row">
+        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">NON-OPERATIONAL EXPENSES - VARIABLE</td>
+    </tr>
+    {% for summary in non_op_variable_summary %}
+    <tr class="{% if summary.is_total %}total{% endif %}">
+        <td colspan="2">{{ summary.expense_type }}</td>
+        {% for m_idx in months %}
+        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+    </tr>
+    {% endfor %}
+
+    <!-- EMPLOYEE BENEFITS SECTION -->
+    <tr class="category-row">
+        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">EMPLOYEE BENEFITS</td>
+    </tr>
+    {% for summary in employee_benefits_summary %}
+    <tr class="{% if summary.is_total %}total{% endif %}">
+        <td colspan="2">{{ summary.expense_type }}</td>
+        {% for m_idx in months %}
+        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+    </tr>
+    {% endfor %}
+
+    <!-- DEPARTMENT EXPENSES SECTION -->
+    <tr class="category-row">
+        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">DEPARTMENT EXPENSES</td>
+    </tr>
+    {% for summary in dept_expenses_summary %}
+    <tr class="{% if summary.is_total %}total{% endif %}">
+        <td colspan="2">{{ summary.expense_type }}</td>
+        {% for m_idx in months %}
+        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+    </tr>
+    {% endfor %}
+
+    <!-- INTEREST EXPENSES SECTION -->
+    <tr class="category-row">
+        <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">INTEREST EXPENSES</td>
+    </tr>
+    {% for summary in interest_summary %}
+    <tr class="{% if summary.is_total %}total{% endif %}">
+        <td colspan="2">{{ summary.expense_type }}</td>
+        {% for m_idx in months %}
+        <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="income-bg">{{ summary.total_budget|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="actuals-bg">{{ summary.monthly_expenses|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="actuals-bg">{{ summary.total_expense|floatformat:0 }}</td>
+        {% for m_idx in months %}
+        <td class="variance-bg">{{ summary.monthly_variance|get_item:m_idx|default:0|floatformat:0 }}</td>
+        {% endfor %}
+        <td class="variance-bg">{{ summary.total_variance|floatformat:0 }}</td>
+    </tr>
+    {% endfor %}
+
+    <!-- NET PROFIT SUMMARY -->
+    <tr style="background:#ffff1a;">
+        <td colspan="2"><strong>NET PROFIT/LOSS</strong></td>
+        {% for m_idx in months %}
+        <td><strong>{{ net_summary.monthly_budget|get_item:m_idx|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ net_summary.total_budget|floatformat:0 }}</strong></td>
+        {% for m_idx in months %}
+        <td><strong>{{ net_summary.monthly_actual|get_item:m_idx|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ net_summary.total_actual|floatformat:0 }}</strong></td>
+        {% for m_idx in months %}
+        <td><strong>{{ net_summary.monthly_variance|get_item:m_idx|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ net_summary.total_variance|floatformat:0 }}</strong></td>
+    </tr>
+    <!-- PROFIT % ROW -->
+    <tr style="background:#ccffcc;">
+        <td colspan="2"><strong>PROFIT %</strong></td>
+        <td colspan="{{ months|length|multiply:2|add:2 }}">&nbsp;</td> <!-- Skip Budget and Actual sections -->
+        {% for m_idx in months %}
+        <td><strong>{{ net_summary.monthly_pl_percentage|get_item:m_idx|floatformat:1 }}%</strong></td>
+        {% endfor %}
+        <td><strong>{{ net_summary.pl_percentage|floatformat:1 }}%</strong></td>
+    </tr>
+
+    </tbody>
+</table>
+</div>
+
+<!-- Pagination Footer -->
+<div class="px-3 pt-2 pb-3 d-flex align-items-center justify-content-between" style="font-size:13px;">
+    <div id="page-info" style="color:#555;">Showing 0 to 0 of 0 entries</div>
+    <div id="pagination-container" class="d-flex align-items-center" style="gap:3px;"></div>
+</div>
+
+<script>
+    // ---- Export Functions ----
+    function copyTable() {
+        const el = document.getElementById('mis-table');
+        // Build plain text from table
+        let text = '';
+        el.querySelectorAll('tr').forEach(row => {
+            const cells = Array.from(row.querySelectorAll('th,td')).map(c => c.innerText.trim());
+            text += cells.join('\t') + '\n';
+        });
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Table copied to clipboard!');
+            }).catch(() => {
+                prompt('Copy this text (Ctrl+C):', text);
+            });
+        } else {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            alert('Table copied to clipboard!');
+        }
+    }
+
+    function printTable() {
+        const css = `
+            <style>
+                body { font-family: Arial, sans-serif; font-size: 10px; }
+                table { border-collapse: collapse; width: 100%; }
+                th, td { border: 1px solid #999; padding: 4px 6px; text-align: center; }
+                thead th { background-color: #343a40 !important; color: white !important; -webkit-print-color-adjust: exact; }
+                .income-bg { background-color: #C6E0B4 !important; -webkit-print-color-adjust: exact; }
+                .actuals-bg { background-color: #F4B084 !important; -webkit-print-color-adjust: exact; }
+                .variance-bg { background-color: #B4C6E7 !important; -webkit-print-color-adjust: exact; }
+                .category-row { background-color: #8faadc !important; -webkit-print-color-adjust: exact; }
+            </style>`;
+        const html = '<html><head><title>Transport MIS Report</title>' + css + '</head><body>' +
+                     '<h3 style="text-align:center;">Transport MIS Report</h3>' +
+                     document.getElementById('mis-table').outerHTML + '</body></html>';
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+        iframe.contentDocument.write(html);
+        iframe.contentDocument.close();
+        setTimeout(() => {
+            iframe.contentWindow.print();
+            document.body.removeChild(iframe);
+        }, 500);
+    }
+
+    function exportCSV() {
+        const rows = document.querySelectorAll('#mis-table tr');
+        let csv = [];
+        rows.forEach(row => {
+            const cols = row.querySelectorAll('th, td');
+            const rowData = Array.from(cols).map(col => '"' + col.innerText.trim().replace(/"/g, '""') + '"');
+            csv.push(rowData.join(','));
+        });
+        const blob = new Blob(['\ufeff' + csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'transport_mis.csv';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => document.body.removeChild(a), 100);
+    }
+
+    function exportExcel() {
+        const table = document.getElementById('mis-table');
+        const html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">' +
+                     '<head><meta charset="UTF-8"></head><body>' + table.outerHTML + '</body></html>';
+        const blob = new Blob(['\ufeff', html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'transport_mis.xls';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => document.body.removeChild(a), 100);
+    }
+
+    // ---- Pagination Logic ----
+    let currentPage = 1;
+    let pageSize = 10;
+
+    function getDataRows() {
+        // All tbody rows that are NOT category/section headers
+        return Array.from(document.querySelectorAll('#mis-table tbody tr')).filter(
+            r => !r.classList.contains('category-row') && !r.style.cssText.includes('background:#ffff1a') && !r.style.cssText.includes('background:#ccffcc')
+        );
+    }
+
+    function getAllTbodyRows() {
+        return Array.from(document.querySelectorAll('#mis-table tbody tr'));
+    }
+
+    function renderPage() {
+        const dataRows = getDataRows();
+        const allRows = getAllTbodyRows();
+        const total = dataRows.length;
+
+        const start = pageSize === 'all' ? 0 : (currentPage - 1) * pageSize;
+        const end   = pageSize === 'all' ? total : Math.min(start + pageSize, total);
+
+        // Hide all data rows
+        dataRows.forEach(r => r.style.display = 'none');
+        // Show rows in current page range
+        dataRows.slice(start, end).forEach(r => r.style.display = '');
+
+        // Show section header (category-row) only if at least one sibling data row is visible
+        let categoryRow = null;
+        let hasVisible = false;
+        allRows.forEach(row => {
+            if (row.classList.contains('category-row')) {
+                if (categoryRow) categoryRow.style.display = hasVisible ? '' : 'none';
+                categoryRow = row;
+                hasVisible = false;
+            } else {
+                if (row.style.display !== 'none') hasVisible = true;
+            }
+        });
+        // Handle last category
+        if (categoryRow) categoryRow.style.display = hasVisible ? '' : 'none';
+
+        // Always show summary rows (profit/loss and profit %)
+        allRows.forEach(row => {
+            if (row.style.cssText.includes('background:#ffff1a') ||
+                row.style.cssText.includes('background:#ccffcc')) {
+                row.style.display = '';
+            }
+        });
+
+        // Update info text
+        const actualEnd = Math.min(end, total);
+        document.getElementById('page-info').textContent =
+            total === 0
+            ? 'No entries found'
+            : `Showing ${start + 1} to ${actualEnd} of ${total} entries`;
+
+        renderPagination(total);
+    }
+
+    function renderPagination(total) {
+        const totalPages = pageSize === 'all' ? 1 : Math.ceil(total / pageSize);
+        const container = document.getElementById('pagination-container');
+        container.innerHTML = '';
+        if (totalPages <= 1) return;
+
+        // Previous
+        const prev = document.createElement('button');
+        prev.textContent = 'Previous';
+        prev.className = 'dt-export-btn';
+        prev.style.opacity = currentPage === 1 ? '0.5' : '1';
+        prev.onclick = () => { if (currentPage > 1) { currentPage--; renderPage(); } };
+        container.appendChild(prev);
+
+        // Page numbers (show max 7 pages with ellipsis)
+        const maxButtons = 7;
+        let pages = [];
+        if (totalPages <= maxButtons) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages = [1];
+            if (currentPage > 3) pages.push('...');
+            for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) pages.push(i);
+            if (currentPage < totalPages - 2) pages.push('...');
+            pages.push(totalPages);
+        }
+
+        pages.forEach(p => {
+            if (p === '...') {
+                const span = document.createElement('span');
+                span.textContent = '...';
+                span.style.padding = '5px 8px';
+                container.appendChild(span);
+            } else {
+                const btn = document.createElement('button');
+                btn.textContent = p;
+                btn.className = 'dt-export-btn';
+                if (p === currentPage) {
+                    btn.style.background = '#343a40';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#343a40';
+                }
+                btn.onclick = () => { currentPage = p; renderPage(); };
+                container.appendChild(btn);
+            }
+        });
+
+        // Next
+        const next = document.createElement('button');
+        next.textContent = 'Next';
+        next.className = 'dt-export-btn';
+        next.style.opacity = currentPage === totalPages ? '0.5' : '1';
+        next.onclick = () => { if (currentPage < totalPages) { currentPage++; renderPage(); } };
+        container.appendChild(next);
+    }
+
+    function changePageSize() {
+        const sel = document.getElementById('page-size-select');
+        pageSize = sel.value === 'all' ? 'all' : parseInt(sel.value);
+        currentPage = 1;
+        renderPage();
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        renderPage();
+    });
+
+    // ---- Filter Functions ----
+    function updateFilters() {
+        const branch = document.getElementById('branch-filter').value;
+        const year = document.getElementById('year').value;
+        const fromDate = document.getElementById('from-date').value;
+        const toDate = document.getElementById('to-date').value;
+        const vehicleSource = document.getElementById('vehicle-source').value;
+        const url = new URL(window.location.origin + window.location.pathname);
+
+        if (branch) url.searchParams.set('branch', branch);
+        if (year) url.searchParams.set('year', year);
+        if (fromDate) url.searchParams.set('from_date', fromDate);
+        if (toDate) url.searchParams.set('to_date', toDate);
+        if (vehicleSource) url.searchParams.set('vehicle_source', vehicleSource);
+
+        window.location.href = url.toString();
+    }
+
+    function clearFilters() {
+        const currentYear = new Date().getFullYear();
+        window.location.href = window.location.pathname + "?year=" + currentYear;
+    }
+</script>
+
+
+
+<style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: white;
+    }
+    thead th {
+        background-color: #343a40 !important;
+        color: white !important;
+        border: 1px solid #454d55 !important;
+        padding: 10px !important;
+        vertical-align: middle !important;
+    }
+    .warehouse-budget-header { background-color: #343a40 !important; color: white !important; }
+    .warehouse-actuals-header { background-color: #343a40 !important; color: white !important; }
+    .income-bg { background-color: #C6E0B4 !important; font-weight: bold; }
+    .actuals-bg { background-color: #F4B084 !important; font-weight: bold; }
+    .variance-bg { background-color: #B4C6E7 !important; font-weight: bold; }
+    .category-row {
+        background-color: #8faadc !important;
+        color: black;
+        font-weight: bold;
+    }
+    .total-row { background-color: #c6e0b4 !important; font-weight: bold; }
+    .mis-title-banner {
+        background: linear-gradient(135deg, #d9534f 0%, #c9302c 100%);
+        color: white;
+        padding: 10px 40px;
+        border-radius: 5px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        display: inline-block;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .box-shadow { box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .dt-buttons .dt-button {
+        background: white !important;
+        border: 1px solid #ccc !important;
+        border-radius: 4px !important;
+        padding: 5px 15px !important;
+        margin-right: 5px !important;
+    }
+</style>
+
+
+{% endblock content %}
