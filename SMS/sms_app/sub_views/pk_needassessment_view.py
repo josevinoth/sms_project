@@ -7,7 +7,14 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 
 from ..forms import PkneedassessmentForm,NadimensionForm
-from ..models import  PkquotationsummaryInfo,PkquotationInfo,POdimension,Natypeofreq,Unitofmeasure,Naconsumables,VehicletypeInfo,Pkstocktype,Pkwooddescription,Nadimensiontype,PkpurchaseorderInfo,PkcostingsummaryInfo,PkcostingInfo,commentsInfo,User_extInfo,PkneedassessmentInfo,Nadimension
+from ..models import (
+    PkquotationsummaryInfo, PkquotationInfo, POdimension, Natypeofreq, Unitofmeasure, 
+    Naconsumables, VehicletypeInfo, Pkstocktype, Pkwooddescription, Nadimensiontype, 
+    PkpurchaseorderInfo, PkcostingsummaryInfo, PkcostingInfo, commentsInfo, User_extInfo, 
+    PkneedassessmentInfo, Nadimension, Natypeofwork, Packreuqirementinfo, 
+    Nawoodtreatmentreq, Nabvmcustomer, Nawoodnorms, Natypeofaccess, Naplywoodthickness, 
+    Natypeofplywood, Natypeofwood
+)
 from django.shortcuts import render, redirect, get_object_or_404
 from random import randint
 from django.contrib import messages
@@ -424,20 +431,51 @@ def need_assessment_print_pdf(request, assessment_id):
 
         today = datetime.now().strftime("%d-%b-%Y")
 
+        # Fetch all options for categories to render as checkboxes/options in PDF
+        type_of_work_list = Natypeofwork.objects.all()
+        type_of_packing_list = Packreuqirementinfo.objects.all()
+        type_of_req_list = Natypeofreq.objects.all()
+        wood_treatment_list = Nawoodtreatmentreq.objects.all()
+        unloading_options = Nabvmcustomer.objects.all()
+        wood_norms_list = Nawoodnorms.objects.all()
+        type_of_access_list = Natypeofaccess.objects.all()
+        
+        # Plywood thickness and type (if models exist)
+        ply_thickness_list = Naplywoodthickness.objects.all() if 'Naplywoodthickness' in globals() else []
+        ply_type_list = Natypeofplywood.objects.all() if 'Natypeofplywood' in globals() else []
+        wood_type_list = Natypeofwood.objects.all() if 'Natypeofwood' in globals() else []
+
+        import os
+        from django.conf import settings
+        logo_path = os.path.join(settings.BASE_DIR, 'bvm_icon_full.png')
+
         context = {
             "need_assessment": need_assessment,
             "dimensions": dimensions,
             "today_date": today,
+            "logo_path": logo_path,
+            "type_of_work_list": type_of_work_list,
+            "type_of_packing_list": type_of_packing_list,
+            "type_of_req_list": type_of_req_list,
+            "wood_treatment_list": wood_treatment_list,
+            "unloading_options": unloading_options,
+            "wood_norms_list": wood_norms_list,
+            "type_of_access_list": type_of_access_list,
+            "ply_thickness_list": ply_thickness_list,
+            "ply_type_list": ply_type_list,
+            "wood_type_list": wood_type_list,
         }
 
         file_name = f"NeedAssessment_{need_assessment.na_assessment_num}.pdf"
-        template_path = 'asset_mgt_app/need_assessment_print.html'  # customize
+        template_path = 'asset_mgt_app/need_assessment_pdf.html'  # Use new template
 
         template = get_template(template_path)
         html = template.render(context)
 
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+        
+        # Create PDF
         pisa_status = pisa.CreatePDF(html, dest=response)
 
         if pisa_status.err:

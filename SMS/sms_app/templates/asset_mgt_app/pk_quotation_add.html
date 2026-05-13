@@ -3,246 +3,318 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<div class="container-fluid py-4">
-    <!-- Progress Tracker -->
-    <div class="pms-tracker-wrapper mb-4">
+<style>
+    /* Compact Styles for One-Page Layout */
+    .container-fluid { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+    .modern-header { padding: 0.8rem 1.5rem !important; border-radius: 12px 12px 0 0 !important; }
+    .modern-header h2 { font-size: 1.4rem !important; }
+    .modern-card { padding: 1rem !important; border-radius: 0 0 15px 15px !important; }
+    .form-section { padding: 0.8rem !important; margin-bottom: 0.8rem !important; border-radius: 12px !important; }
+    .form-section-title { margin-bottom: 1rem !important; font-size: 0.85rem !important; gap: 8px !important; }
+    .form-label-modern { font-size: 0.75rem !important; margin-bottom: 0.4rem !important; letter-spacing: 0.5px !important; }
+    .form-control-modern { height: 38px !important; padding: 0.5rem 0.8rem !important; font-size: 0.9rem !important; border-radius: 8px !important; }
+    .select2-container--default .select2-selection--single { height: 38px !important; border-radius: 8px !important; }
+    .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 34px !important; font-size: 0.9rem !important; }
+    .btn-modern { padding: 0.6rem 1.2rem !important; font-size: 0.95rem !important; border-radius: 10px !important; }
+    .form-row-modern { display: flex; flex-direction: column; gap: 0.8rem; }
+    .input-group-append .btn { padding: 0 0.8rem !important; height: 38px !important; }
+    
+    /* Grid Adjustments */
+    .col-compact { padding: 0 5px !important; }
+    .row-compact { margin: 0 -5px !important; }
+    
+    /* Calculator Card Overrides */
+    .pms-sticky-calculation { position: static !important; height: auto !important; padding: 0 !important; overflow: visible !important; }
+    .pms-sticky-calculation .modern-card { border-radius: 12px !important; border-top: 3px solid var(--accent-orange) !important; padding: 1rem !important; }
+    
+    /* List & Search Sections */
+    .section-divider { border-top: 2px dashed var(--border-light); margin: 2rem 0; position: relative; }
+    .section-divider span { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--bg-page); padding: 0 15px; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
+</style>
+
+<div class="container-fluid">
+    <!-- Progress Tracker (Optional: could be moved to top or made smaller) -->
+    <div class="pms-tracker-wrapper mb-3">
         {% include "asset_mgt_app/pms_progress_tracker.html" with current_step="quotation" %}
     </div>
 
-    <div class="row">
-        <div class="col-12 col-lg-9">
-            <form method="POST" action="" id="quotation_add" data-stock_description-url="{% url 'load_stock_description' %}">
-                {% csrf_token %}
+    <form method="POST" action="" id="quotation_add" data-stock_description-url="{% url 'load_stock_description' %}">
+        {% csrf_token %}
+        
+        <div class="modern-header d-flex justify-content-between align-items-center">
+            <h2 class="mb-0 text-white"><i class="fas fa-file-invoice-dollar mr-2"></i> Quotation Management</h2>
+            <div class="d-flex gap-2">
+                <a href="{% url 'pk_quotation_insert' %}" class="btn-modern btn-submit py-1 px-3" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); font-size: 0.8rem;"><i class="fas fa-plus"></i> New</a>
+            </div>
+        </div>
+        
+        <div class="modern-card">
+            {% if form.errors %}
+            <div class="alert alert-danger p-2 mb-3" style="border-radius: 8px; font-size: 0.85rem;">
+                <ul class="mb-0">
+                    {% for field, errors in form.errors.items %}
+                        <li>{{ field|title }}: {{ errors|join:", " }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
 
-                {% if form.errors %}
-                <div class="alert alert-danger shadow-sm border-0 mb-4" style="border-radius: 1rem; background: rgba(220, 53, 69, 0.1); border-left: 5px solid #dc3545 !important;">
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="fas fa-exclamation-circle text-danger mr-2" style="font-size: 1.2rem;"></i>
-                        <h6 class="mb-0 text-danger font-weight-bold">Please correct the following errors:</h6>
-                    </div>
-                    <ul class="mb-0 pl-4 text-danger small">
-                        {% for field, errors in form.errors.items %}
-                            <li><strong>{{ field|title }}:</strong> {{ errors|join:", " }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-                
-                <div class="modern-header d-flex justify-content-between align-items-center">
-                    <h2 class="mb-0 text-white"><i class="fas fa-file-invoice-dollar mr-2"></i> Add/Update Quotation</h2>
-                    <a href="{% url 'pk_quotation_insert' %}" class="btn-modern btn-submit" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);"><i class="fas fa-plus"></i> New Item</a>
-                </div>
-                
-                <div class="modern-card">
-                    <!-- Section 1: Basic Information -->
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-id-card"></i> Basic Information</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Assessment Number</label>
-                                {% render_field form.pkqt_assessment_num id="pkqt_assessment_num" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Customer Name</label>
-                                {% render_field form.pkqt_customer_name id="pkqt_customer_name" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">New Customer Name</label>
-                                {% render_field form.pkqt_customer_new_name2 id="pkqt_customer_new_name2" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Cost Type</label>
-                                {% render_field form.pkqt_cost_type id="pkqt_cost_type" onchange="onChangeHandler()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Job Type</label>
-                                {% render_field form.pkqt_requirement id="pkqt_requirement" onchange="pk_store_na_dimension_id()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Job Type Quantity</label>
-                                {% render_field form.pkqt_na_quantity id="pkqt_na_quantity" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Requirement Name & Size</label>
-                                {% render_field form.pkqt_requirement_size id="pkqt_requirement_size" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section 2: Part & Stock Information -->
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-barcode"></i> Part & Stock Information</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Part Code</label>
-                                <div class="input-group">
-                                    {% render_field form.pkqt_part_code id="pkqt_part_code" onchange="fetchPartCodeDetails()" class="form-control form-control-modern select2" %}
-                                    <div class="input-group-append">
-                                        <button class="btn btn-warning" type="button" id="show_stock_summary" title="View Stock Summary">
-                                            <i class="fas fa-warehouse"></i>
-                                        </button>
+            <div class="row row-compact">
+                <!-- Grouping Columns 1-3 to control button placement and spacing -->
+                <div class="col-12 col-xl-9">
+                    <div class="row row-compact">
+                        <!-- Column 1: Basic & Stock Info -->
+                        <div class="col-12 col-md-4 col-compact">
+                            <div class="form-section">
+                                <div class="form-section-title"><i class="fas fa-id-card"></i> Basic Info</div>
+                                <div class="form-row-modern">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Assessment #</label>
+                                        {% render_field form.pkqt_assessment_num id="pkqt_assessment_num" class="form-control form-control-modern disable_a_href" %}
+                                    </div>
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Customer</label>
+                                        {% render_field form.pkqt_customer_name id="pkqt_customer_name" class="form-control form-control-modern disable_a_href" %}
+                                    </div>
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">New Customer</label>
+                                        {% render_field form.pkqt_customer_new_name2 id="pkqt_customer_new_name2" class="form-control form-control-modern disable_a_href" %}
+                                    </div>
+                                    <div class="row no-gutters">
+                                        <div class="col-6 pr-1">
+                                            <div class="form-group-modern">
+                                                <label class="form-label-modern">Cost Type</label>
+                                                {% render_field form.pkqt_cost_type id="pkqt_cost_type" onchange="onChangeHandler()" class="form-control form-control-modern" %}
+                                            </div>
+                                        </div>
+                                        <div class="col-6 pl-1">
+                                            <div class="form-group-modern">
+                                                <label class="form-label-modern">Job Qty</label>
+                                                {% render_field form.pkqt_na_quantity id="pkqt_na_quantity" class="form-control form-control-modern disable_a_href" %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Job Type</label>
+                                        {% render_field form.pkqt_requirement id="pkqt_requirement" onchange="pk_store_na_dimension_id()" class="form-control form-control-modern disable_a_href" %}
+                                    </div>
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Req. Name & Size</label>
+                                        {% render_field form.pkqt_requirement_size id="pkqt_requirement_size" class="form-control form-control-modern disable_a_href" %}
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Stock Type</label>
-                                {% render_field form.pkqt_stock_type id="pkqt_stock_type" onchange="toggleFields()" class="form-control form-control-modern disable_a_href" %}
+
+                            <div class="form-section stock-info-box" style="border-left: 4px solid var(--accent-orange);">
+                                <div class="form-section-title" style="color: var(--accent-orange);"><i class="fas fa-warehouse"></i> Stock Status</div>
+                                <div class="form-row-modern">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Stock Purchase #</label>
+                                        {% render_field form.pkqt_stock_purchase_number id="pkqt_stock_purchase_number" class="form-control form-control-modern disable_a_href" %}
+                                    </div>
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Available Qty</label>
+                                        {% render_field form.pkqt_quantity id="pkqt_quantity" class="form-control form-control-modern disable_a_href" %}
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Stock Description</label>
-                                {% render_field form.pkqt_stock_description id="pkqt_stock_description" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+
+                        <!-- Column 2: Part & Item Details -->
+                        <div class="col-12 col-md-4 col-compact">
+                            <div class="form-section">
+                                <div class="form-section-title"><i class="fas fa-barcode"></i> Part & Item</div>
+                                <div class="form-row-modern">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Part Code</label>
+                                        {% render_field form.pkqt_part_code id="pkqt_part_code" onchange="fetchPartCodeDetails()" class="form-control form-control-modern select2" %}
+                                    </div>
+                                    <div class="row no-gutters">
+                                        <div class="col-6 pr-1">
+                                            <div class="form-group-modern">
+                                                <label class="form-label-modern">Stock Type</label>
+                                                {% render_field form.pkqt_stock_type id="pkqt_stock_type" onchange="toggleFields()" class="form-control form-control-modern disable_a_href" %}
+                                            </div>
+                                        </div>
+                                        <div class="col-6 pl-1">
+                                            <div class="form-group-modern">
+                                                <label class="form-label-modern">Stock Desc</label>
+                                                {% render_field form.pkqt_stock_description id="pkqt_stock_description" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Item Name</label>
+                                        {% render_field form.pkqt_item id="pkqt_item" onchange="changeItemDescription()" class="form-control form-control-modern disable_a_href" %}
+                                    </div>
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Item Description</label>
+                                        {% render_field form.pkqt_itemdescription id="pkqt_itemdescription" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                                    </div>
+                                    <div class="row no-gutters">
+                                        <div class="col-4 pr-1">
+                                            <div class="form-group-modern" id="length_group">
+                                                <label class="form-label-modern">L (ft)</label>
+                                                {% render_field form.pkqt_length_req id="pkqt_length_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                                            </div>
+                                        </div>
+                                        <div class="col-4 px-1">
+                                            <div class="form-group-modern" id="width_group">
+                                                <label class="form-label-modern">W (in/ft)</label>
+                                                {% render_field form.pkqt_width_req id="pkqt_width_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                                            </div>
+                                        </div>
+                                        <div class="col-4 pl-1">
+                                            <div class="form-group-modern" id="height_group">
+                                                <label class="form-label-modern">H (in/mm)</label>
+                                                {% render_field form.pkqt_height_req id="pkqt_height_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row no-gutters">
+                                        <div class="col-6 pr-1">
+                                            <div class="form-group-modern" id="uom_group">
+                                                <label class="form-label-modern">UOM</label>
+                                                {% render_field form.pkqt_uom id="pkqt_uom" class="form-control form-control-modern disable_a_href" %}
+                                            </div>
+                                        </div>
+                                        <div class="col-6 pl-1">
+                                            <div class="form-group-modern" id="diameter_width_group">
+                                                <label class="form-label-modern">Dia/Width</label>
+                                                {% render_field form.pkqt_size id="pkqt_size" class="form-control form-control-modern disable_a_href" %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button id="search_wood" type="button" class="btn-modern btn-highlight w-100 mt-2">
+                                        <i class="fas fa-search"></i> Search Item
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Column 3: Calculation & Cost -->
+                        <div class="col-12 col-md-4 col-compact">
+                            <div class="form-section">
+                                <div class="form-section-title"><i class="fas fa-calculator"></i> Calculations</div>
+                                <div class="form-row-modern">
+                                    <div class="row no-gutters">
+                                        <div class="col-6 pr-1">
+                                            <div class="form-group-modern">
+                                                <label class="form-label-modern">Purch. UOM</label>
+                                                {% render_field form.pkqt_weight_received id="pkqt_weight_received" class="form-control form-control-modern disable_a_href" %}
+                                            </div>
+                                        </div>
+                                        <div class="col-6 pl-1">
+                                            <div class="form-group-modern">
+                                                <label class="form-label-modern">Cons. UOM</label>
+                                                {% render_field form.pkqt_weight_Consumption id="pkqt_weight_Consumption" class="form-control form-control-modern disable_a_href" %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row no-gutters">
+                                        <div class="col-6 pr-1">
+                                            <div class="form-group-modern">
+                                                <label class="form-label-modern">Qty Req</label>
+                                                {% render_field form.pkqt_quantity_req id="pkqt_quantity_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                                            </div>
+                                        </div>
+                                        <div class="col-6 pl-1">
+                                            <div class="form-group-modern">
+                                                <label class="form-label-modern">Req Value</label>
+                                                {% render_field form.pkqt_sqrt_req id="pkqt_sqrt_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row no-gutters">
+                                        <div class="col-6 pr-1">
+                                            <div class="form-group-modern">
+                                                <label class="form-label-modern">Conversion</label>
+                                                {% render_field form.pkqt_weight_sqft id="pkqt_weight_sqft" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                                            </div>
+                                        </div>
+                                        <div class="col-6 pl-1">
+                                            <div class="form-group-modern" id="total_cft">
+                                                <label class="form-label-modern">Total CFT</label>
+                                                {% render_field form.pkqt_total_cft_display id="pkqt_total_cft_display" value=total_cft_display onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Days/Hours</label>
+                                        {% render_field form.pkqt_days id="pkqt_days" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section" style="border-left: 4px solid var(--accent-emerald);">
+                                <div class="form-section-title" style="color: var(--accent-emerald);"><i class="fas fa-coins"></i> Cost Information</div>
+                                <div class="form-row-modern">
+                                    <div class="row no-gutters">
+                                        <div class="col-6 pr-1">
+                                            <div class="form-group-modern">
+                                                <label class="form-label-modern">Rate / Unit</label>
+                                                {% render_field form.pkqt_rate id="pkqt_rate" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                                            </div>
+                                        </div>
+                                        <div class="col-6 pl-1">
+                                            <div class="form-group-modern">
+                                                <label class="form-label-modern">Unit Cost</label>
+                                                {% render_field form.pkqt_total_cost id="pkqt_total_cost" readonly="True" class="form-control form-control-modern disable_a_href" %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Total Req (CFT/SQFT)</label>
+                                        <span id="pkqt_cft_sqft_req" class="form-control form-control-modern disable_a_href text-center" style="min-height: 38px; display: flex; align-items: center; justify-content: center; font-size: 1rem;"></span>
+                                    </div>
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Total Cost (INR)</label>
+                                        {% render_field form.pkqt_totalbox_cost id="pkqt_totalbox_cost" readonly="True" class="form-control form-control-modern disable_a_href" style="font-size: 1.2rem !important; color: var(--accent-emerald) !important; text-align: center;" %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Section 3: Item Details -->
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-cube"></i> Item Details</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Item Name</label>
-                                {% render_field form.pkqt_item id="pkqt_item" onchange="changeItemDescription()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Item Description</label>
-                                {% render_field form.pkqt_itemdescription id="pkqt_itemdescription" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern" id="height_group">
-                                <label class="form-label-modern">Height Req (in/mm) <i class="fas fa-info-circle" data-toggle="tooltip" title="For Wood inch. For Plywood mm"></i></label>
-                                {% render_field form.pkqt_height_req id="pkqt_height_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern" id="width_group">
-                                <label class="form-label-modern">Width Req (in/ft) <i class="fas fa-info-circle" data-toggle="tooltip" title="For Wood inch. For Plywood ft"></i></label>
-                                {% render_field form.pkqt_width_req id="pkqt_width_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern" id="length_group">
-                                <label class="form-label-modern">Length Req (ft)</label>
-                                {% render_field form.pkqt_length_req id="pkqt_length_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern" id="uom_group">
-                                <label class="form-label-modern">UOM</label>
-                                {% render_field form.pkqt_uom id="pkqt_uom" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern" id="diameter_width_group">
-                                <label class="form-label-modern">Diameter/Width</label>
-                                {% render_field form.pkqt_size id="pkqt_size" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern d-flex align-items-end">
-                                <button id="search_wood" type="button" class="btn-modern btn-highlight w-100" style="justify-content: center;">
-                                    <i class="fas fa-search"></i> Search Item
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section 4: Calculation Details -->
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-calculator"></i> Calculation Details</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">UOM-Purchased Type</label>
-                                {% render_field form.pkqt_weight_received id="pkqt_weight_received" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Quantity Req</label>
-                                {% render_field form.pkqt_quantity_req id="pkqt_quantity_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Required Value <i class="fas fa-info-circle" data-toggle="tooltip" title="For wood CFT. For Consumables, Plywood SQFT"></i></label>
-                                {% render_field form.pkqt_sqrt_req id="pkqt_sqrt_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern" id="total_cft">
-                                <label class="form-label-modern">Total CFT</label>
-                                {% render_field form.pkqt_total_cft_display id="pkqt_total_cft_display" value=total_cft_display onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">UOM-Consumption Type</label>
-                                {% render_field form.pkqt_weight_Consumption id="pkqt_weight_Consumption" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Conversion Value</label>
-                                {% render_field form.pkqt_weight_sqft id="pkqt_weight_sqft" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Days/Hours</label>
-                                {% render_field form.pkqt_days id="pkqt_days" onchange="change_cost_type()" class="form-control form-control-modern" %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section 5: Stock Information -->
-                    <div class="form-section stock-info-box">
-                        <div class="form-section-title" style="color: #856404; border-color: #ffeeba;"><i class="fas fa-warehouse"></i> Stock Information</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Stock Purchase Number</label>
-                                {% render_field form.pkqt_stock_purchase_number id="pkqt_stock_purchase_number" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Available Quantity</label>
-                                {% render_field form.pkqt_quantity id="pkqt_quantity" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section 6: Cost Information -->
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-coins"></i> Cost Information</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Rate / (Qty/CFT/SQFT)</label>
-                                {% render_field form.pkqt_rate id="pkqt_rate" onchange="change_cost_type()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Unit Cost (INR)</label>
-                                {% render_field form.pkqt_total_cost id="pkqt_total_cost" readonly="True" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Total CFT/SQFT Required</label>
-                                <span id="pkqt_cft_sqft_req" class="form-control form-control-modern disable_a_href" style="min-height: 44px; display: flex; align-items: center;"></span>
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Total Cost (INR)</label>
-                                {% render_field form.pkqt_totalbox_cost id="pkqt_totalbox_cost" readonly="True" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <input type="hidden" id="hidden_pc_stock_description">
-                    {% render_field form.pkqt_updated_by id="pkqt_updated_by" hidden="True" %}
-
-                    <!-- Message Area -->
-                    <div class="message-container my-3">
-                        {% for message in messages %}
-                        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} shadow-sm">
-                            <i class="fas fa-info-circle"></i> {{ message }}
-                        </div>
-                        {% endfor %}
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="btn-group-modern">
-                        <button type="submit" class="btn-modern btn-submit">
-                            <i class="fas fa-check"></i> Submit Quotation
+                    <!-- Action Buttons Tucked Tight Under Columns 1-3 -->
+                    <div class="d-flex justify-content-between align-items-center mt-1">
+                        <button type="submit" class="btn-modern btn-submit px-4">
+                            <i class="fas fa-check mr-2"></i> Submit Quotation
                         </button>
-                        <a href="{% url 'pk_quotation_cancel' %}" class="btn-modern btn-cancel">
-                            <i class="fas fa-times"></i> Cancel
+                        <a href="{% url 'pk_quotation_cancel' %}" class="btn-modern btn-cancel px-4">
+                            <i class="fas fa-times mr-2"></i> Cancel
                         </a>
                     </div>
                 </div>
-            </form>
+
+                <!-- Column 4: Calculator (Placed as sibling to Col 1-3 group) -->
+                <div class="col-12 col-xl-3 col-compact">
+                    {% include "asset_mgt_app/calculation_card.html" %}
+                </div>
+            </div>
+
+            <input type="hidden" id="hidden_pc_stock_description">
+            {% render_field form.pkqt_updated_by id="pkqt_updated_by" hidden="True" %}
         </div>
-        
-        <div class="col-12 col-lg-3">
-            {% include "asset_mgt_app/calculation_card.html" %}
+    </form>
+
+    <!-- Message Area -->
+    <div class="message-container my-2">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 shadow-sm" style="font-size: 0.85rem;">
+            <i class="fas fa-info-circle"></i> {{ message }}
         </div>
+        {% endfor %}
     </div>
 
-    <div id="pk_item_search_page_costing" class="mt-4">
+    <!-- Collapsible Sections for List and Search to save space -->
+    <div class="section-divider"><span>Related Data</span></div>
+    
+    <div id="pk_item_search_page_costing" class="mt-2">
         {% include "asset_mgt_app/pk_item_search_page_costing.html" %}
     </div>
 
-    <div class="mt-4">
+    <div class="mt-2">
         {% include "asset_mgt_app/pk_quotation_list_WOH.html" %}
     </div>
 </div>
