@@ -502,9 +502,21 @@
 		}
 		else if (window.location.href.includes("tripdetail_update")) {
 			// Enable fields
-			$('#tripdetail_id,#tripdetail_submit_id')
-				.removeClass('disable_a_href')
-				.prop('disabled', false);
+			$('#tripdetail_id, #tripdetail_submit_id, #tr_consignmentnumber, #tr_vehiclenumber, #tr_drivername, #tr_drivernumber, #tr_driver_lic, #tr_vehiclesource, #tr_vehicletype, #tr_vehicletype_placed')
+				.prop('disabled', false)
+				.prop('readonly', false);
+				
+			// ✅ Restore the "locked" look (green color) but allow clicks on the dropdown
+			$('#tr_vehiclenumber, #tr_drivername, #tr_drivernumber, #tr_driver_lic, #tr_vehiclesource, #tr_vehicletype, #tr_vehicletype_placed')
+				.addClass('disable_a_href');
+				
+			// Keep consignment number interactive but with the color if possible
+			$('#tr_consignmentnumber').css('background-color', '#CCFFCC');
+
+			// ✅ AUTO-REFRESH Truck Details on page load for existing trips
+			setTimeout(function() {
+				$("#tr_consignmentnumber").trigger("change");
+			}, 500);
 		}
 		else {
 			// Disable fields if on any other page

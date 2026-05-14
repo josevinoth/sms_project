@@ -31,6 +31,9 @@ class Vehicle_allotmentInfo(models.Model):
     va_driver = models.ForeignKey(DrivermasterInfo,on_delete=models.CASCADE,related_name='driver_name',null=True, blank=True)
     va_driver_master_id = models.IntegerField(null=True, blank=True)
     va_email_sent = models.BooleanField(default=False)
+    va_replacement_reason = models.TextField(null=True, blank=True)
+    va_replacement_date = models.DateTimeField(null=True, blank=True)
+    va_replaced_allotment = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replacement_chain')
 
     def __str__(self):
             if self.va_vehiclenumber and str(self.va_vehiclenumber):

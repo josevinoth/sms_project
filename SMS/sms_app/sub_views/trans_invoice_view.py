@@ -213,9 +213,9 @@ def trans_invoice_edit(request, invoice_id):
         TransInvoiceInfo.objects
         .filter(
             ti_customer=customer,
-            ti_inv_no=invoice.ti_inv_no,
-            is_woh=True
+            ti_inv_no=invoice.ti_inv_no
         )
+        .exclude(ti_trip_id__isnull=True)
         .annotate(
             trip_total=(
                 Coalesce(F('ti_transportation_charges'), Value(0.0)) +
@@ -603,9 +603,9 @@ def trans_invoice_list_woh(request, customer_id):
     # 1. Trips for the current manual invoice (to show in WOH list)
     current_woh_trip_ids = []
     if inv_no_filter:
-        current_woh_trip_ids = (
+        current_woh_trip_ids = list(
             TransInvoiceInfo.objects
-            .filter(ti_customer_id=customer_id, ti_inv_no=inv_no_filter, is_woh=True)
+            .filter(ti_customer_id=customer_id, ti_inv_no=inv_no_filter)
             .exclude(ti_trip_id__isnull=True)
             .values_list('ti_trip_id', flat=True)
         )

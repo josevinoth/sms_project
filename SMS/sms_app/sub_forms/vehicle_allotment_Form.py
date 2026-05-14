@@ -16,7 +16,7 @@ class VehicleallotmentForm(forms.ModelForm):
         self.fields['va_vendor'].empty_label = "--Select--"
         self.fields['va_status'].empty_label = "--Select--"
 
-    # 🔥 BUSINESS RULE VALIDATION
+    #  BUSINESS RULE VALIDATION
     def clean(self):
         cleaned_data = super().clean()
 

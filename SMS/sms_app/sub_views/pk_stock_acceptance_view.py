@@ -70,7 +70,7 @@ def pk_acceptance_add(request,retrival_id=0):
                         except Exception as e:
                             print(f"Error logging acceptance: {e}")
 
-                # 🔥 AUTOMATIC RETURN LOGIC: If received (status 4) and has excess, create return ledger entry
+                #  AUTOMATIC RETURN LOGIC: If received (status 4) and has excess, create return ledger entry
                 if retrival.ct_stock_status.id == 4:
                     if retrival.ct_exe_quantity_req and retrival.ct_exe_quantity_req > 0:
                         # Check if already returned to avoid duplicates

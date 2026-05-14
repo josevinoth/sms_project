@@ -365,9 +365,9 @@ Trip Settlement</th>
                 {% endif %}
 
                 {% if data.vehicles %}
-                {% for vehicle in data.vehicles %}
-                <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id vehicle %}">
-                    {{ vehicle }}
+                {% for vehicle_display, vehicle_raw in data.vehicles %}
+                <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id vehicle_raw %}">
+                    {{ vehicle_display }}
                 </a><br>
                 {% endfor %}
                 {% endif %}
