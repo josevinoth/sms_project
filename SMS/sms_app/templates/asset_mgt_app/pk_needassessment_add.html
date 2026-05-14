@@ -27,145 +27,126 @@
     <form method="POST" action="" id="needassessment_add" enctype="multipart/form-data">
         {% csrf_token %}
 
-        <!-- Section 1: Customer & Basic Info -->
-        <div class="modern-card mb-4">
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-user"></i> Customer & Basic Information</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Assessment No.</label>
-                        {% render_field form.na_assessment_num id="na_assessment_num" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Date</label>
-                        {% render_field form.na_date id="na_date" type="Date" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Existing Customer</label>
-                        {% render_field form.na_customer_name id="na_customer_name" class="form-control form-control-modern" onchange="package_type_change(); fetchCustomerDetails();" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">New Customer</label>
-                        {% render_field form.na_customer_new_name class="form-control form-control-modern disable_a_href" id="na_customer_new_name" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Sales Person</label>
-                        {% render_field form.na_sales_person class="form-control form-control-modern" id="na_sales_person" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Customer Number</label>
-                        {% render_field form.na_contactno class="form-control form-control-modern" id="na_contactno" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Customer Email</label>
-                        {% render_field form.na_email class="form-control form-control-modern" id="na_email" %}
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="modern-card" style="padding: 1rem !important;">
+        <form method="POST" action="" id="needassessment_add" enctype="multipart/form-data">
+            {% csrf_token %}
 
-        <!-- Section 2: Work & Scope -->
-        <div class="modern-card mb-4">
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-briefcase"></i> Work & Scope Details</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Type Of Work</label>
-                        {% render_field form.na_type_of_work id="na_type_of_work" class="form-control form-control-modern" onchange="package_type_change()" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Others</label>
-                        {% render_field form.na_others_type_pack id="na_others_type_pack" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Scope Of Work</label>
-                        {% render_field form.na_type_of_pack1 id="na_type_of_pack1" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Wood Treatment Requirement</label>
-                        {% render_field form.na_wood_treatment_req id="na_wood_treatment_req" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Unloading</label>
-                        {% render_field form.na_unloading id="na_unloading" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Special Requirements</label>
-                        {% render_field form.na_special_requirements id="na_special_requirements" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Wood Norms</label>
-                        {% render_field form.na_wood_norms id="na_wood_norms" class="form-control form-control-modern" %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 3: Delivery Details -->
-        <div class="modern-card mb-4">
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-truck"></i> Delivery Details</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Delivery By</label>
-                        {% render_field form.na_delivery_by id="na_delivery_by" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Delivery Type</label>
-                        {% render_field form.na_delivery_type id="na_delivery_type" class="form-control form-control-modern" onchange="deliver_type()" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Delivery Location</label>
-                        {% render_field form.na_delivery_location id="na_delivery_location" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Type Of Lifting</label>
-                        {% render_field form.na_type_of_access id="na_type_of_access" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Packing Location</label>
-                        {% render_field form.na_packing_field id="na_packing_field" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Status</label>
-                        {% render_field form.na_status id="na_status" class="form-control form-control-modern" %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 4: Scope Notes & Attachment -->
-        <div class="modern-card mb-4">
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-file-alt"></i> Scope Notes & Attachment</div>
-                <div class="row">
-                    <div class="col-md-5">
+            <div class="row row-compact">
+                <!-- Column 1: Core Info -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-id-card"></i> Core Info</div>
                         <div class="form-group-modern">
-                            <label class="form-label-modern">Client Scope</label>
-                            <div id="accordion_cs">
-                                <a href="" class="text-purple font-weight-bold" data-toggle="collapse" data-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
-                                    <i class="fas fa-chevron-down mr-1"></i> Toggle Client Scope
-                                </a>
-                                <div id="collapseFive" class="collapse mt-2" aria-labelledby="headingFive">
-                                    {% render_field form.na_client_scope id="na_client_scope" class="form-control form-control-modern" %}
+                            <label class="form-label-modern">Assessment #</label>
+                            {% render_field form.na_assessment_num id="na_assessment_num" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Date</label>
+                            {% render_field form.na_date id="na_date" type="Date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Existing Customer</label>
+                            {% render_field form.na_customer_name id="na_customer_name" class="form-control form-control-modern" onchange="package_type_change(); fetchCustomerDetails();" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">New Customer</label>
+                            {% render_field form.na_customer_new_name class="form-control form-control-modern disable_a_href" id="na_customer_new_name" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Contact & Work Type -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-address-book"></i> Contacts & Work</div>
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Sales Person</label>
+                                    {% render_field form.na_sales_person class="form-control form-control-modern" id="na_sales_person" %}
+                                </div>
+                            </div>
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Contact No</label>
+                                    {% render_field form.na_contactno class="form-control form-control-modern" id="na_contactno" %}
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-5">
                         <div class="form-group-modern">
-                            <label class="form-label-modern">BVM Scope</label>
-                            <div id="accordion_bs">
-                                <a href="javascript:void(0)" class="text-primary font-weight-bold" data-toggle="collapse" data-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix" style="text-decoration: none;">
-                                    <i class="fas fa-chevron-down mr-1"></i> TOGGLE BVM SCOPE
-                                </a>
-                                <div id="collapseSix" class="collapse mt-2" aria-labelledby="headingSix">
-                                    {% render_field form.na_bvm_scope id="na_bvm_scope" class="form-control form-control-modern" %}
+                            <label class="form-label-modern">Customer Email</label>
+                            {% render_field form.na_email class="form-control form-control-modern" id="na_email" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Type Of Work</label>
+                            {% render_field form.na_type_of_work id="na_type_of_work" class="form-control form-control-modern" onchange="package_type_change()" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Others (Pack Type)</label>
+                            {% render_field form.na_others_type_pack id="na_others_type_pack" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Scope & Treatment -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-clipboard-check"></i> Scope & Norms</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Scope Of Work</label>
+                            {% render_field form.na_type_of_pack1 id="na_type_of_pack1" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Wood Treatment</label>
+                            {% render_field form.na_wood_treatment_req id="na_wood_treatment_req" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Unloading</label>
+                                    {% render_field form.na_unloading id="na_unloading" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Status</label>
+                                    {% render_field form.na_status id="na_status" class="form-control form-control-modern" %}
                                 </div>
                             </div>
                         </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Special Req</label>
+                            {% render_field form.na_special_requirements id="na_special_requirements" class="form-control form-control-modern" %}
+                        </div>
                     </div>
-                    <div class="col-md-2">
+                </div>
+
+                <!-- Column 4: Delivery & Logistics -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-truck-loading"></i> Logistics</div>
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Delivery By</label>
+                                    {% render_field form.na_delivery_by id="na_delivery_by" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Deliv. Type</label>
+                                    {% render_field form.na_delivery_type id="na_delivery_type" class="form-control form-control-modern" onchange="deliver_type()" %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Delivery Location</label>
+                            {% render_field form.na_delivery_location id="na_delivery_location" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Packing Location</label>
+                            {% render_field form.na_packing_field id="na_packing_field" class="form-control form-control-modern" %}
+                        </div>
                         <div class="form-group-modern">
                             <label class="form-label-modern">Attachment</label>
                             {% render_field form.na_attach id="na_attach" class="form-control form-control-modern" %}
@@ -173,32 +154,64 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        {% render_field form.na_updated_by id="na_updated_by" hidden="True" class="form-control" %}
-        {% render_field form.nad_cost_unit id="nad_cost_unit" hidden="True" class="form-control" %}
-        {% render_field form.nad_cost_total id="nad_cost_total" hidden="True" class="form-control" %}
-
-        <!-- Messages -->
-        <div class="message-container my-3">
-            {% for message in messages %}
-            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} shadow-sm">
-                <i class="fas fa-info-circle"></i> {{ message }}
+            <!-- Additional Detail Sections (Full Width Groups) -->
+            <div class="row row-compact mt-2">
+                <div class="col-md-4 col-compact">
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-crane"></i> Lifting & Norms</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Type Of Lifting</label>
+                            {% render_field form.na_type_of_access id="na_type_of_access" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Wood Norms</label>
+                            {% render_field form.na_wood_norms id="na_wood_norms" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-compact">
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-file-contract"></i> Client Scope</div>
+                        {% render_field form.na_client_scope id="na_client_scope" class="form-control form-control-modern" style="height: 140px !important;" %}
+                    </div>
+                </div>
+                <div class="col-md-4 col-compact">
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-shield-alt"></i> BVM Scope</div>
+                        {% render_field form.na_bvm_scope id="na_bvm_scope" class="form-control form-control-modern" style="height: 140px !important;" %}
+                    </div>
+                </div>
             </div>
-            {% endfor %}
-        </div>
 
-        <!-- Action Buttons -->
-        <div class="btn-group-modern">
-            <button id="na_submit_btn" type="submit" class="btn-modern btn-submit">
-                <i class="fas fa-check"></i> Submit
-            </button>
-            <a href="{% url 'needassessment_list' %}" class="btn-modern btn-cancel">
-                <i class="fas fa-times"></i> Cancel
-            </a>
-        </div>
+            {% render_field form.na_updated_by id="na_updated_by" hidden="True" class="form-control" %}
+            {% render_field form.nad_cost_unit id="nad_cost_unit" hidden="True" class="form-control" %}
+            {% render_field form.nad_cost_total id="nad_cost_total" hidden="True" class="form-control" %}
 
-    </form>
+            <!-- Messages -->
+            <div class="message-container my-2 text-center">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
+                    <i class="fas fa-info-circle"></i> {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row mt-0">
+                <div class="col-12 col-xl-9">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button id="na_submit_btn" type="submit" class="btn-modern btn-submit px-5">
+                            <i class="fas fa-check mr-2"></i> Submit Assessment
+                        </button>
+                        <a href="{% url 'needassessment_list' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 
     <hr class="my-4">
 

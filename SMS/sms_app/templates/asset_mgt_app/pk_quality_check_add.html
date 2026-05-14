@@ -25,32 +25,49 @@
             </div>
         </div>
 
-        <div class="modern-card">
+        <div class="modern-card" style="padding: 1rem !important;">
             <!-- Section 1: Header Details -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-info-circle"></i> Job & Customer Information</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">PJ No (Job No)</label>
-                        <select name="qc_job_no" id="qc_job_no" class="form-control form-control-modern select2" required>
-                            <option value="">--Select Job--</option>
-                            {% for job in costing_jobs %}
-                            <option value="{{ job.cs_job_no }}" {% if job.cs_job_no == selected_job_no %}selected{% endif %}>{{ job.cs_job_no }}</option>
-                            {% endfor %}
-                        </select>
-                        <small id="qc_job_info" class="text-muted" style="display:block; margin-top:4px; font-size:0.85rem;">{% if assessment_id %}{% if selected_job_no %}Assessment: {{ assessment_id }} | Job: {{ selected_job_no }}{% endif %}{% endif %}</small>
+            <div class="row row-compact">
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-id-badge"></i> Job Selection</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">PJ No (Job No)</label>
+                            <select name="qc_job_no" id="qc_job_no" class="form-control form-control-modern select2" required>
+                                <option value="">--Select Job--</option>
+                                {% for job in costing_jobs %}
+                                <option value="{{ job.cs_job_no }}" {% if job.cs_job_no == selected_job_no %}selected{% endif %}>{{ job.cs_job_no }}</option>
+                                {% endfor %}
+                            </select>
+                            <small id="qc_job_info" class="text-muted" style="display:block; margin-top:4px; font-size:0.75rem;">{% if assessment_id %}{% if selected_job_no %}Assessment: {{ assessment_id }}{% endif %}{% endif %}</small>
+                        </div>
                     </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Customer Name</label>
-                        <input type="text" id="display_customer" class="form-control form-control-modern disable_a_href" readonly value="{{ customer_name|default:'' }}">
+                </div>
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-user"></i> Customer</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer Name</label>
+                            <input type="text" id="display_customer" class="form-control form-control-modern disable_a_href" readonly value="{{ customer_name|default:'' }}">
+                        </div>
                     </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Purchase Order No</label>
-                        <input type="text" id="display_po" class="form-control form-control-modern disable_a_href" readonly value="{{ po_num|default:'' }}">
+                </div>
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-file-invoice"></i> Order Ref</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Purchase Order No</label>
+                            <input type="text" id="display_po" class="form-control form-control-modern disable_a_href" readonly value="{{ po_num|default:'' }}">
+                        </div>
                     </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">PO Date</label>
-                        <input type="text" id="display_po_date" class="form-control form-control-modern disable_a_href" readonly value="{{ po_date|default:'' }}">
+                </div>
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-calendar-alt"></i> Dates</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">PO Date</label>
+                            <input type="text" id="display_po_date" class="form-control form-control-modern disable_a_href" readonly value="{{ po_date|default:'' }}">
+                        </div>
                     </div>
                 </div>
             </div>

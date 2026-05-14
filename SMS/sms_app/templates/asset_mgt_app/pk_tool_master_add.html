@@ -15,105 +15,109 @@
 
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
-        <div class="modern-card p-4">
-            <!-- Section 1: Basic Information -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-info-circle"></i> Basic Information</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Tool Name <span class="text-danger">*</span></label>
-                        {% render_field form.tm_name class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Serial Number <span class="text-danger">*</span></label>
-                        {% render_field form.tm_serial_no class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Size / Specification</label>
-                        {% render_field form.tm_size class="form-control form-control-modern" %}
-                    </div>
-                </div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Brand</label>
-                        {% render_field form.tm_brand class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Model Number</label>
-                        {% render_field form.tm_model_no class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Current Location</label>
-                        {% render_field form.tm_location class="form-control form-control-modern select2" %}
-                    </div>
-                </div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Status</label>
-                        {% render_field form.tm_status class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Usage Type</label>
-                        {% render_field form.tm_usage_type class="form-control form-control-modern" %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 2: Purchase & Vendor Details -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-file-invoice-dollar"></i> Purchase & Vendor Details</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Vendor</label>
-                        {% render_field form.tm_vendor class="form-control form-control-modern select2" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Purchase Date</label>
-                        {% render_field form.tm_purchase_date class="form-control form-control-modern" type="date" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Invoice Number</label>
-                        {% render_field form.tm_invoice_no class="form-control form-control-modern" %}
-                    </div>
-                </div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Invoice Amount</label>
-                        {% render_field form.tm_invoice_amount class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Warranty Expiry Date</label>
-                        {% render_field form.tm_warranty_expiry class="form-control form-control-modern" type="date" %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 3: Media / Attachments -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-paperclip"></i> Media / Attachments</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Bill Attachment</label>
-                        <div class="custom-file-modern">
-                            {% render_field form.tm_bill_attachment class="form-control-file" %}
+        <div class="modern-card" style="padding: 1rem !important;">
+            <div class="row row-compact">
+                <!-- Column 1: Identity -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-barcode"></i> Tool Identity</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Tool Name <span class="text-danger">*</span></label>
+                            {% render_field form.tm_name class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Serial Number <span class="text-danger">*</span></label>
+                            {% render_field form.tm_serial_no class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Brand</label>
+                            {% render_field form.tm_brand class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Model Number</label>
+                            {% render_field form.tm_model_no class="form-control form-control-modern" %}
                         </div>
                     </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Tool Image</label>
-                        <div class="custom-file-modern">
+                </div>
+
+                <!-- Column 2: Specifications -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-cog"></i> Specifications</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Size / Spec</label>
+                            {% render_field form.tm_size class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Status</label>
+                            {% render_field form.tm_status class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Usage Type</label>
+                            {% render_field form.tm_usage_type class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Location</label>
+                            {% render_field form.tm_location class="form-control form-control-modern select2" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Procurement -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-shopping-cart"></i> Procurement</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vendor</label>
+                            {% render_field form.tm_vendor class="form-control form-control-modern select2" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Purchase Date</label>
+                            {% render_field form.tm_purchase_date class="form-control form-control-modern" type="date" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Invoice Number</label>
+                            {% render_field form.tm_invoice_no class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Invoice Amount</label>
+                            {% render_field form.tm_invoice_amount class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 4: Attachments -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100" style="border-left: 4px solid var(--secondary-cyan);">
+                        <div class="form-section-title" style="color: var(--secondary-cyan);"><i class="fas fa-paperclip"></i> Media & Warranty</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Warranty Expiry</label>
+                            {% render_field form.tm_warranty_expiry class="form-control form-control-modern" type="date" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Bill Attachment</label>
+                            {% render_field form.tm_bill_attachment class="form-control-file" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Tool Image</label>
                             {% render_field form.tm_image class="form-control-file" %}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="btn-group-modern mt-4">
-                <button type="submit" class="btn-modern btn-submit px-5 py-2">
-                    <i class="fas fa-save mr-2"></i> SAVE TOOL
-                </button>
-                <a href="{% url 'pk_tool_master_list' %}" class="btn-modern btn-cancel px-5 py-2" style="text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-times mr-2"></i> CANCEL
-                </a>
+            <!-- Action Buttons -->
+            <div class="row mt-3">
+                <div class="col-12 col-xl-9">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn-modern btn-submit px-5">
+                            <i class="fas fa-check mr-2"></i> Save Tool
+                        </button>
+                        <a href="{% url 'pk_tool_master_list' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </form>
