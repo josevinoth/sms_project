@@ -14,14 +14,10 @@
         <!-- Page Header -->
         <div class="modern-header d-flex justify-content-between align-items-center">
             <h2 class="mb-0"><i class="fas fa-check-double"></i> Quality Check Format (PMS)</h2>
-            <div class="d-flex align-items-center" style="gap: 15px;">
-                <select name="qc_status" class="form-control form-control-modern" style="width: 160px; height: 46px !important; border-radius: 12px; font-weight: 800;" required>
-                    <option value="Passed">✅ PASSED</option>
-                    <option value="Failed">❌ FAILED</option>
-                </select>
-                <button type="submit" class="btn-modern btn-submit" id="submit_qc" disabled>
-                    <i class="fas fa-save"></i> Save Report
-                </button>
+            <div style="position: relative; z-index: 10;">
+                <a href="{% url 'pk_quality_check_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                    <i class="fas fa-arrow-left"></i> BACK
+                </a>
             </div>
         </div>
 
@@ -145,10 +141,24 @@
                 </div>
             </div>
             
-            <div class="mt-4 d-flex">
-                <a href="{% url 'pk_quality_check_list' %}" class="btn-modern btn-cancel" style="text-decoration: none;">
-                    <i class="fas fa-arrow-left"></i> Back to List
-                </a>
+            <!-- Action Buttons Row -->
+            <div class="row mt-4">
+                <div class="col-12 col-xl-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'pk_quality_check_list' %}" class="btn-modern btn-cancel px-5" style="text-decoration: none;">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                        <div class="d-flex align-items-center" style="gap: 15px;">
+                            <select name="qc_status" class="form-control form-control-modern" style="width: 160px; height: 46px !important; border-radius: 12px; font-weight: 800; border-color: var(--primary-emerald);" required>
+                                <option value="Passed">✅ PASSED</option>
+                                <option value="Failed">❌ FAILED</option>
+                            </select>
+                            <button type="submit" class="btn-modern btn-submit px-5" id="submit_qc" disabled>
+                                <i class="fas fa-check mr-2"></i> Save Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </form>

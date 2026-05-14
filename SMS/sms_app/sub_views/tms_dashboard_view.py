@@ -23,9 +23,9 @@ def tms_dashboard(request):
     cs_dept = Department_info.objects.filter(Q(dept_name__icontains="CS") | Q(dept_name__icontains="Customer Service")).first()
     cs_employees = []
     if cs_dept:
-        cs_employees = User_extInfo.objects.filter(department=cs_dept).select_related('user')
+        cs_employees = User_extInfo.objects.filter(department=cs_dept, user__is_active=True).select_related('user')
     else:
-        cs_employees = User_extInfo.objects.all().select_related('user')
+        cs_employees = User_extInfo.objects.filter(user__is_active=True).select_related('user')
         
     context = {
         'first_name': first_name,
@@ -38,18 +38,21 @@ def get_tms_dashboard_data(request):
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
 
-    def apply_date_filter(qs, date_field):
+    def apply_enquiry_date_filter(qs, field_prefix=''):
+        """Filter by enquiry created date (en_created_at is a DateTimeField, use __date__ lookup)."""
+        date_field = f"{field_prefix}en_created_at" if not field_prefix else f"{field_prefix}en_created_at"
         if from_date:
-            qs = qs.filter(**{f"{date_field}__gte": from_date})
+            qs = qs.filter(**{f"{date_field}__date__gte": from_date})
         if to_date:
-            qs = qs.filter(**{f"{date_field}__lte": to_date})
+            qs = qs.filter(**{f"{date_field}__date__lte": to_date})
         return qs
-    
+
     def calculate_metrics(user_id=None):
-        en_qs = apply_date_filter(EnquirynoteInfo.objects.all(), 'en_created_at')
-        cn_qs = apply_date_filter(ConsignmentdetailInfo.objects.all(), 'co_consignmentdate')
-        tr_qs = apply_date_filter(TripdetailInfo.objects.all(), 'tr_departeddate')
-        ti_qs = apply_date_filter(TransInvoiceInfo.objects.all(), 'ti_inv_date')
+        # All querysets filtered by Enquiry Created Date
+        en_qs = apply_enquiry_date_filter(EnquirynoteInfo.objects.all(), '')
+        cn_qs = apply_enquiry_date_filter(ConsignmentdetailInfo.objects.all(), 'co_enquirynumber__')
+        tr_qs = apply_enquiry_date_filter(TripdetailInfo.objects.all(), 'tr_enquirynumber__')
+        ti_qs = apply_enquiry_date_filter(TransInvoiceInfo.objects.all(), 'ti_trip__tr_enquirynumber__')
 
         if user_id and user_id != 'all':
             en_qs = en_qs.filter(en_assignedto_id=user_id)
@@ -59,7 +62,7 @@ def get_tms_dashboard_data(request):
 
         vehicles_count = tr_qs.count()
         cnotes_count = cn_qs.count()
-        
+
         metrics = {
             'enquiries': vehicles_count,
             'cnotes': cnotes_count,
@@ -73,13 +76,16 @@ def get_tms_dashboard_data(request):
     totals = calculate_metrics('all')
     employee_metrics = calculate_metrics(employee_id)
     
-    # Chart Data: Business Trip Distribution
-    business_qs = apply_date_filter(TripdetailInfo.objects.filter(tr_category__category__icontains="Business"), 'tr_departeddate')
+    # Chart Data: Business Trip Distribution — filtered by Enquiry Created Date
+    business_qs = apply_enquiry_date_filter(
+        TripdetailInfo.objects.filter(tr_category__category__icontains="Business"),
+        'tr_enquirynumber__'
+    )
     if employee_id and employee_id != 'all':
         business_qs = business_qs.filter(tr_enquirynumber__en_assignedto_id=employee_id)
 
     if not business_qs.exists():
-        business_qs = apply_date_filter(TripdetailInfo.objects.all(), 'tr_departeddate')
+        business_qs = apply_enquiry_date_filter(TripdetailInfo.objects.all(), 'tr_enquirynumber__')
         if employee_id and employee_id != 'all':
             business_qs = business_qs.filter(tr_enquirynumber__en_assignedto_id=employee_id)
 
@@ -104,12 +110,15 @@ def get_tms_dashboard_data(request):
         'outstation': [get_trip_count(s, outstation_type) for s in sources] + [get_trip_count('Total', outstation_type)]
     }
     
-    # Donut Charts (Mileage Breakdown)
+    # Donut Charts (Mileage Breakdown) — filtered by Enquiry Created Date
     def get_km_details(ownership_type):
         db_source = ownership_type
         if ownership_type == 'Own': db_source = 'OWN'
-        
-        qs = apply_date_filter(TripdetailInfo.objects.filter(tr_vehiclesource__ow_ownership__icontains=db_source), 'tr_departeddate')
+
+        qs = apply_enquiry_date_filter(
+            TripdetailInfo.objects.filter(tr_vehiclesource__ow_ownership__icontains=db_source),
+            'tr_enquirynumber__'
+        )
         if employee_id and employee_id != 'all':
             qs = qs.filter(tr_enquirynumber__en_assignedto_id=employee_id)
             

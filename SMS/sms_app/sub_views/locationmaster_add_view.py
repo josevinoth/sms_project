@@ -77,7 +77,19 @@ def locationmaster_add(request,locationmaster_id=0):
                 form = LocationmasteraddForm(request.POST)
                 if form.is_valid():
                     form.save()
-                return redirect('/SMS/locationmaster_list')
+                    messages.success(request, 'Record Created Successfully')
+                    return redirect('/SMS/locationmaster_list')
+                else:
+                    print(form.errors)
+                    messages.error(request, 'Form is invalid. Please check the fields.')
+                    # Re-render with errors
+                    context = {
+                        'form': form,
+                        'first_name': first_name,
+                        'area_occupied': 0,
+                        'volume_occupied': 0,
+                    }
+                    return render(request, "asset_mgt_app/locationmaster_add.html", context)
         else:
             print('Inside Post Else')
             con_val = request.POST.get('lm_concatenate')
@@ -99,11 +111,16 @@ def locationmaster_add(request,locationmaster_id=0):
                     form.save()
                     print('Form Saved Successfully')
                     messages.success(request, 'Record Updated Successfully')
-                    return redirect(request.META['HTTP_REFERER'])
+                    return redirect('/SMS/locationmaster_list')
                 else:
                     print('Form Not Saved Successfully')
-                    messages.error(request, 'Record Not Updated Successfully')
-                    return redirect(request.META['HTTP_REFERER'])
+                    print(form.errors)
+                    messages.error(request, 'Record Not Updated Successfully. ' + str(form.errors))
+                    context = {
+                        'form': form,
+                        'first_name': first_name,
+                    }
+                    return render(request, "asset_mgt_app/locationmaster_add.html", context)
             # return redirect('/SMS/locationmaster_list')
 
 # List locationmaster

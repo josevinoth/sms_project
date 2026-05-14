@@ -2,9 +2,9 @@ from django.db import models
 from ..models import Location_info,UnitInfo,BayInfo,CustomerInfo,TrbusinesstypeInfo
 
 class LocationmasterInfo(models.Model):
-    lm_wh_location = models.ForeignKey(Location_info, on_delete=models.CASCADE, default='')
-    lm_wh_unit = models.ForeignKey(UnitInfo, on_delete=models.CASCADE, default='')
-    lm_areaside = models.ForeignKey(BayInfo, on_delete=models.CASCADE, default='')
+    lm_wh_location = models.ForeignKey(Location_info, on_delete=models.CASCADE)
+    lm_wh_unit = models.ForeignKey(UnitInfo, on_delete=models.CASCADE)
+    lm_areaside = models.ForeignKey(BayInfo, on_delete=models.CASCADE)
     lm_length = models.FloatField(default='0.0')
     lm_width = models.FloatField(default='0.0')
     lm_height = models.FloatField(default='0.0')
@@ -14,9 +14,9 @@ class LocationmasterInfo(models.Model):
     lm_total_volume = models.FloatField(default='0.0')
     lm_available_volume = models.FloatField(default='0.0')
     lm_volume_occupied = models.FloatField(default='0.0')
-    lm_concatenate = models.CharField(max_length=10,default = '')
-    lm_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, default='')
-    lm_customer_model = models.ForeignKey(TrbusinesstypeInfo,on_delete=models.CASCADE, default='')
+    lm_concatenate = models.CharField(max_length=100,default = '')
+    lm_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, null=True, blank=True)
+    lm_customer_model = models.ForeignKey(TrbusinesstypeInfo,on_delete=models.CASCADE, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Auto-calculate area and volume if they are 0 but dimensions are provided

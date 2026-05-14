@@ -45,10 +45,17 @@
                 </div>
                 {% endif %}
 
-                <div class="btn-group-modern mt-3">
-                    <button type="submit" class="btn-modern btn-submit px-4">
-                        <i class="fas fa-check"></i> SAVE PURCHASE
-                    </button>
+                <div class="row mt-3">
+                    <div class="col-12 col-xl-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'pk_stock_vendor_list' %}" class="btn-modern btn-cancel px-5" style="text-decoration: none;">
+                                <i class="fas fa-times mr-2"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn-modern btn-submit px-5">
+                                <i class="fas fa-check mr-2"></i> Save Purchase
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

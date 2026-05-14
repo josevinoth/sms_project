@@ -28,8 +28,6 @@
         {% csrf_token %}
 
     <div class="modern-card" style="padding: 1rem !important;">
-        <form method="POST" action="" id="needassessment_add" enctype="multipart/form-data">
-            {% csrf_token %}
 
             <div class="row row-compact">
                 <!-- Column 1: Core Info -->
@@ -199,7 +197,7 @@
 
             <!-- Action Buttons -->
             <div class="row mt-0">
-                <div class="col-12 col-xl-9">
+                <div class="col-12 col-xl-12">
                     <div class="d-flex justify-content-between align-items-center">
                         <button id="na_submit_btn" type="submit" class="btn-modern btn-submit px-5">
                             <i class="fas fa-check mr-2"></i> Submit Assessment
