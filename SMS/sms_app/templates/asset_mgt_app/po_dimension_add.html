@@ -14,111 +14,133 @@
 
     <form method="POST" action="">
         {% csrf_token %}
-        <div class="modern-card">
-            <!-- Section 1: Identification -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-tag"></i> Identification & Tracking</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Assessment Number</label>
-                        {% render_field form.pod_assess_num id="pod_assess_num" onchange="load_pk_requirement_type()" class="form-control form-control-modern" %}
+        <div class="modern-card" style="padding: 1rem !important;">
+            <div class="row row-compact">
+                <!-- Column 1: Identification -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-tag"></i> Identification</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Assessment Number</label>
+                            {% render_field form.pod_assess_num id="pod_assess_num" onchange="load_pk_requirement_type()" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Quotation Item #</label>
+                            {% render_field form.pod_nad id="pod_nad" onchange="load_na_dimension_details(); updatePodItem();" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">PO Item Number</label>
+                            {% render_field form.pod_item class="form-control form-control-modern" id="pod_item"%}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">PO Number</label>
+                            {% render_field form.pod_po_num id="pod_po_num" class="form-control form-control-modern" readonly="True" %}
+                        </div>
                     </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Quotation Item Number</label>
-                        {% render_field form.pod_nad id="pod_nad" onchange="load_na_dimension_details(); updatePodItem();" class="form-control form-control-modern" %}
+                </div>
+
+                <!-- Column 2: Material & Schedule -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-calendar-check"></i> Schedule & Material</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Delivery Schedule</label>
+                            {% render_field form.pod_delivery_schedule_date id="pod_delivery_schedule_date" type="date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Requirement Type</label>
+                            {% render_field form.pod_type_of_req id="pod_type_of_req" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Wood Type</label>
+                            {% render_field form.pod_wood_type id="pod_wood_type" onchange="plywood_thickness()" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Wood Description</label>
+                            {% render_field form.pod_wood_description id="pod_wood_description" class="form-control form-control-modern" readonly="True" %}
+                        </div>
                     </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">PO Item Number</label>
-                        {% render_field form.pod_item class="form-control form-control-modern" id="pod_item"%}
+                </div>
+
+                <!-- Column 3: Physical Dimensions -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-expand-arrows-alt"></i> Physical Specs</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Dimension Type</label>
+                            {% render_field form.pod_dimension_type id="pod_dimension_type" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="row no-gutters">
+                            <div class="col-4 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Length</label>
+                                    {% render_field form.pod_length id="pod_length" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-4 px-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Width</label>
+                                    {% render_field form.pod_width id="pod_width" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-4 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Height</label>
+                                    {% render_field form.pod_height id="pod_height" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">UOM</label>
+                            {% render_field form.pod_uom id="pod_uom" class="form-control form-control-modern" %}
+                        </div>
                     </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">PO Number</label>
-                        {% render_field form.pod_po_num id="pod_po_num" class="form-control form-control-modern" readonly="True" %}
+                </div>
+
+                <!-- Column 4: Final Details -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-weight-hanging"></i> Weight & Qty</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Plywood Thickness</label>
+                            {% render_field form.pod_plywood_thickness id="pod_plywood_thickness" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Job Weight (KG)</label>
+                            {% render_field form.pod_job_weight id="pod_job_weight" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Quantity</label>
+                            {% render_field form.pod_quantity id="pod_quantity" class="form-control form-control-modern" %}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Section 2: Material & Delivery -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-truck-loading"></i> Material & Delivery Schedule</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Delivery Schedule Date</label>
-                        {% render_field form.pod_delivery_schedule_date id="pod_delivery_schedule_date" type="date" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Requirement Type</label>
-                        {% render_field form.pod_type_of_req id="pod_type_of_req" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Wood Type</label>
-                        {% render_field form.pod_wood_type id="pod_wood_type" onchange="plywood_thickness()" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Wood Description</label>
-                        {% render_field form.pod_wood_description id="pod_wood_description" class="form-control form-control-modern" readonly="True" %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 3: Physical Dimensions -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-expand-arrows-alt"></i> Physical Dimensions</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Dimension Type</label>
-                        {% render_field form.pod_dimension_type id="pod_dimension_type" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">UOM</label>
-                        {% render_field form.pod_uom id="pod_uom" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Length</label>
-                        {% render_field form.pod_length id="pod_length" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Width</label>
-                        {% render_field form.pod_width id="pod_width" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Height</label>
-                        {% render_field form.pod_height id="pod_height" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Plywood Thickness</label>
-                        {% render_field form.pod_plywood_thickness id="pod_plywood_thickness" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Job Weight (kg)</label>
-                        {% render_field form.pod_job_weight id="pod_job_weight" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Quantity</label>
-                        {% render_field form.pod_quantity id="pod_quantity" class="form-control form-control-modern" %}
-                    </div>
-                </div>
-                {% render_field form.pod_updated_by id="pod_updated_by" hidden="True" %}
-                {% render_field form.pod_returnable_status id="pod_returnable_status" hidden="True" %}
-            </div>
+            {% render_field form.pod_updated_by id="pod_updated_by" hidden="True" %}
+            {% render_field form.pod_returnable_status id="pod_returnable_status" hidden="True" %}
 
             <!-- Message Area -->
-            <div class="message-container my-3">
+            <div class="message-container my-1 text-center">
                 {% for message in messages %}
-                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} shadow-sm text-center">
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
                     <i class="fas fa-info-circle"></i> {{ message }}
                 </div>
                 {% endfor %}
             </div>
 
-            <!-- Action Buttons -->
-            <div class="btn-group-modern mt-4" style="position: relative; z-index: 5;">
-                <button type="submit" class="btn btn-modern btn-submit shadow-lg" id="save-btn" onclick="this.form.submit();" style="pointer-events: auto; cursor: pointer; position: relative; z-index: 10;">
-                    <i class="fas fa-check"></i> SAVE PO DIMENSION
-                </button>
-                <a href="{% url 'po_dimension_cancel' %}" class="btn btn-modern btn-cancel shadow-sm" style="pointer-events: auto; cursor: pointer;">
-                    <i class="fas fa-times"></i> CANCEL
-                </a>
+            <!-- Form Actions -->
+            <div class="row mt-2">
+                <div class="col-12 col-xl-9">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn-modern btn-submit px-5" id="save-btn">
+                            <i class="fas fa-check mr-2"></i> Save PO Dimension
+                        </button>
+                        <a href="{% url 'po_dimension_cancel' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </form>

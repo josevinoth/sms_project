@@ -1,83 +1,105 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+
 {% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-file-invoice mr-2"></i> Quotes Management</h2>
+        <div style="position: relative; z-index: 10;">
+            <a href="{% url 'quotes_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK TO LIST
+            </a>
+        </div>
+    </div>
 
-<form method="POST" action="" id="quotes_add"   >
-	{% csrf_token %}
-	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Quotes</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-12">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Quotes Number</span>
-									</div>
-									{% render_field form.qt_quotes_num id="qt_quotes_num" readonly="True"  class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Date</span>
-									</div>
-									{% render_field form.qt_date id="qt_date" type="Date" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Item Value</span>
-									</div>
-									{% render_field form.qt_item_value id="qt_item_value" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Freight Charges</span>
-									</div>
-									{% render_field form.qt_freight_charges id="qt_freight_charges" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Handling Charges</span>
-									</div>
-									{% render_field form.qt_handling_charges id="qt_handling_charges" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total</span>
-									</div>
-									{% render_field form.qt_total id="qt_total"  class="form-control " %}
-								</div>
-								{% render_field form.qt_updated_by id="qt_updated_by" hidden="True" class="form-control" %}
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'quotes_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-2"></div>
-	</div>
-</form>
+    <form method="POST" action="" id="quotes_add">
+        {% csrf_token %}
+        <div class="modern-card" style="padding: 1rem !important;">
+            <div class="row row-compact">
+                <!-- Column 1: Identity -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-id-card"></i> Quote Reference</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Quotes Number</label>
+                            {% render_field form.qt_quotes_num id="qt_quotes_num" readonly="True" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Date</label>
+                            {% render_field form.qt_date id="qt_date" type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Item Valuation -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-coins"></i> Core Value</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Item Value (INR)</label>
+                            {% render_field form.qt_item_value id="qt_item_value" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Logistics Charges -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-truck-loading"></i> Service Charges</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Freight Charges</label>
+                            {% render_field form.qt_freight_charges id="qt_freight_charges" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Handling Charges</label>
+                            {% render_field form.qt_handling_charges id="qt_handling_charges" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 4: Final Summary -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100" style="border-left: 4px solid var(--accent-emerald);">
+                        <div class="form-section-title text-success"><i class="fas fa-calculator"></i> Quote Total</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Grand Total (INR)</label>
+                            {% render_field form.qt_total id="qt_total" class="form-control form-control-modern font-weight-bold text-success" style="font-size: 1.3rem !important;" %}
+                        </div>
+                        {% render_field form.qt_updated_by id="qt_updated_by" hidden="True" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Area -->
+            <div class="message-container my-1 text-center">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
+                    <i class="fas fa-info-circle"></i> {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row mt-2">
+                <div class="col-12 col-xl-9">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn-modern btn-submit px-5">
+                            <i class="fas fa-check mr-2"></i> Submit Quote
+                        </button>
+                        <a href="{% url 'quotes_list' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
 <script>
-$(document).ready(function() {
-	document.getElementById("qt_updated_by").value ='{{user_id}}';
-	});
+    $(document).ready(function() {
+        document.getElementById("qt_updated_by").value ='{{user_id}}';
+    });
 </script>
-
 {% endblock content %}

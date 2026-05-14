@@ -25,227 +25,249 @@
             </div>
         </div>
 
-        <div class="modern-card" id="quotation_summary">
-            <!-- Section 1: Quotation Details -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-info-circle"></i> Quotation Details</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Assessment Number</label>
-                        {% render_field form.qs_assessment_num id="qs_assessment_num" name="qs_assessment_num" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Customer Name</label>
-                        {% render_field form.qs_customer_name_2 id="qs_customer_name_2" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">New Customer Name</label>
-                        {% render_field form.pkqt_customer_new_name id="pkqt_customer_new_name" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Quotation Number</label>
-                        {% render_field form.qs_quotation_number id="qs_quotation_number" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Quotation Status</label>
-                        {% render_field form.qs_status id="qs_status" class="form-control form-control-modern" %}
+        <div class="modern-card" style="padding: 1rem !important;">
+            <div class="row row-compact">
+                <!-- Column 1: Core Details -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-id-card"></i> Quotation Core</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Assessment Number</label>
+                            {% render_field form.qs_assessment_num id="qs_assessment_num" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer Name</label>
+                            {% render_field form.qs_customer_name_2 id="qs_customer_name_2" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">New Customer Name</label>
+                            {% render_field form.pkqt_customer_new_name id="pkqt_customer_new_name" class="form-control form-control-modern disable_a_href" %}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Section 2: Cost Components -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-list-ul"></i> Cost Components</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Wood Cost</label>
-                        {% render_field form.qs_wood_cost id="qs_wood_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Engineer Cost</label>
-                        {% render_field form.qs_engineer_cost id="qs_engineer_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Labour Cost</label>
-                        {% render_field form.qs_labour_cost id="qs_labour_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Crane Cost</label>
-                        {% render_field form.qs_crane_cost id="qs_crane_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">HT Cost</label>
-                        {% render_field form.qs_ht_cost id="qs_ht_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Management Cost</label>
-                        {% render_field form.qs_management_cost id="qs_management_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Consumables Cost</label>
-                        {% render_field form.qs_material_cost id="qs_material_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Transport Cost</label>
-                        {% render_field form.qs_transport_cost id="qs_transport_cost" class="form-control form-control-modern disable_a_href" %}
+                <!-- Column 2: Ref & Status -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-info-circle"></i> Status & Ref</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Quotation Number</label>
+                            {% render_field form.qs_quotation_number id="qs_quotation_number" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Quotation Status</label>
+                            {% render_field form.qs_status id="qs_status" class="form-control form-control-modern" %}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Section 3: Calculation & Margin -->
-            <div class="form-section stock-info-box">
-                <div class="form-section-title" style="color: #856404; border-color: #ffeeba;"><i class="fas fa-calculator"></i> Calculation & Margin</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Total Cost (W/O Margin)</label>
-                        {% render_field form.qs_total_cost_wom id="qs_total_cost_wom" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Margin (%)</label>
-                        {% render_field form.qs_margin id="qs_margin" onchange="change_charge_type()" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Total Cost (With Margin)</label>
-                        {% render_field form.qs_total_cost_wm id="qs_total_cost_wm" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Total CFT</label>
-                        {% render_field form.qs_total_cft id="qs_total_cft" onchange="change_charge_type()" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Rate Per CFT</label>
-                        {% render_field form.qs_rate_per_cft id="qs_rate_per_cft" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">GST %</label>
-                        {% render_field form.qs_gst id="qs_gst" onchange="change_charge_type()" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Final Cost</label>
-                        {% render_field form.qs_final_cost id="qs_final_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 4: Additional Information (Accordions) -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-file-alt"></i> Additional Information</div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div id="accordion_left" class="mb-3">
-                            <div class="card mb-2" style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
-                                <div class="card-header" style="background: var(--section-bg); border-bottom: 1px solid var(--border-color);" id="headingOne">
-                                    <h5 class="mb-0">
-                                        <a href="#" class="text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="text-decoration: none; display: block;">
-                                            Address <i class="fas fa-chevron-down float-right mt-1" style="font-size: 12px; color: #6c3ef4;"></i>
-                                        </a>
-                                    </h5>
-                                </div>
-                                <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordion_left">
-                                    <div class="card-body">
-                                        {% render_field form.qs_address id="qs_address" class="form-control form-control-modern" rows="3" %}
-                                    </div>
+                <!-- Column 3: Primary Costs -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-list-ul"></i> Primary Costs</div>
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Wood Cost</label>
+                                    {% render_field form.qs_wood_cost id="qs_wood_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
                             </div>
-                            <div class="card mb-2" style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
-                                <div class="card-header" style="background: var(--section-bg); border-bottom: 1px solid var(--border-color);" id="headingTwo">
-                                    <h5 class="mb-0">
-                                        <a href="#" class="text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo" style="text-decoration: none; display: block;">
-                                            Cost Includes <i class="fas fa-chevron-down float-right mt-1" style="font-size: 12px; color: #6c3ef4;"></i>
-                                        </a>
-                                    </h5>
-                                </div>
-                                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion_left">
-                                    <div class="card-body">
-                                        {% render_field form.qs_cost_includes id="qs_cost_includes" class="form-control form-control-modern" rows="3" %}
-                                    </div>
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Engineer Cost</label>
+                                    {% render_field form.qs_engineer_cost id="qs_engineer_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
                             </div>
-                            <div class="card mb-2" style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
-                                <div class="card-header" style="background: var(--section-bg); border-bottom: 1px solid var(--border-color);" id="headingThree">
-                                    <h5 class="mb-0">
-                                        <a href="#" class="text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree" style="text-decoration: none; display: block;">
-                                            Notes <i class="fas fa-chevron-down float-right mt-1" style="font-size: 12px; color: #6c3ef4;"></i>
-                                        </a>
-                                    </h5>
+                        </div>
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Labour Cost</label>
+                                    {% render_field form.qs_labour_cost id="qs_labour_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
-                                <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion_left">
-                                    <div class="card-body">
-                                        {% render_field form.qs_notes id="qs_notes" class="form-control form-control-modern" rows="3" %}
-                                    </div>
+                            </div>
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Crane Cost</label>
+                                    {% render_field form.qs_crane_cost id="qs_crane_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div id="accordion_right" class="mb-3">
-                            <div class="card mb-2" style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
-                                <div class="card-header" style="background: var(--section-bg); border-bottom: 1px solid var(--border-color);" id="headingFour">
-                                    <h5 class="mb-0">
-                                        <a href="#" class="text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour" style="text-decoration: none; display: block;">
-                                            Terms & Conditions <i class="fas fa-chevron-down float-right mt-1" style="font-size: 12px; color: #6c3ef4;"></i>
-                                        </a>
-                                    </h5>
-                                </div>
-                                <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordion_right">
-                                    <div class="card-body">
-                                        {% render_field form.qs_terms_condition id="qs_terms_condition" class="form-control form-control-modern" rows="3" %}
-                                    </div>
+                </div>
+
+                <!-- Column 4: Operational Costs -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-truck-loading"></i> Operational Costs</div>
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">HT Cost</label>
+                                    {% render_field form.qs_ht_cost id="qs_ht_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
                             </div>
-                            <div class="card mb-2" style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
-                                <div class="card-header" style="background: var(--section-bg); border-bottom: 1px solid var(--border-color);" id="headingFive">
-                                    <h5 class="mb-0">
-                                        <a href="#" class="text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive" style="text-decoration: none; display: block;">
-                                            Client Scope <i class="fas fa-chevron-down float-right mt-1" style="font-size: 12px; color: #6c3ef4;"></i>
-                                        </a>
-                                    </h5>
-                                </div>
-                                <div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#accordion_right">
-                                    <div class="card-body">
-                                        {% render_field form.qs_client_scope id="qs_client_scope" class="form-control form-control-modern" rows="3" %}
-                                    </div>
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Mgt Cost</label>
+                                    {% render_field form.qs_management_cost id="qs_management_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
                             </div>
-                            <div class="card mb-2" style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
-                                <div class="card-header" style="background: var(--section-bg); border-bottom: 1px solid var(--border-color);" id="headingSix">
-                                    <h5 class="mb-0">
-                                        <a href="#" class="text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix" style="text-decoration: none; display: block;">
-                                            BVM Scope <i class="fas fa-chevron-down float-right mt-1" style="font-size: 12px; color: #6c3ef4;"></i>
-                                        </a>
-                                    </h5>
+                        </div>
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Consumables</label>
+                                    {% render_field form.qs_material_cost id="qs_material_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
-                                <div id="collapseSix" class="collapse" aria-labelledby="headingSix" data-parent="#accordion_right">
-                                    <div class="card-body">
-                                        {% render_field form.qs_bvm_scope id="qs_bvm_scope" class="form-control form-control-modern" rows="3" %}
-                                    </div>
+                            </div>
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Transport</label>
+                                    {% render_field form.qs_transport_cost id="qs_transport_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Calculation & Margin Section (4-column breakdown) -->
+            <div class="form-section mt-3" style="background: rgba(var(--primary-glow-rgb), 0.03); border: 1px solid var(--accent-orange) !important;">
+                <div class="form-section-title" style="color: var(--accent-orange); border-color: var(--accent-orange);"><i class="fas fa-calculator"></i> Calculation & Margin Analysis</div>
+                <div class="row row-compact">
+                    <div class="col-12 col-md-6 col-xl-3 col-compact">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Total Cost (W/O Margin)</label>
+                            {% render_field form.qs_total_cost_wom id="qs_total_cost_wom" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Margin (%)</label>
+                            {% render_field form.qs_margin id="qs_margin" onchange="change_charge_type()" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3 col-compact">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Total Cost (With Margin)</label>
+                            {% render_field form.qs_total_cost_wm id="qs_total_cost_wm" class="form-control form-control-modern disable_a_href font-weight-bold text-primary" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">GST (%)</label>
+                            {% render_field form.qs_gst id="qs_gst" onchange="change_charge_type()" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3 col-compact">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Total CFT</label>
+                            {% render_field form.qs_total_cft id="qs_total_cft" onchange="change_charge_type()" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Rate Per CFT</label>
+                            {% render_field form.qs_rate_per_cft id="qs_rate_per_cft" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3 col-compact">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern" style="color: var(--primary-emerald);">Final Cost (Grand Total)</label>
+                            {% render_field form.qs_final_cost id="qs_final_cost" class="form-control form-control-modern disable_a_href font-weight-bold" style="color: var(--primary-emerald); font-size: 1.1rem;" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Detail Sections (Accordions) -->
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="form-group-modern mb-2">
+                        <label class="form-label-modern text-muted small">Address & Terms</label>
+                        <div id="accordion_left">
+                            <div class="card mb-1 border-0 shadow-none bg-transparent">
+                                <div class="card-header p-0" id="headingOne">
+                                    <button type="button" class="btn btn-link btn-block text-left p-2 bg-light border" data-toggle="collapse" data-target="#collapseOne" style="font-size: 0.85rem; color: var(--text-dark); text-decoration: none;">
+                                        <i class="fas fa-map-marker-alt mr-2 text-primary"></i> Address Details
+                                    </button>
+                                </div>
+                                <div id="collapseOne" class="collapse" data-parent="#accordion_left">
+                                    <div class="p-2 border border-top-0 rounded-bottom">
+                                        {% render_field form.qs_address id="qs_address" class="form-control form-control-modern" rows="2" %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card mb-1 border-0 shadow-none bg-transparent">
+                                <div class="card-header p-0" id="headingTwo">
+                                    <button type="button" class="btn btn-link btn-block text-left p-2 bg-light border" data-toggle="collapse" data-target="#collapseTwo" style="font-size: 0.85rem; color: var(--text-dark); text-decoration: none;">
+                                        <i class="fas fa-check-double mr-2 text-primary"></i> Cost Includes
+                                    </button>
+                                </div>
+                                <div id="collapseTwo" class="collapse" data-parent="#accordion_left">
+                                    <div class="p-2 border border-top-0 rounded-bottom">
+                                        {% render_field form.qs_cost_includes id="qs_cost_includes" class="form-control form-control-modern" rows="2" %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group-modern mb-2">
+                        <label class="form-label-modern text-muted small">Scope & Conditions</label>
+                        <div id="accordion_right">
+                            <div class="card mb-1 border-0 shadow-none bg-transparent">
+                                <div class="card-header p-0" id="headingFour">
+                                    <button type="button" class="btn btn-link btn-block text-left p-2 bg-light border" data-toggle="collapse" data-target="#collapseFour" style="font-size: 0.85rem; color: var(--text-dark); text-decoration: none;">
+                                        <i class="fas fa-gavel mr-2 text-primary"></i> Terms & Conditions
+                                    </button>
+                                </div>
+                                <div id="collapseFour" class="collapse" data-parent="#accordion_right">
+                                    <div class="p-2 border border-top-0 rounded-bottom">
+                                        {% render_field form.qs_terms_condition id="qs_terms_condition" class="form-control form-control-modern" rows="2" %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card mb-1 border-0 shadow-none bg-transparent">
+                                <div class="card-header p-0" id="headingSix">
+                                    <button type="button" class="btn btn-link btn-block text-left p-2 bg-light border" data-toggle="collapse" data-target="#collapseSix" style="font-size: 0.85rem; color: var(--text-dark); text-decoration: none;">
+                                        <i class="fas fa-shield-alt mr-2 text-primary"></i> Scope Analysis
+                                    </button>
+                                </div>
+                                <div id="collapseSix" class="collapse" data-parent="#accordion_right">
+                                    <div class="p-2 border border-top-0 rounded-bottom">
+                                        <label class="small text-muted">Client Scope</label>
+                                        {% render_field form.qs_client_scope id="qs_client_scope" class="form-control form-control-modern mb-2" rows="1" %}
+                                        <label class="small text-muted">BVM Scope</label>
+                                        {% render_field form.qs_bvm_scope id="qs_bvm_scope" class="form-control form-control-modern" rows="1" %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {% render_field form.qs_updated_by id="qs_updated_by" hidden="True" %}
 
             <!-- Message Area -->
-            <div class="message-container my-3 text-center">
+            <div class="message-container my-1 text-center">
                 {% for message in messages %}
-                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} shadow-sm d-inline-block">
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
                     <i class="fas fa-info-circle"></i> {{ message }}
                 </div>
                 {% endfor %}
-                <span id="unique_field_error" class="d-block mt-2 font-weight-bold" style="color: #dc3545;"></span>
+                <span id="unique_field_error" class="d-block mt-2 font-weight-bold text-danger small"></span>
             </div>
 
             <!-- Action Buttons -->
-            <div class="btn-group-modern">
-                <button id="qs_submit_btn" type="submit" class="btn-modern btn-submit">
-                    <i class="fas fa-check"></i> Submit Summary
-                </button>
-                <a href="{% url 'pk_quotationsummary_list' %}" class="btn-modern btn-cancel">
-                    <i class="fas fa-times"></i> Cancel
-                </a>
+            <div class="row mt-2">
+                <div class="col-12 col-xl-9">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button id="qs_submit_btn" type="submit" class="btn-modern btn-submit px-5">
+                            <i class="fas fa-check mr-2"></i> Submit Summary
+                        </button>
+                        <a href="{% url 'pk_quotationsummary_list' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </form>
