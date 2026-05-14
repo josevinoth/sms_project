@@ -27,163 +27,176 @@
         {% csrf_token %}
         <input type="hidden" name="gp_assessment_num" id="gp_assessment_num" value="{{ assessment_id }}">
         
-        <div class="modern-card mb-4">
-            <!-- Section 1: Document & Core Info -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-file-contract"></i> Document & Customer Details</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Document Category</label>
-                        {% render_field form.gp_document_category id="gp_document_category" class="form-control form-control-modern font-weight-bold" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Customer Name</label>
-                        {% render_field form.gp_customer_name id="gp_customer_name" class="form-control form-control-modern select2" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Job Number</label>
-                        {% render_field form.gp_job_no id="gp_job_no" class="form-control form-control-modern font-weight-bold" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Packing Location</label>
-                        {% render_field form.gp_packing_location id="gp_packing_location" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Customer PO</label>
-                        {% render_field form.gp_customer_po id="gp_customer_po" class="form-control form-control-modern select2" %}
+        <div class="modern-card" style="padding: 1rem !important;">
+            <div class="row row-compact">
+                <!-- Column 1: Document Identity -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-file-contract"></i> Identity</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Category</label>
+                            {% render_field form.gp_document_category id="gp_document_category" class="form-control form-control-modern font-weight-bold" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer</label>
+                            {% render_field form.gp_customer_name id="gp_customer_name" class="form-control form-control-modern select2" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Job Number</label>
+                            {% render_field form.gp_job_no id="gp_job_no" class="form-control form-control-modern font-weight-bold" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Location</label>
+                            {% render_field form.gp_packing_location id="gp_packing_location" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer PO</label>
+                            {% render_field form.gp_customer_po id="gp_customer_po" class="form-control form-control-modern select2" %}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Section 2: Financial & Reference Details -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-receipt"></i> Reference & GST Compliance</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Sales Order Ref</label>
-                        {% render_field form.gp_sales_order_po id="gp_sales_order_po" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">General GSTIN</label>
-                        {% render_field form.gp_customer_gstin id="gp_customer_gstin" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern dc-field">
-                        <label class="form-label-modern">Bill-To GSTIN</label>
-                        {% render_field form.gp_customer_bill_to_gstin id="gp_customer_bill_to_gstin" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern dc-field">
-                        <label class="form-label-modern">Ship-To GSTIN</label>
-                        {% render_field form.gp_customer_ship_to_gstin id="gp_customer_ship_to_gstin" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">BVM Invoice No</label>
-                        {% render_field form.gp_bvm_inv_no id="gp_bvm_inv_no" class="form-control form-control-modern" %}
-                    </div>
-                </div>
-                <div class="form-row-modern mt-3">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">BVM Invoice Value</label>
-                        {% render_field form.gp_bvm_inv_value id="gp_bvm_inv_value" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">HSN Code</label>
-                        {% render_field form.gp_hsn_code id="gp_hsn_code" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern dc-field">
-                        <label class="form-label-modern">Returnable Status</label>
-                        {% render_field form.gp_returnable_status id="gp_returnable_status" class="form-control form-control-modern" %}
+                <!-- Column 2: Compliance & Reference -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-receipt"></i> Reference & GST</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Sales Order Ref</label>
+                            {% render_field form.gp_sales_order_po id="gp_sales_order_po" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">GSTIN (General)</label>
+                            {% render_field form.gp_customer_gstin id="gp_customer_gstin" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern dc-field">
+                            <label class="form-label-modern">Bill-To GSTIN</label>
+                            {% render_field form.gp_customer_bill_to_gstin id="gp_customer_bill_to_gstin" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern dc-field">
+                            <label class="form-label-modern">Ship-To GSTIN</label>
+                            {% render_field form.gp_customer_ship_to_gstin id="gp_customer_ship_to_gstin" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">HSN Code</label>
+                            {% render_field form.gp_hsn_code id="gp_hsn_code" class="form-control form-control-modern" %}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Section 3: Staff & Logistics -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-truck-loading"></i> Personnel & Logistics</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Personnel / Staff Name</label>
-                        {% render_field form.gp_s_name id="gp_s_name" class="form-control form-control-modern select2" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Employee ID</label>
-                        {# Render explicit input to enforce consistent styling with other controls #}
-                        <input type="text" id="gp_employee" name="gp_employee" readonly
-                               class="form-control form-control-modern disable_a_href text-center"
-                               value="{% if form.gp_employee.value %}{{ form.gp_employee.value }}{% elif gp_employee %}{{ gp_employee }}{% elif user_id %}{{ user_id }}{% else %}{% endif %}">
-                        <div id="js_message" class="small mt-1 font-weight-bold" style="min-height: 1.2rem;"></div>
-                    </div>
-
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Transporter Name</label>
-                        {% render_field form.gp_transporter_name id="gp_transporter_name" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Consignment No</label>
-                        {% render_field form.gp_consignment_note_no id="gp_consignment_note_no" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern" id="date_label">Movement Date</label>
-                        {% render_field form.gp_consignment_date id="gp_consignment_date" class="form-control form-control-modern" type="date" %}
+                <!-- Column 3: Financial & Staff -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-coins"></i> Valuation & Staff</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">BVM Invoice No</label>
+                            {% render_field form.gp_bvm_inv_no id="gp_bvm_inv_no" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Invoice Value</label>
+                            {% render_field form.gp_bvm_inv_value id="gp_bvm_inv_value" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern dc-field">
+                            <label class="form-label-modern">Returnable Status</label>
+                            {% render_field form.gp_returnable_status id="gp_returnable_status" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Personnel Name</label>
+                            {% render_field form.gp_s_name id="gp_s_name" class="form-control form-control-modern select2" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Employee ID</label>
+                            <input type="text" id="gp_employee" name="gp_employee" readonly
+                                   class="form-control form-control-modern disable_a_href text-center"
+                                   value="{% if form.gp_employee.value %}{{ form.gp_employee.value }}{% elif gp_employee %}{{ gp_employee }}{% elif user_id %}{{ user_id }}{% else %}{% endif %}">
+                        </div>
                     </div>
                 </div>
-                <div class="form-row-modern mt-3">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Vehicle Number</label>
-                        {% render_field form.gp_veh_no id="gp_veh_no" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Vehicle Type</label>
-                        {% render_field form.gp_veh_type id="gp_veh_type" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">E-Way Bill No</label>
-                        {% render_field form.gp_eway_bill_no id="gp_eway_bill_no" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Driver Details</label>
-                        <div class="input-group">
-                            {% render_field form.gp_driver_name id="gp_driver_name" class="form-control form-control-modern" placeholder="Name" %}
-                            {% render_field form.gp_driver_mobile_no id="gp_driver_mobile_no" class="form-control form-control-modern" placeholder="Mobile" %}
+
+                <!-- Column 4: Logistics & Movement -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100" style="border-left: 4px solid var(--accent-orange);">
+                        <div class="form-section-title" style="color: var(--accent-orange) !important;"><i class="fas fa-truck-moving"></i> Movement</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Transporter</label>
+                            {% render_field form.gp_transporter_name id="gp_transporter_name" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Consignment #</label>
+                                    {% render_field form.gp_consignment_note_no id="gp_consignment_note_no" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern" id="date_label">Date</label>
+                                    {% render_field form.gp_consignment_date id="gp_consignment_date" class="form-control form-control-modern" type="date" %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Vehicle #</label>
+                                    {% render_field form.gp_veh_no id="gp_veh_no" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">E-Way Bill</label>
+                                    {% render_field form.gp_eway_bill_no id="gp_eway_bill_no" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Driver Name / Mobile</label>
+                            <div class="input-group">
+                                {% render_field form.gp_driver_name id="gp_driver_name" class="form-control form-control-modern" placeholder="Name" %}
+                                {% render_field form.gp_driver_mobile_no id="gp_driver_mobile_no" class="form-control form-control-modern" placeholder="Mob" %}
+                            </div>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Remarks</label>
+                            {% render_field form.gp_remarks id="gp_remarks" class="form-control form-control-modern" rows="1" style="height: auto !important;" %}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- On-Site Tools Selection -->
-            <div id="tools_section" class="form-section" {% if pack_type != 'On-Site' %}style="display:none;"{% endif %}>
-                <div class="form-section-title text-warning"><i class="fas fa-toolbox"></i> Tools Inventory (On-Site Deployment)</div>
-                <div class="form-group-modern">
-                    <label class="form-label-modern">Assigned Tools</label>
-                    {% render_field form.gp_tools id="gp_tools" class="form-control select2" multiple="multiple" %}
+            <!-- On-Site Tools (Collapsible Logic) -->
+            <div id="tools_section" class="mt-3" {% if pack_type != 'On-Site' %}style="display:none;"{% endif %}>
+                <div class="form-section" style="border: 2px dashed var(--accent-orange); background: rgba(245, 158, 11, 0.05);">
+                    <div class="form-section-title text-warning"><i class="fas fa-toolbox"></i> Tools Inventory (On-Site Deployment)</div>
+                    <div class="form-group-modern">
+                        {% render_field form.gp_tools id="gp_tools" class="form-control select2" multiple="multiple" %}
+                    </div>
                 </div>
             </div>
 
-            <!-- Remarks -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-comment-dots"></i> Additional Documentation Remarks</div>
-                {% render_field form.gp_remarks id="gp_remarks" class="form-control form-control-modern" rows="3" placeholder="Enter any additional movement details here..." %}
-            </div>
-
-            <!-- Messages Area (Standard Django Messages) -->
-            <div class="px-3 text-center">
+            <!-- Messages Area -->
+            <div class="text-center my-2">
+                <div id="js_message" class="small font-weight-bold" style="min-height: 1.2rem;"></div>
                 {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-{% if message.tags == 'success' %}success{% else %}danger{% endif %} d-inline-block shadow-sm py-1 px-3">
-                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} mr-1"></i> {{ message }}
-                </div>
-                {% endfor %}
+                    {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'success' %}success{% else %}danger{% endif %} d-inline-block py-1 px-3 shadow-sm mb-0">
+                        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} mr-1"></i> {{ message }}
+                    </div>
+                    {% endfor %}
                 {% endif %}
             </div>
 
-
             <!-- Action Buttons -->
-            <div class="btn-group-modern mt-4">
-                <button type="submit" class="btn-modern btn-submit">
-                    <i class="fas fa-save"></i> SAVE DOCUMENT
-                </button>
-                <a href="{% url 'packing_gate_list' %}" class="btn-modern btn-cancel">
-                    <i class="fas fa-times"></i> CANCEL
-                </a>
+            <div class="row mt-2">
+                <div class="col-12 col-xl-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn-modern btn-submit px-5">
+                            <i class="fas fa-save mr-2"></i> Save Document
+                        </button>
+                        <a href="{% url 'packing_gate_list' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </form>

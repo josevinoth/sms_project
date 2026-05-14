@@ -20,6 +20,7 @@
     --border-light: #e2e8f0;
     --input-bg: #ffffff;
     --input-border: #94a3b8;
+    --input-focus-bg: #ffedd5; /* Slightly darker orange tint */
     --glass-bg: rgba(255, 255, 255, 0.8);
     --glass-border: rgba(203, 213, 225, 0.5);
     --header-text: #ffffff;
@@ -192,7 +193,7 @@ body {
 
 
 .form-control-modern:focus {
-    background: #fff7ed !important; /* Light orange tint on focus */
+    background: var(--input-focus-bg) !important;
     border-color: #f59e0b !important;
     border-width: 2px !important;
     box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15), 0 0 0 5px rgba(245, 158, 11, 0.1) !important;
@@ -209,7 +210,7 @@ body {
 }
 
 select.form-control-modern {
-    background-color: #fffaf0 !important; /* Warm light tint to match new theme */
+    background-color: #fff4e5 !important; /* Warm light tint to match new theme */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2314b8a6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 1.1rem center;
@@ -222,7 +223,7 @@ select.form-control-modern {
 }
 
 select.form-control-modern:focus {
-    background-color: #fff7ed !important;
+    background-color: var(--input-focus-bg) !important;
 }
 
 /* Action Buttons Layout */
@@ -577,6 +578,15 @@ select.form-control-modern:focus {
     border: 1.5px solid var(--input-border) !important;
     border-radius: 12px !important;
     height: 52px !important;
+    transition: all 0.3s ease;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single,
+.select2-container--default.select2-container--open .select2-selection--single {
+    background-color: var(--input-focus-bg) !important;
+    border-color: #f59e0b !important;
+    border-width: 2px !important;
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15) !important;
 }
 
 
@@ -735,4 +745,101 @@ input:checked + .slider:before {
 /* Transitions for Theme Switch */
 body, .modern-card, .form-section, .form-control-modern, .modern-table td, .table-container-modern, .modern-header, .header_style_modern {
     transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, background 0.4s ease;
+}
+
+/* ==========================================================================
+   HIGH-DENSITY DASHBOARD UTILITIES
+   ========================================================================== */
+
+.row-compact {
+    margin-left: -8px !important;
+    margin-right: -8px !important;
+}
+
+.col-compact {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
+/* Compact Form Section */
+.form-section-compact {
+    padding: 1rem !important;
+    margin-bottom: 0.75rem !important;
+}
+
+/* Sidebar Calculation Card (Global Standard) */
+.calculation-card {
+    background: var(--bg-card);
+    border-radius: 20px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 10px 30px var(--shadow-main);
+    overflow: hidden;
+    height: 100%;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.calc-header {
+    background: var(--primary-glow);
+    padding: 1rem 1.5rem;
+    color: white;
+}
+
+.calc-body {
+    padding: 1.2rem;
+    flex-grow: 1;
+}
+
+.calc-footer {
+    padding: 1rem 1.5rem;
+    background: var(--bg-page);
+    border-top: 1px solid var(--border-light);
+}
+
+.result-box {
+    background: rgba(45, 212, 191, 0.05);
+    border: 1.5px dashed var(--accent-emerald);
+    border-radius: 16px;
+    padding: 1.2rem;
+    text-align: center;
+}
+
+.result-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.result-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--accent-emerald);
+}
+
+.summary-item {
+    font-size: 0.9rem;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+/* Dark Theme Overrides for Dashboard */
+[data-theme="dark"] .calculation-card {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+[data-theme="dark"] .calc-footer {
+    background: #0f172a;
+}
+
+[data-theme="dark"] .result-box {
+    background: rgba(45, 212, 191, 0.1);
 }

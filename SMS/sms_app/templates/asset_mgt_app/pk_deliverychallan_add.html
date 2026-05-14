@@ -18,109 +18,128 @@
     <form method="POST" action="" id="delivery_challan_add" enctype="multipart/form-data">
         {% csrf_token %}
         
-        <div class="modern-card mb-4">
-            <!-- Section 1: Customer & Assessment -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-user-tie"></i> Customer & Assessment Information</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Assessment Number</label>
-                        {% render_field form.dc_assessment_num id="dc_assessment_num" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Customer Name</label>
-                        {% render_field form.dc_customer_name id="dc_customer_name" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Customer PO</label>
-                        {% render_field form.dc_customer_po id="dc_customer_po" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Customer GSTIN</label>
-                        {% render_field form.dc_customer_gstin id="dc_customer_gstin" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern w-100">
-                        <label class="form-label-modern">Customer Address</label>
-                        {% render_field form.dc_customer_address id="dc_customer_address" class="form-control form-control-modern disable_a_href" rows="2" %}
+        <div class="modern-card" style="padding: 1rem !important;">
+            <div class="row row-compact">
+                <!-- Column 1: Source & Customer -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-id-card"></i> Source Details</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Assessment #</label>
+                            {% render_field form.dc_assessment_num id="dc_assessment_num" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer</label>
+                            {% render_field form.dc_customer_name id="dc_customer_name" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer PO</label>
+                            {% render_field form.dc_customer_po id="dc_customer_po" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">GSTIN</label>
+                            {% render_field form.dc_customer_gstin id="dc_customer_gstin" class="form-control form-control-modern disable_a_href" %}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Section 2: Order & Bill Details -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-file-invoice"></i> Order & Bill Details</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Sales Order</label>
-                        {% render_field form.dc_sales_order_po id="dc_sales_order_po" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">E-WAY Bill No</label>
-                        {% render_field form.dc_eway_billno id="dc_eway_billno" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">E-WAY Bill Date</label>
-                        {% render_field form.dc_eway_date id="dc_eway_date" type="date" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">GRN Ref</label>
-                        {% render_field form.dc_grn id="dc_grn" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Stock Register</label>
-                        {% render_field form.dc_stock_register id="dc_stock_register" class="form-control form-control-modern" %}
+                <!-- Column 2: Order & Compliance -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-file-contract"></i> Order & Compliance</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Sales Order</label>
+                            {% render_field form.dc_sales_order_po id="dc_sales_order_po" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">E-WAY Bill No</label>
+                            {% render_field form.dc_eway_billno id="dc_eway_billno" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">E-WAY Date</label>
+                            {% render_field form.dc_eway_date id="dc_eway_date" type="date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">GRN Ref</label>
+                                    {% render_field form.dc_grn id="dc_grn" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Stock Reg</label>
+                                    {% render_field form.dc_stock_register id="dc_stock_register" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Section 3: Transport & Dispatch -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-truck"></i> Transport & Dispatch Information</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Transport Name</label>
-                        {% render_field form.dc_transporter_name id="dc_transporter_name" class="form-control form-control-modern" %}
+                <!-- Column 3: Dispatch & Transport -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-shipping-fast"></i> Dispatch Details</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Transporter Name</label>
+                            {% render_field form.dc_transporter_name id="dc_transporter_name" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Consignment Note</label>
+                            {% render_field form.dc_consignment_note id="dc_consignment_note" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Dispatch Date</label>
+                            {% render_field form.dc_date id="dc_date" type="date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vehicle No</label>
+                            {% render_field form.dc_vehicle_no id="dc_vehicle_no" class="form-control form-control-modern" %}
+                        </div>
                     </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Consignment Note</label>
-                        {% render_field form.dc_consignment_note id="dc_consignment_note" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Dispatch Date</label>
-                        {% render_field form.dc_date id="dc_date" type="date" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Vehicle No</label>
-                        {% render_field form.dc_vehicle_no id="dc_vehicle_no" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Driver Name</label>
-                        {% render_field form.dc_driver_name id="dc_driver_name" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Driver Mobile No</label>
-                        {% render_field form.dc_driver_mobile_num id="dc_driver_mobile_num" class="form-control form-control-modern" %}
+                </div>
+
+                <!-- Column 4: Driver & Address -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-user-check"></i> Driver & Delivery</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Driver Name</label>
+                            {% render_field form.dc_driver_name id="dc_driver_name" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Driver Mobile</label>
+                            {% render_field form.dc_driver_mobile_num id="dc_driver_mobile_num" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Delivery Address</label>
+                            {% render_field form.dc_customer_address id="dc_customer_address" class="form-control form-control-modern disable_a_href" style="height: 100px !important; line-height: 1.4;" %}
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Messages Area -->
-            <div class="message-container my-3">
+            <div class="message-container my-2 text-center">
                 {% for message in messages %}
-                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} shadow-sm">
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
                     <i class="fas fa-info-circle"></i> {{ message }}
                 </div>
                 {% endfor %}
             </div>
 
             <!-- Action Buttons -->
-            <div class="btn-group-modern">
-                <button type="submit" class="btn-modern btn-submit">
-                    <i class="fas fa-check"></i> Submit Dispatch
-                </button>
-                <a href="{% url 'packing_delivery_list' %}" class="btn-modern btn-cancel">
-                    <i class="fas fa-times"></i> Cancel
-                </a>
+            <div class="row mt-2">
+                <div class="col-12 col-xl-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn-modern btn-submit px-5">
+                            <i class="fas fa-truck-loading mr-2"></i> Submit Dispatch
+                        </button>
+                        <a href="{% url 'packing_delivery_list' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </form>
