@@ -608,6 +608,21 @@
           }
         });
       });
+
+      $("#transport").on("click", function(e){
+        e.preventDefault();
+        $.ajax({
+          url: "{% url 'tms_dashboard' %}",
+          type: "GET",
+          success: function(data){
+            $("#main-content").html(data);
+            window.scrollTo(0, 0);
+          },
+          error: function(){
+            alert("Failed to load TMS Dashboard");
+          }
+        });
+      });
     });
 </script>
 
