@@ -156,7 +156,7 @@
 
             <!-- Action Buttons -->
             <div class="row mt-2">
-                <div class="col-12 col-xl-9">
+                <div class="col-12 col-xl-12">
                     <div class="d-flex justify-content-between align-items-center">
                         <button type="submit" class="btn-modern btn-submit px-5">
                             <i class="fas fa-check-double mr-2"></i> Update Retrieval
@@ -176,31 +176,6 @@
         {% render_field form.ct_sqrt_req id="ct_sqrt_req" hidden="True" %}
         <input type="hidden" id="hidden_pc_stock_description">
 
-        <!-- Messages & Errors -->
-        <div class="message-container my-3">
-            {% for message in messages %}
-            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} shadow-sm">
-                <i class="fas fa-info-circle"></i> {{ message }}
-            </div>
-            {% endfor %}
-            {% if form.errors %}
-            <div class="alert alert-danger shadow-sm">
-                <ul class="mb-0">
-                    {% for field, errors in form.errors.items %}
-                    <li><strong>{{ field }}</strong>: {{ errors|join:", " }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-        </div>
-
-        <div class="btn-group-modern mt-4">
-            <button type="submit" class="btn-modern btn-submit">
-                <i class="fas fa-check-double"></i> UPDATE RETRIEVAL
-            </button>
-            <a href="{% url 'pk_retrival_list' %}" class="btn-modern btn-cancel">
-                <i class="fas fa-times"></i> CANCEL
-            </a>
         </div>
     </form>
 

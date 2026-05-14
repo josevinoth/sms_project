@@ -20,6 +20,7 @@
     --border-light: #e2e8f0;
     --input-bg: #ffffff;
     --input-border: #94a3b8;
+    --input-focus-bg: #ffedd5; /* Slightly darker orange tint */
     --glass-bg: rgba(255, 255, 255, 0.8);
     --glass-border: rgba(203, 213, 225, 0.5);
     --header-text: #ffffff;
@@ -192,7 +193,7 @@ body {
 
 
 .form-control-modern:focus {
-    background: #fff7ed !important; /* Light orange tint on focus */
+    background: var(--input-focus-bg) !important;
     border-color: #f59e0b !important;
     border-width: 2px !important;
     box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15), 0 0 0 5px rgba(245, 158, 11, 0.1) !important;
@@ -209,7 +210,7 @@ body {
 }
 
 select.form-control-modern {
-    background-color: #fffaf0 !important; /* Warm light tint to match new theme */
+    background-color: #fff4e5 !important; /* Warm light tint to match new theme */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2314b8a6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 1.1rem center;
@@ -222,7 +223,7 @@ select.form-control-modern {
 }
 
 select.form-control-modern:focus {
-    background-color: #fff7ed !important;
+    background-color: var(--input-focus-bg) !important;
 }
 
 /* Action Buttons Layout */
@@ -577,6 +578,15 @@ select.form-control-modern:focus {
     border: 1.5px solid var(--input-border) !important;
     border-radius: 12px !important;
     height: 52px !important;
+    transition: all 0.3s ease;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single,
+.select2-container--default.select2-container--open .select2-selection--single {
+    background-color: var(--input-focus-bg) !important;
+    border-color: #f59e0b !important;
+    border-width: 2px !important;
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.15) !important;
 }
 
 
