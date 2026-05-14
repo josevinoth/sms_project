@@ -261,6 +261,27 @@
         <div id="main-content" class="col-md-10 p-4">
             <div class="home-dashboard-wrap">
                 <div class="home-kpi-grid">
+                    <a href="{% url 'location_list' %}" class="home-kpi-card home-kpi-card--violet">
+                        <div class="home-kpi-head">
+                            <span>Branches</span>
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="home-kpi-value">{{ count_location }}</div>
+                    </a>
+                    <a href="{% url 'user_list' %}" class="home-kpi-card home-kpi-card--cyan">
+                        <div class="home-kpi-head">
+                            <span>Employees</span>
+                            <i class="fas fa-user-friends"></i>
+                        </div>
+                        <div class="home-kpi-value">{{ count_employee }}</div>
+                    </a>
+                    <a href="{% url 'asset_list' %}" class="home-kpi-card home-kpi-card--blue">
+                        <div class="home-kpi-head">
+                            <span>Total Asset Cost</span>
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                        <div class="home-kpi-value">{{ sum_ass_cost|floatformat:2 }}</div>
+                    </a>
                     <a href="{% url 'product_list' %}" class="home-kpi-card home-kpi-card--violet">
                         <div class="home-kpi-head">
                             <span>Products</span>
@@ -293,30 +314,29 @@
 
                 <div class="home-dashboard-grid">
                     <div class="home-panel home-panel--wide">
-                        <div class="home-panel-title">Warehouse Usage (Monthly)</div>
+                        <div class="home-panel-title">Warehouse Usage (Monthly: Area sq.ft & Volume CBM)</div>
+                        <form method="get" id="warehouse-usage-filter-form" class="home-filter-row">
+                            <select name="branch_id" id="branch-filter" class="home-filter-control">
+                                <option value="">All Branches</option>
+                                {% for branch in branch_filter_list %}
+                                    <option value="{{ branch.id }}" {% if selected_branch_id == branch.id|stringformat:"s" %}selected{% endif %}>{{ branch.loc_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <select name="unit_id" id="unit-filter" class="home-filter-control">
+                                <option value="">All Units</option>
+                                {% for unit in unit_filter_list %}
+                                    <option value="{{ unit.id }}" {% if selected_unit_id == unit.id|stringformat:"s" %}selected{% endif %}>{{ unit.unit_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <select name="bay_id" id="bay-filter" class="home-filter-control">
+                                <option value="">All Bays</option>
+                                {% for bay in bay_filter_list %}
+                                    <option value="{{ bay.id }}" {% if selected_bay_id == bay.id|stringformat:"s" %}selected{% endif %}>{{ bay.bay_bayname }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-info btn-sm">Apply</button>
+                        </form>
                         <canvas id="homeTrendChart" height="110"></canvas>
-                    </div>
-
-                    <div class="home-panel home-panel--snapshot">
-                        <div class="home-panel-title">Current Snapshot</div>
-                        <div class="home-stat-list">
-                            <a href="{% url 'location_list' %}" class="home-stat-row">
-                                <span><i class="fas fa-map-marker-alt mr-2"></i>Branches</span>
-                                <strong>{{ count_location }}</strong>
-                            </a>
-                            <a href="{% url 'user_list' %}" class="home-stat-row">
-                                <span><i class="fas fa-user-friends mr-2"></i>Employees</span>
-                                <strong>{{ count_employee }}</strong>
-                            </a>
-                            <div class="home-stat-row">
-                                <span><i class="fas fa-rupee-sign mr-2"></i>Total Asset Cost</span>
-                                <strong>{{ sum_ass_cost }}</strong>
-                            </div>
-                            <div class="home-stat-row">
-                                <span><i class="fas fa-rupee-sign mr-2"></i>Total Service Cost</span>
-                                <strong>{{ sum_service_cost }}</strong>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="home-panel home-panel--team">
@@ -346,11 +366,17 @@
                             if (!trendCanvas || !donutCanvas || !weekCanvas) return;
 
                             var monthLabels = JSON.parse('{{ warehouse_month_labels_json|default:"[]"|escapejs }}');
-                            var warehouseUsage = JSON.parse('{{ monthly_warehouse_usage_json|default:"[]"|escapejs }}');
+                            var warehouseArea = JSON.parse('{{ monthly_warehouse_area_json|default:"[]"|escapejs }}');
+                            var warehouseVolume = JSON.parse('{{ monthly_warehouse_volume_json|default:"[]"|escapejs }}');
                             var departmentLabels = JSON.parse('{{ team_department_labels_json|default:"[]"|escapejs }}');
                             var departmentValues = JSON.parse('{{ team_department_values_json|default:"[]"|escapejs }}');
                             var regionMonthLabels = JSON.parse('{{ region_month_labels_json|default:"[]"|escapejs }}');
                             var regionMonthDatasets = JSON.parse('{{ region_month_datasets_json|default:"[]"|escapejs }}');
+
+                            var teamPalette = ['#36d1ff', '#7f7dff', '#c27cff', '#5f9cff', '#22d3ee', '#a78bfa', '#f472b6', '#f59e0b', '#34d399', '#60a5fa'];
+                            var departmentColors = departmentLabels.map(function(_, index) {
+                                return teamPalette[index % teamPalette.length];
+                            });
 
                             var regionColors = ['#5ed6ff', '#7f7dff', '#c27cff', '#5f9cff', '#2fb3ff', '#8bd3ff'];
                             var regionDatasets = regionMonthDatasets.map(function(item, index) {
@@ -371,10 +397,20 @@
                                     labels: monthLabels,
                                     datasets: [
                                         {
-                                            label: 'Warehouse Usage',
-                                            data: warehouseUsage,
+                                            label: 'Area (sq.ft)',
+                                            data: warehouseArea,
                                             borderColor: '#36d1ff',
                                             backgroundColor: 'rgba(54, 209, 255, 0.18)',
+                                            fill: true,
+                                            tension: 0.35,
+                                            borderWidth: 2,
+                                            pointRadius: 3,
+                                        },
+                                        {
+                                            label: 'Volume (CBM)',
+                                            data: warehouseVolume,
+                                            borderColor: '#7f7dff',
+                                            backgroundColor: 'rgba(127, 125, 255, 0.12)',
                                             fill: true,
                                             tension: 0.35,
                                             borderWidth: 2,
@@ -385,7 +421,25 @@
                                 options: {
                                     responsive: true,
                                     maintainAspectRatio: false,
-                                    plugins: { legend: { labels: { color: '#d9e3ff' } } },
+                                    interaction: {
+                                        mode: 'index',
+                                        intersect: false,
+                                    },
+                                    plugins: {
+                                        legend: { labels: { color: '#d9e3ff' } },
+                                        tooltip: {
+                                            callbacks: {
+                                                title: function (items) {
+                                                    return items[0].label + ' (Area: sq.ft, Volume: CBM)';
+                                                },
+                                                label: function (context) {
+                                                    var value = Number(context.parsed.y || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
+                                                    var suffix = context.dataset.label.indexOf('Area') === 0 ? ' sq.ft' : ' CBM';
+                                                    return context.dataset.label + ': ' + value + suffix;
+                                                }
+                                            }
+                                        }
+                                    },
                                     scales: {
                                         x: { ticks: { color: '#9fb1d9' }, grid: { color: 'rgba(255,255,255,0.08)' } },
                                         y: { ticks: { color: '#9fb1d9' }, grid: { color: 'rgba(255,255,255,0.08)' }, beginAtZero: true }
@@ -399,7 +453,7 @@
                                     labels: departmentLabels,
                                     datasets: [{
                                         data: departmentValues,
-                                        backgroundColor: ['#36d1ff', '#7f7dff', '#c27cff'],
+                                        backgroundColor: departmentColors,
                                         borderColor: '#0b1537',
                                         borderWidth: 2
                                     }]
@@ -407,7 +461,21 @@
                                 options: {
                                     responsive: true,
                                     maintainAspectRatio: false,
-                                    plugins: { legend: { position: 'right', labels: { color: '#d9e3ff' } } }
+                                    plugins: {
+                                        legend: { position: 'bottom', labels: { color: '#d9e3ff' } },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function (context) {
+                                                    var value = Number(context.parsed || 0);
+                                                    var total = context.dataset.data.reduce(function (acc, item) {
+                                                        return acc + Number(item || 0);
+                                                    }, 0);
+                                                    var pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                                    return context.label + ': ' + value + ' users (' + pct + '%)';
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             });
 
@@ -420,7 +488,24 @@
                                 options: {
                                     responsive: true,
                                     maintainAspectRatio: false,
-                                    plugins: { legend: { display: true, labels: { color: '#d9e3ff' } } },
+                                    interaction: {
+                                        mode: 'index',
+                                        intersect: false,
+                                    },
+                                    plugins: {
+                                        legend: { display: true, labels: { color: '#d9e3ff' } },
+                                        tooltip: {
+                                            callbacks: {
+                                                title: function (items) {
+                                                    return items[0].label + ' (Volume: CBM)';
+                                                },
+                                                label: function (context) {
+                                                    var value = Number(context.parsed.y || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
+                                                    return context.dataset.label + ': ' + value + ' CBM';
+                                                }
+                                            }
+                                        }
+                                    },
                                     scales: {
                                         x: {
                                             ticks: { color: '#9fb1d9' },
@@ -445,6 +530,30 @@
                         }
                     })();
                 </script>
+
+                                <script>
+                                    (function () {
+                                        var form = document.getElementById('warehouse-usage-filter-form');
+                                        if (!form) return;
+
+                                        var branchFilter = document.getElementById('branch-filter');
+                                        var unitFilter = document.getElementById('unit-filter');
+                                        var bayFilter = document.getElementById('bay-filter');
+
+                                        if (branchFilter && unitFilter && bayFilter) {
+                                            branchFilter.addEventListener('change', function () {
+                                                unitFilter.value = '';
+                                                bayFilter.value = '';
+                                                form.submit();
+                                            });
+
+                                            unitFilter.addEventListener('change', function () {
+                                                bayFilter.value = '';
+                                                form.submit();
+                                            });
+                                        }
+                                    })();
+                                </script>
 
 <script>
     var coll = document.getElementsByClassName("collapsible");
