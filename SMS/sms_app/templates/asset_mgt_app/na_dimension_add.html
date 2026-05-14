@@ -19,88 +19,128 @@
     <form method="POST" action="">
         {% csrf_token %}
 
-        <div class="modern-card mb-4">
-            <!-- Section 1: Identification -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-tag"></i> Identification</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Item Number</label>
-                        {% render_field form.nad_item id="nad_item_id" class="form-control form-control-modern disable_a_href" %}
+        <div class="modern-card" style="padding: 1rem !important;">
+            <div class="row row-compact">
+                <!-- Column 1: Identification -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-tag"></i> Identification</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Item Number</label>
+                            {% render_field form.nad_item id="nad_item_id" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Assessment Number</label>
+                            {% render_field form.nad_assess_num id="nad_assess_num" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Requirement Type</label>
+                            {% render_field form.nad_type_of_req id="nad_type_of_req" onchange="requirement_type()" class="form-control form-control-modern" %}
+                        </div>
                     </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Assessment Number</label>
-                        {% render_field form.nad_assess_num id="nad_assess_num" class="form-control form-control-modern disable_a_href" %}
+                </div>
+
+                <!-- Column 2: Material Details -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100" id="nad_form">
+                        <div class="form-section-title"><i class="fas fa-boxes"></i> Material Specs</div>
+                        <div class="form-group-modern" id="wood_type">
+                            <label class="form-label-modern">Wood Type</label>
+                            {% render_field form.nad_wood_type id="nad_wood_type" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern" id="wood_desc">
+                            <label class="form-label-modern">Wood Description</label>
+                            {% render_field form.nad_wood_description id="nad_wood_description" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern" id="consumables">
+                            <label class="form-label-modern">Consumables</label>
+                            {% render_field form.nad_consumables id="nad_consumables" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern" id="vehicle_type">
+                            <label class="form-label-modern">Vehicle Type</label>
+                            {% render_field form.nad_vechicle_type id="nad_vechicle_type" class="form-control form-control-modern" %}
+                        </div>
                     </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Requirement Type</label>
-                        {% render_field form.nad_type_of_req id="nad_type_of_req" onchange="requirement_type()" class="form-control form-control-modern" %}
+                </div>
+
+                <!-- Column 3: Physical Dimensions -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-vector-square"></i> Dimensions</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Dimension Type</label>
+                            {% render_field form.nad_dimension_type id="nad_dimension_type" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="row no-gutters">
+                            <div class="col-4 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Length</label>
+                                    {% render_field form.nad_length id="nad_length" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-4 px-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Width</label>
+                                    {% render_field form.nad_width id="nad_width" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-4 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Height</label>
+                                    {% render_field form.nad_height id="nad_height" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Plywood Thickness</label>
+                            {% render_field form.nad_plywood_thickness id="nad_plywood_thickness" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 4: Weight & Qty -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-weight-hanging"></i> Weight & Qty</div>
+                        <div class="form-group-modern" id="uom">
+                            <label class="form-label-modern">UOM</label>
+                            {% render_field form.nad_uom id="nad_uom" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Per Job Weight (KG)</label>
+                            {% render_field form.nad_job_weight id="nad_job_weight" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Quantity to Supply</label>
+                            {% render_field form.nad_quantity id="nad_quantity" class="form-control form-control-modern" %}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Section 2: Material Details -->
-            <div class="form-section" id="nad_form">
-                <div class="form-section-title"><i class="fas fa-boxes"></i> Material Details</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern" id="wood_type">
-                        <label class="form-label-modern">Wood Type</label>
-                        {% render_field form.nad_wood_type id="nad_wood_type" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern" id="wood_desc">
-                        <label class="form-label-modern">Wood Description</label>
-                        {% render_field form.nad_wood_description id="nad_wood_description" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern" id="consumables">
-                        <label class="form-label-modern">Consumables</label>
-                        {% render_field form.nad_consumables id="nad_consumables" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern" id="vehicle_type">
-                        <label class="form-label-modern">Vehicle Type</label>
-                        {% render_field form.nad_vechicle_type id="nad_vechicle_type" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern" id="uom">
-                        <label class="form-label-modern">UOM</label>
-                        {% render_field form.nad_uom id="nad_uom" class="form-control form-control-modern" %}
-                    </div>
+            {% render_field form.nad_updated_by id="nad_updated_by" hidden="True" %}
+
+            <!-- Messages -->
+            <div class="message-container my-1 text-center">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
+                    <i class="fas fa-info-circle"></i> {{ message }}
                 </div>
+                {% endfor %}
             </div>
 
-            <!-- Section 3: Dimensions -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-vector-square"></i> Dimensions</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Dimension Type</label>
-                        {% render_field form.nad_dimension_type id="nad_dimension_type" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Length</label>
-                        {% render_field form.nad_length id="nad_length" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Width</label>
-                        {% render_field form.nad_width id="nad_width" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Height</label>
-                        {% render_field form.nad_height id="nad_height" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Plywood Thickness</label>
-                        {% render_field form.nad_plywood_thickness id="nad_plywood_thickness" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Per Job Weight</label>
-                        {% render_field form.nad_job_weight id="nad_job_weight" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Quantity to Supply</label>
-                        {% render_field form.nad_quantity id="nad_quantity" class="form-control form-control-modern" %}
+            <!-- Form Actions -->
+            <div class="row mt-2">
+                <div class="col-12 col-xl-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn-modern btn-submit px-5" id="save-btn">
+                            <i class="fas fa-check mr-2"></i> Save Dimension
+                        </button>
+                        <a href="{% url 'na_dimension_cancel' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
                     </div>
                 </div>
-
-                {% render_field form.nad_updated_by id="nad_updated_by" hidden="True" class="form-control" %}
             </div>
         </div>
 

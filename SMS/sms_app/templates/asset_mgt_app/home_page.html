@@ -17,6 +17,33 @@
 <!-- extras JS (flatpickr + export) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
 <link rel="stylesheet" href="{% static 'home_page.css' %}?v=20260501" />
+<style>
+    .nav-category-header {
+        padding: 7.5px 15px 3px 15px; /* Reduced by 25% */
+        font-size: 10px;
+        font-weight: bold;
+        color: #7ec8e3;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        background: rgba(255, 255, 255, 0.05);
+        margin-top: 8px;
+        margin-bottom: 2px;
+        display: none;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+    .sidenav:hover .nav-category-header {
+        display: block;
+    }
+    /* Reduce global padding by 25% for items in this page */
+    .sidenav a, .collapsible {
+        padding: 7.5px 15px !important; /* Original was 10px */
+        min-height: 30px !important; /* Original was 40px, reduced for density */
+    }
+    .sidenav:hover a, .sidenav:hover .collapsible {
+        padding-left: 15px !important;
+    }
+</style>
 
 <div class="container-fluid">
     <div class="row">
@@ -75,6 +102,7 @@
                         <a href="{% url 'customer_contract_rate_report' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Contract Status </a>
                         <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> CMS Misc</button>
                         <div class="content">
+                            <a href="{% url 'email_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Email Master </a>
                             <a href="{% url 'crcountfrom_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Credit Count Type</a>
                             <a href="{% url 'customertype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Type</a>
                             <a href="{% url 'customername_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Name</a>
@@ -154,30 +182,51 @@
                     <button id="transport" type="button" class="collapsible "><i class="fa fa-truck" aria-hidden="true"></i> Transport Management System (TMS)</button>
                     <div class="content">
                         <!--        <a href="{% url 'transport_nav' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Transport </a>-->
+                        <!-- Operations Group -->
+                        <div class="nav-category-header">Operations</div>
                         <a href="{% url 'enquirynote_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Enquiry Note </a>
                         <a href="{% url 'vehicle_allotment_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Allotment </a>
                         <a href="{% url 'consignmentdetail_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Consignment Detail </a>
                         <a href="{% url 'tripdetail_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Trip Detail </a>
-                        <a href="{% url 'tripclosure_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Trip Closure </a>
-                        <a href="{% url 'trip_settlement_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Trip Settlement </a>
-                        <a href="{% url 'invoice_documents_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Invoice Documents </a>
-                        <a href="{% url 'trip_finance_approval_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Finance Approval </a>
-                        <a href="{% url 'trans_invoice_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Invoice List </a>
-                        <a href="{% url 'maintenance_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Maintenance </a>
-                        <a href="{% url 'manager_approval_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Manager Approval <span class="badge bg-danger p-2 blink">{{manager_listcount}}</span></a>
-                        <a href="{% url 'finance_approval_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Finance Aprroval <span class="badge bg-danger p-2 blink">{{finance_listcount }}</span></a>
-                        <a href="{% url 'maintenance_bill_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Maintenance Bill </a>
-                        <a href="{% url 'attached_bill_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Attached bill </a>
+                        <a id="track_vehicle" href="{% url 'track_vehicle_position' %}"><i class="fa fa-map-marker-alt" aria-hidden="true"></i> Track Vehicle</a>
+
+                        <!-- Settlement Group -->
+                        <div class="nav-category-header">Settlement & Closure</div>
+                        <a href="{% url 'tripclosure_list' %}"><i class="fa fa-check-circle" aria-hidden="true"></i> Trip Closure </a>
+                        <a href="{% url 'trip_settlement_view' %}"><i class="fa fa-handshake" aria-hidden="true"></i> Trip Settlement </a>
+
+                        <!-- Billing Group -->
+                        <div class="nav-category-header">Billing & Invoicing</div>
+                        <a href="{% url 'trans_invoice_list' %}"><i class="fa fa-file-invoice" aria-hidden="true"></i> Invoice List </a>
+                        <a href="{% url 'invoice_documents_list' %}"><i class="fa fa-file-alt" aria-hidden="true"></i> Invoice Supportings </a>
+                        <a href="{% url 'attached_bill_list' %}"><i class="fa fa-paperclip" aria-hidden="true"></i> Attached bill </a>
+                        <a href="{% url 'market_bill_list' %}"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Market bill </a>
+
+                        <!-- Approvals Group -->
+                        <div class="nav-category-header">Approvals</div>
+                        <a id="tripapproval" href="{% url 'trip_approval_view' %}"><i class="fa fa-user-check" aria-hidden="true"></i> Trip Approval <span class="badge bg-danger p-2 blink">{{ approval_count }}</span></a>
+                        <a href="{% url 'manager_approval_list' %}"><i class="fa fa-user-tie" aria-hidden="true"></i> Manager Approval <span class="badge bg-danger p-2 blink">{{manager_listcount}}</span></a>
+                        <a href="{% url 'trip_finance_approval_view' %}"><i class="fa fa-money-check-alt" aria-hidden="true"></i> Finance Approval (Trip) </a>
+                        <a href="{% url 'finance_approval_list' %}"><i class="fa fa-wallet" aria-hidden="true"></i> Finance Approval (Admin) <span class="badge bg-danger p-2 blink">{{finance_listcount }}</span></a>
+                        <a id="checklistapproval" href="{% url 'trip_highvalue_list' %}"><i class="fa fa-clipboard-check" aria-hidden="true"></i> Check List Approval <span class="badge bg-danger p-2 blink">{{ checklist_count }}</span></a>
+
+                        <!-- Fleet & Maintenance -->
+                        <div class="nav-category-header">Fleet & Maintenance</div>
+                        <a href="{% url 'maintenance_list' %}"><i class="fa fa-tools" aria-hidden="true"></i> Maintenance </a>
+                        <a href="{% url 'maintenance_bill_list' %}"><i class="fa fa-file-invoice-dollar" aria-hidden="true"></i> Maintenance Bill </a>
+                        <a href="{% url 'fuelfilling_list' %}"><i class="fa fa-gas-pump" aria-hidden="true"></i> Fuel Filling </a>
+                        <a href="{% url 'vehicle_availability' %}"><i class="fa fa-truck-moving" aria-hidden="true"></i> Vehicle Availability </a>
+
+                        <!-- Drivers Group -->
+                        <div class="nav-category-header">Drivers</div>
+                        <a href="{% url 'driver_list' %}"><i class="fa fa-user-cog" aria-hidden="true"></i> Driver Master </a>
+                        <a href="{% url 'driver_settlement_list' %}"><i class="fa fa-user-shield" aria-hidden="true"></i> Driver settlement </a>
+                        <a href="{% url 'driver_salary_list' %}"><i class="fa fa-money-bill-wave" aria-hidden="true"></i> Driver Salary </a>
+
+                        <!-- Reports -->
+                        <div class="nav-category-header">Reports</div>
                         <a href="{% url 'transport_reports' %}"><i class="fa fa-book" aria-hidden="true"></i> Reports </a>
-                        <a href="{% url 'market_bill_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Market bill </a>
-                        <a href="{% url 'driver_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Driver Master </a>
-                        <a href="{% url 'driver_settlement_list' %}"><i class="far fa-user-circle"></i> Driver settlement </a>
-                        <a href="{% url 'driver_salary_list' %}"><i class="fas fa-money-bill-wave"></i> Driver Salary </a>
-                        <a href="{% url 'fuelfilling_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Fuel Filling </a>
-                        <a href="{% url 'vehicle_availability' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Vehicle Availability </a>
-                        <a id="tripapproval" href="{% url 'trip_approval_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Trip Approval <span class="badge bg-danger p-2 blink">{{ approval_count }}</span></a>
-                        <a id="checklistapproval" href="{% url 'trip_highvalue_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Check List Approval <span class="badge bg-danger p-2 blink">{{ checklist_count }}</span></a>
-                        <a id="track_vehicle" href="{% url 'track_vehicle_position' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Track Vehicle</a>
+
                         <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> TMS Misc</button>
                         <div class="content">
                             <a href="{% url 'location_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Location Master </a>
@@ -186,7 +235,6 @@
                             <a href="{% url 'bunkname_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Bunk Master </a>
                             <a href="{% url 'vehiclemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Master </a>
                             <a href="{% url 'halting_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Halting Charges Master </a>
-                            <a href="{% url 'email_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Email Master </a>
                             <a href="{% url 'vehiclecategory_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Category</a>
                             <a href="{% url 'vehicletype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Type</a>
                             <a href="{% url 'movementtype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Movement Type</a>
@@ -714,6 +762,21 @@
           },
           error: function(){
             alert("Failed to load Warehouse Dashboard");
+          }
+        });
+      });
+
+      $("#transport").on("click", function(e){
+        e.preventDefault();
+        $.ajax({
+          url: "{% url 'tms_dashboard' %}",
+          type: "GET",
+          success: function(data){
+            $("#main-content").html(data);
+            window.scrollTo(0, 0);
+          },
+          error: function(){
+            alert("Failed to load TMS Dashboard");
           }
         });
       });

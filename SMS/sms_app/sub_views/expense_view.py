@@ -36,6 +36,7 @@ def expense_add(request, expense_id=0):
                 'first_name': first_name,
                 'user_id': user_id,
                 'expense_ext_list': expense_ext_list,
+                'parent_business': expense.exp_business.bvm_business if expense.exp_business else "",
             }
         return render(request, "asset_mgt_app/expense_add.html", context)
 
@@ -78,26 +79,7 @@ def expense_add(request, expense_id=0):
 
 @login_required(login_url='login_page')
 def expense_list(request):
-    first_name = request.session.get('first_name')
-    organisation_id = request.session.get('ses_organisation_id')
-    role_id = request.session.get('ses_role_id')
-
-    if role_id == 2:
-        expense_list_val = ExpenseInfo.objects.filter(exp_business=organisation_id).order_by('-id')
-    else:
-        expense_list_val = ExpenseInfo.objects.all().order_by('-id')
-
-    paginator = Paginator(expense_list_val, 50)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'expense_list_val': expense_list_val,
-        'first_name': first_name,
-        'page_obj': page_obj,
-        'role_id': role_id,
-    }
-    return render(request, "asset_mgt_app/expense_list.html", context)
+    return expense_search(request)
 
 @login_required(login_url='login_page')
 def expense_delete(request, expense_id):
@@ -119,30 +101,37 @@ def expense_search(request):
     role_id = request.session.get('ses_role_id')
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
+    show_all = request.GET.get('show_all') == 'true'
 
     filters = Q()
     if expense_number:
-        filters &= Q(exp_number__icontains=expense_number) | Q(exp_number__isnull=True)
+        filters &= Q(exp_number__icontains=expense_number)
+    
     if role_id == 2:
         filters &= Q(exp_business=organisation_id)
 
-    # Date filter logic
+    # Date filter logic (Service Start Date)
     if from_date:
         filters &= Q(exp_service_start_date__date__gte=from_date)
     if to_date:
         filters &= Q(exp_service_start_date__date__lte=to_date)
 
-    expense_list = ExpenseInfo.objects.filter(filters).order_by('-id')
+    expense_list_qs = ExpenseInfo.objects.filter(filters).order_by('-id')
 
-    paginator = Paginator(expense_list, 50)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    if show_all:
+        page_obj = expense_list_qs
+    else:
+        paginator = Paginator(expense_list_qs, 50)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
 
     context = {
-        'expense_list': expense_list,
+        'expense_list': expense_list_qs,
         'first_name': first_name,
         'page_obj': page_obj,
         'role': request.session.get('ses_role'),
+        'role_id': role_id,
+        'show_all': show_all,
     }
     return render(request, "asset_mgt_app/expense_list.html", context)
 
@@ -163,12 +152,16 @@ def expense_ext_add(request, expense_ext_id=0):
                 messages.error(request, 'Expense attachment not found.')
                 return redirect('/SMS/expense_ext_list')
 
+        expense_ext_list = ExpenseExtinfo.objects.filter(exp_ext_expense_number=expense_id)
+        parent_expense = ExpenseInfo.objects.get(pk=expense_id)
+
         context = {
             'form': form,
             'first_name': first_name,
             'user_id': user_id,
             'expense_id': expense_id,
             'expense_ext_list': expense_ext_list,
+            'parent_business': parent_expense.exp_business.bvm_business if parent_expense.exp_business else "",
         }
         return render(request, "asset_mgt_app/expense_ext_add.html", context)
 

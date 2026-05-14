@@ -44,58 +44,46 @@
                 <i class="fas fa-plus"></i> ADD NEW
             </a>
         </div>
-    </div>
-
-    <form method="POST">
+    </div>    <form method="POST">
         {% csrf_token %}
-        <div class="modern-card">
-            <div class="row">
-                <!-- Left Column: Primary Info -->
-                <div class="col-md-6 border-right">
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-tag"></i> Stock & Identification</div>
-                        {% if form.errors %}
-                        <div class="alert alert-danger shadow-sm">
-                            <i class="fas fa-exclamation-triangle"></i> <strong>Form Errors:</strong>
-                            <ul class="mb-0 mt-2">
-                                {% for field, errors in form.errors.items %}
-                                    <li>{{ field|title }}: {{ errors|join:", " }}</li>
-                                {% endfor %}
-                            </ul>
+        <div class="modern-card" style="padding: 1rem !important;">
+            <div class="row row-compact">
+                <!-- Column 1: Invoice & Ref -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-file-invoice"></i> Tracking Details</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Invoice No</label>
+                            {% render_field form.sm_invoice_no class="form-control form-control-modern" %}
                         </div>
-                        {% endif %}
-
-                        <div class="form-group-modern mb-3">
-                            <label class="form-label-modern">Stock Type</label>
-                            {% render_field form.sm_stock_type id="id_sm_stock_type" class="form-control form-control-modern" required="required" %}
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Invoice Date</label>
+                            {% render_field form.sm_invoice_date class="form-control form-control-modern" type="date" %}
                         </div>
-                        <div class="row">
-                            <div class="col-6">
-                                <div class="form-group-modern mb-3">
-                                    <label class="form-label-modern">Invoice Date</label>
-                                    {% render_field form.sm_invoice_date class="form-control form-control-modern" type="date" %}
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="form-group-modern mb-3">
-                                    <label class="form-label-modern">Invoice No</label>
-                                    {% render_field form.sm_invoice_no class="form-control form-control-modern" %}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group-modern mb-3">
+                        <div class="form-group-modern">
                             <label class="form-label-modern">Stock Purchase Ref</label>
                             {% render_field form.sm_stock_purchase_number class="form-control form-control-modern disable_a_href" readonly="readonly" %}
                         </div>
-                        <div class="form-group-modern mb-3">
-                            <label class="form-label-modern">Part Code [VER: AJAX] <span class="text-danger">*</span></label>
+                    </div>
+                </div>
+
+                <!-- Column 2: Stock Identity -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-tag"></i> Stock Identity</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Stock Type</label>
+                            {% render_field form.sm_stock_type id="id_sm_stock_type" class="form-control form-control-modern" required="required" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Part Code [AJAX]</label>
                             {% render_field form.sm_partcode class="form-control form-control-modern select2" id="id_sm_partcode" %}
                         </div>
-                        <div class="form-group-modern mb-3">
+                        <div class="form-group-modern">
                             <label class="form-label-modern">Description</label>
                             {% render_field form.sm_description id="id_sm_description" class="form-control form-control-modern disable_a_href" readonly="readonly" %}
                         </div>
-                        <div class="form-group-modern mb-3">
+                        <div class="form-group-modern">
                             <label class="form-label-modern">UOM</label>
                             <input type="text" id="sm_uom_display" class="form-control form-control-modern disable_a_href" readonly>
                             <div style="display:none;">{{ form.sm_uom }}</div>
@@ -103,88 +91,101 @@
                     </div>
                 </div>
 
-                <!-- Right Column: Dimensions & Calculations -->
-                <div class="col-md-6">
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-calculator"></i> Dimensions & Costs</div>
+                <!-- Column 3: Dimensions -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-ruler-combined"></i> Physical Specs</div>
                         <div id="dimensions_group">
-                            <div class="row">
-                                <div class="col-4">
-                                    <div class="form-group-modern mb-3">
+                            <div class="row no-gutters">
+                                <div class="col-4 pr-1">
+                                    <div class="form-group-modern">
                                         <label class="form-label-modern" id="label_sm_thickness">Thick</label>
                                         {% render_field form.sm_thickness id="id_sm_thickness" class="form-control form-control-modern disable_a_href" readonly="readonly" %}
                                     </div>
                                 </div>
-                                <div class="col-4">
-                                    <div class="form-group-modern mb-3">
+                                <div class="col-4 px-1">
+                                    <div class="form-group-modern">
                                         <label class="form-label-modern" id="label_sm_width">Width</label>
                                         {% render_field form.sm_width id="id_sm_width" class="form-control form-control-modern disable_a_href" readonly="readonly" %}
                                     </div>
                                 </div>
-                                <div class="col-4">
-                                    <div class="form-group-modern mb-3">
+                                <div class="col-4 pl-1">
+                                    <div class="form-group-modern">
                                         <label class="form-label-modern" id="label_sm_length">Length</label>
                                         {% render_field form.sm_length id="id_sm_length" class="form-control form-control-modern disable_a_href" readonly="readonly" %}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group-modern mb-3">
-                            <label class="form-label-modern" id="label_sm_count">Count</label>
-                            {% render_field form.sm_count id="id_sm_count" class="form-control form-control-modern" %}
+                        <div class="form-group-modern mt-2">
+                            <label class="form-label-modern" id="label_sm_count">Count / Quantity</label>
+                            {% render_field form.sm_count id="id_sm_count" class="form-control form-control-modern" style="font-size: 1.1rem; font-weight: 700; border-color: var(--secondary-cyan);" %}
                         </div>
+                    </div>
+                </div>
+
+                <!-- Column 4: Financials -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100" style="border-left: 4px solid var(--accent-orange);">
+                        <div class="form-section-title" style="color: var(--accent-orange);"><i class="fas fa-calculator"></i> Calculations</div>
                         <div id="cft_sqft_group">
-                            <div class="row">
-                                <div class="col-6">
-                                    <div class="form-group-modern mb-3">
-                                        <label class="form-label-modern" id="label_sm_cft">CFT</label>
+                            <div class="row no-gutters">
+                                <div class="col-6 pr-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern" id="label_sm_cft">Unit CFT</label>
                                         {% render_field form.sm_cft id="id_sm_cft" class="form-control form-control-modern disable_a_href" readonly="readonly" %}
                                     </div>
                                 </div>
-                                <div class="col-6">
-                                    <div class="form-group-modern mb-3">
+                                <div class="col-6 pl-1">
+                                    <div class="form-group-modern">
                                         <label class="form-label-modern" id="label_sm_total_cft">Total CFT</label>
                                         {% render_field form.sm_total_cft id="id_sm_total_cft" class="form-control form-control-modern" %}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group-modern mb-3">
+                        <div class="form-group-modern">
                             <label class="form-label-modern" id="label_sm_per_unit_cost">Per Unit Cost</label>
                             {% render_field form.sm_per_unit_cost id="id_sm_per_unit_cost" class="form-control form-control-modern" %}
                         </div>
-                        <div class="form-group-modern mb-3">
-                            <label class="form-label-modern" id="label_sm_total_price">Total Price</label>
-                            {% render_field form.sm_total_price id="id_sm_total_price" class="form-control form-control-modern disable_a_href font-weight-bold text-primary" readonly="readonly" %}
+                        <div class="form-group-modern">
+                            <label class="form-label-modern" id="label_sm_total_price">Total Price (INR)</label>
+                            {% render_field form.sm_total_price id="id_sm_total_price" class="form-control form-control-modern disable_a_href font-weight-bold" readonly="readonly" style="font-size: 1.2rem !important; color: var(--accent-orange) !important; font-weight: 800;" %}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="message-container my-3">
+            <!-- Messages Area -->
+            <div class="message-container my-1 text-center">
                 {% for message in messages %}
-                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} shadow-sm text-center">
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
                     <i class="fas fa-info-circle"></i> {{ message }}
                 </div>
                 {% endfor %}
             </div>
 
-            <div class="btn-group-modern mt-4">
-                <button type="submit" class="btn-modern btn-submit">
-                    <i class="fas fa-check"></i> SUBMIT MAINTENANCE
-                </button>
-                {% if is_vendor_flow %}
-                <a href="{% url 'pk_stock_vendor_update' stock_vendor_id=vendor_id %}" class="btn-modern btn-cancel">
-                    <i class="fas fa-times"></i> CANCEL
-                </a>
-                {% else %}
-                <a href="{% url 'stock_maintenance_list' %}" class="btn-modern btn-cancel">
-                    <i class="fas fa-times"></i> CANCEL
-                </a>
-                {% endif %}
+            <!-- Action Buttons -->
+            <div class="row mt-2">
+                <div class="col-12 col-xl-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn-modern btn-submit px-5">
+                            <i class="fas fa-check mr-2"></i> Submit Maintenance
+                        </button>
+                        {% if is_vendor_flow %}
+                        <a href="{% url 'pk_stock_vendor_update' stock_vendor_id=vendor_id %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                        {% else %}
+                        <a href="{% url 'stock_maintenance_list' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
-    </form>
+    </form>m>
 
     <div class="table-container-modern mt-4">
         <div class="form-section-title"><i class="fas fa-list-ul"></i> Stock Maintenance Records</div>

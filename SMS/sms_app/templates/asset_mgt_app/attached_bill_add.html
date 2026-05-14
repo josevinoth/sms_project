@@ -27,15 +27,19 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Vendor Name</span>
                             </div>
-                            {% render_field form.ab_vendor class="form-control" %}
+                            {% render_field form.ab_vendor class="form-control form-control-sm" %}
+
                         </div>
+
 
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Vehicle No</span>
                             </div>
-                            {% render_field form.ab_vehicle_number class="form-control" %}
+                            {% render_field form.ab_vehicle_number class="form-control form-control-sm" %}
+
                         </div>
+
 
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
@@ -168,6 +172,21 @@
                 </button>
             </div>
             <div class="card-body bg-light text-dark pt-3 pb-3">
+
+                <!-- ===== SUMMARY: Table Buy Cost + Extra KM Amount ===== -->
+                <div class="d-flex align-items-center mb-3 px-1">
+                    <div class="input-group input-group-sm" style="max-width: 420px;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text font-weight-bold" style="width:260px; background-color:#17a2b8; color:#fff; border-color:#17a2b8;">
+                                Total Buy Cost (Bill Amt - ExtraKM - Toll)
+                            </span>
+                        </div>
+                        <input type="text" id="id_total_table_buycost_summary" class="form-control form-control-sm font-weight-bold text-dark"
+                               readonly value="0.00" style="background-color:#fff3cd; border-color:#17a2b8;">
+                    </div>
+                </div>
+                <!-- ===================================================== -->
+
                 <div class="table-responsive shadow-box-table p-3">
                     <table class="table table-striped table-bordered table-sm" id="tripsTable">
                         <thead class="thead-dark">
@@ -200,13 +219,6 @@
 
 <script>
     $(document).ready(function () {
-        // Initialize Select2
-        if ($.fn.select2) {
-            $('#id_ab_vendor, #id_ab_vehicle_number').select2({
-                width: '100%',
-                theme: 'bootstrap4'
-            });
-        }
 
         var isInitialLoad = {% if record %}true{% else %}false{% endif %};
         
@@ -219,7 +231,7 @@
         var vendor_id = $(this).val();
         var $vehicleSelect = $('#id_ab_vehicle_number');
         $vehicleSelect.empty().append('<option value="">--Select Vehicle--</option>');
-        if ($vehicleSelect.data('select2')) { $vehicleSelect.trigger('change'); }
+        $vehicleSelect.trigger('change');
 
         if (vendor_id) {
             $.ajax({
@@ -229,7 +241,7 @@
                     $.each(data.vehicles, function (index, vehicle) {
                         $vehicleSelect.append('<option value="' + vehicle.id + '">' + vehicle.reg_no + '</option>');
                     });
-                    if ($vehicleSelect.data('select2')) { $vehicleSelect.trigger('change'); }
+                    $vehicleSelect.trigger('change');
                 }
             });
         }
@@ -441,6 +453,9 @@
             }
             updateRowTotal($row);
         });
+
+        // 6. Refresh the summary field above the table
+        updateTotalBuyCostSummary();
     }
 
     // NEW: Sync table Toll Cost and Selected Trip IDs back to header
@@ -469,6 +484,21 @@
         var t_toll = parseFloat($row.find('.trip-toll-cost').val()) || 0;
         var total = t_buy + t_toll; // Excluded parking_cost as requested
         $row.find('.trip-total-buy-cost-text').text(Math.round(total));
+        updateTotalBuyCostSummary();
+    }
+
+    // Sum all table Buy Cost rows + Extra KM Amount + Leave Amount → display above the table
+    function updateTotalBuyCostSummary() {
+        var tableBuyTotal = 0;
+        $('#tripsTableBody tr').each(function () {
+            tableBuyTotal += parseFloat($(this).find('.trip-buy-cost').val()) || 0;
+        });
+        var billAmt = parseFloat($('#id_ab_bill_amount').val()) || 0;
+        var extraKmAmt = parseFloat($('#id_ab_extra_km_amount').val()) || 0;
+        var tollAmt   = parseFloat($('#id_ab_toll_cost').val()) || 0;
+        var grandTotal = billAmt - extraKmAmt - tollAmt;
+        $('#id_total_table_buycost_summary').val(grandTotal.toFixed(2));
+
     }
 
     // Handle table input changes
@@ -506,12 +536,16 @@
 <style>
     .input-group-text {
         width: 160px;
+        min-width: 160px;
         background-color: #92e0e0;
         /* Matching the teal in the screenshot */
         color: #000000 !important;
         font-size: 0.9rem;
         font-weight: bold;
     }
+
+
+
 
     .card-header h3 {
         font-size: 1.5rem;
@@ -534,14 +568,6 @@
         pointer-events: none;
     }
 
-    /* Fixed Select2 dimensions for bootstrap 4 */
-    .select2-container--bootstrap4 .select2-selection--single {
-        height: calc(1.5em + 0.5rem + 2px) !important;
-    }
-
-    .select2-container--bootstrap4 .select2-selection {
-        border: 1px solid #ced4da !important;
-    }
 </style>
 
 {% endblock %}

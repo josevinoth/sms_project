@@ -15,75 +15,107 @@
 
     <form method="POST" action="">
         {% csrf_token %}
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="modern-card">
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-info-circle"></i> Part Details</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Part Code</label>
-                                {% render_field form.pc_code class="form-control form-control-modern" id="pc_code" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Stock Type</label>
-                                {% render_field form.pc_stock_type class="form-control form-control-modern" id="pc_stock_type" %}
-                            </div>
+        <div class="modern-card" style="padding: 1rem !important;">
+            <div class="row row-compact">
+                <!-- Column 1: Identity -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-barcode"></i> Part Identity</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Part Code</label>
+                            {% render_field form.pc_code class="form-control form-control-modern" id="pc_code" %}
                         </div>
-                        <div class="form-group-modern mb-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Stock Type</label>
+                            {% render_field form.pc_stock_type class="form-control form-control-modern" id="pc_stock_type" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Description -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-info-circle"></i> Identity Details</div>
+                        <div class="form-group-modern">
                             <label class="form-label-modern">Stock Description</label>
                             {% render_field form.pc_stock_description class="form-control form-control-modern select2" id="pc_stock_description" %}
                         </div>
                     </div>
+                </div>
 
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-ruler-combined"></i> Dimensions & UOM</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern" id="height_group">
-                                <label class="form-label-modern">Thick (mm)/Height (In)</label>
-                                {% render_field form.pc_height class="form-control form-control-modern" id="pc_height" %}
+                <!-- Column 3: Dimensional Data -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-ruler-combined"></i> Standard Specs</div>
+                        <div class="row no-gutters">
+                            <div class="col-4 pr-1">
+                                <div class="form-group-modern" id="height_group">
+                                    <label class="form-label-modern">H/Thick</label>
+                                    {% render_field form.pc_height class="form-control form-control-modern" id="pc_height" %}
+                                </div>
                             </div>
-                            <div class="form-group-modern" id="width_group">
-                                <label class="form-label-modern">Width (In/Ft)</label>
-                                {% render_field form.pc_width class="form-control form-control-modern" id="pc_width" %}
+                            <div class="col-4 px-1">
+                                <div class="form-group-modern" id="width_group">
+                                    <label class="form-label-modern">Width</label>
+                                    {% render_field form.pc_width class="form-control form-control-modern" id="pc_width" %}
+                                </div>
                             </div>
-                            <div class="form-group-modern" id="length_group">
-                                <label class="form-label-modern">Length (ft)</label>
-                                {% render_field form.pc_length class="form-control form-control-modern" id="pc_length" %}
-                            </div>
-                        </div>
-                        <div class="form-row-modern mt-3">
-                            <div class="form-group-modern" id="uom_group">
-                                <label class="form-label-modern">UOM</label>
-                                {% render_field form.pc_uom class="form-control form-control-modern" id="pc_uom" %}
-                            </div>
-                            <div class="form-group-modern" id="diameter_width_group">
-                                <label class="form-label-modern">Diameter/Width</label>
-                                {% render_field form.pc_diameter_width class="form-control form-control-modern" id="pc_diameter_width" %}
-                            </div>
-                            <div class="form-group-modern" id="con_length_group">
-                                <label class="form-label-modern">Length</label>
-                                {% render_field form.pc_con_length class="form-control form-control-modern" id="pc_con_length" %}
+                            <div class="col-4 pl-1">
+                                <div class="form-group-modern" id="length_group">
+                                    <label class="form-label-modern">Length</label>
+                                    {% render_field form.pc_length class="form-control form-control-modern" id="pc_length" %}
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <input type="hidden" id="pc_updated_by" name="pc_updated_by" value="{{ user_id }}">
-
-                    <div class="message-container my-3">
-                        {% for message in messages %}
-                        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} shadow-sm text-center">
-                            <i class="fas fa-info-circle"></i> {{ message }}
+                <!-- Column 4: Extended Specs -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-microchip"></i> Secondary Specs</div>
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern" id="uom_group">
+                                    <label class="form-label-modern">UOM</label>
+                                    {% render_field form.pc_uom class="form-control form-control-modern" id="pc_uom" %}
+                                </div>
+                            </div>
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern" id="diameter_width_group">
+                                    <label class="form-label-modern">Dia/Width</label>
+                                    {% render_field form.pc_diameter_width class="form-control form-control-modern" id="pc_diameter_width" %}
+                                </div>
+                            </div>
                         </div>
-                        {% endfor %}
+                        <div class="form-group-modern" id="con_length_group">
+                            <label class="form-label-modern">Container Length</label>
+                            {% render_field form.pc_con_length class="form-control form-control-modern" id="pc_con_length" %}
+                        </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="btn-group-modern mt-4">
-                        <button type="submit" class="btn-modern btn-submit">
-                            <i class="fas fa-check"></i> SAVE PART CODE
+            <input type="hidden" id="pc_updated_by" name="pc_updated_by" value="{{ user_id }}">
+
+            <!-- Message Area -->
+            <div class="message-container my-1 text-center">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
+                    <i class="fas fa-info-circle"></i> {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row mt-2">
+                <div class="col-12 col-xl-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn-modern btn-submit px-5">
+                            <i class="fas fa-check mr-2"></i> Save Part Code
                         </button>
-                        <a href="{% url 'part_code_list' %}" class="btn-modern btn-cancel">
-                            <i class="fas fa-times"></i> CANCEL
+                        <a href="{% url 'part_code_list' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Cancel
                         </a>
                     </div>
                 </div>

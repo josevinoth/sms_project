@@ -656,7 +656,9 @@
 
 			// ✅ Enable the visible fields for category 2 & 3
 			// Loading section fields
-			$("#tr_departedlocation").prop("disabled", false).removeClass('disable_a_href');
+			if (!g_locationLocked) {
+				$("#tr_departedlocation").prop("disabled", false).removeClass('disable_a_href');
+			}
 			$("#tr_departeddate").prop("disabled", false).removeClass('disable_a_href');
 			$("#tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
 
@@ -723,7 +725,26 @@
 	};
 </script>
 <script>
+	var g_locationLocked = "{{ location_locked|yesno:'true,false' }}" === 'true';
+
 	$(document).ready(function () {
+		// Lock the From Location if needed
+		if (g_locationLocked) {
+			var $loc = $("#tr_departedlocation");
+			$loc.on('select2:opening', function (e) { 
+				e.preventDefault(); 
+				var locName = $("#tr_departedlocation option:selected").text().trim();
+				alert("Warning: Vehicle's last destination was '" + locName + "'. Please create an 'Empty Trip' or 'Business Empty Trip' from '" + locName + "' first.");
+			});
+			// Do not use pointer-events:none so the click event can fire
+			setTimeout(function() {
+				var $s2 = $loc.next('.select2-container');
+				if ($s2.length) {
+					$s2.find('.select2-selection').css('background-color', '#e9ecef');
+				}
+			}, 200);
+		}
+
 		function loadEnquiryLocations() {
 			var enquiry_number = $("#tr_enquirynumber").val();   // Enquiry number (ID)
 			var trip_category = $("#tr_category").val();          // Trip category (1 = Normal, 2 = Special)
@@ -749,7 +770,9 @@
 							alert(data.error);
 						} else {
 							// ✅ Fill only if category is normal
-							$("#tr_departedlocation").val(data.from_location_id).trigger('change');
+							if (!g_locationLocked) {
+								$("#tr_departedlocation").val(data.from_location_id).trigger('change');
+							}
 							$("#tr_reportedlocation").val(data.to_location_id).trigger('change');
 							console.log("From Location:", data.from_location_id, "| To Location:", data.to_location_id);
 						}

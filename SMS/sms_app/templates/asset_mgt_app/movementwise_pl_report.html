@@ -137,6 +137,7 @@
                     d.vehicle_source = $('#vehicleSourceSelect').val();
                     d.from_date = $('#fromDate').val();
                     d.to_date = $('#toDate').val();
+                    d.year = '{{ selected_year|default:"" }}';
                 }
             },
             "dom": 'lBfrtip',
@@ -193,7 +194,7 @@
 
         // Final fix for alignment after a short delay
         setTimeout(function () {
-            table.columns.adjust().draw();
+            table.columns.adjust();
         }, 800);
     });
 </script>

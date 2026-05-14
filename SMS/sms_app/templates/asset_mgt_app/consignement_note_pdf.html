@@ -63,9 +63,15 @@
             <td><b>GST Tax Payable By:</b> {% for consignment_detail in consignment_details %} {{consignment_detail.co_gst_payable_by}} {% endfor %}</td>
         </tr>
         <tr>
-            <td><b>Container No:</b>
+            <td>
+                <b>Container No:</b><br>
                 {% for consignment_detail in consignment_details %}
-                {{ consignment_detail.co_container_number }}
+                {{ consignment_detail.co_container_number }}<br>
+                {% endfor %}
+                <hr>
+                <b>Reference No:</b><br>
+                {% for consignment_detail in consignment_details %}
+                {{ consignment_detail.co_cusrefnum }}<br>
                 {% endfor %}
             </td>
 

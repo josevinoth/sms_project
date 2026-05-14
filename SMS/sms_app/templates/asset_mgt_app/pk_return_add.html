@@ -15,191 +15,188 @@
 
     <form method="POST" action="" id="costing_add" data-stock_description-url="{% url 'load_stock_description' %}">
         {% csrf_token %}
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="modern-card">
-                    <!-- Section 1: Basic Information -->
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-info-circle"></i> Basic Information</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Assessment Number</label>
-                                {% render_field form.ct_assessment_num id="ct_assessment_num" class="form-control form-control-modern disable_a_href" %}
+        
+        <div class="modern-card" style="padding: 1rem !important;">
+            <div class="row row-compact">
+                <!-- Column 1: Basic & Job Identity -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-id-card"></i> Basic Information</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Assessment #</label>
+                            {% render_field form.ct_assessment_num id="ct_assessment_num" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer</label>
+                            {% render_field form.ct_customer_name id="ct_customer_name" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">New Customer</label>
+                            {% render_field form.ct_customer_new_name id="ct_customer_new_name" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer PO</label>
+                            {% render_field form.ct_customer_po id="ct_customer_po" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Job & Item Details -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-box"></i> Job & Item Details</div>
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Cost Type</label>
+                                    {% render_field form.ct_cost_type id="ct_cost_type" onchange="onChangeHandler()" class="form-control form-control-modern disable_a_href" %}
+                                </div>
                             </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Customer Name</label>
-                                {% render_field form.ct_customer_name id="ct_customer_name" class="form-control form-control-modern disable_a_href" %}
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Job Qty</label>
+                                    {% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control form-control-modern disable_a_href" %}
+                                </div>
                             </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Customer New Name</label>
-                                {% render_field form.ct_customer_new_name id="ct_customer_new_name" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Customer PO</label>
-                                {% render_field form.ct_customer_po id="ct_customer_po" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Job Type</label>
+                            {% render_field form.ct_requirement id="ct_requirement" onchange="pk_store_na_dimension_id()" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Req. Name & Size</label>
+                            {% render_field form.ct_requirement_size id="ct_requirement_size" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Item & Desc</label>
+                            <div class="row no-gutters">
+                                <div class="col-6 pr-1">
+                                    {% render_field form.ct_item id="ct_item" class="form-control form-control-modern disable_a_href" %}
+                                </div>
+                                <div class="col-6 pl-1">
+                                    {% render_field form.ct_itemdescription id="ct_itemdescription" class="form-control form-control-modern disable_a_href" %}
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Section 2: Job & Stock Details -->
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-box"></i> Job & Stock Details</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Cost Type</label>
-                                {% render_field form.ct_cost_type id="ct_cost_type" onchange="onChangeHandler()" class="form-control form-control-modern disable_a_href" %}
+                <!-- Column 3: Requirements & Stock Specs -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-ruler-combined"></i> Requirements & Specs</div>
+                        <div class="row no-gutters">
+                            <div class="col-4 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">L (ft)</label>
+                                    {% render_field form.ct_length_req id="ct_length_req" class="form-control form-control-modern disable_a_href" %}
+                                </div>
                             </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Job Type</label>
-                                {% render_field form.ct_requirement id="ct_requirement" onchange="pk_store_na_dimension_id()" class="form-control form-control-modern disable_a_href" %}
+                            <div class="col-4 px-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">W (in)</label>
+                                    {% render_field form.ct_width_req id="ct_width_req" class="form-control form-control-modern disable_a_href" %}
+                                </div>
                             </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Job Type Quantity</label>
-                                {% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Requirement Name & Size</label>
-                                {% render_field form.ct_requirement_size id="ct_requirement_size" class="form-control form-control-modern disable_a_href" %}
+                            <div class="col-4 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">H (in)</label>
+                                    {% render_field form.ct_height_req id="ct_height_req" class="form-control form-control-modern disable_a_href" %}
+                                </div>
                             </div>
                         </div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Stock Type</label>
-                                {% render_field form.ct_stock_type id="ct_stock_type" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Qty Req</label>
+                                    {% render_field form.ct_quantity_req id="ct_quantity_req" class="form-control form-control-modern disable_a_href" %}
+                                </div>
                             </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Stock Description</label>
-                                {% render_field form.ct_stock_description id="ct_stock_description" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">CFT/SQFT</label>
+                                    {% render_field form.ct_sqrt_req id="ct_sqrt_req" class="form-control form-control-modern disable_a_href" %}
+                                </div>
                             </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Item</label>
-                                {% render_field form.ct_item id="ct_item" onchange="changeItemDescription()" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mt-1 p-2" style="background: rgba(16, 185, 129, 0.05); border: 1px dashed #10b981; border-radius: 12px;">
+                            <label class="form-label-modern" style="color: #047857;"><i class="fas fa-truck-loading mr-1"></i> Stock Supplied</label>
+                            <div class="row no-gutters small text-muted mb-1">
+                                <div class="col-4 text-center">L: {% render_field form.ct_length id="ct_length" class="form-control form-control-sm disable_a_href" %}</div>
+                                <div class="col-4 text-center">W: {% render_field form.ct_width id="ct_width" class="form-control form-control-sm disable_a_href" %}</div>
+                                <div class="col-4 text-center">H: {% render_field form.ct_height id="ct_height" class="form-control form-control-sm disable_a_href" %}</div>
                             </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Item Description</label>
-                                {% render_field form.ct_itemdescription id="ct_itemdescription" class="form-control form-control-modern disable_a_href" %}
+                            <div class="row no-gutters">
+                                <div class="col-6 pr-1">
+                                    {% render_field form.ct_quantity id="ct_quantity" class="form-control form-control-sm disable_a_href" placeholder="Qty" %}
+                                </div>
+                                <div class="col-6 pl-1">
+                                    {% render_field form.ct_cft id="ct_cft" class="form-control form-control-sm disable_a_href" placeholder="CFT" %}
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Section 3: Requirements -->
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-tasks"></i> Requirements</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Height Req (in/mm)</label>
-                                {% render_field form.ct_height_req id="ct_height_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Width Req (in/ft)</label>
-                                {% render_field form.ct_width_req id="ct_width_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Length Req (ft)</label>
-                                {% render_field form.ct_length_req id="ct_length_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Quantity Req</label>
-                                {% render_field form.ct_quantity_req id="ct_quantity_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">CFT/Sqft Req</label>
-                                {% render_field form.ct_sqrt_req id="ct_sqrt_req" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Days/Hours</label>
-                                {% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
+                <!-- Column 4: Costs & Return Status -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100" style="border-left: 4px solid var(--accent-emerald);">
+                        <div class="form-section-title" style="color: var(--accent-emerald);"><i class="fas fa-coins"></i> Costs & Status</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Unit Cost</label>
+                            {% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Total Cost (INR)</label>
+                            {% render_field form.ct_totalbox_cost id="ct_totalbox_cost" readonly="True" class="form-control form-control-modern disable_a_href" style="font-size: 1.2rem !important; color: var(--accent-emerald) !important; font-weight: 800;" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Return Status</label>
+                            {% render_field form.ct_excess_status id="ct_excess_status" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Stock Purchase #</label>
+                            {% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control form-control-modern disable_a_href" %}
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Section 4: Stock Supplied (The Highlighted Box) -->
-                    <div class="form-section stock-info-box p-4" style="background: rgba(16, 185, 129, 0.05); border: 2px dashed #10b981; border-radius: 12px;">
-                        <div class="form-section-title" style="color: #047857; border-bottom-color: #10b981;"><i class="fas fa-truck-loading"></i> Stock Supplied Information</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Height (in/mm)</label>
-                                {% render_field form.ct_height id="ct_height" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Width (in/ft)</label>
-                                {% render_field form.ct_width id="ct_width" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Length (Ft)</label>
-                                {% render_field form.ct_length id="ct_length" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">UOM</label>
-                                {% render_field form.ct_uom id="ct_uom" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                        </div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Size</label>
-                                {% render_field form.ct_size id="ct_size" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Quantity</label>
-                                {% render_field form.ct_quantity id="ct_quantity" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">CFT/SQFT</label>
-                                {% render_field form.ct_cft id="ct_cft" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Rate</label>
-                                {% render_field form.ct_rate id="ct_rate" onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Stock Purchase #</label>
-                                {% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                        </div>
-                    </div>
+            <!-- Hidden Fields -->
+            <div class="d-none">
+                {% render_field form.ct_stock_type id="ct_stock_type" %}
+                {% render_field form.ct_stock_description id="ct_stock_description" %}
+                {% render_field form.ct_uom id="ct_uom" %}
+                {% render_field form.ct_size id="ct_size" %}
+                {% render_field form.ct_rate id="ct_rate" %}
+                {% render_field form.ct_days id="ct_days" %}
+                {% render_field form.ct_stock_status id="ct_stock_status" %}
+                {% render_field form.ct_exe_height_req id="ct_exe_height_req" %}
+                {% render_field form.ct_exe_width_req id="ct_exe_width_req" %}
+                {% render_field form.ct_exe_length_req id="ct_exe_length_req" %}
+                {% render_field form.ct_exe_quantity_req id="ct_exe_quantity_req" %}
+                {% render_field form.ct_exe_sqrt_req id="ct_exe_sqrt_req" %}
+                {% render_field form.ct_updated_by id="ct_updated_by" %}
+            </div>
 
-                    <!-- Section 5: Costs & Status -->
-                    <div class="form-section mt-4">
-                        <div class="form-section-title"><i class="fas fa-rupee-sign"></i> Costs & Status</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Unit Cost</label>
-                                {% render_field form.ct_total_cost id="ct_total_cost" readonly="True" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Total CFT/SQFT Required</label>
-                                <span id="ct_cft_sqft_req" class="form-control form-control-modern disable_a_href" style="background: #f3f4f6;"></span>
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Total Cost</label>
-                                {% render_field form.ct_totalbox_cost id="ct_totalbox_cost" readonly="True" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                        </div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Stock Status</label>
-                                {% render_field form.ct_stock_status id="ct_stock_status" class="form-control form-control-modern disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Excess Stock Status</label>
-                                {% render_field form.ct_excess_status id="ct_excess_status" class="form-control form-control-modern" %}
-                            </div>
-                        </div>
-                    </div>
+            <!-- Messages Area -->
+            <div class="message-container my-1 text-center">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
+                    <i class="fas fa-info-circle"></i> {{ message }}
+                </div>
+                {% endfor %}
+            </div>
 
-                    {% render_field form.ct_exe_height_req id="ct_exe_height_req" hidden="True" %}
-                    {% render_field form.ct_exe_width_req id="ct_exe_width_req" hidden="True" %}
-                    {% render_field form.ct_exe_length_req id="ct_exe_length_req" hidden="True" %}
-                    {% render_field form.ct_exe_quantity_req id="ct_exe_quantity_req" hidden="True" %}
-                    {% render_field form.ct_exe_sqrt_req id="ct_exe_sqrt_req" hidden="True" %}
-                    {% render_field form.ct_updated_by id="ct_updated_by" hidden="True" %}
-
-                    <div class="btn-group-modern">
-                        <button type="submit" class="btn-modern btn-submit">
-                            <i class="fas fa-check"></i> SUBMIT
+            <!-- Action Buttons -->
+            <div class="row mt-2">
+                <div class="col-12 col-xl-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn-modern btn-submit px-5">
+                            <i class="fas fa-check mr-2"></i> Submit Return
                         </button>
-                        <a href="{% url 'pk_excess_stock_list' %}" class="btn-modern btn-cancel" style="text-align: center; display: flex; align-items: center; justify-content: center; text-decoration: none;">
-                            <i class="fas fa-times"></i> CANCEL
+                        <a href="{% url 'pk_excess_stock_list' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Cancel
                         </a>
                     </div>
                 </div>

@@ -65,14 +65,28 @@ def budgetform_add(request,budget_id=0):
                     (instance.bf_lwf_dept_staff or 0) +
                     (instance.bf_salaries_wages_staff or 0)
             )
+            instance.bf_driver_staff = (
+                    (instance.bf_bonus_drivers or 0) +
+                    (instance.bf_EDLI_contribution_drivers or 0) +
+                    (instance.bf_employer_contribution_to_ESI_drivers or 0) +
+                    (instance.bf_employer_contribution_to_PF_drivers or 0) +
+                    (instance.bf_EPF_admin_charges_drivers or 0) +
+                    (instance.bf_exgratia_drivers or 0) +
+                    (instance.bf_gratuity_drivers or 0) +
+                    (instance.bf_incentive_drivers or 0) +
+                    (instance.bf_insurance_drivers or 0) +
+                    (instance.bf_lwf_drivers or 0) +
+                    (instance.bf_salaries_wages_drivers or 0)
+            )
             instance.bf_fixed = (
-
                     (instance.bf_insurance_warehouse or 0) +
                     (instance.bf_insurance_wcc or 0) +
-
                     (instance.bf_rent_premises or 0) +
                     (instance.bf_security_service_charges or 0) +
-                    (instance.bf_manpower_supply_expenses or 0)
+                    (instance.bf_manpower_supply_expenses or 0) +
+                    (instance.bf_gprs_access_service or 0) +
+                    (instance.bf_insurance_vehicles or 0) +
+                    (instance.bf_vehicle_hire or 0)
             )
             instance.bf_variable = (
                     (instance.bf_crane_handling_expenses or 0) +
@@ -80,12 +94,26 @@ def budgetform_add(request,budget_id=0):
                     (instance.bf_forklift_handling_expenses or 0) +
                     (instance.bf_packing_services or 0) +
                     (instance.bf_support_handling or 0) +
-                    (instance.bf_fumigation_expenses or 0)
+                    (instance.bf_fumigation_expenses or 0) +
+                    (instance.bf_acting_driver or 0) +
+                    (instance.bf_cng or 0) +
+                    (instance.bf_diesel_vehicle or 0) +
+                    (instance.bf_driver_betta or 0) +
+                    (instance.bf_extra_hrs or 0) +
+                    (instance.bf_extra_km or 0) +
+                    (instance.bf_halting or 0) +
+                    (instance.bf_loading or 0) +
+                    (instance.bf_parking or 0) +
+                    (instance.bf_rates_taxes or 0) +
+                    (instance.bf_toll or 0) +
+                    (instance.bf_transportation or 0) +
+                    (instance.bf_unloading or 0) +
+                    (instance.bf_vehicle_maintenance or 0) +
+                    (instance.bf_weighment or 0)
             )
             instance.bf_oe_Fixed = (
                     (instance.bf_amc or 0) +
                     (instance.bf_depreciation or 0) +
-
                     (instance.bf_internet_data_card_expenses or 0) +
                     (instance.bf_rent_plant_machinery or 0) +
                     (instance.bf_software_AMC_charges or 0)
@@ -149,8 +177,20 @@ def budgetform_list(request):
                 budget.bf_Warehouse_Handling_Charges +
                 budget.bf_Warehouse_Loading_Charges +
                 budget.bf_Warehouse_Storage_Charges +
-                budget.bf_Warehouse_Unloading_Charges
-
+                budget.bf_Warehouse_Unloading_Charges +
+                (budget.bf_Halting_Charges or 0) +
+                (budget.bf_Halting_Charges_SEZ or 0) +
+                (budget.bf_Loading_Charges or 0) +
+                (budget.bf_Parking_Charges or 0) +
+                (budget.bf_Parking_Charges_SEZ or 0) +
+                (budget.bf_Toll_Charges or 0) +
+                (budget.bf_Transportation_Charges or 0) +
+                (budget.bf_Transportation_Charges_Interstate or 0) +
+                (budget.bf_Transportation_Charges_SEZ or 0) +
+                (budget.bf_Transportation_Handling_Charges or 0) +
+                (budget.bf_Transportation_Handling_Charges_SEZ or 0) +
+                (budget.bf_Unloading_Charges or 0) +
+                (budget.bf_Weighment_Charges or 0)
         )  # Assuming 'bf_fixed' is for Income
 
         department_expenses_total += (
@@ -170,29 +210,8 @@ def budgetform_list(request):
 
         employee_benefits_total += (
                 budget.bf_corp_staff +
-                budget.bf_bonus_corp_staff +
-                budget.bf_EDLI_contribution_corp_staff +
-                budget.bf_employer_contribution_to_ESI_corp_staff +
-                budget.bf_employer_contribution_to_PF_corp_staff +
-                budget.bf_EPF_admin_charges_corp_staff +
-                budget.bf_exgratia_corp_staff +
-                budget.bf_gratuity_corp_staff +
-                budget.bf_incentive_corp_staff +
-                budget.bf_insurance_corp_staff +
-                budget.bf_lwf_corp_staff +
-                budget.bf_salaries_wages_corp_staff +
                 budget.bf_dept_staff +
-                budget.bf_bonus_staff +
-                budget.bf_EDLI_contribution_staff +
-                budget.bf_employer_contribution_to_ESI_staff +
-                budget.bf_employer_contribution_to_PF_staff +
-                budget.bf_EPF_admin_charges_staff +
-                budget.bf_exgratia_dept_staff +
-                budget.bf_gratuity_staff +
-                budget.bf_incentive_dept_staff +
-                budget.bf_insurance_staff +
-                budget.bf_lwf_dept_staff +
-                budget.bf_salaries_wages_staff
+                (budget.bf_driver_staff or 0)
         )
 
         operational_expenses_total += (
@@ -358,6 +377,52 @@ def budgetform_clone(request, budget_id):
             'bf_telephone_mobile_expenses': budget.bf_telephone_mobile_expenses,
             'bf_training_expenses': budget.bf_training_expenses,
             'bf_travelling_expenses': budget.bf_travelling_expenses,
+
+            # New fields for BVM Trans Solutions pvt ltd
+            'bf_Halting_Charges': budget.bf_Halting_Charges,
+            'bf_Halting_Charges_SEZ': budget.bf_Halting_Charges_SEZ,
+            'bf_Loading_Charges': budget.bf_Loading_Charges,
+            'bf_Parking_Charges': budget.bf_Parking_Charges,
+            'bf_Parking_Charges_SEZ': budget.bf_Parking_Charges_SEZ,
+            'bf_Toll_Charges': budget.bf_Toll_Charges,
+            'bf_Transportation_Charges': budget.bf_Transportation_Charges,
+            'bf_Transportation_Charges_Interstate': budget.bf_Transportation_Charges_Interstate,
+            'bf_Transportation_Charges_SEZ': budget.bf_Transportation_Charges_SEZ,
+            'bf_Transportation_Handling_Charges': budget.bf_Transportation_Handling_Charges,
+            'bf_Transportation_Handling_Charges_SEZ': budget.bf_Transportation_Handling_Charges_SEZ,
+            'bf_Unloading_Charges': budget.bf_Unloading_Charges,
+            'bf_Weighment_Charges': budget.bf_Weighment_Charges,
+            'bf_driver_staff': budget.bf_driver_staff,
+            'bf_bonus_drivers': budget.bf_bonus_drivers,
+            'bf_EDLI_contribution_drivers': budget.bf_EDLI_contribution_drivers,
+            'bf_employer_contribution_to_ESI_drivers': budget.bf_employer_contribution_to_ESI_drivers,
+            'bf_employer_contribution_to_PF_drivers': budget.bf_employer_contribution_to_PF_drivers,
+            'bf_EPF_admin_charges_drivers': budget.bf_EPF_admin_charges_drivers,
+            'bf_exgratia_drivers': budget.bf_exgratia_drivers,
+            'bf_gratuity_drivers': budget.bf_gratuity_drivers,
+            'bf_incentive_drivers': budget.bf_incentive_drivers,
+            'bf_insurance_drivers': budget.bf_insurance_drivers,
+            'bf_lwf_drivers': budget.bf_lwf_drivers,
+            'bf_salaries_wages_drivers': budget.bf_salaries_wages_drivers,
+            'bf_gprs_access_service': budget.bf_gprs_access_service,
+            'bf_insurance_vehicles': budget.bf_insurance_vehicles,
+            'bf_vehicle_hire': budget.bf_vehicle_hire,
+            'bf_acting_driver': budget.bf_acting_driver,
+            'bf_cng': budget.bf_cng,
+            'bf_diesel_vehicle': budget.bf_diesel_vehicle,
+            'bf_driver_betta': budget.bf_driver_betta,
+            'bf_extra_hrs': budget.bf_extra_hrs,
+            'bf_extra_km': budget.bf_extra_km,
+            'bf_halting': budget.bf_halting,
+            'bf_loading': budget.bf_loading,
+            'bf_parking': budget.bf_parking,
+            'bf_rates_taxes': budget.bf_rates_taxes,
+            'bf_toll': budget.bf_toll,
+            'bf_transportation': budget.bf_transportation,
+            'bf_unloading': budget.bf_unloading,
+            'bf_vehicle_maintenance': budget.bf_vehicle_maintenance,
+            'bf_weighment': budget.bf_weighment,
+            'bf_vehicle_source': budget.bf_vehicle_source,
         })
         context = {
             'form': form,
@@ -377,7 +442,9 @@ def budgetform_clone(request, budget_id):
                 bf_start_date_year__month=month,
                 bf_company=form.cleaned_data['bf_company'],
                 bf_location=form.cleaned_data['bf_location'],
-                bf_unit_reference=form.cleaned_data['bf_unit_reference'] ).exists()
+                bf_unit_reference=form.cleaned_data['bf_unit_reference'],
+                bf_vehicle_source=form.cleaned_data['bf_vehicle_source']
+            ).exists()
 
             if existing_budget:
                 messages.error(request, f'A budget record for {unique_start_date.strftime("%B %Y")} in the selected company, branch, and unit already exists.')

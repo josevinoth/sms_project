@@ -219,7 +219,7 @@ def get_attached_vehicle_details(request):
             if already_billed:
                 filters &= ~Q(tr_tripnumber__in=already_billed)
 
-            trips = TripdetailInfo.objects.filter(filters).order_by('tr_departeddate')
+            trips = TripdetailInfo.objects.filter(filters).filter(tr_category_id=1).order_by('tr_departeddate')
             trip_dates = set()
             
             # For Total KM using Vehicle Log method (Last Closing - First Starting)
@@ -228,7 +228,7 @@ def get_attached_vehicle_details(request):
 
             for trip in trips:
                 # Per-trip KM logic stays the same for display in the 'Trip KM' column
-                km = max(0, (trip.tr_reportedkm_delivery or trip.tr_reportedkm or 0) - (trip.tr_departedkm or 0))
+                km = ((trip.tr_reportedkm or 0) - (trip.tr_reportedkm_pickup or 0)) if trip.tr_category_id in (2, 3) else ((trip.tr_reportedkm_delivery or 0) - (trip.tr_reportedkm_pickup or 0))
 
                 # Track min departed and max reported for the entire period
                 # ONLY track KM for trips within the actual billing period
@@ -395,7 +395,7 @@ def attached_bill_summary(request, id):
     summary_billed_trip_dates = set()
     trip_km_run = 0
     for t in trips:
-        trip_km_run += max(0, (t.tr_reportedkm_delivery or t.tr_reportedkm or 0) - (t.tr_departedkm or 0))
+        trip_km_run += ((t.tr_reportedkm or 0) - (t.tr_reportedkm_pickup or 0)) if t.tr_category_id in (2, 3) else ((t.tr_reportedkm_delivery or 0) - (t.tr_reportedkm_pickup or 0))
         if t.tr_departeddate:
             summary_billed_trip_dates.add(t.tr_departeddate.date())
 

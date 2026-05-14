@@ -138,13 +138,13 @@
                 {
                     targets: 13,
                     render: function (data, type, row) {
-                        return '<a class="btn btn-primary" href="/tripclosure_update/' + row[13] + '/"><i class="far fa-edit"></i></a>';
+                        return '<a class="btn btn-primary" href="/SMS/tripclosure_update/' + row[13] + '/"><i class="far fa-edit"></i></a>';
                     }
                 },
                 {
                     targets: 14,
                     render: function (data, type, row) {
-                        return '<form action="/tripclosure_delete/' + row[13] + '/" method="post" onsubmit="return confirm(\'Are you sure?\');">' +
+                        return '<form action="/SMS/tripclosure_delete/' + row[13] + '/" method="post" onsubmit="return confirm(\'Are you sure?\');">' +
                             '<input type="hidden" name="csrfmiddlewaretoken" value="' + getCookie('csrftoken') + '">' +
                             '<button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button></form>';
                     }

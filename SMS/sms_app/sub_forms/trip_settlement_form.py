@@ -26,6 +26,10 @@ class TripSettlementForm(forms.ModelForm):
         self.fields['tr_consignmentnumber'].empty_label = "--Select--"
         self.fields['tc_financestatus'].empty_label = "--Select--"
         self.fields['tr_iou'].empty_label = "--Select--"
+        
+        # Default "Trip Charges" checkbox to True
+        if 'tc_tripcost_check' in self.fields:
+            self.fields['tc_tripcost_check'].initial = True
         # Only show Trip Settled & Clarification
         self.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(
             id__in=[7, 4]   # Trip Settled, Clarification

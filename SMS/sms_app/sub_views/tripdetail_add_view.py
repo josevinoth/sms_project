@@ -120,7 +120,7 @@ def tripdetail_add(request, tripdetail_id=0):
                         'tr_vehicletype_placed': va.va_vehicletype_placed,
                         'tr_drivernumber': va.va_drivernumber,
                         'tr_driver_lic': va.va_driver_lic,
-                        'tr_category': 2,
+                        'tr_category': 1 if va.va_vehiclesource_id == 3 else 2,
                     }
                 except Vehicle_allotmentInfo.DoesNotExist:
                     pass
@@ -143,16 +143,37 @@ def tripdetail_add(request, tripdetail_id=0):
                     initial_data['tr_reportedkm_pickup'] = last_trip.tr_reportedkm
 
             trip_det_form = TripdetailaddForm(initial=initial_data)
-            if vehicle_allotment_id:
+            if vehicle_allotment_id and va.va_vehiclesource_id != 3:
                 trip_det_form.fields['tr_category'].widget.attrs['readonly'] = True
 
-            previous_trip = TripdetailInfo.objects.filter(
-                tr_enquirynumber_id=enquiry_num_id
-            ).order_by('-tr_created_at').first()
-            if previous_trip and previous_trip.tr_reportedlocation:
-                trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
+            # Ensure departed location matches the vehicle's last reported location
+            location_locked = False
+            if vehicle_allotment_id and 'tr_vehiclenumber' in initial_data and va.va_vehiclesource_id != 3:
+                last_trip_loc = TripdetailInfo.objects.filter(
+                    tr_vehiclenumber=search_vehicle_num
+                ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
+                
+                if last_trip_loc:
+                    trip_det_form.fields['tr_departedlocation'].initial = last_trip_loc.tr_reportedlocation
+                    trip_det_form.fields['tr_departedlocation'].widget.attrs.update({
+                        'style': 'pointer-events: none; background-color: #e9ecef;',
+                        'onmousedown': 'return false;',
+                        'onkeydown': 'return false;',
+                        'readonly': 'readonly'
+                    })
+                    location_locked = True
+                else:
+                    previous_trip = TripdetailInfo.objects.filter(
+                        tr_enquirynumber_id=enquiry_num_id
+                    ).order_by('-tr_created_at').first()
+                    if previous_trip and previous_trip.tr_reportedlocation:
+                        trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
             else:
-                print("No previous trip or reported location found.")
+                previous_trip = TripdetailInfo.objects.filter(
+                    tr_enquirynumber_id=enquiry_num_id
+                ).order_by('-tr_created_at').first()
+                if previous_trip and previous_trip.tr_reportedlocation:
+                    trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
 
             tripclosurefiles_form = TripclosurefilesForm()
             trip_list = TripdetailInfo.objects.select_related(
@@ -180,6 +201,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 'consignment_list': consignment_list,
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
                 'status_selected': 8,
+                'location_locked': location_locked,
             }
 
         else:
@@ -242,6 +264,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 'checklist': checklist,
                 'trip_approvallist': trip_approvallist,
                 'trip_instance': trip_instance,
+                'location_locked': False,
             }
 
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
@@ -280,6 +303,24 @@ def tripdetail_add(request, tripdetail_id=0):
                             'A trip for this vehicle is still open. Please close it before creating a new one.'
                         )
                         return redirect(request.META['HTTP_REFERER'])
+
+                # ✅ NEW LOCATION MATCHING VALIDATION HERE
+                # Skip for Market Vehicles (Source 3)
+                v_source_id = request.POST.get('tr_vehiclesource')
+                if vehicle_number and str(v_source_id) != "3":
+                    last_trip_for_loc = TripdetailInfo.objects.filter(
+                        tr_vehiclenumber=vehicle_number
+                    ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
+
+                    if last_trip_for_loc:
+                        departed_loc_id = request.POST.get('tr_departedlocation')
+                        if departed_loc_id and str(departed_loc_id) != str(last_trip_for_loc.tr_reportedlocation.id):
+                            last_loc_name = last_trip_for_loc.tr_reportedlocation.place_name if hasattr(last_trip_for_loc.tr_reportedlocation, 'place_name') else str(last_trip_for_loc.tr_reportedlocation)
+                            messages.error(
+                                request,
+                                f"Warning: Vehicle's last destination was '{last_loc_name}'. Please create an 'Empty Trip' or 'Business Empty Trip' from '{last_loc_name}' first."
+                            )
+                            return redirect(request.META.get('HTTP_REFERER', 'tripdetail_list'))
 
                 # Generate trip number with financial year (Branch specific)
                 # Example format: 26-27_MAA_TN_0000001
@@ -893,7 +934,7 @@ def trip_email(request):
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Consignment #</b></td><td style="padding: 8px; border: 1px solid #ddd;">{consignment}</td></tr>
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Started Date</b></td><td style="padding: 8px; border: 1px solid #ddd;">{started_dt}</td></tr>
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>To Location</b></td><td style="padding: 8px; border: 1px solid #ddd;">{to_location}</td></tr>
-                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Reported Date (Unloading)</b></td><td style="padding: 8px; border: 1px solid #ddd;">{unloading_reported_dt}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Closed Date & Time</b></td><td style="padding: 8px; border: 1px solid #ddd;">{unloading_reported_dt}</td></tr>
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Status</b></td><td style="padding: 8px; border: 1px solid #ddd;">Trip Closed</td></tr>
             </tbody>
         </table>
@@ -1464,7 +1505,7 @@ def trip_send_trip_closed_mail(request):
                     <td style="padding: 8px; border: 1px solid #ddd;">{to_location}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Reported Date & Time</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Closed Date & Time</b></td>
                     <td style="padding: 8px; border: 1px solid #ddd;">{reported_dt}</td>
                 </tr>
                 <tr>

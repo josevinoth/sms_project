@@ -55,19 +55,24 @@
         font-weight: bold;
         text-align: center;
         text-transform: uppercase;
-        font-size: 9px;
+        font-size: 8.5px;
         padding: 8px 4px;
         border: 1px solid #0f172a;
     }
     .items-table td {
         border: 1px solid #cbd5e1;
-        padding: 8px 6px;
-        height: 25px;
+        padding: 6px 4px;
+        font-size: 9px;
+        min-height: 25px;
+    }
+    .item-description {
+        font-size: 10px;
+        font-weight: bold;
     }
     .section-title {
         background-color: #e2e8f0;
         font-weight: bold;
-        font-size: 9px;
+        font-size: 11px;
         padding: 4px 8px;
         border-bottom: 1px solid #94a3b8;
     }
@@ -86,7 +91,7 @@
             <!-- Company Details -->
             <td colspan="3" style="width: 50%; border-right: 1.5px solid #0f172a;">
                 <div class="company-title bold">BVM PACK SOLUTIONS PRIVATE LIMITED</div>
-                <div style="font-size: 9px; color: #475569;">
+                <div style="font-size: 11px; color: #475569;">
                     No. 70 Adam Nagar Road, Nagalkeni, Chrompet, Chennai - 600 044<br>
                     <strong>GSTIN: 33AAKCB6640C1Z0</strong>
                 </div>
@@ -96,7 +101,7 @@
                 <table style="width: 100%; border: none;">
                     <tr>
                         <td style="border: none; padding: 2px; color: #64748b;" class="bold">{{ gate.gp_document_category|upper|default:'DC' }} NO</td>
-                        <td style="border: none; padding: 2px;" class="bold">: {{ gate.gp_document_category|slice:":1"|upper }}P-{{ gate.id }}</td>
+                        <td style="border: none; padding: 2px;" class="bold">: {% if 'Challan' in gate.gp_document_category %}DC{% else %}GP{% endif %}-{{ gate.id }}</td>
                     </tr>
                     <tr>
                         <td style="border: none; padding: 2px; color: #64748b;" class="bold">{{ gate.gp_document_category|upper|default:'DC' }} DATE</td>
@@ -196,19 +201,19 @@
             {% for item in gatepass_list %}
             <tr>
                 <td class="text-center" style="color: #64748b;">{{ forloop.counter }}</td>
-                <td class="bold">{{ item.pod_type_of_req|default:item.pod_item }}</td>
-                <td class="text-center">{{ item.pod_uom }}</td>
-                <td class="text-center bold">{{ item.pod_quantity }}</td>
+                <td class="item-description">{{ item.pod_type_of_req|default:item.pod_item }}</td>
+                <td class="text-center">{{ item.pod_uom|default:item.pod_nad.nad_uom|default:'---' }}</td>
+                <td class="text-center bold">{{ item.pod_quantity|default:item.pod_nad.nad_quantity|default:'0' }}</td>
                 
                 {% if gate.gp_document_category == 'Delivery Challan' %}
                     <td class="text-center">{{ gate.gp_hsn_code|default:'4415' }}</td>
-                    <td class="text-center" style="font-size: 8px;">{{ item.pod_returnable_status|default:'Non-Returnable' }}</td>
+                    <td class="text-center">{{ item.pod_returnable_status|default:'Non-Returnable' }}</td>
                     <td class="text-right">{{ item.pod_base_value|floatformat:2|default:'0.00' }}</td>
                     <td class="text-right">{{ item.pod_gst_amount|floatformat:2|default:'0.00' }}</td>
                     <td class="text-right bold" style="background-color: #f8fafc;">{{ item.pod_total_value|floatformat:2|default:'0.00' }}</td>
                 {% else %}
                     <td class="text-center">{{ gate.gp_hsn_code|default:'4415' }}</td>
-                    <td colspan="3" style="font-size: 9px;">{{ item.pod_item }}</td>
+                    <td colspan="3" style="font-size: 11px;">{{ item.pod_item }}</td>
                     <td>{{ gate.gp_remarks|default:'' }}</td>
                 {% endif %}
             </tr>

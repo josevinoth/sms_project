@@ -1,6 +1,7 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
+
 <form method="POST" action="" id="expense_ext_add" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="row">
@@ -45,9 +46,17 @@
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">Unit</span>
+                                        {% if "bvm trans solutions" in parent_business|lower %}
+                                            <span class="input-group-text">Vehicle Source</span>
+                                        {% else %}
+                                            <span class="input-group-text">Unit</span>
+                                        {% endif %}
                                     </div>
-                                    {% render_field form.exp_ext_unit id="exp_ext_unit" class="form-control disable_a_href" id="exp_ext_unit" %}
+                                    {% if "bvm trans solutions" in parent_business|lower %}
+                                        {% render_field form.exp_ext_vehicle_source id="exp_ext_vehicle_source" class="form-control" %}
+                                    {% else %}
+                                        {% render_field form.exp_ext_unit id="exp_ext_unit" class="form-control disable_a_href" %}
+                                    {% endif %}
                                 </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
@@ -163,4 +172,21 @@
 }
 
 </script>
+<style>
+    .input-group-text {
+        width: 150px;
+        font-size: 13px;
+        white-space: normal;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 0.2rem 0.5rem;
+        background-color: #9fe9f0 !important;
+        color: #333;
+        font-weight: 600;
+        border: 1px solid #7ed2d9;
+        line-height: 1.2;
+    }
+</style>
 {% endblock content %}

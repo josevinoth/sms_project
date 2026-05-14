@@ -14,42 +14,56 @@
         <!-- Page Header -->
         <div class="modern-header d-flex justify-content-between align-items-center">
             <h2 class="mb-0"><i class="fas fa-check-double"></i> Quality Check Format (PMS)</h2>
-            <div class="d-flex align-items-center" style="gap: 15px;">
-                <select name="qc_status" class="form-control form-control-modern" style="width: 160px; height: 46px !important; border-radius: 12px; font-weight: 800;" required>
-                    <option value="Passed">✅ PASSED</option>
-                    <option value="Failed">❌ FAILED</option>
-                </select>
-                <button type="submit" class="btn-modern btn-submit" id="submit_qc" disabled>
-                    <i class="fas fa-save"></i> Save Report
-                </button>
+            <div style="position: relative; z-index: 10;">
+                <a href="{% url 'pk_quality_check_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                    <i class="fas fa-arrow-left"></i> BACK
+                </a>
             </div>
         </div>
 
-        <div class="modern-card">
+        <div class="modern-card" style="padding: 1rem !important;">
             <!-- Section 1: Header Details -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-info-circle"></i> Job & Customer Information</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">PJ No (Job No)</label>
-                        <select name="qc_job_no" id="qc_job_no" class="form-control form-control-modern select2" required>
-                            <option value="">--Select Job--</option>
-                            {% for job in costing_jobs %}
-                            <option value="{{ job.cs_job_no }}" {% if job.cs_job_no == selected_job_no %}selected{% endif %}>{{ job.cs_job_no }}</option>
-                            {% endfor %}
-                        </select>
+            <div class="row row-compact">
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-id-badge"></i> Job Selection</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">PJ No (Job No)</label>
+                            <select name="qc_job_no" id="qc_job_no" class="form-control form-control-modern select2" required>
+                                <option value="">--Select Job--</option>
+                                {% for job in costing_jobs %}
+                                <option value="{{ job.cs_job_no }}" {% if job.cs_job_no == selected_job_no %}selected{% endif %}>{{ job.cs_job_no }}</option>
+                                {% endfor %}
+                            </select>
+                            <small id="qc_job_info" class="text-muted" style="display:block; margin-top:4px; font-size:0.75rem;">{% if assessment_id %}{% if selected_job_no %}Assessment: {{ assessment_id }}{% endif %}{% endif %}</small>
+                        </div>
                     </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Customer Name</label>
-                        <input type="text" id="display_customer" class="form-control form-control-modern disable_a_href" readonly>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-user"></i> Customer</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer Name</label>
+                            <input type="text" id="display_customer" class="form-control form-control-modern disable_a_href" readonly value="{{ customer_name|default:'' }}">
+                        </div>
                     </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Purchase Order No</label>
-                        <input type="text" id="display_po" class="form-control form-control-modern disable_a_href" readonly>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-file-invoice"></i> Order Ref</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Purchase Order No</label>
+                            <input type="text" id="display_po" class="form-control form-control-modern disable_a_href" readonly value="{{ po_num|default:'' }}">
+                        </div>
                     </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">PO Date</label>
-                        <input type="text" id="display_po_date" class="form-control form-control-modern disable_a_href" readonly>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-calendar-alt"></i> Dates</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">PO Date</label>
+                            <input type="text" id="display_po_date" class="form-control form-control-modern disable_a_href" readonly value="{{ po_date|default:'' }}">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -127,10 +141,24 @@
                 </div>
             </div>
             
-            <div class="mt-4 d-flex">
-                <a href="{% url 'pk_quality_check_list' %}" class="btn-modern btn-cancel" style="text-decoration: none;">
-                    <i class="fas fa-arrow-left"></i> Back to List
-                </a>
+            <!-- Action Buttons Row -->
+            <div class="row mt-4">
+                <div class="col-12 col-xl-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'pk_quality_check_list' %}" class="btn-modern btn-cancel px-5" style="text-decoration: none;">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                        <div class="d-flex align-items-center" style="gap: 15px;">
+                            <select name="qc_status" class="form-control form-control-modern" style="width: 160px; height: 46px !important; border-radius: 12px; font-weight: 800; border-color: var(--primary-emerald);" required>
+                                <option value="Passed">✅ PASSED</option>
+                                <option value="Failed">❌ FAILED</option>
+                            </select>
+                            <button type="submit" class="btn-modern btn-submit px-5" id="submit_qc" disabled>
+                                <i class="fas fa-check mr-2"></i> Save Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </form>
@@ -188,15 +216,29 @@
                         return;
                     }
 
-                    $('#display_customer').val(data.customer);
-                    $('#display_po').val(data.po_no);
-                    $('#display_po_date').val(data.po_date);
+                    // Populate header fields from server payload
+                    $('#display_customer').val(data.customer_name || '');
+                    $('#display_po').val(data.po_num || '');
+                    $('#qc_job_info').text((data.assessment_num ? ('Assessment: ' + data.assessment_num + ' | ') : '') + (data.po_num ? ('PO: ' + data.po_num) : ''));
+                    const eqc = data.existing_qc || null;
+                    if(eqc) {
+                        $('select[name="qc_status"]').val(eqc.status);
+                        $('textarea[name="qc_remarks"]').val(eqc.remarks);
+                        $('#twist').prop('checked', eqc.wood_twist);
+                        $('#seal').prop('checked', eqc.seal);
+                        $('#cracks').prop('checked', eqc.cracks);
+                        $('#pasting').prop('checked', eqc.pasting);
+                    }
 
                     let rows = '';
                     if (!data.items || data.items.length === 0) {
                         rows = '<tr><td colspan="10" class="text-center py-5 text-warning font-weight-bold">No items found for this job.</td></tr>';
                     } else {
                         data.items.forEach((item, index) => {
+                            let item_eqc = (eqc && eqc.items && eqc.items[item.id]) ? eqc.items[item.id] : null;
+                            let acc_val = item_eqc ? item_eqc.acc : item.qty;
+                            let rej_val = item_eqc ? item_eqc.rej : 0;
+                            
                             rows += `
                             <tr class="modern-tr" data-id="${item.id}">
                                 <td class="font-weight-bold">${index + 1}</td>
@@ -211,26 +253,28 @@
                                 <td>${item.thickness}</td>
                                 <td>
                                     <input type="number" step="0.01" name="accepted_qty_${item.id}" 
-                                           value="${item.qty}" 
+                                           value="${acc_val}" 
                                            class="form-control form-control-modern text-center accepted-qty" 
                                            style="height: 44px !important; border-color: #10b981;"
                                            data-total="${item.qty}">
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" name="rejected_qty_${item.id}" 
-                                           value="0" 
+                                           value="${rej_val}" 
                                            class="form-control form-control-modern text-center rejected-qty" 
                                            style="height: 44px !important; border-color: #ef4444;"
                                            readonly>
                                 </td>
                                 <td class="text-left p-3" style="background-color: #f1f5f9; border-radius: 12px;">
                                     <div class="row no-gutters small font-weight-bold">
-                                        <div class="col-6 mb-1"><input type="checkbox" name="check_type_${item.id}"> Work: ${data.na_details.type_of_work}</div>
-                                        <div class="col-6 mb-1"><input type="checkbox" name="check_scope_${item.id}"> Scope: ${data.na_details.client_scope}</div>
-                                        <div class="col-6 mb-1"><input type="checkbox" name="check_treatment_${item.id}"> Treat: ${data.na_details.wood_treatment}</div>
-                                        <div class="col-6 mb-1"><input type="checkbox" name="check_norms_${item.id}"> Norms: ${data.na_details.wood_norms}</div>
-                                        <div class="col-6 mb-1"><input type="checkbox" name="check_lifting_${item.id}"> Lift: ${data.na_details.lifting}</div>
-                                        <div class="col-6 mb-1"><input type="checkbox" name="check_req_${item.id}"> Req: ${data.na_details.req_type}</div>
+                                        <div class="col-6 mb-1"><input type="checkbox" name="check_type_${item.id}" ${item_eqc && item_eqc.c_type ? 'checked' : ''}> Work: ${data.na_details.type_of_work}</div>
+                                        <div class="col-6 mb-1"><input type="checkbox" name="check_scope_${item.id}" ${item_eqc && item_eqc.c_scope ? 'checked' : ''}> Scope: ${data.na_details.client_scope}</div>
+                                        <div class="col-6 mb-1"><input type="checkbox" name="check_treatment_${item.id}" ${item_eqc && item_eqc.c_treat ? 'checked' : ''}> Treat: ${data.na_details.wood_treatment}</div>
+                                        <div class="col-6 mb-1"><input type="checkbox" name="check_norms_${item.id}" ${item_eqc && item_eqc.c_norms ? 'checked' : ''}> Norms: ${data.na_details.wood_norms}</div>
+                                        <div class="col-6 mb-1"><input type="checkbox" name="check_lifting_${item.id}" ${item_eqc && item_eqc.c_lift ? 'checked' : ''}> Lift: ${data.na_details.lifting}</div>
+                                        <div class="col-6 mb-1"><input type="checkbox" name="check_req_${item.id}" ${item_eqc && item_eqc.c_req ? 'checked' : ''}> Req: ${data.na_details.req_type}</div>
+                                        <div class="col-6 mb-1"><input type="checkbox" name="check_wood_${item.id}" ${item_eqc && item_eqc.c_wood ? 'checked' : ''}> Wood: ${data.na_details.wood_type}</div>
+                                        <div class="col-6 mb-1"><input type="checkbox" name="check_desc_${item.id}" ${item_eqc && item_eqc.c_desc ? 'checked' : ''}> Desc: ${data.na_details.wood_description}</div>
                                     </div>
                                 </td>
                             </tr>`;
@@ -250,11 +294,14 @@
         }
 
         $('#qc_job_no').on('change', function() {
-            loadJobDetails($(this).val());
+            const jobNo = $(this).val();
+            loadJobDetails(jobNo);
         });
 
         const preselected = "{{ selected_job_no|safe }}";
-        if(preselected) { loadJobDetails(preselected); }
+        if(preselected) {
+            loadJobDetails(preselected);
+        }
 
         $(document).on('input', '.accepted-qty', function() {
             let total = parseFloat($(this).data('total')) || 0;

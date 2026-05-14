@@ -26,6 +26,13 @@ class PkcostingForm(forms.ModelForm):
             pid = submitted_data.get('ct_part_code')
             if pid:
                 self.fields['ct_part_code'].queryset = PkpartcodeInfo.objects.filter(pk=pid)
+        
+        if submitted_data and 'ct_stock_purchase_number' in submitted_data:
+            sid = submitted_data.get('ct_stock_purchase_number')
+            if sid:
+                # Include StockMaintenance in the queryset for validation
+                from ..models import StockMaintenance
+                self.fields['ct_stock_purchase_number'].queryset = StockMaintenance.objects.filter(pk=sid)
 
         # If we have an instance (editing), ensure the current value is available
         if self.instance and self.instance.pk and self.instance.ct_part_code:
@@ -38,12 +45,33 @@ class PkcostingForm(forms.ModelForm):
             self.fields['ct_part_code'].queryset = PkpartcodeInfo.objects.filter(pk=part_id)
             # choices will be set by widget or manually if needed
 
+        # Restrict/prepare ct_requirement queryset to avoid validation errors when a choice is posted
+        # Default to none to avoid loading many Nadimension records
+        self.fields['ct_requirement'].queryset = Nadimension.objects.none()
+        # If assessment_id is known, expose Nadimension entries for that assessment
+        try:
+            if assessment_id:
+                self.fields['ct_requirement'].queryset = Nadimension.objects.filter(nad_assess_num=assessment_id).order_by('id')
+        except Exception:
+            # fallback: keep empty queryset
+            pass
+        # If form was submitted and a ct_requirement value exists in POST, ensure that specific choice is included
+        if submitted_data and 'ct_requirement' in submitted_data:
+            try:
+                rid = submitted_data.get('ct_requirement')
+                if rid:
+                    # Include the specific Nadimension even if it wasn't in the filtered queryset
+                    req_qs = Nadimension.objects.filter(pk=rid)
+                    if req_qs.exists():
+                        # Combine querysets (use union if prior queryset populated)
+                        self.fields['ct_requirement'].queryset = req_qs | self.fields['ct_requirement'].queryset
+            except Exception:
+                pass
+
         if assessment_id:
-            self.fields['ct_requirement'].queryset = Nadimension.objects.filter(nad_assess_num=assessment_id)
             self.fields['ct_customer_po'].queryset = PkpurchaseorderInfo.objects.filter(po_assessment_num=assessment_id)
             self.fields['ct_po_dimension'].queryset = POdimension.objects.filter(pod_assess_num=assessment_id)
         else:
-            self.fields['ct_requirement'].queryset = Nadimension.objects.all()
             self.fields['ct_customer_po'].queryset = PkpurchaseorderInfo.objects.all()
             self.fields['ct_po_dimension'].queryset = POdimension.objects.all()
 

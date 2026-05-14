@@ -15,6 +15,13 @@
         </div>
     </div>
 
+    <!-- Search Bar -->
+    <div class="mb-3 d-flex justify-content-end">
+        <input type="text" id="retrival_search" class="form-control"
+               placeholder="🔍 Search any column..."
+               style="max-width:400px; border-radius:8px; border:2px solid #17a2b8; font-size:1rem;">
+    </div>
+
     <!-- Table Container -->
     <div class="table-container-modern">
         <div class="form-section-title">
@@ -72,19 +79,11 @@
 </div>
 
 <script>
-    $(document).ready(function() {
-        if (!$.fn.DataTable.isDataTable('#pk_retrival_list')) {
-            $('#pk_retrival_list').DataTable({
-                order: [[0, 'desc']],
-                pageLength: 25,
-                dom: 'lBfrtip',
-                buttons: [
-                    { extend: 'copy', className: 'btn btn-sm btn-secondary' },
-                    { extend: 'excel', className: 'btn btn-sm btn-success' },
-                    { extend: 'print', className: 'btn btn-sm btn-info' }
-                ],
-            });
-        }
+    document.getElementById('retrival_search').addEventListener('keyup', function() {
+        var term = this.value.toLowerCase();
+        document.querySelectorAll('#pk_retrival_list tbody tr').forEach(function(row) {
+            row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+        });
     });
 </script>
 

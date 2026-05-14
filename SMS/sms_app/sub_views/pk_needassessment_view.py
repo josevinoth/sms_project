@@ -7,7 +7,14 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 
 from ..forms import PkneedassessmentForm,NadimensionForm
-from ..models import  PkquotationsummaryInfo,PkquotationInfo,POdimension,Natypeofreq,Unitofmeasure,Naconsumables,VehicletypeInfo,Pkstocktype,Pkwooddescription,Nadimensiontype,PkpurchaseorderInfo,PkcostingsummaryInfo,PkcostingInfo,commentsInfo,User_extInfo,PkneedassessmentInfo,Nadimension
+from ..models import (
+    PkquotationsummaryInfo, PkquotationInfo, POdimension, Natypeofreq, Unitofmeasure, 
+    Naconsumables, VehicletypeInfo, Pkstocktype, Pkwooddescription, Nadimensiontype, 
+    PkpurchaseorderInfo, PkcostingsummaryInfo, PkcostingInfo, commentsInfo, User_extInfo, 
+    PkneedassessmentInfo, Nadimension, Natypeofwork, Packreuqirementinfo, 
+    Nawoodtreatmentreq, Nabvmcustomer, Nawoodnorms, Natypeofaccess, Naplywoodthickness, 
+    Natypeofplywood, Natypeofwood
+)
 from django.shortcuts import render, redirect, get_object_or_404
 from random import randint
 from django.contrib import messages
@@ -16,7 +23,6 @@ from .general_utils import get_financial_year, generate_next_number, get_branch_
 def get_tracker_flags(na_id):
     """
     Return a dict of completed flags for each PMS stage.
-    A stage is 'done' (green) if its status FK has id == 5 (Completed).
     """
     flags = {
         'assessment_done': False,
@@ -24,33 +30,46 @@ def get_tracker_flags(na_id):
         'po_done': False,
         'costing_done': False,
         'acceptance_done': False,
+        'gate_pass_done': False,
     }
     if not na_id:
         return flags
-    try:
-        na = PkneedassessmentInfo.objects.get(pk=na_id)
+        
+    # 1. Assessment
+    na = PkneedassessmentInfo.objects.filter(pk=na_id).first()
+    if na:
         flags['assessment_done'] = bool(na.na_status and na.na_status.id == 5)
-    except PkneedassessmentInfo.DoesNotExist:
-        pass
 
+    # 2. Quotation
     qs = PkquotationsummaryInfo.objects.filter(qs_assessment_num=na_id).first()
     if qs:
         flags['quotation_done'] = bool(qs.qs_status and qs.qs_status.id == 5)
 
+    # 3. Purchase Order
     po = PkpurchaseorderInfo.objects.filter(po_assessment_num=na_id).first()
     if po:
         flags['po_done'] = bool(po.po_status and po.po_status.id == 5)
 
+    # 4. Costing
     cs = PkcostingsummaryInfo.objects.filter(cs_assessment_num=na_id).first()
     if cs:
         flags['costing_done'] = bool(cs.cs_status and cs.cs_status.id == 5)
+        
+    # 5. Acceptance (All costing items must be accepted, status id 5)
+    from ..models import PkcostingInfo
+    has_items = PkcostingInfo.objects.filter(ct_assessment_num=na_id).exists()
+    if has_items:
+        pending = PkcostingInfo.objects.filter(ct_assessment_num=na_id).exclude(ct_stock_status_id=5).exists()
+        flags['acceptance_done'] = not pending
+    else:
+        flags['acceptance_done'] = False
 
-    # Acceptance: all stock items (cost_type=8) are received (status=4)
-    stock_items = PkcostingInfo.objects.filter(ct_assessment_num=na_id, ct_cost_type=8)
-    if stock_items.exists() and all(i.ct_stock_status_id == 4 for i in stock_items):
-        flags['acceptance_done'] = True
+    # 6. Gate Pass / DC
+    from ..models import PackingGateReturn
+    flags['gate_pass_done'] = PackingGateReturn.objects.filter(gp_assessment_num=na_id).exists()
 
     return flags
+
 
 
 @login_required(login_url='login_page')
@@ -146,7 +165,7 @@ def needassessment_list(request):
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
     context = {
-            'needassessment_list' : PkneedassessmentInfo.objects.all(),
+            'needassessment_list' : PkneedassessmentInfo.objects.all().order_by('-na_updated_at'),
             'first_name': first_name,
             'role': role,
         }
@@ -412,20 +431,51 @@ def need_assessment_print_pdf(request, assessment_id):
 
         today = datetime.now().strftime("%d-%b-%Y")
 
+        # Fetch all options for categories to render as checkboxes/options in PDF
+        type_of_work_list = Natypeofwork.objects.all()
+        type_of_packing_list = Packreuqirementinfo.objects.all()
+        type_of_req_list = Natypeofreq.objects.all()
+        wood_treatment_list = Nawoodtreatmentreq.objects.all()
+        unloading_options = Nabvmcustomer.objects.all()
+        wood_norms_list = Nawoodnorms.objects.all()
+        type_of_access_list = Natypeofaccess.objects.all()
+        
+        # Plywood thickness and type (if models exist)
+        ply_thickness_list = Naplywoodthickness.objects.all() if 'Naplywoodthickness' in globals() else []
+        ply_type_list = Natypeofplywood.objects.all() if 'Natypeofplywood' in globals() else []
+        wood_type_list = Natypeofwood.objects.all() if 'Natypeofwood' in globals() else []
+
+        import os
+        from django.conf import settings
+        logo_path = os.path.join(settings.BASE_DIR, 'bvm_icon_full.png')
+
         context = {
             "need_assessment": need_assessment,
             "dimensions": dimensions,
             "today_date": today,
+            "logo_path": logo_path,
+            "type_of_work_list": type_of_work_list,
+            "type_of_packing_list": type_of_packing_list,
+            "type_of_req_list": type_of_req_list,
+            "wood_treatment_list": wood_treatment_list,
+            "unloading_options": unloading_options,
+            "wood_norms_list": wood_norms_list,
+            "type_of_access_list": type_of_access_list,
+            "ply_thickness_list": ply_thickness_list,
+            "ply_type_list": ply_type_list,
+            "wood_type_list": wood_type_list,
         }
 
         file_name = f"NeedAssessment_{need_assessment.na_assessment_num}.pdf"
-        template_path = 'asset_mgt_app/need_assessment_print.html'  # customize
+        template_path = 'asset_mgt_app/need_assessment_pdf.html'  # Use new template
 
         template = get_template(template_path)
         html = template.render(context)
 
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+        
+        # Create PDF
         pisa_status = pisa.CreatePDF(html, dest=response)
 
         if pisa_status.err:

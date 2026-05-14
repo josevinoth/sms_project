@@ -1,0 +1,184 @@
+/* dashboard_universal.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Global Dashboard Overrides - Responsive Cockpit Theme */
+.dashboard-body-reset {
+    overflow: hidden !important;
+    height: 100% !important;
+    background: #060b26 !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* Main Wrapper */
+.home-dashboard-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: calc(100vh - 100px); /* Adjust based on system header */
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem;
+    gap: 0.75rem;
+    box-sizing: border-box;
+    background: #0b1537;
+    overflow: hidden;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+/* KPI Section Logic */
+.dash-kpi-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.dash-kpi-row {
+    display: grid;
+    grid-template-columns: 140px repeat(6, minmax(0, 1fr));
+    gap: 0.5rem;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Compact Dashboard Cards */
+.dash-card {
+    position: relative;
+    border-radius: 6px;
+    padding: 0.4rem 0.6rem;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: #fff;
+    min-height: 50px;
+    min-width: 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.dash-card:hover {
+    transform: translateY(-2px);
+}
+
+.dash-card i {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    opacity: 0.3;
+    font-size: 0.9rem;
+}
+
+/* Specific KPI Colors (Universal Palette) */
+.card-enquiry, .card-violet { background: #4c4ea2; } 
+.card-cnote, .card-teal { background: #25667a; }   
+.card-missed, .card-orange { background: #7c2d12; }  
+.card-settled, .card-green { background: #145c44; } 
+.card-ready, .card-indigo { background: #1e3a8a; }   
+.card-invoiced, .card-brown { background: #5c4a26; } 
+
+.dash-kpi-label {
+    font-size: 0.6rem;
+    font-weight: 500;
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash-kpi-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+/* Filter/Dropdown Cards */
+.dash-dropdown-card {
+    background: #1e293b;
+    border: 1px solid #36d1ff;
+    border-radius: 8px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.dash-dropdown-card label {
+    font-size: 0.65rem;
+    color: #36d1ff;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+}
+
+.dash-select-wrap select, .dash-date-input {
+    width: 100%;
+    background: #0b1537 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    padding: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+}
+
+.dash-date-input {
+    background: transparent !important;
+    border: none !important;
+}
+
+.dash-date-input::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+/* Charts Layout */
+.dash-charts-container {
+    flex: 1;
+    display: grid;
+    grid-template-rows: 0.9fr 1.1fr; 
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.5rem;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+.chart-panel {
+    background: #081028;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.chart-panel--full { grid-column: span 2; }
+
+.chart-title {
+    font-size: 0.9rem;
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chart-title i { color: #36d1ff; }
+
+.chart-canvas-wrap {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+}
+
+/* Legacy Support for home- classes */
+.home-panel { @extend .chart-panel; }

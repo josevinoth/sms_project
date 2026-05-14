@@ -3,6 +3,7 @@ from django.views.generic import TemplateView
 
 from . import views
 from .sub_views.pk_purchaseorder_view import pk_create_batch_job, pk_get_po_items_for_job
+from .sub_views.tms_dashboard_view import tms_dashboard, get_tms_dashboard_data
 
 urlpatterns = [
     path('pk_create_batch_job/', pk_create_batch_job, name='pk_create_batch_job'),
@@ -14,7 +15,6 @@ urlpatterns = [
     path('login_page', views.login_page, name='login_page'),  # Login_page
     path('logout_page', views.logout_page, name='logout_page'),  # Logout_page
     path('driver/login/', views.driver_login, name='driver_login'),
-    path('driver/login/', views.driver_login, name='driver_login'),
     path('driver/logout/', views.driver_logout, name='driver_logout'),
     path('driver/dashboard/', views.driver_dashboard, name='driver_dashboard'),
     path('home_page', views.home_page, name='home_page'),  # Home_page
@@ -24,6 +24,7 @@ urlpatterns = [
     path('pk_quality_check_list/', views.pk_quality_check_list, name='pk_quality_check_list'),
     path('pk_quality_check_add/', views.pk_quality_check_add, name='pk_quality_check_add'),
     path('get_job_details_for_qc/', views.get_job_details_for_qc, name='get_job_details_for_qc'),
+    path('pk_quality_check_pdf/<int:qc_id>/', views.pk_quality_check_pdf, name='pk_quality_check_pdf'),
     path('asset_insert', views.assetinfo_add, name='asset_insert'),  # Add Asset
     path('asset_update/<int:asset_id>/', views.assetinfo_add, name='asset_update'),  # Update asset
     path('asset_delete/<int:asset_id>/', views.asset_delete, name='asset_delete'),  # Delete asset
@@ -379,6 +380,7 @@ urlpatterns = [
     path('invoice_delete/<int:invoice_id>', views.invoice_delete, name='invoice_delete'),  # delete invoice
     path('warehouse_reports/', views.warehouse_reports, name='warehouse_reports'),
     path('transport_reports/', views.transport_reports, name='transport_reports'),
+    path('transport_mis/', views.transport_mis, name='transport_mis'),
     path('space_utilization_reports/', views.space_utilization_reports, name='space_utilization_reports'),
     path('space_availability_reports/', views.space_availability_reports, name='space_availability_reports'),
     path('stock_value_report/', views.stock_value_reports, name='stock_value_report'),
@@ -811,6 +813,7 @@ urlpatterns = [
     path('send_performance_audit_email/', views.send_performance_audit_email, name='send_performance_audit_email'),
     path('salesperson_wise_table/', views.salesperson_wise_table, name='salesperson_wise_table'),
     path('sales_multiple_item_add/', views.sales_multiple_item_add, name='sales_multiple_item_add'),
+    path('sales_multiple_item_add/<int:enquiry_id>/', views.sales_multiple_item_add, name='sales_multiple_item_add_with_enquiry'),
     path('sales_multiple_item_list/', views.sales_multiple_item_list, name='sales_multiple_item_list'),
     path('sales_multiple_item_update/<int:sales_multiple_id>/', views.sales_multiple_item_add, name='sales_multiple_item_update'),
     path('charge_master_list/', views.charge_master_list, name='charge_master_list'),
@@ -929,6 +932,8 @@ urlpatterns = [
     path('customer_claims_report/', views.customer_claims_report, name='customer_claims_report'),
     path('highvalue_report_list/', views.highvalue_report_list, name='highvalue_report_list'),
     path('warehouse_dashboard/', views.warehouse_dashboard, name='warehouse_dashboard'),
+    path('tms_dashboard/', tms_dashboard, name='tms_dashboard'),
+    path('get_tms_dashboard_data/', get_tms_dashboard_data, name='get_tms_dashboard_data'),
     path('customer_contract_rate_report/', views.customer_contract_rate_report, name='customer_contract_rate_report'),
     path("get-customer-pan-gst/", views.get_customer_pan_gst, name="get_customer_pan_gst"),
     path('vehicle_allotment_email/', views.vehicle_allotment_email, name='vehicle_allotment_email'),
@@ -1099,10 +1104,12 @@ urlpatterns = [
     path('get_maintenance_records_by_vehicle/', views.get_maintenance_records_by_vehicle, name='get_maintenance_records_by_vehicle'),
     path('fuelfilling_export_excel/', views.fuelfilling_export_excel, name='fuelfilling_export_excel'),
     path('sale_enquiry_list/', views.sale_enquiry_list, name='sale_enquiry_list'),
+    path('mc_tours_calendar_events/', views.mc_tours_calendar_events, name='mc_tours_calendar_events'),
     path('sale_enquiry_add/', views.sale_enquiry_add, name='sale_enquiry_add'),
     path('sale_enquiry_update/<int:enquiry_id>/', views.sale_enquiry_add, name='sale_enquiry_update'),
     path('sale_enquiry_delete/<int:enquiry_id>/', views.sale_enquiry_delete, name='sale_enquiry_delete'),
     path('ajax/get_customer_code/', views.get_customer_code, name='get_customer_code'),
+    path('ajax/get_sale_details/', views.get_sale_details, name='get_sale_details'),
     path('invoice_documents_list/', views.invoice_documents_list, name='invoice_documents_list'),
     path('invoice_documents_add/<int:trip_id>/', views.invoice_documents_add, name='invoice_documents_add'),
     path('pk_tool_master_list/', views.pk_tool_master_list, name='pk_tool_master_list'),

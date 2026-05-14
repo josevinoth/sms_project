@@ -22,8 +22,8 @@
                 <tr data-id="{{ gatepassreturn.id }}" class="modern-tr">
                     <td class="font-weight-bold">{{ forloop.counter }}</td>
                     <td class="text-left font-weight-bold">{{ gatepassreturn.pod_type_of_req }}</td>
-                    <td>{{ gatepassreturn.pod_uom }}</td>
-                    <td class="font-weight-bold text-dark">{{ gatepassreturn.pod_quantity }}</td>
+                    <td>{{ gatepassreturn.pod_uom|default:gatepassreturn.pod_nad.nad_uom|default:'---' }}</td>
+                    <td class="font-weight-bold text-dark">{{ gatepassreturn.pod_quantity|default:gatepassreturn.pod_nad.nad_quantity|default:'0' }}</td>
                     <td>
                         <select class="form-control form-control-modern py-0 returnable-input" style="height: 34px !important; font-size: 0.85rem;">
                             <option value="Non-Returnable" {% if gatepassreturn.pod_returnable_status == 'Non-Returnable' %}selected{% endif %}>Non-Returnable</option>
@@ -58,7 +58,7 @@
 </div>
 
 <script>
-    $(document).ready(function() {
+    jQuery(document).ready(function($) {
         if (!$.fn.DataTable.isDataTable('#dispatch_goods_list')) {
             $('#dispatch_goods_list').DataTable({
                 "paging": false,
@@ -107,3 +107,4 @@
         });
     });
 </script>
+

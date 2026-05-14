@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models.aggregates import Sum
+from django.db.models import Sum, F
 from django.http import JsonResponse
 from ..forms import PkquotationForm
 from ..models import User_extInfo,Nadimension,PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo,Costtype,Pkstocktype,Stockdescription,pk_itemInfo,pk_itemdescriptionInfo,StockMaintenance
@@ -154,9 +154,9 @@ def pk_quotation_add(request, quotation_id=0):
                                 pkqt_assessment_num=assessment_id,
                                 pkqt_cost_type=8,
                                 pkqt_stock_type=1
-                            ).aggregate(Sum('pkqt_sqrt_req'))['pkqt_sqrt_req__sum'] or 0.0
-                            print("total_cft",total_cft)
-                            request.session['total_cft_display'] = round(total_cft, 2)
+                            ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total'] or 0.0
+                            print("total_cft", total_cft)
+                            request.session['total_cft_display'] = round(total_cft, 3)
                         else:
                             request.session['total_cft_display'] = 0.0
 
@@ -179,7 +179,7 @@ def pk_quotation_add(request, quotation_id=0):
                             pkqt_assessment_num=assessment_id,
                             pkqt_cost_type=8,
                             pkqt_stock_type=1
-                        ).aggregate(Sum('pkqt_sqrt_req'))['pkqt_sqrt_req__sum'] or 0.0
+                        ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total'] or 0.0
                         print("total_cft", total_cft)
                         request.session['total_cft_display'] = round(total_cft, 2)
                     else:
@@ -276,37 +276,48 @@ def pk_get_pk_requirement_type(request):
 @login_required(login_url='login_page')
 def pk_store_na_dimension_id(request):
     na_dimension_box_val = []
-    ct_requirement_id= request.GET.get('ct_requirement_id')
-    print('ct_requirement_id',ct_requirement_id)
-    # Fetch requirement type from need assessment
+    ct_requirement_id = request.GET.get('ct_requirement_id')
+    print('ct_requirement_id', ct_requirement_id)
 
-    a = Nadimension.objects.get(pk=ct_requirement_id)
+    empty_response = {
+        'na_dimension_box_val': [],
+        'na_dimension_type': '',
+        'na_dimension_type_id': '',
+        'na_uom': '',
+        'na_uom_id': '',
+        'na_length': 0,
+        'na_width': 0,
+        'na_height': 0,
+        'na_quantity': 0,
+        'na_wood_type_id': '',
+        'na_wood_desc_id': '',
+        'na_type_of_req_id': '',
+    }
 
-    na_dimension_box_val.append(str(a.nad_type_of_req)+str(' (')+str(a.nad_length)+str('x')+str(a.nad_width)+str('x')+str(a.nad_height)+str(')'))
-    na_dimension_type =str(a.nad_dimension_type)
-    na_dimension_type_id = str(a.nad_dimension_type.id)
-    na_uom=str(a.nad_uom)
-    na_uom_id=str(a.nad_uom.id)
-    na_length=str(a.nad_length)
-    na_width=str(a.nad_width)
-    na_height = str(a.nad_height)
-    na_quantity = str(a.nad_quantity)
-    na_wood_type_id = a.nad_wood_type.first().id if a.nad_wood_type.exists() else ""
-    na_wood_desc_id = a.nad_wood_description.first().id if a.nad_wood_description.exists() else ""
-    na_type_of_req_id = a.nad_type_of_req.id if a.nad_type_of_req else ""
+    # Guard: return empty response if no valid ID provided
+    if not ct_requirement_id or not str(ct_requirement_id).strip().isdigit():
+        return JsonResponse(empty_response)
 
+    try:
+        a = Nadimension.objects.get(pk=ct_requirement_id)
+    except Nadimension.DoesNotExist:
+        return JsonResponse(empty_response)
+
+    na_dimension_box_val.append(
+        str(a.nad_type_of_req) + ' (' + str(a.nad_length) + 'x' + str(a.nad_width) + 'x' + str(a.nad_height) + ')'
+    )
     data = {
         'na_dimension_box_val': na_dimension_box_val,
-        'na_dimension_type': na_dimension_type,
-        'na_dimension_type_id': na_dimension_type_id,
-        'na_uom': na_uom,
-        'na_uom_id': na_uom_id,
-        'na_length': na_length,
-        'na_width': na_width,
-        'na_height': na_height,
-        'na_quantity': na_quantity,
-        'na_wood_type_id': na_wood_type_id,
-        'na_wood_desc_id': na_wood_desc_id,
-        'na_type_of_req_id': na_type_of_req_id,
+        'na_dimension_type': str(a.nad_dimension_type),
+        'na_dimension_type_id': str(a.nad_dimension_type.id),
+        'na_uom': str(a.nad_uom),
+        'na_uom_id': str(a.nad_uom.id),
+        'na_length': str(a.nad_length),
+        'na_width': str(a.nad_width),
+        'na_height': str(a.nad_height),
+        'na_quantity': str(a.nad_quantity),
+        'na_wood_type_id': a.nad_wood_type.first().id if a.nad_wood_type.exists() else "",
+        'na_wood_desc_id': a.nad_wood_description.first().id if a.nad_wood_description.exists() else "",
+        'na_type_of_req_id': a.nad_type_of_req.id if a.nad_type_of_req else "",
     }
     return JsonResponse(data)

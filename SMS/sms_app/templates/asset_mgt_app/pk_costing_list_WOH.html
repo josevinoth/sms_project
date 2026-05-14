@@ -1,20 +1,39 @@
 {% block content %}
-<div class="table-container-modern mt-5">
+<div class="table-container-modern mt-2">
     <div class="modern-header mb-0 d-flex justify-content-between align-items-center" style="border-radius: 8px 8px 0 0;">
-        <h4 class="mb-0 text-white"><i class="fas fa-list-ul mr-2"></i> Costing Items Detail</h4>
+        <h4 class="mb-0 text-white"><i class="fas fa-list-ul mr-2"></i> COSTING LIST</h4>
+        <input type="text" id="costing_list_search" class="form-control form-control-sm"
+               placeholder="🔍 Search..."
+               style="max-width:280px; border-radius:6px; border:2px solid #17a2b8;">
     </div>
 
     <div class="p-3 bg-white shadow-sm" style="border-radius: 0 0 8px 8px;">
-        <table id="costing_list" class="modern-table">
-            <thead>
+        <table id="costing_list" class="table modern-table" style="width:100%">
+            <thead class="thead-dark">
                 <tr>
                     <th>ID</th>
-                    <th>Job Info</th>
-                    <th>Material Info</th>
-                    <th>Dimensions</th>
-                    <th>Req Value</th>
-                    <th>Costing</th>
-                    <th>Stock Status</th>
+                    <th>Created On</th>
+                    <th>Stock Purchase Number</th>
+                    <th>Assessment Number</th>
+                    <th>Customer Name</th>
+                    <th>Job Number</th>
+                    <th>Job Type</th>
+                    <th>Cost Type</th>
+                    <th>Stock Type</th>
+                    <th>Stock Description</th>
+                    <th>Item Name</th>
+                    <th>Item Description</th>
+                    <th>Width (in)</th>
+                    <th>Height (in)</th>
+                    <th>Length (ft)</th>
+                    <th>Quantity</th>
+                    <th>UOM</th>
+                    <th>Total CFT</th>
+                    <th>Rate/QTY (CFT)</th>
+                    <th>Days</th>
+                    <th>Job Type Quantity</th>
+                    <th>Unit Cost</th>
+                    <th>Total Cost</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -22,41 +41,30 @@
                 {% for costinginfo in costing_list %}
                 <tr>
                     <td class="font-weight-bold">#{{costinginfo.id}}</td>
-                    <td>
-                        <div class="small font-weight-bold">{{costinginfo.ct_assessment_num}}</div>
-                        <div class="small text-muted">{{costinginfo.ct_customer_name}}</div>
-                        <div class="x-small text-secondary">{{costinginfo.ct_requirement}}</div>
-                    </td>
-                    <td>
-                        <div class="small font-weight-bold text-primary">{{costinginfo.ct_stock_description}}</div>
-                        <div class="x-small text-muted">{{costinginfo.ct_cost_type}} | {{costinginfo.ct_stock_type}}</div>
-                    </td>
-                    <td>
-                        <div class="small">L: {{costinginfo.ct_length_req}} ft</div>
-                        <div class="small">W: {{costinginfo.ct_width_req}} in</div>
-                        <div class="small">H: {{costinginfo.ct_height_req}} in</div>
-                    </td>
-                    <td class="text-center">
-                        <div class="font-weight-bold text-info">{{costinginfo.ct_sqrt_req}}</div>
-                        <div class="small text-muted">{{costinginfo.ct_uom}}</div>
-                    </td>
-                    <td>
-                        <div class="small">Rate: ₹{{costinginfo.ct_rate}}</div>
-                        <div class="font-weight-bold text-success">Total: ₹{{costinginfo.ct_totalbox_cost}}</div>
-                    </td>
-                    <td>
-                        <div class="small">{{costinginfo.ct_stock_status}}</div>
-                        <div class="x-small text-muted">Excess: {{costinginfo.ct_excess_status}}</div>
-                    </td>
+                    <td>{{costinginfo.ct_created_at|date:"Y-m-d"}}</td>
+                    <td>{{costinginfo.ct_stock_purchase_number}}</td>
+                    <td>{{costinginfo.ct_assessment_num}}</td>
+                    <td>{{costinginfo.ct_customer_name}}</td>
+                    <td>{{costinginfo.ct_job_no}}</td>
+                    <td>{{costinginfo.ct_requirement}}</td>
+                    <td>{{costinginfo.ct_cost_type}}</td>
+                    <td>{{costinginfo.ct_stock_type}}</td>
+                    <td>{{costinginfo.ct_stock_description}}</td>
+                    <td>{{costinginfo.ct_item}}</td>
+                    <td>{{costinginfo.ct_itemdescription}}</td>
+                    <td>{{costinginfo.ct_width_req}}</td>
+                    <td>{{costinginfo.ct_height_req}}</td>
+                    <td>{{costinginfo.ct_length_req}}</td>
+                    <td>{{costinginfo.ct_quantity_req}}</td>
+                    <td>{{costinginfo.ct_uom}}</td>
+                    <td>{{costinginfo.ct_sqrt_req}}</td>
+                    <td>{{costinginfo.ct_rate}}</td>
+                    <td>{{costinginfo.ct_days}}</td>
+                    <td>{{costinginfo.ct_na_quantity}}</td>
+                    <td>{{costinginfo.ct_total_cost}}</td>
+                    <td class="font-weight-bold text-success">₹{{costinginfo.ct_totalbox_cost}}</td>
                     <td>
                         <div class="d-flex align-items-center" style="gap: 5px;">
-                            {% if costinginfo.ct_excess_status.id == 3 %}
-                            <a class="btn btn-warning btn-sm" href="{% url 'pk_return_excess_to_stock' costinginfo.id %}"
-                                onclick="return confirm('Return excess stock of {{ costinginfo.ct_exe_quantity_req }} to ledger?');" title="Return to Stock">
-                                <i class="fas fa-undo"></i>
-                            </a>
-                            {% endif %}
-
                             <a class="btn btn-primary btn-sm" href="{% url 'costing_update' costinginfo.id %}" title="Edit">
                                 <i class="far fa-edit"></i>
                             </a>
@@ -84,20 +92,11 @@
 </div>
 
 <script>
-    $(document).ready(function () {
-        if (!$.fn.DataTable.isDataTable('#costing_list')) {
-            $('#costing_list').DataTable({
-                scrollX: true,
-                order: [[0, 'desc']],
-                dom: 'Bfrtip',
-                buttons: [
-                    { extend: 'copy', className: 'btn btn-sm btn-secondary' },
-                    { extend: 'excel', className: 'btn btn-sm btn-success' },
-                    { extend: 'print', className: 'btn btn-sm btn-info' }
-                ],
-                pageLength: 10
-            });
-        }
+    document.getElementById('costing_list_search').addEventListener('keyup', function() {
+        var term = this.value.toLowerCase();
+        document.querySelectorAll('#costing_list tbody tr').forEach(function(row) {
+            row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+        });
     });
 </script>
-{% endblock content %}
+{% endblock content %}

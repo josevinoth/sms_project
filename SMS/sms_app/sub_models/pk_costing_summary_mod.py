@@ -37,6 +37,8 @@ class PkcostingsummaryInfo(models.Model):
     cs_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
     cs_job_no = models.CharField(max_length=100, blank=True, null=True)
     cs_pack_type = models.CharField(max_length=50, choices=[('In-House', 'In-House'), ('On-Site', 'On-Site')], default='In-House')
+    cs_others_cost = models.FloatField(blank=True, null=True, default=0.0)
+    cs_others_description = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ["id"]
