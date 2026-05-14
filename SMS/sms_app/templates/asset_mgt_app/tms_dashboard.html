@@ -120,8 +120,8 @@
                 data: {
                     labels: data.bar_chart.labels,
                     datasets: [
-                        { label: 'Local', data: data.bar_chart.local, backgroundColor: '#3b82f6' },
-                        { label: 'Outstation', data: data.bar_chart.outstation, backgroundColor: '#8b5cf6' }
+                        { label: 'Local', data: data.bar_chart.local, backgroundColor: '#3b82f6', borderRadius: 6, borderSkipped: false },
+                        { label: 'Outstation', data: data.bar_chart.outstation, backgroundColor: '#8b5cf6', borderRadius: 6, borderSkipped: false }
                     ]
                 },
                 options: {
@@ -144,22 +144,35 @@
             });
 
             const donutColors = ['#10b981', '#f59e0b', '#ef4444'];
+            const donutLabels = ['Business', 'Empty', 'B-Empty'];
             const donutDatalabelOptions = {
-                ...commonOptions.plugins.datalabels,
-                display: true,
-                anchor: 'end',
-                align: 'end',
-                // Varied offsets to prevent collision at the top
-                offset: (context) => {
-                    if (context.dataIndex === 1) return 22; // Empty
-                    if (context.dataIndex === 2) return 8;  // B-Empty
-                    return 12;
+                display: (context) => {
+                    const value = context.dataset.data[context.dataIndex];
+                    if (!value || value <= 0) return false;
+                    const total = context.dataset.data.reduce((a, b) => a + (b || 0), 0);
+                    return total > 0 && (value / total) * 100 >= 5; // hide if < 5% share
                 },
-                color: (context) => donutColors[context.dataIndex],
-                font: { weight: '800', size: 10 },
-                formatter: (value) => {
+                anchor: 'center',
+                align: 'center',
+                offset: 0,
+                color: '#ffffff',
+                backgroundColor: (context) => {
+                    const colors = ['rgba(16,185,129,0.85)', 'rgba(245,158,11,0.85)', 'rgba(239,68,68,0.85)'];
+                    return colors[context.dataIndex];
+                },
+                borderRadius: 4,
+                padding: { top: 3, bottom: 3, left: 5, right: 5 },
+                font: { weight: '800', size: 9 },
+                formatter: (value, context) => {
                     if (!value || value <= 0) return null;
-                    return value.toLocaleString() + ' KM';
+                    const total = context.dataset.data.reduce((a, b) => a + (b || 0), 0);
+                    if (total > 0 && (value / total) * 100 < 5) return null;
+                    const label = donutLabels[context.dataIndex] || '';
+                    let km;
+                    if (value >= 1000000) km = (value / 1000000).toFixed(1) + 'M KM';
+                    else if (value >= 1000) km = (value / 1000).toFixed(1) + 'K KM';
+                    else km = value.toLocaleString() + ' KM';
+                    return label + '\n' + km;
                 }
             };
 
@@ -171,12 +184,12 @@
                 },
                 options: {
                     ...commonOptions,
-                    layout: { padding: { left: 30, right: 80, top: 45, bottom: 40 } },
+                    layout: { padding: 6 },
                     plugins: {
                         ...commonOptions.plugins,
                         datalabels: donutDatalabelOptions
                     },
-                    cutout: '50%'
+                    cutout: '52%'
                 }
             });
 
@@ -188,12 +201,12 @@
                 },
                 options: {
                     ...commonOptions,
-                    layout: { padding: { left: 30, right: 80, top: 45, bottom: 40 } },
+                    layout: { padding: 6 },
                     plugins: {
                         ...commonOptions.plugins,
                         datalabels: donutDatalabelOptions
                     },
-                    cutout: '50%'
+                    cutout: '52%'
                 }
             });
         }
