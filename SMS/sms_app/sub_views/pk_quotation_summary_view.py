@@ -9,7 +9,7 @@ from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_del
 from ..forms import PkcostingsummaryForm,PkquotationsummaryForm
 from ..models import pk_stock_statusinfo,PkcostingInfo,User_extInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo,PkcostingsummaryInfo,PkpurchaseorderInfo,StatusList,POdimension
 from django.shortcuts import render, redirect
-from django.db.models.aggregates import Sum
+from django.db.models import Sum, F
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
@@ -64,9 +64,11 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 filter_kwargs = {'pkqt_assessment_num': assessment_id, 'pkqt_cost_type': cost_type}
                 if stock_types:
                     filter_kwargs['pkqt_stock_type__in'] = stock_types
-                cost = PkquotationInfo.objects.filter(**filter_kwargs).aggregate(Sum('pkqt_sqrt_req'))[
-                    'pkqt_sqrt_req__sum']
-                return round(cost, 2) if cost is not None else 0.0
+                # Calculate total project CFT: Sum(CFT_per_box * num_boxes)
+                cost = PkquotationInfo.objects.filter(**filter_kwargs).aggregate(
+                    total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity'))
+                )['total']
+                return round(cost, 3) if cost is not None else 0.0
 
             def get_aggregate_cost(assessment_id, cost_type, stock_types=None):
                 filter_kwargs = {'pkqt_assessment_num': assessment_id, 'pkqt_cost_type': cost_type}
@@ -74,20 +76,15 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                     filter_kwargs['pkqt_stock_type__in'] = stock_types
                 cost = PkquotationInfo.objects.filter(**filter_kwargs).aggregate(Sum('pkqt_totalbox_cost'))[
                     'pkqt_totalbox_cost__sum']
-                return round(cost, 2) if cost is not None else 0.0
+                return round(cost, 3) if cost is not None else 0.0
 
-            wood_cost = get_aggregate_cost(needassessment_id, 8, [1, 4])
-            total_cft = get_aggregate_cft(needassessment_id, 8, [1])
+            wood_cost = get_aggregate_cost(needassessment_id, 8, [1, 4, 5])
+            total_cft = get_aggregate_cft(needassessment_id, 8, [1, 4, 5])
             engineer_cost = get_aggregate_cost(needassessment_id, 2)
             packing_labour_cost = get_aggregate_cost(needassessment_id, 3)
             labour_cost = packing_labour_cost
             crane_cost = get_aggregate_cost(needassessment_id, 6)
-            ht_cost = PkquotationInfo.objects.filter(
-                pkqt_assessment_num=needassessment_id,
-                pkqt_cost_type=5
-            ).aggregate(Sum('pkqt_total_cost'))['pkqt_total_cost__sum'] or 0.0
-
-            ht_cost = round(ht_cost, 2)
+            ht_cost = get_aggregate_cost(needassessment_id, 5)
             management_cost = get_aggregate_cost(needassessment_id, 7)
             material_cost = get_aggregate_cost(needassessment_id, 8, [2])
             transport_cost = get_aggregate_cost(needassessment_id, 4)
@@ -292,13 +289,15 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
         print('qty', qty)
         total_cost_wom=PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id,pkqt_requirement=i).aggregate(total_cost=Sum('pkqt_total_cost'))['total_cost'] or 0
         print('total_cost_wom',total_cost_wom)
-        total_cost=total_cost_wom+(total_cost_wom*margin/100)
         try:
-            Nadimension.objects.filter(pk=k).update(nad_cost_unit=round(total_cost,0))
+            total_cost_wm = round(total_cost_wom + (total_cost_wom * margin / 100), 0)
+            gst = round(total_cost_wm * gst_val / 100, 0)
+            final_cost = round(total_cost_wm + gst, 0)
+            Nadimension.objects.filter(pk=k).update(nad_cost_unit=round(total_cost_wm,0))
         except:
             Nadimension.objects.filter(pk=k).update(nad_cost_unit=0)
         try:
-            Nadimension.objects.filter(pk=k).update(nad_cost_total=round(total_cost*qty,0))
+            Nadimension.objects.filter(pk=k).update(nad_cost_total=round(total_cost_wm*qty,0))
         except:
             Nadimension.objects.filter(pk=k).update(nad_cost_total=0)
         # total_sum=round((total_sum+total_cost),2)
@@ -456,12 +455,12 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
                                 ct_customer_po=customer_po,
                                 ct_updated_by=request.user,
                                 ct_na_quantity=quotation.pkqt_na_quantity,
-                                ct_totalbox_cost=quotation.pkqt_totalbox_cost,
+ct_totalbox_cost=quotation.pkqt_totalbox_cost,
                                 ct_part_code=quotation.pkqt_part_code,
                                 ct_weight_sqft=quotation.pkqt_weight_sqft,
                                 ct_weight_received=quotation.pkqt_weight_received,
                                 ct_weight_Consumption=quotation.pkqt_weight_Consumption,
-                                ct_total_cft_display=quotation.pkqt_total_cft_display,
+                                ct_total_cft_display=round(quotation.pkqt_total_cft_display, 3),
                             )
 
                             # Create StockMaintenance Retrieval Record if it's a stock item (Type 8, Stock Type 1/4)

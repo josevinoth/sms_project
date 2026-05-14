@@ -934,7 +934,7 @@ def trip_email(request):
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Consignment #</b></td><td style="padding: 8px; border: 1px solid #ddd;">{consignment}</td></tr>
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Started Date</b></td><td style="padding: 8px; border: 1px solid #ddd;">{started_dt}</td></tr>
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>To Location</b></td><td style="padding: 8px; border: 1px solid #ddd;">{to_location}</td></tr>
-                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Reported Date (Unloading)</b></td><td style="padding: 8px; border: 1px solid #ddd;">{unloading_reported_dt}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Closed Date & Time</b></td><td style="padding: 8px; border: 1px solid #ddd;">{unloading_reported_dt}</td></tr>
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Status</b></td><td style="padding: 8px; border: 1px solid #ddd;">Trip Closed</td></tr>
             </tbody>
         </table>
@@ -1505,7 +1505,7 @@ def trip_send_trip_closed_mail(request):
                     <td style="padding: 8px; border: 1px solid #ddd;">{to_location}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Reported Date & Time</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Closed Date & Time</b></td>
                     <td style="padding: 8px; border: 1px solid #ddd;">{reported_dt}</td>
                 </tr>
                 <tr>

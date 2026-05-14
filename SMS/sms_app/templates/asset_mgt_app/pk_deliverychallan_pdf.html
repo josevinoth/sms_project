@@ -1,192 +1,182 @@
-{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
 <style>
     @page {
-        margin: 25px;
-        size: A4;
+        size: A4 portrait;
+        margin: 1cm;
     }
     body {
         font-family: 'Helvetica', 'Arial', sans-serif;
-        font-size: 10px;
-        color: #1e293b;
-        line-height: 1.4;
+        font-size: 9px;
+        color: #000;
+        line-height: 1.2;
     }
-    .main-table {
+    table {
         width: 100%;
         border-collapse: collapse;
-        border: 1.5px solid #0f172a;
+        margin-bottom: 5px;
+        table-layout: fixed;
     }
-    .main-table td {
-        border: 1px solid #94a3b8;
-        padding: 6px 8px;
-        vertical-align: top;
+    th, td {
+        border: 0.5pt solid #000;
+        padding: 3px 5px;
+        vertical-align: middle;
+        word-wrap: break-word;
     }
     .text-center { text-align: center; }
+    .text-left { text-align: left; }
     .text-right { text-align: right; }
     .bold { font-weight: bold; }
-    .bg-modern { background-color: #f1f5f9; }
+    .bg-gray { background-color: #f2f2f2; }
     
-    /* Header Styles */
-    .company-title { 
-        font-size: 16px; 
-        color: #1e40af; 
-        margin-bottom: 2px;
-        letter-spacing: 0.5px;
+    .header-box {
+        border: 1pt solid #000;
+        margin-bottom: 10px;
     }
-    .doc-type-header { 
-        background-color: #1e293b; 
-        color: white;
-        font-size: 13px; 
-        padding: 8px; 
+    .company-name {
+        font-size: 14px;
         text-align: center;
-        letter-spacing: 2px;
-    }
-    
-    /* Item Table Styles */
-    .items-table {
-        width: 100%;
-        border-collapse: collapse;
-        border: 1.5px solid #0f172a;
-        border-top: none;
-    }
-    .items-table th {
-        background-color: #334155;
-        color: white;
-        font-weight: bold;
-        text-align: center;
-        text-transform: uppercase;
-        font-size: 9px;
-        padding: 8px 4px;
-        border: 1px solid #0f172a;
-    }
-    .items-table td {
-        border: 1px solid #cbd5e1;
-        padding: 8px 6px;
-        height: 25px;
-    }
-    .section-title {
-        background-color: #e2e8f0;
-        font-weight: bold;
-        font-size: 9px;
-        padding: 4px 8px;
-        border-bottom: 1px solid #94a3b8;
+        padding: 5px;
+        border-bottom: 0.5pt solid #000;
     }
 </style>
+</head>
+<body>
 
-<div class="container">
-    <table class="main-table">
-        <tr>
-            <td colspan="6" class="doc-type-header bold">DELIVERY CHALLAN</td>
-        </tr>
-        <tr>
-            <td colspan="3" style="width: 50%; border-right: 1.5px solid #0f172a;">
-                <div class="company-title bold">BVM PACK SOLUTIONS PRIVATE LIMITED</div>
-                <div style="font-size: 9px; color: #475569;">
-                    No. 70 Adam Nagar Road, Nagalkeni, Chrompet, Chennai - 600 044<br>
-                    <strong>GSTIN: 33AAKCB6640C1Z0</strong>
-                </div>
-            </td>
-            <td colspan="3" style="width: 50%;">
-                <table style="width: 100%; border: none;">
-                    <tr>
-                        <td style="border: none; padding: 2px; color: #64748b;" class="bold">CHALLAN NO</td>
-                        <td style="border: none; padding: 2px;" class="bold">: DP-{{ delivery.id }}</td>
-                    </tr>
-                    <tr>
-                        <td style="border: none; padding: 2px; color: #64748b;" class="bold">CHALLAN DATE</td>
-                        <td style="border: none; padding: 2px;">: {{ delivery.dc_created_at|date:"d.m.Y" }}</td>
-                    </tr>
-                    <tr>
-                        <td style="border: none; padding: 2px; color: #64748b;" class="bold">JOB NO</td>
-                        <td style="border: none; padding: 2px;" class="bold">: {{ delivery.dc_job_no }}</td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
+<div class="header-box">
+    <div class="company-name bold">BVM PACK SOLUTIONS PRIVATE LIMITED</div>
+    <div style="text-align: center; padding: 3px; font-size: 8.5px;">
+        No. 70 Adam Nagar Road, Nagalkeni, Chrompet, Chennai - 600 044<br>
+        <span class="bold">GSTIN: 33AAKCB6640C1Z0</span>
+    </div>
+</div>
 
-        <tr>
-            <td colspan="3" class="section-title">CONSIGNEE (SHIP TO)</td>
-            <td colspan="3" class="section-title">TRANSPORTER & VEHICLE INFO</td>
-        </tr>
-        <tr>
-            <td colspan="3" style="height: 65px; border-right: 1.5px solid #0f172a;">
-                <div class="bold" style="font-size: 11px; color: #1e3a8a;">{{ delivery.dc_customer_name.cu_name }}</div>
-                <div style="margin-top: 4px;">{{ delivery.dc_customer_name.cu_address|linebreaksbr }}</div>
-                <div style="margin-top: 5px;"><strong>GSTIN:</strong> {{ delivery.dc_customer_name.cu_gst }}</div>
-            </td>
-            <td colspan="3">
-                <table style="width: 100%; border: none;">
-                    <tr>
-                        <td style="border: none; padding: 2px; color: #64748b; width: 40%;" class="bold">Vehicle No</td>
-                        <td style="border: none; padding: 2px;">: {{ delivery.dc_veh_no|default:'---' }}</td>
-                    </tr>
-                    <tr>
-                        <td style="border: none; padding: 2px; color: #64748b;" class="bold">Driver Name</td>
-                        <td style="border: none; padding: 2px;">: {{ delivery.dc_driver_name|default:'---' }}</td>
-                    </tr>
-                    <tr>
-                        <td style="border: none; padding: 2px; color: #64748b;" class="bold">E-Way Bill</td>
-                        <td style="border: none; padding: 2px;">: {{ delivery.dc_eway_bill_no|default:'---' }}</td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+<table>
+    <tr>
+        <td colspan="4" class="bold text-center bg-gray" style="font-size: 11px;">DELIVERY CHALLAN</td>
+        <td colspan="2" class="bold text-center">DC NO: BVM/PKG/25-26/{{ delivery.id }}</td>
+    </tr>
+    <tr>
+        <td colspan="4" rowspan="4" style="vertical-align: top;">
+            <span class="bold">Customer Address:</span><br>
+            <span class="bold" style="font-size: 10px;">{{ delivery.dc_customer_name.cu_name }}</span><br>
+            {{ delivery.dc_customer_name.cu_address|linebreaksbr }}
+        </td>
+        <td class="bold bg-gray" style="width: 25%;">DC Date</td>
+        <td>{{ delivery.dc_created_at|date:"d-m-Y" }}</td>
+    </tr>
+    <tr>
+        <td class="bold bg-gray">Transporter</td>
+        <td>{{ delivery.dc_transporter_name|default:'---' }}</td>
+    </tr>
+    <tr>
+        <td class="bold bg-gray">Vehicle No</td>
+        <td class="bold">{{ delivery.dc_vehicle_no|default:'---' }}</td>
+    </tr>
+    <tr>
+        <td class="bold bg-gray">CN Note</td>
+        <td>{{ delivery.dc_consignment_note|default:'---' }}</td>
+    </tr>
+</table>
 
-    <table class="items-table">
-        <thead>
+<table>
+    <tr>
+        <td class="bold bg-gray" style="width: 20%;">Ship To GSTIN</td>
+        <td style="width: 30%;">{{ delivery.dc_customer_gstin|default:delivery.dc_customer_name.cu_gst }}</td>
+        <td class="bold bg-gray" style="width: 20%;">Bill To GSTIN</td>
+        <td style="width: 30%;">{{ delivery.dc_customer_name.cu_gst|default:'' }}</td>
+    </tr>
+    <tr>
+        <td class="bold bg-gray">E-WAY Bill No</td>
+        <td>{{ delivery.dc_eway_billno|default:'---' }}</td>
+        <td class="bold bg-gray">E-WAY Date</td>
+        <td>{{ delivery.dc_eway_date|date:"d-m-Y"|default:'---' }}</td>
+    </tr>
+    <tr>
+        <td class="bold bg-gray">GRN Ref</td>
+        <td>{{ delivery.dc_grn|default:'---' }}</td>
+        <td class="bold bg-gray">Sales Order Ref</td>
+        <td>{{ delivery.dc_sales_order_po|default:'---' }}</td>
+    </tr>
+    <tr>
+        <td class="bold bg-gray">Driver Name</td>
+        <td>{{ delivery.dc_driver_name|default:'---' }}</td>
+        <td class="bold bg-gray">Driver Mobile</td>
+        <td>{{ delivery.dc_driver_mobile_num|default:'---' }}</td>
+    </tr>
+</table>
+
+<table>
+    <thead>
+        <tr class="text-center bold bg-gray">
+            <th style="width: 4%;">SN</th>
+            <th style="width: 30%;">DESCRIPTION OF GOODS</th>
+            <th style="width: 6%;">UOM</th>
+            <th style="width: 7%;">QTY</th>
+            <th style="width: 8%;">HSN</th>
+            <th style="width: 10%;">TYPE</th>
+            <th style="width: 9%;">BASE VAL</th>
+            <th style="width: 7%;">GST %</th>
+            <th style="width: 9%;">GST AMT</th>
+            <th style="width: 10%;">TOTAL</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in challan_list %}
+        <tr class="text-center">
+            <td>{{ forloop.counter }}</td>
+            <td class="text-left bold">{{ item.pod_item }}</td>
+            <td>{{ item.pod_uom|default:'Nos' }}</td>
+            <td class="bold">{{ item.pod_quantity|default:'0' }}</td>
+            <td>4415</td>
+            <td style="font-size: 8px;">{{ item.pod_returnable_status|upper }}</td>
+            <td class="text-right">{{ item.pod_base_value|floatformat:2|default:'0.00' }}</td>
+            <td>{{ item.pod_gst_rate|default:'0' }}%</td>
+            <td class="text-right">{{ item.pod_gst_amount|floatformat:2|default:'0.00' }}</td>
+            <td class="text-right bold bg-gray">{{ item.pod_total_value|floatformat:2|default:'0.00' }}</td>
+        </tr>
+        {% endfor %}
+        
+        {% if challan_list|length < 10 %}
+            {% with "123456" as filler %}
+            {% for i in filler %}
             <tr>
-                <th style="width: 5%;">SR.</th>
-                <th style="width: 35%;">DESCRIPTION OF GOODS</th>
-                <th style="width: 10%;">UOM</th>
-                <th style="width: 10%;">QTY</th>
-                <th style="width: 15%;">HSN CODE</th>
-                <th style="width: 25%;">REMARKS</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in challan_list %}
-            <tr>
-                <td class="text-center" style="color: #64748b;">{{ forloop.counter }}</td>
-                <td class="bold">{{ item.pod_item }}</td>
-                <td class="text-center">{{ item.pod_uom }}</td>
-                <td class="text-center bold">{{ item.pod_quantity }}</td>
-                <td class="text-center">4415</td>
-                <td>{{ item.pod_returnable_status|default:'' }}</td>
+                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
             </tr>
             {% endfor %}
-            
-            {% if challan_list|length < 8 %}
-                {% with "12345" as filler %}
-                {% for i in filler %}
-                <tr>
-                    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
-                </tr>
-                {% endfor %}
-                {% endwith %}
-            {% endif %}
-        </tbody>
-    </table>
-
-    <div style="margin-top: 20px; font-size: 9px; padding: 10px; background-color: #f8fafc; border: 1px solid #cbd5e1;">
-        <strong style="color: #475569;">TERMS & CONDITIONS:</strong><br>
-        <div style="margin-top: 5px;">
-            1. Goods once sold will not be taken back.<br>
-            2. We are not responsible for any damage after the goods leave our premises.<br>
-            3. Subject to Chennai Jurisdiction.
-        </div>
-    </div>
-
-    <table style="width: 100%; border: none; margin-top: 60px;">
-        <tr>
-            <td style="border: none; width: 50%;" class="text-center">
-                <div style="height: 60px;"></div>
-                <div style="border-top: 1.5px solid #0f172a; padding-top: 8px; color: #475569; width: 200px; margin: 0 auto;" class="bold">RECEIVER'S SIGNATURE</div>
-            </td>
-            <td style="border: none; width: 50%;" class="text-center">
-                <div style="color: #64748b; font-size: 8px; margin-bottom: 40px;">For BVM PACK SOLUTIONS PVT LTD</div>
-                <div style="border-top: 1.5px solid #0f172a; padding-top: 8px; color: #1e3a8a; width: 200px; margin: 0 auto;" class="bold">AUTHORISED SIGNATORY</div>
-            </td>
+            {% endwith %}
+        {% endif %}
+        
+        <tr class="bold text-center bg-gray">
+            <td colspan="3">TOTAL</td>
+            <td>{{ total_qty|default:'0' }}</td>
+            <td colspan="2">&nbsp;</td>
+            <td class="text-right">{{ total_base|floatformat:2|default:'0.00' }}</td>
+            <td>&nbsp;</td>
+            <td class="text-right">{{ total_gst|floatformat:2|default:'0.00' }}</td>
+            <td class="text-right" style="font-size: 11px;">INR {{ total_amount|floatformat:2|default:'0.00' }}</td>
         </tr>
-    </table>
+    </tbody>
+</table>
+
+<div style="margin-top: 10px; font-size: 8px;">
+    <span class="bold">Remarks:</span> Goods received in good condition.
 </div>
-{% endblock content %}
+
+<table style="width: 100%; border: none; margin-top: 50px;">
+    <tr>
+        <td style="border: none; text-align: center;">
+            <div style="border-top: 1pt solid black; width: 150px; margin: 0 auto;"></div>
+            RECEIVER'S SIGNATURE
+        </td>
+        <td style="border: none; text-align: center;">
+            <div style="font-size: 8px; margin-bottom: 40px;">For BVM PACK SOLUTIONS PVT LTD</div>
+            <div style="border-top: 1pt solid black; width: 150px; margin: 0 auto;"></div>
+            AUTHORISED SIGNATORY
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

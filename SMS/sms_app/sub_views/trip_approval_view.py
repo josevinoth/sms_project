@@ -3,7 +3,18 @@ from ..models import TripdetailInfo, ConsignmentgoodsInfo, approval_status_info,
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
+from django.utils import timezone
 from .send_department_email import send_department_email
+
+def format_email_date(dt):
+    if not dt:
+        return ""
+    try:
+        # Convert to local timezone (IST)
+        local_dt = timezone.localtime(dt)
+        return local_dt.strftime("%d-%m-%Y %H:%M")
+    except Exception:
+        return str(dt)
 
 @login_required(login_url='login_page')
 def trip_approval_view(request):
@@ -70,9 +81,9 @@ def update_trip_approval(request, trip_id):
                     # 2. Construct Email
                     customer_name = customer.cu_name if customer else "N/A"
                     from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
-                    reported_dt = trip.tr_departeddate_pickup or ""
+                    reported_dt = format_email_date(trip.tr_departeddate_pickup)
                     consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
-                    started_dt = trip.tr_departeddate or ""
+                    started_dt = format_email_date(trip.tr_departeddate)
                     vehicle_number = trip.tr_vehiclenumber or "N/A"
 
                     subject = f"Trip Started Alert - {vehicle_number}"
@@ -89,8 +100,9 @@ def update_trip_approval(request, trip_id):
                                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Customer Name</b></td><td style="padding: 8px; border: 1px solid #ddd;">{customer_name}</td></tr>
                                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{vehicle_number}</td></tr>
                                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>From Location</b></td><td style="padding: 8px; border: 1px solid #ddd;">{from_location}</td></tr>
+                                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Reported Date & Time</b></td><td style="padding: 8px; border: 1px solid #ddd;">{reported_dt or "N/A"}</td></tr>
                                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Consignment Number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{consignment}</td></tr>
-                                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Started Date & Time</b></td><td style="padding: 8px; border: 1px solid #ddd;">{started_dt}</td></tr>
+                                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Started Date & Time</b></td><td style="padding: 8px; border: 1px solid #ddd;">{started_dt or "N/A"}</td></tr>
                             </tbody>
                         </table>
                         <p>Regards,<br>BVM Transport Team</p>

@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models.aggregates import Sum
+from django.db.models import Sum, F
 from django.http import JsonResponse
 from ..forms import PkquotationForm
 from ..models import User_extInfo,Nadimension,PkstockpurchasesInfo,PkquotationInfo,PkquotationsummaryInfo,Costtype,Pkstocktype,Stockdescription,pk_itemInfo,pk_itemdescriptionInfo,StockMaintenance
@@ -154,9 +154,9 @@ def pk_quotation_add(request, quotation_id=0):
                                 pkqt_assessment_num=assessment_id,
                                 pkqt_cost_type=8,
                                 pkqt_stock_type=1
-                            ).aggregate(Sum('pkqt_sqrt_req'))['pkqt_sqrt_req__sum'] or 0.0
-                            print("total_cft",total_cft)
-                            request.session['total_cft_display'] = round(total_cft, 2)
+                            ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total'] or 0.0
+                            print("total_cft", total_cft)
+                            request.session['total_cft_display'] = round(total_cft, 3)
                         else:
                             request.session['total_cft_display'] = 0.0
 
@@ -179,7 +179,7 @@ def pk_quotation_add(request, quotation_id=0):
                             pkqt_assessment_num=assessment_id,
                             pkqt_cost_type=8,
                             pkqt_stock_type=1
-                        ).aggregate(Sum('pkqt_sqrt_req'))['pkqt_sqrt_req__sum'] or 0.0
+                        ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total'] or 0.0
                         print("total_cft", total_cft)
                         request.session['total_cft_display'] = round(total_cft, 2)
                     else:

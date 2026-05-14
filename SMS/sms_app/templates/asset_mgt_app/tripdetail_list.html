@@ -145,13 +145,13 @@
                 {
                     targets: 15,
                     render: function (data, type, row) {
-                        return '<a class="btn btn-sm btn-primary" href="/tripdetail_update/' + row[15] + '/"><i class="far fa-edit"></i></a>';
+                        return '<a class="btn btn-sm btn-primary" href="/SMS/tripdetail_update/' + row[15] + '/"><i class="far fa-edit"></i></a>';
                     }
                 },
                 {
                     targets: 16,
                     render: function (data, type, row) {
-                        return '<form action="/tripdetail_delete/' + row[15] + '/" method="post" onsubmit="return confirm(\'Are you sure?\');">' +
+                        return '<form action="/SMS/tripdetail_delete/' + row[15] + '/" method="post" onsubmit="return confirm(\'Are you sure?\');">' +
                             '<input type="hidden" name="csrfmiddlewaretoken" value="' + getCookie('csrftoken') + '">' +
                             '<button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash-alt"></i></button></form>';
                     }

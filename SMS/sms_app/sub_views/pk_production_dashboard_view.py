@@ -3,6 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from sms_app.sub_models.pk_costing_summary_mod import PkcostingsummaryInfo
 from sms_app.sub_models.packing_jobs_mod import Packingjobs
+from sms_app.sub_models.pk_quality_check_mod import PkQualityCheck
+from sms_app.sub_models.pk_delivery_challan_mod import Pkdeliverychallan
+from sms_app.sub_models.pk_gate_pass_returnable_mod import PackingGateReturn
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -21,14 +24,14 @@ def pk_production_dashboard(request):
 
     # Build a lookup of existing status flags keyed by job_no
     status_map = {
-        pj.pj_job_no: pj
+        pj.pj_job_no.strip() if pj.pj_job_no else '': pj
         for pj in Packingjobs.objects.all()
     }
 
     # Merge: augment each costing job with its production/material status
     dashboard_rows = []
     for job in costing_jobs:
-        job_no = job.cs_job_no
+        job_no = job.cs_job_no.strip() if job.cs_job_no else ''
 
         # Get or create a status record for this job_no (auto-seed with Pending)
         if job_no not in status_map:
@@ -43,9 +46,18 @@ def pk_production_dashboard(request):
         else:
             status_tracker = status_map[job_no]
 
+        # Find QC, DC, or GP records for PDF links
+        qc_record = PkQualityCheck.objects.filter(qc_job_no=job_no).first()
+        dc_record = Pkdeliverychallan.objects.filter(dc_customer_po=job.cs_customer_po, dc_assessment_num=job.cs_assessment_num).first()
+        gp_record = PackingGateReturn.objects.filter(gp_job_no=job_no).first()
+
         dashboard_rows.append({
             'costing': job,
             'tracker': status_tracker,
+            'qc_record': qc_record,
+            'dc_record': dc_record,
+            'gp_record': gp_record,
+            'is_onsite': 'On-Site' in status_tracker.pj_pack_type if status_tracker.pj_pack_type else False
         })
 
     context = {
@@ -78,10 +90,16 @@ def update_production_status(request):
             if material_status and material_status != '':
                 update_data['pj_material_returned_flag'] = material_status
                 
-            job, created = Packingjobs.objects.update_or_create(
-                pj_job_no__iexact=job_no,
-                defaults=update_data
-            )
+            # Use filter().update() to avoid MultipleObjectsReturned if duplicates exist
+            jobs_to_update = Packingjobs.objects.filter(pj_job_no__iexact=job_no)
+            if jobs_to_update.exists():
+                jobs_to_update.update(**update_data)
+            else:
+                # Fallback if it doesn't exist at all
+                Packingjobs.objects.create(
+                    pj_job_no=job_no,
+                    **update_data
+                )
             
             return JsonResponse({'status': 'success', 'message': 'Status updated.'})
         except Exception as e:

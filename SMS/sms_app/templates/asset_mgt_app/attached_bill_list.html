@@ -57,6 +57,7 @@
                     <th>Agreed KM</th>
                     <th>Extra KM</th>
                     <th>Toll Cost</th>
+                    <th>Total Buy Cost</th>
                     <th>Bill Amount</th>
                     <th>Bill Attachment</th>
                     <th>Created On</th>
@@ -82,6 +83,7 @@
                     <td>{{ bill.ab_agreed_km|floatformat:2 }}</td>
                     <td>{{ bill.ab_extra_km_run|floatformat:2 }}</td>
                     <td>{{ bill.ab_toll_cost|floatformat:2 }}</td>
+                    <td class="font-weight-bold text-primary">{{ bill.ab_total_buy_cost|floatformat:2 }}</td>
                     <th class="text-info">{{ bill.ab_bill_amount|floatformat:2 }}</th>
                     <td class="text-center">
                         <div class="d-flex align-items-center justify-content-center">
@@ -192,7 +194,7 @@
             ],
             pageLength: 10,
             lengthMenu: [5, 10, 25, 50, 100],
-            order: [[13, 'desc']] // Sort by Created On by default
+            order: [[15, 'desc']] // Sort by Created On by default
         });
 
         // ===== Summary Button Click =====

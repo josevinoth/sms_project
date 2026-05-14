@@ -55,7 +55,7 @@ def branch_profit_loss(request):
         ExpenseExtinfo.objects.filter(**expenses_filter)
         .annotate(month=TruncMonth('exp_ext_expense_number__exp_service_start_date'))  # create "month"
         .values('exp_ext_branch', 'exp_ext_branch__loc_name', 'month')  # now you can use it
-        .annotate(total_expense=Sum('exp_ext_amount'))
+        .annotate(total_expense=Sum(F('exp_ext_amount') * F('exp_ext_expense_number__exp_quantity')))
     )
     invoice_data = (
         Warehouse_goods_info.objects.filter(**invoices_filter)
@@ -205,7 +205,7 @@ def branch_unit_profit_loss(request):
         ExpenseExtinfo.objects.filter(**expenses_filter)
         .annotate(month=TruncMonth('exp_ext_expense_number__exp_service_start_date'))
         .values('exp_ext_branch', 'exp_ext_unit', 'exp_ext_branch__loc_name', 'exp_ext_unit__unit_name', 'month')
-        .annotate(total_expense=Sum('exp_ext_amount'))
+        .annotate(total_expense=Sum(F('exp_ext_amount') * F('exp_ext_expense_number__exp_quantity')))
     )
 
     invoice_data = (
@@ -341,7 +341,7 @@ def businessmodel_PL(request):
             unit_name=F('exp_ext_unit__unit_name'),
             businessmodel=F('exp_ext_businessmodel__tb_trbusinesstype')
         )
-        .annotate(total_expense=Sum('exp_ext_amount'))
+        .annotate(total_expense=Sum(F('exp_ext_amount') * F('exp_ext_expense_number__exp_quantity')))
     )
 
     results = []
@@ -441,7 +441,7 @@ def customerwise_PL(request):
     expense_summary = expense_data.annotate(
         month=TruncMonth('exp_ext_expense_number__exp_service_start_date')
     ).values('month', 'exp_ext_branch__loc_name','exp_ext_businessmodel__tb_trbusinesstype','exp_ext_customer_name__cu_nameshort').annotate(
-        total_expense=Sum('exp_ext_amount')
+        total_expense=Sum(F('exp_ext_amount') * F('exp_ext_expense_number__exp_quantity'))
     )
 
     # Income
@@ -613,7 +613,7 @@ def fin_profit_loss_view(request):
             branch_name=F('exp_ext_branch__loc_name'),
             unit_name=F('exp_ext_unit__unit_name'),
         )
-        .annotate(total_expense=Sum('exp_ext_amount'))
+        .annotate(total_expense=Sum(F('exp_ext_amount') * F('exp_ext_expense_number__exp_quantity')))
     )
 
     results = []
@@ -712,7 +712,7 @@ def expenses_report(request):
             'month_start',
             expense_type=F('exp_ext_expense_number__exp_expense_type__exp_type_name'),
         )
-        .annotate(total_expense=Sum('exp_ext_amount'))
+        .annotate(total_expense=Sum(F('exp_ext_amount') * F('exp_ext_expense_number__exp_quantity')))
         .order_by('exp_ext_branch__loc_name', 'exp_ext_unit__unit_name', 'month_start', 'expense_type')
     )
     chart_labels = [entry['expense_type'] for entry in expense_summary]
@@ -1043,11 +1043,6 @@ NON_OPERATIONAL_EXPENSES_CATEGORIES = {
 }
 
 BUDGET_FIELD_MAPPING = {
-    "TV Expense": None,
-    "Salary Expenses": None,
-    "Transportation Expenses": None,
-    "Air Conditioning Expenses": None,
-
     "Airport Handling Charges": "bf_Airport_Handling_Charges",
     "Forklift Handling Charges": "bf_Forklift_Handling_Charges",
     "Crane Handling Charges": "bf_Crane_Handling_Charges",
@@ -1057,15 +1052,11 @@ BUDGET_FIELD_MAPPING = {
     "Warehouse Loading Charges": "bf_Warehouse_Loading_Charges",
     "Warehouse Storage Charges": "bf_Warehouse_Storage_Charges",
     "Warehouse Unloading Charges": "bf_Warehouse_Unloading_Charges",
-    # "Unloading Expenses": "bf_Warehouse_Unloading_Charges",
     "Advertisement & Business Promotion": "bf_advertisement_business_promotion",
-    # "Audit Fee": "bf_audit_fees",
-    # "Bad Debts": "bf_bad_debts",
     "Bank Charges": "bf_bank_charges",
     "Consultancy": "bf_consultancy_charges",
     "Celebration": "bf_celebration_expenses",
     "Directors Remuneration": "bf_directors_remuneration",
-    # "Insurance Car": "bf_insurance_car",
     "Interest On Statutory Dues": "bf_interest_on_statutory_dues",
     "Professional & Legal": "bf_professional_legal_charges",
     "Subscription & Membership": "bf_subscription_membership",
@@ -1083,7 +1074,6 @@ BUDGET_FIELD_MAPPING = {
     "Insurance-Corp Staff": "bf_insurance_corp_staff",
     "LWF-Corp Staff": "bf_lwf_corp_staff",
     "Salaries & Wages-Corp Staff": "bf_salaries_wages_corp_staff",
-
     "Dept Staff": "bf_dept_staff",
     "Bonus-Staff": "bf_bonus_staff",
     "EDLI Contribution-Staff": "bf_EDLI_contribution_staff",
@@ -1096,14 +1086,22 @@ BUDGET_FIELD_MAPPING = {
     "Insurance-Staff": "bf_insurance_staff",
     "LWF-Staff": "bf_lwf_dept_staff",
     "Salaries & Wages-Staff": "bf_salaries_wages_staff",
-    # "Interest on Borrowings": "bf_interest_on_borrowings",
-    # "Interest on Other Loans ": "bf_interest_on_other_loans",
+    "Drivers": "bf_driver_staff",
+    "Bonus-Drivers": "bf_bonus_drivers",
+    "EDLI Contribution-Drivers": "bf_EDLI_contribution_drivers",
+    "Employer Contribution to ESI-Drivers": "bf_employer_contribution_to_ESI_drivers",
+    "Employer Contribution to PF-Drivers": "bf_employer_contribution_to_PF_drivers",
+    "EPF Admin-Drivers": "bf_EPF_admin_charges_drivers",
+    "Ex-Gratia-Drivers": "bf_exgratia_drivers",
+    "Gratuity-Drivers": "bf_gratuity_drivers",
+    "Incentive-Drivers": "bf_incentive_drivers",
+    "Insurance-Drivers": "bf_insurance_drivers",
+    "LWF-Drivers": "bf_lwf_drivers",
+    "Salaries & Wages-Drivers": "bf_salaries_wages_drivers",
     "Operational Expenses Fixed": "bf_fixed",
-
     "Insurance-Warehouse": "bf_insurance_warehouse",
     "Insurance-WCC": "bf_insurance_wcc",
     "Manpower Supply": "bf_manpower_supply_expenses",
-    # "Rates & Taxes Expenses": "bf_rates_taxes",
     "Rent-Premises": "bf_rent_premises",
     "Security Service": "bf_security_service_charges",
     "Operational Expenses Variable": "bf_variable",
@@ -1138,6 +1136,7 @@ BUDGET_FIELD_MAPPING = {
     "Telephone & Mobile": "bf_telephone_mobile_expenses",
     "Training": "bf_training_expenses",
     "Travelling": "bf_travelling_expenses",
+    "Travelling": "bf_travelling_expenses",
 
 }
 OTHER_EXPENSES_CATEGORIES = {k: v for k, v in BUDGET_FIELD_MAPPING.items() if v not in (
@@ -1148,6 +1147,134 @@ OTHER_EXPENSES_CATEGORIES = {k: v for k, v in BUDGET_FIELD_MAPPING.items() if v 
         set(NON_OPERATIONAL_EXPENSES_CATEGORIES.values())
 
 )}
+
+TRANSPORT_INCOME_CATEGORIES = {
+    "Halting Charges": "bf_Halting_Charges",
+    "Halting Charges (SEZ)": "bf_Halting_Charges_SEZ",
+    "Loading Charges": "bf_Loading_Charges",
+    "Parking Charges": "bf_Parking_Charges",
+    "Parking Charges(SEZ)": "bf_Parking_Charges_SEZ",
+    "Toll Charges": "bf_Toll_Charges",
+    "Transportation Charges": "bf_Transportation_Charges",
+    "Transportation Charges - Interstate": "bf_Transportation_Charges_Interstate",
+    "Transportation Charges(SEZ)": "bf_Transportation_Charges_SEZ",
+    "Transportation Handling Charges": "bf_Transportation_Handling_Charges",
+    "Transportation Handling Charges(SEZ)": "bf_Transportation_Handling_Charges_SEZ",
+    "Unloading Charges": "bf_Unloading_Charges",
+    "Weighment Charges": "bf_Weighment_Charges",
+}
+
+TRANSPORT_INVOICE_FIELD_MAPPING = {
+    "Halting Charges": "ti_halting_charges",
+    "Halting Charges (SEZ)": None,
+    "Loading Charges": "ti_loading_charges",
+    "Parking Charges": "ti_parking_charges",
+    "Parking Charges(SEZ)": None,
+    "Toll Charges": "ti_toll_charges",
+    "Transportation Charges": "ti_transportation_charges",
+    "Transportation Charges - Interstate": None,
+    "Transportation Charges(SEZ)": None,
+    "Transportation Handling Charges": "ti_handling_charges",
+    "Transportation Handling Charges(SEZ)": None,
+    "Unloading Charges": "ti_unloading_charges",
+    "Weighment Charges": "ti_weighment_charges",
+}
+
+TRANSPORT_OPERATIONAL_EXPENSES_FIXED = {
+    "GPRS Access & Service": "bf_gprs_access_service",
+    "Insurance-Vehicles": "bf_insurance_vehicles",
+    "Vehicle-Hire": "bf_vehicle_hire",
+}
+
+TRANSPORT_OPERATIONAL_EXPENSES_VARIABLE = {
+    "Acting Driver": "bf_acting_driver",
+    "CNG": "bf_cng",
+    "Diesel-Vehicle": "bf_diesel_vehicle",
+    "Driver Betta": "bf_driver_betta",
+    "Extra Hrs": "bf_extra_hrs",
+    "Extra KM": "bf_extra_km",
+    "Halting": "bf_halting",
+    "Loading": "bf_loading",
+    "Parking": "bf_parking",
+    "Rates & Taxes": "bf_rates_taxes",
+    "Toll": "bf_toll",
+    "Transportation": "bf_transportation",
+    "Unloading": "bf_unloading",
+    "Vehicle Maintenance": "bf_vehicle_maintenance",
+    "Weighment": "bf_weighment",
+}
+
+TRANSPORT_NON_OPERATIONAL_EXPENSES_FIXED = {
+    "AMC": "bf_amc",
+    "Depreciation": "bf_depreciation",
+    "Internet & Data Card": "bf_internet_data_card_expenses",
+    "Rent-Plant & Machinery": "bf_rent_plant_machinery",
+    "Software AMC": "bf_software_AMC_charges",
+}
+
+TRANSPORT_NON_OPERATIONAL_EXPENSES_VARIABLE = {
+    "CGST Ineligible ITC": "bf_CGST_ineligible_ITC",
+    "Conveyance Expenses": "bf_conveyance_expenses",
+    "Handling Expenses": "bf_handling_expenses",
+    "Hotel, Boarding & Lodging": "bf_hotel_boarding_lodging_expenses",
+    "IGST Ineligible ITC": "bf_IGST_ineligible_ITC",
+    "Postage & Courier": "bf_postage_courier",
+    "Printing & Stationery": "bf_printing_stationery",
+    "SGST Ineligible ITC": "bf_SGST_ineligible_ITC",
+    "Staff Welfare": "bf_staff_welfare_staff",
+    "Supplies & General": "bf_office_supplies_general_expenses",
+    "Telephone & Mobile": "bf_telephone_mobile_expenses",
+    "Training": "bf_training_expenses",
+    "Travelling": "bf_travelling_expenses",
+    "Power and Fuel Expenses": "bf_power_fuel",
+}
+
+TRANSPORT_EMPLOYEE_BENEFITS_CATEGORIES = {
+    "Corp Staff": "bf_corp_staff",
+    "Bonus-Corp Staff": "bf_bonus_corp_staff",
+    "EDLI Contribution-Corp Staff": "bf_EDLI_contribution_corp_staff",
+    "Employer Contribution to ESI-Corp Staff": "bf_employer_contribution_to_ESI_corp_staff",
+    "Employer Contribution to PF-Corp Staff": "bf_employer_contribution_to_PF_corp_staff",
+    "EPF Admin-Corp Staff": "bf_EPF_admin_charges_corp_staff",
+    "Ex-Gratia-Corp Staff": "bf_exgratia_corp_staff",
+    "Gratuity-Corp Staff": "bf_gratuity_corp_staff",
+    "Incentive-Corp Staff": "bf_incentive_corp_staff",
+    "Insurance-Corp Staff": "bf_insurance_corp_staff",
+    "LWF-Corp Staff": "bf_lwf_corp_staff",
+    "Salaries & Wages-Corp Staff": "bf_salaries_wages_corp_staff",
+
+    "Dept Staff": "bf_dept_staff",
+    "Bonus-Staff": "bf_bonus_staff",
+    "EDLI Contribution-Staff": "bf_EDLI_contribution_staff",
+    "Employer Contribution to ESI-Staff": "bf_employer_contribution_to_ESI_staff",
+    "Employer Contribution to PF-Staff": "bf_employer_contribution_to_PF_staff",
+    "EPF Admin-Staff": "bf_EPF_admin_charges_staff",
+    "Ex-Gratia-Staff": "bf_exgratia_dept_staff",
+    "Gratuity-Staff": "bf_gratuity_staff",
+    "Incentive-Staff": "bf_incentive_dept_staff",
+    "Insurance-Staff": "bf_insurance_staff",
+    "LWF-Staff": "bf_lwf_dept_staff",
+    "Salaries & Wages-Staff": "bf_salaries_wages_staff",
+
+    "Drivers": "bf_driver_staff",
+    "Bonus-Drivers": "bf_bonus_drivers",
+    "EDLI Contribution-Drivers": "bf_EDLI_contribution_drivers",
+    "Employer Contribution to ESI-Drivers": "bf_employer_contribution_to_ESI_drivers",
+    "Employer Contribution to PF-Drivers": "bf_employer_contribution_to_PF_drivers",
+    "EPF Admin-Drivers": "bf_EPF_admin_charges_drivers",
+    "Ex-Gratia-Drivers": "bf_exgratia_drivers",
+    "Gratuity-Drivers": "bf_gratuity_drivers",
+    "Incentive-Drivers": "bf_incentive_drivers",
+    "Insurance-Drivers": "bf_insurance_drivers",
+    "LWF-Drivers": "bf_lwf_drivers",
+    "Salaries & Wages-Drivers": "bf_salaries_wages_drivers",
+}
+
+TRANSPORT_INTEREST_EXPENSES_CATEGORIES = {
+    "Interest on Borrowings": "bf_interest_on_borrowings",
+    "Interest on vehicle loan": "bf_interest_on_vehicle_loan",
+}
+
 
 
 def budget_expense(request):
@@ -1194,7 +1321,7 @@ def budget_expense(request):
     # Get total expenses per category
     expense_summary = ExpenseExtinfo.objects.filter(**expenses_filter).values(
         'exp_ext_expense_number__exp_expense_type__exp_type_name'
-    ).annotate(total_expense=Sum('exp_ext_amount'))
+    ).annotate(total_expense=Sum(F('exp_ext_amount') * F('exp_ext_expense_number__exp_quantity')))
 
     expense_dict = {
         item['exp_ext_expense_number__exp_expense_type__exp_type_name']: item['total_expense']
@@ -1331,7 +1458,7 @@ def budget_expense_mis(request):
         .exclude(exp_ext_expense_number__exp_service_start_date__isnull=True)
         .values("exp_ext_expense_number__exp_expense_type__exp_type_name",
                 "exp_ext_expense_number__exp_service_start_date__month")
-        .annotate(total_expense=Sum("exp_ext_amount"))
+        .annotate(total_expense=Sum(F('exp_ext_amount') * F('exp_ext_expense_number__exp_quantity')))
         .order_by("exp_ext_expense_number__exp_service_start_date__month")
     )
 
@@ -1716,7 +1843,7 @@ def fin_mis(request):
         .exclude(exp_ext_expense_number__exp_service_start_date__isnull=True)
         .values("exp_ext_expense_number__exp_expense_type__exp_type_name",
                 "exp_ext_expense_number__exp_service_start_date__month")
-        .annotate(total_expense=Sum("exp_ext_amount"))
+        .annotate(total_expense=Sum(F('exp_ext_amount') * F('exp_ext_expense_number__exp_quantity')))
         .order_by("exp_ext_expense_number__exp_service_start_date__month")
     )
 
@@ -2101,7 +2228,7 @@ def fin_mis_warehouse(request):
         .exclude(exp_ext_expense_number__exp_service_start_date__isnull=True)
         .values("exp_ext_expense_number__exp_expense_type__exp_type_name",
                 "exp_ext_expense_number__exp_service_start_date__month")
-        .annotate(total_expense=Sum("exp_ext_amount"))
+        .annotate(total_expense=Sum(F('exp_ext_amount') * F('exp_ext_expense_number__exp_quantity')))
         .order_by("exp_ext_expense_number__exp_service_start_date__month")
     )
 

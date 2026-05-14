@@ -8,36 +8,52 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.shortcuts import render, redirect
 
+from .pk_needassessment_view import get_tracker_flags
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
+
 @login_required(login_url='login_page')
 def gate_return_add(request, gate_id=0):
     first_name = request.session.get('first_name')
+    user_id = request.session.get('ses_userID')
     gate_list = PackingGateReturn.objects.all()
+    
     if request.method == "GET":
         if gate_id == 0:
             job_no = request.GET.get('job_no')
             initial_data = {}
+            costing = None
             if job_no:
                 costing = PkcostingsummaryInfo.objects.filter(cs_job_no=job_no).first()
                 if costing:
                     pack_type = Packingjobs.objects.filter(pj_job_no=job_no).values_list('pj_pack_type', flat=True).first() or 'In-House'
+                    po_obj = PkpurchaseorderInfo.objects.filter(po_assessment_num=costing.cs_assessment_num).first()
                     initial_data = {
                         'gp_job_no': job_no,
                         'gp_customer_name': costing.cs_customer_name,
-                        'gp_customer_po': PkpurchaseorderInfo.objects.filter(po_assessment_num=costing.cs_assessment_num).first(),
+                        'gp_customer_po': po_obj,
                         'gp_assessment_num': costing.cs_assessment_num,
-                        'gp_document_category': 'Delivery Challan' if 'On-Site' in pack_type else 'Gate Pass'
+                        'gp_document_category': 'Delivery Challan' if 'On-Site' in pack_type else 'Gate Pass',
+                        'gp_sales_order_po': po_obj.sales_order_num if po_obj else '',
+                        'gp_customer_gstin': costing.cs_customer_name.cu_gst if costing.cs_customer_name else '',
+                        'gp_customer_bill_to_gstin': costing.cs_customer_name.cu_gst if costing.cs_customer_name else '',
+                        'gp_packing_location': costing.cs_assessment_num.na_packing_field if costing.cs_assessment_num else None,
                     }
             
             pack_type = Packingjobs.objects.filter(pj_job_no=job_no).values_list('pj_pack_type', flat=True).first() if job_no else 'In-House'
             
             form = GatepassreturnForm(initial=initial_data)
+            assessment_id = request.session.get('na_assessment_id') or (costing.cs_assessment_num.id if job_no and costing else None)
+            
             context = {
                 'form':form,
                 'first_name': first_name,
                 'gate_list': gate_list,
-                'assessment_id': request.session.get('na_assessment_id') or (costing.cs_assessment_num.id if job_no and costing else None),
-                'current_stage': 8,
+                'assessment_id': assessment_id,
+                'current_step': 'gate_pass',
+                'tracker_flags': get_tracker_flags(assessment_id),
                 'pack_type': pack_type,
+                'user_id': user_id,
+                'gp_employee': initial_data.get('gp_employee','') if isinstance(initial_data, dict) else '',
             }
         else:
             gate = PackingGateReturn.objects.get(pk=gate_id)
@@ -52,14 +68,20 @@ def gate_return_add(request, gate_id=0):
                 pod_assess_num__in=assess_ids, 
                 pod_po_num=gate.gp_customer_po
             )
+            
+            assessment_id = request.session.get('na_assessment_id') or (assess_ids[0] if assess_ids else None)
+            
             context = {
                 'form':form,
                 'gatepassreturn_list': gatepassreturn_list,
                 'first_name': first_name,
                 'gate': gate,
-                'assessment_id': request.session.get('na_assessment_id'),
-                'current_stage': 8,
+                'assessment_id': assessment_id,
+                'current_step': 'gate_pass',
+                'tracker_flags': get_tracker_flags(assessment_id),
                 'pack_type': Packingjobs.objects.filter(pj_job_no=gate.gp_job_no).values_list('pj_pack_type', flat=True).first() or 'In-House',
+                'user_id': user_id,
+                'gp_employee': getattr(gate, 'gp_employee', '') if gate else '',
             }
         return render(request, "asset_mgt_app/pk_gate_pass_return_add.html", context)
 
@@ -71,11 +93,13 @@ def gate_return_add(request, gate_id=0):
             form = GatepassreturnForm(request.POST, instance=delivery)
         if form.is_valid():
             gate_pass = form.save(commit=False)
-            job = Packingjobs.objects.filter(pj_job_no=gate_pass.gp_job_no).first()
-            if job and 'On-Site' in job.pj_pack_type:
-                gate_pass.gp_document_category = 'Delivery Challan'
-            else:
-                gate_pass.gp_document_category = 'Gate Pass'
+            # Set default category only if not provided by form
+            if not gate_pass.gp_document_category:
+                job = Packingjobs.objects.filter(pj_job_no=gate_pass.gp_job_no).first()
+                if job and 'On-Site' in job.pj_pack_type:
+                    gate_pass.gp_document_category = 'Delivery Challan'
+                else:
+                    gate_pass.gp_document_category = 'Gate Pass'
             gate_pass.save()
             form.save_m2m() # Required for ManyToMany with commit=False
 
@@ -148,6 +172,13 @@ def gate_return_pdf(request, gate_id):
             'wh_branch__loc_name', flat=True).order_by('id').first()
 
     print("Warehouse Location:", wh_location)
+    
+    # Fallback for HSN Code if missing
+    if not gate.gp_hsn_code and gate.gp_assessment_num:
+        from ..models import Nadimension
+        hsn = Nadimension.objects.filter(na_assessment_num=gate.gp_assessment_num).values_list('na_hsn_code', flat=True).first()
+        if hsn:
+            gate.gp_hsn_code = hsn
 
     if not wh_location:
         wh_location = "BVM Chennai"
@@ -166,7 +197,8 @@ def gate_return_pdf(request, gate_id):
         'total_sum': total_sum,
     }
 
-    file_name = f"Gate Pass{gate_id}.pdf"
+    category = gate.gp_document_category if gate.gp_document_category else "Gate Pass"
+    file_name = f"{category}_{gate_id}.pdf"
     template_path = 'asset_mgt_app/pk_gate_pass_return.html'
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{file_name}"'
@@ -183,14 +215,58 @@ def gate_return_pdf(request, gate_id):
 @login_required(login_url='login_page')
 def gate_return_employee_id(request):
     user_id = request.GET.get('id', None)
-    print("user_id", user_id)
-    if user_id:
-        user = User.objects.filter(id=user_id).first()
-        data = {
-            'employee': user.username if user else ''
-        }
-        return JsonResponse(data)
+    employee_value = ''
+    debug_msg = ''
     
+    if user_id:
+        try:
+
+            from django.contrib.auth.models import User
+            user = None
+            
+            # Remove any leading/trailing whitespace
+            user_id = user_id.strip()
+            
+            # 1. Try finding by ID (PK)
+            if user_id.isdigit():
+                user = User.objects.filter(id=user_id).first()
+                if user: debug_msg = f"Found by ID: {user_id}"
+            
+            # 2. Try finding by username (exact match)
+            if not user:
+                user = User.objects.filter(username=user_id).first()
+                if user: debug_msg = f"Found by Username: {user_id}"
+                
+            # 3. Try finding by Full Name (case-insensitive)
+            if not user:
+                from django.db.models.functions import Concat, Trim
+                from django.db.models import Value
+                
+                # Use Trim to handle cases where first_name or last_name might be empty resulting in trailing/leading spaces
+                user = User.objects.annotate(
+                    full_name=Trim(Concat('first_name', Value(' '), 'last_name'))
+                ).filter(full_name__iexact=user_id.strip()).first()
+                
+                if user: debug_msg = f"Found by Full Name: {user_id}"
+
+            
+            if user:
+                employee_value = user.username
+            else:
+                debug_msg = f"No user found for: {user_id}"
+                
+        except Exception as e:
+            debug_msg = f"Error: {str(e)}"
+            
+    return JsonResponse({
+        'employee': employee_value,
+        'debug': debug_msg,
+        'received_id': user_id
+    })
+
+
+
+
 @login_required(login_url='login_page')
 def update_dc_item_financials(request):
     if request.method == 'POST':
@@ -213,7 +289,7 @@ def update_dc_item_financials(request):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)
-    return JsonResponse({'employee': ''})
+
 
 @login_required(login_url='login_page')
 def gate_pass_get_jobs_by_customer(request):
@@ -261,7 +337,10 @@ def gate_pass_get_job_details(request):
         'sales_order': '',
         'assessment_id': '',
         'po_list_id': [],
-        'po_list_name': []
+        'po_list_name': [],
+        'customer_gstin': '',
+        'bvm_inv_no': '',
+        'hsn_code': '',
     }
     
     if costing:
@@ -270,11 +349,23 @@ def gate_pass_get_job_details(request):
         data['po_num'] = po.po_num if po else ''
         data['sales_order'] = po.sales_order_num if po else ''
         data['assessment_id'] = costing.cs_assessment_num.id if costing.cs_assessment_num else ''
+        
+        # Packing Type & Document Category
         pack_type = Packingjobs.objects.filter(pj_job_no=job_no).values_list('pj_pack_type', flat=True).first() or 'In-House'
         data['pack_type'] = pack_type
         data['document_category'] = 'Delivery Challan' if 'On-Site' in pack_type else 'Gate Pass'
         
-        # Also return the full PO list for this customer so we can populate the dropdown if it was empty
+        # Reference Fields from Costing
+        data['customer_gstin'] = costing.cs_customer_name.cu_gst if costing.cs_customer_name else ''
+        data['bvm_inv_no'] = costing.cs_invoice_num if costing.cs_invoice_num else ''
+        
+        # HSN Code from linked Need Assessment dimensions if possible
+        if costing.cs_assessment_num:
+            from ..models import Nadimension
+            hsn = Nadimension.objects.filter(na_assessment_num=costing.cs_assessment_num).values_list('na_hsn_code', flat=True).first()
+            data['hsn_code'] = hsn if hsn else ''
+
+        # Also return the full PO list for this customer
         po_qs = PkpurchaseorderInfo.objects.filter(po_customer_name=customer_id)
         data['po_list_id'] = list(po_qs.values_list('id', flat=True))
         data['po_list_name'] = list(po_qs.values_list('po_num', flat=True))

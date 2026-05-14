@@ -30,6 +30,7 @@ class PkQualityCheckItem(models.Model):
     qc_master = models.ForeignKey(PkQualityCheck, on_delete=models.CASCADE, related_name='items')
     qc_costing_item = models.ForeignKey(PkcostingInfo, on_delete=models.CASCADE)
     
+    
     qc_accepted_qty = models.FloatField(default=0.0)
     qc_rejected_qty = models.FloatField(default=0.0)
     
