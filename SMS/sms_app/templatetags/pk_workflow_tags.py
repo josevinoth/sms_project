@@ -3,6 +3,9 @@ from django.urls import reverse
 from ..models import PkneedassessmentInfo, PkquotationsummaryInfo, PkpurchaseorderInfo, PkcostingsummaryInfo, Packingjobs
 
 register = template.Library()
+@register.filter(name='split')
+def split(value, arg):
+    return value.split(arg)
 
 @register.inclusion_tag('asset_mgt_app/pk_workflow_tracker.html')
 def pk_workflow_tracker(assessment_id, current_stage):

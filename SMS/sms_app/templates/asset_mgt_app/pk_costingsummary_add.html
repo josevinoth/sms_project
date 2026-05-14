@@ -26,229 +26,231 @@
 
     <form method="POST" action="" id="costingsummary_add">
         {% csrf_token %}
-        <div class="modern-card">
-            <!-- Section 1: Core Details -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-id-card"></i> Assessment & Customer</div>
-                <div class="form-row-modern" id="costing_summary">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Assessment Number</label>
-                        {% render_field form.cs_assessment_num id="cs_assessment_num" onchange="cs_assessment_num_change()" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Customer Name</label>
-                        {% render_field form.cs_customer_name id="cs_customer_name" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Customer (Display)</label>
-                        {% render_field form.cs_customer_new_name id="cs_customer_new_name" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Customer PO</label>
-                        {% render_field form.cs_customer_po id="cs_customer_po" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Invoice Number</label>
-                        {% render_field form.cs_invoice_num id="cs_invoice_num" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern text-primary">Job Number</label>
-                        {% render_field form.cs_job_no id="cs_job_no" class="form-control form-control-modern font-weight-bold" style="background-color: #fff3cd; color: #856404;" readonly="True" %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 2: Cost Breakdown -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-calculator"></i> Cost Breakdown (INR)</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Wood Cost</label>
-                        {% render_field form.cs_wood_cost id="cs_wood_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Engineer Cost</label>
-                        {% render_field form.cs_engineer_cost id="cs_engineer_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Labour Cost</label>
-                        {% render_field form.cs_labour_cost id="cs_labour_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Crane Cost</label>
-                        {% render_field form.cs_crane_cost id="cs_crane_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">HT Cost</label>
-                        {% render_field form.cs_ht_cost id="cs_ht_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                </div>
-                <div class="form-row-modern mt-3">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Management</label>
-                        {% render_field form.cs_management_cost id="cs_management_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Consumables</label>
-                        {% render_field form.cs_material_cost id="cs_material_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Transport</label>
-                        {% render_field form.cs_transport_cost id="cs_transport_cost" class="form-control form-control-modern disable_a_href" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Others Cost</label>
-                        {% render_field form.cs_others_cost id="cs_others_cost" onchange="change_charge_type()" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Total (W/O Margin)</label>
-                        {% render_field form.cs_total_cost_wom id="cs_total_cost_wom" class="form-control form-control-modern bg-light font-weight-bold" readonly="readonly" %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 3: Financial Summary -->
-            <div class="form-section">
-                <div class="form-section-title"><i class="fas fa-chart-line"></i> Financial Summary & Status</div>
-                <div class="form-row-modern">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Margin (%)</label>
-                        {% render_field form.cs_margin id="cs_margin" onchange="change_charge_type()" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Total (With Margin)</label>
-                        {% render_field form.cs_total_cost_wm id="cs_total_cost_wm" class="form-control form-control-modern bg-light font-weight-bold" readonly="readonly" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">GST (%)</label>
-                        {% render_field form.cs_gst id="cs_gst" onchange="change_charge_type()" class="form-control form-control-modern" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern text-success font-weight-bold">Final Cost (Net)</label>
-                        {% render_field form.cs_final_cost id="cs_final_cost" class="form-control form-control-modern font-weight-bold" style="color: #27ae60; background: #e8f6ed;" readonly="readonly" %}
-                    </div>
-                </div>
-                <div class="form-row-modern mt-3">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Total CFT</label>
-                        {% render_field form.cs_total_cft id="cs_total_cft" class="form-control form-control-modern bg-light" readonly="readonly" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Rate Per CFT</label>
-                        {% render_field form.cs_rate_per_cft id="cs_rate_per_cft" class="form-control form-control-modern bg-light" readonly="readonly" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Workflow Status</label>
-                        {% render_field form.cs_status id="cs_status" class="form-control form-control-modern font-weight-bold" %}
-                    </div>
-                    <div class="form-group-modern">
-                        <label class="form-label-modern">Packing Type</label>
-                        {% render_field form.cs_pack_type id="cs_pack_type" class="form-control form-control-modern" %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 4: Terms & Documentation -->
-            <div class="row mt-4">
-                <div class="col-lg-6">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-map-marker-alt"></i> Location & Terms</div>
-                        <div class="accordion" id="termsAccordion">
-                            <div class="card border-0 mb-2 shadow-sm rounded">
-                                <div class="card-header bg-white p-0">
-                                    <button class="btn btn-link btn-block text-left font-weight-bold text-dark py-3" type="button" data-toggle="collapse" data-target="#collapseAddr">
-                                        <i class="fas fa-chevron-right mr-2 small"></i> Billing/Shipping Address
-                                    </button>
-                                </div>
-                                <div id="collapseAddr" class="collapse" data-parent="#termsAccordion">
-                                    <div class="card-body">
-                                        <label class="form-label-modern mb-2">Billing/Shipping Address</label>
-                                        {% render_field form.cs_address id="cs_address" class="form-control" rows="3" %}
-                                    </div>
-                                </div>
+        <div class="modern-card" style="padding: 1rem !important;">
+            <div class="row row-compact">
+                <!-- Column 1: Assessment & Customer -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-id-card"></i> Core Details</div>
+                        <div class="form-row-modern">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Assessment #</label>
+                                {% render_field form.cs_assessment_num id="cs_assessment_num" onchange="cs_assessment_num_change()" class="form-control form-control-modern disable_a_href" %}
                             </div>
-                            <div class="card border-0 mb-2 shadow-sm rounded">
-                                <div class="card-header bg-white p-0">
-                                    <button class="btn btn-link btn-block text-left font-weight-bold text-dark py-3" type="button" data-toggle="collapse" data-target="#collapseInc">
-                                        <i class="fas fa-chevron-right mr-2 small"></i> Cost Inclusions
-                                    </button>
-                                </div>
-                                <div id="collapseInc" class="collapse" data-parent="#termsAccordion">
-                                    <div class="card-body">
-                                        <label class="form-label-modern mb-2">Cost Inclusions</label>
-                                        {% render_field form.cs_cost_includes id="cs_cost_includes" class="form-control" rows="3" %}
-                                    </div>
-                                </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Customer Name</label>
+                                {% render_field form.cs_customer_name id="cs_customer_name" class="form-control form-control-modern disable_a_href" %}
                             </div>
-                            <div class="card border-0 mb-2 shadow-sm rounded">
-                                <div class="card-header bg-white p-0">
-                                    <button class="btn btn-link btn-block text-left font-weight-bold text-dark py-3" type="button" data-toggle="collapse" data-target="#collapseTerms">
-                                        <i class="fas fa-chevron-right mr-2 small"></i> Terms & Conditions
-                                    </button>
-                                </div>
-                                <div id="collapseTerms" class="collapse" data-parent="#termsAccordion">
-                                    <div class="card-body">
-                                        <label class="form-label-modern mb-2">Terms & Conditions</label>
-                                        {% render_field form.cs_terms_condition id="cs_terms_condition" class="form-control" rows="3" %}
-                                    </div>
-                                </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Display Name</label>
+                                {% render_field form.cs_customer_new_name id="cs_customer_new_name" class="form-control form-control-modern disable_a_href" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Customer PO</label>
+                                {% render_field form.cs_customer_po id="cs_customer_po" class="form-control form-control-modern" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Invoice #</label>
+                                {% render_field form.cs_invoice_num id="cs_invoice_num" class="form-control form-control-modern" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern text-primary">Job Number</label>
+                                {% render_field form.cs_job_no id="cs_job_no" class="form-control form-control-modern font-weight-bold" style="background-color: #fff3cd; color: #856404;" readonly="True" %}
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-6">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-file-alt"></i> Notes & Scopes</div>
-                        <div class="accordion" id="scopeAccordion">
-                            <div class="card border-0 mb-2 shadow-sm rounded">
-                                <div class="card-header bg-white p-0">
-                                    <button class="btn btn-link btn-block text-left font-weight-bold text-dark py-3" type="button" data-toggle="collapse" data-target="#collapseNotes">
-                                        <i class="fas fa-chevron-right mr-2 small"></i> Engineering Notes
-                                    </button>
+
+                <!-- Column 2: Cost Components -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-calculator"></i> Cost Components</div>
+                        <div class="form-row-modern">
+                            <div class="row no-gutters">
+                                <div class="col-6 pr-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Wood Cost</label>
+                                        {% render_field form.cs_wood_cost id="cs_wood_cost" class="form-control form-control-modern disable_a_href" %}
+                                    </div>
                                 </div>
-                                <div id="collapseNotes" class="collapse" data-parent="#scopeAccordion">
-                                    <div class="card-body">
-                                        <label class="form-label-modern mb-2">Engineering Notes</label>
-                                        {% render_field form.cs_notes id="cs_notes" class="form-control" rows="3" %}
+                                <div class="col-6 pl-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Engineer</label>
+                                        {% render_field form.cs_engineer_cost id="cs_engineer_cost" class="form-control form-control-modern disable_a_href" %}
                                     </div>
                                 </div>
                             </div>
-                            <div class="card border-0 mb-2 shadow-sm rounded">
-                                <div class="card-header bg-white p-0">
-                                    <button class="btn btn-link btn-block text-left font-weight-bold text-dark py-3" type="button" data-toggle="collapse" data-target="#collapseClient">
-                                        <i class="fas fa-chevron-right mr-2 small"></i> Client Scope
-                                    </button>
+                            <div class="row no-gutters">
+                                <div class="col-6 pr-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Labour</label>
+                                        {% render_field form.cs_labour_cost id="cs_labour_cost" class="form-control form-control-modern disable_a_href" %}
+                                    </div>
                                 </div>
-                                <div id="collapseClient" class="collapse" data-parent="#scopeAccordion">
-                                    <div class="card-body">
-                                        <label class="form-label-modern mb-2">Client Scope</label>
-                                        {% render_field form.cs_client_scope id="cs_client_scope" class="form-control" rows="3" %}
+                                <div class="col-6 pl-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Crane</label>
+                                        {% render_field form.cs_crane_cost id="cs_crane_cost" class="form-control form-control-modern disable_a_href" %}
                                     </div>
                                 </div>
                             </div>
-                            <div class="card border-0 mb-2 shadow-sm rounded">
+                            <div class="row no-gutters">
+                                <div class="col-6 pr-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">HT Cost</label>
+                                        {% render_field form.cs_ht_cost id="cs_ht_cost" class="form-control form-control-modern disable_a_href" %}
+                                    </div>
+                                </div>
+                                <div class="col-6 pl-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Management</label>
+                                        {% render_field form.cs_management_cost id="cs_management_cost" class="form-control form-control-modern disable_a_href" %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row no-gutters">
+                                <div class="col-6 pr-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Consumables</label>
+                                        {% render_field form.cs_material_cost id="cs_material_cost" class="form-control form-control-modern disable_a_href" %}
+                                    </div>
+                                </div>
+                                <div class="col-6 pl-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Transport</label>
+                                        {% render_field form.cs_transport_cost id="cs_transport_cost" class="form-control form-control-modern disable_a_href" %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Others Cost</label>
+                                {% render_field form.cs_others_cost id="cs_others_cost" onchange="change_charge_type()" class="form-control form-control-modern" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Total (W/O Margin)</label>
+                                {% render_field form.cs_total_cost_wom id="cs_total_cost_wom" class="form-control form-control-modern bg-light font-weight-bold" readonly="readonly" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Totals & Tax -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-chart-line"></i> Totals & Tax</div>
+                        <div class="form-row-modern">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Margin (%)</label>
+                                {% render_field form.cs_margin id="cs_margin" onchange="change_charge_type()" class="form-control form-control-modern" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Total (With Margin)</label>
+                                {% render_field form.cs_total_cost_wm id="cs_total_cost_wm" class="form-control form-control-modern bg-light font-weight-bold" readonly="readonly" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">GST (%)</label>
+                                {% render_field form.cs_gst id="cs_gst" onchange="change_charge_type()" class="form-control form-control-modern" %}
+                            </div>
+                            <div class="row no-gutters">
+                                <div class="col-6 pr-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Total CFT</label>
+                                        {% render_field form.cs_total_cft id="cs_total_cft" class="form-control form-control-modern bg-light" readonly="readonly" %}
+                                    </div>
+                                </div>
+                                <div class="col-6 pl-1">
+                                    <div class="form-group-modern">
+                                        <label class="form-label-modern">Rate / CFT</label>
+                                        {% render_field form.cs_rate_per_cft id="cs_rate_per_cft" class="form-control form-control-modern bg-light" readonly="readonly" %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Packing Type</label>
+                                {% render_field form.cs_pack_type id="cs_pack_type" class="form-control form-control-modern" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Workflow Status</label>
+                                {% render_field form.cs_status id="cs_status" class="form-control form-control-modern font-weight-bold" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 4: Location, Terms & Notes -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section mb-3">
+                        <div class="form-section-title"><i class="fas fa-file-contract"></i> Documentation & Scopes</div>
+                        <div class="accordion" id="summaryAccordion">
+                            <div class="card border-0 mb-1 shadow-sm">
                                 <div class="card-header bg-white p-0">
-                                    <button class="btn btn-link btn-block text-left font-weight-bold text-dark py-3" type="button" data-toggle="collapse" data-target="#collapseBvm">
-                                        <i class="fas fa-chevron-right mr-2 small"></i> BVM Scope
+                                    <button class="btn btn-link btn-block text-left font-weight-bold text-dark py-2 px-3" type="button" data-toggle="collapse" data-target="#collapseAddr">
+                                        <i class="fas fa-map-marker-alt mr-2 small text-primary"></i> Address Info
                                     </button>
                                 </div>
-                                <div id="collapseBvm" class="collapse" data-parent="#scopeAccordion">
-                                    <div class="card-body">
-                                        <label class="form-label-modern mb-2">BVM Scope</label>
-                                        {% render_field form.cs_bvm_scope id="cs_bvm_scope" class="form-control" rows="3" %}
+                                <div id="collapseAddr" class="collapse show" data-parent="#summaryAccordion">
+                                    <div class="card-body py-2">
+                                        {% render_field form.cs_address id="cs_address" class="form-control" rows="2" %}
                                     </div>
                                 </div>
-                                <div class="card border-0 mb-2 shadow-sm rounded">
-                                    <div class="card-header bg-white p-0">
-                                        <button class="btn btn-link btn-block text-left font-weight-bold text-dark py-3" type="button" data-toggle="collapse" data-target="#collapseOthers">
-                                            <i class="fas fa-chevron-right mr-2 small"></i> Miscellaneous Description
-                                        </button>
+                            </div>
+                            <div class="card border-0 mb-1 shadow-sm">
+                                <div class="card-header bg-white p-0">
+                                    <button class="btn btn-link btn-block text-left font-weight-bold text-dark py-2 px-3" type="button" data-toggle="collapse" data-target="#collapseInc">
+                                        <i class="fas fa-plus-circle mr-2 small text-success"></i> Inclusions
+                                    </button>
+                                </div>
+                                <div id="collapseInc" class="collapse" data-parent="#summaryAccordion">
+                                    <div class="card-body py-2">
+                                        {% render_field form.cs_cost_includes id="cs_cost_includes" class="form-control" rows="2" %}
                                     </div>
-                                    <div id="collapseOthers" class="collapse" data-parent="#scopeAccordion">
-                                        <div class="card-body">
-                                            <label class="form-label-modern mb-2">Miscellaneous (Others) Description</label>
-                                            {% render_field form.cs_others_description id="cs_others_description" class="form-control" rows="3" %}
-                                        </div>
+                                </div>
+                            </div>
+                            <div class="card border-0 mb-1 shadow-sm">
+                                <div class="card-header bg-white p-0">
+                                    <button class="btn btn-link btn-block text-left font-weight-bold text-dark py-2 px-3" type="button" data-toggle="collapse" data-target="#collapseTerms">
+                                        <i class="fas fa-gavel mr-2 small text-warning"></i> Terms & Conditions
+                                    </button>
+                                </div>
+                                <div id="collapseTerms" class="collapse" data-parent="#summaryAccordion">
+                                    <div class="card-body py-2">
+                                        {% render_field form.cs_terms_condition id="cs_terms_condition" class="form-control" rows="2" %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card border-0 mb-1 shadow-sm">
+                                <div class="card-header bg-white p-0">
+                                    <button class="btn btn-link btn-block text-left font-weight-bold text-dark py-2 px-3" type="button" data-toggle="collapse" data-target="#collapseNotes">
+                                        <i class="fas fa-edit mr-2 small text-info"></i> Engg. Notes
+                                    </button>
+                                </div>
+                                <div id="collapseNotes" class="collapse" data-parent="#summaryAccordion">
+                                    <div class="card-body py-2">
+                                        {% render_field form.cs_notes id="cs_notes" class="form-control" rows="2" %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card border-0 mb-1 shadow-sm">
+                                <div class="card-header bg-white p-0">
+                                    <button class="btn btn-link btn-block text-left font-weight-bold text-dark py-2 px-3" type="button" data-toggle="collapse" data-target="#collapseClient">
+                                        <i class="fas fa-user-tie mr-2 small text-secondary"></i> Client Scope
+                                    </button>
+                                </div>
+                                <div id="collapseClient" class="collapse" data-parent="#summaryAccordion">
+                                    <div class="card-body py-2">
+                                        {% render_field form.cs_client_scope id="cs_client_scope" class="form-control" rows="2" %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card border-0 mb-0 shadow-sm">
+                                <div class="card-header bg-white p-0">
+                                    <button class="btn btn-link btn-block text-left font-weight-bold text-dark py-2 px-3" type="button" data-toggle="collapse" data-target="#collapseOthers">
+                                        <i class="fas fa-ellipsis-h mr-2 small text-dark"></i> Misc Description
+                                    </button>
+                                </div>
+                                <div id="collapseOthers" class="collapse" data-parent="#summaryAccordion">
+                                    <div class="card-body py-2">
+                                        {% render_field form.cs_others_description id="cs_others_description" class="form-control" rows="2" %}
                                     </div>
                                 </div>
                             </div>
@@ -258,32 +260,39 @@
             </div>
 
             {% render_field form.cs_updated_by id="cs_updated_by" hidden="True" %}
-
-            <!-- Messages & Error Logs -->
-            <div class="mt-3 px-3 text-center">
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-                <div id="unique_field_error" class="text-danger font-weight-bold"></div>
-                <div id="unique_record" class="text-success font-weight-bold"></div>
+            <div class="d-none">
+                {% render_field form.cs_final_cost id="cs_final_cost" %}
             </div>
 
-            <!-- Form Actions -->
-            <div class="btn-group-modern mt-4">
-                <button id="cs_submit_btn" type="submit" class="btn-modern btn-submit">
-                    <i class="fas fa-save"></i> Save Summary
-                </button>
-                <a href="{% url 'costingsummary_list' %}" class="btn-modern btn-cancel">
-                    <i class="fas fa-times"></i> Cancel
-                </a>
+            <!-- Messages & Error Logs -->
+            <div class="mt-2 px-3 text-center">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 mb-1">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+                <div id="unique_field_error" class="text-danger small font-weight-bold"></div>
+                <div id="unique_record" class="text-success small font-weight-bold"></div>
+            </div>
+
+            <!-- Action Buttons Parallel (Bottom Corners) -->
+            <div class="row mt-1">
+                <div class="col-12 col-xl-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button id="cs_submit_btn" type="submit" class="btn-modern btn-submit px-5">
+                            <i class="fas fa-save mr-2"></i> Save Summary
+                        </button>
+                        <a href="{% url 'costingsummary_list' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </form>
 
     <!-- Sub-Section: Items Management -->
-    <div class="mt-5">
+    <div class="mt-2">
         <div class="modern-header d-flex justify-content-between align-items-center mb-4" style="background: linear-gradient(135deg, #2c3e50, #4ca1af);">
             <h4 class="mb-0 text-white"><i class="fas fa-boxes mr-2"></i> Costed Items Breakdown</h4>
             <div class="d-flex gap-2">
@@ -303,7 +312,7 @@
 
     <!-- Nested Workflows (Retrieval & Acceptance) -->
     {% if retrival_list %}
-    <div class="mt-5">
+    <div class="mt-2">
         <div class="table-container-modern" style="border-top: 5px solid var(--primary-glow);">
             <div class="form-section-title text-primary"><i class="fas fa-truck-loading"></i> Pending Stock Retrieval</div>
             <div class="table-responsive">
@@ -327,7 +336,7 @@
     {% endif %}
 
     {% if acceptance_list %}
-    <div class="mt-5">
+    <div class="mt-2">
         <div class="table-container-modern" style="border-top: 5px solid var(--accent-orange);">
             <div class="form-section-title text-warning"><i class="fas fa-user-check"></i> Pending Stock Acceptance</div>
             <div class="table-responsive">
@@ -417,6 +426,9 @@
 
         var initial_po_val = $("#cs_customer_po").val();
         if (initial_po_val != '') { $("#cs_customer_po").attr("data-initial-val", initial_po_val); }
+
+        // Initialize calculations
+        change_charge_type();
     });
 
     function change_charge_type() {

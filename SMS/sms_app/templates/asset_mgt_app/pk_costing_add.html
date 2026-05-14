@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid mt-2">
     <!-- Progress Tracker -->
     <div class="pms-tracker-wrapper mb-4">
         {% include "asset_mgt_app/pms_progress_tracker.html" with current_step=current_step %}
@@ -18,19 +18,13 @@
         </div>
     </div>
 
-    <div class="row">
-        <!-- Main Form Column -->
-        <div class="col-lg-9">
+        <div class="modern-card" style="padding: 1rem !important;">
             <form method="POST" action="" id="costing_add" data-stock_description-url="{% url 'load_stock_description' %}">
                 {% csrf_token %}
 
                 {% if form.errors %}
-                <div class="alert alert-danger shadow-sm border-0 mb-4" style="border-radius: 1rem; background: rgba(220, 53, 69, 0.1); border-left: 5px solid #dc3545 !important;">
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="fas fa-exclamation-circle text-danger mr-2" style="font-size: 1.2rem;"></i>
-                        <h6 class="mb-0 text-danger font-weight-bold">Please correct the following errors:</h6>
-                    </div>
-                    <ul class="mb-0 pl-4 text-danger small">
+                <div class="alert alert-danger shadow-sm border-0 mb-3" style="border-radius: 0.5rem; background: rgba(220, 53, 69, 0.1); border-left: 4px solid #dc3545 !important; padding: 0.5rem 1rem;">
+                    <ul class="mb-0 pl-3 text-danger small">
                         {% for field, errors in form.errors.items %}
                             <li><strong>{{ field|title }}:</strong> {{ errors|join:", " }}</li>
                         {% endfor %}
@@ -38,220 +32,267 @@
                 </div>
                 {% endif %}
 
-                <div class="modern-card mb-4" id="costing_form">
-                    
-                    <!-- Section 1: Basic Information -->
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-id-card"></i> Basic Information</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Assessment Number</label>
-                                {% render_field form.ct_assessment_num id="ct_assessment_num" readonly="readonly" class="form-control form-control-modern disable_a_href" style="background-color: #e9ecef;" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Customer Name</label>
-                                {% render_field form.ct_customer_name id="ct_customer_name" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Customer PO</label>
-                                {% render_field form.ct_customer_po id="ct_customer_po" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Job Number</label>
-                                <select id="ct_job_no_select" name="ct_job_no" class="form-control form-control-modern" onchange="load_pk_requirement_type_by_job()">
-                                        <option value="">--Select Job--</option>
-                                        {% for job in job_no_list %}
-                                            <option value="{{ job }}" {% if job == current_job_no %}selected{% endif %}>{{ job }}</option>
-                                        {% endfor %}
-                                    </select>
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Cost Type</label>
-                                {% render_field form.ct_cost_type id="ct_cost_type" onchange="onChangeHandler()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Job Type</label>
-                                {% render_field form.ct_requirement id="ct_requirement" onchange="pk_store_po_dimension_id()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Job Type Quantity</label>
-                                {% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Requirement Name & Size</label>
-                                {% render_field form.ct_requirement_size id="ct_requirement_size" class="form-control form-control-modern" %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section 2: Part & Stock Information -->
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-barcode"></i> Part & Stock Information</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Part Code</label>
-                                <div class="input-group">
-                                    {% render_field form.ct_part_code id="ct_part_code" onchange="fetchPartCodeDetails()" class="form-control form-control-modern select2" %}
-                                    <div class="input-group-append">
-                                        <button class="btn btn-warning" type="button" id="show_stock_summary">
-                                            <i class="fas fa-warehouse"></i>
-                                        </button>
+                <div class="row row-compact">
+                    <!-- Column 1: Basic & Job Info -->
+                    <div class="col-12 col-md-4 col-xl-3 col-compact">
+                        <div class="form-section">
+                            <div class="form-section-title"><i class="fas fa-id-card"></i> Basic Info</div>
+                            <div class="form-row-modern">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Assessment #</label>
+                                    {% render_field form.ct_assessment_num id="ct_assessment_num" readonly="readonly" class="form-control form-control-modern disable_a_href" style="background-color: #f8f9fa;" %}
+                                </div>
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Customer</label>
+                                    {% render_field form.ct_customer_name id="ct_customer_name" class="form-control form-control-modern" %}
+                                </div>
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Customer PO</label>
+                                    {% render_field form.ct_customer_po id="ct_customer_po" class="form-control form-control-modern" %}
+                                </div>
+                                <div class="row no-gutters">
+                                    <div class="col-6 pr-1">
+                                        <div class="form-group-modern">
+                                            <label class="form-label-modern">Job Number</label>
+                                            <select id="ct_job_no_select" name="ct_job_no" class="form-control form-control-modern" onchange="load_pk_requirement_type_by_job()">
+                                                <option value="">--Select--</option>
+                                                {% for job in job_no_list %}
+                                                    <option value="{{ job }}" {% if job == current_job_no %}selected{% endif %}>{{ job }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 pl-1">
+                                        <div class="form-group-modern">
+                                            <label class="form-label-modern">Cost Type</label>
+                                            {% render_field form.ct_cost_type id="ct_cost_type" onchange="onChangeHandler()" class="form-control form-control-modern" %}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Stock Type</label>
-                                {% render_field form.ct_stock_type id="ct_stock_type" onchange="toggleFields()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Stock Description</label>
-                                {% render_field form.ct_stock_description id="ct_stock_description" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Job Type</label>
+                                    {% render_field form.ct_requirement id="ct_requirement" onchange="pk_store_po_dimension_id()" class="form-control form-control-modern" %}
+                                </div>
+                                <div class="row no-gutters">
+                                    <div class="col-6 pr-1">
+                                        <div class="form-group-modern">
+                                            <label class="form-label-modern">Job Qty</label>
+                                            {% render_field form.ct_na_quantity id="ct_na_quantity" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                    <div class="col-6 pl-1">
+                                        <div class="form-group-modern stock-info-box" style="border-left: 3px solid var(--accent-orange); padding-left: 8px;">
+                                            <label class="form-label-modern" style="color: var(--accent-orange);">Avail. Qty</label>
+                                            {% render_field form.ct_quantity id="ct_quantity" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Req. Name & Size</label>
+                                    {% render_field form.ct_requirement_size id="ct_requirement_size" class="form-control form-control-modern" %}
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Section 3: Item Details -->
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-cube"></i> Item Details</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Item Name</label>
-                                {% render_field form.ct_item id="ct_item" onchange="changeItemDescription()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Item Description</label>
-                                {% render_field form.ct_itemdescription id="ct_itemdescription" onchange="change_cost_type()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern" id="height_group">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Height Req (in/mm)</label>
-                                {% render_field form.ct_height_req id="ct_height_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern" id="width_group">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Width Req (in/ft)</label>
-                                {% render_field form.ct_width_req id="ct_width_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern" id="length_group">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Length Req (ft)</label>
-                                {% render_field form.ct_length_req id="ct_length_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern" id="uom_group">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">UOM</label>
-                                {% render_field form.ct_uom id="ct_uom" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern" id="diameter_width_group">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Diameter/Width</label>
-                                {% render_field form.ct_size id="ct_size" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern d-flex align-items-end">
-                                <button id="search_wood" type="button" class="btn-modern btn-highlight w-100" style="justify-content: center;">
+                    <!-- Column 2: Part & Item Details -->
+                    <div class="col-12 col-md-4 col-xl-3 col-compact">
+                        <div class="form-section">
+                            <div class="form-section-title"><i class="fas fa-barcode"></i> Part & Item</div>
+                            <div class="form-row-modern">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Part Code</label>
+                                    <div class="input-group input-group-sm">
+                                        {% render_field form.ct_part_code id="ct_part_code" onchange="fetchPartCodeDetails()" class="form-control form-control-modern select2" %}
+                                        <div class="input-group-append">
+                                            <button class="btn btn-warning py-0" type="button" id="show_stock_summary" style="height: 32px;">
+                                                <i class="fas fa-warehouse"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row no-gutters">
+                                    <div class="col-6 pr-1">
+                                        <div class="form-group-modern">
+                                            <label class="form-label-modern">Stock Type</label>
+                                            {% render_field form.ct_stock_type id="ct_stock_type" onchange="toggleFields()" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                    <div class="col-6 pl-1">
+                                        <div class="form-group-modern">
+                                            <label class="form-label-modern">Stock Desc</label>
+                                            {% render_field form.ct_stock_description id="ct_stock_description" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Item Name</label>
+                                    {% render_field form.ct_item id="ct_item" onchange="changeItemDescription()" class="form-control form-control-modern" %}
+                                </div>
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Item Description</label>
+                                    {% render_field form.ct_itemdescription id="ct_itemdescription" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                                </div>
+                                <div class="row no-gutters">
+                                    <div class="col-4 pr-1">
+                                        <div class="form-group-modern" id="length_group">
+                                            <label class="form-label-modern">L (ft)</label>
+                                            {% render_field form.ct_length_req id="ct_length_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                    <div class="col-4 px-1">
+                                        <div class="form-group-modern" id="width_group">
+                                            <label class="form-label-modern">W (in/ft)</label>
+                                            {% render_field form.ct_width_req id="ct_width_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                    <div class="col-4 pl-1">
+                                        <div class="form-group-modern" id="height_group">
+                                            <label class="form-label-modern">H (in/mm)</label>
+                                            {% render_field form.ct_height_req id="ct_height_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row no-gutters">
+                                    <div class="col-6 pr-1">
+                                        <div class="form-group-modern" id="uom_group">
+                                            <label class="form-label-modern">UOM</label>
+                                            {% render_field form.ct_uom id="ct_uom" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                    <div class="col-6 pl-1">
+                                        <div class="form-group-modern" id="diameter_width_group">
+                                            <label class="form-label-modern">Dia/Width</label>
+                                            {% render_field form.ct_size id="ct_size" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button id="search_wood" type="button" class="btn-modern btn-highlight w-100 mt-2">
                                     <i class="fas fa-search"></i> Search Item
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Section 4: Calculation Details -->
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-calculator"></i> Calculation Details</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">UOM-Purchased Type</label>
-                                {% render_field form.ct_weight_received id="ct_weight_received" class="form-control form-control-modern" %}
+                    <!-- Column 3: Calculation & Costing -->
+                    <div class="col-12 col-md-4 col-xl-3 col-compact">
+                        <div class="form-section">
+                            <div class="form-section-title"><i class="fas fa-calculator"></i> Calculations</div>
+                            <div class="form-row-modern">
+                                <div class="row no-gutters">
+                                    <div class="col-6 pr-1">
+                                        <div class="form-group-modern">
+                                            <label class="form-label-modern">Purch. UOM</label>
+                                            {% render_field form.ct_weight_received id="ct_weight_received" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                    <div class="col-6 pl-1">
+                                        <div class="form-group-modern">
+                                            <label class="form-label-modern">Cons. UOM</label>
+                                            {% render_field form.ct_weight_Consumption id="ct_weight_Consumption" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row no-gutters">
+                                    <div class="col-6 pr-1">
+                                        <div class="form-group-modern">
+                                            <label class="form-label-modern">Qty Req</label>
+                                            {% render_field form.ct_quantity_req id="ct_quantity_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                    <div class="col-6 pl-1">
+                                        <div class="form-group-modern">
+                                            <label class="form-label-modern">Req Value</label>
+                                            {% render_field form.ct_sqrt_req id="ct_sqrt_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row no-gutters">
+                                    <div class="col-6 pr-1">
+                                        <div class="form-group-modern">
+                                            <label class="form-label-modern">Conversion</label>
+                                            {% render_field form.ct_weight_sqft id="ct_weight_sqft" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                    <div class="col-6 pl-1">
+                                        <div class="form-group-modern" id="total_cft">
+                                            <label class="form-label-modern">Total CFT</label>
+                                            {% render_field form.ct_total_cft_display id="ct_total_cft_display" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Days/Hours</label>
+                                    {% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                                </div>
                             </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Quantity Req</label>
-                                {% render_field form.ct_quantity_req id="ct_quantity_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Required Value (CFT/SQFT)</label>
-                                {% render_field form.ct_sqrt_req id="ct_sqrt_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern" id="total_cft">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Total CFT</label>
-                                {% render_field form.ct_total_cft_display id="ct_total_cft_display" onchange="change_cost_type()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">UOM-Consumption Type</label>
-                                {% render_field form.ct_weight_Consumption id="ct_weight_Consumption" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Conversion Value</label>
-                                {% render_field form.ct_weight_sqft id="ct_weight_sqft" onchange="change_cost_type()" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Days/Hours</label>
-                                {% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-section" style="border-left: 4px solid var(--accent-emerald);">
+                            <div class="form-section-title" style="color: var(--accent-emerald);"><i class="fas fa-coins"></i> Costing Information</div>
+                            <div class="form-row-modern">
+                                <div class="row no-gutters">
+                                    <div class="col-6 pr-1">
+                                        <div class="form-group-modern">
+                                            <label class="form-label-modern">Rate / Unit</label>
+                                            {% render_field form.ct_rate id="ct_rate" oninput="change_cost_type()" class="form-control form-control-modern font-weight-bold" %}
+                                        </div>
+                                    </div>
+                                    <div class="col-6 pl-1">
+                                        <div class="form-group-modern">
+                                            <label class="form-label-modern">Unit Cost</label>
+                                            {% render_field form.ct_total_cost id="ct_total_cost" class="form-control form-control-modern font-weight-bold" %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Total Job Value (INR)</label>
+                                    {% render_field form.ct_totalbox_cost id="ct_totalbox_cost" class="form-control form-control-modern font-weight-bold text-success bg-light" style="font-size: 1.2rem; text-align: center;" %}
+                                </div>
+                                <div class="form-group-modern stock-info-box mt-2" style="border-left: 3px solid var(--accent-orange); padding-left: 8px;">
+                                    <label class="form-label-modern" style="color: var(--accent-orange);">Stock Purchase #</label>
+                                    {% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control form-control-modern" %}
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Section 5: Stock Information -->
-                    <div class="form-section stock-info-box" style="background: rgba(255, 193, 7, 0.05); border-left: 5px solid #ffc107 !important; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
-                        <div class="form-section-title" style="color: #856404; border-color: #ffeeba;"><i class="fas fa-warehouse"></i> Stock Information</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Stock Purchase Number</label>
-                                {% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control form-control-modern" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Available Quantity</label>
-                                {% render_field form.ct_quantity id="ct_quantity" class="form-control form-control-modern" %}
-                            </div>
+                    <!-- Column 4: Calculator -->
+                    <div class="col-12 col-xl-3 col-compact">
+                        {% include "asset_mgt_app/calculation_card.html" %}
+                    </div>
+                </div>
+
+                <!-- Hidden Fields -->
+                <div class="d-none">
+                    {% render_field form.ct_customer_new_name id="ct_customer_new_name" %}
+                    {% render_field form.ct_stock_status id="ct_stock_status" %}
+                    {% render_field form.ct_updated_by id="ct_updated_by" %}
+                    <input type="hidden" id="hidden_pc_stock_description">
+                </div>
+
+                <!-- Action Buttons Parallel (Corners) -->
+                <div class="row mt-0">
+                    <div class="col-12 col-xl-9">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button type="submit" class="btn-modern btn-submit px-4">
+                                <i class="fas fa-save mr-2"></i> Save Costing
+                            </button>
+                            <a href="{% url 'costing_cancel' %}" class="btn-modern btn-cancel px-4">
+                                <i class="fas fa-times mr-2"></i> Cancel
+                            </a>
                         </div>
-                    </div>
-
-                    <!-- Section 6: Costing & Totals -->
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-rupee-sign"></i> Costing & Totals</div>
-                        <div class="form-row-modern">
-                            <div class="form-group-modern">
-                                <label class="form-label-modern">Rate / Unit</label>
-                                {% render_field form.ct_rate id="ct_rate" oninput="change_cost_type()" class="form-control form-control-modern font-weight-bold disable_a_href" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Unit Cost (INR)</label>
-                                {% render_field form.ct_total_cost id="ct_total_cost" class="form-control form-control-modern font-weight-bold" %}
-                            </div>
-                            <div class="form-group-modern">
-                                <label class="form-label-modern" style="display: block !important; font-weight: 600;">Total Job Value (INR)</label>
-                                {% render_field form.ct_totalbox_cost id="ct_totalbox_cost" class="form-control form-control-modern font-weight-bold text-success bg-light" style="font-size: 1.2rem;" %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Hidden Fields -->
-                    <div class="d-none">
-                        {% render_field form.ct_customer_new_name id="ct_customer_new_name" %}
-                        {% render_field form.ct_stock_status id="ct_stock_status" %}
-                        {% render_field form.ct_updated_by id="ct_updated_by" %}
-                        <input type="hidden" id="hidden_pc_stock_description">
-                    </div>
-
-                    <!-- Buttons -->
-                    <div class="btn-group-modern mt-4">
-                        <button type="submit" class="btn-modern btn-submit">
-                            <i class="fas fa-save"></i> Save Costing
-                        </button>
-                        <a href="{% url 'costing_cancel' %}" class="btn-modern btn-cancel">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
                     </div>
                 </div>
             </form>
         </div>
 
-        <!-- Sidebar Column -->
-        <div class="col-lg-3">
-            {% include "asset_mgt_app/calculation_card.html" %}
-        </div>
-    </div>
-
     <!-- Additional Lists -->
-    <div id="pk_item_search_page_costing" class="mt-4">
+    <div id="pk_item_search_page_costing" class="mt-2">
         {% include "asset_mgt_app/pk_item_search_page_costing.html" %}
     </div>
 
-    <div class="mt-4">
+    <div class="mt-2">
         {% include "asset_mgt_app/pk_costing_list_WOH.html" %}
     </div>
 </div>

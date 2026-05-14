@@ -3,6 +3,7 @@ from django.views.generic import TemplateView
 
 from . import views
 from .sub_views.pk_purchaseorder_view import pk_create_batch_job, pk_get_po_items_for_job
+from .sub_views.tms_dashboard_view import tms_dashboard, get_tms_dashboard_data
 
 urlpatterns = [
     path('pk_create_batch_job/', pk_create_batch_job, name='pk_create_batch_job'),
@@ -13,7 +14,6 @@ urlpatterns = [
     path('registration_page', views.registration_page, name='registration_page'),  # Registration_page
     path('login_page', views.login_page, name='login_page'),  # Login_page
     path('logout_page', views.logout_page, name='logout_page'),  # Logout_page
-    path('driver/login/', views.driver_login, name='driver_login'),
     path('driver/login/', views.driver_login, name='driver_login'),
     path('driver/logout/', views.driver_logout, name='driver_logout'),
     path('driver/dashboard/', views.driver_dashboard, name='driver_dashboard'),
@@ -937,6 +937,8 @@ urlpatterns = [
     path('customer_claims_report/', views.customer_claims_report, name='customer_claims_report'),
     path('highvalue_report_list/', views.highvalue_report_list, name='highvalue_report_list'),
     path('warehouse_dashboard/', views.warehouse_dashboard, name='warehouse_dashboard'),
+    path('tms_dashboard/', tms_dashboard, name='tms_dashboard'),
+    path('get_tms_dashboard_data/', get_tms_dashboard_data, name='get_tms_dashboard_data'),
     path('customer_contract_rate_report/', views.customer_contract_rate_report, name='customer_contract_rate_report'),
     path("get-customer-pan-gst/", views.get_customer_pan_gst, name="get_customer_pan_gst"),
     path('vehicle_allotment_email/', views.vehicle_allotment_email, name='vehicle_allotment_email'),

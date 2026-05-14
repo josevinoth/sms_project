@@ -1,0 +1,279 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20260513">
+
+<style>
+    /* Specific overrides for this dashboard if any */
+    html, body {
+        overflow: hidden !important;
+        height: 100% !important;
+        background: #060b26 !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+</style>
+
+<div class="home-dashboard-wrap">
+    <div class="dash-kpi-container">
+        <!-- Row 1: Totals -->
+        <div class="dash-kpi-row">
+            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                <div class="dash-dropdown-card" style="padding: 0.25rem 0.5rem;">
+                    <label style="margin-bottom: 0.1rem;"><i class="fas fa-calendar-alt"></i> From Date</label>
+                    <div class="dash-select-wrap">
+                        <input type="date" id="from-date" class="dash-date-input" style="padding: 2px;">
+                    </div>
+                </div>
+                <div class="dash-dropdown-card" style="padding: 0.25rem 0.5rem;">
+                    <label style="margin-bottom: 0.1rem;"><i class="fas fa-calendar-alt"></i> To Date</label>
+                    <div class="dash-select-wrap">
+                        <input type="date" id="to-date" class="dash-date-input" style="padding: 2px;">
+                    </div>
+                </div>
+            </div>
+            <div class="dash-card card-enquiry"><i class="fas fa-poll-h"></i><div class="dash-kpi-label">Vehicles Used</div><div class="dash-kpi-value" id="total-enquiries">0</div></div>
+            <div class="dash-card card-cnote"><i class="fas fa-file-invoice"></i><div class="dash-kpi-label">C-Notes</div><div class="dash-kpi-value" id="total-cnotes">0</div></div>
+            <div class="dash-card card-missed"><i class="fas fa-exclamation-circle"></i><div class="dash-kpi-label">Missed Enquiry</div><div class="dash-kpi-value" id="total-missed">0</div></div>
+            <div class="dash-card card-settled"><i class="fas fa-check-double"></i><div class="dash-kpi-label">Trip Settled</div><div class="dash-kpi-value" id="total-settled">0</div></div>
+            <div class="dash-card card-ready"><i class="fas fa-hourglass-half"></i><div class="dash-kpi-label">Ready to Invoice</div><div class="dash-kpi-value" id="total-ready">0</div></div>
+            <div class="dash-card card-invoiced"><i class="fas fa-file-signature"></i><div class="dash-kpi-label">Invoiced</div><div class="dash-kpi-value" id="total-invoiced">0</div></div>
+        </div>
+        <!-- Row 2: Employee Specific -->
+        <div class="dash-kpi-row">
+            <div class="dash-dropdown-card">
+                <label><i class="fas fa-user-tie"></i> CS Representative</label>
+                <div class="dash-select-wrap">
+                    <select id="cs-employee-select">
+                        <option value="all">All Representatives</option>
+                        {% for emp in cs_employees %}<option value="{{ emp.user.id }}">{{ emp.user.first_name }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="dash-card card-enquiry"><i class="fas fa-poll-h"></i><div class="dash-kpi-label">Vehicles Used</div><div class="dash-kpi-value" id="emp-enquiries">0</div></div>
+            <div class="dash-card card-cnote"><i class="fas fa-file-invoice"></i><div class="dash-kpi-label">C-Notes</div><div class="dash-kpi-value" id="emp-cnotes">0</div></div>
+            <div class="dash-card card-missed"><i class="fas fa-exclamation-circle"></i><div class="dash-kpi-label">Missed Enquiry</div><div class="dash-kpi-value" id="emp-missed">0</div></div>
+            <div class="dash-card card-settled"><i class="fas fa-check-double"></i><div class="dash-kpi-label">Trip Settled</div><div class="dash-kpi-value" id="emp-settled">0</div></div>
+            <div class="dash-card card-ready"><i class="fas fa-hourglass-half"></i><div class="dash-kpi-label">Ready to Invoice</div><div class="dash-kpi-value" id="emp-ready">0</div></div>
+            <div class="dash-card card-invoiced"><i class="fas fa-file-signature"></i><div class="dash-kpi-label">Invoiced</div><div class="dash-kpi-value" id="emp-invoiced">0</div></div>
+        </div>
+    </div>
+
+    <div class="dash-charts-container">
+        <div class="chart-panel chart-panel--full">
+            <div class="chart-title"><i class="fas fa-chart-bar"></i> Business Trip Distribution</div>
+            <div class="chart-canvas-wrap"><canvas id="tripBarChart"></canvas></div>
+        </div>
+        <div class="chart-panel">
+            <div class="chart-title"><i class="fas fa-tachometer-alt"></i> Own Vehicle KM Details</div>
+            <div class="chart-canvas-wrap"><canvas id="ownDonutChart"></canvas></div>
+        </div>
+        <div class="chart-panel">
+            <div class="chart-title"><i class="fas fa-truck"></i> Attached Vehicle KM Details</div>
+            <div class="chart-canvas-wrap"><canvas id="attachedDonutChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script>
+    $(document).ready(function() {
+        let tripBarChart, ownDonutChart, marketDonutChart;
+
+        function updateKpis(data, prefix) {
+            $(`#${prefix}-enquiries`).text(data.enquiries);
+            $(`#${prefix}-cnotes`).text(data.cnotes);
+            $(`#${prefix}-missed`).text(data.missed);
+            $(`#${prefix}-settled`).text(data.settled);
+            $(`#${prefix}-ready`).text(data.ready);
+            $(`#${prefix}-invoiced`).text(data.invoiced);
+        }
+
+        function initCharts(data) {
+            Chart.register(ChartDataLabels);
+            const ctxBar = document.getElementById('tripBarChart').getContext('2d');
+            const ctxOwn = document.getElementById('ownDonutChart').getContext('2d');
+            const ctxAtt = document.getElementById('attachedDonutChart').getContext('2d');
+
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 1000, easing: 'easeOutQuart' },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right',
+                        labels: { color: '#d9e3ff', boxWidth: 10, font: { size: 9 } }
+                    },
+                    datalabels: {
+                        color: '#fff',
+                        font: { weight: '700', size: 11 },
+                        padding: 4,
+                        formatter: (value) => {
+                            if (!value || value === 0) return '';
+                            return value.toLocaleString();
+                        }
+                    }
+                }
+            };
+
+            tripBarChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: data.bar_chart.labels,
+                    datasets: [
+                        { label: 'Local', data: data.bar_chart.local, backgroundColor: '#3b82f6', borderRadius: 6, borderSkipped: false },
+                        { label: 'Outstation', data: data.bar_chart.outstation, backgroundColor: '#8b5cf6', borderRadius: 6, borderSkipped: false }
+                    ]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        ...commonOptions.plugins,
+                        datalabels: {
+                            ...commonOptions.plugins.datalabels,
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 2,
+                            color: '#36d1ff'
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#9fb1d9', font: { size: 10 } }, grid: { display: false } },
+                        y: { ticks: { color: '#9fb1d9', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
+
+            const donutColors = ['#10b981', '#f59e0b', '#ef4444'];
+            const donutLabels = ['Business', 'Empty', 'B-Empty'];
+            const donutDatalabelOptions = {
+                display: (context) => {
+                    const value = context.dataset.data[context.dataIndex];
+                    if (!value || value <= 0) return false;
+                    const total = context.dataset.data.reduce((a, b) => a + (b || 0), 0);
+                    return total > 0 && (value / total) * 100 >= 5; // hide if < 5% share
+                },
+                anchor: 'center',
+                align: 'center',
+                offset: 0,
+                color: '#ffffff',
+                backgroundColor: (context) => {
+                    const colors = ['rgba(16,185,129,0.85)', 'rgba(245,158,11,0.85)', 'rgba(239,68,68,0.85)'];
+                    return colors[context.dataIndex];
+                },
+                borderRadius: 4,
+                padding: { top: 3, bottom: 3, left: 5, right: 5 },
+                font: { weight: '800', size: 9 },
+                formatter: (value, context) => {
+                    if (!value || value <= 0) return null;
+                    const total = context.dataset.data.reduce((a, b) => a + (b || 0), 0);
+                    if (total > 0 && (value / total) * 100 < 5) return null;
+                    const label = donutLabels[context.dataIndex] || '';
+                    let km;
+                    if (value >= 1000000) km = (value / 1000000).toFixed(1) + 'M KM';
+                    else if (value >= 1000) km = (value / 1000).toFixed(1) + 'K KM';
+                    else km = value.toLocaleString() + ' KM';
+                    return label + '\n' + km;
+                }
+            };
+
+            ownDonutChart = new Chart(ctxOwn, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Business', 'Empty', 'B-Empty'],
+                    datasets: [{ data: data.donut_own, backgroundColor: donutColors, borderWidth: 2, borderColor: '#0b1537' }]
+                },
+                options: {
+                    ...commonOptions,
+                    layout: { padding: 6 },
+                    plugins: {
+                        ...commonOptions.plugins,
+                        datalabels: donutDatalabelOptions
+                    },
+                    cutout: '52%'
+                }
+            });
+
+            attachedDonutChart = new Chart(ctxAtt, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Business', 'Empty', 'B-Empty'],
+                    datasets: [{ data: data.donut_attached, backgroundColor: donutColors, borderWidth: 2, borderColor: '#0b1537' }]
+                },
+                options: {
+                    ...commonOptions,
+                    layout: { padding: 6 },
+                    plugins: {
+                        ...commonOptions.plugins,
+                        datalabels: donutDatalabelOptions
+                    },
+                    cutout: '52%'
+                }
+            });
+        }
+
+        function loadDashboardData() {
+            const employeeId = $('#cs-employee-select').val();
+            const fromDate = $('#from-date').val();
+            const toDate = $('#to-date').val();
+
+            $.ajax({
+                url: "{% url 'get_tms_dashboard_data' %}",
+                data: { 
+                    'employee_id': employeeId,
+                    'from_date': fromDate,
+                    'to_date': toDate
+                },
+                success: function(data) {
+                    // Always update totals from the same data response (backend should send both)
+                    updateKpis(data.totals, 'total');
+                    updateKpis(data.employee, 'emp');
+
+                    if (!tripBarChart) {
+                        initCharts(data);
+                    } else {
+                        tripBarChart.data.datasets[0].data = data.bar_chart.local;
+                        tripBarChart.data.datasets[1].data = data.bar_chart.outstation;
+                        tripBarChart.update();
+                        ownDonutChart.data.datasets[0].data = data.donut_own;
+                        ownDonutChart.update();
+                        attachedDonutChart.data.datasets[0].data = data.donut_attached;
+                        attachedDonutChart.update();
+                    }
+                }
+            });
+        }
+
+        function adjustLayout() {
+            // Remove padding from main bootstrap containers
+            $('.container-fluid').css('padding', '0');
+            $('.row').css('margin', '0');
+            
+            // Adjust sidebar container (col-md-2)
+            $('.col-md-2').css({'padding': '0', 'flex': '0 0 auto', 'width': 'auto'});
+            
+            // Adjust main content container (col-md-10)
+            $('#main-content').css({
+                'padding': '0',
+                'margin': '0',
+                'max-width': '100%',
+                'flex': '1',
+                'width': 'auto'
+            });
+            
+            $('.home-dashboard-wrap').css({
+                'padding': '0.5rem',
+                'width': '100%',
+                'max-width': '100%',
+                'margin': '0'
+            });
+        }
+
+        loadDashboardData();
+        adjustLayout();
+
+        $('#cs-employee-select, #from-date, #to-date').on('change', function() {
+            adjustLayout();
+            loadDashboardData();
+        });
+    });
+</script>

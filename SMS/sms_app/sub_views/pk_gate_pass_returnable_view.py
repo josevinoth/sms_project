@@ -93,11 +93,13 @@ def gate_return_add(request, gate_id=0):
             form = GatepassreturnForm(request.POST, instance=delivery)
         if form.is_valid():
             gate_pass = form.save(commit=False)
-            job = Packingjobs.objects.filter(pj_job_no=gate_pass.gp_job_no).first()
-            if job and 'On-Site' in job.pj_pack_type:
-                gate_pass.gp_document_category = 'Delivery Challan'
-            else:
-                gate_pass.gp_document_category = 'Gate Pass'
+            # Set default category only if not provided by form
+            if not gate_pass.gp_document_category:
+                job = Packingjobs.objects.filter(pj_job_no=gate_pass.gp_job_no).first()
+                if job and 'On-Site' in job.pj_pack_type:
+                    gate_pass.gp_document_category = 'Delivery Challan'
+                else:
+                    gate_pass.gp_document_category = 'Gate Pass'
             gate_pass.save()
             form.save_m2m() # Required for ManyToMany with commit=False
 
@@ -170,6 +172,13 @@ def gate_return_pdf(request, gate_id):
             'wh_branch__loc_name', flat=True).order_by('id').first()
 
     print("Warehouse Location:", wh_location)
+    
+    # Fallback for HSN Code if missing
+    if not gate.gp_hsn_code and gate.gp_assessment_num:
+        from ..models import Nadimension
+        hsn = Nadimension.objects.filter(na_assessment_num=gate.gp_assessment_num).values_list('na_hsn_code', flat=True).first()
+        if hsn:
+            gate.gp_hsn_code = hsn
 
     if not wh_location:
         wh_location = "BVM Chennai"
@@ -188,7 +197,8 @@ def gate_return_pdf(request, gate_id):
         'total_sum': total_sum,
     }
 
-    file_name = f"Gate Pass{gate_id}.pdf"
+    category = gate.gp_document_category if gate.gp_document_category else "Gate Pass"
+    file_name = f"{category}_{gate_id}.pdf"
     template_path = 'asset_mgt_app/pk_gate_pass_return.html'
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="{file_name}"'
