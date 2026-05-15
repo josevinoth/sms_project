@@ -33,7 +33,12 @@ def tripclosure_enquiry(request,enquiry_id,trip_num):
         request.session['ses_enqiury_id'] = enquiry_id
         return redirect('tripclosure_insert')  # Define this URL in urls.py
     else:
-        trip_id = TripdetailInfo.objects.get(tr_tripnumber=trip_num).id
+        trip_obj = TripdetailInfo.objects.filter(tr_tripnumber=trip_num).order_by('-id').first()
+        if not trip_obj:
+            messages.error(request, f"Trip {trip_num} not found.")
+            return redirect('tripclosure_list')
+        
+        trip_id = trip_obj.id
         print('trip_id:', trip_id)
         # If trip_id is provided, redirect to update
         return redirect('tripclosure_update', tripclosure_id=trip_id)  # tripdetail_id is a keyword argument in the URL
@@ -103,7 +108,7 @@ def tripclosure_add(request,tripclosure_id=0):
             enquiry_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_enquirynumber
             enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
             consignment_num = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_consignmentdetails
-            tripclosure = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
+            tripclosure = TripdetailInfo.objects.filter(tr_tripnumber=trip_num).order_by('-id').first()
             tripclosure_form = TripclosureaddForm(instance=tripclosure)
             
             # Populate Customer Name and Trip Date
@@ -168,7 +173,7 @@ def tripclosure_add(request,tripclosure_id=0):
         else:
             print("Inside Trip closure post edit")
             trip_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_tripnumber
-            tripclosure = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
+            tripclosure = TripdetailInfo.objects.filter(tr_tripnumber=trip_num).order_by('-id').first()
             tripclosure_form = TripclosureaddForm(request.POST,instance=tripclosure)
             tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
             tripclosurefiles_form = TripclosurefilesForm(request.POST,request.FILES,instance=tripclosure_files)
@@ -387,7 +392,7 @@ def get_fastag_toll_cost_ajax(request):
         return JsonResponse(result)
 
     try:
-        trip = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
+        trip = TripdetailInfo.objects.filter(tr_tripnumber=trip_num).order_by('-id').first()
         vehicle_num = trip.tr_vehiclenumber
         from_date = trip.tr_departeddate
         to_date = trip.tr_reporteddate

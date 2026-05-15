@@ -4,7 +4,7 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.utils import timezone
 from django.db.models.functions import Coalesce, TruncMonth
-from ..models import Customerattach,PkcostingInfo,RequirementsInfo,Pregateintruckinfo,PkstockpurchasesInfo,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info,TripdetailInfo,TripHighvalueInfo
+from ..models import Customerattach,PkcostingInfo,RequirementsInfo,Pregateintruckinfo,PkstockpurchasesInfo,Loadingbay_Info,TrbusinesstypeInfo,User_extInfo,Warehouse_goods_info,AssetInfo,Vendor_info,Location_info,Product_info,User,Service_Info,TripdetailInfo,TripHighvalueInfo,UnitInfo,BayInfo
 from django.shortcuts import render, redirect
 from django.db.models import Count, Sum, Q
 from datetime import datetime, timedelta
@@ -73,19 +73,61 @@ def home_page(request):
     month_keys = [month.strftime('%Y-%m') for month in month_starts]
     filter_start_date = month_starts[0]
 
+    selected_branch_id = request.GET.get('branch_id', '').strip()
+    selected_unit_id = request.GET.get('unit_id', '').strip()
+    selected_bay_id = request.GET.get('bay_id', '').strip()
+
+    branch_filter_list = Location_info.objects.filter(loc_status=1).order_by('loc_name')
+    unit_filter_list = UnitInfo.objects.all().order_by('unit_name')
+    bay_filter_list = BayInfo.objects.all().order_by('bay_bayname')
+
+    if selected_branch_id:
+        unit_filter_list = unit_filter_list.filter(ui_branch_name_id=selected_branch_id)
+
+    if selected_unit_id and not unit_filter_list.filter(id=selected_unit_id).exists():
+        selected_unit_id = ''
+        selected_bay_id = ''
+
+    if selected_unit_id:
+        bay_filter_list = bay_filter_list.filter(Bay_unit_name_id=selected_unit_id)
+    elif selected_branch_id:
+        bay_filter_list = bay_filter_list.filter(bay_branch_name_id=selected_branch_id)
+
+    if selected_bay_id and not bay_filter_list.filter(id=selected_bay_id).exists():
+        selected_bay_id = ''
+
+    usage_filters = {
+        'wh_checkin_time__isnull': False,
+        'wh_checkin_time__gte': filter_start_date,
+    }
+    if selected_branch_id:
+        usage_filters['wh_branch_id'] = selected_branch_id
+    if selected_unit_id:
+        usage_filters['wh_unit_id'] = selected_unit_id
+    if selected_bay_id:
+        usage_filters['wh_bay_id'] = selected_bay_id
+
     usage_qs = (
         Warehouse_goods_info.objects
-        .filter(wh_checkin_time__isnull=False, wh_checkin_time__gte=filter_start_date)
+        .filter(**usage_filters)
         .annotate(month=TruncMonth('wh_checkin_time'))
         .values('month')
-        .annotate(total=Coalesce(Sum('wh_goods_volume_weight'), 0.0))
+        .annotate(
+            total_area=Coalesce(Sum('wh_goods_area'), 0.0),
+            total_volume=Coalesce(Sum('wh_goods_volume_weight'), 0.0),
+        )
         .order_by('month')
     )
-    usage_map = {
-        item['month'].strftime('%Y-%m'): float(item['total'] or 0.0)
+    usage_area_map = {
+        item['month'].strftime('%Y-%m'): float(item['total_area'] or 0.0)
         for item in usage_qs if item.get('month')
     }
-    monthly_warehouse_usage = [round(usage_map.get(key, 0.0), 2) for key in month_keys]
+    usage_volume_map = {
+        item['month'].strftime('%Y-%m'): float(item['total_volume'] or 0.0)
+        for item in usage_qs if item.get('month')
+    }
+    monthly_warehouse_area = [round(usage_area_map.get(key, 0.0), 2) for key in month_keys]
+    monthly_warehouse_volume = [round(usage_volume_map.get(key, 0.0), 2) for key in month_keys]
 
     department_qs = (
         User_extInfo.objects
@@ -187,11 +229,18 @@ def home_page(request):
                'DG_cargo_count':DG_cargo_count,
                'need_assessment_count': need_assessment_count,
                'warehouse_month_labels_json': json.dumps(month_labels),
-               'monthly_warehouse_usage_json': json.dumps(monthly_warehouse_usage),
+               'monthly_warehouse_area_json': json.dumps(monthly_warehouse_area),
+               'monthly_warehouse_volume_json': json.dumps(monthly_warehouse_volume),
                'team_department_labels_json': json.dumps(team_department_labels),
                'team_department_values_json': json.dumps(team_department_values),
                'region_month_labels_json': json.dumps(month_labels),
                'region_month_datasets_json': json.dumps(region_month_datasets),
+               'branch_filter_list': branch_filter_list,
+               'unit_filter_list': unit_filter_list,
+               'bay_filter_list': bay_filter_list,
+               'selected_branch_id': selected_branch_id,
+               'selected_unit_id': selected_unit_id,
+               'selected_bay_id': selected_bay_id,
                }
     return render(request, 'asset_mgt_app/home_page.html', context)
 

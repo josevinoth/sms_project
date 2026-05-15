@@ -42,7 +42,12 @@ def tripdetail_enquiry(request, enquiry_id, trip_num):
         request.session['enquiry_num_id'] = enquiry_id
         return redirect('tripdetail_insert')  # Define this URL in urls.py
     else:
-        trip_id = TripdetailInfo.objects.get(tr_tripnumber=trip_num).id
+        trip_obj = TripdetailInfo.objects.filter(tr_tripnumber=trip_num).order_by('-id').first()
+        if not trip_obj:
+            messages.error(request, f"Trip {trip_num} not found.")
+            return redirect('tripdetail_list')
+        
+        trip_id = trip_obj.id
         print('trip_id:', trip_id)
         # If trip_id is provided, redirect to update
         return redirect('tripdetail_update', tripdetail_id=trip_id)  # tripdetail_id is a keyword argument in the URL
@@ -378,7 +383,9 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip.td_pod = data
 
                 trip.save()
-                tripclosurefiles_form.save()
+                trip_files = tripclosurefiles_form.save(commit=False)
+                trip_files.tcf_tripnumber = trip_num_next
+                trip_files.save()
 
                 # ✅ AUTOMATED EMAIL TRIGGERS
                 def trigger_alert(alert_func, label):
@@ -431,11 +438,7 @@ def tripdetail_add(request, tripdetail_id=0):
                         trigger_alert(trip_send_trip_closed_mail, "Trip Closed")
 
                 print("Main Form is Valid")
-                last_id = TripdetailInfo.objects.latest('id').id
-                last_id_files = Trip_closure_files_Info.objects.latest('id').id
-                TripdetailInfo.objects.filter(id=last_id).update(tr_tripnumber=trip_num_next)
-                Trip_closure_files_Info.objects.filter(id=last_id_files).update(tcf_tripnumber=trip_num_next)
-
+                # Removed dangerous latest('id') updates as values are already set on 'trip' and 'trip_files' objects
                 tripdetail_list = TripdetailInfo.objects.filter(
                     tr_enquirynumber=enquiry_num
                 ).values_list('tr_tripnumber', flat=True)
