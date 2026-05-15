@@ -11,6 +11,11 @@
     --glass-border: rgba(255, 255, 255, 0.3);
 }
 
+[data-theme="dark"] {
+    --pms-card: #1e40af;
+    --pms-gradient: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
+}
+
 .pms-progress-container {
     display: flex;
     justify-content: space-between;
@@ -23,6 +28,10 @@
     position: relative;
     overflow: hidden;
     box-shadow: 0 10px 25px rgba(20, 184, 166, 0.2);
+}
+
+[data-theme="dark"] .pms-progress-container {
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
 }
 
 .pms-progress-container::before {
@@ -194,6 +203,10 @@
     align-items: center;
     gap: 0.5rem;
     transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .pms-btn-convert {
+    background: linear-gradient(135deg, #6366f1 0%, #312e81 100%);
 }
 
 .pms-btn-convert:hover {

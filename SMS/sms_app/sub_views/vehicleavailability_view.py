@@ -22,7 +22,7 @@ def vehicle_availability_list(request):
         if latest_trip:
             status_id = latest_trip.tc_financestatus.id if latest_trip.tc_financestatus else None
 
-            # 🔥 Check availability by status list
+            #  Check availability by status list
             if status_id in AVAILABLE_STATUS_IDS:
                 availability = "Yes"
             else:

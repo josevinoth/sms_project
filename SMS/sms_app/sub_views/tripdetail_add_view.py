@@ -42,12 +42,7 @@ def tripdetail_enquiry(request, enquiry_id, trip_num):
         request.session['enquiry_num_id'] = enquiry_id
         return redirect('tripdetail_insert')  # Define this URL in urls.py
     else:
-        trip_obj = TripdetailInfo.objects.filter(tr_tripnumber=trip_num).order_by('-id').first()
-        if not trip_obj:
-            messages.error(request, f"Trip {trip_num} not found.")
-            return redirect('tripdetail_list')
-        
-        trip_id = trip_obj.id
+        trip_id = TripdetailInfo.objects.get(tr_tripnumber=trip_num).id
         print('trip_id:', trip_id)
         # If trip_id is provided, redirect to update
         return redirect('tripdetail_update', tripdetail_id=trip_id)  # tripdetail_id is a keyword argument in the URL
@@ -157,7 +152,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 last_trip_loc = TripdetailInfo.objects.filter(
                     tr_vehiclenumber=search_vehicle_num
                 ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
-                
+
                 if last_trip_loc:
                     trip_det_form.fields['tr_departedlocation'].initial = last_trip_loc.tr_reportedlocation
                     trip_det_form.fields['tr_departedlocation'].widget.attrs.update({
@@ -214,6 +209,45 @@ def tripdetail_add(request, tripdetail_id=0):
             enquiry_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_enquirynumber
             enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
             tripdetail = TripdetailInfo.objects.get(pk=tripdetail_id)
+            
+            # ✅ Sync Driver/Vehicle info with LATEST Allotment if trip is not closed
+            # (Statuses: 1: Open/Started, 8: Awaiting Approval)
+            if tripdetail.tc_financestatus_id in [1, 8] and tripdetail.tr_consignmentnumber:
+                truck_number = tripdetail.tr_consignmentnumber.co_vehicelnumber
+                if truck_number:
+                    latest_allotment = Vehicle_allotmentInfo.objects.filter(
+                        va_enquirynumber=enquiry_num_id
+                    ).filter(
+                        Q(va_vehiclenumber__vm_registrationnumber=truck_number.strip()) | Q(va_vehiclenumber_mkt=truck_number.strip())
+                    ).last()
+                    
+                    if latest_allotment:
+                        needs_save = False
+                        if tripdetail.tr_drivername != latest_allotment.va_drivername:
+                            tripdetail.tr_drivername = latest_allotment.va_drivername
+                            needs_save = True
+                        if tripdetail.tr_drivernumber != latest_allotment.va_drivernumber:
+                            tripdetail.tr_drivernumber = latest_allotment.va_drivernumber
+                            needs_save = True
+                        if tripdetail.tr_driver_lic != latest_allotment.va_driver_lic:
+                            tripdetail.tr_driver_lic = latest_allotment.va_driver_lic
+                            needs_save = True
+                        if tripdetail.tr_vehiclenumber != truck_number:
+                            tripdetail.tr_vehiclenumber = truck_number
+                            needs_save = True
+                        if tripdetail.tr_vehiclesource != latest_allotment.va_vehiclesource:
+                            tripdetail.tr_vehiclesource = latest_allotment.va_vehiclesource
+                            needs_save = True
+                        if tripdetail.tr_vehicletype != latest_allotment.va_vehicletype:
+                            tripdetail.tr_vehicletype = latest_allotment.va_vehicletype
+                            needs_save = True
+                        if tripdetail.tr_vehicletype_placed != latest_allotment.va_vehicletype_placed:
+                            tripdetail.tr_vehicletype_placed = latest_allotment.va_vehicletype_placed
+                            needs_save = True
+                            
+                        if needs_save:
+                            tripdetail.save()
+            
             request.session['ses_tripdetail_id'] = tripdetail_id
 
             trip_det_form = TripdetailaddForm(instance=tripdetail)
@@ -320,7 +354,9 @@ def tripdetail_add(request, tripdetail_id=0):
                     if last_trip_for_loc:
                         departed_loc_id = request.POST.get('tr_departedlocation')
                         if departed_loc_id and str(departed_loc_id) != str(last_trip_for_loc.tr_reportedlocation.id):
-                            last_loc_name = last_trip_for_loc.tr_reportedlocation.place_name if hasattr(last_trip_for_loc.tr_reportedlocation, 'place_name') else str(last_trip_for_loc.tr_reportedlocation)
+                            last_loc_name = last_trip_for_loc.tr_reportedlocation.place_name if hasattr(
+                                last_trip_for_loc.tr_reportedlocation, 'place_name') else str(
+                                last_trip_for_loc.tr_reportedlocation)
                             messages.error(
                                 request,
                                 f"Warning: Vehicle's last destination was '{last_loc_name}'. Please create an 'Empty Trip' or 'Business Empty Trip' from '{last_loc_name}' first."
@@ -383,9 +419,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip.td_pod = data
 
                 trip.save()
-                trip_files = tripclosurefiles_form.save(commit=False)
-                trip_files.tcf_tripnumber = trip_num_next
-                trip_files.save()
+                tripclosurefiles_form.save()
 
                 # ✅ AUTOMATED EMAIL TRIGGERS
                 def trigger_alert(alert_func, label):
@@ -438,7 +472,11 @@ def tripdetail_add(request, tripdetail_id=0):
                         trigger_alert(trip_send_trip_closed_mail, "Trip Closed")
 
                 print("Main Form is Valid")
-                # Removed dangerous latest('id') updates as values are already set on 'trip' and 'trip_files' objects
+                last_id = TripdetailInfo.objects.latest('id').id
+                last_id_files = Trip_closure_files_Info.objects.latest('id').id
+                TripdetailInfo.objects.filter(id=last_id).update(tr_tripnumber=trip_num_next)
+                Trip_closure_files_Info.objects.filter(id=last_id_files).update(tcf_tripnumber=trip_num_next)
+
                 tripdetail_list = TripdetailInfo.objects.filter(
                     tr_enquirynumber=enquiry_num
                 ).values_list('tr_tripnumber', flat=True)
@@ -535,9 +573,9 @@ def tripdetail_add(request, tripdetail_id=0):
                 # Boolean checks for status
                 # Fallback to IDs 1/2 if name lookup fails, but prioritize names
                 is_open = (status_open and trip.tc_financestatus_id == status_open.id) or (
-                            not status_open and trip.tc_financestatus_id == 1)
+                        not status_open and trip.tc_financestatus_id == 1)
                 is_closed = (status_closed and trip.tc_financestatus_id == status_closed.id) or (
-                            not status_closed and trip.tc_financestatus_id == 2)
+                        not status_closed and trip.tc_financestatus_id == 2)
 
                 # ✅ Only send email alerts for trip category 1
                 if trip.tr_category_id == 1:
@@ -1011,14 +1049,14 @@ def load_truck_details(request):
 
     try:
         # Fetch truck number from ConsignmentdetailInfo
-
-        truck_number = ConsignmentdetailInfo.objects.get(pk=consignment_number).co_vehicelnumber
+        consignment_obj = ConsignmentdetailInfo.objects.get(pk=consignment_number)
+        truck_number = consignment_obj.co_vehicelnumber.strip() if consignment_obj.co_vehicelnumber else ""
 
         # Fetch vehicle details from Vehicle_allotmentInfo (search in both fields)
         vehicle_info = filtered_records.filter(
             Q(va_vehiclenumber__vm_registrationnumber=truck_number) | Q(va_vehiclenumber_mkt=truck_number)
-        ).first()  # Get first matching record
-        print(vehicle_info.va_sale)
+        ).last()  #  Fix: Get LATEST matching record (for replacements)
+
         if vehicle_info:
             data = {
                 "truck_number": truck_number,
@@ -1031,7 +1069,7 @@ def load_truck_details(request):
                 "va_sale": vehicle_info.va_sale,
             }
         else:
-            data = {"error": "No vehicle allotment details found for this Consignment number"}
+            data = {"error": "No vehicle allotment details found for vehicle: " + truck_number}
 
     except ObjectDoesNotExist:
         data = {"error": "Consignment number not found"}

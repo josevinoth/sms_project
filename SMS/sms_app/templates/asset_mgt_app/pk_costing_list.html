@@ -33,7 +33,8 @@
                         <th>CFT</th>
                         <th>Rate</th>
                         <th>Total Cost</th>
-                        <th class="text-center">Actions</th>
+                        <th class="text-center">Edit</th>
+                        <th class="text-center">Delete</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -49,22 +50,22 @@
                         <td>₹{{ costinginfo.ct_rate }}</td>
                         <td class="font-weight-bold text-success">₹{{ costinginfo.ct_total_cost }}</td>
                         <td class="text-center">
-                            <div class="d-flex justify-content-center gap-2">
-                                <a href="{% url 'costing_update' costinginfo.id %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; text-decoration: none;" title="Edit">
-                                    <i class="far fa-edit"></i>
-                                </a>
-                                <form action="{% url 'costing_delete' costinginfo.id %}" method="post" onsubmit="return confirm('Are you sure?');" class="m-0">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px; height: 32px; width: 32px; padding: 0;">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
-                            </div>
+                            <a href="{% url 'costing_update' costinginfo.id %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; text-decoration: none;" title="Edit">
+                                <i class="far fa-edit"></i>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <form action="{% url 'costing_delete' costinginfo.id %}" method="post" onsubmit="return confirm('Are you sure?');" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px; height: 32px; width: 32px; padding: 0;">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="10" class="text-center py-5 text-muted italic">No costing records found.</td>
+                        <td colspan="11" class="text-center py-5 text-muted italic">No costing records found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

@@ -301,7 +301,7 @@
             const sid = "{{ settlement.id }}";
             if (!sid) return;
             
-            // 🔥 Dynamically pass filters to server
+            //  Dynamically pass filters to server
             const dVal = filterDateInput ? filterDateInput.value : "";
             const vVal = filterVehicleNumSelect ? filterVehicleNumSelect.value : "";
             const tVal = filterTripNumSelect ? filterTripNumSelect.value : "";
@@ -420,7 +420,7 @@
         
         if (filterTripNumSelect) filterTripNumSelect.addEventListener("input", executeTableFilter);
         if (filterVehicleNumSelect) filterVehicleNumSelect.addEventListener("input", executeTableFilter);
-        if (filterDateInput) filterDateInput.addEventListener("input", loadTrips); // 🔥 Refresh from server on date change
+        if (filterDateInput) filterDateInput.addEventListener("input", loadTrips); //  Refresh from server on date change
 
         // Select2 for main dropdown
         if (window.jQuery?.fn?.select2) {

@@ -6,6 +6,7 @@ from django.http import HttpResponse
 import json
 from django.contrib import messages
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 
 from ..forms import InvoiceaddForm
 from ..models import VehicletypeInfo, Loadingbay_Info, TrbusinesstypeInfo, CustomerInfo, Warehouse_goods_info, \
@@ -670,17 +671,19 @@ def shipper_invoice_list(request, voucher_id):
     return render(request, "asset_mgt_app/shipper_invoice_list.html", context)
 
 
+@csrf_exempt
 @login_required(login_url='login_page')
 def shipper_invoice_goods_add(request):
     voucher_num_val = request.session.get('ses_voucher_num_val')
     voucher_id_val = request.session.get('ses_voucher_id')
     print(voucher_num_val)
-    selected_stocks = request.GET.getlist('myList[]')
+    selected_stocks = request.POST.getlist('myList[]') or request.GET.getlist('myList[]')
     first_name = request.session.get('first_name')
-    for i in selected_stocks:
-        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_voucher_num=voucher_num_val)
-        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_voucher_id=voucher_id_val)
-        print("Inside dispatch_add_goods end")
+    if selected_stocks:
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num__in=selected_stocks).update(
+            wh_voucher_num=voucher_num_val,
+            wh_voucher_id=voucher_id_val
+        )
     invoice_list_1 = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
 
     context = {
@@ -689,19 +692,21 @@ def shipper_invoice_goods_add(request):
     }
     # return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_goods_list')
-    return redirect('/SMS/shipper_invoice_list/' + str(voucher_id_val))
+    return redirect('shipperinvoice_list', voucher_id=voucher_id_val)
 
 
+@csrf_exempt
 @login_required(login_url='login_page')
 def shipper_invoice_goods_remove(request):
     voucher_num_val = request.session.get('ses_voucher_num_val')
     voucher_id_val = request.session.get('ses_voucher_id')
-    selected_stocks = request.GET.getlist('myList[]')
+    selected_stocks = request.POST.getlist('myList[]') or request.GET.getlist('myList[]')
     first_name = request.session.get('first_name')
-    for i in selected_stocks:
-        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_voucher_num=None)
-        Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_voucher_id=None)
-        print("Inside dispatch_add_goods end")
+    if selected_stocks:
+        Warehouse_goods_info.objects.filter(wh_qr_rand_num__in=selected_stocks).update(
+            wh_voucher_num=None,
+            wh_voucher_id=None
+        )
     invoice_list_1 = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
 
     context = {
@@ -710,7 +715,7 @@ def shipper_invoice_goods_remove(request):
     }
     # return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_goods_list')
-    return redirect('/SMS/shipper_invoice_list/' + str(voucher_id_val))
+    return redirect('shipperinvoice_list', voucher_id=voucher_id_val)
 
 
 # Custom serialization function for date objects

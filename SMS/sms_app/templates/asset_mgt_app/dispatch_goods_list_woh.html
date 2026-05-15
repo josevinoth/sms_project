@@ -132,7 +132,7 @@
             let selectedIndexes = table.rows({ selected: true }).indexes();
             $.ajax({
                 url: '{% url "dispatch_remove_goods" %}',
-                type: 'GET',
+                type: 'POST',
                 data: {
                     'myList[]': selectedIds
                 },

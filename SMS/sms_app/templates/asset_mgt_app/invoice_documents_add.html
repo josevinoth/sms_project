@@ -165,8 +165,17 @@
 								<div class="row mb-2 align-items-center">
 									<div class="col-9">
 										<div class="input-group input-group-sm">
+											<div class="input-group-prepend"><span class="input-group-text">Supervisor Charges</span></div>
+											{% render_field tripclosure_form.tc_supervisorcost id="tc_supervisorcost" class="form-control disable_a_href" %}
+										</div>
+									</div>
+									<div class="col-3 text-center">{% render_field tripclosure_form.tc_supervisorcost_check id="tc_supervisorcost_check" %}</div>
+								</div>
+								<div class="row mb-2 align-items-center">
+									<div class="col-9">
+										<div class="input-group input-group-sm">
 											<div class="input-group-prepend"><span class="input-group-text">Handling Charges</span></div>
-											{% render_field tripclosure_form.tc_handlingcost class="form-control disable_a_href" %}
+											{% render_field tripclosure_form.tc_handlingcost id="tc_handlingcost" class="form-control disable_a_href" %}
 										</div>
 									</div>
 									<div class="col-3 text-center">{% render_field tripclosure_form.tc_handlingcost_check id="tc_handlingcost_check" %}</div>

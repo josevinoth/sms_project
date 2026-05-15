@@ -422,7 +422,29 @@
         if (tc_tripcost_val == "0" || tc_tripcost_val == "0.0" || tc_tripcost_val == "") {
             $("#tc_tripcost").val("{{ va_sale }}");
         }
+        
+        // Auto-tick logic for initial values
+        autoTickCheckboxes();
      });
+
+    // Helper function to auto-tick checkboxes based on values
+    function autoTickCheckboxes() {
+        const mappings = [
+            { cost: 'tc_tripcost', check: 'tc_tripcost_check' }
+        ];
+
+        mappings.forEach(m => {
+            const val = parseFloat($(`#${m.cost}`).val()) || 0;
+            if (val > 0) {
+                $(`#${m.check}`).prop('checked', true);
+            }
+        });
+    }
+
+    // Attach listeners for manual input
+    $(document).on('input change', 'input[type="number"], input[type="text"]', function() {
+        autoTickCheckboxes();
+    });
 </script>
 <script>
 function getRoRate(force=false) {
@@ -458,6 +480,7 @@ function getRoRate(force=false) {
             } else {
                 $("#tc_tripcost").val(data.ro_rate);
             }
+            autoTickCheckboxes(); // Trigger tick
         }
     });
 }
@@ -512,6 +535,7 @@ $(document).ready(function () {
 
                 const tollField = $("#tc_tollcost");
                 tollField.val(data.total_amount.toFixed(2));
+                autoTickCheckboxes(); // Trigger tick
             }
         }
     });
