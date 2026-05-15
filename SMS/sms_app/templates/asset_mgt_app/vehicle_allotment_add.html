@@ -267,22 +267,10 @@
 			document.getElementById("va_vehicletype").value = '{{vehicle_type_requested}}';
 		}
 
-		// Auto-populate Placed if empty
-		if ($("#va_vehicletype_placed").val() == "" && $("#va_vehicletype").val() != "") {
-			$("#va_vehicletype_placed").val($("#va_vehicletype").val());
-		}
-
 		market_vehicle_enable_disable();
-		loadAvailableVehicleNumbers(); // Ensure list is loaded on start
+		loadAvailableVehicleNumbers(); // Ensure list is loaded on start if values exist
 	});
 
-	// Auto-copy Requested to Placed
-	$("#va_vehicletype").on("change", function() {
-		if ($("#va_vehicletype_placed").val() == "") {
-			$("#va_vehicletype_placed").val($(this).val());
-			loadAvailableVehicleNumbers();
-		}
-	});
 </script>
 <script>
 	$(document).ready(function () {
