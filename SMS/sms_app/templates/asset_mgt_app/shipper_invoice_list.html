@@ -110,7 +110,8 @@ $(document).ready(function (){
 });
 
    // Handle form submission event
-   $('#remove_btn').on('click', function(){
+   $('#remove_btn').on('click', function(e){
+        e.preventDefault();
       	var rows_selected = table.column(0).selected();
       	let selectedValues = table.rows( { selected: true } ).data();
       	var len1=( selectedValues ).length;
@@ -126,14 +127,17 @@ $(document).ready(function (){
 			}
 		var elements_list=elements;
    $.ajax({
-        url: '{% url 'shipper_invoice_goods_remove' %}',
-        type: 'GET',
+        url: '{% url "shipper_invoice_goods_remove" %}',
+        type: 'POST',
         data: {
-            'myList[]': elements_list,  // This will encode the list as URL parameters
+            'myList[]': elements_list,
         },
         success: function(response) {
-            // Handle the response from the Django view
+            location.reload();
         },
+        error: function() {
+            location.reload();
+        }
    });
 
    });

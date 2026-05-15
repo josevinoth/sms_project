@@ -233,34 +233,40 @@ def dispatch_goods_list(request):
 
     return render(request, "asset_mgt_app/dispatch_goods_list_woh.html", context)
 
+@csrf_exempt
 @login_required(login_url='login_page')
 def dispatch_remove_goods(request):
-    selected_stocks = request.GET.getlist('myList[]')
+    selected_stocks = request.POST.getlist('myList[]') or request.GET.getlist('myList[]')
     print('selected_stocks',selected_stocks)
     dispatch_id_val = request.session.get('ses_dispatch_id_val')
     current_dispatch = Dispatch_info.objects.get(pk=dispatch_id_val)
 
-    for qr_num in selected_stocks:
-        try:
-            goods = Warehouse_goods_info.objects.get(wh_qr_rand_num=qr_num)
-
-            GoodsPartialDispatchInfo.objects.filter(
-                pd_goods=goods,
-                pd_dispatch_info=current_dispatch
-            ).delete()
-
+    if selected_stocks:
+        check_in_out_1 = Check_in_out.objects.get(pk=1)
+        
+        GoodsPartialDispatchInfo.objects.filter(
+            pd_goods__wh_qr_rand_num__in=selected_stocks,
+            pd_dispatch_info=current_dispatch
+        ).delete()
+        
+        goods_to_update = []
+        goods_queryset = Warehouse_goods_info.objects.filter(wh_qr_rand_num__in=selected_stocks)
+        for goods in goods_queryset:
             if goods.wh_dispatch_id == current_dispatch:
                 goods.wh_dispatch_num = None
                 goods.wh_dispatch_id = None
                 goods.wh_dispatch_qty = 0
-                goods.wh_check_in_out = Check_in_out.objects.get(pk=1)
+                goods.wh_check_in_out = check_in_out_1
                 goods.wh_storage_time = 0
                 goods.wh_checkout_time = None
                 goods.wh_truck_type = None
-                goods.save()
-
-        except Warehouse_goods_info.DoesNotExist:
-            continue
+                goods_to_update.append(goods)
+                
+        if goods_to_update:
+            Warehouse_goods_info.objects.bulk_update(
+                goods_to_update,
+                ['wh_dispatch_num', 'wh_dispatch_id', 'wh_dispatch_qty', 'wh_check_in_out', 'wh_storage_time', 'wh_checkout_time', 'wh_truck_type']
+            )
 
     dispatch_num_val=request.session.get('ses_dispatch_num_val')
     first_name = request.session.get('first_name')
@@ -274,8 +280,9 @@ def dispatch_remove_goods(request):
     # return redirect('/SMS/dispatch_goods_list')
     return redirect('/SMS/dispatch_goods_list/' + str(dispatch_id_val))
 
+@csrf_exempt
 def dispatch_stock_list(request):
-    myList = request.GET.getlist('myList[]')
+    myList = request.POST.getlist('myList[]') or request.GET.getlist('myList[]')
     # Return a response, for example, a JSON response
     response_data = {
         'result': 'success',
@@ -283,11 +290,12 @@ def dispatch_stock_list(request):
     }
     return JsonResponse(response_data)
 
+@csrf_exempt
 @login_required(login_url='login_page')
 def dispatch_add_goods(request):
     dispatch_num_val = request.session.get('ses_dispatch_num_val')
     dispatch_id_val = request.session.get('ses_dispatch_id_val')
-    selected_stocks = request.GET.getlist('myList[]')
+    selected_stocks = request.POST.getlist('myList[]') or request.GET.getlist('myList[]')
     current_date = now()
     print('selected',selected_stocks)
     try:

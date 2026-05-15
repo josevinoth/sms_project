@@ -5,7 +5,7 @@ from ..sub_models.driver_master_mod import DrivermasterInfo
 
 class DriverSettlementForm(forms.ModelForm):
 
-    # 🔥 Override driver field
+    #  Override driver field
     driver = forms.ModelChoiceField(
         queryset=DrivermasterInfo.objects.all(),
         required=True
@@ -21,7 +21,7 @@ class DriverSettlementForm(forms.ModelForm):
         # Empty label
         self.fields['driver'].empty_label = "--Select Driver--"
 
-        # 🔥 THIS FIXES DISPLAY
+        #  THIS FIXES DISPLAY
         self.fields['driver'].label_from_instance = self.driver_label
 
     # ==================================================

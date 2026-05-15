@@ -427,7 +427,7 @@ def consignment_note_pdf(request, consignment_note_id=0):
         vehicle_detail = Vehicle_allotmentInfo.objects.filter(
             va_enquirynumber=enquiry_id,
             va_vehiclenumber_mkt=vehicle_reg_num
-        ).first()
+        ).last()
 
         # ----------------------------------------------------
         # 2️⃣ IF NOT MARKET → TRY OWN VEHICLE MATCH (FK)
@@ -438,7 +438,7 @@ def consignment_note_pdf(request, consignment_note_id=0):
                 vehicle_detail = Vehicle_allotmentInfo.objects.filter(
                     va_enquirynumber=enquiry_id,
                     va_vehiclenumber=vehicle_master.id
-                ).first()
+                ).last()
             except VehiclemasterInfo.DoesNotExist:
                 vehicle_detail = None
 
@@ -459,7 +459,10 @@ def consignment_note_pdf(request, consignment_note_id=0):
             if vehicle_detail.va_vehiclenumber_mkt:
                 vehicle_number_val.append(vehicle_detail.va_vehiclenumber_mkt)
 
-            driver_name.append(vehicle_detail.va_drivername)
+            # ✅ Only use Driver Name, remove ID in brackets
+            raw_name = vehicle_detail.va_drivername or ""
+            clean_name = raw_name.split('(')[0].strip()
+            driver_name.append(clean_name)
             driver_lic.append(vehicle_detail.va_driver_lic)
             driver_number.append(vehicle_detail.va_drivernumber)
 
@@ -502,12 +505,12 @@ def vehicle_allotted(request):
 
     print(consignmentdetail_id_val)
     requested_vehicles = list(
-        Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number)
+        Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number, va_status_id__in=[1, 2, 3])
         .select_related('va_vehiclenumber')
         .values_list('va_vehiclenumber__vm_registrationnumber', flat=True)
     )
     requested_vehicles_market = list(
-        Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number)
+        Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_number, va_status_id__in=[1, 2, 3])
         .values_list('va_vehiclenumber_mkt', flat=True)
     )
 
@@ -539,10 +542,10 @@ def consignmentdetail_cancel(request):
 def get_vehicle_type(request, vehicle_id):
     try:
         vehicle_master = VehiclemasterInfo.objects.get(vm_registrationnumber=vehicle_id)
-        allotment = Vehicle_allotmentInfo.objects.filter(va_vehiclenumber=vehicle_master).first()
+        allotment = Vehicle_allotmentInfo.objects.filter(va_vehiclenumber=vehicle_master).last()
     except VehiclemasterInfo.DoesNotExist:
 
-        allotment = Vehicle_allotmentInfo.objects.filter(va_vehiclenumber_mkt=vehicle_id).first()
+        allotment = Vehicle_allotmentInfo.objects.filter(va_vehiclenumber_mkt=vehicle_id).last()
 
     if allotment and allotment.va_vehicletype_placed:
         vehicle_type = allotment.va_vehicletype_placed.vt_vehicletype

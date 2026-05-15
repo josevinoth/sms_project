@@ -287,7 +287,7 @@
         if (elements.length > 0) {
             $.ajax({
                 url: '{% url "dispatch_add_goods" %}',
-                type: 'GET',
+                type: 'POST',
                 data: { 'myList[]': elements },
                 success: function () {
                     location.reload();

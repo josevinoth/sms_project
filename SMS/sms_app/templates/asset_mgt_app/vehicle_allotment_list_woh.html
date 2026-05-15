@@ -13,17 +13,23 @@
             <th>ID</th>
             <th>Created On</th>
             <th>Enquiry Number</th>
-            <th>Vehicle Type Requeted</th>
-            <th>Vehicle Type Alloted</th>
+            <th>Vehicle Type Requested</th>
+            <th>Vehicle Type Allotted</th>
             <th>Vehicle Source</th>
             <th>Vehicle Number</th>
-            <th>Vehicle Number Market</th>
+            <th>Vendor Name</th>
             <th>Driver Name</th>
             <th>Driver Number</th>
+            <th>Sell Rate</th>
+            <th>Standard Buy</th>
+            <th>Special Buy</th>
+            <th>Profit %</th>
             <th>Updated By</th>
             <th>Updated On</th>
+            <th>Status</th>
             <th>Edit</th>
             <th>Delete</th>
+        </tr>
         </thead>
         <tbody>
         {% for vehicle_allot_info in vehicle_allotment_list %}
@@ -34,12 +40,30 @@
             <td> {{vehicle_allot_info.va_vehicletype}}</td>
             <td> {{vehicle_allot_info.va_vehicletype_placed}}</td>
             <td> {{vehicle_allot_info.va_vehiclesource}}</td>
-            <td> {{vehicle_allot_info.va_vehiclenumber}}</td>
-            <td> {{vehicle_allot_info.va_vehiclenumber_mkt}}</td>
+            <td> 
+                {% if vehicle_allot_info.va_vehiclenumber %}
+                    {{ vehicle_allot_info.va_vehiclenumber }}
+                {% else %}
+                    {{ vehicle_allot_info.va_vehiclenumber_mkt }}
+                {% endif %}
+            </td>
+            <td> {{vehicle_allot_info.va_vendor|default:"N/A"}}</td>
             <td> {{vehicle_allot_info.va_drivername}}</td>
             <td> {{vehicle_allot_info.va_drivernumber}}</td>
+            <td> {{vehicle_allot_info.va_sale|default:"0"}}</td>
+            <td> {{vehicle_allot_info.va_standardbuy|default:"0"}}</td>
+            <td> {{vehicle_allot_info.va_specialbuy|default:"0"}}</td>
+            <td> {{vehicle_allot_info.va_profit_percentage|floatformat:2}}%</td>
             <td> {{vehicle_allot_info.va_updated_by}}</td>
             <td> {{vehicle_allot_info.va_updated_at}}</td>
+            <td> 
+                <span class="badge 
+                    {% if vehicle_allot_info.va_status_id == 1 %}badge-success
+                    {% elif vehicle_allot_info.va_status_id == 2 %}badge-danger
+                    {% else %}badge-info{% endif %}">
+                    {{vehicle_allot_info.va_status}}
+                </span>
+            </td>
             <td>
                 <a class="btn btn-primary" href="{% url 'vehicle_allotment_update' vehicle_allot_info.id %}" >
                     <i class="far fa-edit"></i>

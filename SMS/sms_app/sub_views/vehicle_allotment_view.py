@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from django.utils import timezone
 
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -7,7 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db.models import Sum, Q, Count
 from ..forms import VehicleallotmentForm
-from ..models import Enquirynotevehicle,TripdetailInfo,OwnershipInfo,User_extInfo,ConsignmentdetailInfo,VehiclemasterInfo,EnquirynoteInfo,Vehicle_allotmentInfo,VendorratemasterInfo1, RtratemasterInfo
+from ..models import Enquirynotevehicle,TripdetailInfo,OwnershipInfo,User_extInfo,ConsignmentdetailInfo,VehiclemasterInfo,EnquirynoteInfo,Vehicle_allotmentInfo,VendorratemasterInfo1, RtratemasterInfo, VehicletypeInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from .send_department_email import send_department_email
@@ -135,7 +136,7 @@ def va_send_allotment_email(va, enquiry, recipients):
 
 @login_required(login_url='login_page')
 def vehicle_allotment_enquiry(request, enquiry_id, vehicle_number):
-    request.session['ses_enquiry_id'] = enquiry_id  # 🔥 ADD THIS
+    request.session['ses_enquiry_id'] = enquiry_id  #  ADD THIS
 
     if vehicle_number == "0" or vehicle_number == 0:
         return redirect('vehicle_allotment_insert', enquiry_id=enquiry_id)
@@ -156,7 +157,7 @@ def vehicle_allotment_enquiry(request, enquiry_id, vehicle_number):
     ).filter(
         Q(va_vehiclenumber_mkt=vehicle_number) |
         Q(va_vehiclenumber=vehicle_number_id)
-    ).first()
+    ).last()  #  Pick the LATEST one (for replacements)
 
     if vehicle_allotment:
         return redirect('vehicle_allotment_update',
@@ -208,7 +209,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             'customer_name': enquiry.en_customername.cu_name,
             'from_location': enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "",
             'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
-
+            'all_vehicletypes': VehicletypeInfo.objects.all(),
+            'all_vendors': Vendor_info.objects.all(),
         })
 
     # ---------- UPDATE MODE (GET) ----------
@@ -236,6 +238,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             'customer_name': enquiry.en_customername.cu_name,
             'from_location': enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "",
             'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
+            'all_vehicletypes': VehicletypeInfo.objects.all(),
+            'all_vendors': Vendor_info.objects.all(),
         })
 
     # ---------- POST SAVE (ADD + UPDATE) ----------
@@ -260,6 +264,11 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
 
             obj = form.save(commit=False)
             obj.va_enquirynumber_id = enquiry_id
+
+            # Explicitly ensure status is updated from POST if provided
+            status_id = request.POST.get('va_status')
+            if status_id:
+                obj.va_status_id = status_id
 
             # 🚫 DUPLICATE VEHICLE CHECK (✅ CORRECT PLACE)
             vehicle_source = obj.va_vehiclesource_id
@@ -334,6 +343,12 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 return redirect(request.META.get('HTTP_REFERER'))
 
             obj = form.save(commit=False)
+            
+            # Explicitly ensure status is updated from POST if provided
+            status_id = request.POST.get('va_status')
+            if status_id:
+                obj.va_status_id = status_id
+
             obj.va_enquirynumber = va.va_enquirynumber
             obj.save()
 
@@ -457,7 +472,8 @@ def vehicle_allotment_list(request):
     ).values_list(
         'va_enquirynumber',
         'va_vehiclenumber__vm_registrationnumber',
-        'va_vehiclenumber_mkt'
+        'va_vehiclenumber_mkt',
+        'id'
     )
 
     trip_data = TripdetailInfo.objects.filter(
@@ -474,9 +490,12 @@ def vehicle_allotment_list(request):
     # BUILD VEHICLE DICT
     # -----------------------------
     vehicle_dict = {}
-    for enq_id, reg_num, mkt_num in vehicle_data:
-        nums = [x for x in (reg_num, mkt_num) if x]
-        vehicle_dict.setdefault(enq_id, []).extend(nums or ["No Vehicle"])
+    for enq_id, reg_num, mkt_num, va_id in vehicle_data:
+        display_num = reg_num or mkt_num or "None"
+        vehicle_dict.setdefault(enq_id, []).append({
+            'id': va_id,
+            'number': display_num
+        })
 
     # -----------------------------
     # BUILD TRIP DICT
@@ -621,6 +640,7 @@ def load_vehicle_source(request):
 def load_vehicle_number(request):
     vehicletype_placed = request.GET.get('vehicletype_placed')
     vehicletype_source = request.GET.get('vehicletype_source')
+    enquiry_id = request.GET.get('enquiry_id')
 
     # basic validation
     if not vehicletype_placed or not vehicletype_source:
@@ -633,14 +653,17 @@ def load_vehicle_number(request):
         tr_vehiclesource=vehicletype_source,
         tr_vehiclenumber__isnull=False
     ).values_list('tr_vehiclenumber', flat=True).distinct()
-    inactive_regs = list(inactive_regs)  # make membership checks reliable
+    inactive_regs = list(inactive_regs)
 
-    # 2) registration numbers that are currently active (exclude these)
-    active_regs = TripdetailInfo.objects.filter(
+    # 2) registration numbers that are currently active (exclude these, EXCEPT for the current enquiry)
+    active_regs_qs = TripdetailInfo.objects.filter(
         tc_financestatus_id=1,
         tr_vehiclenumber__isnull=False
-    ).values_list('tr_vehiclenumber', flat=True)
-    active_regs = list(active_regs)
+    )
+    if enquiry_id:
+        active_regs_qs = active_regs_qs.exclude(tr_enquirynumber_id=enquiry_id)
+    
+    active_regs = list(active_regs_qs.values_list('tr_vehiclenumber', flat=True))
 
     # 3) Get vehicles matching type+ownership
     candidate_qs = VehiclemasterInfo.objects.filter(
@@ -681,6 +704,12 @@ def load_driver_details(request):
     driver_number=list(VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydrivermob',flat=True))
     driver_license=list(VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license',flat=True))
     driver_license_exp_date=list(VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license_exp_date',flat=True))
+    if active_trip:
+        active_trip.tr_drivername = new_driver_name
+        active_trip.tr_drivernumber = new_driver_number
+        active_trip.tr_driverlicence = new_driver_lic
+        active_trip.tr_driver_license_exp_date = new_driver_lic_exp_date
+        active_trip.save()
     data = {
         'driver_name': driver_name,
         'driver_number': driver_number,
@@ -1010,3 +1039,163 @@ def get_vendor_by_vehicle(request):
 
     except VehiclemasterInfo.DoesNotExist:
         return JsonResponse({'vendor_id': '', 'vendor_name': ''})
+def get_decimal(val, default=0):
+    try:
+        return float(val) if val else default
+    except (ValueError, TypeError):
+        return default
+
+@login_required(login_url='login_page')
+def vehicle_allotment_replace(request, allotment_id):
+    """
+    Handle full vehicle replacement.
+    Creates a new allotment record and marks old as 'Vehicle Replaced'.
+    """
+    if request.method == "POST":
+        try:
+            old_va = Vehicle_allotmentInfo.objects.get(id=allotment_id)
+            
+            # Get new details from POST
+            new_vehicle_source_id = request.POST.get('va_vehiclesource')
+            new_vehicle_id = request.POST.get('va_vehiclenumber')
+            new_vehicle_mkt = request.POST.get('va_vehiclenumber_mkt')
+            new_vehicletype_placed_id = request.POST.get('va_vehicletype_placed')
+            new_driver_name = request.POST.get('va_drivername')
+            new_driver_number = request.POST.get('va_drivernumber')
+            new_driver_lic = request.POST.get('va_driver_lic')
+            new_driver_lic_expiry = request.POST.get('va_driver_lic_expiry')
+            reason = request.POST.get('reason', '')
+            
+            if not reason:
+                return JsonResponse({'success': False, 'message': 'Reason for replacement is required.'})
+
+            # Step 1: Create New Allotment
+            new_va = Vehicle_allotmentInfo.objects.create(
+                va_enquirynumber=old_va.va_enquirynumber,
+                va_vehiclesource_id=new_vehicle_source_id,
+                va_vehicletype_id=request.POST.get('va_vehicletype') or old_va.va_vehicletype_id,
+                va_vehicletype_placed_id=new_vehicletype_placed_id if new_vehicletype_placed_id else old_va.va_vehicletype_placed_id,
+                va_vehicletype_selection_requested=True if request.POST.get('va_vehicletype_selection_requested') == 'on' else False,
+                va_vehicletype_selection_placed=True if request.POST.get('va_vehicletype_selection_placed') == 'on' else False,
+                va_vehiclenumber_id=new_vehicle_id if new_vehicle_id else None,
+                va_vehiclenumber_mkt=new_vehicle_mkt,
+                va_drivername=new_driver_name,
+                va_drivernumber=new_driver_number,
+                va_driver_lic=new_driver_lic,
+                va_driver_lic_expiry=new_driver_lic_expiry,
+                va_status_id=2,  # Vehicle Replaced
+                va_replaced_allotment=old_va,
+                va_replacement_reason=reason,
+                va_replacement_date=timezone.now(),
+                va_updated_by_id=request.session.get('ses_userID'),
+                va_vendor=old_va.va_vendor,
+                va_sale=get_decimal(request.POST.get('va_sale'), old_va.va_sale),
+                va_standardbuy=get_decimal(request.POST.get('va_standardbuy'), old_va.va_standardbuy),
+                va_specialbuy=get_decimal(request.POST.get('va_specialbuy'), old_va.va_specialbuy),
+                va_profit_percentage=get_decimal(request.POST.get('va_profit_percentage'), old_va.va_profit_percentage)
+            )
+
+            # Step 2: Mark Old Allotment as Replaced
+            old_va.va_status_id = 2  # Vehicle Replaced
+            old_va.save()
+
+            # Step 3: Update Active Trip if exists
+            old_vehicle_num = str(old_va.va_vehiclenumber) if old_va.va_vehiclenumber else old_va.va_vehiclenumber_mkt
+            new_vehicle_num = str(new_va.va_vehiclenumber) if new_va.va_vehiclenumber else new_va.va_vehiclenumber_mkt
+
+            active_trip = TripdetailInfo.objects.filter(
+                tr_enquirynumber=old_va.va_enquirynumber,
+                tr_vehiclenumber=old_vehicle_num,
+                tc_financestatus_id__in=[1, 8]  # Open or Awaiting Approval
+            ).first()
+
+            if active_trip:
+                active_trip.tr_vehiclenumber = new_vehicle_num
+                active_trip.tr_drivername = new_va.va_drivername
+                active_trip.tr_drivernumber = new_va.va_drivernumber
+                
+                # Update remarks to reflect replacement
+                current_remarks = active_trip.tr_remarks or ""
+                replacement_note = f"\n[AUTO-NOTE] Vehicle replaced from {old_vehicle_num} to {new_vehicle_num} on {timezone.now().strftime('%Y-%m-%d %H:%M')} due to: {reason}"
+                active_trip.tr_remarks = (current_remarks + replacement_note)[:250]
+                active_trip.save()
+
+            # Step 4: Update Consignment Details if exists
+            ConsignmentdetailInfo.objects.filter(
+                co_enquirynumber=old_va.va_enquirynumber,
+                co_vehicelnumber=old_vehicle_num
+            ).update(co_vehicelnumber=new_vehicle_num)
+
+            return JsonResponse({'success': True, 'new_id': new_va.id})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+@login_required(login_url='login_page')
+def vehicle_allotment_driver_replace(request, allotment_id):
+    """
+    Handle driver-only replacement.
+    """
+    if request.method == "POST":
+        try:
+            old_va = Vehicle_allotmentInfo.objects.get(id=allotment_id)
+            
+            # Get new details
+            new_driver_name = request.POST.get('va_drivername')
+            new_driver_number = request.POST.get('va_drivernumber')
+            new_driver_lic = request.POST.get('va_driver_lic')
+            new_driver_lic_expiry = request.POST.get('va_driver_lic_expiry')
+            reason = request.POST.get('reason', '')
+            
+            if not reason or not new_driver_name:
+                return JsonResponse({'success': False, 'message': 'Reason and New Driver Name are required.'})
+
+            # Step 1: Create New Allotment Record (cloning old details but with new driver)
+            new_va = Vehicle_allotmentInfo.objects.create(
+                va_enquirynumber=old_va.va_enquirynumber,
+                va_vehiclesource=old_va.va_vehiclesource,
+                va_vehicletype=old_va.va_vehicletype,
+                va_vehicletype_placed=old_va.va_vehicletype_placed,
+                va_vehicletype_selection_requested=old_va.va_vehicletype_selection_requested,
+                va_vehicletype_selection_placed=old_va.va_vehicletype_selection_placed,
+                va_vehiclenumber=old_va.va_vehiclenumber,
+                va_vehiclenumber_mkt=old_va.va_vehiclenumber_mkt,
+                va_drivername=new_driver_name,
+                va_drivernumber=new_driver_number,
+                va_driver_lic=new_driver_lic,
+                va_driver_lic_expiry=new_driver_lic_expiry,
+                va_status_id=3,  # Driver Replaced
+                va_replaced_allotment=old_va,
+                va_replacement_reason=reason,
+                va_replacement_date=timezone.now(),
+                va_updated_by_id=request.session.get('ses_userID'),
+                va_vendor=old_va.va_vendor,
+                va_sale=old_va.va_sale,
+                va_standardbuy=old_va.va_standardbuy,
+                va_specialbuy=old_va.va_specialbuy,
+                va_profit_percentage=old_va.va_profit_percentage
+            )
+
+            # Step 2: Mark Old Allotment as Driver Replaced (Status ID 3)
+            old_va.va_status_id = 3 
+            old_va.save()
+
+            # Step 3: Update Active Trip if exists
+            vehicle_num = str(old_va.va_vehiclenumber) if old_va.va_vehiclenumber else old_va.va_vehiclenumber_mkt
+            
+            active_trip = TripdetailInfo.objects.filter(
+                tr_enquirynumber=old_va.va_enquirynumber,
+                tr_vehiclenumber=vehicle_num,
+                tc_financestatus_id__in=[1, 8]  # Open or Awaiting Approval
+            ).first()
+
+            if active_trip:
+                active_trip.tr_drivername = new_driver_name
+                active_trip.tr_drivernumber = new_driver_number
+                active_trip.tr_driver_lic = new_driver_lic
+                active_trip.save()
+
+            return JsonResponse({'success': True, 'new_id': new_va.id})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})

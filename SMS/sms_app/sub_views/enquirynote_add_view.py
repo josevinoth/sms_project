@@ -201,7 +201,7 @@ def enquirynote_list(request):
     consignment_data = ConsignmentdetailInfo.objects.filter(co_enquirynumber_id__in=enquiry_ids)
     vehicle_data = Vehicle_allotmentInfo.objects.filter(
         va_enquirynumber__in=enquiry_ids
-    ).values_list('va_enquirynumber', 'va_vehiclenumber__vm_registrationnumber', 'va_vehiclenumber_mkt')
+    ).values_list('va_enquirynumber', 'va_vehiclenumber__vm_registrationnumber', 'va_vehiclenumber_mkt', 'va_status_id', 'id', 'va_replaced_allotment_id')
 
     trip_data = TripdetailInfo.objects.filter(
         tr_enquirynumber_id__in=enquiry_ids
@@ -222,11 +222,39 @@ def enquirynote_list(request):
     # Pre-build consignment count dict for limit checking
     consignment_count_dict = {enq_id: len(cons_list) for enq_id, cons_list in consignment_dict.items()}
 
+    # Identify which allotment IDs are "replaced" (i.e., someone else points to them)
+    replaced_ids = set()
+    for enq_id, reg_num, mkt_num, status_id, va_id, replaced_va_id in vehicle_data:
+        if replaced_va_id:
+            replaced_ids.add(replaced_va_id)
+
     # Vehicle dict
     vehicle_dict = {}
-    for enq_id, reg_num, mkt_num in vehicle_data:
-        valid_numbers = [num for num in (reg_num, mkt_num) if num]
-        vehicle_dict.setdefault(enq_id, []).extend(valid_numbers or ["No Vehicle"])
+    for enq_id, reg_num, mkt_num, status_id, va_id, replaced_va_id in vehicle_data:
+        v_num = reg_num if reg_num else mkt_num
+        if v_num:
+            # ONLY show (replaced) if this record's ID is in replaced_ids
+            if va_id in replaced_ids:
+                display_num = f"{v_num} (replaced)"
+            else:
+                display_num = v_num
+
+            if enq_id not in vehicle_dict:
+                vehicle_dict[enq_id] = []
+            
+            # Check if this raw_number already exists to avoid duplicates
+            if not any(v['number'] == v_num for v in vehicle_dict[enq_id]):
+                vehicle_dict[enq_id].append({
+                    'id': va_id,
+                    'number': display_num
+                })
+        else:
+            if enq_id not in vehicle_dict:
+                vehicle_dict[enq_id] = []
+            vehicle_dict[enq_id].append({
+                'id': va_id,
+                'number': "None"
+            })
 
     # Trip dict
     trip_dict = {}
