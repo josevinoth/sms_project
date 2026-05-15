@@ -242,13 +242,19 @@ def enquirynote_list(request):
             if enq_id not in vehicle_dict:
                 vehicle_dict[enq_id] = []
             
-            # Store tuple (display_name, raw_number)
             # Check if this raw_number already exists to avoid duplicates
-            if not any(v[1] == v_num for v in vehicle_dict[enq_id]):
-                vehicle_dict[enq_id].append((display_num, v_num))
+            if not any(v['number'] == v_num for v in vehicle_dict[enq_id]):
+                vehicle_dict[enq_id].append({
+                    'id': va_id,
+                    'number': display_num
+                })
         else:
             if enq_id not in vehicle_dict:
-                vehicle_dict[enq_id] = [("No Vehicle", "0")]
+                vehicle_dict[enq_id] = []
+            vehicle_dict[enq_id].append({
+                'id': va_id,
+                'number': "None"
+            })
 
     # Trip dict
     trip_dict = {}

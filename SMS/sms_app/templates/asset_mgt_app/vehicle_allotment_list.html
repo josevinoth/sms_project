@@ -128,8 +128,8 @@
 
                 {% if data.vehicles %}
                 {% for vehicle in data.vehicles %}
-                <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id vehicle %}">
-                    {{ vehicle }}
+                <a class="link" href="{% url 'vehicle_allotment_update' vehicle.id %}">
+                    {{ vehicle.number }}
                 </a><br>
                 {% endfor %}
                 {% endif %}

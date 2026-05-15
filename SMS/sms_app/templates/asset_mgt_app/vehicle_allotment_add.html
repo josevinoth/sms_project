@@ -95,7 +95,7 @@
 											<div class="input-group-prepend">
 												<span class="input-group-text">Vehicle Type Placed</span>
 											</div>
-											{% render_field vehicle_allotment_form.va_vehicletype_placed id="va_vehicletype_placed"  class="form-control" %}
+											{% render_field vehicle_allotment_form.va_vehicletype_placed id="va_vehicletype_placed"  class="form-control" onchange="loadAvailableVehicleNumbers()" %}
 										</div>
 									</div>
 									<div class="col-2"
@@ -261,14 +261,27 @@
 	$(document).ready(function () {
 		document.getElementById("va_updated_by").value = '{{user_id}}';
 		document.getElementById("va_enquirynumber").value = '{{enquiry_num_id}}';
+		
 		var vehicle_type = document.getElementById("va_vehicletype").value;
 		if (vehicle_type == "") {
 			document.getElementById("va_vehicletype").value = '{{vehicle_type_requested}}';
 		}
-		else {
-			document.getElementById("va_vehicletype").value = vehicle_type;
+
+		// Auto-populate Placed if empty
+		if ($("#va_vehicletype_placed").val() == "" && $("#va_vehicletype").val() != "") {
+			$("#va_vehicletype_placed").val($("#va_vehicletype").val());
 		}
+
 		market_vehicle_enable_disable();
+		loadAvailableVehicleNumbers(); // Ensure list is loaded on start
+	});
+
+	// Auto-copy Requested to Placed
+	$("#va_vehicletype").on("change", function() {
+		if ($("#va_vehicletype_placed").val() == "") {
+			$("#va_vehicletype_placed").val($(this).val());
+			loadAvailableVehicleNumbers();
+		}
 	});
 </script>
 <script>
@@ -307,36 +320,7 @@
 	});
 </script>
 <script>
-	$("#va_vehiclesource").change(function () {
-		<!--      var url = $("#vehicle_allotment").attr("data-load_vehicle_source-url");-->
-		var vehicletype_placed = document.getElementById("va_vehicletype_placed").value;
-		var vehicletype_source = $(this).val();
-		$.ajax({
-			url: '{% url 'load_vehicle_number' %}',
-			data: {
-				'vehicletype_placed': vehicletype_placed,
-				'vehicletype_source': vehicletype_source,
-			},
-			success: function (data) {
-				var vehicle_number = JSON.parse(data)["vehicle_number_list"]
-				var vehicle_number_id = JSON.parse(data)["vehicle_number_list_id"]
-				if (vehicle_number_id != "") {
-					$('#va_vehiclenumber').removeClass('disable_a_href');
-					$('#va_vendor').addClass('disable_a_href');
-				}
-				else {
-					$('#va_vehiclenumber').addClass('disable_a_href');
-					$('#va_vendor').removeClass('disable_a_href');
-				}
-				var len1 = (vehicle_number).length;
-				$("#va_vehiclenumber").empty();
-				$('#va_vehiclenumber').empty().append("<option value=''>--Select--</option>");
-				for (var k = 0; k < len1; k++) {
-					$("#va_vehiclenumber").append("<option value='" + vehicle_number_id[k] + "'>" + vehicle_number[k] + "</option>");
-				}
-			}
-		});
-	});
+	// Removed duplicate va_vehiclesource handler
 </script>
 <script>
 	$("#va_vehiclenumber").change(function () {
@@ -469,27 +453,34 @@
 	function loadAvailableVehicleNumbers() {
 		const placed = $("#va_vehicletype_placed").val();
 		const source = $("#va_vehiclesource").val();
+		const currentVehicleId = "{{ vehicle_allotment_form.instance.va_vehiclenumber_id|default:'' }}";
+
 		if (placed && source) {
 			$.ajax({
 				url: "{% url 'load_vehicle_number' %}",
 				data: {
 					vehicletype_placed: placed,
-					vehicletype_source: source
+					vehicletype_source: source,
+					enquiry_id: "{{ enquiry_num_id }}"
 				},
 				success: function(data) {
 					const dropdown = $("#va_vehiclenumber");
 					dropdown.empty();
+					dropdown.append(`<option value="">--Select--</option>`);
+					
 					const numbers = data.vehicle_number_list;
 					const ids = data.vehicle_number_list_id;
-					if (numbers.length === 0) {
-						dropdown.append(`<option value="">No available vehicles</option>`);
-						dropdown.prop("disabled", true);
+					
+					for (let i = 0; i < numbers.length; i++) {
+						const isSelected = (currentVehicleId && currentVehicleId == ids[i]) ? 'selected' : '';
+						dropdown.append(`<option value="${ids[i]}" ${isSelected}>${numbers[i]}</option>`);
+					}
+
+					// Update UI state
+					if (source == 3) {
+						$('#va_vehiclenumber').addClass('disable_a_href');
 					} else {
-						dropdown.append(`<option value="">Select vehicle</option>`);
-						for (let i = 0; i < numbers.length; i++) {
-							dropdown.append(`<option value="${ids[i]}">${numbers[i]}</option>`);
-						}
-						dropdown.prop("disabled", false);
+						$('#va_vehiclenumber').removeClass('disable_a_href');
 					}
 				}
 			});

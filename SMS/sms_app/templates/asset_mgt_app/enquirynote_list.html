@@ -357,7 +357,7 @@ Trip Settlement</th>
             <td>
                 {% if data.enquiry.id %}
                 {% if not data.limit_reached %}
-                <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id 0 %}" style="color: red;">
+                <a class="link" href="{% url 'vehicle_allotment_insert' data.enquiry.id %}" style="color: red;">
                     Add New
                 </a><br>
                 {% else %}
@@ -365,9 +365,9 @@ Trip Settlement</th>
                 {% endif %}
 
                 {% if data.vehicles %}
-                {% for vehicle_display, vehicle_raw in data.vehicles %}
-                <a class="link" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id vehicle_raw %}">
-                    {{ vehicle_display }}
+                {% for vehicle in data.vehicles %}
+                <a class="link" href="{% url 'vehicle_allotment_update' vehicle.id %}">
+                    {{ vehicle.number }}
                 </a><br>
                 {% endfor %}
                 {% endif %}

@@ -472,7 +472,8 @@ def vehicle_allotment_list(request):
     ).values_list(
         'va_enquirynumber',
         'va_vehiclenumber__vm_registrationnumber',
-        'va_vehiclenumber_mkt'
+        'va_vehiclenumber_mkt',
+        'id'
     )
 
     trip_data = TripdetailInfo.objects.filter(
@@ -489,9 +490,12 @@ def vehicle_allotment_list(request):
     # BUILD VEHICLE DICT
     # -----------------------------
     vehicle_dict = {}
-    for enq_id, reg_num, mkt_num in vehicle_data:
-        nums = [x for x in (reg_num, mkt_num) if x]
-        vehicle_dict.setdefault(enq_id, []).extend(nums or ["No Vehicle"])
+    for enq_id, reg_num, mkt_num, va_id in vehicle_data:
+        display_num = reg_num or mkt_num or "None"
+        vehicle_dict.setdefault(enq_id, []).append({
+            'id': va_id,
+            'number': display_num
+        })
 
     # -----------------------------
     # BUILD TRIP DICT
@@ -636,6 +640,7 @@ def load_vehicle_source(request):
 def load_vehicle_number(request):
     vehicletype_placed = request.GET.get('vehicletype_placed')
     vehicletype_source = request.GET.get('vehicletype_source')
+    enquiry_id = request.GET.get('enquiry_id')
 
     # basic validation
     if not vehicletype_placed or not vehicletype_source:
@@ -648,14 +653,17 @@ def load_vehicle_number(request):
         tr_vehiclesource=vehicletype_source,
         tr_vehiclenumber__isnull=False
     ).values_list('tr_vehiclenumber', flat=True).distinct()
-    inactive_regs = list(inactive_regs)  # make membership checks reliable
+    inactive_regs = list(inactive_regs)
 
-    # 2) registration numbers that are currently active (exclude these)
-    active_regs = TripdetailInfo.objects.filter(
+    # 2) registration numbers that are currently active (exclude these, EXCEPT for the current enquiry)
+    active_regs_qs = TripdetailInfo.objects.filter(
         tc_financestatus_id=1,
         tr_vehiclenumber__isnull=False
-    ).values_list('tr_vehiclenumber', flat=True)
-    active_regs = list(active_regs)
+    )
+    if enquiry_id:
+        active_regs_qs = active_regs_qs.exclude(tr_enquirynumber_id=enquiry_id)
+    
+    active_regs = list(active_regs_qs.values_list('tr_vehiclenumber', flat=True))
 
     # 3) Get vehicles matching type+ownership
     candidate_qs = VehiclemasterInfo.objects.filter(
