@@ -84,7 +84,8 @@
                             <th>Count</th>
                             <th>CFT</th>
                             <th>Cost</th>
-                            <th class="text-center">Actions</th>
+                            <th class="text-center">Edit</th>
+                            <th class="text-center">Delete</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -105,18 +106,18 @@
                             <td class="text-primary font-weight-bold">{{ item.sm_count }}</td>
                             <td>{{ item.sm_total_cft }}</td>
                             <td class="text-success font-weight-bold">₹{{ item.sm_total_price }}</td>
-                            <td>
-                                <div class="d-flex gap-2 justify-content-center">
-                                    <a href="{% url 'stock_maintenance_edit' item.id %}" class="btn-modern btn-submit py-1 px-2" style="font-size: 0.75rem; min-width: 35px;" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-outline-danger btn-sm p-1" style="border-radius: 8px; width: 35px;" title="Delete" onclick="if(confirm('Are you sure?')) document.getElementById('delete-form-{{ item.id }}').submit();">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                    <form id="delete-form-{{ item.id }}" method="POST" action="{% url 'stock_maintenance_delete' item.id %}" style="display:none;">
-                                        {% csrf_token %}
-                                    </form>
-                                </div>
+                            <td class="text-center">
+                                <a href="{% url 'stock_maintenance_edit' item.id %}" class="btn-modern btn-submit py-1 px-2" style="font-size: 0.75rem; min-width: 35px;" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-outline-danger btn-sm p-1" style="border-radius: 8px; width: 35px;" title="Delete" onclick="if(confirm('Are you sure?')) document.getElementById('delete-form-{{ item.id }}').submit();">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                <form id="delete-form-{{ item.id }}" method="POST" action="{% url 'stock_maintenance_delete' item.id %}" style="display:none;">
+                                    {% csrf_token %}
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}
