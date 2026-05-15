@@ -152,7 +152,7 @@
                 <td>{{ trip.tc_unloadingcost }}</td>
                 <td>{{ trip.tc_haltingcost }}</td>
                 <td>{{ trip.tc_weighmentcost }}</td>
-                <td>{{ trip.tc_handlingcost }}</td>
+                <td>{{ trip.tc_handlingcost|add:trip.tc_supervisorcost }}</td>
                 <td>{{ trip.tc_cancellation }}</td>
 
                 <!-- ================= Invoice Documents ================= -->
@@ -215,7 +215,7 @@
 
             $.ajax({
                 url: "{% url 'trans_invoice_remove_woh' %}",
-                type: "GET",
+                type: "POST",
                 data: {
                     'invoice_list[]': ids
                 },

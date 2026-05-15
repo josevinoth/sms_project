@@ -113,27 +113,38 @@ $(document).ready(function () {
         });
 
     // Handle form submission event
-    $('#add_btn').on('click', function () {
+    $('#add_btn').on('click', function (e) {
+        e.preventDefault();
         var rows_selected = table.column(0).selected();
         let selectedValues = table.rows({ selected: true }).data();
         var len1 = selectedValues.length;
-        console.log(len1);
+
+        if (len1 === 0) {
+            alert("Please select at least one item to add.");
+            return;
+        }
+
         var elements = [];
         for (var i = 0; i < len1; i++) {
-            console.log(selectedValues[i][6]);
             elements.push(selectedValues[i][6]);
         }
         var elements_list = elements;
 
+        $(this).addClass('disabled').html('<i class="fas fa-spinner fa-spin"></i> Adding...');
+
         $.ajax({
-            url: '{% url 'shipper_invoice_goods_add' %}',
-            type: 'GET',
+            url: '{% url "shipper_invoice_goods_add" %}',
+            type: 'POST',
             data: {
-                'myList[]': elements_list,  // This will encode the list as URL parameters
+                'myList[]': elements_list,
             },
             success: function (response) {
-                // Handle the response from the Django view
+                location.reload();
             },
+            error: function () {
+                alert("Error adding items. Please try again.");
+                location.reload();
+            }
         });
     });
 });
