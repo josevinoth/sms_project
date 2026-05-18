@@ -1063,6 +1063,7 @@ urlpatterns = [
     path('vehicle_utilization_report/', views.vehicle_utilization_report_view, name='vehicle_utilization_report'),
     path('drivers_advance_report/', views.drivers_advance_report_view, name='drivers_advance_report'),
     path('invoice_pending_report/', views.invoice_pending_report_view, name='invoice_pending_report'),
+    path('invoice_pending_report_ajax/', views.invoice_pending_report_ajax_view, name='invoice_pending_report_ajax'),
     path('vendor_p_l_mkt_report/', views.vendor_p_l_mkt_report_view, name='vendor_p_l_mkt_report'),
     path('vendor_p_l_attached_report/', views.vendor_p_l_attached_report_view, name='vendor_p_l_attached_report'),
     path('whatsapp_delivery_status_report/', views.whatsapp_delivery_status_report_view,name='whatsapp_delivery_status_report'),
