@@ -152,7 +152,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 last_trip_loc = TripdetailInfo.objects.filter(
                     tr_vehiclenumber=search_vehicle_num
                 ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
-                
+
                 if last_trip_loc:
                     trip_det_form.fields['tr_departedlocation'].initial = last_trip_loc.tr_reportedlocation
                     trip_det_form.fields['tr_departedlocation'].widget.attrs.update({
@@ -354,7 +354,9 @@ def tripdetail_add(request, tripdetail_id=0):
                     if last_trip_for_loc:
                         departed_loc_id = request.POST.get('tr_departedlocation')
                         if departed_loc_id and str(departed_loc_id) != str(last_trip_for_loc.tr_reportedlocation.id):
-                            last_loc_name = last_trip_for_loc.tr_reportedlocation.place_name if hasattr(last_trip_for_loc.tr_reportedlocation, 'place_name') else str(last_trip_for_loc.tr_reportedlocation)
+                            last_loc_name = last_trip_for_loc.tr_reportedlocation.place_name if hasattr(
+                                last_trip_for_loc.tr_reportedlocation, 'place_name') else str(
+                                last_trip_for_loc.tr_reportedlocation)
                             messages.error(
                                 request,
                                 f"Warning: Vehicle's last destination was '{last_loc_name}'. Please create an 'Empty Trip' or 'Business Empty Trip' from '{last_loc_name}' first."
@@ -571,9 +573,9 @@ def tripdetail_add(request, tripdetail_id=0):
                 # Boolean checks for status
                 # Fallback to IDs 1/2 if name lookup fails, but prioritize names
                 is_open = (status_open and trip.tc_financestatus_id == status_open.id) or (
-                            not status_open and trip.tc_financestatus_id == 1)
+                        not status_open and trip.tc_financestatus_id == 1)
                 is_closed = (status_closed and trip.tc_financestatus_id == status_closed.id) or (
-                            not status_closed and trip.tc_financestatus_id == 2)
+                        not status_closed and trip.tc_financestatus_id == 2)
 
                 # ✅ Only send email alerts for trip category 1
                 if trip.tr_category_id == 1:

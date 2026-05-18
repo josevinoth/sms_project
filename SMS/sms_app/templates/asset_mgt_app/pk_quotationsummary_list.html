@@ -21,8 +21,8 @@
             <i class="fas fa-list-ul"></i> Quotation Summary Records
         </div>
         <div class="table-responsive">
-            <table id="quotationsummary_list" class="table table-striped table-bordered display nowrap" style="width:100%">
-                <thead class="thead-dark">
+            <table id="quotationsummary_list" class="table modern-table display nowrap" style="width:100%">
+                <thead>
                     <tr>
                         <th>ID</th>
                         <th>Clone</th>
@@ -72,7 +72,7 @@
                             </a>
                         </td>
                         <td>{{ quotationsummaryinfo.qs_created_at|date:"d-m-Y" }}</td>
-                        <td class="font-weight-bold text-teal">{{ quotationsummaryinfo.qs_assessment_num }}</td>
+                        <td class="font-weight-bold">{{ quotationsummaryinfo.qs_assessment_num }}</td>
                         <td>{{ quotationsummaryinfo.qs_customer_name_2 }}</td>
                         <td>{{ quotationsummaryinfo.qs_estimation_type }}</td>
                         <td class="text-info">{{ quotationsummaryinfo.qs_quotation_number }}</td>
@@ -126,6 +126,7 @@
             ],
             pageLength: 25,
             language: {
+                search: "",
                 searchPlaceholder: "Search records..."
             }
         });

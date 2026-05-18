@@ -26,7 +26,9 @@
                         <th>Job No.</th>
                         <th>Status</th>
                         <th>Conducted By</th>
-                        <th class="text-center">Actions</th>
+                        <th class="text-center">View</th>
+                        <th class="text-center">PDF</th>
+                        <th class="text-center">Next</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -46,24 +48,32 @@
                         </td>
                         <td class="font-weight-bold">{{ qc.qc_conducted_by.username|default:"N/A" }}</td>
                         <td class="text-center">
-                            <div class="d-flex justify-content-center gap-2">
-                                <a href="{% url 'pk_quality_check_add' %}?job_no={{ qc.qc_job_no }}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; text-decoration: none;" title="View/Edit QC">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                {% if qc.qc_status == 'Passed' %}
-                                <a href="{% url 'pk_quality_check_pdf' qc.id %}" class="btn-modern py-1 px-3" style="font-size: 0.8rem; background: var(--accent-emerald); color: white; text-decoration: none;" title="Download PDF Report">
-                                    <i class="fas fa-file-pdf"></i>
-                                </a>
-                                <a href="{% url 'packing_gate' %}?job_no={{ qc.qc_job_no }}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; background: var(--accent-blue); text-decoration: none;" title="Go to Gate Pass">
-                                    <i class="fas fa-arrow-right"></i>
-                                </a>
-                                {% endif %}
-                            </div>
+                            <a href="{% url 'pk_quality_check_add' %}?job_no={{ qc.qc_job_no }}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; text-decoration: none;" title="View/Edit QC">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            {% if qc.qc_status == 'Passed' %}
+                            <a href="{% url 'pk_quality_check_pdf' qc.id %}" class="btn-modern py-1 px-3" style="font-size: 0.8rem; background: var(--accent-emerald); color: white; text-decoration: none;" title="Download PDF Report">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if qc.qc_status == 'Passed' %}
+                            <a href="{% url 'packing_gate' %}?job_no={{ qc.qc_job_no }}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; background: var(--accent-blue); text-decoration: none;" title="Go to Gate Pass">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                            {% else %}
+                            -
+                            {% endif %}
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-muted italic">No Quality Check records found.</td>
+                        <td colspan="8" class="text-center py-5 text-muted italic">No Quality Check records found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
