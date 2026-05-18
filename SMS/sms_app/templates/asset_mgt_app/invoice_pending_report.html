@@ -3,6 +3,19 @@
 {% load static %}
 {% block content %}
 
+<!-- PAGE LEVEL DATATABLE -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
 <div class="container-fluid d-flex justify-content-center py-3">
     <div class="rounded text-center bg-info shadow-box px-4 py-2">
         <h3>Invoice Pending Report</h3>
@@ -19,60 +32,61 @@
     <div class="col-2"></div>
 </div>
 
-<form method="POST" action="{% url 'invoice_pending_report' %}" class="row g-3 align-items-end">
-    {% csrf_token %}
+<!-- Filter form — no POST, values read by DataTables AJAX data function -->
+<form id="filter_form" class="row g-3 align-items-end">
 
     <!-- Customer -->
     <div class="col-md-2">
         <label class="form-label fw-bold">Customer Name</label>
-        {% render_field form.dmr_customer class="form-control" value=customer_id %}
+        {% render_field form.dmr_customer class="form-control" id="filter_customer" %}
     </div>
-    
+
     <!-- Branch -->
     <div class="col-md-2">
         <label class="form-label fw-bold">Branch</label>
-        <select name="branch" class="form-select form-control" id="branchSelect">
+        <select name="branch" class="form-select form-control" id="filter_branch">
             <option value="">-- All Branches --</option>
             {% for b in all_branches %}
-            <option value="{{ b.id }}" {% if branch_id == b.id %}selected{% endif %}>{{ b.loc_name|cut:"BVM " }}</option>
+            <option value="{{ b.id }}">{{ b.loc_name|cut:"BVM " }}</option>
             {% endfor %}
         </select>
     </div>
 
-
     <!-- Department -->
     <div class="col-md-2">
         <label class="form-label fw-bold">Department</label>
-        {% render_field form.customer_department class="form-control" value=dept_id %}
+        {% render_field form.customer_department class="form-control" id="filter_dept" %}
     </div>
 
     <!-- Month -->
     <div class="col-md-2">
         <label class="form-label fw-bold">Month</label>
-        {% render_field form.month class="form-control" value=selected_month %}
+        {% render_field form.month class="form-control" id="filter_month" %}
     </div>
 
     <!-- Year -->
     <div class="col-md-1">
         <label class="form-label fw-bold">Year</label>
-        {% render_field form.year class="form-control" value=selected_year %}
+        {% render_field form.year class="form-control" id="filter_year" %}
     </div>
+
     <!-- From Location -->
     <div class="col-md-2">
         <label class="form-label fw-bold">From Location</label>
-        {% render_field form.from_location class="form-control" value=from_location %}
+        {% render_field form.from_location class="form-control" id="filter_from_loc" %}
     </div>
 
     <!-- To Location -->
     <div class="col-md-2">
         <label class="form-label fw-bold">To Location</label>
-        {% render_field form.to_location class="form-control" value=to_location %}
+        {% render_field form.to_location class="form-control" id="filter_to_loc" %}
     </div>
 
     <div class="col-md-1">
-        <button type="submit" class="btn btn-primary mt-3">Filter</button>
+        <button type="button" id="btn_filter" class="btn btn-primary mt-3">
+            <i class="fas fa-filter"></i> Filter
+        </button>
     </div>
-
 
 </form>
 <br>
@@ -89,128 +103,94 @@
 <br>
 
 <div class="container-fluid shadow-box-table">
-    <table id="invoice_pending_report_table" class="table table-striped table-bordered">
+    <table id="invoice_pending_report_table" class="table table-striped table-bordered display nowrap" style="width:100%">
         <thead class="thead-dark">
             <tr>
-                <!-- DYNAMIC HEADERS -->
                 {% for h in headers %}
                 <th>{{ h }}</th>
                 {% endfor %}
             </tr>
         </thead>
         <tbody>
-            <!-- DYNAMIC ROWS -->
-            {% for row in data_rows %}
-            <tr>
-                {% for cell in row %}
-                <td>{{ cell }}</td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
+            <!-- Loaded via AJAX server-side -->
         </tbody>
     </table>
-
-
 </div>
 
 <script>
     $(document).ready(function () {
 
-        const table = $('#invoice_pending_report_table').DataTable({
+        var table = $('#invoice_pending_report_table').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "scrollX": true,
+            "ajax": {
+                "url": "{% url 'invoice_pending_report_ajax' %}",
+                "type": "GET",
+                "data": function (d) {
+                    d.dmr_customer       = $('#filter_customer').val();
+                    d.customer_department = $('#filter_dept').val();
+                    d.branch             = $('#filter_branch').val();
+                    d.month              = $('#filter_month').val();
+                    d.year               = $('#filter_year').val();
+                    d.from_location      = $('#filter_from_loc').val();
+                    d.to_location        = $('#filter_to_loc').val();
+                }
+            },
+            "dom": 'lBfrtip',
+            "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            "pageLength": 50,
+            "order": [[0, 'asc']],
 
-            scrollX: true,
-            dom: 'lBfrtip',
-
-            lengthMenu: [
-                [10, 25, 50, 100, -1],
-                [10, 25, 50, 100, "All"]
-            ],
-
-            pageLength: 10,
-
-            buttons: [
-
+            "buttons": [
                 'copy',
                 'csv',
 
-                // ======================
                 // EXCEL EXPORT
-                // ======================
                 {
                     extend: 'excelHtml5',
                     text: 'Excel',
                     title: 'Invoice Pending Report',
+                    filename: 'Invoice_Pending_Report_' + new Date().toISOString().slice(0, 10),
 
                     customize: function (xlsx) {
-
-                        let sheet = xlsx.xl.worksheets['sheet1.xml'];
+                        let sheet  = xlsx.xl.worksheets['sheet1.xml'];
                         let styles = xlsx.xl['styles.xml'];
 
-                        // ---------- FONT ----------
                         let fonts = $('fonts', styles);
-                        fonts.append(`
-                        <font>
-                            <sz val="11"/>
-                            <color rgb="FFFFFFFF"/>
-                            <name val="Calibri"/>
-                            <b/>
-                        </font>
-                    `);
+                        fonts.append(`<font><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/><b/></font>`);
                         let fontId = fonts.children().length - 1;
 
-                        // ---------- BLUE FILL ----------
                         let fills = $('fills', styles);
-                        fills.append(`
-                        <fill>
-                            <patternFill patternType="solid">
-                                <fgColor rgb="FF0A3278"/>
-                                <bgColor indexed="64"/>
-                            </patternFill>
-                        </fill>
-                    `);
+                        fills.append(`<fill><patternFill patternType="solid"><fgColor rgb="FF0A3278"/><bgColor indexed="64"/></patternFill></fill>`);
                         let fillId = fills.children().length - 1;
 
-                        // ---------- STYLE ----------
                         let cellXfs = $('cellXfs', styles);
-                        cellXfs.append(`
-                        <xf xfId="0"
-                            fontId="${fontId}"
-                            fillId="${fillId}"
-                            borderId="0"
-                            applyFont="1"
-                            applyFill="1"/>
-                    `);
-
+                        cellXfs.append(`<xf xfId="0" fontId="${fontId}" fillId="${fillId}" borderId="0" applyFont="1" applyFill="1"/>`);
                         let styleId = cellXfs.children().length - 1;
 
-                        // APPLY STYLE TO HEADER ROW
                         $('row:eq(1) c', sheet).attr('s', styleId);
                     }
                 },
 
-                // ======================
                 // PDF EXPORT
-                // ======================
                 {
                     extend: 'pdfHtml5',
                     orientation: 'landscape',
-                    pageSize: 'A4',
+                    pageSize: 'A3',
                     title: 'Invoice Pending Report',
-
                     customize: function (doc) {
                         doc.styles.tableHeader.fillColor = '#0A3278';
                         doc.styles.tableHeader.color = 'white';
                         doc.styles.tableHeader.bold = true;
+                        doc.defaultStyle.fontSize = 7;
                     }
                 },
 
-                // ======================
                 // PRINT
-                // ======================
                 {
                     extend: 'print',
                     title: 'Invoice Pending Report',
-
                     customize: function (win) {
                         $(win.document.body).find('thead th')
                             .css('background-color', '#0A3278')
@@ -218,9 +198,19 @@
                             .css('font-weight', 'bold');
                     }
                 }
-            ],
+            ]
+        });
 
-            order: [[0, 'asc']]
+        // Filter button triggers server-side reload
+        $('#btn_filter').click(function () {
+            table.draw();
+        });
+
+        // Also allow pressing Enter in any filter field
+        $('#filter_form input, #filter_form select').on('change keypress', function (e) {
+            if (e.type === 'change' || e.which === 13) {
+                table.draw();
+            }
         });
 
     });

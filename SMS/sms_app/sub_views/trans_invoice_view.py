@@ -341,6 +341,15 @@ def trans_invoice_list(request):
 @login_required(login_url='login_page')
 def trans_invoice_delete(request, invoice_id):
     invoice = get_object_or_404(TransInvoiceInfo, pk=invoice_id)
+    
+    # If this is a master invoice, delete all its associated WOH detail records as well
+    if not invoice.is_woh:
+        TransInvoiceInfo.objects.filter(
+            ti_inv_no=invoice.ti_inv_no,
+            ti_customer=invoice.ti_customer,
+            is_woh=True
+        ).delete()
+
     invoice.delete()
     messages.success(request, "Transportation Invoice Deleted Successfully!")
     return redirect('trans_invoice_list')
