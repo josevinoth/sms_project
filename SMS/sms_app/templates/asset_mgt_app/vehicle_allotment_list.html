@@ -120,22 +120,22 @@
             <td>
                 {% if data.enquiry.id %}
                 {% if not data.limit_reached %}
-                <a class="badge badge-outline-danger p-2 mb-1 d-inline-block" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id 'none' %}" style="border: 1px dashed #ef4444; color: #ef4444; text-decoration: none; font-size: 0.8rem;">
+                <a class="badge p-2 mb-1 d-inline-block" href="{% url 'vehicle_allotment_update_enquiry' data.enquiry.id 'none' %}" style="border: 1px dashed #64748b; background: transparent; color: #475569; font-weight: 600; text-decoration: none; font-size: 0.8rem; transition: all 0.2s;" onmouseover="this.style.borderColor='#2563eb'; this.style.color='#2563eb';" onmouseout="this.style.borderColor='#64748b'; this.style.color='#475569';">
                     <i class="fas fa-plus-circle"></i> Add New
                 </a><br>
                 {% else %}
-                <span class="badge badge-secondary p-2 mb-1" style="font-size: 0.8rem;"><i class="fas fa-check-circle"></i> Allotted</span><br>
+                <span class="text-muted small font-weight-bold mb-2 d-inline-block"><i class="fas fa-check-circle"></i> Allotted</span><br>
                 {% endif %}
 
                 {% if data.vehicles %}
                 {% for vehicle in data.vehicles %}
-                <a class="badge badge-primary p-2 mb-1 d-inline-block text-white" href="{% url 'vehicle_allotment_update' vehicle.id %}" style="text-decoration: none; background: var(--accent-blue); font-size: 0.8rem;">
-                    <i class="fas fa-truck"></i> {{ vehicle.number }}
+                <a class="badge p-2 mb-1 d-inline-block" href="{% url 'vehicle_allotment_update' vehicle.id %}" style="text-decoration: none; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; font-size: 0.8rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <i class="fas fa-truck text-info"></i> {{ vehicle.number }}
                 </a><br>
                 {% endfor %}
                 {% endif %}
                 {% else %}
-                <span class="badge badge-light p-2 text-muted border" style="border-style: dashed !important; font-size: 0.8rem;"><i class="fas fa-ban"></i> Add New</span>
+                <span class="badge p-2 text-muted" style="border: 1px dashed #64748b; background: transparent; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-ban"></i> Add New</span>
                 {% endif %}
             </td>
 
@@ -144,23 +144,23 @@
             <!-- Trips -->
             <td style="min-width:280px; width:280px; white-space:normal; word-break:break-word;">
                 {% if data.consignments and data.consignments|length > 0 %}
-                    <a class="badge badge-outline-danger p-2 mb-2 d-inline-block" href="{% url 'tripdetail_enquiry' data.enquiry.id 'none' %}" style="border: 1px dashed #ef4444; color: #ef4444; text-decoration: none; font-size: 0.8rem;">
+                    <a class="badge p-2 mb-2 d-inline-block" href="{% url 'tripdetail_enquiry' data.enquiry.id 'none' %}" style="border: 1px dashed #64748b; background: transparent; color: #475569; font-weight: 600; text-decoration: none; font-size: 0.8rem; transition: all 0.2s;" onmouseover="this.style.borderColor='#2563eb'; this.style.color='#2563eb';" onmouseout="this.style.borderColor='#64748b'; this.style.color='#475569';">
                         <i class="fas fa-plus-circle"></i> Add New
                     </a><br>
                 {% else %}
-                    <span class="badge badge-light p-2 mb-2 text-muted border" style="border-style: dashed !important; font-size: 0.8rem;"><i class="fas fa-ban"></i> Add New</span><br>
+                    <span class="badge p-2 mb-2 text-muted" style="border: 1px dashed #64748b; background: transparent; font-size: 0.8rem; font-weight: 600;"><i class="fas fa-ban"></i> Add New</span><br>
                 {% endif %}
 
                 <div>
                     {% if data.trips and data.trips|length > 0 %}
                         {% for trip_cons,trip_num, trip_status, trip_status_id in data.trips %}
                             {% if "Empty" in trip_cons or "Business" in trip_cons %}
-                            <a class="badge p-2 mb-2 d-inline-block text-white" href="{% url 'tripdetail_enquiry' data.enquiry.id trip_num %}" style="text-decoration: none; background: #8b5cf6; font-size: 0.8rem;">
-                                <i class="fas fa-route"></i> {{ trip_num }} <span class="small font-weight-normal">({{ trip_cons }})</span>
+                            <a class="badge p-2 mb-2 d-inline-block" href="{% url 'tripdetail_enquiry' data.enquiry.id trip_num %}" style="text-decoration: none; background: rgba(139, 92, 246, 0.1); border: 1px solid #8b5cf6; color: #7c3aed; font-weight: 600; font-size: 0.8rem;">
+                                <i class="fas fa-route"></i> {{ trip_num }} <span class="small" style="opacity: 0.8;">({{ trip_cons }})</span>
                             </a>
                             {% else %}
-                            <a class="badge p-2 mb-2 d-inline-block text-white" href="{% url 'tripdetail_enquiry' data.enquiry.id trip_num %}" style="text-decoration: none; background: #10b981; font-size: 0.8rem;">
-                                <i class="fas fa-route"></i> {{ trip_num }} <span class="small font-weight-normal">({{ trip_cons }})</span>
+                            <a class="badge p-2 mb-2 d-inline-block" href="{% url 'tripdetail_enquiry' data.enquiry.id trip_num %}" style="text-decoration: none; background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #059669; font-weight: 600; font-size: 0.8rem;">
+                                <i class="fas fa-route"></i> {{ trip_num }} <span class="small" style="opacity: 0.8;">({{ trip_cons }})</span>
                             </a>
                             {% endif %}
                         {% endfor %}
@@ -175,10 +175,10 @@
                 {% if data.trips %}
                     {% for trip_cons,trip_num,trip_status,trip_status_id in data.trips %}
                         {% if trip_status_id == 1 or trip_status_id == 5 or trip_status_id == 8 %}
-                        <span class="badge p-2 mb-1 border" style="font-size: 0.8rem; {% if 'Started' in trip_status %}background-color: #10b981; color: white; border-color: transparent !important;{% elif 'Awaiting' in trip_status %}background-color: #f59e0b; color: #1e293b; border-color: transparent !important;{% elif 'Closed' in trip_status %}background-color: #ef4444; color: white; border-color: transparent !important;{% else %}background-color: #f8f9fa; color: #6c757d;{% endif %}"><i class="fas fa-lock"></i> {{ trip_status }} <span class="small">({{ trip_num }})</span></span><br>
+                        <span class="badge p-2 mb-1" style="font-size: 0.8rem; {% if 'Started' in trip_status %}background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #059669; font-weight: 600;{% elif 'Awaiting' in trip_status %}background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: #d97706; font-weight: 600;{% elif 'Closed' in trip_status %}background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #dc2626; font-weight: 600;{% else %}background: #f1f5f9; border: 1px solid #94a3b8; color: #475569; font-weight: 600;{% endif %}"><i class="fas fa-lock"></i> {{ trip_status }} <span class="small" style="opacity: 0.8;">({{ trip_num }})</span></span><br>
                         {% else %}
-                        <a class="badge p-2 mb-1 d-inline-block" href="{% url 'tripclosure_enquiry' data.enquiry.id trip_num %}" style="text-decoration: none; font-size: 0.8rem; {% if 'Started' in trip_status %}background-color: #10b981; color: white !important;{% elif 'Awaiting' in trip_status %}background-color: #f59e0b; color: #1e293b !important;{% elif 'Closed' in trip_status %}background-color: #ef4444; color: white !important;{% else %}background-color: #3b82f6; color: white !important;{% endif %}">
-                            <i class="fas fa-hand-holding-usd"></i> {{ trip_status }} <span class="small">({{ trip_num }})</span>
+                        <a class="badge p-2 mb-1 d-inline-block" href="{% url 'tripclosure_enquiry' data.enquiry.id trip_num %}" style="text-decoration: none; font-size: 0.8rem; {% if 'Started' in trip_status %}background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #059669 !important; font-weight: 600;{% elif 'Awaiting' in trip_status %}background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: #d97706 !important; font-weight: 600;{% elif 'Closed' in trip_status %}background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #dc2626 !important; font-weight: 600;{% else %}background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; color: #2563eb !important; font-weight: 600;{% endif %}">
+                            <i class="fas fa-hand-holding-usd"></i> {{ trip_status }} <span class="small" style="opacity: 0.8;">({{ trip_num }})</span>
                         </a><br>
                         {% endif %}
                     {% endfor %}

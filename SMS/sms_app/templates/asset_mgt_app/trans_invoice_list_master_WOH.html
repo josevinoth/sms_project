@@ -173,7 +173,7 @@
                 <td>{{ inv.tr_enquirynumber.en_customername }}</td>
 
                 <!-- Planning Date -->
-                <td data-order="{{ inv.tr_created_at|date:'Y-m-d' }}">{{ inv.tr_created_at|date:"d/m/Y" }}</td>
+                <td data-order="{{ inv.tr_reporteddate_pickup|date:'Y-m-d' }}">{{ inv.tr_reporteddate_pickup|date:"d/m/Y"|default:"-" }}</td>
 
                 <!-- Cnote No -->
                 <td>
