@@ -334,48 +334,104 @@
 									</div>
 									{% render_field tripclosurefiles_form.tcf_trip_cost id="tcf_trip_cost" class="form-control" %}
 								</div>
+                                {% if tripclosurefiles_form.instance.tcf_trip_cost %}
+                                <div class="view-link text-center mb-3">
+                                    <a href="{{ tripclosurefiles_form.instance.tcf_trip_cost.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
+                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_trip_cost.name }}
+                                    </a>
+                                </div>
+                                {% endif %}
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Parking Charges</span>
 									</div>
 									{% render_field tripclosurefiles_form.tcf_parking_cost id="tcf_parking_cost" class="form-control" %}
 								</div>
+                                {% if tripclosurefiles_form.instance.tcf_parking_cost %}
+                                <div class="view-link text-center mb-3">
+                                    <a href="{{ tripclosurefiles_form.instance.tcf_parking_cost.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
+                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_parking_cost.name }}
+                                    </a>
+                                </div>
+                                {% endif %}
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Toll Charges</span>
 									</div>
 									{% render_field tripclosurefiles_form.tcf_toll_cost id="tcf_toll_cost" class="form-control" %}
 								</div>
+                                {% if tripclosurefiles_form.instance.tcf_toll_cost %}
+                                <div class="view-link text-center mb-3">
+                                    <a href="{{ tripclosurefiles_form.instance.tcf_toll_cost.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
+                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_toll_cost.name }}
+                                    </a>
+                                </div>
+                                {% endif %}
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Loading Charges</span>
 									</div>
 									{% render_field tripclosurefiles_form.tcf_loading_cost id="tcf_loading_cost" class="form-control" %}
 								</div>
+                                {% if tripclosurefiles_form.instance.tcf_loading_cost %}
+                                <div class="view-link text-center mb-3">
+                                    <a href="{{ tripclosurefiles_form.instance.tcf_loading_cost.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
+                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_loading_cost.name }}
+                                    </a>
+                                </div>
+                                {% endif %}
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Un-Loading Charges</span>
 									</div>
 									{% render_field tripclosurefiles_form.tcf_unloading_cost id="tcf_unloading_cost" class="form-control" %}
 								</div>
+                                {% if tripclosurefiles_form.instance.tcf_unloading_cost %}
+                                <div class="view-link text-center mb-3">
+                                    <a href="{{ tripclosurefiles_form.instance.tcf_unloading_cost.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
+                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_unloading_cost.name }}
+                                    </a>
+                                </div>
+                                {% endif %}
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Weighment Charges</span>
 									</div>
 									{% render_field tripclosurefiles_form.tcf_weighment_cost id="tcf_weighment_cost" class="form-control" %}
 								</div>
+                                {% if tripclosurefiles_form.instance.tcf_weighment_cost %}
+                                <div class="view-link text-center mb-3">
+                                    <a href="{{ tripclosurefiles_form.instance.tcf_weighment_cost.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
+                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_weighment_cost.name }}
+                                    </a>
+                                </div>
+                                {% endif %}
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Handling Charges</span>
 									</div>
 									{% render_field tripclosurefiles_form.tcf_handling_cost id="tcf_handling_cost" class="form-control" %}
 								</div>
+                                {% if tripclosurefiles_form.instance.tcf_handling_cost %}
+                                <div class="view-link text-center mb-3">
+                                    <a href="{{ tripclosurefiles_form.instance.tcf_handling_cost.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
+                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_handling_cost.name }}
+                                    </a>
+                                </div>
+                                {% endif %}
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">POD</span>
 									</div>
 									{% render_field tripclosurefiles_form.tcf_pod id="tcf_pod" class="form-control" %}
 								</div>
+                                {% if tripclosurefiles_form.instance.tcf_pod %}
+                                <div class="view-link text-center mb-3">
+                                    <a href="{{ tripclosurefiles_form.instance.tcf_pod.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
+                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_pod.name }}
+                                    </a>
+                                </div>
+                                {% endif %}
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Status</span>

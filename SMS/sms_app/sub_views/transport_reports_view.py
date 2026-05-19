@@ -1378,6 +1378,7 @@ def invoice_pending_report_view(request):
 def invoice_pending_report_ajax_view(request):
     """Server-side DataTables AJAX endpoint for Invoice Pending Report."""
     from ..models import TransInvoiceInfo, ConsignmentgoodsInfo
+    from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
     from django.http import JsonResponse
 
     # DataTables params
@@ -1516,13 +1517,20 @@ def invoice_pending_report_ajax_view(request):
     # Global search
     # -------------------------
     if search_value:
+        matching_invoice_trip_numbers = list(InvoiceDocumentInfo.objects.filter(
+            id_status__status__icontains=search_value
+        ).values_list('id_tripnumber', flat=True))
+
         trips = trips.filter(
             Q(tr_vehiclenumber__icontains=search_value) |
             Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
             Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
             Q(tr_departedlocation__place_name__icontains=search_value) |
             Q(tr_reportedlocation__place_name__icontains=search_value) |
-            Q(tr_enquirynumber__en_customerdepartment__ct_customerdepartment__icontains=search_value)
+            Q(tr_enquirynumber__en_customerdepartment__ct_customerdepartment__icontains=search_value) |
+            Q(tr_tripnumber__icontains=search_value) |
+            Q(tc_financestatus__status__icontains=search_value) |
+            Q(tr_tripnumber__in=matching_invoice_trip_numbers)
         )
 
     records_filtered = trips.count()
@@ -1564,6 +1572,11 @@ def invoice_pending_report_ajax_view(request):
         )
     }
 
+    # Bulk-fetch invoice documents for current page only
+    trip_numbers = [t.tr_tripnumber for t in trips_slice if t.tr_tripnumber]
+    invoice_docs = InvoiceDocumentInfo.objects.filter(id_tripnumber__in=trip_numbers).select_related('id_status')
+    invoice_doc_map = {doc.id_tripnumber: doc.id_status.status for doc in invoice_docs if doc.id_status}
+
     # -------------------------
     # Build data rows
     # -------------------------
@@ -1571,6 +1584,7 @@ def invoice_pending_report_ajax_view(request):
     for idx, trip in enumerate(trips_slice, start=start + 1):
         cons = trip.tr_consignmentnumber
         goods = goods_map.get(trip.tr_consignmentnumber_id) if trip.tr_consignmentnumber_id else None
+        inv_status = invoice_doc_map.get(trip.tr_tripnumber, "-") if trip.tr_tripnumber else "-"
 
         # Branch
         branch_name = "OTH"
@@ -1607,6 +1621,8 @@ def invoice_pending_report_ajax_view(request):
             if fallback:
                 display_date = fallback.strftime("%d-%m-%Y")
 
+        trip_status_display = inv_status if inv_status != "-" else (safe_str(trip.tc_financestatus) if trip.tc_financestatus else "")
+
         data.append([
             idx,
             branch_name,
@@ -1621,7 +1637,7 @@ def invoice_pending_report_ajax_view(request):
             safe_str(goods.cg_consignee) if goods else "",
             safe_num(goods.cg_qty) if goods else 0,
             safe_num(goods.cg_weight) if goods else 0.0,
-            safe_str(trip.tc_financestatus) if trip.tc_financestatus else "",
+            trip_status_display,
             safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0,
             safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0,
             safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0,
