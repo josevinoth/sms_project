@@ -23,4 +23,13 @@ class TripclosurefilesForm(forms.ModelForm):
     class Meta:
         model = Trip_closure_files_Info
         fields = '__all__'
-        # fields=('dam_OTL_pic','dam_document')
+        widgets = {
+            'tcf_trip_cost': forms.FileInput(),
+            'tcf_parking_cost': forms.FileInput(),
+            'tcf_toll_cost': forms.FileInput(),
+            'tcf_loading_cost': forms.FileInput(),
+            'tcf_unloading_cost': forms.FileInput(),
+            'tcf_weighment_cost': forms.FileInput(),
+            'tcf_handling_cost': forms.FileInput(),
+            'tcf_pod': forms.FileInput(),
+        }

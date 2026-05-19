@@ -45,6 +45,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
+    <!-- Theme Initialization (Prevents White Flash) -->
+    <script>
+        (function() {
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+        })();
+    </script>
+
     <style>
         html, body {
             margin: 0;
@@ -125,11 +133,8 @@
     const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
     const currentTheme = localStorage.getItem('theme');
 
-    if (currentTheme) {
-        document.documentElement.setAttribute('data-theme', currentTheme);
-        if (currentTheme === 'dark') {
-            toggleSwitch.checked = true;
-        }
+    if (currentTheme === 'dark') {
+        toggleSwitch.checked = true;
     }
 
     function switchTheme(e) {

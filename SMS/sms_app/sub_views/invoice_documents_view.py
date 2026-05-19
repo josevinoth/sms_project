@@ -131,11 +131,15 @@ def invoice_documents_list(request):
     if not status_ids:
         status_ids = [7, 9]  # Fallback
 
-    # Exclude trips already invoiced (linked in TransInvoiceInfo with is_woh=True)
-    invoiced_trip_ids = TransInvoiceInfo.objects.filter(
-        is_woh=True, 
-        ti_trip_id__isnull=False
-    ).values_list('ti_trip_id', flat=True)
+    # Exclude all trips already invoiced (WOH, Consignment, or Goods)
+    invoiced_trip_ids = TransInvoiceInfo.objects.filter(ti_trip__isnull=False).values_list('ti_trip_id', flat=True)
+    invoiced_cons_ids = TransInvoiceInfo.objects.filter(ti_consignment__isnull=False).values_list('ti_consignment_id', flat=True)
+    trips_from_cons = TripdetailInfo.objects.filter(tr_consignmentnumber_id__in=invoiced_cons_ids).values_list('id', flat=True)
+    invoiced_goods_ids = TransInvoiceInfo.objects.filter(ti_goods__isnull=False).values_list('ti_goods_id', flat=True)
+    
+    from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
+    cons_from_goods = ConsignmentgoodsInfo.objects.filter(id__in=invoiced_goods_ids).values_list('cg_consignmentnumber_id', flat=True)
+    trips_from_goods = TripdetailInfo.objects.filter(tr_consignmentnumber_id__in=cons_from_goods).values_list('id', flat=True)
 
     trip_list = TripdetailInfo.objects.select_related(
         'tr_enquirynumber',
@@ -146,6 +150,10 @@ def invoice_documents_list(request):
         tc_financestatus_id__in=status_ids
     ).exclude(
         id__in=invoiced_trip_ids
+    ).exclude(
+        id__in=trips_from_cons
+    ).exclude(
+        id__in=trips_from_goods
     )
 
     if veh_no:
@@ -189,10 +197,79 @@ def invoice_documents_add(request, trip_id):
     if not files_instance:
         files_instance = Trip_closure_files_Info(tcf_tripnumber=trip.tr_tripnumber)
 
+    # Pre-populate and copy POD from Trip Detail if missing
+    if not files_instance.tcf_pod:
+        if trip.tc_pod_attachment:
+            files_instance.tcf_pod.save(
+                trip.tc_pod_attachment.name.split('/')[-1],
+                ContentFile(trip.tc_pod_attachment.read()),
+                save=False
+            )
+            files_instance.save()
+        elif trip.td_pod:
+            files_instance.tcf_pod.save(
+                trip.td_pod.name.split('/')[-1],
+                ContentFile(trip.td_pod.read()),
+                save=False
+            )
+            files_instance.save()
+
     # Load or initialise InvoiceDocumentInfo record
     invoice_doc = InvoiceDocumentInfo.objects.filter(
         id_tripnumber=trip.tr_tripnumber
     ).first()
+
+    # Pre-populate and copy POD from Trip Detail / closure if missing
+    if invoice_doc and not invoice_doc.id_pod_doc:
+        if files_instance.tcf_pod:
+            invoice_doc.id_pod_doc.save(
+                files_instance.tcf_pod.name.split('/')[-1],
+                ContentFile(files_instance.tcf_pod.read()),
+                save=False
+            )
+            invoice_doc.save()
+        elif trip.tc_pod_attachment:
+            invoice_doc.id_pod_doc.save(
+                trip.tc_pod_attachment.name.split('/')[-1],
+                ContentFile(trip.tc_pod_attachment.read()),
+                save=False
+            )
+            invoice_doc.save()
+        elif trip.td_pod:
+            invoice_doc.id_pod_doc.save(
+                trip.td_pod.name.split('/')[-1],
+                ContentFile(trip.td_pod.read()),
+                save=False
+            )
+            invoice_doc.save()
+    elif not invoice_doc:
+        ready_status = Tripstatusinfo.objects.filter(Q(id=9) | Q(status='Ready for Invoice')).first()
+        ready_status_id = ready_status.id if ready_status else 9
+
+        invoice_doc = InvoiceDocumentInfo(
+            id_tripnumber=trip.tr_tripnumber,
+            id_status=ready_status,
+            id_updated_by=request.user
+        )
+        if files_instance.tcf_pod:
+            invoice_doc.id_pod_doc.save(
+                files_instance.tcf_pod.name.split('/')[-1],
+                ContentFile(files_instance.tcf_pod.read()),
+                save=False
+            )
+        elif trip.tc_pod_attachment:
+            invoice_doc.id_pod_doc.save(
+                trip.tc_pod_attachment.name.split('/')[-1],
+                ContentFile(trip.tc_pod_attachment.read()),
+                save=False
+            )
+        elif trip.td_pod:
+            invoice_doc.id_pod_doc.save(
+                trip.td_pod.name.split('/')[-1],
+                ContentFile(trip.td_pod.read()),
+                save=False
+            )
+        invoice_doc.save()
 
     # Fields editable in the settlement form on this page (status only)
     editable_fields = ['tc_financestatus']
@@ -225,12 +302,48 @@ def invoice_documents_add(request, trip_id):
             # Save closure files if any
             files_obj = files_form.save(commit=False)
             files_obj.tcf_tripnumber = trip.tr_tripnumber
+
+            # Ensure tcf_pod is populated on POST save
+            if not files_obj.tcf_pod:
+                if trip_obj.tc_pod_attachment:
+                    files_obj.tcf_pod.save(
+                        trip_obj.tc_pod_attachment.name.split('/')[-1],
+                        ContentFile(trip_obj.tc_pod_attachment.read()),
+                        save=False
+                    )
+                elif trip_obj.td_pod:
+                    files_obj.tcf_pod.save(
+                        trip_obj.td_pod.name.split('/')[-1],
+                        ContentFile(trip_obj.td_pod.read()),
+                        save=False
+                    )
             files_obj.save()
 
             # Save invoice document record
             inv_obj = invoice_form.save(commit=False)
             inv_obj.id_tripnumber = trip.tr_tripnumber
             inv_obj.id_updated_by = request.user
+
+            # Ensure id_pod_doc is populated on POST save
+            if not inv_obj.id_pod_doc:
+                if files_obj.tcf_pod:
+                    inv_obj.id_pod_doc.save(
+                        files_obj.tcf_pod.name.split('/')[-1],
+                        ContentFile(files_obj.tcf_pod.read()),
+                        save=False
+                    )
+                elif trip_obj.tc_pod_attachment:
+                    inv_obj.id_pod_doc.save(
+                        trip_obj.tc_pod_attachment.name.split('/')[-1],
+                        ContentFile(trip_obj.tc_pod_attachment.read()),
+                        save=False
+                    )
+                elif trip_obj.td_pod:
+                    inv_obj.id_pod_doc.save(
+                        trip_obj.td_pod.name.split('/')[-1],
+                        ContentFile(trip_obj.td_pod.read()),
+                        save=False
+                    )
             inv_obj.save()
 
             # Synchronize trip status with document status for consistency
