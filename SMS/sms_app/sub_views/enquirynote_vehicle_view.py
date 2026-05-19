@@ -10,16 +10,30 @@ from django.contrib import messages
 def enquirynotevehicle_add(request,enquirynotevehicle_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    enquiry_num_id = request.session['enquiry_num_id']
-    enquirynote = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
+    
+    enquiry_num_id = request.session.get('enquiry_num_id')
+    if not enquiry_num_id:
+        messages.error(request, 'Session expired or invalid Enquiry. Please select an enquiry note first.')
+        return redirect('/SMS/enquirynote_list/')
+        
+    try:
+        enquirynote = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
+    except EnquirynoteInfo.DoesNotExist:
+        messages.error(request, 'Enquiry not found.')
+        return redirect('/SMS/enquirynote_list/')
+        
     form = EnquirynoteaddForm(instance=enquirynote)
     enquirynotevehicle_list = Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry_num_id)
     if request.method == "GET":
         if enquirynotevehicle_id == 0:
             enquiryvechicle_form = EnquirynotevehicleForm()
         else:
-            enquirynotevehicle=Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
-            enquiryvechicle_form = EnquirynotevehicleForm(instance=enquirynotevehicle)
+            try:
+                enquirynotevehicle=Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
+                enquiryvechicle_form = EnquirynotevehicleForm(instance=enquirynotevehicle)
+            except Enquirynotevehicle.DoesNotExist:
+                messages.error(request, 'Vehicle detail record not found.')
+                return redirect(request.META.get('HTTP_REFERER', f'/SMS/enquirynote_update/{enquiry_num_id}'))
         context={
                 'form': form,
                 'enquiryvechicle_form': enquiryvechicle_form,
@@ -35,24 +49,30 @@ def enquirynotevehicle_add(request,enquirynotevehicle_id=0):
             if form.is_valid():
                 form.save()
                 print("enquirynotevehicle Form is Valid")
-                last_id = (Enquirynotevehicle.objects.latest('id')).id
+                try:
+                    last_id = (Enquirynotevehicle.objects.latest('id')).id
+                except Enquirynotevehicle.DoesNotExist:
+                    pass
                 messages.success(request, 'Record Updated Successfully')
                 return redirect('/SMS/enquirynotevehicle_insert/')
             else:
                 print("enquirynotevehicle Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
-                return redirect(request.META['HTTP_REFERER'])
+                return redirect(request.META.get('HTTP_REFERER', f'/SMS/enquirynote_update/{enquiry_num_id}'))
         else:
-            enquirynotevehicle = Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
-            form = EnquirynotevehicleForm(request.POST,instance=enquirynotevehicle)
-            if form.is_valid():
-                form.save()
-                print("enquirynotevehicle Form is Valid")
-                messages.success(request, 'Record Updated Successfully')
-            else:
-                print("enquirynotevehicle Form is Not Valid")
-                messages.error(request, 'Record Not Updated Successfully')
-            return redirect(request.META['HTTP_REFERER'])
+            try:
+                enquirynotevehicle = Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
+                form = EnquirynotevehicleForm(request.POST,instance=enquirynotevehicle)
+                if form.is_valid():
+                    form.save()
+                    print("enquirynotevehicle Form is Valid")
+                    messages.success(request, 'Record Updated Successfully')
+                else:
+                    print("enquirynotevehicle Form is Not Valid")
+                    messages.error(request, 'Record Not Updated Successfully')
+            except Enquirynotevehicle.DoesNotExist:
+                messages.error(request, 'Vehicle detail record not found.')
+            return redirect(request.META.get('HTTP_REFERER', f'/SMS/enquirynote_update/{enquiry_num_id}'))
         # return redirect('/SMS/requirements_list')
 
 # List enquirynotevehicle
@@ -65,12 +85,16 @@ def enquirynotevehicle_list(request):
 #Delete enquirynotevehicle
 @login_required(login_url='login_page')
 def enquirynotevehicle_delete(request,enquirynotevehicle_id):
-    enquirynotevehicle = Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
-    enquirynotevehicle.delete()
-    return redirect(request.META['HTTP_REFERER'])
+    try:
+        enquirynotevehicle = Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
+        enquirynotevehicle.delete()
+    except Enquirynotevehicle.DoesNotExist:
+        messages.error(request, 'Vehicle detail record not found.')
+    return redirect(request.META.get('HTTP_REFERER', '/SMS/enquirynote_list/'))
     # return redirect('/SMS/enquirynotevehicle_list')
 
 @login_required(login_url='login_page')
 def enquirynotevehicle_cancel(request):
     enquiry_num_id = request.session.get('enquiry_num_id')
     return redirect('/SMS/enquirynote_update/' + str(enquiry_num_id))
+

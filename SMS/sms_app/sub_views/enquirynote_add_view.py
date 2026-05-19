@@ -21,7 +21,7 @@ def enquirynote_nav(request, enquirynote_id=0, enquirynotevehicle_id=0):
     user_id = request.session.get('ses_userID')
     if enquirynote_id == 0:
         print("I am inside Get add Enquirynote")
-        form = EnquirynoteaddForm()
+        form = EnquirynoteaddForm(initial={'en_assignedto': user_id})
         enquiryvechicle_form = EnquirynotevehicleForm()
         context = {
             'user_id': user_id,
@@ -53,7 +53,7 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
     if request.method == "GET":
         if enquirynote_id == 0:
             print("I am inside Get add Enquirynote")
-            form = EnquirynoteaddForm()
+            form = EnquirynoteaddForm(initial={'en_assignedto': user_id})
             enquiryvechicle_form = EnquirynotevehicleForm()
             context = {
                 'user_id': user_id,
@@ -112,7 +112,7 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
             else:
                 print("Enquiry Main Form not Saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-                return redirect(request.META['HTTP_REFERER'])
+                return redirect(request.META.get('HTTP_REFERER', '/SMS/enquirynote_list/'))
         else:
             print("I am inside post edit Enquirynote")
             enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
@@ -121,11 +121,11 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
                 form.save()
                 print("Enquiry Main Form Saved")
                 messages.success(request, 'Record Updated Successfully')
-                return redirect(request.META['HTTP_REFERER'])
+                return redirect(request.META.get('HTTP_REFERER', f'/SMS/enquirynote_update/{enquirynote_id}'))
             else:
                 print("Enquiry Main Form not Saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
-                return redirect(request.META['HTTP_REFERER'])
+                return redirect(request.META.get('HTTP_REFERER', f'/SMS/enquirynote_update/{enquirynote_id}'))
             # return redirect('/SMS/enquirynote_list')
 
 
