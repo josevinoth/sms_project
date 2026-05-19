@@ -142,7 +142,7 @@ def maintenance_edit(request, id):
         if form.is_valid():
             obj = form.save(commit=False)
 
-            # 🔥 CRITICAL: update vehicle from registration_no
+            #  CRITICAL: update vehicle from registration_no
             obj.mi_vehicle = form.cleaned_data["registration_no"]
             
             # Update updated_by field

@@ -253,7 +253,7 @@
                 <td>{{ inv.tc_unloadingcost }}</td>
                 <td>{{ inv.tc_haltingcost }}</td>
                 <td>{{ inv.tc_weighmentcost }}</td>
-                <td>{{ inv.tc_handlingcost }}</td>
+                <td>{{ inv.tc_handlingcost|add:inv.tc_supervisorcost }}</td>
                 <td>{{ inv.tc_cancellation }}</td>
 
                 <!-- Invoice Documents -->

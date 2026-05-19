@@ -7,9 +7,11 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
+from django.core.files.base import ContentFile
 
-from ..forms import TripclosurefilesForm,TripclosureaddForm
-from ..models import RtratemasterInfo,User_extInfo,Trip_closure_files_Info,EnquirynoteInfo,TripdetailInfo,Tripstatusinfo, Vehicle_allotmentInfo
+from ..forms import TripclosurefilesForm, TripclosureaddForm
+from ..models import RtratemasterInfo, User_extInfo, Trip_closure_files_Info, EnquirynoteInfo, TripdetailInfo, \
+    Tripstatusinfo, Vehicle_allotmentInfo
 from ..sub_models.ownership_mod import OwnershipInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -23,11 +25,11 @@ from django.core.paginator import Paginator
 
 
 @login_required(login_url='login_page')
-def tripclosure_enquiry(request,enquiry_id,trip_num):
+def tripclosure_enquiry(request, enquiry_id, trip_num):
     # Fetch the enquiry object (optional - only needed if you want to verify or log it)
     enquiry = get_object_or_404(EnquirynoteInfo, pk=enquiry_id)
-    print('enquiry_id',enquiry_id)
-    print('trip_num',trip_num)
+    print('enquiry_id', enquiry_id)
+    print('trip_num', trip_num)
     # If no trip is associated, store enquiry ID in session and redirect to insert
     if trip_num == 'none' or trip_num == '':
         request.session['ses_enqiury_id'] = enquiry_id
@@ -37,18 +39,20 @@ def tripclosure_enquiry(request,enquiry_id,trip_num):
         print('trip_id:', trip_id)
         # If trip_id is provided, redirect to update
         return redirect('tripclosure_update', tripclosure_id=trip_id)  # tripdetail_id is a keyword argument in the URL
+
+
 @login_required(login_url='login_page')
-def tripclosure_nav(request,tripclosure_id=0):
+def tripclosure_nav(request, tripclosure_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     print("I a m inside Get add tripclosure")
     tripclosure_form = TripclosureaddForm(request.POST)
-    tripclosurefiles_form = TripclosurefilesForm(request.POST,request.FILES)
+    tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES)
     enquiry_num = EnquirynoteInfo.objects.get(pk=tripclosure_id).en_enquirynumber
     enquiry_num_id = EnquirynoteInfo.objects.get(pk=tripclosure_id).id
     request.session['ses_enqiury_id'] = enquiry_num
-    tripclosure_list=TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id)
-    status_list = Tripstatusinfo.objects.filter(id__in=[4,5,6,7])
+    tripclosure_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id)
+    status_list = Tripstatusinfo.objects.filter(id__in=[4, 5, 6, 7])
     context = {
         'first_name': first_name,
         'user_id': user_id,
@@ -61,7 +65,8 @@ def tripclosure_nav(request,tripclosure_id=0):
     if tripclosure_form.is_valid():
         tripclosure_form.save()
         print("Main Form is Valid")
-        tripclosure_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num).values_list('tr_tripnumber', flat=True)
+        tripclosure_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num).values_list('tr_tripnumber',
+                                                                                                   flat=True)
         EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_tripclosure=list(tripclosure_list))
         messages.success(request, 'Record Updated Successfully')
     else:
@@ -77,8 +82,9 @@ def tripclosure_nav(request,tripclosure_id=0):
         print("Trip Closure files Form not Saved")
     return render(request, "asset_mgt_app/tripclosure_add.html", context)
 
+
 @login_required(login_url='login_page')
-def tripclosure_add(request,tripclosure_id=0):
+def tripclosure_add(request, tripclosure_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
@@ -89,7 +95,7 @@ def tripclosure_add(request,tripclosure_id=0):
             print("I am inside Get add Tripclosure")
             tripclosure_form = TripclosureaddForm()
             tripclosurefiles_form = TripclosurefilesForm()
-            status_list = list(Tripstatusinfo.objects.filter(id__in=[4,5,6,7]))
+            status_list = list(Tripstatusinfo.objects.filter(id__in=[4, 5, 6, 7]))
             context = {
                 'tripclosure_form': tripclosure_form,
                 'tripclosurefiles_form': tripclosurefiles_form,
@@ -105,7 +111,7 @@ def tripclosure_add(request,tripclosure_id=0):
             consignment_num = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_consignmentdetails
             tripclosure = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
             tripclosure_form = TripclosureaddForm(instance=tripclosure)
-            
+
             # Populate Customer Name and Trip Date
             if tripclosure.tr_enquirynumber:
                 tripclosure_form.fields['customer_name'].initial = str(tripclosure.tr_enquirynumber.en_customername)
@@ -113,6 +119,26 @@ def tripclosure_add(request,tripclosure_id=0):
                 tripclosure_form.fields['trip_date'].initial = tripclosure.tr_departeddate_pickup.strftime('%d-%m-%Y')
 
             tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
+            if not tripclosure_files:
+                tripclosure_files = Trip_closure_files_Info(tcf_tripnumber=trip_num)
+            
+            # Pre-populate and copy POD from Trip Detail if missing
+            if not tripclosure_files.tcf_pod:
+                if tripclosure.tc_pod_attachment:
+                    tripclosure_files.tcf_pod.save(
+                        tripclosure.tc_pod_attachment.name.split('/')[-1],
+                        ContentFile(tripclosure.tc_pod_attachment.read()),
+                        save=False
+                    )
+                    tripclosure_files.save()
+                elif tripclosure.td_pod:
+                    tripclosure_files.tcf_pod.save(
+                        tripclosure.td_pod.name.split('/')[-1],
+                        ContentFile(tripclosure.td_pod.read()),
+                        save=False
+                    )
+                    tripclosure_files.save()
+
             tripclosurefiles_form = TripclosurefilesForm(instance=tripclosure_files)
             trip = TripdetailInfo.objects.get(pk=tripclosure_id)
 
@@ -121,7 +147,7 @@ def tripclosure_add(request,tripclosure_id=0):
                 if trip.tc_financestatus
                 else None
             )
-            status_list = list(Tripstatusinfo.objects.filter(id__in=[4,5,6,7]))
+            status_list = list(Tripstatusinfo.objects.filter(id__in=[4, 5, 6, 7]))
 
             # Fetch Sell value from allotment
             allotment = Vehicle_allotmentInfo.objects.filter(
@@ -150,7 +176,7 @@ def tripclosure_add(request,tripclosure_id=0):
         if tripclosure_id == 0:
             print("Inside Trip closure post add")
             tripclosure_form = TripclosureaddForm(request.POST)
-            tripclosurefiles_form = TripclosurefilesForm(request.POST,request.FILES)
+            tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES)
             if tripclosure_form.is_valid():
                 tripclosure_form.save()
                 print("Trip Closure Main Form Saved")
@@ -158,7 +184,28 @@ def tripclosure_add(request,tripclosure_id=0):
                 print("Trip Closure Main Form not Saved")
 
             if tripclosurefiles_form.is_valid():
-                tripclosurefiles_form.save()
+                files_obj = tripclosurefiles_form.save(commit=False)
+                
+                # Fetch related trip detail
+                trip_detail = None
+                if files_obj.tcf_tripnumber:
+                    trip_detail = TripdetailInfo.objects.filter(tr_tripnumber=files_obj.tcf_tripnumber).first()
+                
+                # If tcf_pod is empty, copy from trip detail if available
+                if not files_obj.tcf_pod and trip_detail:
+                    if trip_detail.tc_pod_attachment:
+                        files_obj.tcf_pod.save(
+                            trip_detail.tc_pod_attachment.name.split('/')[-1],
+                            ContentFile(trip_detail.tc_pod_attachment.read()),
+                            save=False
+                        )
+                    elif trip_detail.td_pod:
+                        files_obj.tcf_pod.save(
+                            trip_detail.td_pod.name.split('/')[-1],
+                            ContentFile(trip_detail.td_pod.read()),
+                            save=False
+                        )
+                files_obj.save()
                 print("Trip Closure files Form Saved")
                 messages.success(request, 'Record Updated Successfully')
             else:
@@ -169,9 +216,9 @@ def tripclosure_add(request,tripclosure_id=0):
             print("Inside Trip closure post edit")
             trip_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_tripnumber
             tripclosure = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
-            tripclosure_form = TripclosureaddForm(request.POST,instance=tripclosure)
+            tripclosure_form = TripclosureaddForm(request.POST, instance=tripclosure)
             tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
-            tripclosurefiles_form = TripclosurefilesForm(request.POST,request.FILES,instance=tripclosure_files)
+            tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES, instance=tripclosure_files)
 
             if tripclosure_form.is_valid():
                 tripclosure_form.save()
@@ -188,7 +235,27 @@ def tripclosure_add(request,tripclosure_id=0):
                 print("Trip Closure Main Form not Saved")
 
             if tripclosurefiles_form.is_valid():
-                tripclosurefiles_form.save()
+                files_obj = tripclosurefiles_form.save(commit=False)
+                files_obj.tcf_tripnumber = trip_num
+                
+                # Fetch related trip detail
+                trip_detail = tripclosure
+                
+                # If tcf_pod is empty, copy from trip detail if available
+                if not files_obj.tcf_pod and trip_detail:
+                    if trip_detail.tc_pod_attachment:
+                        files_obj.tcf_pod.save(
+                            trip_detail.tc_pod_attachment.name.split('/')[-1],
+                            ContentFile(trip_detail.tc_pod_attachment.read()),
+                            save=False
+                        )
+                    elif trip_detail.td_pod:
+                        files_obj.tcf_pod.save(
+                            trip_detail.td_pod.name.split('/')[-1],
+                            ContentFile(trip_detail.td_pod.read()),
+                            save=False
+                        )
+                files_obj.save()
                 print("Trip Closure files Form Saved")
                 messages.success(request, 'Record Updated Successfully')
             else:
@@ -196,6 +263,7 @@ def tripclosure_add(request,tripclosure_id=0):
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
             return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/enquirynote_list')
+
 
 @login_required(login_url='login_page')
 def tripclosure_list(request):
@@ -329,13 +397,15 @@ def tripclosure_list_ajax(request):
     })
 
 
-#Delete tripclosure
+# Delete tripclosure
 @login_required(login_url='login_page')
-def tripclosure_delete(request,tripclosure_id):
+def tripclosure_delete(request, tripclosure_id):
     tripclosure = TripdetailInfo.objects.get(pk=tripclosure_id)
     tripclosure.delete()
     return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/tripclosure_list')
+
+
 @login_required(login_url='login_page')
 def transport_calculate_trip_charges(request):
     # Retrieve parameters from the AJAX request
@@ -362,7 +432,7 @@ def transport_calculate_trip_charges(request):
                 ro_customerdepartment=customer_department_id,
                 # ro_vehiclecategory_id=vehicle_category_id
             ).ro_rate
-            print('ro_rate',ro_rate)
+            print('ro_rate', ro_rate)
             return JsonResponse({'ro_rate': ro_rate})
 
         except RtratemasterInfo.DoesNotExist:
@@ -372,6 +442,7 @@ def transport_calculate_trip_charges(request):
     else:
         # Return 100 if trip_category is not 1
         return JsonResponse({'ro_rate': 100})
+
 
 @csrf_exempt
 @require_GET

@@ -32,7 +32,8 @@
                         <th>Driver Name</th>
                         <th>Date</th>
                         <th>Status</th>
-                        <th class="text-center">Actions</th>
+                        <th class="text-center">PDF</th>
+                        <th class="text-center">Edit</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -47,19 +48,19 @@
                         <td>{{ delivery.dc_date|date:"d-M-Y" }}</td>
                         <td><span class="badge badge-success px-3 py-2">Dispatched</span></td>
                         <td class="text-center">
-                            <div class="d-flex justify-content-center gap-3">
-                                <a href="{% url 'packing_delivery_pdf' delivery.id %}" class="btn-modern btn-submit py-2 px-4" style="font-size: 1rem; background: var(--accent-orange); text-decoration: none;" title="Download PDF">
-                                    <i class="fas fa-file-pdf"></i>
-                                </a>
-                                <a href="{% url 'packing_delivery_update' delivery.id %}" class="btn-modern btn-submit py-2 px-4" style="font-size: 1rem; text-decoration: none;" title="Edit DC">
-                                    <i class="far fa-edit"></i>
-                                </a>
-                            </div>
+                            <a href="{% url 'packing_delivery_pdf' delivery.id %}" class="btn-modern btn-submit py-2 px-4" style="font-size: 1rem; background: var(--accent-orange); text-decoration: none;" title="Download PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'packing_delivery_update' delivery.id %}" class="btn-modern btn-submit py-2 px-4" style="font-size: 1rem; text-decoration: none;" title="Edit DC">
+                                <i class="far fa-edit"></i>
+                            </a>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="9" class="text-center py-5 text-muted italic">No Delivery Challan records found.</td>
+                        <td colspan="10" class="text-center py-5 text-muted italic">No Delivery Challan records found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

@@ -68,7 +68,7 @@ def driver_expense_add(request, expense_id=0):
             exp.de_driver_id = settlement
             exp.save()
 
-            # 🔥 ALWAYS recalc after save
+            # ALWAYS recalc after save
             recalc_driver_settlement(settlement)
 
             messages.success(request, "Driver expense saved successfully ✅")
@@ -136,7 +136,7 @@ def driver_expense_delete(request, expense_id):
 
     expense.delete()
 
-    # 🔥 RECALC AFTER DELETE
+    #  RECALC AFTER DELETE
     recalc_driver_settlement(settlement)
 
     messages.success(request, "Driver expense deleted successfully 🗑️")
@@ -164,7 +164,7 @@ def get_trip_charges(request):
             'rto': trip.tc_rtocost or 0,
             'batta': trip.tc_betacost or 0,
 
-            # 🔥 NEW DETAILS
+            #  NEW DETAILS
             'vehicle_number': trip.tr_vehiclenumber or "",
             'from_location': trip.tr_departedlocation.place_name if trip.tr_departedlocation else "",
             'to_location': trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else "",

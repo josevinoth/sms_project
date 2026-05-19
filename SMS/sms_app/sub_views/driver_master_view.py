@@ -76,7 +76,7 @@ def driver_autocomplete(request):
     )[:10]
 
     data = [{
-        'id': d.id,  # 🔥 ADD THIS
+        'id': d.id,  # ADD THIS
         'name': d.dm_name,
         'number': d.dm_drivernumber,
         'lic': d.dm_driver_lic,

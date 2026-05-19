@@ -1,272 +1,285 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<form method="POST" id="enquiry_note" action=""  data-load_customer_model-url="{% url 'load_customer_model' %}">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Enquiry Note</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Enquiry Number</span>
-									</div>
-									{% render_field form.en_enquirynumber id="en_enquirynumber" readonly="True" class="form-control bg-secondary text-white" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Name</span>
-									</div>
-									{% render_field form.en_customername id="en_customername" class="form-control" onchange="fetchCustomerDetails()" %}
-								</div>
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">New Customer Name</span>
-									</div>
-									{% render_field form.en_customer_new_name id="en_customer_new_name" class="form-control disable_a_href" %}
-								</div>
+<div class="container-fluid py-4">
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Contact</span>
-									</div>
-									{% render_field form.en_contactno id="en_contactno" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Email</span>
-									</div>
-									{% render_field form.en_email id="en_email" class="form-control disable_a_href" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Department</span>
-									</div>
-									{% render_field form.en_customerdepartment id="en_customerdepartment" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Requestor</span>
-									</div>
-									{% render_field form.en_requestor id="en_requestor" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Business Type</span>
-									</div>
-									{% render_field form.en_business_type id="en_business_type" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Movement Type</span>
-									</div>
-									{% render_field form.en_movement_type id="en_movement_type" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Trip Type</span>
-									</div>
-									{% render_field form.en_trip_type id="en_trip_type" class="form-control " %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Assigned To</span>
-									</div>
-									{% render_field form.en_assignedto id="en_assignedto" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">From Location</span>
-									</div>
-									{% render_field form.en_fromlocaion id="en_fromlocaion" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Touch Point 1</span>
-									</div>
-									{% render_field form.en_touchpoint id="en_touchpoint" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Touch Point 2</span>
-									</div>
-									{% render_field form.en_touchpoint2 id="en_touchpoint2" class="form-control" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Touch Point 3</span>
-									</div>
-									{% render_field form.en_touchpoint3 id="en_touchpoint3" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Touch Point 4</span>
-									</div>
-									{% render_field form.en_touchpoint4 id="en_touchpoint4" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">To Location</span>
-									</div>
-									{% render_field form.en_tolocation id="en_tolocation" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Pick-Up Date & Time</span>
-									</div>
-									{% render_field form.en_pickupdatetime id="en_pickupdatetime" type="Datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Status</span>
-									</div>
-									{% render_field form.en_status class="form-control" %}
-								</div>
-							</div>
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-white" style="font-size: 1.4rem; font-weight: 700; letter-spacing: 1px;">
+            <i class="fas fa-edit mr-2"></i> Add/Update Enquiry Note
+        </h3>
+        <a href="{% url 'enquirynote_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 1rem; text-decoration: none; border-radius: 12px; border: 1px solid var(--border-light); display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
 
-							{% render_field form.en_updated_by id="en_updated_by" hidden="True" class="form-control" %}
-							{% render_field form.en_consignmentdetails id="en_consignmentdetails" hidden="True" class="form-control" %}
-							{% render_field form.en_vehicle_allotment id="en_vehicle_allotment" hidden="True" class="form-control" %}
-							{% render_field form.en_tripdetails id="en_tripdetails" hidden="True" class="form-control" %}
-							{% render_field form.en_tripclosure id="en_tripclosure" hidden="True" class="form-control" %}
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</form>
-<div class="accordion container-fluid">
-	<div class="card">
-		<div class="card-header bg-info" id="headingOne">
-			<div class="d-flex align-items-center">
-				<h2 class="mb-0">
-					<button class="btn btn-link text-left text-white" type="button" data-toggle="collapse"
-						data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-						Add/Update Vehicle Details <i class="fas fa-angle-down"></i>
-					</button>
-				</h2>
-				<a href="{% url 'enquirynotevehicle_insert' %}" class="btn btn-primary ml-3">
-					<i class="fas fa-plus"></i> Add
-				</a>
-			</div>
-		</div>
+    <!-- Main Form -->
+    <form method="POST" id="enquiry_note" action="" data-load_customer_model-url="{% url 'load_customer_model' %}">
+        {% csrf_token %}
 
-		<div id="collapseOne" class="collapse show " aria-labelledby="headingOne" data-parent="#vehicledetails">
-			<div class="card-body" id="vehicledetails">
-				{% include "asset_mgt_app/enquirynotevehicle_add.html" %}
-			</div>
-		</div>
-	</div>
+        <div class="modern-card" style="padding: 1.5rem !important; border-top: none;">
+            <div class="row row-compact">
+                
+                <!-- Column 1: Customer Info -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-user-tag"></i> Customer Info</div>
+                        
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Enquiry Number</label>
+                            {% render_field form.en_enquirynumber id="en_enquirynumber" readonly="True" class="form-control form-control-modern modern-readonly" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer Name</label>
+                            {% render_field form.en_customername id="en_customername" class="form-control form-control-modern" onchange="fetchCustomerDetails()" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">New Customer Name</label>
+                            {% render_field form.en_customer_new_name id="en_customer_new_name" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer Contact</label>
+                            {% render_field form.en_contactno id="en_contactno" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer Email</label>
+                            {% render_field form.en_email id="en_email" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Request Info -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-clipboard-list"></i> Request Info</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer Department</label>
+                            {% render_field form.en_customerdepartment id="en_customerdepartment" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Requestor</label>
+                            {% render_field form.en_requestor id="en_requestor" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Business Type</label>
+                            {% render_field form.en_business_type id="en_business_type" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Movement Type</label>
+                            {% render_field form.en_movement_type id="en_movement_type" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Trip Type</label>
+                            {% render_field form.en_trip_type id="en_trip_type" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Logistics & Route -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-truck-loading"></i> Logistics & Route</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Assigned To</label>
+                            {% render_field form.en_assignedto id="en_assignedto" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">From Location</label>
+                            {% render_field form.en_fromlocaion id="en_fromlocaion" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">To Location</label>
+                            {% render_field form.en_tolocation id="en_tolocation" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Touch Point 1</label>
+                            {% render_field form.en_touchpoint id="en_touchpoint" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Touch Point 2</label>
+                            {% render_field form.en_touchpoint2 id="en_touchpoint2" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 4: Destination & Status -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-map-marked-alt"></i> Destination & Status</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Touch Point 3</label>
+                            {% render_field form.en_touchpoint3 id="en_touchpoint3" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Touch Point 4</label>
+                            {% render_field form.en_touchpoint4 id="en_touchpoint4" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Pick-Up Date & Time</label>
+                            {% render_field form.en_pickupdatetime id="en_pickupdatetime" type="Datetime-local" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Status</label>
+                            {% render_field form.en_status class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden Fields -->
+                {% render_field form.en_updated_by id="en_updated_by" hidden="True" class="form-control" %}
+                {% render_field form.en_consignmentdetails id="en_consignmentdetails" hidden="True" class="form-control" %}
+                {% render_field form.en_vehicle_allotment id="en_vehicle_allotment" hidden="True" class="form-control" %}
+                {% render_field form.en_tripdetails id="en_tripdetails" hidden="True" class="form-control" %}
+                {% render_field form.en_tripclosure id="en_tripclosure" hidden="True" class="form-control" %}
+            </div>
+
+            <!-- Messages Section -->
+            <div class="row mt-2">
+                <div class="col-12 text-center">
+                    <div class="message text-center">
+                        {% for message in messages %}
+                        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
+                            <i class="fas fa-info-circle"></i> {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-between align-items-center mt-4 px-2">
+                <button type="submit" class="btn-modern btn-submit px-5">
+                    <i class="fas fa-check mr-2"></i> Submit Note
+                </button>
+                <a href="{% url 'enquirynote_list' %}" class="btn-modern btn-cancel px-5" style="text-decoration: none;">
+                    <i class="fas fa-times mr-2"></i> Cancel
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Vehicle Details Section -->
+    <div class="modern-card mt-4 p-0" style="overflow: hidden; border-radius: 20px;">
+        <div class="modern-list-header px-4 py-3 d-flex justify-content-between align-items-center" id="headingOne" style="margin-bottom: 0; border-radius: 0;">
+            <span class="text-white" style="cursor: pointer; font-size: 1.25rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                <i class="fas fa-truck"></i> Vehicle Details <i class="fas fa-angle-down" style="font-size: 0.95rem;"></i>
+            </span>
+            <a href="{% url 'enquirynotevehicle_insert' %}" class="btn-modern btn-submit py-2 px-4" style="font-size: 0.9rem; text-decoration: none; border-radius: 10px; background: var(--accent-emerald); box-shadow: 0 4px 15px rgba(20, 184, 166, 0.2);">
+                <i class="fas fa-plus"></i> Add Vehicle Details
+            </a>
+        </div>
+
+        <div id="collapseOne" class="collapse show" aria-labelledby="headingOne">
+            <div class="p-4" id="vehicledetails" style="background: var(--bg-card); color: var(--text-main);">
+                {% include "asset_mgt_app/enquirynotevehicle_add.html" %}
+            </div>
+        </div>
+    </div>
+
 </div>
-<script>
-	$(document).ready(function () {
-		$('#enquirynotevehicle_list').DataTable({
-			order: [0, 'asc'],
-			dom: 'Bfrtip',
-			buttons: [
-				'copy', 'csv', 'excel', 'print'
-			]
-		});
-
-		document.getElementById("en_updated_by").value = '{{user_id}}';
-		document.getElementById("en_assignedto").value = '{{user_id}}';
-
-		var enquiry_num_id_val = document.getElementById("env_enquirynumber").value;
-		var x = '{{enquiry_num_id}}';
-
-		if (enquiry_num_id_val == "") {
-			document.getElementById("env_enquirynumber").value = '{{enquiry_num_id}}';
-		} else {
-			document.getElementById("env_enquirynumber").value = enquiry_num_id_val;
-		}
-
-		var enquiry_num = document.getElementById("en_enquirynumber").value;
-
-		if (enquiry_num == "") {
-			$('#vehicledetails').addClass('disable_a_href');
-		} else {
-			$('#vehicledetails').removeClass('disable_a_href');
-		}
-	});
-</script>
-
-<script>
-	function fetchCustomerDetails() {
-		var customerId = $("#en_customername").val();  // Get selected customer ID
-		if (customerId == 210) {
-			$('#en_customer_new_name').removeClass('disable_a_href');
-		} else {
-			$('#en_customer_new_name').addClass('disable_a_href');
-			document.getElementById("en_customer_new_name").value = "";
-		}
-		if (customerId) {
-			$.ajax({
-				url: "{% url 'get_customer_details' %}",  // Django URL to fetch customer details
-				type: "GET",
-				data: { customer_id: customerId },
-				success: function (response) {
-					$("#en_contactno").val(response.customer_contact);
-					$("#en_email").val(response.customer_email);
-				},
-				error: function (xhr, status, error) {
-					console.log("Error fetching customer details:", error);
-				}
-			});
-		}
-	}
-</script>
-<script>
-	$("#en_customername").select2({
-		width: 'resolve'
-	});
-	$("#en_fromlocaion").select2({
-		width: 'resolve'
-	});
-	$("#en_touchpoint").select2({
-		width: 'resolve'
-	});
-	$("#en_touchpoint1").select2({
-		width: 'resolve'
-	});
-	$("#en_touchpoint2").select2({
-		width: 'resolve'
-	});
-	$("#en_touchpoint3").select2({
-		width: 'resolve'
-	});
-	$("#en_touchpoint4").select2({
-		width: 'resolve'
-	});
-	$("#en_tolocation").select2({
-		width: 'resolve'
-	});
-</script>
 
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        $('#enquirynotevehicle_list').DataTable({
+            order: [0, 'asc'],
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'print'
+            ]
+        });
+
+        document.getElementById("en_updated_by").value = '{{user_id}}';
+        document.getElementById("en_assignedto").value = '{{user_id}}';
+
+        var enquiry_num_id_val = document.getElementById("env_enquirynumber").value;
+        var x = '{{enquiry_num_id}}';
+
+        if (enquiry_num_id_val == "") {
+            document.getElementById("env_enquirynumber").value = '{{enquiry_num_id}}';
+        } else {
+            document.getElementById("env_enquirynumber").value = enquiry_num_id_val;
+        }
+
+        var enquiry_num = document.getElementById("en_enquirynumber").value;
+
+        if (enquiry_num == "") {
+            $('#vehicledetails').addClass('disable_a_href');
+        } else {
+            $('#vehicledetails').removeClass('disable_a_href');
+        }
+    });
+
+    function fetchCustomerDetails() {
+        var customerId = $("#en_customername").val();  // Get selected customer ID
+        if (customerId == 210) {
+            $('#en_customer_new_name').removeClass('disable_a_href');
+        } else {
+            $('#en_customer_new_name').addClass('disable_a_href');
+            document.getElementById("en_customer_new_name").value = "";
+        }
+        if (customerId) {
+            $.ajax({
+                url: "{% url 'get_customer_details' %}",  // Django URL to fetch customer details
+                type: "GET",
+                data: { customer_id: customerId },
+                success: function (response) {
+                    $("#en_contactno").val(response.customer_contact);
+                    $("#en_email").val(response.customer_email);
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error fetching customer details:", error);
+                }
+            });
+        }
+    }
+</script>
+
+<script>
+    $("#en_customername").select2({
+        width: '100%'
+    });
+    $("#en_fromlocaion").select2({
+        width: '100%'
+    });
+    $("#en_touchpoint").select2({
+        width: '100%'
+    });
+    $("#en_touchpoint1").select2({
+        width: '100%'
+    });
+    $("#en_touchpoint2").select2({
+        width: '100%'
+    });
+    $("#en_touchpoint3").select2({
+        width: '100%'
+    });
+    $("#en_touchpoint4").select2({
+        width: '100%'
+    });
+    $("#en_tolocation").select2({
+        width: '100%'
+    });
+</script>
+{% endblock extra_js %}

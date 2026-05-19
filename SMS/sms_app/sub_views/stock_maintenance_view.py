@@ -116,7 +116,7 @@ def stock_maintenance_add(request):
         if form.is_valid():
             obj = form.save(commit=False)
 
-            # 🔥 FORCE UOM FROM POST
+            #  FORCE UOM FROM POST
             uom_id = request.POST.get("sm_uom")
             if uom_id:
                 obj.sm_uom_id = uom_id
@@ -269,7 +269,7 @@ def stock_maintenance_edit(request, pk):
         if form.is_valid():
             obj = form.save(commit=False)
 
-            # 🔥 FORCE UOM AGAIN
+            #  FORCE UOM AGAIN
             uom_id = request.POST.get("sm_uom")
             if uom_id:
                 obj.sm_uom_id = uom_id

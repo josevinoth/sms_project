@@ -291,17 +291,18 @@
 				vehicleDropdown.empty();
 				vehicleDropdown.append("<option value=''>--Select--</option>");
 
-				if (selectedVehicle !== "") {
+				if (selectedVehicle && selectedVehicle !== "") {
 					$("#co_vehicelnumber").append(
 						"<option value='" + selectedVehicle + "' selected>" + selectedVehicle + "</option>"
 					);
 				}
-				else {
-					final_vehicle_list.forEach(function (vehicle) {
+				
+				final_vehicle_list.forEach(function (vehicle) {
+					if (vehicle !== selectedVehicle) {
 						$("#co_vehicelnumber").append(
 							"<option value='" + vehicle + "'>" + vehicle + "</option>");
-					});
-				}
+					}
+				});
 
 				bind_vehicle_type_fetch();
 				vehicleDropdown.trigger('change');

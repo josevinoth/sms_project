@@ -39,7 +39,7 @@ class DriverMasterForm(forms.ModelForm):
         self.fields['dm_user_id'].empty_label = "--Select Employee--"
         self.fields['dm_user_id'].required = False
 
-        # 🔥 THIS FIXES YOUR ISSUE
+        #  THIS FIXES YOUR ISSUE
         self.fields['dm_user_id'].label_from_instance = self.employee_label
 
         # -------------------------------

@@ -1,109 +1,122 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" action="" id="enquirynotevehicle_add"  >
+<form method="POST" action="" id="enquirynotevehicle_add">
 	{% csrf_token %}
-	<div class="row container-fluid">
-		<div class="col-auto">
-			{% render_field enquiryvechicle_form.env_enquirynumber id="env_enquirynumber" class="form-control disable_a_href" %}
-		</div>
-		<div class="col-auto">
-			{% render_field enquiryvechicle_form.env_vehicletype id="env_vehicletype" class="form-control disable_a_href" %}
-		</div>
-		<div class="col-auto">
-			{% render_field enquiryvechicle_form.env_vehiclecategory id="env_vehiclecategory" class="form-control disable_a_href" %}
-		</div>
-		<div class="col-auto">
-			{% render_field enquiryvechicle_form.env_quantity id="env_quantity" class="form-control disable_a_href" placeholder="Quantity" %}
-		</div>
-		<div class="col-auto">
-			{% render_field enquiryvechicle_form.env_updated_by id="env_updated_by" hidden="True" class="form-control" %}
-		</div>
-		<div class="col-auto">
-			<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Save</button>
-		</div>
+    
+    <div class="form-section p-3 mb-4" style="background: var(--bg-section); border: 1.5px solid var(--border-light); border-radius: 14px;">
+        <div class="row align-items-center">
+            <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+                <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Enquiry Number</label>
+                {% render_field enquiryvechicle_form.env_enquirynumber id="env_enquirynumber" class="form-control form-control-modern disable_a_href modern-readonly" style="height: 45px; padding: 0.5rem 1rem;" %}
+            </div>
+            <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+                <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Vehicle Type</label>
+                {% render_field enquiryvechicle_form.env_vehicletype id="env_vehicletype" class="form-control form-control-modern disable_a_href" style="height: 45px; padding: 0.5rem 1rem;" %}
+            </div>
+            <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+                <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Vehicle Category</label>
+                {% render_field enquiryvechicle_form.env_vehiclecategory id="env_vehiclecategory" class="form-control form-control-modern disable_a_href" style="height: 45px; padding: 0.5rem 1rem;" %}
+            </div>
+            <div class="col-md-2 col-sm-6 mb-2 mb-md-0">
+                <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Quantity</label>
+                {% render_field enquiryvechicle_form.env_quantity id="env_quantity" class="form-control form-control-modern disable_a_href" placeholder="Quantity" style="height: 45px; padding: 0.5rem 1rem;" %}
+            </div>
+            {% render_field enquiryvechicle_form.env_updated_by id="env_updated_by" hidden="True" class="form-control" %}
+            <div class="col-md-1 col-sm-12 text-md-right text-center mt-3 mt-md-0">
+                <label class="form-label-modern small mb-1 d-none d-md-block" style="visibility: hidden;">Save</label>
+                <button type="submit" class="btn-modern btn-submit py-2 px-3 w-100" style="font-size: 0.9rem; height: 45px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fas fa-save"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
 
-	</div>
-	<br>
-	<div class="row ">
-		<div class="col-1"></div>
-		<div class="col-10">
+	<div class="row">
+		<div class="col-12 text-center">
 			<div class="message text-center">
 				{% for message in messages %}
-				<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+				<div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
+                    <i class="fas fa-info-circle"></i> {{ message }}
+                </div>
 				{% endfor %}
 			</div>
 		</div>
-		<div class="col-1"></div>
 	</div>
 </form>
-<hr>
-<div class="container-fluid row">
-<!--	<div class="col-md-1">-->
-<!--		<a href="{% url 'enquirynotevehicle_insert' %}"  id="add_enquiry" class="btn btn-primary btn-block ">-->
-<!--			<i class="fas fa-plus"></i> Add-->
-<!--		</a>-->
-<!--	</div>-->
+
+<div class="table-container-modern p-0 border-0 shadow-none">
+    <div class="table-responsive">
+        <table id="enquirynotevehicle_list" class="table modern-table text-center" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Created On</th>
+                    <th>Enquiry Number</th>
+                    <th>Vehicle Type</th>
+                    <th>Vehicle Category</th>
+                    <th>Quantity</th>
+                    <th>Updated at</th>
+                    <th>Updated By</th>
+                    <th class="text-center">Edit</th>
+                    <th class="text-center">Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for enquirynotevehicleinfo in enquirynotevehicle_list %}
+            <tr>
+                <td class="font-weight-bold">{{ enquirynotevehicleinfo.id }}</td>
+                <td>
+                    {{ enquirynotevehicleinfo.env_created_at|date:"d-m-Y"|default:enquirynotevehicleinfo.env_created_at }}<br>
+                    <span class="small text-muted font-weight-bold">{{ enquirynotevehicleinfo.env_created_at|date:"h:i A" }}</span>
+                </td>
+                <td><span class="badge badge-light p-2 border font-weight-bold" style="font-size: 0.85rem;">{{ enquirynotevehicleinfo.env_enquirynumber }}</span></td>
+                <td>{{ enquirynotevehicleinfo.env_vehicletype }}</td>
+                <td>{{ enquirynotevehicleinfo.env_vehiclecategory }}</td>
+                <td><span class="badge badge-info px-3 py-1 font-weight-bold" style="font-size: 0.85rem; background-color: #0ea5e9;">{{ enquirynotevehicleinfo.env_quantity }}</span></td>
+                <td>
+                    {{ enquirynotevehicleinfo.env_updated_at|date:"d-m-Y"|default:enquirynotevehicleinfo.env_updated_at }}<br>
+                    <span class="small text-muted font-weight-bold">{{ enquirynotevehicleinfo.env_updated_at|date:"h:i A" }}</span>
+                </td>
+                <td>{{ enquirynotevehicleinfo.env_updated_by }}</td>
+                <td class="text-center">
+                    <a class="btn-modern btn-submit py-1 px-3" href="{% url 'enquirynotevehicle_update' enquirynotevehicleinfo.id %}" style="font-size: 0.8rem; text-decoration: none; border-radius: 8px;">
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+                <td class="text-center">
+                    <form action="{% url 'enquirynotevehicle_delete' enquirynotevehicleinfo.id %}" method="post" onclick="return confirm('Are you sure?');" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px; padding: 6px 12px;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
-<br>
-<div class="container-fluid">
-	<table  id="enquirynotevehicle_list" class="table table-striped table-bordered">
-		<thead class="thead-dark">
-		<tr>
-			<th>ID</th>
-			<th>Created On</th>
-			<th>Enquiry Number</th>
-			<th>Vehicle Type</th>
-			<th>Vehicle Category</th>
-			<th>Quantity</th>
-			<th>Updated at</th>
-			<th>Updated By</th>
-			<th>Edit</th>
-			<th>Delete</th>
-		</thead>
-		<tbody>
-		{% for enquirynotevehicleinfo in enquirynotevehicle_list %}
-		<tr>
-			<td> {{enquirynotevehicleinfo.id}}</td>
-			<td> {{enquirynotevehicleinfo.env_created_at}}</td>
-			<td> {{enquirynotevehicleinfo.env_enquirynumber}}</td>
-			<td> {{enquirynotevehicleinfo.env_vehicletype}}</td>
-			<td> {{enquirynotevehicleinfo.env_vehiclecategory}}</td>
-			<td> {{enquirynotevehicleinfo.env_quantity}}</td>
-			<td> {{enquirynotevehicleinfo.env_updated_at}}</td>
-			<td> {{enquirynotevehicleinfo.env_updated_by}}</td>
-			<td>
-				<a class="btn btn-primary" href="{% url 'enquirynotevehicle_update' enquirynotevehicleinfo.id %}" class="btn btn-primary">
-					<i class="far fa-edit"></i>
-				</a>
-			</td>
-			<td>
-				<form action="{% url 'enquirynotevehicle_delete' enquirynotevehicleinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-					{% csrf_token %}
-					<button type="submit" class="btn btn-danger">
-						<i class="fas fa-trash-alt"></i>
-					</button>
-				</form>
-			</td>
-		</tr>
-		{% endfor %}
-		</tbody>
-	</table>
-</div>
+
 <script>
 	$(document).ready(function() {
         document.getElementById("env_updated_by").value ='{{user_id}}';
-        var enquiry_num_id_val = document.getElementById("env_enquirynumber").value
+        var enquiry_num_id_val = document.getElementById("env_enquirynumber").value;
         if (enquiry_num_id_val=="")
         {
-
             document.getElementById("env_enquirynumber").value ='{{enquirynote_id}}';
         }
         else
         {
             document.getElementById("env_enquirynumber").value =enquiry_num_id_val;
         }
+
+        // Enable env_enquirynumber on form submit so it is submitted with the form
+        $('#enquirynotevehicle_add').on('submit', function() {
+            $('#env_enquirynumber').prop('disabled', false);
         });
+    });
 </script>
 
 <script>

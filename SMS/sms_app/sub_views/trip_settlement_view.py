@@ -53,6 +53,22 @@ def trip_settlement_edit(request, trip_id):
     if not files_instance:
         files_instance = Trip_closure_files_Info(tcf_tripnumber=trip.tr_tripnumber)
 
+    # --- NEW LOGIC: Pre-populate POD from TripdetailInfo if missing ---
+    if not files_instance.tcf_pod and trip.tc_pod_attachment:
+        from django.core.files.base import ContentFile
+        try:
+            trip.tc_pod_attachment.open('rb')
+            files_instance.tcf_pod.save(
+                trip.tc_pod_attachment.name.split('/')[-1],
+                ContentFile(trip.tc_pod_attachment.read()),
+                save=False 
+            )
+        except Exception as e:
+            print(f"Error copying POD: {e}")
+        finally:
+            trip.tc_pod_attachment.close()
+    # ------------------------------------------------------------------
+
     if request.method == "POST":
         print("---- POST RECEIVED ----")
         print(request.POST)
