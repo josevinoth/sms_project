@@ -121,7 +121,7 @@ def tripclosure_add(request, tripclosure_id=0):
             tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
             if not tripclosure_files:
                 tripclosure_files = Trip_closure_files_Info(tcf_tripnumber=trip_num)
-            
+
             # Pre-populate and copy POD from Trip Detail if missing
             if not tripclosure_files.tcf_pod:
                 if tripclosure.tc_pod_attachment:
@@ -190,12 +190,12 @@ def tripclosure_add(request, tripclosure_id=0):
 
             if tripclosurefiles_form.is_valid():
                 files_obj = tripclosurefiles_form.save(commit=False)
-                
+
                 # Fetch related trip detail
                 trip_detail = None
                 if files_obj.tcf_tripnumber:
                     trip_detail = TripdetailInfo.objects.filter(tr_tripnumber=files_obj.tcf_tripnumber).first()
-                
+
                 # If tcf_pod is empty, copy from trip detail if available
                 if not files_obj.tcf_pod and trip_detail:
                     if trip_detail.tc_pod_attachment:
@@ -242,10 +242,10 @@ def tripclosure_add(request, tripclosure_id=0):
             if tripclosurefiles_form.is_valid():
                 files_obj = tripclosurefiles_form.save(commit=False)
                 files_obj.tcf_tripnumber = trip_num
-                
+
                 # Fetch related trip detail
                 trip_detail = tripclosure
-                
+
                 # If tcf_pod is empty, copy from trip detail if available
                 if not files_obj.tcf_pod and trip_detail:
                     if trip_detail.tc_pod_attachment:
