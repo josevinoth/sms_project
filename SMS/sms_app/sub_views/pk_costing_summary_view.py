@@ -195,34 +195,8 @@ def costingsummary_add(request,costingsummary_id=0):
                 print("PkcostingsummaryForm Form is Valid")
                 
                 # RECALCULATE ITEM COSTS BASED ON NEW MARGIN
-                job_no = summary.cs_job_no
-                cs_po_num = summary.cs_customer_po
-                margin = summary.cs_margin or 0
-                
-                if job_no:
-                    base_filter = {'ct_job_no': job_no, 'ct_customer_po': cs_po_num}
-                else:
-                    base_filter = {'ct_assessment_num': summary.cs_assessment_num, 'ct_customer_po': cs_po_num}
-                
-                # Get unique items (requirements) for this job
-                item_reqs = PkcostingInfo.objects.filter(**base_filter).values('ct_requirement').distinct()
-                for req in item_reqs:
-                    k = req['ct_requirement']
-                    if not k: continue
-                    
-                    # Sum base costs (W/O margin) for this item
-                    total_cost_wom = PkcostingInfo.objects.filter(ct_requirement=k, **base_filter).aggregate(total=Sum('ct_total_cost'))['total'] or 0
-                    total_cost_with_margin = total_cost_wom + (total_cost_wom * margin / 100)
-                    
-                    # Get quantity from first line
-                    rep_line = PkcostingInfo.objects.filter(ct_requirement=k, **base_filter).first()
-                    qty = rep_line.ct_na_quantity if rep_line else 1
-                    
-                    # Update all lines for this item in this job
-                    PkcostingInfo.objects.filter(ct_requirement=k, **base_filter).update(
-                        ct_total_cost=round(total_cost_with_margin, 2),
-                        ct_totalbox_cost=round(total_cost_with_margin * qty, 2)
-                    )
+                # The logic that previously overwrote PkcostingInfo items with the summary total has been removed 
+                # to prevent data corruption where all items show the same unit cost.
 
                 messages.success(request, 'Record Updated Successfully')
             else:
@@ -353,10 +327,8 @@ def pk_bvm_invoice_pdf(request, invoice_id=0):
         qty = rep_line.ct_na_quantity if rep_line else 1
         
         # Update lines only for this specific job to prevent affecting other jobs
-        PkcostingInfo.objects.filter(ct_requirement=k, **base_filter).update(
-            ct_total_cost=round(total_cost_with_margin, 2),
-            ct_totalbox_cost=round(total_cost_with_margin * qty, 2)
-        )
+        # The logic that previously overwrote PkcostingInfo items with the summary total has been removed 
+        # to prevent data corruption.
         
         totalbox_cost += (total_cost_with_margin * qty)
 
