@@ -28,7 +28,7 @@ def trip_settlement_view(request):
                 Q(tr_enquirynumber__consignmentdetailinfo__co_status_id=8)
             )
         )
-    )
+    ).distinct()
 
     if veh_no:
         trip_list = trip_list.filter(tr_vehiclenumber__icontains=veh_no)
