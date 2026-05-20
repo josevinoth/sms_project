@@ -436,14 +436,16 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Trip Status</span>
 									</div>
-									<select name="tc_financestatus" id="tc_financestatus" class="form-control" disabled="disabled" aria-disabled="true" title="Fixed status">
+									<select name="tc_financestatus" id="tc_financestatus" class="form-control" {% if not is_business_empty_and_cancelled %}disabled="disabled" aria-disabled="true" title="Fixed status"{% endif %}>
 										<option value="2">--Select--</option>
 										{% for item in status_list  %}
 										<option value="{{ item.id }}">{{ item.status }}</option>
 										{% endfor %}
 									</select>
+									{% if not is_business_empty_and_cancelled %}
 									<!-- Hidden input so the disabled select's value still gets submitted -->
 									<input type="hidden" name="tc_financestatus" id="tc_financestatus_hidden" value="4" />
+									{% endif %}
 								</div>
 								{% render_field tripclosure_form.tr_updated_by id="tr_updated_by" hidden="True" class="form-control" %}
 								{% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control" %}
@@ -476,21 +478,36 @@
         document.getElementById("tr_updated_by").value ='{{user_id}}';
 
         // Determine the target status:
-        // If the trip is already Cancelled (status=3), keep it as 3.
-        // Otherwise force it to 4 (Trip Closed).
         var currentStatus = "{{ status_selected|default:'' }}";
-        var targetStatus = (currentStatus === '3') ? '3' : '4';
+        var isBusinessEmptyAndCancelled = {% if is_business_empty_and_cancelled %}true{% else %}false{% endif %};
 
-        if (document.getElementById("tc_financestatus")) {
-            var sel = document.getElementById("tc_financestatus");
-            var opt = sel.querySelector('option[value="' + targetStatus + '"]');
-            if (opt) {
-                opt.selected = true;
+        if (isBusinessEmptyAndCancelled) {
+            // Business Empty with cancelled consignment allows manual choice.
+            // Do not force automatically. Select the current status if it exists.
+            if (document.getElementById("tc_financestatus") && currentStatus) {
+                var sel = document.getElementById("tc_financestatus");
+                var opt = sel.querySelector('option[value="' + currentStatus + '"]');
+                if (opt) {
+                    opt.selected = true;
+                }
+                sel.value = currentStatus;
             }
-            sel.value = targetStatus;
-        }
-        if (document.getElementById("tc_financestatus_hidden")) {
-            document.getElementById("tc_financestatus_hidden").value = targetStatus;
+        } else {
+            // If the trip is already Cancelled (status=3), keep it as 3.
+            // Otherwise force it to 4 (Trip Closed).
+            var targetStatus = (currentStatus === '3') ? '3' : '4';
+
+            if (document.getElementById("tc_financestatus")) {
+                var sel = document.getElementById("tc_financestatus");
+                var opt = sel.querySelector('option[value="' + targetStatus + '"]');
+                if (opt) {
+                    opt.selected = true;
+                }
+                sel.value = targetStatus;
+            }
+            if (document.getElementById("tc_financestatus_hidden")) {
+                document.getElementById("tc_financestatus_hidden").value = targetStatus;
+            }
         }
         trip_status=document.getElementById("tc_financestatus").value
         var tr_enquirynumber_val=document.getElementById("tr_enquirynumber").value;

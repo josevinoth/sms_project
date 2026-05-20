@@ -158,6 +158,10 @@ def tripclosure_add(request, tripclosure_id=0):
             ).first()
             va_sale = allotment.va_sale if allotment else 0
 
+            is_business_empty_and_cancelled = False
+            if trip.tr_category_id == 3 and trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_status_id == 8:
+                is_business_empty_and_cancelled = True
+
             context = {
                 'tripclosure_form': tripclosure_form,
                 'tripclosurefiles_form': tripclosurefiles_form,
@@ -170,6 +174,7 @@ def tripclosure_add(request, tripclosure_id=0):
                 'status_selected': status_selected,
                 'tripclosure_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num),
                 'va_sale': va_sale,
+                'is_business_empty_and_cancelled': is_business_empty_and_cancelled,
             }
         return render(request, "asset_mgt_app/tripclosure_add.html", context)
     else:
