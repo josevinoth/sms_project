@@ -121,29 +121,23 @@ def tripclosure_add(request, tripclosure_id=0):
             tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
             if not tripclosure_files:
                 tripclosure_files = Trip_closure_files_Info(tcf_tripnumber=trip_num)
-            
+
             # Pre-populate and copy POD from Trip Detail if missing
             if not tripclosure_files.tcf_pod:
                 if tripclosure.tc_pod_attachment:
-                    try:
-                        tripclosure_files.tcf_pod.save(
-                            tripclosure.tc_pod_attachment.name.split('/')[-1],
-                            ContentFile(tripclosure.tc_pod_attachment.read()),
-                            save=False
-                        )
-                        tripclosure_files.save()
-                    except Exception as e:
-                        print(f"Error copying tc_pod_attachment: {e}")
+                    tripclosure_files.tcf_pod.save(
+                        tripclosure.tc_pod_attachment.name.split('/')[-1],
+                        ContentFile(tripclosure.tc_pod_attachment.read()),
+                        save=False
+                    )
+                    tripclosure_files.save()
                 elif tripclosure.td_pod:
-                    try:
-                        tripclosure_files.tcf_pod.save(
-                            tripclosure.td_pod.name.split('/')[-1],
-                            ContentFile(tripclosure.td_pod.read()),
-                            save=False
-                        )
-                        tripclosure_files.save()
-                    except Exception as e:
-                        print(f"Error copying td_pod: {e}")
+                    tripclosure_files.tcf_pod.save(
+                        tripclosure.td_pod.name.split('/')[-1],
+                        ContentFile(tripclosure.td_pod.read()),
+                        save=False
+                    )
+                    tripclosure_files.save()
 
             tripclosurefiles_form = TripclosurefilesForm(instance=tripclosure_files)
             trip = TripdetailInfo.objects.get(pk=tripclosure_id)
@@ -188,53 +182,40 @@ def tripclosure_add(request, tripclosure_id=0):
             print("Inside Trip closure post add")
             tripclosure_form = TripclosureaddForm(request.POST)
             tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES)
-
-            is_main_valid = tripclosure_form.is_valid()
-            is_files_valid = tripclosurefiles_form.is_valid()
-
-            if is_main_valid and is_files_valid:
+            if tripclosure_form.is_valid():
                 tripclosure_form.save()
                 print("Trip Closure Main Form Saved")
+            else:
+                print("Trip Closure Main Form not Saved")
 
+            if tripclosurefiles_form.is_valid():
                 files_obj = tripclosurefiles_form.save(commit=False)
+
                 # Fetch related trip detail
                 trip_detail = None
                 if files_obj.tcf_tripnumber:
                     trip_detail = TripdetailInfo.objects.filter(tr_tripnumber=files_obj.tcf_tripnumber).first()
-                
+
                 # If tcf_pod is empty, copy from trip detail if available
                 if not files_obj.tcf_pod and trip_detail:
                     if trip_detail.tc_pod_attachment:
-                        try:
-                            files_obj.tcf_pod.save(
-                                trip_detail.tc_pod_attachment.name.split('/')[-1],
-                                ContentFile(trip_detail.tc_pod_attachment.read()),
-                                save=False
-                            )
-                        except Exception as e:
-                            print(f"Error copying tc_pod_attachment: {e}")
+                        files_obj.tcf_pod.save(
+                            trip_detail.tc_pod_attachment.name.split('/')[-1],
+                            ContentFile(trip_detail.tc_pod_attachment.read()),
+                            save=False
+                        )
                     elif trip_detail.td_pod:
-                        try:
-                            files_obj.tcf_pod.save(
-                                trip_detail.td_pod.name.split('/')[-1],
-                                ContentFile(trip_detail.td_pod.read()),
-                                save=False
-                            )
-                        except Exception as e:
-                            print(f"Error copying td_pod: {e}")
+                        files_obj.tcf_pod.save(
+                            trip_detail.td_pod.name.split('/')[-1],
+                            ContentFile(trip_detail.td_pod.read()),
+                            save=False
+                        )
                 files_obj.save()
                 print("Trip Closure files Form Saved")
                 messages.success(request, 'Record Updated Successfully')
             else:
-                if not is_main_valid:
-                    print("Trip Closure Main Form Validation Errors:", tripclosure_form.errors)
-                    for field, errors in tripclosure_form.errors.items():
-                        messages.error(request, f"Trip Closure Form - {field}: {', '.join(errors)}")
-                if not is_files_valid:
-                    print("Trip Closure Files Form Validation Errors:", tripclosurefiles_form.errors)
-                    for field, errors in tripclosurefiles_form.errors.items():
-                        messages.error(request, f"Files Form - {field}: {', '.join(errors)}")
-                messages.error(request, 'Record Not Saved. Please fix the validation errors above.')
+                print("Trip Closure files Form not Saved")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
             return redirect(request.META['HTTP_REFERER'])
         else:
             print("Inside Trip closure post edit")
@@ -244,10 +225,7 @@ def tripclosure_add(request, tripclosure_id=0):
             tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
             tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES, instance=tripclosure_files)
 
-            is_main_valid = tripclosure_form.is_valid()
-            is_files_valid = tripclosurefiles_form.is_valid()
-
-            if is_main_valid and is_files_valid:
+            if tripclosure_form.is_valid():
                 tripclosure_form.save()
                 print("Trip Closure Main Form Saved")
                 enquiry_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_enquirynumber
@@ -256,50 +234,38 @@ def tripclosure_add(request, tripclosure_id=0):
                     'tc_financestatus', flat=True)
                 tripclousre_status = []
                 for i in tripclosure_list:
-                    status_obj = Tripstatusinfo.objects.filter(id=i).first()
-                    if status_obj:
-                        tripclousre_status.append(status_obj.status)
+                    tripclousre_status.append(Tripstatusinfo.objects.get(id=i).status)
                 EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_tripclosure=tripclousre_status)
+            else:
+                print("Trip Closure Main Form not Saved")
 
+            if tripclosurefiles_form.is_valid():
                 files_obj = tripclosurefiles_form.save(commit=False)
                 files_obj.tcf_tripnumber = trip_num
-                
+
                 # Fetch related trip detail
                 trip_detail = tripclosure
-                
+
                 # If tcf_pod is empty, copy from trip detail if available
                 if not files_obj.tcf_pod and trip_detail:
                     if trip_detail.tc_pod_attachment:
-                        try:
-                            files_obj.tcf_pod.save(
-                                trip_detail.tc_pod_attachment.name.split('/')[-1],
-                                ContentFile(trip_detail.tc_pod_attachment.read()),
-                                save=False
-                            )
-                        except Exception as e:
-                            print(f"Error copying tc_pod_attachment: {e}")
+                        files_obj.tcf_pod.save(
+                            trip_detail.tc_pod_attachment.name.split('/')[-1],
+                            ContentFile(trip_detail.tc_pod_attachment.read()),
+                            save=False
+                        )
                     elif trip_detail.td_pod:
-                        try:
-                            files_obj.tcf_pod.save(
-                                trip_detail.td_pod.name.split('/')[-1],
-                                ContentFile(trip_detail.td_pod.read()),
-                                save=False
-                            )
-                        except Exception as e:
-                            print(f"Error copying td_pod: {e}")
+                        files_obj.tcf_pod.save(
+                            trip_detail.td_pod.name.split('/')[-1],
+                            ContentFile(trip_detail.td_pod.read()),
+                            save=False
+                        )
                 files_obj.save()
                 print("Trip Closure files Form Saved")
                 messages.success(request, 'Record Updated Successfully')
             else:
-                if not is_main_valid:
-                    print("Trip Closure Main Form Validation Errors:", tripclosure_form.errors)
-                    for field, errors in tripclosure_form.errors.items():
-                        messages.error(request, f"Trip Closure Form - {field}: {', '.join(errors)}")
-                if not is_files_valid:
-                    print("Trip Closure Files Form Validation Errors:", tripclosurefiles_form.errors)
-                    for field, errors in tripclosurefiles_form.errors.items():
-                        messages.error(request, f"Files Form - {field}: {', '.join(errors)}")
-                messages.error(request, 'Record Not Saved. Please fix the validation errors above.')
+                print("Trip Closure files Form not Saved")
+                messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
             return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/enquirynote_list')
 
