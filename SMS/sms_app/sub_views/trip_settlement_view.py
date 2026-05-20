@@ -20,7 +20,15 @@ def trip_settlement_view(request):
         'tr_approval',
         'tr_approval__ta_approval_status',
         'tr_category'
-    ).filter(tc_financestatus_id=4, tr_category_id=1)
+    ).filter(
+        Q(tc_financestatus_id=4) & (
+            Q(tr_category_id=1) |
+            Q(tr_category_id=3) & (
+                Q(tr_consignmentnumber__co_status_id=8) |
+                Q(tr_enquirynumber__consignmentdetailinfo__co_status_id=8)
+            )
+        )
+    )
 
     if veh_no:
         trip_list = trip_list.filter(tr_vehiclenumber__icontains=veh_no)
