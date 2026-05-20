@@ -1,7 +1,7 @@
 from django.db import models
 from ..models import (MyUser, Location_info, Enquiry_source, CustomerInfo, Whrequirementinfo,
                      Packreuqirementinfo, Toursrequirementinfo, Express_info, Trans_info, 
-                     Support_info, Shipment_type, Delivery_type, Travel_type, OwnershipInfo)
+                     Support_info, Shipment_type, Delivery_type, Travel_type, OwnershipInfo, YesNoInfo)
 from .tour_type_mod import Tour_type
 from .transport_mode_mod import Transport_mode
 
@@ -22,6 +22,7 @@ class SaleEnquiry(models.Model):
     contact_person_name = models.CharField(max_length=100, default='', blank=True, null=True)
     contact_no = models.CharField(max_length=20, default='', blank=True, null=True)
     mail = models.EmailField(max_length=100, default='', blank=True, null=True)
+    assigned_to = models.CharField(max_length=150, default='', blank=True, null=True)
     address = models.TextField(default='', blank=True, null=True)
     remarks = models.TextField(default='', blank=True, null=True)
     service_type = models.CharField(max_length=100, default='', blank=True, null=True)
@@ -92,7 +93,7 @@ class SaleEnquiry(models.Model):
     mc_vehicle_source = models.ForeignKey(OwnershipInfo, on_delete=models.CASCADE, null=True, blank=True)
     mc_vehicle_type = models.CharField(max_length=100, default='', blank=True, null=True)
     mc_package_req = models.CharField(max_length=100, default='', blank=True, null=True)
-    mc_hotel_req = models.CharField(max_length=100, default='', blank=True, null=True)
+    mc_hotel_req = models.ForeignKey(YesNoInfo, on_delete=models.CASCADE, null=True, blank=True)
     mc_rfq_closed_date = models.DateField(blank=True, null=True)
     mc_remarks = models.TextField(default='', blank=True, null=True)
 

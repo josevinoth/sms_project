@@ -164,6 +164,13 @@
                             {% render_field form.mail class="form-control" id="mail_input" %}
                         </div>
 
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Assigned To</span>
+                            </div>
+                            {% render_field form.assigned_to class="form-control" id="assigned_to_input" %}
+                        </div>
+
                         <div class="input-group input-group-sm mb-3" style="display:none;">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Service Type</span>
@@ -613,17 +620,17 @@
                             <div class="input-group input-group-sm mb-3">
                                 <div class="input-group-prepend"><span class="input-group-text">Vehicle Type</span>
                                 </div>
-                                {% render_field form.mc_vehicle_type class="form-control" %}
+                                {% render_field form.mc_vehicle_type class="form-control" id="mc_vehicle_type_input" %}
                             </div>
                         </div>
                         <div class="col-12 col-md-4">
                             <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Package Req</span></div>
+                                <div class="input-group-prepend"><span class="input-group-text">Package Duration</span></div>
                                 {% render_field form.mc_package_req class="form-control" %}
                             </div>
                             <div class="input-group input-group-sm mb-3">
                                 <div class="input-group-prepend"><span class="input-group-text">Hotel Req</span></div>
-                                {% render_field form.mc_hotel_req class="form-control" %}
+                                {% render_field form.mc_hotel_req class="form-control select2" id="mc_hotel_req_select" %}
                             </div>
                             <div class="input-group input-group-sm mb-3">
                                 <div class="input-group-prepend"><span class="input-group-text">RFQ Closed Date</span>
@@ -923,18 +930,30 @@
                 // Tours: show Tour Type + Mode of Transport
                 $('#mc_tour_type_select').closest('.input-group').show();
                 $('#mc_mode_of_transport_select').closest('.input-group').show();
+                // Hide Vehicle Type and Vehicle Source
+                $('#mc_vehicle_source_select').closest('.input-group').hide();
+                $('#mc_vehicle_type_input').closest('.input-group').hide();
             } else if (customerType === '2') {
                 // Travels: hide Tour Type + Mode of Transport
                 $('#mc_tour_type_select').closest('.input-group').hide();
                 $('#mc_mode_of_transport_select').closest('.input-group').hide();
+                // Show Vehicle Type and Vehicle Source
+                $('#mc_vehicle_source_select').closest('.input-group').show();
+                $('#mc_vehicle_type_input').closest('.input-group').show();
             } else if (customerType === '3') {
                 // Tours & Travels: show Tour Type and Mode of Transport
                 $('#mc_tour_type_select').closest('.input-group').show();
                 $('#mc_mode_of_transport_select').closest('.input-group').show();
+                // Show Vehicle Type and Vehicle Source
+                $('#mc_vehicle_source_select').closest('.input-group').show();
+                $('#mc_vehicle_type_input').closest('.input-group').show();
             } else {
                 // No selection: hide Tour Type + Mode of Transport
                 $('#mc_tour_type_select').closest('.input-group').hide();
                 $('#mc_mode_of_transport_select').closest('.input-group').hide();
+                // Show Vehicle Type and Vehicle Source
+                $('#mc_vehicle_source_select').closest('.input-group').show();
+                $('#mc_vehicle_type_input').closest('.input-group').show();
             }
         }
 
