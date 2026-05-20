@@ -1,0 +1,293 @@
+{% load pk_workflow_tags %}
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @page {
+            size: a4;
+            margin: 1cm;
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 8pt;
+            line-height: 1.1;
+            color: #000;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            border: 1px solid #000;
+        }
+        td {
+            border: 1px solid #000;
+            padding: 3px;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+        .bg-gray { background-color: #f0f0f0; font-weight: bold; }
+        .text-center { text-align: center; }
+        .bold { font-weight: bold; }
+        .title { font-size: 13pt; font-weight: bold; text-align: center; border: none; }
+        .small-text { font-size: 6pt; }
+        
+        /* 12-column grid widths (approximate for A4) */
+        .col-1 { width: 8.33%; }
+        .col-2 { width: 16.66%; }
+        .col-3 { width: 25%; }
+        .col-4 { width: 33.33%; }
+        .col-5 { width: 41.66%; }
+        .col-6 { width: 50%; }
+        .col-7 { width: 58.33%; }
+        .col-8 { width: 66.66%; }
+        .col-9 { width: 75%; }
+        .col-10 { width: 83.33%; }
+        .col-11 { width: 91.66%; }
+        .col-12 { width: 100%; }
+    </style>
+</head>
+<body>
+    <!-- Header Table (separate from main to avoid layout issues) -->
+    <table style="border-bottom: none;">
+        <tr>
+            <td colspan="10" class="title" style="padding: 10px;">
+                BVM PACK NEED ASSESSMENT FORM
+            </td>
+            <td colspan="2" style="text-align: center; border-left: 1px solid #000;">
+                {% if logo_path %}
+                <img src="{{ logo_path }}" width="45">
+                {% else %}
+                <span class="bold">BVM PACK</span>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <!-- Main Content Table -->
+    <table style="border-top: none;">
+        <!-- Column definitions -->
+        <tr>
+            <td class="col-1" style="border:none; padding:0; height:0;"></td>
+            <td class="col-1" style="border:none; padding:0; height:0;"></td>
+            <td class="col-1" style="border:none; padding:0; height:0;"></td>
+            <td class="col-1" style="border:none; padding:0; height:0;"></td>
+            <td class="col-1" style="border:none; padding:0; height:0;"></td>
+            <td class="col-1" style="border:none; padding:0; height:0;"></td>
+            <td class="col-1" style="border:none; padding:0; height:0;"></td>
+            <td class="col-1" style="border:none; padding:0; height:0;"></td>
+            <td class="col-1" style="border:none; padding:0; height:0;"></td>
+            <td class="col-1" style="border:none; padding:0; height:0;"></td>
+            <td class="col-1" style="border:none; padding:0; height:0;"></td>
+            <td class="col-1" style="border:none; padding:0; height:0;"></td>
+        </tr>
+
+        <!-- Info Section -->
+        <tr>
+            <td colspan="3" class="bg-gray">CUSTOMER NAME:</td>
+            <td colspan="5">{{ need_assessment.na_customer_name }}</td>
+            <td colspan="2" class="bg-gray">DATE:</td>
+            <td colspan="2">{{ need_assessment.na_date|date:"d/m/Y" }}</td>
+        </tr>
+        <tr>
+            <td colspan="3" class="bg-gray">LOCATION:</td>
+            <td colspan="5">{{ need_assessment.na_delivery_location }}</td>
+            <td colspan="2" class="bg-gray">KM:</td>
+            <td colspan="2"></td>
+        </tr>
+        <tr>
+            <td colspan="3" class="bg-gray">PO Number:</td>
+            <td colspan="5"></td>
+            <td colspan="2" class="bg-gray">SL NO:</td>
+            <td colspan="2">{{ need_assessment.na_assessment_num }}</td>
+        </tr>
+        <tr>
+            <td colspan="3" class="bg-gray">PO Date:</td>
+            <td colspan="9"></td>
+        </tr>
+
+        <!-- ERP/DRAW Section (4 rows) -->
+        {% for i in "1234" %}
+        {% with idx=forloop.counter0 %}
+        <tr>
+            <td colspan="3" class="bg-gray">ERP/DRAW No & QTY:</td>
+            <td colspan="9">
+                {% for dim in dimensions %}
+                    {% if forloop.counter0 == idx %}
+                        {{ dim.nad_item }} - Qty: {{ dim.nad_quantity }}
+                    {% endif %}
+                {% endfor %}
+            </td>
+        </tr>
+        {% endwith %}
+        {% endfor %}
+
+        <!-- Dimension Table Header -->
+        <tr>
+            <td colspan="2" rowspan="5" class="bg-gray text-center" style="font-size: 9pt;">
+                DIMENSION<br>
+                <span class="small-text" style="font-weight: normal;">To page</span>
+            </td>
+            <td colspan="2" class="bg-gray text-center">LENGTH</td>
+            <td colspan="2" class="bg-gray text-center">WIDTH</td>
+            <td colspan="2" class="bg-gray text-center">HEIGHT</td>
+            <td colspan="2" class="bg-gray text-center">DIM IN</td>
+            <td colspan="2" class="bg-gray text-center">JOB WIGHT</td>
+        </tr>
+        <!-- Row 1: MM / KG -->
+        <tr>
+            <td colspan="2" class="text-center">{% if dimensions.0 %}{{ dimensions.0.nad_length }}{% endif %}</td>
+            <td colspan="2" class="text-center">{% if dimensions.0 %}{{ dimensions.0.nad_width }}{% endif %}</td>
+            <td colspan="2" class="text-center">{% if dimensions.0 %}{{ dimensions.0.nad_height }}{% endif %}</td>
+            <td colspan="2" class="bg-gray text-center">MM</td>
+            <td colspan="2" class="text-center">{% if dimensions.0 %}{{ dimensions.0.nad_job_weight }} KG{% endif %}</td>
+        </tr>
+        <!-- Row 2: CM / TON -->
+        <tr>
+            <td colspan="2"></td><td colspan="2"></td><td colspan="2"></td>
+            <td colspan="2" class="bg-gray text-center">CM</td>
+            <td colspan="2" class="text-center">TON</td>
+        </tr>
+        <!-- Row 3: INCHES -->
+        <tr>
+            <td colspan="2"></td><td colspan="2"></td><td colspan="2"></td>
+            <td colspan="2" class="bg-gray text-center">INCHES</td>
+            <td colspan="2"></td>
+        </tr>
+        <!-- Row 4: FT -->
+        <tr>
+            <td colspan="2"></td><td colspan="2"></td><td colspan="2"></td>
+            <td colspan="2" class="bg-gray text-center">FT</td>
+            <td colspan="2"></td>
+        </tr>
+
+        <!-- Type of Work -->
+        <tr>
+            <td colspan="3" class="bg-gray text-center">TYPE OF WORK:</td>
+            <td colspan="3" class="small-text">PACKING: {% if need_assessment.na_type_of_work.type_of_work == 'PACKING' %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="3" class="small-text">SUPPLY: {% if need_assessment.na_type_of_work.type_of_work == 'SUPPLY' %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="3" class="small-text">PROJECT BASIS: {% if need_assessment.na_type_of_work.type_of_work == 'PROJECT BASIS' %}<b>YES</b>{% else %}NO{% endif %}</td>
+        </tr>
+        <tr>
+            <td colspan="3"></td>
+            <td colspan="3" class="small-text">TRADING: {% if need_assessment.na_type_of_work.type_of_work == 'TRADING' %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="6" class="small-text">OTHERS: {{ need_assessment.na_others_type_pack }}</td>
+        </tr>
+
+        <!-- Type of Packing -->
+        <tr>
+            <td colspan="3" rowspan="2" class="bg-gray text-center">TYPE OF PACKING:</td>
+            <td colspan="3" class="small-text">SOFT /AIRW.: {% if 'SOFT' in need_assessment.na_type_of_pack1.pack_requirement %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="3" class="small-text">SEAWORTHY: {% if 'SEAWORTHY' in need_assessment.na_type_of_pack1.pack_requirement %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="3" class="small-text">THERMO.: {% if 'THERMO' in need_assessment.na_type_of_pack1.pack_requirement %}<b>YES</b>{% else %}NO{% endif %}</td>
+        </tr>
+        <tr>
+            <td colspan="3" class="small-text">TARP. WRAP.: NO</td>
+            <td colspan="3" class="small-text">LASHING: NO</td>
+            <td colspan="3" class="small-text">OTHERS: NO</td>
+        </tr>
+
+        <!-- Requirements & Material Spec -->
+        <tr>
+            <td colspan="4" class="bg-gray text-center">TYPE OF REQUIREMENTS</td>
+            <td colspan="8" class="bg-gray text-center">MATERIAL SPECIFICATION</td>
+        </tr>
+        <tr>
+            <td colspan="3">FULL PLYWOOD BOX</td><td class="text-center">NO</td>
+            <td colspan="4" class="bg-gray">PLANKS THICKNESS:</td><td colspan="4"></td>
+        </tr>
+        <tr>
+            <td colspan="3">PLYWOOD BOX</td><td class="text-center">YES</td>
+            <td colspan="8" class="bg-gray text-center">PLYWOOD THICKNESS</td>
+        </tr>
+        <tr>
+            <td colspan="3">WOODEN BOX</td><td class="text-center">NO</td>
+            <td colspan="2" class="text-center">6MM</td><td colspan="2" class="text-center">8MM</td><td colspan="2" class="text-center">10MM</td><td colspan="2" class="text-center">12MM / 15MM</td>
+        </tr>
+        <tr>
+            <td colspan="3">WOODEN CRATE</td><td class="text-center">NO</td>
+            <td colspan="2" class="text-center">18MM</td><td colspan="2" class="text-center">20MM</td><td colspan="2" class="text-center">25MM</td><td colspan="2"></td>
+        </tr>
+        <tr>
+            <td colspan="3">WOODEN PALLET</td><td class="text-center">NO</td>
+            <td colspan="8" class="bg-gray"></td>
+        </tr>
+        <tr>
+            <td colspan="3">PLYWOOD PALLET</td><td class="text-center">NO</td>
+            <td colspan="8" class="bg-gray text-center">TYPE OF PLYWOOD</td>
+        </tr>
+        <tr>
+            <td colspan="3">PLASTIC PALLET</td><td class="text-center">NO</td>
+            <td colspan="4">HARDWOOD PLY</td><td colspan="4" class="text-center">NO</td>
+        </tr>
+        <tr>
+            <td colspan="3">SKID</td><td class="text-center">NO</td>
+            <td colspan="4">SEMIHARDWOOD PLY</td><td colspan="4" class="text-center">NO</td>
+        </tr>
+        <tr>
+            <td colspan="3">HEAVY DUTY PALLET</td><td class="text-center">NO</td>
+            <td colspan="4">RUBBER WOOD PLY</td><td colspan="4" class="text-center">YES</td>
+        </tr>
+
+        <!-- Wood Treated & Unloading -->
+        <tr>
+            <td colspan="4" class="bg-gray text-center">WOOD TREATED REQUIREMENTS</td>
+            <td colspan="4">WHITE FACE PLY</td><td colspan="4" class="text-center">NO</td>
+        </tr>
+        <tr>
+            <td colspan="3">FUMIGATION</td><td class="text-center">YES</td>
+            <td colspan="4">BWR PLY</td><td colspan="4" class="text-center">NO</td>
+        </tr>
+        <tr>
+            <td colspan="3">HT</td><td class="text-center">NO</td>
+            <td colspan="8" class="bg-gray text-center">TYPE OF WOOD</td>
+        </tr>
+        <tr>
+            <td colspan="2" class="bg-gray text-center">UNLOADING</td>
+            <td colspan="2">BVM</td>
+            <td colspan="2">PINE</td><td colspan="2">KD PINE</td><td colspan="4">COUNTRY / RUBBER</td>
+        </tr>
+        <tr>
+            <td colspan="4"></td>
+            <td colspan="2">REUSED PINE</td><td colspan="2">SILVER</td><td colspan="4"></td>
+        </tr>
+
+        <!-- Wood Norms -->
+        <tr>
+            <td colspan="12" class="bg-gray text-center">WOOD NORMS(QUALITY)</td>
+        </tr>
+        <tr>
+            <td colspan="2" class="bg-gray">AIR CRACK</td><td colspan="2">YES</td>
+            <td colspan="2" class="bg-gray">NOTCHES</td><td colspan="6">YES</td>
+        </tr>
+        <tr>
+            <td colspan="2"></td><td colspan="2">0 TO 6"</td>
+            <td colspan="2"></td><td colspan="6">0 TO 2"</td>
+        </tr>
+        <tr>
+            <td colspan="2" class="bg-gray">FUNGUS</td><td colspan="2">NO</td>
+            <td colspan="2" class="bg-gray">TOLERANCE</td><td colspan="6">YES (3MM)</td>
+        </tr>
+        <tr>
+            <td colspan="2" class="bg-gray">VEHICLE</td><td colspan="2">BVM</td>
+            <td colspan="8" class="small-text">VEHICLE TYPE: {{ need_assessment.na_vehicle_type }}</td>
+        </tr>
+
+        <!-- Type of Access -->
+        <tr>
+            <td colspan="12" class="bg-gray text-center">TYPE OF ACCESS</td>
+        </tr>
+        <tr>
+            <td colspan="3">JOB LIFTING</td><td colspan="3" class="text-center">NO</td>
+            <td colspan="3">BASE LIFTING</td><td colspan="3" class="text-center">YES</td>
+        </tr>
+        <tr>
+            <td colspan="3">FOUR WAY</td><td colspan="3" class="text-center">NO</td>
+            <td colspan="3">TWO WAY</td><td colspan="3" class="text-center">YES</td>
+        </tr>
+        <tr>
+            <td colspan="3" class="bg-gray">REMARKS</td>
+            <td colspan="9"></td>
+        </tr>
+    </table>
+</body>
+</html>
