@@ -190,7 +190,7 @@ def pre_gatein_search(request):
     except ObjectDoesNotExist:
         branch_code = "UNK"
         user_branch = ""
-        print("DEBUG: Branch info not found for user_id", user_id)
+        # print("DEBUG: Branch info not found for user_id", user_id)
 
     # Search filters
     pre_gate_in = request.GET.get("pre_gate_in") or ""
@@ -213,7 +213,7 @@ def pre_gatein_search(request):
     total_count = 0
     if user_unit:
         unit_pattern = f"{branch_code}_{user_unit}"
-        print(f"DEBUG: unit_pattern={unit_pattern}")
+        # print(f"DEBUG: unit_pattern={unit_pattern}")
 
         records = Gatein_pre_info.objects.filter(
             gatein_pre_number__icontains=unit_pattern,
@@ -222,7 +222,7 @@ def pre_gatein_search(request):
         total = Gatein_pre_info.objects.filter(
             gatein_pre_number__icontains=unit_pattern,
         )
-        print(f"DEBUG: matching gatein_pre_number = {[r.gatein_pre_number for r in records]}")
+        # print(f"DEBUG: matching gatein_pre_number = {[r.gatein_pre_number for r in records]}")
 
         pending_count = records.count()
         total_count = total.count()
@@ -294,4 +294,4 @@ def gate_in_email(request):
     else:
         messages.error(request, message)
     
-    return redirect(request.META['HTTP_REFERER'])
+    return redirect(request.META['HTTP_REFERER'])

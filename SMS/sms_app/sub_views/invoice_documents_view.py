@@ -105,15 +105,15 @@ def _try_merge_pdfs(inv_obj, closure_obj=None):
                     file_field.close()
                     if img.mode != 'RGB': img = img.convert('RGB')
                     pages.append(img)
-                except: pass
+                except:
+                    pass
             if pages:
                 output = io.BytesIO()
                 pages[0].save(output, format='PDF', save_all=True, append_images=pages[1:])
                 output.seek(0)
                 inv_obj.id_merged_pdf.save(f"merged_{inv_obj.id_tripnumber}.pdf", ContentFile(output.read()), save=True)
-        except: pass
-
-
+        except:
+            pass
 
 
 @login_required
@@ -123,7 +123,7 @@ def invoice_documents_list(request):
     date_to = request.GET.get('date_to', '').strip()
 
     from ..sub_models.trans_invoice_mod import TransInvoiceInfo
-    
+
     # Show settled trips or trips ready for invoice
     status_ids = list(Tripstatusinfo.objects.filter(
         status__in=['Trip Settled', 'Ready for Invoice']
@@ -133,13 +133,17 @@ def invoice_documents_list(request):
 
     # Exclude all trips already invoiced (WOH, Consignment, or Goods)
     invoiced_trip_ids = TransInvoiceInfo.objects.filter(ti_trip__isnull=False).values_list('ti_trip_id', flat=True)
-    invoiced_cons_ids = TransInvoiceInfo.objects.filter(ti_consignment__isnull=False).values_list('ti_consignment_id', flat=True)
-    trips_from_cons = TripdetailInfo.objects.filter(tr_consignmentnumber_id__in=invoiced_cons_ids).values_list('id', flat=True)
+    invoiced_cons_ids = TransInvoiceInfo.objects.filter(ti_consignment__isnull=False).values_list('ti_consignment_id',
+                                                                                                  flat=True)
+    trips_from_cons = TripdetailInfo.objects.filter(tr_consignmentnumber_id__in=invoiced_cons_ids).values_list('id',
+                                                                                                               flat=True)
     invoiced_goods_ids = TransInvoiceInfo.objects.filter(ti_goods__isnull=False).values_list('ti_goods_id', flat=True)
-    
+
     from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
-    cons_from_goods = ConsignmentgoodsInfo.objects.filter(id__in=invoiced_goods_ids).values_list('cg_consignmentnumber_id', flat=True)
-    trips_from_goods = TripdetailInfo.objects.filter(tr_consignmentnumber_id__in=cons_from_goods).values_list('id', flat=True)
+    cons_from_goods = ConsignmentgoodsInfo.objects.filter(id__in=invoiced_goods_ids).values_list(
+        'cg_consignmentnumber_id', flat=True)
+    trips_from_goods = TripdetailInfo.objects.filter(tr_consignmentnumber_id__in=cons_from_goods).values_list('id',
+                                                                                                              flat=True)
 
     trip_list = TripdetailInfo.objects.select_related(
         'tr_enquirynumber',
@@ -280,8 +284,10 @@ def invoice_documents_add(request, trip_id):
         invoice_form = InvoiceDocumentForm(request.POST, request.FILES, instance=invoice_doc)
 
         # Only show 'Ready for Invoice' (ID 9 or by name)
-        settlement_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(Q(id=9) | Q(status='Ready for Invoice'))
-        invoice_form.fields['id_status'].queryset = Tripstatusinfo.objects.filter(Q(id=9) | Q(status='Ready for Invoice'))
+        settlement_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(
+            Q(id=9) | Q(status='Ready for Invoice'))
+        invoice_form.fields['id_status'].queryset = Tripstatusinfo.objects.filter(
+            Q(id=9) | Q(status='Ready for Invoice'))
 
         # Disable all settlement fields except status
         for field in settlement_form.fields:
@@ -386,7 +392,8 @@ def invoice_documents_add(request, trip_id):
             )
 
         # Only show 'Ready for Invoice' (ID 9 or by name)
-        settlement_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(Q(id=9) | Q(status='Ready for Invoice'))
+        settlement_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(
+            Q(id=9) | Q(status='Ready for Invoice'))
 
         # Disable all settlement fields except status
         for field in settlement_form.fields:
