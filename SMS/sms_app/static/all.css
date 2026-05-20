@@ -29,9 +29,17 @@ body {
   left: 0;
   background-color: #0D2F3F;
   overflow-x: hidden;
+  overflow-y: auto;
   padding-top: 12px;
   padding-left: 12px;
   padding-right: 12px;
+  /* Hide scrollbar but allow scrolling */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.sidenav::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }
 
 @media screen and (min-width: 992px) {
