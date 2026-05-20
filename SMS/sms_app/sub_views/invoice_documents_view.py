@@ -200,19 +200,25 @@ def invoice_documents_add(request, trip_id):
     # Pre-populate and copy POD from Trip Detail if missing
     if not files_instance.tcf_pod:
         if trip.tc_pod_attachment:
-            files_instance.tcf_pod.save(
-                trip.tc_pod_attachment.name.split('/')[-1],
-                ContentFile(trip.tc_pod_attachment.read()),
-                save=False
-            )
-            files_instance.save()
+            try:
+                files_instance.tcf_pod.save(
+                    trip.tc_pod_attachment.name.split('/')[-1],
+                    ContentFile(trip.tc_pod_attachment.read()),
+                    save=False
+                )
+                files_instance.save()
+            except Exception as e:
+                print(f"Error copying tc_pod_attachment: {e}")
         elif trip.td_pod:
-            files_instance.tcf_pod.save(
-                trip.td_pod.name.split('/')[-1],
-                ContentFile(trip.td_pod.read()),
-                save=False
-            )
-            files_instance.save()
+            try:
+                files_instance.tcf_pod.save(
+                    trip.td_pod.name.split('/')[-1],
+                    ContentFile(trip.td_pod.read()),
+                    save=False
+                )
+                files_instance.save()
+            except Exception as e:
+                print(f"Error copying td_pod: {e}")
 
     # Load or initialise InvoiceDocumentInfo record
     invoice_doc = InvoiceDocumentInfo.objects.filter(
@@ -222,26 +228,35 @@ def invoice_documents_add(request, trip_id):
     # Pre-populate and copy POD from Trip Detail / closure if missing
     if invoice_doc and not invoice_doc.id_pod_doc:
         if files_instance.tcf_pod:
-            invoice_doc.id_pod_doc.save(
-                files_instance.tcf_pod.name.split('/')[-1],
-                ContentFile(files_instance.tcf_pod.read()),
-                save=False
-            )
-            invoice_doc.save()
+            try:
+                invoice_doc.id_pod_doc.save(
+                    files_instance.tcf_pod.name.split('/')[-1],
+                    ContentFile(files_instance.tcf_pod.read()),
+                    save=False
+                )
+                invoice_doc.save()
+            except Exception as e:
+                print(f"Error copying tcf_pod to invoice_doc: {e}")
         elif trip.tc_pod_attachment:
-            invoice_doc.id_pod_doc.save(
-                trip.tc_pod_attachment.name.split('/')[-1],
-                ContentFile(trip.tc_pod_attachment.read()),
-                save=False
-            )
-            invoice_doc.save()
+            try:
+                invoice_doc.id_pod_doc.save(
+                    trip.tc_pod_attachment.name.split('/')[-1],
+                    ContentFile(trip.tc_pod_attachment.read()),
+                    save=False
+                )
+                invoice_doc.save()
+            except Exception as e:
+                print(f"Error copying tc_pod_attachment to invoice_doc: {e}")
         elif trip.td_pod:
-            invoice_doc.id_pod_doc.save(
-                trip.td_pod.name.split('/')[-1],
-                ContentFile(trip.td_pod.read()),
-                save=False
-            )
-            invoice_doc.save()
+            try:
+                invoice_doc.id_pod_doc.save(
+                    trip.td_pod.name.split('/')[-1],
+                    ContentFile(trip.td_pod.read()),
+                    save=False
+                )
+                invoice_doc.save()
+            except Exception as e:
+                print(f"Error copying td_pod to invoice_doc: {e}")
     elif not invoice_doc:
         ready_status = Tripstatusinfo.objects.filter(Q(id=9) | Q(status='Ready for Invoice')).first()
         ready_status_id = ready_status.id if ready_status else 9
@@ -252,23 +267,32 @@ def invoice_documents_add(request, trip_id):
             id_updated_by=request.user
         )
         if files_instance.tcf_pod:
-            invoice_doc.id_pod_doc.save(
-                files_instance.tcf_pod.name.split('/')[-1],
-                ContentFile(files_instance.tcf_pod.read()),
-                save=False
-            )
+            try:
+                invoice_doc.id_pod_doc.save(
+                    files_instance.tcf_pod.name.split('/')[-1],
+                    ContentFile(files_instance.tcf_pod.read()),
+                    save=False
+                )
+            except Exception as e:
+                print(f"Error copying tcf_pod: {e}")
         elif trip.tc_pod_attachment:
-            invoice_doc.id_pod_doc.save(
-                trip.tc_pod_attachment.name.split('/')[-1],
-                ContentFile(trip.tc_pod_attachment.read()),
-                save=False
-            )
+            try:
+                invoice_doc.id_pod_doc.save(
+                    trip.tc_pod_attachment.name.split('/')[-1],
+                    ContentFile(trip.tc_pod_attachment.read()),
+                    save=False
+                )
+            except Exception as e:
+                print(f"Error copying tc_pod_attachment: {e}")
         elif trip.td_pod:
-            invoice_doc.id_pod_doc.save(
-                trip.td_pod.name.split('/')[-1],
-                ContentFile(trip.td_pod.read()),
-                save=False
-            )
+            try:
+                invoice_doc.id_pod_doc.save(
+                    trip.td_pod.name.split('/')[-1],
+                    ContentFile(trip.td_pod.read()),
+                    save=False
+                )
+            except Exception as e:
+                print(f"Error copying td_pod: {e}")
         invoice_doc.save()
 
     # Fields editable in the settlement form on this page (status only)
@@ -306,17 +330,23 @@ def invoice_documents_add(request, trip_id):
             # Ensure tcf_pod is populated on POST save
             if not files_obj.tcf_pod:
                 if trip_obj.tc_pod_attachment:
-                    files_obj.tcf_pod.save(
-                        trip_obj.tc_pod_attachment.name.split('/')[-1],
-                        ContentFile(trip_obj.tc_pod_attachment.read()),
-                        save=False
-                    )
+                    try:
+                        files_obj.tcf_pod.save(
+                            trip_obj.tc_pod_attachment.name.split('/')[-1],
+                            ContentFile(trip_obj.tc_pod_attachment.read()),
+                            save=False
+                        )
+                    except Exception as e:
+                        print(f"Error copying tc_pod_attachment in POST: {e}")
                 elif trip_obj.td_pod:
-                    files_obj.tcf_pod.save(
-                        trip_obj.td_pod.name.split('/')[-1],
-                        ContentFile(trip_obj.td_pod.read()),
-                        save=False
-                    )
+                    try:
+                        files_obj.tcf_pod.save(
+                            trip_obj.td_pod.name.split('/')[-1],
+                            ContentFile(trip_obj.td_pod.read()),
+                            save=False
+                        )
+                    except Exception as e:
+                        print(f"Error copying td_pod in POST: {e}")
             files_obj.save()
 
             # Save invoice document record
@@ -327,23 +357,32 @@ def invoice_documents_add(request, trip_id):
             # Ensure id_pod_doc is populated on POST save
             if not inv_obj.id_pod_doc:
                 if files_obj.tcf_pod:
-                    inv_obj.id_pod_doc.save(
-                        files_obj.tcf_pod.name.split('/')[-1],
-                        ContentFile(files_obj.tcf_pod.read()),
-                        save=False
-                    )
+                    try:
+                        inv_obj.id_pod_doc.save(
+                            files_obj.tcf_pod.name.split('/')[-1],
+                            ContentFile(files_obj.tcf_pod.read()),
+                            save=False
+                        )
+                    except Exception as e:
+                        print(f"Error copying tcf_pod in POST: {e}")
                 elif trip_obj.tc_pod_attachment:
-                    inv_obj.id_pod_doc.save(
-                        trip_obj.tc_pod_attachment.name.split('/')[-1],
-                        ContentFile(trip_obj.tc_pod_attachment.read()),
-                        save=False
-                    )
+                    try:
+                        inv_obj.id_pod_doc.save(
+                            trip_obj.tc_pod_attachment.name.split('/')[-1],
+                            ContentFile(trip_obj.tc_pod_attachment.read()),
+                            save=False
+                        )
+                    except Exception as e:
+                        print(f"Error copying tc_pod_attachment in POST: {e}")
                 elif trip_obj.td_pod:
-                    inv_obj.id_pod_doc.save(
-                        trip_obj.td_pod.name.split('/')[-1],
-                        ContentFile(trip_obj.td_pod.read()),
-                        save=False
-                    )
+                    try:
+                        inv_obj.id_pod_doc.save(
+                            trip_obj.td_pod.name.split('/')[-1],
+                            ContentFile(trip_obj.td_pod.read()),
+                            save=False
+                        )
+                    except Exception as e:
+                        print(f"Error copying td_pod in POST: {e}")
             inv_obj.save()
 
             # Synchronize trip status with document status for consistency
