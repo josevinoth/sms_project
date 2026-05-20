@@ -12,7 +12,7 @@ class SaleEnquiryForm(forms.ModelForm):
         model = SaleEnquiry
         fields = [
             'enquiry_id', 'enquiry_date_time', 'enquiry_source', 'branch', 'customer_name',
-            'new_customer_name', 'customer_code', 'contact_person_name', 'contact_no', 'mail',
+            'new_customer_name', 'customer_code', 'contact_person_name', 'contact_no', 'mail', 'assigned_to',
             'address', 'remarks', 'service_type', 'sales_number',
             'wh_customer_type', 'wh_sqft_req', 'wh_scope_of_lul',
             'wh_tonnage', 'wh_no_of_months_req', 'wh_rfq_closed_date', 'wh_remarks',
@@ -35,6 +35,7 @@ class SaleEnquiryForm(forms.ModelForm):
             'contact_person_name': forms.TextInput(attrs={'class': 'form-control'}),
             'contact_no': forms.TextInput(attrs={'class': 'form-control'}),
             'mail': forms.EmailInput(attrs={'class': 'form-control'}),
+            'assigned_to': forms.TextInput(attrs={'class': 'form-control', 'id': 'assigned_to_input'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'service_type': forms.TextInput(attrs={'class': 'form-control'}),
@@ -90,9 +91,9 @@ class SaleEnquiryForm(forms.ModelForm):
             'mc_travel_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'mc_return_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'mc_vehicle_source': forms.Select(attrs={'class': 'form-control select2', 'id': 'mc_vehicle_source_select'}),
-            'mc_vehicle_type': forms.TextInput(attrs={'class': 'form-control'}),
+            'mc_vehicle_type': forms.TextInput(attrs={'class': 'form-control', 'id': 'mc_vehicle_type_input'}),
             'mc_package_req': forms.TextInput(attrs={'class': 'form-control'}),
-            'mc_hotel_req': forms.TextInput(attrs={'class': 'form-control'}),
+            'mc_hotel_req': forms.Select(attrs={'class': 'form-control select2', 'id': 'mc_hotel_req_select'}),
             'mc_rfq_closed_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'mc_remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'sales_number': forms.Select(attrs={'class': 'form-control select2', 'id': 'sales_number_input'}),
@@ -120,3 +121,4 @@ class SaleEnquiryForm(forms.ModelForm):
         if self.instance and self.instance.pk:
             self.fields['sales_number'].initial = self.instance.sales_number
         self.fields['mc_vehicle_source'].empty_label = "--Select--"
+        self.fields['mc_hotel_req'].empty_label = "--Select--"
