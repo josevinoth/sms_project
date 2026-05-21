@@ -153,14 +153,6 @@
             {% endfor %}
         </div>
 
-        <div class="btn-group-modern mt-4">
-            <button type="submit" class="btn-modern btn-submit" id="save-btn">
-                <i class="fas fa-check"></i> SAVE DIMENSION
-            </button>
-            <a href="{% url 'na_dimension_cancel' %}" class="btn-modern btn-cancel">
-                <i class="fas fa-times"></i> CANCEL
-            </a>
-        </div>
 
     </form>
 </div>
@@ -216,23 +208,32 @@
 
 <script>
 	function plywood_thickness() {
-    var wood_type = $('#nad_wood_type').val();
-      if (wood_type==4)
-        {
-            $('#nad_plywood_thickness').removeClass('disable_a_href');
+        var wood_type = $('#nad_wood_type').val();
+        var has_plywood = false;
+
+        if (wood_type) {
+            if (Array.isArray(wood_type)) {
+                has_plywood = wood_type.includes('4') || wood_type.includes(4);
+            } else {
+                has_plywood = (wood_type == 4);
+            }
         }
-      else
-        {
+
+        if (has_plywood) {
+            $('#nad_plywood_thickness').removeClass('disable_a_href');
+            $('#nad_plywood_thickness').prop('readonly', false);
+        } else {
             $('#nad_plywood_thickness').addClass('disable_a_href');
-          }
-		$(document).ready(function () {
-			plywood_thickness();
-			$('#nad_wood_type').on('change', function () {
-				plywood_thickness();
-			});
-		});
-      endif
+            $('#nad_plywood_thickness').val('0.0');
+            $('#nad_plywood_thickness').prop('readonly', true);
+        }
     }
+
+    $(document).ready(function () {
+        $('#nad_wood_type').on('change', function () {
+            plywood_thickness();
+        });
+    });
 </script>
 
 <script>

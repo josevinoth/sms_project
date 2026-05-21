@@ -186,8 +186,11 @@ def enquirynote_list(request):
     select_all = request.GET.get('select_all', '')
 
     if select_all == "true":
-        # Load records with a sensible limit (500 max for performance)
-        page_obj = list(enquirynote_queryset[:500])
+        # Load records with a sensible limit (1000 max for performance) when "Show All" is clicked
+        page_obj = list(enquirynote_queryset[:1000])
+    elif date_from or date_to or enquiry_number or consignment_number:
+        # Load records with a larger limit (10000 max) when specific filters/search terms are applied
+        page_obj = list(enquirynote_queryset[:5000])
     else:
         # Normal pagination
         paginator = Paginator(enquirynote_queryset, 75)
@@ -201,7 +204,8 @@ def enquirynote_list(request):
     consignment_data = ConsignmentdetailInfo.objects.filter(co_enquirynumber_id__in=enquiry_ids)
     vehicle_data = Vehicle_allotmentInfo.objects.filter(
         va_enquirynumber__in=enquiry_ids
-    ).values_list('va_enquirynumber', 'va_vehiclenumber__vm_registrationnumber', 'va_vehiclenumber_mkt', 'va_status_id', 'id', 'va_replaced_allotment_id')
+    ).values_list('va_enquirynumber', 'va_vehiclenumber__vm_registrationnumber', 'va_vehiclenumber_mkt', 'va_status_id',
+                  'id', 'va_replaced_allotment_id')
 
     trip_data = TripdetailInfo.objects.filter(
         tr_enquirynumber_id__in=enquiry_ids
@@ -241,7 +245,7 @@ def enquirynote_list(request):
 
             if enq_id not in vehicle_dict:
                 vehicle_dict[enq_id] = []
-            
+
             # Check if this raw_number already exists to avoid duplicates
             if not any(v['number'] == v_num for v in vehicle_dict[enq_id]):
                 vehicle_dict[enq_id].append({
@@ -276,15 +280,15 @@ def enquirynote_list(request):
     # Vehicle limits
     vehicle_limits = (
         Enquirynotevehicle.objects.filter(env_enquirynumber__in=enquiry_ids)
-            .values('env_enquirynumber')
-            .annotate(total_allowed=Sum('env_quantity'))
+        .values('env_enquirynumber')
+        .annotate(total_allowed=Sum('env_quantity'))
     )
     vehicle_limit_dict = {v['env_enquirynumber']: v['total_allowed'] for v in vehicle_limits}
 
     vehicle_allotted = (
         Vehicle_allotmentInfo.objects.filter(va_enquirynumber__in=enquiry_ids)
-            .values('va_enquirynumber')
-            .annotate(total_allotted=Count('id'))
+        .values('va_enquirynumber')
+        .annotate(total_allotted=Count('id'))
     )
     vehicle_allotted_dict = {v['va_enquirynumber']: v['total_allotted'] for v in vehicle_allotted}
 
@@ -415,6 +419,9 @@ def enquirynote_list(request):
         'role': user_role,
         'enquiry_data': enquiry_data,
         'enquiry_number': enquiry_number,
+        'consignment_number': consignment_number,
+        'date_from': date_from,
+        'date_to': date_to,
         'vehicle_summary': vehicle_summary,
     }
     return render(request, "asset_mgt_app/enquirynote_list.html", context)
@@ -477,7 +484,7 @@ def enquirynote_delete(request, enquirynote_id):
     enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
     enquiry_num = enquirynote.en_enquirynumber
     reason = request.POST.get('deletion_reason', 'No reason provided')
-    
+
     # Create deletion log
     DeletionLog.objects.create(
         dl_model_name='EnquirynoteInfo',
@@ -493,7 +500,7 @@ def enquirynote_delete(request, enquirynote_id):
                                                                                           flat=True))
     tripdetails_list = list(
         TripdetailInfo.objects.filter(tr_enquirynumber=enquirynote_id).values_list('tr_tripnumber', flat=True))
-    
+
     for i in consignment_num_list:
         consignment_note = ConsignmentdetailInfo.objects.get(co_consignmentnumber=i)
         DeletionLog.objects.create(
@@ -504,7 +511,7 @@ def enquirynote_delete(request, enquirynote_id):
             dl_reason=f"Cascaded delete from Enquiry {enquiry_num}. Reason: {reason}"
         )
         consignment_note.delete()
-        
+
     for j in tripdetails_list:
         tripdetails_note = TripdetailInfo.objects.get(tr_tripnumber=j)
         DeletionLog.objects.create(

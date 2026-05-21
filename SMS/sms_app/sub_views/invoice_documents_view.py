@@ -273,8 +273,8 @@ def invoice_documents_add(request, trip_id):
             )
         invoice_doc.save()
 
-    # Fields editable in the settlement form on this page (status only)
-    editable_fields = ['tc_financestatus']
+    # Fields editable in the settlement form on this page (status and parking charges)
+    editable_fields = ['tc_financestatus', 'tc_parkingcost', 'tc_parkingcost_check']
 
     if request.method == 'POST':
         settlement_form = TripSettlementForm(request.POST, request.FILES, instance=trip)
