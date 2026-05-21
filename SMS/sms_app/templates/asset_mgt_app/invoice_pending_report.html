@@ -58,16 +58,16 @@
         {% render_field form.customer_department class="form-control" id="filter_dept" %}
     </div>
 
-    <!-- Month -->
+    <!-- From Date -->
     <div class="col-md-2">
-        <label class="form-label fw-bold">Month</label>
-        {% render_field form.month class="form-control" id="filter_month" %}
+        <label class="form-label fw-bold">From Date</label>
+        <input type="date" name="from_date" class="form-control" id="filter_from_date">
     </div>
 
-    <!-- Year -->
-    <div class="col-md-1">
-        <label class="form-label fw-bold">Year</label>
-        {% render_field form.year class="form-control" id="filter_year" %}
+    <!-- To Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">To Date</label>
+        <input type="date" name="to_date" class="form-control" id="filter_to_date">
     </div>
 
     <!-- From Location -->
@@ -131,8 +131,8 @@
                     d.dmr_customer       = $('#filter_customer').val();
                     d.customer_department = $('#filter_dept').val();
                     d.branch             = $('#filter_branch').val();
-                    d.month              = $('#filter_month').val();
-                    d.year               = $('#filter_year').val();
+                    d.from_date          = $('#filter_from_date').val();
+                    d.to_date            = $('#filter_to_date').val();
                     d.from_location      = $('#filter_from_loc').val();
                     d.to_location        = $('#filter_to_loc').val();
                 }
