@@ -215,7 +215,8 @@ def enquirynote_list(request):
         'tr_tripnumber',
         'tc_financestatus__status',
         'tc_financestatus',
-        'tr_category__category'
+        'tr_category__category',
+        'tr_vehiclenumber'
     )
 
     # Pre-build consignment dict to avoid N+1 queries
@@ -262,7 +263,7 @@ def enquirynote_list(request):
 
     # Trip dict
     trip_dict = {}
-    for enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category in trip_data:
+    for enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num in trip_data:
         # Check category safely
         cat_lower = trip_category.strip().lower() if trip_category else ""
 
@@ -273,8 +274,10 @@ def enquirynote_list(request):
         else:
             display_text = trip_category if trip_category else "No Category"
 
+        display_veh_num = trip_veh_num if trip_veh_num else (trip_num or "No Trip")
+
         trip_dict.setdefault(enq_id, []).append(
-            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id)
+            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, display_veh_num)
         )
 
     # Vehicle limits
@@ -442,7 +445,14 @@ def consignment_note_connect(request, enquirynote_id):
     if request.method == "GET":
         if consignment_num == None:
             print("I am inside Get add consignmentdetails")
-            con_det_form = ConsignmentdetailaddForm()
+            try:
+                enquiry = EnquirynoteInfo.objects.get(pk=enquirynote_id)
+                customer = enquiry.en_customername
+                customer_obj = CustomerInfo.objects.filter(cu_name=customer).first()
+                cust_id = customer_obj.id if customer_obj else None
+            except Exception:
+                cust_id = None
+            con_det_form = ConsignmentdetailaddForm(initial={'co_enquirynumber': enquirynote_id, 'co_customer': cust_id})
         else:
             print("I am inside get edit consignmentdetails")
             try:
