@@ -67,6 +67,18 @@
         </select>
     </div>
 
+    <!-- Vehicle Source -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Vehicle Source</label>
+        <select name="vehicle_source" class="form-select form-control" id="vehicleSourceSelect">
+            <option value="">-- All Sources --</option>
+            {% for vs in all_vehicle_sources %}
+            <option value="{{ vs.id }}" {% if vehicle_source_id == vs.id %}selected{% endif %}>{{ vs.ow_ownership }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
     <div class="col-md-2">
         <button type="submit" class="btn btn-primary mt-3">Filter</button>
     </div>
@@ -134,6 +146,7 @@
                     d.branch = $('#branchSelect').val();
                     d.trip_category = $('#tripCategorySelect').val();
                     d.customer = $('#customerSelect').val();
+                    d.vehicle_source = $('#vehicleSourceSelect').val();
                     d.from_date = $('#fromDate').val();
                     d.to_date = $('#toDate').val();
                     d.year = '{{ selected_year|default:"" }}';

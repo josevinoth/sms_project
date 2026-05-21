@@ -95,7 +95,7 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill):
     v_source = trip.tr_vehiclesource_id
 
     if v_source == 1:  # OWN
-        fuel = salary = acting = bata = toll = parking = loading = unloading = weighment = handling = hire = 0.0
+        fuel = salary = acting = bata = toll = parking = loading = unloading = weighment = handling = hire = other = 0.0
         for e in trip_expenses:
             et = str(e.de_expense_type).lower() if e.de_expense_type else ""
             cv = safe_num(e.de_total_cost)
@@ -121,34 +121,27 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill):
                 handling += cv
             elif any(k in et for k in ['hire', 'freight']):
                 hire += cv
+            else:
+                other += cv
         total_buying = (
-                    fuel + salary + acting + bata + toll + parking + loading + unloading + weighment + handling + hire)
+                    fuel + salary + acting + bata + toll + parking + loading + unloading + weighment + handling + hire + other)
 
     elif v_source == 2:  # ATTACHED
-        km_run = max(0, safe_num(trip.tr_reportedkm_delivery or trip.tr_reportedkm) - safe_num(trip.tr_departedkm))
         if ab_bill:
-            ab_rate = (safe_num(ab_bill.ab_buy_cost) / safe_num(ab_bill.ab_total_km_run)) if safe_num(
-                ab_bill.ab_total_km_run) > 0 else 0
-            buy_trip = round(ab_rate * km_run, 2)
+            km_run = max(0, safe_num(trip.tr_reportedkm_delivery or trip.tr_reportedkm) - safe_num(trip.tr_departedkm))
+            ab_buy_cost = safe_num(ab_bill.ab_buy_cost)
+            ab_total_km = safe_num(ab_bill.ab_total_km_run)
+            if 0 < km_run < 5000:
+                ab_rate = (ab_buy_cost / ab_total_km) if ab_total_km > 0 else 0
+                total_buying = round(ab_rate * km_run, 2)
+            else:
+                num_trips = 1
+                if ab_bill.ab_selected_trips:
+                    num_trips = len([it.strip() for it in ab_bill.ab_selected_trips.split(',') if it.strip()])
+                if num_trips < 1: num_trips = 1
+                total_buying = round(ab_buy_cost / num_trips, 2)
         else:
-            buy_trip = safe_num(va_info.va_specialbuy) or safe_num(va_info.va_standardbuy) if va_info else 0
-
-        buy_toll = safe_num(trip.tc_tollcost)
-        buy_other = 0.0
-        for e in trip_expenses:
-            buy_other += (safe_num(e.de_loadingcost) + safe_num(e.de_unloadingcost) + safe_num(e.de_weighmentcost) +
-                          safe_num(e.de_supervisorcost) + safe_num(e.de_parkingcost) + safe_num(
-                        e.de_rtocost) + safe_num(e.de_battacost))
-            et = str(e.de_expense_type).lower() if e.de_expense_type else ""
-            cv = safe_num(e.de_total_cost)
-            if "toll" in et and not ab_bill and not e.de_rtocost:
-                buy_toll += cv
-            elif any(k in et for k in
-                     ["halting", "handling", "parking", "loading", "unloading", "weighment", "bata", "batta"]):
-                if not any([e.de_loadingcost, e.de_unloadingcost, e.de_weighmentcost, e.de_supervisorcost,
-                            e.de_parkingcost, e.de_rtocost, e.de_battacost]):
-                    buy_other += cv
-        total_buying = buy_trip + buy_toll + buy_other
+            total_buying = 0.0
 
     elif v_source == 3:  # MARKET
         if mb_bill:
@@ -5480,32 +5473,32 @@ def movementwise_pl_report_ajax_view(request):
         vendor_ids = set(a.va_vendor_id for a in va_map.values() if a.va_vendor_id)
 
         bill_no_map = {}
-        for b in MarketBillInfo.objects.filter(mb_vendor_id__in=vendor_ids).only('mb_bill_no', 'mb_selected_trips',
-                                                                                 'mb_total_cost'):
+        for b in MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost'):
             if b.mb_selected_trips:
                 for tid in [tid.strip() for tid in b.mb_selected_trips.split(',') if tid.strip()]:
                     try:
                         bill_no_map[int(tid)] = b
                     except:
                         pass
+                    bill_no_map[str(tid).strip().upper()] = b
 
         attached_bill_map = {}
-        for b in AttachedBillInfo.objects.filter(ab_vendor_id__in=vendor_ids).only('ab_bill_no', 'ab_selected_trips',
-                                                                                   'ab_buy_cost'):
+        for b in AttachedBillInfo.objects.all().only('ab_bill_no', 'ab_selected_trips', 'ab_buy_cost', 'ab_total_km_run'):
             if b.ab_selected_trips:
                 for tid in [tid.strip() for tid in b.ab_selected_trips.split(',') if tid.strip()]:
                     try:
                         attached_bill_map[int(tid)] = b
                     except:
                         pass
+                    attached_bill_map[str(tid).strip().upper()] = b
 
         final_data_rows = []
         for idx, trip in enumerate(all_matching_trips, start=start + 1):
             inv = invoice_obj_map.get(trip.id)
             trip_expenses = expense_map.get(trip.id, [])
             va_info = va_map.get(trip.tr_enquirynumber_id)
-            ab_bill = attached_bill_map.get(trip.id)
-            mb_bill = bill_no_map.get(trip.id)
+            ab_bill = attached_bill_map.get(trip.id) or (attached_bill_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
+            mb_bill = bill_no_map.get(trip.id) or (bill_no_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
 
             try:
                 selling, buying, profit, profit_pct, disp_date = get_trip_pl_data(
@@ -5566,13 +5559,14 @@ def customerwise_pl_report_ajax_view(request):
         branch_id = request.GET.get('branch')
         trip_category_id = request.GET.get('trip_category')
         customer_id = request.GET.get('customer')
+        vehicle_source_id = request.GET.get('vehicle_source')
         from_date = request.GET.get('from_date')
         to_date = request.GET.get('to_date')
         selected_year = request.GET.get('year')
         search_value = request.GET.get('search[value]', '').strip()
 
         # Base queryset
-        trips = get_filtered_trips(branch_id, trip_category_id, None, from_date, to_date, selected_year,
+        trips = get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date, to_date, selected_year,
                                    customer_id=customer_id)
         trips = trips.filter(tr_category_id=1, tc_financestatus_id=7)
 
@@ -5658,24 +5652,24 @@ def customerwise_pl_report_ajax_view(request):
         vendor_ids = set(a.va_vendor_id for a in va_map.values() if a.va_vendor_id)
 
         bill_no_map = {}
-        for b in MarketBillInfo.objects.filter(mb_vendor_id__in=vendor_ids).only('mb_bill_no', 'mb_selected_trips',
-                                                                                 'mb_total_cost'):
+        for b in MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost'):
             if b.mb_selected_trips:
                 for tid in [tid.strip() for tid in b.mb_selected_trips.split(',') if tid.strip()]:
                     try:
                         bill_no_map[int(tid)] = b
                     except:
                         pass
+                    bill_no_map[str(tid).strip().upper()] = b
 
         attached_bill_map = {}
-        for b in AttachedBillInfo.objects.filter(ab_vendor_id__in=vendor_ids).only('ab_bill_no', 'ab_selected_trips',
-                                                                                   'ab_buy_cost'):
+        for b in AttachedBillInfo.objects.all().only('ab_bill_no', 'ab_selected_trips', 'ab_buy_cost', 'ab_total_km_run'):
             if b.ab_selected_trips:
                 for tid in [tid.strip() for tid in b.ab_selected_trips.split(',') if tid.strip()]:
                     try:
                         attached_bill_map[int(tid)] = b
                     except:
                         pass
+                    attached_bill_map[str(tid).strip().upper()] = b
 
         # Calculate P&L for current page
         final_data_rows = []
@@ -5683,8 +5677,8 @@ def customerwise_pl_report_ajax_view(request):
             inv = invoice_obj_map.get(trip.id)
             trip_expenses = expense_map.get(trip.id, [])
             va_info = va_map.get(trip.tr_enquirynumber_id)
-            ab_bill = attached_bill_map.get(trip.id)
-            mb_bill = bill_no_map.get(trip.id)
+            ab_bill = attached_bill_map.get(trip.id) or (attached_bill_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
+            mb_bill = bill_no_map.get(trip.id) or (bill_no_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
 
             try:
                 selling, buying, profit, profit_pct, disp_date = get_trip_pl_data(
@@ -5742,6 +5736,7 @@ def customerwise_pl_report_view(request):
     branch_id = request.POST.get('branch')
     trip_category_id = request.POST.get('trip_category')
     customer_id = request.POST.get('customer')
+    vehicle_source_id = request.POST.get('vehicle_source')
     from_date = request.POST.get('from_date')
     to_date = request.POST.get('to_date')
     selected_year = request.POST.get('year')
@@ -5769,6 +5764,7 @@ def customerwise_pl_report_view(request):
         'branch_id': int(branch_id) if branch_id else None,
         'trip_category_id': int(trip_category_id) if trip_category_id else None,
         'customer_id': int(customer_id) if customer_id else None,
+        'vehicle_source_id': int(vehicle_source_id) if vehicle_source_id else None,
         'from_date': from_date,
         'to_date': to_date,
         'selected_year': selected_year,
@@ -5779,6 +5775,7 @@ def customerwise_pl_report_view(request):
         ],
 
         'all_customers': all_customers,
+        'all_vehicle_sources': OwnershipInfo.objects.all(),
     })
 
 
@@ -5872,8 +5869,8 @@ def location_pl_report_view(request):
             for tid in ids:
                 try:
                     attached_bill_map[int(tid)] = b
-                except:
-                    pass
+                except ValueError:
+                    attached_bill_map[tid] = b
 
     # ALLOTMENTS & RATES
     va_map = {
@@ -6052,7 +6049,7 @@ def location_pl_report_view(request):
             departed_km = safe_num(trip.tr_departedkm)
             km_run = max(0, reported_km - departed_km)
 
-            ab_bill = attached_bill_map.get(trip.id)
+            ab_bill = attached_bill_map.get(trip.id) or (attached_bill_map.get(str(trip.tr_tripnumber).strip()) if trip.tr_tripnumber else None)
             if ab_bill:
                 ab_buy_cost = safe_num(ab_bill.ab_buy_cost)
                 ab_total_km = safe_num(ab_bill.ab_total_km_run)
