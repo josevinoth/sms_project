@@ -135,29 +135,27 @@ def invoice_documents_list(request):
     invoiced_trip_ids = TransInvoiceInfo.objects.filter(ti_trip__isnull=False).values_list('ti_trip_id', flat=True)
     invoiced_cons_ids = TransInvoiceInfo.objects.filter(ti_consignment__isnull=False).values_list('ti_consignment_id',
                                                                                                   flat=True)
-    trips_from_cons = TripdetailInfo.objects.filter(tr_consignmentnumber_id__in=invoiced_cons_ids).values_list('id',
-                                                                                                               flat=True)
     invoiced_goods_ids = TransInvoiceInfo.objects.filter(ti_goods__isnull=False).values_list('ti_goods_id', flat=True)
 
     from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
     cons_from_goods = ConsignmentgoodsInfo.objects.filter(id__in=invoiced_goods_ids).values_list(
         'cg_consignmentnumber_id', flat=True)
-    trips_from_goods = TripdetailInfo.objects.filter(tr_consignmentnumber_id__in=cons_from_goods).values_list('id',
-                                                                                                              flat=True)
 
     trip_list = TripdetailInfo.objects.select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_consignmentnumber',
         'tc_financestatus',
+        'tr_departedlocation',
+        'tr_reportedlocation',
     ).filter(
         tc_financestatus_id__in=status_ids
     ).exclude(
         id__in=invoiced_trip_ids
     ).exclude(
-        id__in=trips_from_cons
+        tr_consignmentnumber_id__in=invoiced_cons_ids
     ).exclude(
-        id__in=trips_from_goods
+        tr_consignmentnumber_id__in=cons_from_goods
     )
 
     if veh_no:
@@ -171,7 +169,7 @@ def invoice_documents_list(request):
 
     # Map trip_number -> InvoiceDocumentInfo
     trip_numbers = [t.tr_tripnumber for t in trip_list if t.tr_tripnumber]
-    invoice_docs = InvoiceDocumentInfo.objects.filter(id_tripnumber__in=trip_numbers)
+    invoice_docs = InvoiceDocumentInfo.objects.filter(id_tripnumber__in=trip_numbers).select_related('id_status')
     invoice_doc_map = {doc.id_tripnumber: doc for doc in invoice_docs}
 
     trips_with_docs = []

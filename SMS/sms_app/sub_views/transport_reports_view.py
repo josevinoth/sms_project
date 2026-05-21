@@ -1362,6 +1362,7 @@ def invoice_pending_report_view(request):
     first_name = request.session.get('first_name')
 
     # Always use GET — filters are applied via AJAX in the DataTable
+    # (Synced and re-applied)
     form = DmrForm()
 
     context = {
@@ -1376,7 +1377,7 @@ def invoice_pending_report_view(request):
 
 @login_required(login_url='login_page')
 def invoice_pending_report_ajax_view(request):
-    """Server-side DataTables AJAX endpoint for Invoice Pending Report."""
+    """Server-side DataTables AJAX endpoint for Invoice Pending Report (Synced)."""
     from ..models import TransInvoiceInfo, ConsignmentgoodsInfo
     from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
     from django.http import JsonResponse
@@ -1390,8 +1391,8 @@ def invoice_pending_report_ajax_view(request):
     # Custom filter params (passed via AJAX data function)
     customer_id = request.GET.get('dmr_customer', '').strip()
     dept_id = request.GET.get('customer_department', '').strip()
-    selected_month = request.GET.get('month', '').strip()
-    selected_year = request.GET.get('year', '').strip()
+    from_date = request.GET.get('from_date', '').strip()
+    to_date = request.GET.get('to_date', '').strip()
     from_loc_id = request.GET.get('from_location', '').strip()
     to_loc_id = request.GET.get('to_location', '').strip()
     branch_id = request.GET.get('branch', '').strip()
@@ -1474,25 +1475,11 @@ def invoice_pending_report_ajax_view(request):
     if dept_id:
         trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
 
-    if selected_month and selected_month != '0':
-        trips = trips.filter(
-            Q(tr_loading_time__month=selected_month) |
-            Q(tr_departeddate__month=selected_month) |
-            Q(tr_departeddate_pickup__month=selected_month) |
-            Q(tr_reporteddate__month=selected_month) |
-            Q(tr_unloading_time__month=selected_month) |
-            Q(tr_created_at__month=selected_month)
-        )
+    if from_date:
+        trips = trips.filter(tr_departeddate_pickup__date__gte=from_date)
 
-    if selected_year and selected_year != '0':
-        trips = trips.filter(
-            Q(tr_loading_time__year=selected_year) |
-            Q(tr_departeddate__year=selected_year) |
-            Q(tr_departeddate_pickup__year=selected_year) |
-            Q(tr_reporteddate__year=selected_year) |
-            Q(tr_unloading_time__year=selected_year) |
-            Q(tr_created_at__year=selected_year)
-        )
+    if to_date:
+        trips = trips.filter(tr_departeddate_pickup__date__lte=to_date)
 
     if from_loc_id:
         trips = trips.filter(tr_departedlocation_id=from_loc_id)
@@ -1600,26 +1587,8 @@ def invoice_pending_report_ajax_view(request):
         elif 'CJB' in cu_name:
             branch_name = 'CJB'
 
-        # Date selection logic
-        dates = [
-            trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
-            trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
-            trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
-            trip.tr_dock_out_time, trip.tr_created_at
-        ]
-        target_month = int(selected_month) if selected_month and selected_month != '0' else None
-        target_year = int(selected_year) if selected_year and selected_year != '0' else None
-
-        display_date = ""
-        matched = next((d for d in dates if d and
-                        (not target_month or d.month == target_month) and
-                        (not target_year or d.year == target_year)), None)
-        if matched:
-            display_date = matched.strftime("%d-%m-%Y")
-        else:
-            fallback = next((d for d in dates if d), None)
-            if fallback:
-                display_date = fallback.strftime("%d-%m-%Y")
+        # Date selection logic (strictly using tr_departeddate_pickup as the planning date)
+        display_date = trip.tr_departeddate_pickup.strftime("%d-%m-%Y") if trip.tr_departeddate_pickup else ""
 
         trip_status_display = inv_status if inv_status != "-" else (safe_str(trip.tc_financestatus) if trip.tc_financestatus else "")
 
