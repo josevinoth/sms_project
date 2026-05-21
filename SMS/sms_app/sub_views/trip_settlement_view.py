@@ -5,7 +5,7 @@ from ..models import  TripdetailInfo,Trip_closure_files_Info, Vehicle_allotmentI
 from ..forms import TripSettlementForm,TripclosurefilesForm
 from ..sub_models.trip_status_mod import Tripstatusinfo
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Exists, OuterRef
 
 @login_required
 def trip_settlement_view(request):
@@ -13,40 +13,144 @@ def trip_settlement_view(request):
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
 
-    trip_list = TripdetailInfo.objects.select_related(
-        'tr_enquirynumber',
-        'tr_enquirynumber__en_customername',
-        'tr_consignmentnumber',
-        'tr_approval',
-        'tr_approval__ta_approval_status',
-        'tr_category'
-    ).filter(
-        Q(tc_financestatus_id=4) & (
-            Q(tr_category_id=1) |
-            Q(tr_category_id=3) & (
-                Q(tr_consignmentnumber__co_status_id=8) |
-                Q(tr_enquirynumber__consignmentdetailinfo__co_status_id=8)
-            )
-        )
-    ).distinct()
-
-    if veh_no:
-        trip_list = trip_list.filter(tr_vehiclenumber__icontains=veh_no)
-
-    if date_from:
-        trip_list = trip_list.filter(tr_departeddate__date__gte=date_from)
-
-    if date_to:
-        trip_list = trip_list.filter(tr_departeddate__date__lte=date_to)
-
-    trip_list = trip_list.order_by('-tr_tripnumber')
-
     return render(request, "asset_mgt_app/trip_settlement.html", {
-        'tripsettlement_list': trip_list,
         'veh_no': veh_no,
         'date_from': date_from,
         'date_to': date_to,
     })
+
+@login_required
+def trip_settlement_list_ajax_view(request):
+    from django.http import JsonResponse
+    from ..sub_models.consignmentdetail_mod import ConsignmentdetailInfo
+    try:
+        draw = int(request.GET.get('draw', 1))
+        start = int(request.GET.get('start', 0))
+        length = int(request.GET.get('length', 10))
+        
+        veh_no = request.GET.get('veh_no', '').strip()
+        date_from = request.GET.get('date_from', '').strip()
+        date_to = request.GET.get('date_to', '').strip()
+        search_value = request.GET.get('search[value]', '').strip()
+
+        # Use Exists subquery instead of reverse FK join to avoid .distinct()
+        has_settled_consignment = Exists(
+            ConsignmentdetailInfo.objects.filter(
+                co_enquirynumber=OuterRef('tr_enquirynumber_id'),
+                co_status_id=8
+            )
+        )
+
+        trip_list = TripdetailInfo.objects.select_related(
+            'tr_enquirynumber',
+            'tr_enquirynumber__en_customername',
+            'tr_consignmentnumber',
+            'tr_approval',
+            'tr_approval__ta_approval_status',
+            'tr_category',
+            'tc_financestatus'
+        ).filter(
+            Q(tc_financestatus_id=4) & (
+                Q(tr_category_id=1) |
+                Q(tr_category_id=3) & (
+                    Q(tr_consignmentnumber__co_status_id=8) |
+                    Q(pk__in=TripdetailInfo.objects.filter(has_settled_consignment).values('pk'))
+                )
+            )
+        )
+
+        if veh_no:
+            trip_list = trip_list.filter(tr_vehiclenumber__icontains=veh_no)
+        if date_from:
+            trip_list = trip_list.filter(tr_departeddate__date__gte=date_from)
+        if date_to:
+            trip_list = trip_list.filter(tr_departeddate__date__lte=date_to)
+
+        # Count before search filter for recordsTotal
+        records_total = trip_list.count()
+
+        if search_value:
+            trip_list = trip_list.filter(
+                Q(tr_tripnumber__icontains=search_value) |
+                Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+                Q(tr_enquirynumber__en_enquirynumber__icontains=search_value) |
+                Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
+                Q(tr_vehiclenumber__icontains=search_value)
+            )
+
+        records_filtered = trip_list.count()
+
+        # Ordering
+        order_col = int(request.GET.get('order[0][column]', 2))
+        order_dir = request.GET.get('order[0][dir]', 'desc')
+
+        col_map = {
+            0: 'tr_enquirynumber__en_enquirynumber',
+            1: 'tr_consignmentnumber__co_consignmentnumber',
+            2: 'tr_tripnumber',
+            3: 'tr_category__category',
+            4: 'tr_enquirynumber__en_customername__cu_name',
+            5: 'tr_vehiclenumber',
+            6: 'tr_departedlocation__place_name',
+            7: 'tr_reportedlocation__place_name',
+            8: 'tr_departeddate_pickup',
+            9: 'tc_tripcost',
+            10: 'tc_parkingcost',
+            11: 'tc_tollcost',
+            12: 'tc_loadingcost',
+            13: 'tc_unloadingcost',
+            14: 'tc_weighmentcost',
+            15: 'tc_handlingcost',
+        }
+
+        order_field = col_map.get(order_col, '-tr_tripnumber')
+        if order_dir == 'desc' and not order_field.startswith('-'):
+            order_field = '-' + order_field
+            
+        trip_list = trip_list.order_by(order_field)
+
+        # Pagination
+        if length != -1:
+            trip_list = trip_list[start:start + length]
+
+        data = []
+        for trip in trip_list:
+            
+            from django.urls import reverse
+            edit_url = reverse('trip_settlement_edit', args=[trip.id])
+            edit_btn = f'<a class="btn btn-primary" href="{edit_url}"><i class="far fa-edit"></i></a>'
+            
+            data.append([
+                str(trip.tr_enquirynumber) if trip.tr_enquirynumber else '',
+                str(trip.tr_consignmentnumber) if trip.tr_consignmentnumber else '',
+                str(trip.tr_tripnumber) if trip.tr_tripnumber else '',
+                str(trip.tr_category.category) if trip.tr_category else '',
+                str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername else '',
+                str(trip.tr_vehiclenumber) if trip.tr_vehiclenumber else '',
+                str(trip.tr_departedlocation) if trip.tr_departedlocation else '',
+                str(trip.tr_reportedlocation) if trip.tr_reportedlocation else '',
+                trip.tr_departeddate_pickup.strftime("%d-%m-%Y") if trip.tr_departeddate_pickup else '',
+                '' if trip.tc_tripcost is None else str(trip.tc_tripcost),
+                '' if trip.tc_parkingcost is None else str(trip.tc_parkingcost),
+                '' if trip.tc_tollcost is None else str(trip.tc_tollcost),
+                '' if trip.tc_loadingcost is None else str(trip.tc_loadingcost),
+                '' if trip.tc_unloadingcost is None else str(trip.tc_unloadingcost),
+                '' if trip.tc_weighmentcost is None else str(trip.tc_weighmentcost),
+                '' if trip.tc_handlingcost is None else str(trip.tc_handlingcost),
+                str(trip.tc_financestatus.status) if trip.tc_financestatus else '',
+                edit_btn
+            ])
+
+        return JsonResponse({
+            'draw': draw,
+            'recordsTotal': records_total,
+            'recordsFiltered': records_filtered,
+            'data': data
+        })
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return JsonResponse({'error': str(e)})
 
 @login_required
 def trip_settlement_edit(request, trip_id):

@@ -76,7 +76,6 @@
                 <th>Unloading Cost</th>
                 <th>Weighment Cost</th>
                 <th>Handling Cost</th>
-                <th>POD</th>
                 <th>Settlement Status</th>
                 <th>Edit</th>
             </tr>
@@ -90,36 +89,6 @@
 
 
         <tbody>
-            {% for trip in tripsettlement_list %}
-            <tr style="white-space: nowrap;">
-                <td>{{ trip.tr_enquirynumber }}</td>
-                <td>{{ trip.tr_consignmentnumber }}</td>
-                <td>{{ trip.tr_tripnumber }}</td>
-                <td>{{ trip.tr_category.category }}</td>
-                <td>{{ trip.tr_enquirynumber.en_customername }}</td>
-                <td>{{ trip.tr_vehiclenumber }}</td>
-                <td>{{ trip.tr_departedlocation }}</td>
-                <td>{{ trip.tr_reportedlocation }}</td>
-                <td>{{ trip.tr_departeddate_pickup|date:"d-m-Y" }}</td>
-
-                <td>{{ trip.tc_tripcost }}</td>
-                <td>{{ trip.tc_parkingcost }}</td>
-                <td>{{ trip.tc_tollcost }}</td>
-                <td>{{ trip.tc_loadingcost }}</td>
-                <td>{{ trip.tc_unloadingcost }}</td>
-                <td>{{ trip.tc_weighmentcost }}</td>
-                <td>{{ trip.tc_handlingcost }}</td>
-
-                <td>{{ trip.tc_pod }}</td>
-                <td>{{ trip.tc_financestatus.status }}</td>
-
-                <td>
-                    <a class="btn btn-primary" href="{% url 'trip_settlement_edit' trip.id %}">
-                        <i class="far fa-edit"></i>
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
         </tbody>
     </table>
 
@@ -127,6 +96,17 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     $('#tripsettlement_list').DataTable({
+        serverSide: true,
+        processing: true,
+        ajax: {
+            url: "{% url 'trip_settlement_list_ajax' %}",
+            type: "GET",
+            data: function(d) {
+                d.veh_no = $("input[name='veh_no']").val();
+                d.date_from = $("input[name='date_from']").val();
+                d.date_to = $("input[name='date_to']").val();
+            }
+        },
         order: [[2, 'desc']],
         scrollX: true,
         scrollCollapse: true,
@@ -134,12 +114,15 @@ document.addEventListener("DOMContentLoaded", function () {
         pageLength: 10,   // default page size
 
         lengthMenu: [
-            [10, 25, 50, 100, -1],   // values
-            [10, 25, 50, 100, "All"] // labels
+            [10, 25, 50, 100],   // values (do not use -1 for server-side to prevent massive queries)
+            [10, 25, 50, 100]    // labels
         ],
 
         dom: 'lBfrtip',
-        buttons: ['copy', 'csv', 'excel', 'print']
+        buttons: ['copy', 'csv', 'excel', 'print'],
+        columnDefs: [
+            { orderable: false, targets: [17] } // Edit
+        ]
     });
 });
 </script>
