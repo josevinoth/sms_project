@@ -100,15 +100,15 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
 
     if request.method == "GET":
         if consignmentdetail_id == 0:
-            con_det_form = ConsignmentdetailaddForm()
-            form = ConsignmentgoodsaddForm()
+            con_det_form = ConsignmentdetailaddForm(initial={'co_enquirynumber': enquiry_num_id, 'co_customer': customer_id})
+            form = ConsignmentgoodsaddForm(initial={'cg_consignmentnumber': 0})
             vehicle_type = ""
         else:
             request.session['ses_consignment_detail_id'] = consignmentdetail_id
             enquiry_num = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id).co_enquirynumber
             consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
             con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
-            form = ConsignmentgoodsaddForm()
+            form = ConsignmentgoodsaddForm(initial={'cg_consignmentnumber': consignmentdetail_id})
             vehicle_type = consignmentdetail.co_vehicletype
 
         context = {

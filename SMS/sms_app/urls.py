@@ -590,6 +590,8 @@ urlpatterns = [
     path('consignmentgoods_cancel/', views.consignmentgoods_cancel, name='consignmentgoods_cancel'),
     # Cancel consignmentgoods
     path('consignmentgoods_back/', views.consignmentgoods_back, name='consignmentgoods_back'),
+    path('consigner_select2_search/', views.consigner_select2_search, name='consigner_select2_search'),
+    path('consignee_select2_search/', views.consignee_select2_search, name='consignee_select2_search'),
     # Cancel consignmentgoods
     path('load_location/', views.load_location, name='load_location'),
     path('export_stockreport/', views.export_stockreport_to_csv, name='export_stockreport'),
