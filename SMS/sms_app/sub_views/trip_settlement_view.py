@@ -10,7 +10,7 @@ from django.db.models import Q, Exists, OuterRef
 @login_required
 def trip_settlement_view(request):
     veh_no = request.GET.get('veh_no', '').strip()
-    date_from = request.GET.get('date_from', '').strip()
+    date_from = request.GET.get('date_from', '').strip() or '2026-05-01'
     date_to = request.GET.get('date_to', '').strip()
 
     return render(request, "asset_mgt_app/trip_settlement.html", {
@@ -29,7 +29,7 @@ def trip_settlement_list_ajax_view(request):
         length = int(request.GET.get('length', 10))
         
         veh_no = request.GET.get('veh_no', '').strip()
-        date_from = request.GET.get('date_from', '').strip()
+        date_from = request.GET.get('date_from', '').strip() or '2026-05-01'
         date_to = request.GET.get('date_to', '').strip()
         search_value = request.GET.get('search[value]', '').strip()
 
@@ -62,9 +62,9 @@ def trip_settlement_list_ajax_view(request):
         if veh_no:
             trip_list = trip_list.filter(tr_vehiclenumber__icontains=veh_no)
         if date_from:
-            trip_list = trip_list.filter(tr_departeddate__date__gte=date_from)
+            trip_list = trip_list.filter(tr_departeddate_pickup__gte=date_from)
         if date_to:
-            trip_list = trip_list.filter(tr_departeddate__date__lte=date_to)
+            trip_list = trip_list.filter(tr_departeddate_pickup__lte=f"{date_to} 23:59:59")
 
         # Count before search filter for recordsTotal
         records_total = trip_list.count()

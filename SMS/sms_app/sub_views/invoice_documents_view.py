@@ -119,7 +119,7 @@ def _try_merge_pdfs(inv_obj, closure_obj=None):
 @login_required
 def invoice_documents_list(request):
     veh_no = request.GET.get('veh_no', '').strip()
-    date_from = request.GET.get('date_from', '').strip()
+    date_from = request.GET.get('date_from', '').strip() or '2026-05-01'
     date_to = request.GET.get('date_to', '').strip()
 
     return render(request, 'asset_mgt_app/invoice_documents_list.html', {
@@ -137,7 +137,7 @@ def invoice_documents_list_ajax_view(request):
         length = int(request.GET.get('length', 10))
         
         veh_no = request.GET.get('veh_no', '').strip()
-        date_from = request.GET.get('date_from', '').strip()
+        date_from = request.GET.get('date_from', '').strip() or '2026-05-01'
         date_to = request.GET.get('date_to', '').strip()
         search_value = request.GET.get('search[value]', '').strip()
 
@@ -178,9 +178,9 @@ def invoice_documents_list_ajax_view(request):
         if veh_no:
             trip_list = trip_list.filter(tr_vehiclenumber__icontains=veh_no)
         if date_from:
-            trip_list = trip_list.filter(tr_departeddate__date__gte=date_from)
+            trip_list = trip_list.filter(tr_departeddate_pickup__gte=date_from)
         if date_to:
-            trip_list = trip_list.filter(tr_departeddate__date__lte=date_to)
+            trip_list = trip_list.filter(tr_departeddate_pickup__lte=f"{date_to} 23:59:59")
 
         # Count before search filter for recordsTotal
         records_total = trip_list.count()
@@ -352,8 +352,22 @@ def invoice_documents_add(request, trip_id):
             )
         invoice_doc.save()
 
-    # Fields editable in the settlement form on this page (status and parking charges)
-    editable_fields = ['tc_financestatus', 'tc_parkingcost', 'tc_parkingcost_check']
+    # Fields editable in the settlement form on this page (status and all charges except trip cost)
+    editable_fields = [
+        'tc_financestatus', 
+        'tc_parkingcost', 'tc_parkingcost_check',
+        'tc_tollcost', 'tc_tollcost_check',
+        'tc_loadingcost', 'tc_loadingcost_check',
+        'tc_unloadingcost', 'tc_unloadingcost_check',
+        'tc_weighmentcost', 'tc_weighmentcost_check',
+        'tc_handlingcost', 'tc_handlingcost_check',
+        'tc_supervisorcost', 'tc_supervisorcost_check',
+        'tc_haltingcost', 'tc_haltingcost_check',
+        'tc_rtocost', 'tc_rtocost_check',
+        'tc_betacost', 'tc_betacost_check',
+        'tc_cancellation', 'tc_cancellation_check',
+        'tc_tripcost_check'
+    ]
 
     if request.method == 'POST':
         settlement_form = TripSettlementForm(request.POST, request.FILES, instance=trip)
