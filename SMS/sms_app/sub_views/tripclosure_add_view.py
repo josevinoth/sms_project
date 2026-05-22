@@ -250,7 +250,11 @@ def tripclosure_add(request, tripclosure_id=0):
                     'tc_financestatus', flat=True)
                 tripclousre_status = []
                 for i in tripclosure_list:
-                    tripclousre_status.append(Tripstatusinfo.objects.get(id=i).status)
+                    if i is not None:
+                        try:
+                            tripclousre_status.append(Tripstatusinfo.objects.get(id=i).status)
+                        except Tripstatusinfo.DoesNotExist:
+                            tripclousre_status.append('Unknown')
                 EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_tripclosure=tripclousre_status)
             else:
                 print("Trip Closure Main Form not Saved")
