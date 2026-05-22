@@ -75,42 +75,6 @@
             </tr>
         </thead>
         <tbody>
-            {% for row in trips_with_docs %}
-            <tr style="white-space: nowrap;">
-                <td>{{ forloop.counter }}</td>
-                <td>{{ row.trip.tr_enquirynumber }}</td>
-                <td>{{ row.trip.tr_consignmentnumber }}</td>
-                <td>{{ row.trip.tr_tripnumber }}</td>
-                <td>{{ row.trip.tr_enquirynumber.en_customername }}</td>
-                <td>{{ row.trip.tr_vehiclenumber }}</td>
-                <td>{{ row.trip.tr_departedlocation }}</td>
-                <td>{{ row.trip.tr_reportedlocation }}</td>
-                <td>{{ row.trip.tr_departeddate_pickup|date:"d-m-Y" }}</td>
-                <td>
-                    {% if row.invoice_doc %}
-                        {{ row.invoice_doc.id_status.status|default:"-" }}
-                    {% else %}
-                        <span class="text-muted">-</span>
-                    {% endif %}
-                </td>
-                <td>
-                    {% if row.invoice_doc and row.invoice_doc.id_merged_pdf %}
-                        <a href="{{ row.invoice_doc.id_merged_pdf.url }}"
-                           target="_blank" class="btn btn-success btn-sm">
-                            <i class="fas fa-file-pdf"></i> Download PDF
-                        </a>
-                    {% else %}
-                        <span class="text-muted">Not generated</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <a class="btn btn-primary btn-sm"
-                       href="{% url 'invoice_documents_add' row.trip.id %}">
-                        <i class="far fa-edit"></i>
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
         </tbody>
     </table>
 </div>
@@ -118,16 +82,30 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     $('#invoice_documents_table').DataTable({
+        serverSide: true,
+        processing: true,
+        ajax: {
+            url: "{% url 'invoice_documents_list_ajax' %}",
+            type: "GET",
+            data: function(d) {
+                d.veh_no = $("input[name='veh_no']").val();
+                d.date_from = $("input[name='date_from']").val();
+                d.date_to = $("input[name='date_to']").val();
+            }
+        },
         order: [[3, 'desc']],
         scrollX: true,
         scrollCollapse: true,
         pageLength: 10,
         lengthMenu: [
-            [10, 25, 50, 100, -1],
-            [10, 25, 50, 100, "All"]
+            [10, 25, 50, 100],
+            [10, 25, 50, 100]
         ],
         dom: 'lBfrtip',
-        buttons: ['copy', 'csv', 'excel', 'print']
+        buttons: ['copy', 'csv', 'excel', 'print'],
+        columnDefs: [
+            { orderable: false, targets: [0, 9, 10, 11] } // S.No, Status, PDF, Edit
+        ]
     });
 });
 </script>
