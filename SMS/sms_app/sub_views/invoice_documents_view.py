@@ -13,6 +13,37 @@ from ..sub_forms.invoice_document_form import InvoiceDocumentForm
 from ..sub_models.trip_status_mod import Tripstatusinfo
 
 
+def _stored_file_content(file_field):
+    if not file_field or not file_field.name:
+        return None
+    try:
+        if not file_field.storage.exists(file_field.name):
+            print(f"Skipping missing stored file: {file_field.name}")
+            return None
+        file_field.open('rb')
+        return file_field.read()
+    except FileNotFoundError:
+        print(f"Skipping missing stored file: {file_field.name}")
+        return None
+    finally:
+        try:
+            file_field.close()
+        except Exception:
+            pass
+
+
+def _copy_stored_file(target_field, source_field):
+    content = _stored_file_content(source_field)
+    if content is None:
+        return False
+    target_field.save(
+        source_field.name.split('/')[-1],
+        ContentFile(content),
+        save=False
+    )
+    return True
+
+
 def _try_merge_pdfs(inv_obj, closure_obj=None):
     """
     Merge all uploaded documents from both InvoiceDocumentInfo and Trip_closure_files_Info
@@ -53,9 +84,9 @@ def _try_merge_pdfs(inv_obj, closure_obj=None):
             if not file_field or not file_field.name:
                 continue
             try:
-                file_field.open('rb')
-                content = file_field.read()
-                file_field.close()
+                content = _stored_file_content(file_field)
+                if content is None:
+                    continue
                 fname = file_field.name.lower()
 
                 if fname.endswith('.pdf'):
@@ -100,9 +131,10 @@ def _try_merge_pdfs(inv_obj, closure_obj=None):
                 if not file_field or not file_field.name: continue
                 if not file_field.name.lower().endswith(IMAGE_EXTS): continue
                 try:
-                    file_field.open('rb')
-                    img = Image.open(io.BytesIO(file_field.read()))
-                    file_field.close()
+                    content = _stored_file_content(file_field)
+                    if content is None:
+                        continue
+                    img = Image.open(io.BytesIO(content))
                     if img.mode != 'RGB': img = img.convert('RGB')
                     pages.append(img)
                 except:
@@ -232,13 +264,13 @@ def invoice_documents_list_ajax_view(request):
             invoice_status = doc.id_status.status if doc and doc.id_status else '-'
             
             if doc and doc.id_merged_pdf:
-                pdf_btn = f'<a href="{doc.id_merged_pdf.url}" target="_blank" class="btn btn-success btn-sm"><i class="fas fa-file-pdf"></i> Download PDF</a>'
+                pdf_btn = f'<a href="{doc.id_merged_pdf.url}" target="_blank" class="btn-modern btn-highlight-cyan py-1 px-2 d-inline-flex align-items-center" style="font-size:0.8rem;text-decoration:none;border-radius:8px;gap:5px;"><i class="fas fa-file-pdf"></i> PDF</a>'
             else:
-                pdf_btn = '<span class="text-muted">Not generated</span>'
+                pdf_btn = '<span style="color:var(--text-muted);font-size:0.85rem;font-style:italic;">Not generated</span>'
                 
             from django.urls import reverse
             edit_url = reverse('invoice_documents_add', args=[trip.id])
-            edit_btn = f'<a class="btn btn-primary btn-sm" href="{edit_url}"><i class="far fa-edit"></i></a>'
+            edit_btn = f'<a class="btn-modern btn-submit py-1 px-2 d-inline-flex align-items-center justify-content-center" href="{edit_url}" style="font-size:0.8rem;text-decoration:none;min-height:auto;border-radius:8px;"><i class="far fa-edit"></i></a>'
             
             data.append([
                 str(start + idx + 1),
@@ -281,19 +313,11 @@ def invoice_documents_add(request, trip_id):
     # Pre-populate and copy POD from Trip Detail if missing
     if not files_instance.tcf_pod:
         if trip.tc_pod_attachment:
-            files_instance.tcf_pod.save(
-                trip.tc_pod_attachment.name.split('/')[-1],
-                ContentFile(trip.tc_pod_attachment.read()),
-                save=False
-            )
-            files_instance.save()
+            if _copy_stored_file(files_instance.tcf_pod, trip.tc_pod_attachment):
+                files_instance.save()
         elif trip.td_pod:
-            files_instance.tcf_pod.save(
-                trip.td_pod.name.split('/')[-1],
-                ContentFile(trip.td_pod.read()),
-                save=False
-            )
-            files_instance.save()
+            if _copy_stored_file(files_instance.tcf_pod, trip.td_pod):
+                files_instance.save()
 
     # Load or initialise InvoiceDocumentInfo record
     invoice_doc = InvoiceDocumentInfo.objects.filter(
@@ -303,26 +327,14 @@ def invoice_documents_add(request, trip_id):
     # Pre-populate and copy POD from Trip Detail / closure if missing
     if invoice_doc and not invoice_doc.id_pod_doc:
         if files_instance.tcf_pod:
-            invoice_doc.id_pod_doc.save(
-                files_instance.tcf_pod.name.split('/')[-1],
-                ContentFile(files_instance.tcf_pod.read()),
-                save=False
-            )
-            invoice_doc.save()
+            if _copy_stored_file(invoice_doc.id_pod_doc, files_instance.tcf_pod):
+                invoice_doc.save()
         elif trip.tc_pod_attachment:
-            invoice_doc.id_pod_doc.save(
-                trip.tc_pod_attachment.name.split('/')[-1],
-                ContentFile(trip.tc_pod_attachment.read()),
-                save=False
-            )
-            invoice_doc.save()
+            if _copy_stored_file(invoice_doc.id_pod_doc, trip.tc_pod_attachment):
+                invoice_doc.save()
         elif trip.td_pod:
-            invoice_doc.id_pod_doc.save(
-                trip.td_pod.name.split('/')[-1],
-                ContentFile(trip.td_pod.read()),
-                save=False
-            )
-            invoice_doc.save()
+            if _copy_stored_file(invoice_doc.id_pod_doc, trip.td_pod):
+                invoice_doc.save()
     elif not invoice_doc:
         ready_status = Tripstatusinfo.objects.filter(Q(id=9) | Q(status='Ready for Invoice')).first()
         ready_status_id = ready_status.id if ready_status else 9
@@ -333,23 +345,11 @@ def invoice_documents_add(request, trip_id):
             id_updated_by=request.user
         )
         if files_instance.tcf_pod:
-            invoice_doc.id_pod_doc.save(
-                files_instance.tcf_pod.name.split('/')[-1],
-                ContentFile(files_instance.tcf_pod.read()),
-                save=False
-            )
+            _copy_stored_file(invoice_doc.id_pod_doc, files_instance.tcf_pod)
         elif trip.tc_pod_attachment:
-            invoice_doc.id_pod_doc.save(
-                trip.tc_pod_attachment.name.split('/')[-1],
-                ContentFile(trip.tc_pod_attachment.read()),
-                save=False
-            )
+            _copy_stored_file(invoice_doc.id_pod_doc, trip.tc_pod_attachment)
         elif trip.td_pod:
-            invoice_doc.id_pod_doc.save(
-                trip.td_pod.name.split('/')[-1],
-                ContentFile(trip.td_pod.read()),
-                save=False
-            )
+            _copy_stored_file(invoice_doc.id_pod_doc, trip.td_pod)
         invoice_doc.save()
 
     # Fields editable in the settlement form on this page (status and parking charges)
@@ -389,17 +389,9 @@ def invoice_documents_add(request, trip_id):
             # Ensure tcf_pod is populated on POST save
             if not files_obj.tcf_pod:
                 if trip_obj.tc_pod_attachment:
-                    files_obj.tcf_pod.save(
-                        trip_obj.tc_pod_attachment.name.split('/')[-1],
-                        ContentFile(trip_obj.tc_pod_attachment.read()),
-                        save=False
-                    )
+                    _copy_stored_file(files_obj.tcf_pod, trip_obj.tc_pod_attachment)
                 elif trip_obj.td_pod:
-                    files_obj.tcf_pod.save(
-                        trip_obj.td_pod.name.split('/')[-1],
-                        ContentFile(trip_obj.td_pod.read()),
-                        save=False
-                    )
+                    _copy_stored_file(files_obj.tcf_pod, trip_obj.td_pod)
             files_obj.save()
 
             # Save invoice document record
@@ -410,23 +402,11 @@ def invoice_documents_add(request, trip_id):
             # Ensure id_pod_doc is populated on POST save
             if not inv_obj.id_pod_doc:
                 if files_obj.tcf_pod:
-                    inv_obj.id_pod_doc.save(
-                        files_obj.tcf_pod.name.split('/')[-1],
-                        ContentFile(files_obj.tcf_pod.read()),
-                        save=False
-                    )
+                    _copy_stored_file(inv_obj.id_pod_doc, files_obj.tcf_pod)
                 elif trip_obj.tc_pod_attachment:
-                    inv_obj.id_pod_doc.save(
-                        trip_obj.tc_pod_attachment.name.split('/')[-1],
-                        ContentFile(trip_obj.tc_pod_attachment.read()),
-                        save=False
-                    )
+                    _copy_stored_file(inv_obj.id_pod_doc, trip_obj.tc_pod_attachment)
                 elif trip_obj.td_pod:
-                    inv_obj.id_pod_doc.save(
-                        trip_obj.td_pod.name.split('/')[-1],
-                        ContentFile(trip_obj.td_pod.read()),
-                        save=False
-                    )
+                    _copy_stored_file(inv_obj.id_pod_doc, trip_obj.td_pod)
             inv_obj.save()
 
             # Synchronize trip status with document status for consistency

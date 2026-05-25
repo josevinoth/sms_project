@@ -1,77 +1,80 @@
-
 {% block content %}
-<!--<div class="container-fluid row">-->
-<!--    <div class="col-md-1">-->
-<!--      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">-->
-<!--        <i class="fas fa-arrow-left"></i>-->
-<!--      </a>-->
-<!--    </div>-->
-<!--    <div class="col-md-1">-->
-<!--      <a href="{% url 'tripclosure_insert' %}" class="btn btn-success btn-block btn-lg">-->
-<!--        <i class="fas fa-plus"></i>-->
-<!--      </a>-->
-<!--    </div>-->
-<!--</div>-->
-<hr>
-<div class="container-fluid">
-<table  id="tripclosure_list" class="table table-striped table-bordered">
-    <thead class="thead-dark">
-        <tr>
-            <th>ID</th>
-            <th>Enquiry Number</th>
-            <th>Consignment Number</th>
-            <th>Trip Number</th>
-            <th>Trip Category</th>
-            <th>Trip Cost</th>
-            <th>Parking Cost</th>
-            <th>Toll Cost</th>
-            <th>Loading Cost</th>
-            <th>Un-Loading Cost</th>
-            <th>Weighment Cost</th>
-            <th>Handling Cost</th>
-            <th>Status</th>
-            <th>Edit</th>
-            <th>Delete</th>
-    </thead>
-    <tbody>
-        {% for tripclosureinfo in tripclosure_list %}
-            <tr>
-                <td> {{tripclosureinfo.id}}</td>
-                <td> {{tripclosureinfo.tr_enquirynumber}}</td>
-                <td> {{tripclosureinfo.tr_consignmentnumber}}</td>
-                <td> {{tripclosureinfo.tr_tripnumber}}</td>
-                <td> {{tripclosureinfo.tr_category}}</td>
-                <td> {{tripclosureinfo.tc_tripcost}}</td>
-                <td> {{tripclosureinfo.tc_parkingcost}}</td>
-                <td> {{tripclosureinfo.tc_tollcost}}</td>
-                <td> {{tripclosureinfo.tc_loadingcost}}</td>
-                <td> {{tripclosureinfo.tc_unloadingcost}}</td>
-                <td> {{tripclosureinfo.tc_weighmentcost}}</td>
-                <td> {{tripclosureinfo.tc_handlingcost}}</td>
-                <td> {{tripclosureinfo.tc_financestatus}}</td>
-                <td>
-
-                    <a class="btn btn-primary" href="{% url 'tripclosure_update' tripclosureinfo.id %}" >
-                        <i class="far fa-edit"></i>
-                    </a>
-                </td>
-                <td>
-                    <form action="{% url 'tripclosure_delete' tripclosureinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="table-container-modern mt-4">
+    <div class="form-section-title">
+        <i class="fas fa-list-ul"></i> Trip Closure Records
+    </div>
+    <div class="table-responsive">
+        <table id="tripclosure_list" class="table table-striped table-bordered modern-table text-center">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Enquiry Number</th>
+                    <th>Consignment Number</th>
+                    <th>Trip Number</th>
+                    <th>Trip Category</th>
+                    <th>Trip Cost</th>
+                    <th>Parking Cost</th>
+                    <th>Toll Cost</th>
+                    <th>Loading Cost</th>
+                    <th>Un-Loading Cost</th>
+                    <th>Weighment Cost</th>
+                    <th>Handling Cost</th>
+                    <th>Status</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tripclosureinfo in tripclosure_list %}
+                    <tr class="modern-tr">
+                        <td class="font-weight-bold">#{{tripclosureinfo.id}}</td>
+                        <td>{{tripclosureinfo.tr_enquirynumber|default:"-"}}</td>
+                        <td>{{tripclosureinfo.tr_consignmentnumber|default:"-"}}</td>
+                        <td>{{tripclosureinfo.tr_tripnumber|default:"-"}}</td>
+                        <td><span class="badge badge-info">{{tripclosureinfo.tr_category|default:"-"}}</span></td>
+                        <td>{{tripclosureinfo.tc_tripcost|default:"0"}}</td>
+                        <td>{{tripclosureinfo.tc_parkingcost|default:"0"}}</td>
+                        <td>{{tripclosureinfo.tc_tollcost|default:"0"}}</td>
+                        <td>{{tripclosureinfo.tc_loadingcost|default:"0"}}</td>
+                        <td>{{tripclosureinfo.tc_unloadingcost|default:"0"}}</td>
+                        <td>{{tripclosureinfo.tc_weighmentcost|default:"0"}}</td>
+                        <td>{{tripclosureinfo.tc_handlingcost|default:"0"}}</td>
+                        <td>
+                            {% if tripclosureinfo.tc_financestatus %}
+                                <span class="badge badge-success">{{tripclosureinfo.tc_financestatus}}</span>
+                            {% else %}
+                                <span class="badge badge-secondary">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; text-decoration: none;" href="{% url 'tripclosure_update' tripclosureinfo.id %}" title="Edit">
+                                <i class="far fa-edit"></i>
+                            </a>
+                        </td>
+                        <td>
+                            <form action="{% url 'tripclosure_delete' tripclosureinfo.id %}" method="post" onclick="return confirm('Are you sure?');" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.8rem; background: #e74c3c; border-color: #e74c3c; color: white !important;">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
+
 <script>
     $(document).ready(function() {
-    $('#tripclosure_list').DataTable();
-} );
+        if (!$.fn.DataTable.isDataTable('#tripclosure_list')) {
+            $('#tripclosure_list').DataTable({
+                order: [[0, 'desc']],
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]]
+            });
+        }
+    });
 </script>
-
 {% endblock content %}
