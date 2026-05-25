@@ -11,7 +11,7 @@ from openpyxl import Workbook
 from io import BytesIO
 import datetime
 from datetime import date
-from ..models import Fuelfillinginfo, Places, Bunkname, TripdetailInfo
+from ..models import Fuelfillinginfo, Places, Bunkname, TripdetailInfo, VehiclemasterInfo
 
 @login_required(login_url='login_page')
 def fuelfilling_add(request, fuelfilling_id=0):
@@ -65,7 +65,38 @@ def fuelfilling_add(request, fuelfilling_id=0):
 @login_required(login_url='login_page')
 def fuelfilling_list(request):
     first_name = request.session.get('first_name')
-    context = {'fuelfilling_list' : Fuelfillinginfo.objects.all(),'first_name': first_name}
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    vehicle_id = request.GET.get('vehicle_id', '')
+    
+    # Default to current month's start and end dates if not provided
+    if not date_from or not date_to:
+        today = date.today()
+        d_from = today.replace(day=1)
+        if today.month == 12:
+            d_to = date(today.year + 1, 1, 1) - datetime.timedelta(days=1)
+        else:
+            d_to = date(today.year, today.month + 1, 1) - datetime.timedelta(days=1)
+        date_from = d_from.strftime('%Y-%m-%d')
+        date_to = d_to.strftime('%Y-%m-%d')
+        
+    queryset = Fuelfillinginfo.objects.all()
+    if date_from and date_to:
+        queryset = queryset.filter(ff_date__range=[date_from, date_to])
+        
+    if vehicle_id:
+        queryset = queryset.filter(ff_vehicle_num_id=vehicle_id)
+        
+    vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+        
+    context = {
+        'fuelfilling_list' : queryset,
+        'first_name': first_name,
+        'date_from': date_from,
+        'date_to': date_to,
+        'vehicle_id': vehicle_id,
+        'vehicles': vehicles
+    }
     return render(request,"asset_mgt_app/fuelfilling_list.html",context)
 
 #Delete fuelfilling
@@ -113,23 +144,28 @@ import calendar
 
 @login_required(login_url='login_page')
 def fuelfilling_export_excel(request):
-    month = request.GET.get('month')
-    year = request.GET.get('year')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    vehicle_id = request.GET.get('vehicle_id', '')
     
-    if not month or not year:
-        return HttpResponse("Month and Year are required", status=400)
+    if not date_from or not date_to:
+        return HttpResponse("date_from and date_to are required", status=400)
         
-    month = int(month)
-    year = int(year)
+    try:
+        from datetime import datetime
+        d_to = datetime.strptime(date_to, '%Y-%m-%d').date()
+    except ValueError:
+        return HttpResponse("Invalid date format", status=400)
     
-    # Get last day of the month
-    last_day = calendar.monthrange(year, month)[1]
-    last_date_of_month = datetime.date(year, month, last_day)
+    last_date_of_month = d_to
+    month = d_to.strftime('%B')
+    year = d_to.strftime('%Y')
     
     queryset = Fuelfillinginfo.objects.filter(
-        ff_date__year=year,
-        ff_date__month=month
+        ff_date__range=[date_from, date_to]
     )
+    if vehicle_id:
+        queryset = queryset.filter(ff_vehicle_num_id=vehicle_id)
         
     # Group by vehicle (monthly summary for the selected period)
     grouped_data = {}
@@ -172,12 +208,12 @@ def fuelfilling_export_excel(request):
         vehicle = data['vehicle']
         
         # Voucher format: Diesel_{month}_{FY}-{serial}
-        mm = str(month).zfill(2)
-        fy = get_financial_year(last_date_of_month)
+        mm = str(d_to.month).zfill(2)
+        fy = get_financial_year(d_to)
         voucher_no = f"Diesel_{mm}_{fy}-{str(idx).zfill(3)}"
         
         # Ref No: Month-Year (e.g., Apr-26)
-        ref_no = last_date_of_month.strftime('%b-%y')
+        ref_no = d_to.strftime('%b-%y')
         
         # Get Primary Cost Category from Vehicle Master Ownership
         primary_cost_category = ""

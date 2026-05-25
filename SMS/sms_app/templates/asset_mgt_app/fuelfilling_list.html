@@ -1,5 +1,36 @@
 {% extends "asset_mgt_app/base.html" %}
 {% block content %}
+<!-- Select2 Resources specifically for this page to override base.html conflicts -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet">
+<style>
+    /* Style Select2 to match Bootstrap 4's form-control-lg and align vertically centered */
+    .select2-container--bootstrap4 .select2-selection--single {
+        height: calc(1.5em + 1rem + 2px) !important;
+        padding: 0 1rem !important;
+        font-size: 1.25rem !important;
+        border-radius: .3rem !important;
+        border: 1px solid #ced4da !important;
+        background-color: #fff !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+        padding-left: 0 !important;
+        color: #495057 !important;
+        line-height: normal !important;
+        width: 100% !important;
+    }
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow {
+        height: 100% !important;
+        right: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__placeholder {
+        color: #6c757d !important;
+    }
+</style>
 <div class="container-fluid" style="padding:15px;">
     <div class="row">
         <div class="col-5"></div>
@@ -20,46 +51,72 @@
             <i class="fas fa-plus"></i> Add
         </a>
     </div>
-    <div class="col-md-2">
-        <select id="exportMonth" class="form-control form-control-lg">
-            <option value="1">January</option>
-            <option value="2">February</option>
-            <option value="3">March</option>
-            <option value="4">April</option>
-            <option value="5">May</option>
-            <option value="6">June</option>
-            <option value="7">July</option>
-            <option value="8">August</option>
-            <option value="9">September</option>
-            <option value="10">October</option>
-            <option value="11">November</option>
-            <option value="12">December</option>
-        </select>
-    </div>
-    <div class="col-md-2">
-        <select id="exportYear" class="form-control form-control-lg">
-            <!-- Dynamically populate years or hardcode if preferred -->
-            <option value="2024">2024</option>
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
-            <option value="2027">2027</option>
-        </select>
-    </div>
-    <div class="col-md-2">
-        <button type="button" onclick="exportFuelFormat()" class="btn btn-warning btn-block btn-lg">
-            <i class="fas fa-file-excel"></i> Fuel Format
-        </button>
-    </div>
+    <form method="GET" action="{% url 'fuelfilling_list' %}" class="col-md-10">
+        <div class="row">
+            <div class="col-md-2">
+                <label>Vehicle Number</label>
+                <select name="vehicle_id" id="vehicle_id" class="form-control select2">
+                    <option value="">All Vehicles</option>
+                    {% for v in vehicles %}
+                        <option value="{{ v.id }}" {% if vehicle_id == v.id|stringformat:"s" %}selected{% endif %}>{{ v.vm_registrationnumber }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label>From Date</label>
+                <input type="date" name="date_from" id="date_from" class="form-control form-control-lg" value="{{ date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label>To Date</label>
+                <input type="date" name="date_to" id="date_to" class="form-control form-control-lg" value="{{ date_to }}">
+            </div>
+            <div class="col-md-3 mt-4">
+                <button type="submit" class="btn btn-info btn-block btn-lg" style="margin-top: 5px;">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+            <div class="col-md-3 mt-4">
+                <button type="button" onclick="exportFuelFormat()" class="btn btn-warning btn-block btn-lg" style="margin-top: 5px;">
+                    <i class="fas fa-file-excel"></i> Fuel Format
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
 <script>
-    // Set current month and year as default
-    document.getElementById('exportMonth').value = new Date().getMonth() + 1;
-    document.getElementById('exportYear').value = new Date().getFullYear();
+    // Set default dates to current month if empty in local time (avoiding UTC timezone shift bugs)
+    var today = new Date();
+    var y = today.getFullYear();
+    var m = today.getMonth();
+    
+    function formatDate(d) {
+        var month = '' + (d.getMonth() + 1);
+        var day = '' + d.getDate();
+        var year = d.getFullYear();
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+        return [year, month, day].join('-');
+    }
+    
+    var firstDay = formatDate(new Date(y, m, 1));
+    var lastDay = formatDate(new Date(y, m + 1, 0));
+    
+    if (!document.getElementById('date_from').value) {
+        document.getElementById('date_from').value = firstDay;
+    }
+    if (!document.getElementById('date_to').value) {
+        document.getElementById('date_to').value = lastDay;
+    }
 
     function exportFuelFormat() {
-        var month = document.getElementById('exportMonth').value;
-        var year = document.getElementById('exportYear').value;
-        var url = "{% url 'fuelfilling_export_excel' %}?month=" + month + "&year=" + year;
+        var date_from = document.getElementById('date_from').value;
+        var date_to = document.getElementById('date_to').value;
+        var vehicle_id = document.getElementById('vehicle_id').value;
+        if (!date_from || !date_to) {
+            alert("Please select both dates for export.");
+            return;
+        }
+        var url = "{% url 'fuelfilling_export_excel' %}?date_from=" + date_from + "&date_to=" + date_to + "&vehicle_id=" + vehicle_id;
         window.location.href = url;
     }
 </script>
@@ -87,12 +144,12 @@
         <tbody>
             {% for fuelfillinginfo in fuelfilling_list %}
             <tr>
-                <td> {{fuelfillinginfo.ff_created_at}}</td>
+                <td> {{fuelfillinginfo.ff_created_at|date:"d-m-Y"}}</td>
                 <td> {{fuelfillinginfo.ff_vehicle_num}}</td>
                 <td> {{fuelfillinginfo.ff_fuel_rate}}</td>
                 <td> {{fuelfillinginfo.ff_filled_ltr}}</td>
                 <td> {{fuelfillinginfo.ff_fuel_price}}</td>
-                <td> {{fuelfillinginfo.ff_date}}</td>
+                <td> {{fuelfillinginfo.ff_date|date:"d-m-Y"}}</td>
                 <td> {{fuelfillinginfo.ff_bunk_name}}</td>
                 <td> {{fuelfillinginfo.ff_location}}</td>
                 <td> {{fuelfillinginfo.ff_state}}</td>
@@ -121,14 +178,40 @@
     </table>
 </div>
 <script>
-    $(document).ready(function () {
-        $('#fuelfilling_list').DataTable({
-            order: [0, 'asc'],
-            dom: 'Bfrtip',
-            buttons: [
-                'copy', 'csv', 'excel', 'print'
-            ],
-        });
+    // Extremely robust initialization to handle multiple jQuery versions in base.html
+    window.addEventListener('load', function() {
+        // Wait for jQuery to be definitely available
+        var checkjQuery = setInterval(function() {
+            if (window.jQuery) {
+                clearInterval(checkjQuery);
+                var $ = window.jQuery;
+                
+                // Dynamically load Select2 JS to ensure it attaches to THIS jQuery instance
+                var script = document.createElement('script');
+                script.src = "https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js";
+                script.onload = function() {
+                    // Initialize Select2 with the bootstrap4 theme
+                    $('.select2').select2({
+                        placeholder: "Search Vehicle",
+                        allowClear: true,
+                        width: '100%',
+                        theme: 'bootstrap4'
+                    });
+                };
+                document.head.appendChild(script);
+
+                // Initialize DataTable
+                if ($.fn.DataTable) {
+                    $('#fuelfilling_list').DataTable({
+                        order: [0, 'desc'],
+                        dom: 'Bfrtip',
+                        buttons: [
+                            'copy', 'csv', 'excel', 'print'
+                        ],
+                    });
+                }
+            }
+        }, 100);
     });
 </script>
 
