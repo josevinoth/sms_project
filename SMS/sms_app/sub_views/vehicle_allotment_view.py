@@ -352,6 +352,16 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             obj.va_enquirynumber = va.va_enquirynumber
             obj.save()
 
+            # ===== SYNC va_sale to Trip Closure tc_tripcost =====
+            if obj.va_sale is not None:
+                vehicle_num = str(obj.va_vehiclenumber) if obj.va_vehiclenumber else obj.va_vehiclenumber_mkt
+                if vehicle_num:
+                    matching_trips = TripdetailInfo.objects.filter(
+                        tr_enquirynumber=obj.va_enquirynumber,
+                        tr_vehiclenumber=vehicle_num
+                    )
+                    matching_trips.update(tc_tripcost=obj.va_sale)
+
             # ===== AUTO EMAIL TRIGGER (only if Submit & Email clicked) =====
             submit_and_email = request.POST.get('submit_and_email')
             if submit_and_email:
