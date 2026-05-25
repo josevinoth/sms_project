@@ -3279,6 +3279,39 @@ def own_vehicle_pl_report_view(request):
     from django.db.models import Sum
     import datetime
 
+    # -------------------------------
+    # ROUTE-BASED KILOMETER DATABASE
+    # If odometer readings are missing for a trip, we will look up the average
+    # distance run by any vehicle on the exact same route (or reverse route)
+    # to estimate the trip's kilometers.
+    # -------------------------------
+    route_avg_km = {}
+    try:
+        historical_routes = TripdetailInfo.objects.filter(
+            tr_departedlocation__isnull=False,
+            tr_reportedlocation__isnull=False,
+            tr_reportedkm_pickup__isnull=False
+        ).filter(
+            Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False)
+        ).values('tr_departedlocation_id', 'tr_reportedlocation_id', 'tr_reportedkm_pickup', 'tr_reportedkm_delivery', 'tr_reportedkm', 'tr_category_id')
+        
+        route_distances = {}
+        for ht in historical_routes:
+            start = ht['tr_reportedkm_pickup'] or 0
+            if ht['tr_category_id'] in (2, 3):
+                end = ht['tr_reportedkm'] or 0
+            else:
+                end = ht['tr_reportedkm_delivery'] or 0
+            diff = end - start
+            if diff > 0:
+                route = (ht['tr_departedlocation_id'], ht['tr_reportedlocation_id'])
+                route_distances.setdefault(route, []).append(diff)
+                
+        for route, kms in route_distances.items():
+            route_avg_km[route] = sum(kms) / len(kms)
+    except Exception as e:
+        print(f"Error building route distance database: {e}")
+
     # Group trips by vehicle number
     vehicle_trips_map = {}  # {veh_no: [trip, ...]}
     for t in trips_list:
@@ -3287,6 +3320,38 @@ def own_vehicle_pl_report_view(request):
             vehicle_trips_map.setdefault(veh, []).append(t)
 
     fuel_lookup = {}  # {trip.id: prorated_fuel_cost}
+
+    def get_trip_km(t):
+        # 1. Primary choice: Started KM (Unloading Started KM - Loading Started KM)
+        start_started = t.tr_reportedkm_pickup or 0
+        end_started = t.tr_reportedkm_delivery or 0
+        
+        # Only calculate if both odometer readings were entered (> 0)
+        diff_started = (end_started - start_started) if (start_started > 0 and end_started > 0) else 0
+        if 0 < diff_started < 15000:  # Cap at 15000km to prevent data entry typos
+            return diff_started
+            
+        # 2. Secondary choice: Reported KM (Unloading Reported KM - Loading Reported KM)
+        start_reported = t.tr_departedkm or 0
+        end_reported = t.tr_reportedkm or 0
+        
+        # Only calculate if both odometer readings were entered (> 0)
+        diff_reported = (end_reported - start_reported) if (start_reported > 0 and end_reported > 0) else 0
+        if 0 < diff_reported < 15000: # Cap at 15000km to prevent data entry typos
+            return diff_reported
+            
+        # Odometer is missing/0. Try to estimate from historical route database
+        if t.tr_departedlocation_id and t.tr_reportedlocation_id:
+            frm = t.tr_departedlocation_id
+            to = t.tr_reportedlocation_id
+            # 1. Try exact route
+            if (frm, to) in route_avg_km:
+                return route_avg_km[(frm, to)]
+            # 2. Try reverse route
+            if (to, frm) in route_avg_km:
+                return route_avg_km[(to, frm)]
+                
+        return 0
 
     for veh_no, veh_trips in vehicle_trips_map.items():
         if not veh_trips:
@@ -3303,6 +3368,7 @@ def own_vehicle_pl_report_view(request):
             min_date = min(trip_dates)
             max_date = max(trip_dates)
 
+            # Query total fuel price in the range
             fuel_records = Fuelfillinginfo.objects.filter(
                 ff_vehicle_num__vm_registrationnumber__iexact=veh_no,
                 ff_date__gte=min_date,
@@ -3310,13 +3376,41 @@ def own_vehicle_pl_report_view(request):
             ).aggregate(total_fuel=Sum('ff_fuel_price'))
             
             total_fuel = safe_num(fuel_records.get('total_fuel'))
+            
+            # Fetch ALL trips (movements) for this vehicle in the date range to calculate total kms
+            all_period_trips = TripdetailInfo.objects.annotate(
+                resolved_date=Coalesce('tr_loading_time', 'tr_departeddate', 'tr_created_at')
+            ).filter(
+                tr_vehiclenumber__iexact=veh_no,
+                resolved_date__date__range=[min_date, max_date]
+            )
+            
+            total_km_run = sum(get_trip_km(pt) for pt in all_period_trips)
         else:
             total_fuel = 0.0
+            total_km_run = 0
 
-        if len(veh_trips) > 0 and total_fuel > 0:
+        # Calculate per-km price if there is fuel cost and distance run
+        if total_fuel > 0 and total_km_run > 0:
+            price_per_km = total_fuel / total_km_run
+            
+            # Find the average km per trip during this period to use as fallback for missing/0 km readings
+            all_trips_count = all_period_trips.count()
+            avg_km = total_km_run / all_trips_count if all_trips_count > 0 else 0
+            
+            for t in veh_trips:
+                km = get_trip_km(t)
+                if km == 0:
+                    km = avg_km # Fallback to average km of all trips in this period
+                fuel_lookup[t.id] = round(km * price_per_km, 2)
+        elif len(veh_trips) > 0 and total_fuel > 0:
+            # Fallback to old simple trip proration if total_km_run is 0
             prorated = total_fuel / len(veh_trips)
             for t in veh_trips:
-                fuel_lookup[t.id] = prorated
+                fuel_lookup[t.id] = round(prorated, 2)
+        else:
+            for t in veh_trips:
+                fuel_lookup[t.id] = 0.0
 
     # -------------------------------
     # BUILD TABLE
@@ -3410,7 +3504,7 @@ def own_vehicle_pl_report_view(request):
         # Pull Driver Salary from pre-calculated lookup (if available)
         d_id = trip.tr_driver_master_id
         d_date = trip.resolved_date
-        driver_salary = salary_lookup.get((d_id, d_date.month, d_date.year), 0.0) if d_id and d_date else 0.0
+        driver_salary = round(salary_lookup.get((d_id, d_date.month, d_date.year), 0.0) if d_id and d_date else 0.0, 2)
 
         acting_driver = 0.0
         driver_bata = 0.0
