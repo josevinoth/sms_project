@@ -352,6 +352,16 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             obj.va_enquirynumber = va.va_enquirynumber
             obj.save()
 
+            # ===== SYNC va_sale to Trip Closure tc_tripcost =====
+            if obj.va_sale is not None:
+                vehicle_num = str(obj.va_vehiclenumber) if obj.va_vehiclenumber else obj.va_vehiclenumber_mkt
+                if vehicle_num:
+                    matching_trips = TripdetailInfo.objects.filter(
+                        tr_enquirynumber=obj.va_enquirynumber,
+                        tr_vehiclenumber=vehicle_num
+                    )
+                    matching_trips.update(tc_tripcost=obj.va_sale)
+
             # ===== AUTO EMAIL TRIGGER (only if Submit & Email clicked) =====
             submit_and_email = request.POST.get('submit_and_email')
             if submit_and_email:
@@ -483,7 +493,9 @@ def vehicle_allotment_list(request):
         'tr_consignmentnumber__co_consignmentnumber',
         'tr_tripnumber',
         'tc_financestatus__status',
-        'tc_financestatus'
+        'tc_financestatus',
+        'tr_category__category',
+        'tr_vehiclenumber'
     )
 
     # -----------------------------
@@ -501,9 +513,17 @@ def vehicle_allotment_list(request):
     # BUILD TRIP DICT
     # -----------------------------
     trip_dict = {}
-    for enq_id, trip_cons, trip_num, trip_status, trip_status_id in trip_data:
+    for enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num in trip_data:
+        cat_lower = trip_category.strip().lower() if trip_category else ""
+        if cat_lower in ["business", "bussiness"]:
+            display_text = trip_cons if trip_cons else "No Consignment"
+        else:
+            display_text = trip_category if trip_category else "No Category"
+
+        display_veh_num = trip_veh_num if trip_veh_num else (trip_num or "No Trip")
+
         trip_dict.setdefault(enq_id, []).append(
-            (trip_cons or "Empty trip", trip_num or "No Trip", trip_status or "", trip_status_id)
+            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, display_veh_num)
         )
 
     # -----------------------------

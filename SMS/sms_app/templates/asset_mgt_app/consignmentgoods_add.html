@@ -718,11 +718,37 @@
 </script>
 <script>
 	$("#cg_consigner").select2({
-		width: '230px'
-	});
-	$("#cg_consignee").select2({
-		width: '230px'
-	});
+    width: '230px',
+    ajax: {
+        url: '/SMS/consigner_select2_search/',
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+            return { q: params.term };
+        },
+        processResults: function (data) {
+            return { results: data.results };
+        },
+        cache: true
+    },
+    minimumInputLength: 1,
+});
+$("#cg_consignee").select2({
+    width: '230px',
+    ajax: {
+        url: '/SMS/consignee_select2_search/',
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+            return { q: params.term };
+        },
+        processResults: function (data) {
+            return { results: data.results };
+        },
+        cache: true
+    },
+    minimumInputLength: 1,
+});
 
 </script>
 

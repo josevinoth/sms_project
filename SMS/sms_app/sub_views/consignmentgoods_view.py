@@ -3,11 +3,31 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
-from ..forms import ConsignmentgoodsaddForm,ConsignmentdetailaddForm
-from ..models import EnquirynoteInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,Stock_type,ConsigneeInfo,ConsignerInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+
+from ..forms import ConsignmentgoodsaddForm, ConsignmentdetailaddForm
+from ..models import EnquirynoteInfo, ConsignmentgoodsInfo, ConsignmentdetailInfo, Stock_type, ConsigneeInfo, ConsignerInfo
+
+
+@login_required(login_url='login_page')
+def consigner_select2_search(request):
+    q = request.GET.get('q', '').strip()
+    consigners = ConsignerInfo.objects.all()
+    if q:
+        consigners = consigners.filter(consigner_name__icontains=q)
+    results = [{'id': c.id, 'text': c.consigner_name} for c in consigners[:30]]
+    return JsonResponse({'results': results})
+
+
+@login_required(login_url='login_page')
+def consignee_select2_search(request):
+    q = request.GET.get('q', '').strip()
+    consignees = ConsigneeInfo.objects.all()
+    if q:
+        consignees = consignees.filter(consignee_name__icontains=q)
+    results = [{'id': c.id, 'text': c.consignee_name} for c in consignees[:30]]
+    return JsonResponse({'results': results})
 
 
 
@@ -27,7 +47,7 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             .distinct()
         )
         if consignmentgoods_id == 0:
-            form = ConsignmentgoodsaddForm()
+            form = ConsignmentgoodsaddForm(initial={'cg_consignmentnumber': consignment_detail_id})
             consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
             con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
 

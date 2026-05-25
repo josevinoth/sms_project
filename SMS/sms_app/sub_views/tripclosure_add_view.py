@@ -125,19 +125,27 @@ def tripclosure_add(request, tripclosure_id=0):
             # Pre-populate and copy POD from Trip Detail if missing
             if not tripclosure_files.tcf_pod:
                 if tripclosure.tc_pod_attachment:
-                    tripclosure_files.tcf_pod.save(
-                        tripclosure.tc_pod_attachment.name.split('/')[-1],
-                        ContentFile(tripclosure.tc_pod_attachment.read()),
-                        save=False
-                    )
-                    tripclosure_files.save()
+                    try:
+                        content = tripclosure.tc_pod_attachment.read()
+                        tripclosure_files.tcf_pod.save(
+                            tripclosure.tc_pod_attachment.name.split('/')[-1],
+                            ContentFile(content),
+                            save=False
+                        )
+                        tripclosure_files.save()
+                    except (FileNotFoundError, ValueError) as e:
+                        print(f"Error copying tc_pod_attachment: {e}")
                 elif tripclosure.td_pod:
-                    tripclosure_files.tcf_pod.save(
-                        tripclosure.td_pod.name.split('/')[-1],
-                        ContentFile(tripclosure.td_pod.read()),
-                        save=False
-                    )
-                    tripclosure_files.save()
+                    try:
+                        content = tripclosure.td_pod.read()
+                        tripclosure_files.tcf_pod.save(
+                            tripclosure.td_pod.name.split('/')[-1],
+                            ContentFile(content),
+                            save=False
+                        )
+                        tripclosure_files.save()
+                    except (FileNotFoundError, ValueError) as e:
+                        print(f"Error copying td_pod: {e}")
 
             tripclosurefiles_form = TripclosurefilesForm(instance=tripclosure_files)
             trip = TripdetailInfo.objects.get(pk=tripclosure_id)
@@ -199,17 +207,25 @@ def tripclosure_add(request, tripclosure_id=0):
                 # If tcf_pod is empty, copy from trip detail if available
                 if not files_obj.tcf_pod and trip_detail:
                     if trip_detail.tc_pod_attachment:
-                        files_obj.tcf_pod.save(
-                            trip_detail.tc_pod_attachment.name.split('/')[-1],
-                            ContentFile(trip_detail.tc_pod_attachment.read()),
-                            save=False
-                        )
+                        try:
+                            content = trip_detail.tc_pod_attachment.read()
+                            files_obj.tcf_pod.save(
+                                trip_detail.tc_pod_attachment.name.split('/')[-1],
+                                ContentFile(content),
+                                save=False
+                            )
+                        except (FileNotFoundError, ValueError) as e:
+                            print(f"Error copying tc_pod_attachment: {e}")
                     elif trip_detail.td_pod:
-                        files_obj.tcf_pod.save(
-                            trip_detail.td_pod.name.split('/')[-1],
-                            ContentFile(trip_detail.td_pod.read()),
-                            save=False
-                        )
+                        try:
+                            content = trip_detail.td_pod.read()
+                            files_obj.tcf_pod.save(
+                                trip_detail.td_pod.name.split('/')[-1],
+                                ContentFile(content),
+                                save=False
+                            )
+                        except (FileNotFoundError, ValueError) as e:
+                            print(f"Error copying td_pod: {e}")
                 files_obj.save()
                 print("Trip Closure files Form Saved")
                 messages.success(request, 'Record Updated Successfully')
@@ -234,7 +250,11 @@ def tripclosure_add(request, tripclosure_id=0):
                     'tc_financestatus', flat=True)
                 tripclousre_status = []
                 for i in tripclosure_list:
-                    tripclousre_status.append(Tripstatusinfo.objects.get(id=i).status)
+                    if i is not None:
+                        try:
+                            tripclousre_status.append(Tripstatusinfo.objects.get(id=i).status)
+                        except Tripstatusinfo.DoesNotExist:
+                            tripclousre_status.append('Unknown')
                 EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_tripclosure=tripclousre_status)
             else:
                 print("Trip Closure Main Form not Saved")
@@ -249,17 +269,25 @@ def tripclosure_add(request, tripclosure_id=0):
                 # If tcf_pod is empty, copy from trip detail if available
                 if not files_obj.tcf_pod and trip_detail:
                     if trip_detail.tc_pod_attachment:
-                        files_obj.tcf_pod.save(
-                            trip_detail.tc_pod_attachment.name.split('/')[-1],
-                            ContentFile(trip_detail.tc_pod_attachment.read()),
-                            save=False
-                        )
+                        try:
+                            content = trip_detail.tc_pod_attachment.read()
+                            files_obj.tcf_pod.save(
+                                trip_detail.tc_pod_attachment.name.split('/')[-1],
+                                ContentFile(content),
+                                save=False
+                            )
+                        except (FileNotFoundError, ValueError) as e:
+                            print(f"Error copying tc_pod_attachment: {e}")
                     elif trip_detail.td_pod:
-                        files_obj.tcf_pod.save(
-                            trip_detail.td_pod.name.split('/')[-1],
-                            ContentFile(trip_detail.td_pod.read()),
-                            save=False
-                        )
+                        try:
+                            content = trip_detail.td_pod.read()
+                            files_obj.tcf_pod.save(
+                                trip_detail.td_pod.name.split('/')[-1],
+                                ContentFile(content),
+                                save=False
+                            )
+                        except (FileNotFoundError, ValueError) as e:
+                            print(f"Error copying td_pod: {e}")
                 files_obj.save()
                 print("Trip Closure files Form Saved")
                 messages.success(request, 'Record Updated Successfully')

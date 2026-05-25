@@ -72,6 +72,7 @@
             <tr>
                 <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="ID"></th>
                 <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Created On"></th>
+                <th></th>
                 <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Enquiry Number"></th>
                 <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Customer"></th>
                 <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="From"></th>
@@ -83,11 +84,11 @@
                 <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Updated On"></th>
                 <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Updated By"></th>
                 <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Status"></th>
-                <th></th>
             </tr>
             <tr>
                 <th>ID</th>
                 <th>Created On</th>
+                <th class="text-center">Edit</th>
                 <th style="min-width:180px; width:220px; white-space:normal; word-break:break-word;">Enquiry Number</th>
                 <th>Customer Name</th>
                 <th>From Location</th>
@@ -99,7 +100,6 @@
                 <th>Updated On</th>
                 <th>Updated By</th>
                 <th>Status</th>
-                <th class="text-center">Edit</th>
             </tr>
             </thead>
         <tbody>
@@ -109,6 +109,11 @@
             <td>
                 {{ data.enquiry.en_created_at|date:"d-m-Y"|default:data.enquiry.en_created_at }}<br>
                 <span class="small text-muted font-weight-bold">{{ data.enquiry.en_created_at|date:"h:i A" }}</span>
+            </td>
+            <td class="text-center">
+                <a class="btn-modern btn-submit py-1 px-3" href="{% url 'enquirynote_update' data.enquiry.id %}" style="font-size: 0.8rem; text-decoration: none; border-radius: 8px;">
+                    <i class="far fa-edit"></i>
+                </a>
             </td>
             <td><span class="badge badge-light p-2 border font-weight-bold" style="font-size: 0.95rem;">{{ data.enquiry.en_enquirynumber }}</span></td>
             <td>{{ data.enquiry.en_customername }}</td>
@@ -153,14 +158,14 @@
 
                 <div>
                     {% if data.trips and data.trips|length > 0 %}
-                        {% for trip_cons,trip_num, trip_status, trip_status_id in data.trips %}
+                        {% for trip_cons,trip_num, trip_status, trip_status_id, display_veh_num in data.trips %}
                             {% if "Empty" in trip_cons or "Business" in trip_cons %}
                             <a class="badge p-2 mb-2 d-inline-block" href="{% url 'tripdetail_enquiry' data.enquiry.id trip_num %}" style="text-decoration: none; background: rgba(139, 92, 246, 0.1); border: 1px solid #8b5cf6; color: #7c3aed; font-weight: 600; font-size: 0.8rem;">
-                                <i class="fas fa-route"></i> {{ trip_num }} <span class="small" style="opacity: 0.8;">({{ trip_cons }})</span>
+                                <i class="fas fa-route"></i> {{ display_veh_num }} <span class="small" style="opacity: 0.8;">({{ trip_cons }})</span>
                             </a>
                             {% else %}
                             <a class="badge p-2 mb-2 d-inline-block" href="{% url 'tripdetail_enquiry' data.enquiry.id trip_num %}" style="text-decoration: none; background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #059669; font-weight: 600; font-size: 0.8rem;">
-                                <i class="fas fa-route"></i> {{ trip_num }} <span class="small" style="opacity: 0.8;">({{ trip_cons }})</span>
+                                <i class="fas fa-route"></i> {{ display_veh_num }} <span class="small" style="opacity: 0.8;">({{ trip_cons }})</span>
                             </a>
                             {% endif %}
                         {% endfor %}
@@ -173,12 +178,12 @@
             <!-- Trip Settlement -->
             <td style="min-width:260px; width:260px; white-space:normal; word-break:break-word;">
                 {% if data.trips %}
-                    {% for trip_cons,trip_num,trip_status,trip_status_id in data.trips %}
+                    {% for trip_cons,trip_num,trip_status,trip_status_id, display_veh_num in data.trips %}
                         {% if trip_status_id == 1 or trip_status_id == 5 or trip_status_id == 8 %}
-                        <span class="badge p-2 mb-1" style="font-size: 0.8rem; {% if 'Started' in trip_status %}background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #059669; font-weight: 600;{% elif 'Awaiting' in trip_status %}background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: #d97706; font-weight: 600;{% elif 'Closed' in trip_status %}background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #dc2626; font-weight: 600;{% else %}background: #f1f5f9; border: 1px solid #94a3b8; color: #475569; font-weight: 600;{% endif %}"><i class="fas fa-lock"></i> {{ trip_status }} <span class="small" style="opacity: 0.8;">({{ trip_num }})</span></span><br>
+                        <span class="badge p-2 mb-1" style="font-size: 0.8rem; {% if 'Started' in trip_status %}background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #059669; font-weight: 600;{% elif 'Awaiting' in trip_status %}background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: #d97706; font-weight: 600;{% elif 'Closed' in trip_status %}background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #dc2626; font-weight: 600;{% else %}background: #f1f5f9; border: 1px solid #94a3b8; color: #475569; font-weight: 600;{% endif %}"><i class="fas fa-lock"></i> {{ trip_status }} <span class="small" style="opacity: 0.8;">({{ display_veh_num }} - {{ trip_cons }})</span></span><br>
                         {% else %}
                         <a class="badge p-2 mb-1 d-inline-block" href="{% url 'tripclosure_enquiry' data.enquiry.id trip_num %}" style="text-decoration: none; font-size: 0.8rem; {% if 'Started' in trip_status %}background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #059669 !important; font-weight: 600;{% elif 'Awaiting' in trip_status %}background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b; color: #d97706 !important; font-weight: 600;{% elif 'Closed' in trip_status %}background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #dc2626 !important; font-weight: 600;{% else %}background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; color: #2563eb !important; font-weight: 600;{% endif %}">
-                            <i class="fas fa-hand-holding-usd"></i> {{ trip_status }} <span class="small" style="opacity: 0.8;">({{ trip_num }})</span>
+                            <i class="fas fa-hand-holding-usd"></i> {{ trip_status }} <span class="small" style="opacity: 0.8;">({{ display_veh_num }} - {{ trip_cons }})</span>
                         </a><br>
                         {% endif %}
                     {% endfor %}
@@ -203,11 +208,7 @@
                 <span class="badge badge-secondary px-3 py-2 text-white" style="font-size: 0.8rem;"><i class="fas fa-info-circle mr-1"></i> {{ data.enquiry.en_status }}</span>
                 {% endif %}
             </td>
-            <td class="text-center">
-                <a class="btn-modern btn-submit py-1 px-3" href="{% url 'enquirynote_update' data.enquiry.id %}" style="font-size: 0.8rem; text-decoration: none; border-radius: 8px;">
-                    <i class="far fa-edit"></i>
-                </a>
-            </td>
+            <!-- Edit moved to 3rd column -->
         </tr>
         {% endfor %}
         </tbody>
