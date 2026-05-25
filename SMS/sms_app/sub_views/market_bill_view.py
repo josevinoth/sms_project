@@ -145,10 +145,9 @@ def market_bill_edit(request, id):
     # Fetch selected trips data for the edit page table
     selected_trips_data = []
     if record.mb_selected_trips:
-        trip_ids = [int(tid) for tid in record.mb_selected_trips.split(',') if tid.strip()]        # Only include trips that are in 'Settled' financial status (id=4)
-        # Use Tripstatusinfo id 7 as the 'settled' status per request
-        settled_status_id = 7
-        selected_trips = TripdetailInfo.objects.filter(id__in=trip_ids, tc_financestatus_id=settled_status_id).select_related('tr_enquirynumber', 'tr_consignmentnumber')
+        trip_ids = [int(tid) for tid in record.mb_selected_trips.split(',') if tid.strip()]        # Include trips in 'Trip Settled' (id=7) or 'Ready for Invoice' (id=9) financial status
+        eligible_status_ids = [7, 9]
+        selected_trips = TripdetailInfo.objects.filter(id__in=trip_ids, tc_financestatus_id__in=eligible_status_ids).select_related('tr_enquirynumber', 'tr_consignmentnumber')
 
         for trip in selected_trips:
             from_location = ''
@@ -309,7 +308,8 @@ def get_trips_by_vendor(request):
     if not vendor_id:
         return JsonResponse({'trips': []})
 
-    settled_status_id = 7
+    # Include trips in 'Trip Settled' (id=7) or 'Ready for Invoice' (id=9) financial status
+    eligible_status_ids = [7, 9]
     market_ownership_id = 3
 
     # Option 1: Get vehicles from master (if any are assigned to this vendor)
@@ -337,12 +337,12 @@ def get_trips_by_vendor(request):
             billed_trip_ids.update([tid.strip() for tid in bill.mb_selected_trips.split(',') if tid.strip()])
 
     # Filter trips for ANY vehicle or enquiry of this vendor that are not billed
-    # Only show trips that are in settled financial status (ID 7)
+    # Show trips in 'Trip Settled' (ID 7) or 'Ready for Invoice' (ID 9) financial status
     # Plus double check that the trip record itself is marked as 'Market' source
     trips = TripdetailInfo.objects.filter(
         (Q(tr_vehiclenumber__in=list(vendor_master_vehicles)) | 
          Q(tr_enquirynumber_id__in=list(allotted_enquiry_ids))),
-        tc_financestatus_id=settled_status_id,
+        tc_financestatus_id__in=eligible_status_ids,
         tr_vehiclesource_id=market_ownership_id
     )
     # Exclude already billed trip ids (if any)
