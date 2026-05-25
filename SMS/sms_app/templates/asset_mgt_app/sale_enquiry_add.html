@@ -581,7 +581,7 @@
                                 </div>
                                 {% render_field form.mc_tour_type class="form-control" %}
                             </div>
-                            <div class="input-group input-group-sm mb-3" style="display:none;">
+                            <div class="input-group input-group-sm mb-3">
                                 <div class="input-group-prepend"><span class="input-group-text">Travel Type</span></div>
                                 {% render_field form.mc_travel_type class="form-control" %}
                             </div>
@@ -923,8 +923,6 @@
         // 1 = Tours, 2 = Travels, 3 = Tours&Travels
         function toggleMcFields() {
             var customerType = $('#mc_customer_type_select').val();
-            // Travel Type is always hidden on this page
-            $('#mc_travel_type_select').closest('.input-group').hide();
 
             if (customerType === '1') {
                 // Tours: show Tour Type + Mode of Transport
@@ -933,6 +931,8 @@
                 // Hide Vehicle Type and Vehicle Source
                 $('#mc_vehicle_source_select').closest('.input-group').hide();
                 $('#mc_vehicle_type_input').closest('.input-group').hide();
+                // Hide Travel Type
+                $('#mc_travel_type_select').closest('.input-group').hide();
             } else if (customerType === '2') {
                 // Travels: hide Tour Type + Mode of Transport
                 $('#mc_tour_type_select').closest('.input-group').hide();
@@ -940,6 +940,8 @@
                 // Show Vehicle Type and Vehicle Source
                 $('#mc_vehicle_source_select').closest('.input-group').show();
                 $('#mc_vehicle_type_input').closest('.input-group').show();
+                // Show Travel Type
+                $('#mc_travel_type_select').closest('.input-group').show();
             } else if (customerType === '3') {
                 // Tours & Travels: show Tour Type and Mode of Transport
                 $('#mc_tour_type_select').closest('.input-group').show();
@@ -947,6 +949,8 @@
                 // Show Vehicle Type and Vehicle Source
                 $('#mc_vehicle_source_select').closest('.input-group').show();
                 $('#mc_vehicle_type_input').closest('.input-group').show();
+                // Show Travel Type
+                $('#mc_travel_type_select').closest('.input-group').show();
             } else {
                 // No selection: hide Tour Type + Mode of Transport
                 $('#mc_tour_type_select').closest('.input-group').hide();
@@ -954,6 +958,8 @@
                 // Show Vehicle Type and Vehicle Source
                 $('#mc_vehicle_source_select').closest('.input-group').show();
                 $('#mc_vehicle_type_input').closest('.input-group').show();
+                // Hide Travel Type
+                $('#mc_travel_type_select').closest('.input-group').hide();
             }
         }
 

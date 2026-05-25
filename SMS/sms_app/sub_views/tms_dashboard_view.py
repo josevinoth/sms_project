@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.db.models import Count, Sum, Q, F, Value, FloatField, Func
+from django.utils import timezone
+from datetime import datetime
 from ..sub_models.tripdetail_mod import TripdetailInfo, Trip_closure_files_Info, Trip_category_info
 from ..sub_models.enquirynote_mod import EnquirynoteInfo
 from ..sub_models.user_ext_mod import User_extInfo
@@ -139,10 +141,92 @@ def get_tms_dashboard_data(request):
             
         return [business, empty, business_empty]
 
+    progress_month_str = request.GET.get('progress_month')
+
+    local_now = timezone.localtime(timezone.now())
+    current_year = local_now.year
+    current_month = local_now.month
+    
+    if progress_month_str:
+        try:
+            dt = datetime.strptime(progress_month_str, '%Y-%m')
+            current_year = dt.year
+            current_month = dt.month
+        except ValueError:
+            pass
+
+    own_attached_ids = list(
+        OwnershipInfo.objects.filter(
+            Q(ow_ownership__icontains='OWN') |
+            Q(ow_ownership__icontains='Attached')
+        ).values_list('id', flat=True)
+    )
+
+    progress_qs = TripdetailInfo.objects.filter(
+        tr_category__category__icontains="Business",
+        tr_enquirynumber__en_created_at__year=current_year,
+        tr_enquirynumber__en_created_at__month=current_month,
+        tr_vehiclesource_id__in=own_attached_ids,
+    )
+    if employee_id and employee_id != 'all':
+        progress_qs = progress_qs.filter(tr_enquirynumber__en_assignedto_id=employee_id)
+
+    trips_by_vehicle = progress_qs.values(
+        'tr_vehicletype__vt_vehicletype',
+        'tr_vehiclenumber'
+    ).annotate(
+        trip_count=Count('id')
+    )
+
+    # Initialize buckets/ranges for trip counts
+    buckets = ["30-42", "20-30", "10-20", "0-10"]
+    progress_breakdowns = {b: [] for b in buckets}
+
+    for item in trips_by_vehicle:
+        vt_name = str(item['tr_vehicletype__vt_vehicletype'] or 'Unknown').strip()
+        veh_num = str(item['tr_vehiclenumber'] or 'N/A').strip()
+        count = item['trip_count']
+        
+        # Categorize vehicle based on trip count
+        if count >= 30:
+            b_key = "30-42"
+        elif count >= 20:
+            b_key = "20-30"
+        elif count >= 10:
+            b_key = "10-20"
+        else:
+            b_key = "0-10"
+            
+        progress_breakdowns[b_key].append({
+            'vehicle_number': veh_num,
+            'trip_count': count,
+            'vehicle_type': vt_name
+        })
+
+    # Sort each bucket's vehicles by trip count descending
+    for b_key in progress_breakdowns:
+        progress_breakdowns[b_key] = sorted(
+            progress_breakdowns[b_key],
+            key=lambda x: x['trip_count'],
+            reverse=True
+        )
+
+    # Build chart data format
+    progress_labels = buckets
+    progress_counts = [len(progress_breakdowns[b]) for b in buckets]
+
+    month_name = datetime(current_year, current_month, 1).strftime('%B %Y')
+
     return JsonResponse({
         'totals': totals,
         'employee': employee_metrics,
         'bar_chart': bar_chart_data,
         'donut_own': get_km_details('Own'),
-        'donut_attached': get_km_details('Attached')
+        'donut_attached': get_km_details('Attached'),
+        'progress_chart': {
+            'labels': progress_labels,
+            'counts': progress_counts,
+            'breakdowns': progress_breakdowns,
+            'month_name': month_name
+        }
     })
