@@ -204,7 +204,7 @@ DEPARTMENT_EMAILS = {
         'EMAIL_PORT' : 587,
         'EMAIL_USE_TLS' : True,
         'EMAIL_HOST_USER' : 'wms@thebvmgroup.com',
-        'EMAIL_HOST_PASSWORD' : 'F!220749109956aq',
+        'EMAIL_HOST_PASSWORD' : 'Bvm!123456789',
     },
     'itadmin': {
         'EMAIL_HOST' : ITADMIN_EMAIL_HOST,

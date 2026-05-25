@@ -42,7 +42,16 @@ def tripdetail_enquiry(request, enquiry_id, trip_num):
         request.session['enquiry_num_id'] = enquiry_id
         return redirect('tripdetail_insert')  # Define this URL in urls.py
     else:
-        trip_id = TripdetailInfo.objects.get(tr_tripnumber=trip_num).id
+        trip = TripdetailInfo.objects.filter(
+            tr_enquirynumber=enquiry,
+            tr_tripnumber=trip_num,
+        ).order_by('-id').first()
+        if not trip:
+            request.session['enquiry_num_id'] = enquiry_id
+            messages.warning(request, "Trip number was not found for this enquiry. Please create or select the trip again.")
+            return redirect('tripdetail_insert')
+
+        trip_id = trip.id
         print('trip_id:', trip_id)
         # If trip_id is provided, redirect to update
         return redirect('tripdetail_update', tripdetail_id=trip_id)  # tripdetail_id is a keyword argument in the URL
