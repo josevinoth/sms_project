@@ -19,7 +19,14 @@ def sale_enquiry_list(request):
     sale_enquiry_query = SaleEnquiry.objects.all()
 
     if role_id not in [1, 3]:
-        sale_enquiry_query = sale_enquiry_query.filter(created_by=user_id)
+        from django.db.models import Q
+        from django.contrib.auth.models import User
+        try:
+            user = User.objects.get(pk=user_id)
+            current_user_name = f"{user.first_name} {user.last_name}".strip() or user.username
+            sale_enquiry_query = sale_enquiry_query.filter(Q(created_by=user_id) | Q(assigned_to=current_user_name))
+        except User.DoesNotExist:
+            sale_enquiry_query = sale_enquiry_query.filter(created_by=user_id)
 
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
