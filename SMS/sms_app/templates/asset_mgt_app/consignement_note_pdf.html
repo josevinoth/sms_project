@@ -4,7 +4,7 @@
     <table class='report_details'>
         <tr>
             <td rowspan="4"><img src="media/Company_Logo.png" alt="home" class="centered-image"></td>
-            <td colspan="3"><h3>BVM TRANS SOLUTIONS PVT LTD</h3></td>
+            <td colspan="3"><h3>BVM TRANS SOLUTIONS PRIVATE LIMITED</h3></td>
         </tr>
         <tr>
             <td colspan="3">Address 70, Adam Nagar Road Nagalkeni, Chrompet Chennai 600 044</td>
@@ -88,9 +88,9 @@
                 {% endfor %}
             </td>
 
-            <td><b>Bill To Party Name And Address:</b>
+            <td><b>Bill To Party Name And Address:</b><br>
                 {% for consignment_detail in consignment_details %}
-                {{ consignment_detail.co_enquirynumber.en_customername }}
+                {{ consignment_detail.co_enquirynumber.en_customername.cu_nameshort|default:consignment_detail.co_enquirynumber.en_customername.cu_name }}
                 <p>{{ consignment_detail.co_enquirynumber.en_customername.cu_address }}</p>
                 {% endfor %}
             </td>
