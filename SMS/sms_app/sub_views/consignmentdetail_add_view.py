@@ -415,9 +415,18 @@ def consignment_note_pdf(request, consignment_note_id=0):
         enquiry_id = consignment.co_enquirynumber_id
 
         # All related goods
-        consignment_goods_list = ConsignmentgoodsInfo.objects.filter(
+        consignment_goods_list = list(ConsignmentgoodsInfo.objects.filter(
             cg_consignmentnumber=consignment_note_id
-        ).order_by('id')
+        ).order_by('id'))
+
+        # Replace slashes and commas with space suffixes in memory to enable word wrapping in the PDF table
+        for goods in consignment_goods_list:
+            if goods.cg_consignerinvoice:
+                goods.cg_consignerinvoice = goods.cg_consignerinvoice.replace('/', '/ ').replace(',', ', ')
+            if goods.cg_hawbno:
+                goods.cg_hawbno = goods.cg_hawbno.replace('/', '/ ').replace(',', ', ')
+            if goods.cg_ebillno:
+                goods.cg_ebillno = goods.cg_ebillno.replace('/', '/ ').replace(',', ', ')
 
         vehicle_detail = None
 

@@ -535,14 +535,11 @@ def customer_enquiry_list(request):
             # Check closure files
             closure = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip.tr_tripnumber).first()
             if closure and closure.tcf_pod:
-                fpath = os.path.join(settings.MEDIA_ROOT, str(closure.tcf_pod))
-                if os.path.exists(fpath):
-                    pod_trip_id = trip.id
+                pod_trip_id = trip.id
+            
             # Check trip attachment
             if not pod_trip_id and trip.tc_pod_attachment:
-                fpath = os.path.join(settings.MEDIA_ROOT, str(trip.tc_pod_attachment))
-                if os.path.exists(fpath):
-                    pod_trip_id = trip.id
+                pod_trip_id = trip.id
 
         # Consignment ID for PDF link
         consignment_id = None

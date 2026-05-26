@@ -1,98 +1,80 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>Trip Settlement</h3>
-        </div>
-        <div class="col-5"></div>
-    </div>
-</div>
-<div class="container-fluid mt-3">
-    <div class="row">
-        <div class="col-md-1">
-            <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-                <i class="fas fa-arrow-left"></i> Back
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-file-invoice-dollar mr-2"></i> Trip Settlement</h2>
+        <div style="position: relative; z-index: 10;">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK
             </a>
         </div>
-        <div class="col-md-10">
-            <div class="row justify-content-center">
-                <div class="col-12 col-lg-9">
-                    <form method="get" action="{% url 'trip_settlement_view' %}">
-                        <div class="row g-2 justify-content-center">
-                            <div class="col-12 col-sm-4">
-                                <input type="text" class="form-control" name="veh_no" placeholder="Vehicle Number"
-                                    value="{{ veh_no }}">
-                            </div>
-                            <div class="col-12 col-sm-3">
-                                <input type="date" class="form-control" name="date_from" value="{{ date_from }}">
-                            </div>
-                            <div class="col-12 col-sm-3">
-                                <input type="date" class="form-control" name="date_to" value="{{ date_to }}">
-                            </div>
-                            <input type="hidden" name="per_page" value="{{ per_page }}">
-                        </div>
-                        <div class="row g-2 justify-content-center mt-2">
-                            <div class="col-12 col-sm-5">
-                                <button class="btn btn-primary w-100" type="submit">
-                                    <i class="fa fa-search mr-1"></i> Search
-                                </button>
-                            </div>
-                            <div class="col-12 col-sm-5">
-                                <a href="{% url 'trip_settlement_view' %}" class="btn btn-secondary w-100">
-                                    <i class="fa fa-times-circle mr-1"></i> Clear
-                                </a>
-                            </div>
-                        </div>
-                    </form>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="modern-card mb-4" style="padding: 1.5rem !important;">
+        <form method="get" action="{% url 'trip_settlement_view' %}">
+            <div class="row align-items-end">
+                <div class="col-12 col-md-3 mb-3 mb-md-0">
+                    <label class="form-label-modern small mb-1">Vehicle Number</label>
+                    <input type="text" class="form-control form-control-modern" name="veh_no" placeholder="Enter Vehicle Number" value="{{ veh_no }}">
+                </div>
+                <div class="col-12 col-md-3 mb-3 mb-md-0">
+                    <label class="form-label-modern small mb-1">Date From</label>
+                    <input type="date" class="form-control form-control-modern" name="date_from" value="{{ date_from }}">
+                </div>
+                <div class="col-12 col-md-3 mb-3 mb-md-0">
+                    <label class="form-label-modern small mb-1">Date To</label>
+                    <input type="date" class="form-control form-control-modern" name="date_to" value="{{ date_to }}">
+                </div>
+                <input type="hidden" name="per_page" value="{{ per_page }}">
+                <div class="col-12 col-md-3 d-flex justify-content-end">
+                    <button class="btn-modern btn-submit px-4 mr-2" type="submit">
+                        <i class="fa fa-search mr-1"></i> Search
+                    </button>
+                    <a href="{% url 'trip_settlement_view' %}" class="btn-modern btn-cancel px-4" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">
+                        <i class="fa fa-times-circle mr-1"></i> Clear
+                    </a>
                 </div>
             </div>
+        </form>
+    </div>
+
+    <!-- Data Table Section -->
+    <div class="modern-card p-3">
+        <div class="table-responsive">
+            <table id="tripsettlement_list" class="table table-hover modern-table w-100">
+                <thead>
+                    <tr style="white-space: nowrap;">
+                        <th>Enquiry Number</th>
+                        <th>Consignment Number</th>
+                        <th>Trip Number</th>
+                        <th>Category</th>
+                        <th>Customer Name</th>
+                        <th>Vehicle Number</th>
+                        <th>From Location</th>
+                        <th>To Location</th>
+                        <th>Trip Date</th>
+                        <th>Trip Cost</th>
+                        <th>Parking Cost</th>
+                        <th>Toll Cost</th>
+                        <th>Loading Cost</th>
+                        <th>Unloading Cost</th>
+                        <th>Weighment Cost</th>
+                        <th>Handling Cost</th>
+                        <th>Settlement Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
-
-<hr>
-
-<div class="container-fluid">
-
-    <table id="tripsettlement_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-            <tr style="white-space: nowrap;">
-                <th>Enquiry Number</th>
-                <th>Consignment Number</th>
-                <th>Trip Number</th>
-                <th>Category</th>
-                <th>Customer Name</th>
-                <th>Vehicle Number</th>
-                <th>From Location</th>
-                <th>To Location</th>
-                <th>Trip Date</th>
-                <th>Trip Cost</th>
-                <th>Parking Cost</th>
-                <th>Toll Cost</th>
-                <th>Loading Cost</th>
-                <th>Unloading Cost</th>
-                <th>Weighment Cost</th>
-                <th>Handling Cost</th>
-                <th>Settlement Status</th>
-                <th>Edit</th>
-            </tr>
-        </thead>
-        <form method="get" class="mb-2">
-            <input type="hidden" name="veh_no" value="{{ veh_no }}">
-            <input type="hidden" name="date_from" value="{{ date_from }}">
-            <input type="hidden" name="date_to" value="{{ date_to }}">
-
-        </form>
-
-
-        <tbody>
-        </tbody>
-    </table>
 
 </div>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     $('#tripsettlement_list').DataTable({
@@ -111,18 +93,23 @@ document.addEventListener("DOMContentLoaded", function () {
         scrollX: true,
         scrollCollapse: true,
 
-        pageLength: 10,   // default page size
+        pageLength: 10,
 
         lengthMenu: [
-            [10, 25, 50, 100],   // values (do not use -1 for server-side to prevent massive queries)
-            [10, 25, 50, 100]    // labels
+            [10, 25, 50, 100],
+            [10, 25, 50, 100]
         ],
 
-        dom: 'lBfrtip',
+        dom: '<"d-flex justify-content-between align-items-center mb-3"lBf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
         buttons: ['copy', 'csv', 'excel', 'print'],
         columnDefs: [
             { orderable: false, targets: [17] } // Edit
-        ]
+        ],
+        language: {
+            search: "",
+            searchPlaceholder: "Search records...",
+            lengthMenu: "Show _MENU_ entries"
+        }
     });
 });
 </script>

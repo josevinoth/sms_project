@@ -1,458 +1,364 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<form method="POST" action="" enctype="multipart/form-data">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Trip Settlement</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Enquiry Number</span>
-									</div>
-									{% render_field tripclosure_form.tr_enquirynumber id="tr_enquirynumber" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consignment Number</span>
-									</div>
-									{% render_field tripclosure_form.tr_consignmentnumber id="tr_consignmentnumber" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Trip Number</span>
-									</div>
-									{% render_field tripclosure_form.tr_tripnumber id="tr_tripnumber" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Trip Category</span>
-									</div>
-									{% render_field tripclosure_form.tr_category id="tr_category" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Ref no </span>
-									</div>
-									{% render_field tripclosure_form.tr_customerref id="tr_customerref" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Type Requested</span>
-									</div>
-									{% render_field tripclosure_form.tr_vehicletype id="tr_vehicletype" class="form-control disable_a_href" %}
-								</div>
-							</div>
-							<div class="col-3">
-                                <div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Name</span>
-									</div>
-									{% render_field tripclosure_form.customer_name class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Trip Date</span>
-									</div>
-									{% render_field tripclosure_form.trip_date class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Source</span>
-									</div>
-									{% render_field tripclosure_form.tr_vehiclesource id="tr_vehiclesource" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Number</span>
-									</div>
-									{% render_field tripclosure_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Type Placed</span>
-									</div>
-									{% render_field tripclosure_form.tr_vehicletype_placed id="tr_vehicletype_placed" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Departed Location</span>
-									</div>
-									{% render_field tripclosure_form.tr_departedlocation id="tr_departedlocation" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Reported Location</span>
-									</div>
-									{% render_field tripclosure_form.tr_reportedlocation id="tr_reportedlocation" class="form-control disable_a_href" %}
-								</div>
-							</div>
 
-							<div class="col-3">
-								<div class="row fw-bold mb-1  text-black py-1 rounded">
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-file-invoice-dollar mr-2"></i> Add/Update Trip Settlement</h2>
+        <div style="position: relative; z-index: 10;">
+            <a href="{% url 'trip_settlement_view' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK TO LIST
+            </a>
+        </div>
+    </div>
 
-									<div class="col-9">
-										<div class="input-group input-group-sm mb-2">
-											<div class="input-group-prepend">
-												<span class="input-group-text">IOU</span>
-											</div>
-											{% render_field tripclosure_form.tr_iou class="form-control" %}
-										</div>
-									</div>
-									<div class="col-3 bg-info text-center small">Bill To Customer</div>
-								</div>
+    <form method="POST" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modern-card" style="padding: 1rem !important;">
+            <div class="row">
 
+                <!-- Column 1: Trip Info -->
+                <div class="col-12 col-md-6 col-lg-3 mb-3">
+                    <div class="form-section h-100 p-3">
+                        <div class="form-section-title mb-3" style="font-size:0.95rem;"><i class="fas fa-info-circle"></i> Trip Info</div>
 
-								<div class="row mb-2 align-items-center">
-									<div class="col-9">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Trip Charges</span>
-											</div>
-											{% render_field tripclosure_form.tc_tripcost id="tc_tripcost" class="form-control disable_a_href" %}
-										</div>
-									</div>
-									<div class="col-3 text-center">
-										{% render_field tripclosure_form.tc_tripcost_check id="tc_tripcost_check" %}
-									</div>
-								</div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Enquiry Number</label>
+                            {% render_field tripclosure_form.tr_enquirynumber id="tr_enquirynumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Consignment Number</label>
+                            {% render_field tripclosure_form.tr_consignmentnumber id="tr_consignmentnumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Trip Number</label>
+                            {% render_field tripclosure_form.tr_tripnumber id="tr_tripnumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Trip Category</label>
+                            {% render_field tripclosure_form.tr_category id="tr_category" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Customer Ref No</label>
+                            {% render_field tripclosure_form.tr_customerref id="tr_customerref" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Vehicle Type Requested</label>
+                            {% render_field tripclosure_form.tr_vehicletype id="tr_vehicletype" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                    </div>
+                </div>
 
-								<div class="row mb-2 align-items-center">
-									<div class="col-9">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Parking Charges</span>
-											</div>
-											{% render_field tripclosure_form.tc_parkingcost class="form-control" %}
-										</div>
-									</div>
-									<div class="col-3 text-center">
-										{% render_field tripclosure_form.tc_parkingcost_check id="tc_parkingcost_check" %}
-									</div>
-								</div>
+                <!-- Column 2: Vehicle & Route Info -->
+                <div class="col-12 col-md-6 col-lg-3 mb-3">
+                    <div class="form-section h-100 p-3">
+                        <div class="form-section-title mb-3" style="font-size:0.95rem;"><i class="fas fa-truck"></i> Vehicle & Route</div>
 
-								<div class="row mb-2 align-items-center">
-									<div class="col-6">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Toll Charges</span>
-											</div>
-											{% render_field tripclosure_form.tc_tollcost class="form-control" id="tc_tollcost" %}
-										</div>
-									</div>
-									<div class="col-3 text-center">
-										<div class="input-group-append ms-2">
-											<button type="button" class="btn btn-outline-info btn-sm" onclick="showTollTxnDialog(true)">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Customer Name</label>
+                            {% render_field tripclosure_form.customer_name class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Trip Date</label>
+                            {% render_field tripclosure_form.trip_date class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Vehicle Source</label>
+                            {% render_field tripclosure_form.tr_vehiclesource id="tr_vehiclesource" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Vehicle Number</label>
+                            {% render_field tripclosure_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Vehicle Type Placed</label>
+                            {% render_field tripclosure_form.tr_vehicletype_placed id="tr_vehicletype_placed" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Departed Location</label>
+                            {% render_field tripclosure_form.tr_departedlocation id="tr_departedlocation" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Reported Location</label>
+                            {% render_field tripclosure_form.tr_reportedlocation id="tr_reportedlocation" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                    </div>
+                </div>
 
-												View
-											</button>
-										</div>
-										<div class="modal fade" id="tollTxnModal" tabindex="-1" aria-labelledby="tollTxnModalLabel" aria-hidden="true">
-											<div class="modal-dialog modal-xl modal-dialog-scrollable">
-												<div class="modal-content">
-													<div class="modal-header bg-dark text-white">
-														<h5 class="modal-title" id="tollTxnModalLabel">Toll Transaction List</h5>
-														<button type="button" class="btn-close bg-light" data-bs-dismiss="modal" aria-label="Close"></button>
-													</div>
-													<div class="modal-body" id="tollTxnContent">
-														<p>Loading toll data...</p>
-													</div>
-													<div class="modal-footer">
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="col-3 text-center">
-										{% render_field tripclosure_form.tc_tollcost_check id="tc_tollcost_check" %}
-									</div>
-								</div>
+                <!-- Column 3: Trip Charges & Status -->
+                <div class="col-12 col-md-6 col-lg-3 mb-3">
+                    <div class="form-section h-100 p-3">
+                        <div class="form-section-title mb-3 d-flex justify-content-between align-items-center" style="font-size:0.95rem;">
+                            <span><i class="fas fa-rupee-sign"></i> Trip Charges</span>
+                            <span title="Bill to Customer" style="font-size:0.65rem; text-transform:uppercase; opacity:0.8;">Bill Cust</span>
+                        </div>
 
-								<div class="row mb-2 align-items-center">
-									<div class="col-9">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Loading Charges</span>
-											</div>
-											{% render_field tripclosure_form.tc_loadingcost class="form-control" %}
-										</div>
-									</div>
-									<div class="col-3 text-center">
-										{% render_field tripclosure_form.tc_loadingcost_check id="tc_loadingcost_check" %}
-									</div>
-								</div>
-
-								<div class="row mb-2 align-items-center">
-									<div class="col-9">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Unloading Charges</span>
-											</div>
-											{% render_field tripclosure_form.tc_unloadingcost class="form-control" %}
-										</div>
-									</div>
-									<div class="col-3 text-center">
-										{% render_field tripclosure_form.tc_unloadingcost_check id="tc_unloadingcost_check" %}
-									</div>
-								</div>
-
-								<div class="row mb-2 align-items-center">
-									<div class="col-9">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Weighment Charges</span>
-											</div>
-											{% render_field tripclosure_form.tc_weighmentcost class="form-control" %}
-										</div>
-									</div>
-									<div class="col-3 text-center">
-										{% render_field tripclosure_form.tc_weighmentcost_check id="tc_weighmentcost_check" %}
-									</div>
-								</div>
-								<div class="row mb-2 align-items-center">
-									<div class="col-9">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Supervisor Charges</span>
-											</div>
-											{% render_field tripclosure_form.tc_supervisorcost class="form-control" %}
-										</div>
-									</div>
-									<div class="col-3 text-center">
-										{% render_field tripclosure_form.tc_supervisorcost_check id="tc_supervisorcost_check" %}
-									</div>
-								</div>
-								<div class="row mb-2 align-items-center">
-									<div class="col-9">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Handling Charges</span>
-											</div>
-											{% render_field tripclosure_form.tc_handlingcost class="form-control" %}
-										</div>
-									</div>
-									<div class="col-3 text-center">
-										{% render_field tripclosure_form.tc_handlingcost_check id="tc_handlingcost_check" %}
-									</div>
-								</div>
-                                <div class="row mb-2 align-items-center">
-									<div class="col-9">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Halting Charges</span>
-											</div>
-											{% render_field tripclosure_form.tc_haltingcost class="form-control" %}
-										</div>
-									</div>
-									<div class="col-3 text-center">
-										{% render_field tripclosure_form.tc_haltingcost_check id="tc_haltingcost_check" %}
-									</div>
-								</div>
-								<div class="input-group input-group-sm mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">No of Halting Days</span>
-									</div>
-									{% render_field tripclosure_form.tc_no_of_days_halting class="form-control" %}
-								</div>
-                                <div class="row mb-2 align-items-center">
-                                    <div class="col-9">
-                                        <div class="input-group input-group-sm">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">Total Halting Charges</span>
-                                            </div>
-                                            <input type="text" name="tc_total_halting_cost" id="tc_total_halting_cost"
-                                                   class="form-control disable_a_href" readonly>
-                                        </div>
-                                    </div>
-                                    <div class="col-3 text-center">
-                                        {% render_field tripclosure_form.tc_total_halting_cost_check id="tc_total_halting_cost_check" %}
-                                    </div>
-							    </div>
-								<div class="row mb-2 align-items-center">
-									<div class="col-9">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
-												<span class="input-group-text">RTO Charges</span>
-											</div>
-											{% render_field tripclosure_form.tc_rtocost id="tc_rtocost" class="form-control " %}
-										</div>
-									</div>
-									<div class="col-3 text-center">
-										{% render_field tripclosure_form.tc_rtocost_check id="tc_rtocost_check" %}
-									</div>
-								</div>
-								<div class="row mb-2 align-items-center">
-									<div class="col-9">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Batta Charges</span>
-											</div>
-											{% render_field tripclosure_form.tc_betacost id="tc_betacost" class="form-control " %}
-										</div>
-									</div>
-									<div class="col-3 text-center">
-										{% render_field tripclosure_form.tc_betacost_check id="tc_betacost_check" %}
-									</div>
-								</div>
-
-								<div class="row mb-2 align-items-center">
-									<div class="col-9">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Cancellation Charges</span>
-											</div>
-											{% render_field tripclosure_form.tc_cancellation id="tc_cancellation" class="form-control" %}
-										</div>
-									</div>
-									<div class="col-3 text-center">
-										{% render_field tripclosure_form.tc_cancellation_check id="tc_cancellation_check" %}
-									</div>
-								</div>
+                        <!-- Trip Charges -->
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Trip Charges</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_tripcost id="tc_tripcost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_tripcost_check id="tc_tripcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
+                        </div>
 
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Trip Charges</span>
-									</div>
-									{% render_field tripclosurefiles_form.tcf_trip_cost id="tcf_trip_cost" class="form-control" %}
-								</div>
-                                {% if tripclosurefiles_form.instance.tcf_trip_cost %}
-                                <div class="view-link text-center mb-3">
-                                    <a href="{{ tripclosurefiles_form.instance.tcf_trip_cost.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
-                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_trip_cost.name }}
-                                    </a>
-                                </div>
-                                {% endif %}
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Parking Charges</span>
-									</div>
-									{% render_field tripclosurefiles_form.tcf_parking_cost id="tcf_parking_cost" class="form-control" %}
-								</div>
-                                {% if tripclosurefiles_form.instance.tcf_parking_cost %}
-                                <div class="view-link text-center mb-3">
-                                    <a href="{{ tripclosurefiles_form.instance.tcf_parking_cost.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
-                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_parking_cost.name }}
-                                    </a>
-                                </div>
-                                {% endif %}
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Toll Charges</span>
-									</div>
-									{% render_field tripclosurefiles_form.tcf_toll_cost id="tcf_toll_cost" class="form-control" %}
-								</div>
-                                {% if tripclosurefiles_form.instance.tcf_toll_cost %}
-                                <div class="view-link text-center mb-3">
-                                    <a href="{{ tripclosurefiles_form.instance.tcf_toll_cost.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
-                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_toll_cost.name }}
-                                    </a>
-                                </div>
-                                {% endif %}
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Loading Charges</span>
-									</div>
-									{% render_field tripclosurefiles_form.tcf_loading_cost id="tcf_loading_cost" class="form-control" %}
-								</div>
-                                {% if tripclosurefiles_form.instance.tcf_loading_cost %}
-                                <div class="view-link text-center mb-3">
-                                    <a href="{{ tripclosurefiles_form.instance.tcf_loading_cost.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
-                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_loading_cost.name }}
-                                    </a>
-                                </div>
-                                {% endif %}
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Un-Loading Charges</span>
-									</div>
-									{% render_field tripclosurefiles_form.tcf_unloading_cost id="tcf_unloading_cost" class="form-control" %}
-								</div>
-                                {% if tripclosurefiles_form.instance.tcf_unloading_cost %}
-                                <div class="view-link text-center mb-3">
-                                    <a href="{{ tripclosurefiles_form.instance.tcf_unloading_cost.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
-                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_unloading_cost.name }}
-                                    </a>
-                                </div>
-                                {% endif %}
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Weighment Charges</span>
-									</div>
-									{% render_field tripclosurefiles_form.tcf_weighment_cost id="tcf_weighment_cost" class="form-control" %}
-								</div>
-                                {% if tripclosurefiles_form.instance.tcf_weighment_cost %}
-                                <div class="view-link text-center mb-3">
-                                    <a href="{{ tripclosurefiles_form.instance.tcf_weighment_cost.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
-                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_weighment_cost.name }}
-                                    </a>
-                                </div>
-                                {% endif %}
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Handling Charges</span>
-									</div>
-									{% render_field tripclosurefiles_form.tcf_handling_cost id="tcf_handling_cost" class="form-control" %}
-								</div>
-                                {% if tripclosurefiles_form.instance.tcf_handling_cost %}
-                                <div class="view-link text-center mb-3">
-                                    <a href="{{ tripclosurefiles_form.instance.tcf_handling_cost.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
-                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_handling_cost.name }}
-                                    </a>
-                                </div>
-                                {% endif %}
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">POD</span>
-									</div>
-									{% render_field tripclosurefiles_form.tcf_pod id="tcf_pod" class="form-control" %}
-								</div>
-                                {% if tripclosurefiles_form.instance.tcf_pod %}
-                                <div class="view-link text-center mb-3">
-                                    <a href="{{ tripclosurefiles_form.instance.tcf_pod.url }}" target="_blank" class="text-success fw-bold" style="font-size: 0.8rem;">
-                                        <i class="fas fa-file"></i> {{ tripclosurefiles_form.instance.tcf_pod.name }}
-                                    </a>
-                                </div>
-                                {% endif %}
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Trip Status</span>
-									</div>
-									{% render_field tripclosure_form.tc_financestatus class="form-control" %}
-								</div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Parking</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_parkingcost class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_parkingcost_check id="tc_parkingcost_check" class="ml-2" style="width:16px; height:16px;" %}
+                            </div>
+                        </div>
 
-								{% render_field tripclosure_form.tr_updated_by id="tr_updated_by" hidden="True" class="form-control" %}
-								{% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control" %}
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	{% include "asset_mgt_app/tripclosure_list_woh.html" %}
-</form>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
+                                Toll
+                                <button type="button" class="btn btn-outline-info btn-sm ml-1 p-0 px-1" style="font-size:0.65rem;" onclick="showTollTxnDialog(true)">View</button>
+                            </label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_tollcost class="form-control form-control-modern form-control-sm py-1" id="tc_tollcost" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_tollcost_check id="tc_tollcost_check" class="ml-2" style="width:16px; height:16px;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Loading</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_loadingcost class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_loadingcost_check id="tc_loadingcost_check" class="ml-2" style="width:16px; height:16px;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Unloading</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_unloadingcost class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_unloadingcost_check id="tc_unloadingcost_check" class="ml-2" style="width:16px; height:16px;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Weighment</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_weighmentcost class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_weighmentcost_check id="tc_weighmentcost_check" class="ml-2" style="width:16px; height:16px;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Supervisor</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_supervisorcost class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_supervisorcost_check id="tc_supervisorcost_check" class="ml-2" style="width:16px; height:16px;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Handling</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_handlingcost class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_handlingcost_check id="tc_handlingcost_check" class="ml-2" style="width:16px; height:16px;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Halting</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_haltingcost class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_haltingcost_check id="tc_haltingcost_check" class="ml-2" style="width:16px; height:16px;" %}
+                            </div>
+                        </div>
+
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">No of Halting Days</label>
+                            {% render_field tripclosure_form.tc_no_of_days_halting class="form-control form-control-modern form-control-sm" %}
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Total Halting</label>
+                            <div class="d-flex align-items-center w-50">
+                                <input type="text" name="tc_total_halting_cost" id="tc_total_halting_cost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" readonly>
+                                {% render_field tripclosure_form.tc_total_halting_cost_check id="tc_total_halting_cost_check" class="ml-2" style="width:16px; height:16px;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">RTO</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_rtocost id="tc_rtocost" class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_rtocost_check id="tc_rtocost_check" class="ml-2" style="width:16px; height:16px;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Batta</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_betacost id="tc_betacost" class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_betacost_check id="tc_betacost_check" class="ml-2" style="width:16px; height:16px;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Cancellation</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_cancellation id="tc_cancellation" class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_cancellation_check id="tc_cancellation_check" class="ml-2" style="width:16px; height:16px;" %}
+                            </div>
+                        </div>
+
+                        <!-- Trip Status -->
+                        <div class="form-group-modern mt-3 mb-0">
+                            <label class="form-label-modern small mb-1 font-weight-bold">Trip Status</label>
+                            {% render_field tripclosure_form.tc_financestatus class="form-control form-control-modern form-control-sm border-primary" %}
+                        </div>
+
+                        {% render_field tripclosure_form.tr_updated_by id="tr_updated_by" hidden="True" class="form-control form-control-modern" %}
+                        {% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+
+                <!-- Column 4: Document Uploads -->
+                <div class="col-12 col-md-6 col-lg-3 mb-3">
+                    <div class="form-section h-100 p-3">
+                        <div class="form-section-title mb-3" style="font-size:0.95rem;"><i class="fas fa-file-upload"></i> Upload Docs</div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
+                                Trip Charges
+                                {% if tripclosurefiles_form.instance.tcf_trip_cost %}<a href="{{ tripclosurefiles_form.instance.tcf_trip_cost.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                            </label>
+                            <div class="w-50">
+                                {% render_field tripclosurefiles_form.tcf_trip_cost id="tcf_trip_cost" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
+                                Parking
+                                {% if tripclosurefiles_form.instance.tcf_parking_cost %}<a href="{{ tripclosurefiles_form.instance.tcf_parking_cost.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                            </label>
+                            <div class="w-50">
+                                {% render_field tripclosurefiles_form.tcf_parking_cost id="tcf_parking_cost" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
+                                Toll
+                                {% if tripclosurefiles_form.instance.tcf_toll_cost %}<a href="{{ tripclosurefiles_form.instance.tcf_toll_cost.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                            </label>
+                            <div class="w-50">
+                                {% render_field tripclosurefiles_form.tcf_toll_cost id="tcf_toll_cost" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
+                                Loading
+                                {% if tripclosurefiles_form.instance.tcf_loading_cost %}<a href="{{ tripclosurefiles_form.instance.tcf_loading_cost.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                            </label>
+                            <div class="w-50">
+                                {% render_field tripclosurefiles_form.tcf_loading_cost id="tcf_loading_cost" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
+                                Un-Loading
+                                {% if tripclosurefiles_form.instance.tcf_unloading_cost %}<a href="{{ tripclosurefiles_form.instance.tcf_unloading_cost.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                            </label>
+                            <div class="w-50">
+                                {% render_field tripclosurefiles_form.tcf_unloading_cost id="tcf_unloading_cost" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
+                                Weighment
+                                {% if tripclosurefiles_form.instance.tcf_weighment_cost %}<a href="{{ tripclosurefiles_form.instance.tcf_weighment_cost.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                            </label>
+                            <div class="w-50">
+                                {% render_field tripclosurefiles_form.tcf_weighment_cost id="tcf_weighment_cost" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
+                                Handling
+                                {% if tripclosurefiles_form.instance.tcf_handling_cost %}<a href="{{ tripclosurefiles_form.instance.tcf_handling_cost.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                            </label>
+                            <div class="w-50">
+                                {% render_field tripclosurefiles_form.tcf_handling_cost id="tcf_handling_cost" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
+                                POD
+                                {% if tripclosurefiles_form.instance.tcf_pod %}<a href="{{ tripclosurefiles_form.instance.tcf_pod.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                            </label>
+                            <div class="w-50">
+                                {% render_field tripclosurefiles_form.tcf_pod id="tcf_pod" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end row -->
+
+            <!-- Message Area -->
+            {% if messages %}
+            <div class="message-container my-3 text-center">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-2 px-4 d-inline-block shadow-sm rounded-lg">
+                    <i class="fas fa-info-circle mr-1"></i> {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn-modern btn-submit px-5">
+                            <i class="fas fa-check mr-2"></i> Submit
+                        </button>
+                        <a href="{% url 'trip_settlement_view' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end modern-card -->
+    </form>
+
+    <!-- Shared Table Sub-template -->
+    {% include "asset_mgt_app/tripclosure_list_woh.html" %}
+</div>
+
+<!-- Toll Transactions Modal (outside form/columns to avoid positioning issues) -->
+<div class="modal fade" id="tollTxnModal" tabindex="-1" role="dialog" aria-labelledby="tollTxnModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="tollTxnModalLabel"><i class="fas fa-road mr-2"></i>Toll Transaction List</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="tollTxnContent">
+                <p>Loading toll data...</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     const IS_EDIT = true;
 </script>
@@ -506,7 +412,7 @@
 function getRoRate(force=false) {
 
     if (IS_EDIT && force === false) {
-        console.log("â›” RO rate blocked (edit mode)");
+        console.log("⛔ RO rate blocked (edit mode)");
         return;
     }
 
@@ -528,7 +434,6 @@ function getRoRate(force=false) {
         },
         success: function(data) {
             if (data.ro_rate === 0 || data.ro_rate === 100) {
-                // Fallback to Sell value if Master rate is missing or not applicable
                 var current_val = $("#tc_tripcost").val();
                 if (current_val == "0" || current_val == "0.0" || current_val == "") {
                     $("#tc_tripcost").val("{{ va_sale }}");
@@ -536,7 +441,7 @@ function getRoRate(force=false) {
             } else {
                 $("#tc_tripcost").val(data.ro_rate);
             }
-            autoTickCheckboxes(); // Trigger tick
+            autoTickCheckboxes();
         }
     });
 }
@@ -544,14 +449,13 @@ function getRoRate(force=false) {
 $(document).ready(function () {
     $("#tr_departedlocation, #tr_reportedlocation, #tr_vehicletype_placed, #tr_category, #tr_enquirynumber")
     .change(function () {
-        getRoRate(true);   // only recalc when user changes
+        getRoRate(true);
     });
 });
 </script>
 
 <script>
 	document.addEventListener('DOMContentLoaded', function () {
-      // Add "data-bs-toggle" and "title" attributes to each checkbox dynamically
       ['tc_tripcost_check','tc_parkingcost_check','tc_tollcost_check', 'tc_loadingcost_check',
        'tc_unloadingcost_check', 'tc_weighmentcost_check', 'tc_supervisorcost_check', 'tc_handlingcost_check',
        'tc_haltingcost_check', 'tc_total_halting_cost_check', 'tc_rtocost_check', 'tc_betacost_check',
@@ -564,19 +468,19 @@ $(document).ready(function () {
         }
       });
 
-      // Initialize Bootstrap tooltips
       var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
       tooltipTriggerList.forEach(function (tooltipTriggerEl) {
         new bootstrap.Tooltip(tooltipTriggerEl);
       });
     });
 </script>
+
 <script>
     function fetchTollCost(force = false) {
 
     if (IS_EDIT && force === false) {
-        console.log("â›” Toll API blocked (edit mode)");
-        return;   // do NOT overwrite DB value
+        console.log("⛔ Toll API blocked (edit mode)");
+        return;
     }
 
     const trip_num = $("#tr_tripnumber").val();
@@ -588,15 +492,20 @@ $(document).ready(function () {
         success: function(data) {
             if (data.success) {
                 buildTxnTable(data.txn_list);
-
                 const tollField = $("#tc_tollcost");
                 tollField.val(data.total_amount.toFixed(2));
-                autoTickCheckboxes(); // Trigger tick
+                autoTickCheckboxes();
             }
         }
     });
 }
 
+    function showTollTxnDialog(force = false) {
+        // Show modal first
+        $('#tollTxnModal').modal('show');
+        // Then fetch data
+        fetchTollCost(force);
+    }
 
     function buildTxnTable(txn_list) {
         if (!txn_list || txn_list.length === 0) {
@@ -635,21 +544,17 @@ $(document).ready(function () {
                     <td>${txn.originalTxnId}</td>
                     <td>${txn.tollplazaname}</td>
                     <td>${txn.vehicleDesc}</td>
-                    <td>â‚¹${parseFloat(txn.txnAmt).toFixed(2)}</td>
+                    <td>₹${parseFloat(txn.txnAmt).toFixed(2)}</td>
                     <td>${txn.laneId}</td>
                 </tr>`;
         });
 
         table += `</tbody></table></div>`;
-
         document.getElementById("tollTxnContent").innerHTML = table;
 
-        // Attach checkbox listeners
         document.querySelectorAll('.toll-checkbox').forEach(chk => {
             chk.addEventListener('change', updateSelectedTollCost);
         });
-
-        // Update total immediately
         updateSelectedTollCost();
     }
 
@@ -658,8 +563,6 @@ $(document).ready(function () {
         document.querySelectorAll('.toll-checkbox:checked').forEach(c => {
             total += parseFloat(c.dataset.amount);
         });
-
-        // Try both ID and name selectors to ensure it finds the input
         const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
         if (tollField) {
             tollField.value = total.toFixed(2);
@@ -671,94 +574,32 @@ $(document).ready(function () {
 	$(document).ready(function() {
         function fetchCustomerRef() {
             var consignmentId = $('#tr_consignmentnumber').val();
-
             if (consignmentId) {
                 $.ajax({
                     url: "{% url 'get_customer_ref' %}",
-                    data: {
-                        'consignment_id': consignmentId
-                    },
+                    data: { 'consignment_id': consignmentId },
                     dataType: 'json',
                     success: function(data) {
-                        console.log("Fetched Customer Ref:", data);
                         if (data.customer_ref) {
                             $('#tr_customerref').val(data.customer_ref);
                         } else {
                             $('#tr_customerref').val('');
                         }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("AJAX Error:", error);
                     }
                 });
             } else {
                 $('#tr_customerref').val('');
             }
         }
-
-        // Run automatically if field already has a value
         fetchCustomerRef();
-
-        // Also run if user changes consignment manually later
         $(document).on('change', '#tr_consignmentnumber', fetchCustomerRef);
-
-        // --- NEW: Trip Charges Logic (Matching Trip Closure) ---
-        getRoRate();
-
-        // Default Trip Charges to Sell value if currently zero
-        var tc_tripcost_val = $("#tc_tripcost").val();
-        if (tc_tripcost_val == "0" || tc_tripcost_val == "0.0" || tc_tripcost_val == "") {
-            $("#tc_tripcost").val("{{ va_sale }}");
-        }
-
-        function getRoRate() {
-            var selectedFromLocation = $("#tr_departedlocation").val();
-            var selectedToLocation = $("#tr_reportedlocation").val();
-            var selectedVehicleType = $("#tr_vehicletype_placed").val();
-            var selectedTripCategory = $("#tr_category").val();
-            var selectedEnquiryNumber= $("#tr_enquirynumber").val();
-
-            $.ajax({
-                url: '{% url 'transport_calculate_trip_charges' %}',
-                method: "GET",
-                data: {
-                    'from_location': selectedFromLocation,
-                    'to_location': selectedToLocation,
-                    'vehicle_type': selectedVehicleType,
-                    'trip_category': selectedTripCategory,
-                    'enquirynumber': selectedEnquiryNumber,
-                },
-                success: function(data) {
-                    if (data.ro_rate === 0 || data.ro_rate === 100) {
-                        // Fallback to Sell value if Master rate is missing or not applicable
-                        var current_val = $("#tc_tripcost").val();
-                        if (current_val == "0" || current_val == "0.0" || current_val == "") {
-                            $("#tc_tripcost").val("{{ va_sale }}");
-                        }
-                    }
-                    else {
-                        // Update the ro_rate field with the retrieved value
-                        $("#tc_tripcost").val(data.ro_rate);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('AJAX error:', error);
-                }
-            });
-        }
-
-        // Attach event listeners for dynamic recalculation
-        $("#tr_departedlocation, #tr_reportedlocation, #tr_vehicletype_placed, #tr_category, #tr_enquirynumber").change(function() {
-            getRoRate();
-        });
-        // -----------------------------------------------------
     });
 </script>
+
 <script>
 function fetchHaltingCharge() {
     var enquiryId = $("#tr_enquirynumber").val();
     var tripType = $("#tr_category").val();
-
     if (!enquiryId || !tripType) return;
 
     $.ajax({
@@ -782,15 +623,10 @@ function calcTotalHalting() {
 }
 
 $(document).ready(function () {
-
-    // DO NOT auto fetch on edit
     calcTotalHalting();
-
     $("#tr_enquirynumber, #tr_category").change(fetchHaltingCharge);
-
     $("#id_tc_no_of_days_halting, #id_tc_haltingcost").on("input", calcTotalHalting);
 });
 </script>
-
 
 {% endblock content %}
