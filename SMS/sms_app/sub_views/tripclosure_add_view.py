@@ -35,10 +35,17 @@ def tripclosure_enquiry(request, enquiry_id, trip_num):
         request.session['ses_enqiury_id'] = enquiry_id
         return redirect('tripclosure_insert')  # Define this URL in urls.py
     else:
-        trip_id = TripdetailInfo.objects.get(tr_tripnumber=trip_num).id
+        trip_detail = TripdetailInfo.objects.filter(tr_tripnumber=trip_num, tr_enquirynumber_id=enquiry_id).first()
+        if not trip_detail:
+            trip_detail = TripdetailInfo.objects.filter(tr_tripnumber=trip_num).first()
+        trip_id = trip_detail.id if trip_detail else None
         print('trip_id:', trip_id)
         # If trip_id is provided, redirect to update
-        return redirect('tripclosure_update', tripclosure_id=trip_id)  # tripdetail_id is a keyword argument in the URL
+        if trip_id:
+            return redirect('tripclosure_update', tripclosure_id=trip_id)
+        else:
+            messages.error(request, "Trip not found.")
+            return redirect(request.META.get('HTTP_REFERER', 'enquirynote_list'))
 
 
 @login_required(login_url='login_page')
@@ -104,12 +111,12 @@ def tripclosure_add(request, tripclosure_id=0):
                 'status_list': status_list,
             }
         else:
-            trip_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_tripnumber
+            tripclosure = TripdetailInfo.objects.get(pk=tripclosure_id)
+            trip_num = tripclosure.tr_tripnumber
             print("Inside Trip closure edit")
-            enquiry_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_enquirynumber
+            enquiry_num = tripclosure.tr_enquirynumber
             enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
             consignment_num = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_consignmentdetails
-            tripclosure = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
             tripclosure_form = TripclosureaddForm(instance=tripclosure)
 
             # Populate Customer Name and Trip Date
@@ -235,8 +242,8 @@ def tripclosure_add(request, tripclosure_id=0):
             return redirect(request.META['HTTP_REFERER'])
         else:
             print("Inside Trip closure post edit")
-            trip_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_tripnumber
-            tripclosure = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
+            tripclosure = TripdetailInfo.objects.get(pk=tripclosure_id)
+            trip_num = tripclosure.tr_tripnumber
             tripclosure_form = TripclosureaddForm(request.POST, instance=tripclosure)
             tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
             tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES, instance=tripclosure_files)
@@ -491,7 +498,9 @@ def get_fastag_toll_cost_ajax(request):
         return JsonResponse(result)
 
     try:
-        trip = TripdetailInfo.objects.get(tr_tripnumber=trip_num)
+        trip = TripdetailInfo.objects.filter(tr_tripnumber=trip_num).first()
+        if not trip:
+            raise TripdetailInfo.DoesNotExist
         vehicle_num = trip.tr_vehiclenumber
         from_date = trip.tr_departeddate
         to_date = trip.tr_reporteddate
