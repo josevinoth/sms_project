@@ -1,5 +1,5 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20260513">
+<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20260519-6">
 
 <style>
     /* Specific overrides for this dashboard if any */
@@ -8,6 +8,30 @@
         height: 100% !important;
         background: #060b26 !important;
         font-family: 'Inter', sans-serif !important;
+    }
+
+    /* Style scrollbar for the custom tooltip to be visible but modern */
+    #custom-progress-tooltip::-webkit-scrollbar {
+        width: 6px;
+    }
+    #custom-progress-tooltip::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+    }
+    #custom-progress-tooltip::-webkit-scrollbar-thumb {
+        background: rgba(54, 209, 255, 0.4);
+        border-radius: 3px;
+    }
+    #custom-progress-tooltip::-webkit-scrollbar-thumb:hover {
+        background: rgba(54, 209, 255, 0.7);
+    }
+    #custom-progress-tooltip {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(54, 209, 255, 0.4) rgba(255, 255, 255, 0.05);
+    }
+    #progress-back-btn:hover {
+        background: rgba(54, 209, 255, 0.2) !important;
+        box-shadow: 0 0 8px rgba(54, 209, 255, 0.5);
     }
 </style>
 
@@ -57,17 +81,47 @@
     </div>
 
     <div class="dash-charts-container">
-        <div class="chart-panel chart-panel--full">
-            <div class="chart-title"><i class="fas fa-chart-bar"></i> Business Trip Distribution</div>
-            <div class="chart-canvas-wrap"><canvas id="tripBarChart"></canvas></div>
+        <!-- Left Column: Business Trip Distribution and KM Details side-by-side below it -->
+        <div class="dash-left-col">
+            <div class="chart-panel" style="flex: 0.95; min-height: 0;">
+                <div class="chart-title"><i class="fas fa-chart-bar"></i> Business Trip Distribution</div>
+                <div class="chart-canvas-wrap"><canvas id="tripBarChart"></canvas></div>
+            </div>
+            <div class="dash-donuts-row">
+                <div class="chart-panel">
+                    <div class="chart-title" style="display: flex; align-items: center; width: 100%; white-space: nowrap;">
+                        <i class="fas fa-tachometer-alt"></i> Own Vehicle KM Details
+                        <div style="margin-left: auto; display: flex; gap: 0.4rem; font-size: 8px; font-weight: normal; color: #d9e3ff; align-items: center;">
+                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%;"></span>Business</span>
+                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #f59e0b; border-radius: 50%;"></span>Empty</span>
+                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%;"></span>B-Empty</span>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><canvas id="ownDonutChart"></canvas></div>
+                </div>
+                <div class="chart-panel">
+                    <div class="chart-title" style="display: flex; align-items: center; width: 100%; white-space: nowrap;">
+                        <i class="fas fa-truck"></i> Att. Vehicle KM Details
+                        <div style="margin-left: auto; display: flex; gap: 0.4rem; font-size: 8px; font-weight: normal; color: #d9e3ff; align-items: center;">
+                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%;"></span>Business</span>
+                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #f59e0b; border-radius: 50%;"></span>Empty</span>
+                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%;"></span>B-Empty</span>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap"><canvas id="attachedDonutChart"></canvas></div>
+                </div>
+            </div>
         </div>
+        <!-- Right Column: Vehicle Type wise Monthly Progress (expanded full height) -->
         <div class="chart-panel">
-            <div class="chart-title"><i class="fas fa-tachometer-alt"></i> Own Vehicle KM Details</div>
-            <div class="chart-canvas-wrap"><canvas id="ownDonutChart"></canvas></div>
-        </div>
-        <div class="chart-panel">
-            <div class="chart-title"><i class="fas fa-truck"></i> Attached Vehicle KM Details</div>
-            <div class="chart-canvas-wrap"><canvas id="attachedDonutChart"></canvas></div>
+            <div class="chart-title" style="display: flex; align-items: center; width: 100%; gap: 10px;">
+                <button id="progress-back-btn" class="btn btn-outline-info btn-xs" style="display: none; padding: 2px 8px; font-size: 10px; border-radius: 4px; background: transparent; border: 1px solid #36d1ff; color: #36d1ff; cursor: pointer; transition: all 0.2s; align-items: center; justify-content: center; gap: 4px;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <div><i class="fas fa-chart-line"></i> Vehicle Trip wise Monthly Progress - <span id="progress-chart-month" style="color: #36d1ff;">Current Month</span></div>
+                <input type="month" id="progress-month" class="dash-date-input" style="padding: 2px; font-size: 11px; background: #060b26; color: #fff; border: 1px solid #1a2352; border-radius: 4px; outline: none; margin-left: auto;">
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="progressChart"></canvas></div>
         </div>
     </div>
 </div>
@@ -76,7 +130,36 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 <script>
     $(document).ready(function() {
-        let tripBarChart, ownDonutChart, marketDonutChart;
+        let tripBarChart, ownDonutChart, attachedDonutChart, progressChart;
+        let progressBreakdowns = {};
+        let currentProgressView = 'ranges'; // 'ranges' or 'vehicles'
+        let selectedBucket = null;
+        let lastProgressData = null;
+
+        const targetLinePlugin = {
+            id: 'targetLine',
+            beforeDraw(chart) {
+                const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
+                const xPos = x.getPixelForValue(42);
+                if (xPos >= chart.chartArea.left && xPos <= chart.chartArea.right) {
+                    ctx.save();
+                    ctx.strokeStyle = '#ff3b30'; // soft warning red
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(xPos, top);
+                    ctx.lineTo(xPos, bottom);
+                    ctx.stroke();
+
+                    // Label "Target: 42"
+                    ctx.fillStyle = '#ff3b30';
+                    ctx.font = 'bold 9px Inter';
+                    ctx.textAlign = 'right';
+                    ctx.fillText('Target: 42', xPos - 4, top + 10);
+                    ctx.restore();
+                }
+            }
+        };
 
         function updateKpis(data, prefix) {
             $(`#${prefix}-enquiries`).text(data.enquiries);
@@ -86,6 +169,283 @@
             $(`#${prefix}-ready`).text(data.ready);
             $(`#${prefix}-invoiced`).text(data.invoiced);
         }
+
+        let pinnedChart = false;
+        
+        const getOrCreateTooltip = () => {
+            let tooltipEl = document.getElementById('custom-progress-tooltip');
+            
+            if (!tooltipEl) {
+                tooltipEl = document.createElement('div');
+                tooltipEl.id = 'custom-progress-tooltip';
+                tooltipEl.style.background = 'rgba(0, 0, 0, 0.95)';
+                tooltipEl.style.borderRadius = '6px';
+                tooltipEl.style.color = 'white';
+                tooltipEl.style.opacity = 0;
+                tooltipEl.style.pointerEvents = 'none';
+                tooltipEl.style.position = 'absolute';
+                tooltipEl.style.transform = 'translate(-50%, -100%)';
+                tooltipEl.style.transition = 'all .1s ease';
+                tooltipEl.style.zIndex = 9999;
+                tooltipEl.style.maxHeight = '250px';
+                tooltipEl.style.overflowY = 'auto';
+                tooltipEl.style.padding = '12px';
+                tooltipEl.style.fontSize = '12px';
+                tooltipEl.style.border = '1px solid rgba(54, 209, 255, 0.3)';
+                tooltipEl.style.boxShadow = '0px 8px 16px rgba(0,0,0,0.6)';
+                
+                const closeBtn = document.createElement('div');
+                closeBtn.innerHTML = '&times;';
+                closeBtn.style.position = 'sticky';
+                closeBtn.style.top = '0';
+                closeBtn.style.float = 'right';
+                closeBtn.style.cursor = 'pointer';
+                closeBtn.style.color = '#ff3b30';
+                closeBtn.style.fontSize = '20px';
+                closeBtn.style.fontWeight = 'bold';
+                closeBtn.style.display = 'none';
+                closeBtn.style.lineHeight = '1';
+                closeBtn.style.marginLeft = '15px';
+                closeBtn.id = 'custom-progress-tooltip-close';
+                
+                closeBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    pinnedChart = false;
+                    tooltipEl.style.opacity = 0;
+                    tooltipEl.style.pointerEvents = 'none';
+                    closeBtn.style.display = 'none';
+                    tooltipEl.style.border = '1px solid rgba(54, 209, 255, 0.3)';
+                };
+                
+                const content = document.createElement('div');
+                content.id = 'custom-progress-tooltip-content';
+                
+                tooltipEl.appendChild(closeBtn);
+                tooltipEl.appendChild(content);
+                document.body.appendChild(tooltipEl);
+            }
+            return tooltipEl;
+        };
+
+        const externalTooltipHandler = (context) => {
+            const {chart, tooltip} = context;
+            
+            if (pinnedChart) return; 
+            
+            const tooltipEl = getOrCreateTooltip();
+            
+            if (tooltip.opacity === 0) {
+                tooltipEl.style.opacity = 0;
+                return;
+            }
+            
+            if (tooltip.body) {
+                const titleLines = tooltip.title || [];
+                const bodyLines = tooltip.body.map(b => b.lines);
+                
+                let innerHtml = '';
+                
+                titleLines.forEach(title => {
+                    innerHtml += `<div style="font-weight:bold; margin-bottom: 8px; color: #36d1ff; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">${title}</div>`;
+                });
+                
+                bodyLines.forEach((body, i) => {
+                    body.forEach(line => {
+                        innerHtml += `<div style="white-space: nowrap; margin-bottom: 4px;">${line}</div>`;
+                    });
+                });
+                
+                document.getElementById('custom-progress-tooltip-content').innerHTML = innerHtml;
+            }
+            
+            const position = chart.canvas.getBoundingClientRect();
+            
+            tooltipEl.style.opacity = 1;
+            tooltipEl.style.left = position.left + window.pageXOffset + tooltip.caretX + 'px';
+            tooltipEl.style.top = position.top + window.pageYOffset + tooltip.caretY - 10 + 'px';
+        };
+
+        function renderProgressChartRanges() {
+            const ctxProgress = document.getElementById('progressChart').getContext('2d');
+            if (progressChart) {
+                progressChart.destroy();
+            }
+            const data = lastProgressData;
+            progressChart = new Chart(ctxProgress, {
+                type: 'bar',
+                data: {
+                    labels: data.progress_chart.labels,
+                    datasets: [{
+                        label: 'Vehicles',
+                        data: data.progress_chart.counts,
+                        backgroundColor: 'rgba(54, 209, 255, 0.85)',
+                        borderColor: '#36d1ff',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 800, easing: 'easeOutQuart' },
+                    onClick: (e, activeElements) => {
+                        if (activeElements.length > 0) {
+                            const index = activeElements[0].index;
+                            const bucketName = progressChart.data.labels[index];
+                            switchToVehiclesView(bucketName);
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            color: '#fff',
+                            anchor: 'end',
+                            align: 'right',
+                            offset: 4,
+                            font: { weight: '700', size: 10 },
+                            formatter: (value) => {
+                                return value > 0 ? value : '';
+                            }
+                        },
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function(context) {
+                                    return `Vehicles Count: ${context.parsed.x}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            min: 0,
+                            max: Math.max(5, Math.max(...data.progress_chart.counts, 0) + 1),
+                            ticks: { 
+                                color: '#9fb1d9', 
+                                font: { size: 10 },
+                                stepSize: 1,
+                                precision: 0
+                            },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            ticks: { color: '#9fb1d9', font: { size: 10 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function switchToVehiclesView(bucketName) {
+            currentProgressView = 'vehicles';
+            selectedBucket = bucketName;
+
+            pinnedChart = false;
+            const tooltipEl = document.getElementById('custom-progress-tooltip');
+            if (tooltipEl) {
+                tooltipEl.style.opacity = 0;
+                tooltipEl.style.pointerEvents = 'none';
+            }
+
+            $('#progress-back-btn').css('display', 'inline-flex');
+
+            const monthName = lastProgressData.progress_chart.month_name;
+            $('#progress-chart-month').text(`${monthName} (Range: ${bucketName})`);
+
+            const vehicles = progressBreakdowns[bucketName] || [];
+            const labels = vehicles.map(v => v.vehicle_number);
+            const tripCounts = vehicles.map(v => v.trip_count);
+
+            const ctxProgress = document.getElementById('progressChart').getContext('2d');
+            if (progressChart) {
+                progressChart.destroy();
+            }
+
+            progressChart = new Chart(ctxProgress, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Trips',
+                        data: tripCounts,
+                        backgroundColor: 'rgba(54, 209, 255, 0.85)',
+                        borderColor: '#36d1ff',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'x',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 800, easing: 'easeOutQuart' },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            color: '#fff',
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 2,
+                            font: { weight: '700', size: 10 },
+                            formatter: (value) => {
+                                return value > 0 ? value : '';
+                            }
+                        },
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const vehicle = vehicles[index];
+                                    return `Trips: ${context.parsed.y} (${vehicle.vehicle_type})`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { 
+                                color: '#9fb1d9', 
+                                font: { size: 9 },
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: { display: false }
+                        },
+                        y: {
+                            min: 0,
+                            max: Math.max(5, Math.max(...tripCounts, 0) + 1),
+                            ticks: { 
+                                color: '#9fb1d9', 
+                                font: { size: 10 },
+                                stepSize: 1,
+                                precision: 0
+                            },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        $('#progress-back-btn').on('click', function() {
+            pinnedChart = false;
+            const tooltipEl = document.getElementById('custom-progress-tooltip');
+            if (tooltipEl) {
+                tooltipEl.style.opacity = 0;
+                tooltipEl.style.pointerEvents = 'none';
+            }
+            currentProgressView = 'ranges';
+            selectedBucket = null;
+            $(this).hide();
+            const monthName = lastProgressData.progress_chart.month_name;
+            $('#progress-chart-month').text(monthName);
+            renderProgressChartRanges();
+        });
 
         function initCharts(data) {
             Chart.register(ChartDataLabels);
@@ -143,6 +503,9 @@
                 }
             });
 
+            // Initialize progress chart
+            renderProgressChartRanges();
+
             const donutColors = ['#10b981', '#f59e0b', '#ef4444'];
             const donutLabels = ['Business', 'Empty', 'B-Empty'];
             const donutDatalabelOptions = {
@@ -187,9 +550,12 @@
                     layout: { padding: 6 },
                     plugins: {
                         ...commonOptions.plugins,
+                        legend: {
+                            display: false
+                        },
                         datalabels: donutDatalabelOptions
                     },
-                    cutout: '52%'
+                    cutout: '40%'
                 }
             });
 
@@ -204,9 +570,12 @@
                     layout: { padding: 6 },
                     plugins: {
                         ...commonOptions.plugins,
+                        legend: {
+                            display: false
+                        },
                         datalabels: donutDatalabelOptions
                     },
-                    cutout: '52%'
+                    cutout: '40%'
                 }
             });
         }
@@ -215,18 +584,29 @@
             const employeeId = $('#cs-employee-select').val();
             const fromDate = $('#from-date').val();
             const toDate = $('#to-date').val();
+            const progressMonth = $('#progress-month').val();
 
             $.ajax({
                 url: "{% url 'get_tms_dashboard_data' %}",
                 data: { 
                     'employee_id': employeeId,
                     'from_date': fromDate,
-                    'to_date': toDate
+                    'to_date': toDate,
+                    'progress_month': progressMonth
                 },
                 success: function(data) {
                     // Always update totals from the same data response (backend should send both)
                     updateKpis(data.totals, 'total');
                     updateKpis(data.employee, 'emp');
+
+                    progressBreakdowns = data.progress_chart.breakdowns;
+                    lastProgressData = data;
+                    
+                    // Reset to ranges view when loading new data
+                    currentProgressView = 'ranges';
+                    selectedBucket = null;
+                    $('#progress-back-btn').hide();
+                    $('#progress-chart-month').text(data.progress_chart.month_name);
 
                     if (!tripBarChart) {
                         initCharts(data);
@@ -234,6 +614,9 @@
                         tripBarChart.data.datasets[0].data = data.bar_chart.local;
                         tripBarChart.data.datasets[1].data = data.bar_chart.outstation;
                         tripBarChart.update();
+
+                        renderProgressChartRanges();
+
                         ownDonutChart.data.datasets[0].data = data.donut_own;
                         ownDonutChart.update();
                         attachedDonutChart.data.datasets[0].data = data.donut_attached;
@@ -268,10 +651,14 @@
             });
         }
 
+        const now = new Date();
+        const currentMonthVal = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        $('#progress-month').val(currentMonthVal);
+
         loadDashboardData();
         adjustLayout();
 
-        $('#cs-employee-select, #from-date, #to-date').on('change', function() {
+        $('#cs-employee-select, #from-date, #to-date, #progress-month').on('change', function() {
             adjustLayout();
             loadDashboardData();
         });

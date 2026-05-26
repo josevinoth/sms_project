@@ -583,12 +583,19 @@
         return new Date(yyyy, mm - 1, dd);
     }
 
+    function parseInputDate(dateStr) {
+        // dateStr is in YYYY-MM-DD format (from <input type="date">)
+        // Parse as local date to avoid UTC midnight timezone offset issues
+        const [yyyy, mm, dd] = dateStr.split("-");
+        return new Date(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd));
+    }
+
     function filterTripsByDateRange() {
         const fromVal = document.getElementById("tripFromDate").value;
         const toVal = document.getElementById("tripToDate").value;
 
-        const fromDate = fromVal ? new Date(fromVal) : null;
-        const toDate = toVal ? new Date(toVal) : null;
+        const fromDate = fromVal ? parseInputDate(fromVal) : null;
+        const toDate = toVal ? parseInputDate(toVal) : null;
 
         document.querySelectorAll("#tripsTableBody tr").forEach(row => {
             const dateCell = row.children[7]; // Trip Date column (index shifted after adding Customer)

@@ -13,7 +13,7 @@
 .home-dashboard-wrap {
     width: 100% !important;
     max-width: 100% !important;
-    height: calc(100vh - 100px); /* Adjust based on system header */
+    height: calc(100vh - 125px);
     display: flex;
     flex-direction: column;
     padding: 0.75rem;
@@ -21,7 +21,6 @@
     box-sizing: border-box;
     background: #0b1537;
     overflow: hidden;
-    flex-shrink: 1;
     min-width: 0;
 }
 
@@ -141,20 +140,38 @@
 .dash-charts-container {
     flex: 1;
     display: grid;
-    grid-template-rows: 0.9fr 1.1fr; 
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: 1.1fr 0.9fr; 
     gap: 0.5rem;
     min-height: 0;
     min-width: 0;
     width: 100%;
-    overflow: hidden;
+}
+
+.dash-left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+    min-height: 0;
+}
+
+.dash-donuts-row {
+    display: flex;
+    gap: 0.5rem;
+    flex: 1;
+    min-height: 0;
+}
+
+.dash-donuts-row .chart-panel {
+    flex: 1;
+    min-width: 0;
 }
 
 .chart-panel {
     background: #081028;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 1.25rem;
+    padding: 0.6rem 0.8rem;
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -163,10 +180,10 @@
 .chart-panel--full { grid-column: span 2; }
 
 .chart-title {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: #fff;
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;

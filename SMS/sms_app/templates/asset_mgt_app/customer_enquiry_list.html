@@ -609,7 +609,15 @@
                             <td>{{ item.enq.en_fromlocaion.place_name }}</td>
                             <td>{{ item.enq.en_tolocation.place_name }}</td>
                             <td>{{ item.enq.en_customerdepartment.ct_customerdepartment|default:"-" }}</td>
-                            <td>{{ item.cnote }}</td>
+                            <td>
+                                {% if item.consignment_id %}
+                                    <a href="{% url 'consignment_note_pdf' item.consignment_id %}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;" title="View Consignment Note">
+                                        <i class="fas fa-file-pdf" style="margin-right: 4px;"></i>{{ item.cnote }}
+                                    </a>
+                                {% else %}
+                                    {{ item.cnote }}
+                                {% endif %}
+                            </td>
 
                             <td>{{ item.enq.en_created_at|date:"d M Y" }}</td>
                             <td>{{ item.enq.en_pickupdatetime|date:"d M Y H:i"|default:"-" }}</td>

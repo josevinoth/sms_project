@@ -7,6 +7,11 @@ class SaleEnquiryForm(forms.ModelForm):
         required=False,
         widget=forms.Select(attrs={'class': 'form-control select2', 'id': 'sales_number_input'})
     )
+    assigned_to = forms.ChoiceField(
+        choices=[('', '---------')],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control select2', 'id': 'assigned_to_input'})
+    )
     
     class Meta:
         model = SaleEnquiry
@@ -35,7 +40,6 @@ class SaleEnquiryForm(forms.ModelForm):
             'contact_person_name': forms.TextInput(attrs={'class': 'form-control'}),
             'contact_no': forms.TextInput(attrs={'class': 'form-control'}),
             'mail': forms.EmailInput(attrs={'class': 'form-control'}),
-            'assigned_to': forms.TextInput(attrs={'class': 'form-control', 'id': 'assigned_to_input'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'service_type': forms.TextInput(attrs={'class': 'form-control'}),
@@ -120,5 +124,22 @@ class SaleEnquiryForm(forms.ModelForm):
         self.fields['sales_number'].choices = sales_choices
         if self.instance and self.instance.pk:
             self.fields['sales_number'].initial = self.instance.sales_number
+            
+        # Fetch active MC Tours employees
+        from django.contrib.auth.models import User
+        mc_employees = User.objects.filter(
+            is_active=True,
+            user_extinfo__emp_organisation__bvm_business='MC Tours & Travels  pvt ltd'
+        ).order_by('first_name')
+        
+        assigned_to_choices = [('', '---------')]
+        for emp in mc_employees:
+            name = f"{emp.first_name} {emp.last_name}".strip() or emp.username
+            assigned_to_choices.append((name, name))
+            
+        self.fields['assigned_to'].choices = assigned_to_choices
+        if self.instance and self.instance.pk:
+            self.fields['assigned_to'].initial = self.instance.assigned_to
+            
         self.fields['mc_vehicle_source'].empty_label = "--Select--"
         self.fields['mc_hotel_req'].empty_label = "--Select--"
