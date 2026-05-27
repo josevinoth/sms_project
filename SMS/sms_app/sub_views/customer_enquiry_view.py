@@ -89,44 +89,82 @@ def customer_dashboard(request):
     if department:
         all_trips = all_trips.filter(tr_enquirynumber__en_customerdepartment=department)
 
-    completed_statuses = [2, 3, 4, 5, 7, 9]
+    from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
+    from datetime import timedelta
 
-    # Count DISTINCT ENQUIRIES (not individual trips) so numbers match the list pages
-    # In-Transit = distinct enquiries with at least one in-transit trip (status 1)
-    in_transit = enquiry_qs.filter(
-        tripdetailinfo__tc_financestatus_id=1
-    ).distinct().count()
+    # BUSINESS trips only (tr_category_id=1) — exclude empty runs
+    business_trips = all_trips.filter(tr_category_id=1)
 
-    # Active = enquiries with NO vehicle allotted yet (vehicle not attended/assigned)
-    allotted_trip_ids = all_trips.filter(
+    # In-Transit = enquiries with a business trip in status 1 (trip started/running)
+    in_transit_enq_ids = business_trips.filter(
+        tc_financestatus_id=1
+    ).values_list('tr_enquirynumber_id', flat=True).distinct()
+    in_transit = enquiry_qs.filter(id__in=in_transit_enq_ids).count()
+
+    # Delivered = enquiries with a business trip in status 2, 7 or 9 (closed/settled/ready for invoice)
+    # ALSO include trips that have a Trip_closure_files_Info record (internally closed but status not yet updated)
+    from sms_app.models import Trip_closure_files_Info
+    closed_trip_numbers = Trip_closure_files_Info.objects.values_list('tcf_tripnumber', flat=True)
+    closed_via_closure_enq_ids = business_trips.filter(
+        tr_tripnumber__in=closed_trip_numbers
+    ).values_list('tr_enquirynumber_id', flat=True).distinct()
+
+    delivered_enq_ids = list(set(
+        list(business_trips.filter(
+            tc_financestatus_id__in=[2, 7, 9]
+        ).values_list('tr_enquirynumber_id', flat=True).distinct()) +
+        list(closed_via_closure_enq_ids)
+    ))
+    delivered = enquiry_qs.filter(id__in=delivered_enq_ids).count()
+
+    # Vehicle Allotted = enquiries that have a vehicle allotted
+    # but NO business trip started (not in-transit, not delivered)
+    allotted_trip_enq_ids = business_trips.filter(
         tr_vehiclenumber__isnull=False
     ).exclude(
         tr_vehiclenumber=''
     ).values_list('tr_enquirynumber_id', flat=True).distinct()
 
-    from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
     allotted_va_ids = Vehicle_allotmentInfo.objects.filter(
         va_enquirynumber__en_customername=customer
     ).filter(
         ~Q(va_vehiclenumber__isnull=True) | (~Q(va_vehiclenumber_mkt='') & ~Q(va_vehiclenumber_mkt__isnull=True))
     ).values_list('va_enquirynumber_id', flat=True).distinct()
 
-    from datetime import timedelta
-    recent_limit = timezone.now() - timedelta(days=3)
+    allotted_all_ids = list(set(list(allotted_trip_enq_ids) + list(allotted_va_ids)))
 
+    # Exclude explicitly dead/cancelled/completed enquiries
+    dead_enq_ids = list(enquiry_qs.filter(en_status_id__in=[5, 8]).values_list('id', flat=True))
+
+    # Exclude enquiries where ALL trips are closed (no active trips, but has trips)
+    active_trips_enq_ids = all_trips.exclude(tc_financestatus_id__in=[2, 3, 4, 5, 7, 9]).values_list('tr_enquirynumber_id', flat=True).distinct()
+    any_trip_enq_ids = all_trips.values_list('tr_enquirynumber_id', flat=True).distinct()
+    fully_closed_enq_ids = list(set(any_trip_enq_ids) - set(active_trips_enq_ids))
+
+    # Allotted: has vehicle, but no business trip running or closed yet
+    allotted = enquiry_qs.filter(
+        id__in=allotted_all_ids
+    ).exclude(
+        id__in=in_transit_enq_ids
+    ).exclude(
+        id__in=delivered_enq_ids
+    ).exclude(
+        id__in=dead_enq_ids
+    ).exclude(
+        id__in=fully_closed_enq_ids
+    ).count()
+
+    # Active = enquiries with NO vehicle allotted yet (recent 3 days)
+    recent_limit = timezone.now() - timedelta(days=3)
     active_enquiries = enquiry_qs.filter(
         en_created_at__gte=recent_limit
-    ).exclude(id__in=allotted_trip_ids).exclude(id__in=allotted_va_ids).count()
-
-    # Delivered = distinct enquiries with a completed trip this year
-    delivered = enquiry_qs.filter(
-        tripdetailinfo__tc_financestatus_id__in=[2, 7]
-    ).distinct().count()
-
-    # Cancelled = distinct enquiries with a cancelled trip
-    cancelled = enquiry_qs.filter(
-        tripdetailinfo__tc_financestatus_id=3
-    ).distinct().count()
+    ).exclude(
+        id__in=allotted_all_ids
+    ).exclude(
+        id__in=dead_enq_ids
+    ).exclude(
+        id__in=fully_closed_enq_ids
+    ).count()
 
     # Recent Shipments — include driver and consignment info
     recent_shipments = all_trips.select_related(
@@ -139,8 +177,8 @@ def customer_dashboard(request):
         'active_enquiries': active_enquiries,
         'in_transit': in_transit,
         'delivered': delivered,
-        'cancelled': cancelled,
-        'recent_shipments': recent_shipments,
+        'allotted': allotted,
+        'recent_shipments': recent_shipments
     })
 
 @login_required
@@ -222,14 +260,23 @@ def customer_enquiry_add(request):
             if not selected_dept:
                 selected_dept = department
 
+            # Custom logic for assigning to Ajay R for EIPL
+            assigned_user = MyUser.objects.filter(is_superuser=True).first() or request.user
+            if customer and "EIPL" in customer.cu_name:
+                ajay_user = MyUser.objects.filter(first_name__icontains='Ajay', last_name__icontains='R').first()
+                if not ajay_user:
+                    ajay_user = MyUser.objects.filter(first_name__icontains='Ajay').first()
+                if ajay_user:
+                    assigned_user = ajay_user
+
             enquiry = EnquirynoteInfo(
                 en_customername=customer,
                 en_customerdepartment=selected_dept,
-                en_assignedto=MyUser.objects.filter(is_superuser=True).first() or request.user,
+                en_assignedto=assigned_user,
                 en_status=StatusList.objects.filter(id=6).first(),
                 en_consignmentdetails=cargo_details,
                 en_vehicledetails=category_name, # Save category here as string
-                en_pickupdatetime=pickup_date if pickup_date else timezone.now(),
+                en_pickupdatetime=pickup_datetime_str if pickup_datetime_str else timezone.now(),
                 en_fromlocaion=from_loc,
                 en_tolocation=to_loc,
                 en_created_at=timezone.now(),
@@ -306,9 +353,17 @@ def customer_enquiry_edit(request, enquiry_id):
         category_id = request.POST.get('vehicle_category')
         type_id = request.POST.get('vehicle_type')
         cargo_details = request.POST.get('cargo_details', '')
-        pickup_date = request.POST.get('pickup_date')
+        
+        pickup_datetime_str = request.POST.get('pickup_datetime', '')
+        req_time = None
+        if pickup_datetime_str:
+            try:
+                parts = pickup_datetime_str.split('T')
+                req_time = parts[1] if len(parts) > 1 else None
+            except Exception:
+                pass
+
         agent_name = request.POST.get('agent_name')
-        req_time = request.POST.get('req_time')
         no_of_veh = request.POST.get('no_of_veh', 0)
         no_of_pcs = request.POST.get('no_of_pcs', 0)
         weight = request.POST.get('weight')
@@ -348,7 +403,7 @@ def customer_enquiry_edit(request, enquiry_id):
             enquiry.en_customerdepartment = selected_dept
             enquiry.en_consignmentdetails = cargo_details
             enquiry.en_vehicledetails = category_name
-            enquiry.en_pickupdatetime = pickup_date if pickup_date else enquiry.en_pickupdatetime
+            enquiry.en_pickupdatetime = pickup_datetime_str if pickup_datetime_str else enquiry.en_pickupdatetime
             enquiry.en_fromlocaion = from_loc
             enquiry.en_tolocation = to_loc
             enquiry.en_agent_name = agent_name
@@ -440,40 +495,93 @@ def customer_enquiry_list(request):
             Q(en_enquirynumber__icontains=search_query) |
             Q(en_fromlocaion__place_name__icontains=search_query) |
             Q(en_tolocation__place_name__icontains=search_query) |
-            Q(tripdetailinfo__tr_tripnumber__icontains=search_query)
+            Q(tripdetailinfo__tr_tripnumber__icontains=search_query) |
+            Q(tripdetailinfo__tr_vehiclenumber__icontains=search_query) |
+            Q(vehicle_allotmentinfo__va_vehiclenumber__vm_registrationnumber__icontains=search_query) |
+            Q(vehicle_allotmentinfo__va_vehiclenumber_mkt__icontains=search_query) |
+            Q(tripdetailinfo__tr_consignmentnumber__co_consignmentnumber__icontains=search_query) |
+            Q(en_customerdepartment__ct_customerdepartment__icontains=search_query)
         ).distinct()
 
     # Status filter from dashboard cards
     status_filter = request.GET.get('status', '')
-    _completed = [2, 3, 4, 5, 7, 9]
+    from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
+    from datetime import timedelta
+
+    # Pre-compute allotted IDs needed for 'active' and 'allotted' filters
+    _business_trips = TripdetailInfo.objects.filter(
+        tr_enquirynumber__en_customername=customer,
+        tr_category_id=1
+    )
+    _allotted_trip_enq_ids = _business_trips.filter(
+        tr_vehiclenumber__isnull=False
+    ).exclude(
+        tr_vehiclenumber=''
+    ).values_list('tr_enquirynumber_id', flat=True).distinct()
+
+    _allotted_va_ids = Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber__en_customername=customer
+    ).filter(
+        ~Q(va_vehiclenumber__isnull=True) | (~Q(va_vehiclenumber_mkt='') & ~Q(va_vehiclenumber_mkt__isnull=True))
+    ).values_list('va_enquirynumber_id', flat=True).distinct()
+
+    _allotted_all_ids = list(set(list(_allotted_trip_enq_ids) + list(_allotted_va_ids)))
+
+    _in_transit_enq_ids = _business_trips.filter(
+        tc_financestatus_id=1
+    ).values_list('tr_enquirynumber_id', flat=True).distinct()
+
+    from sms_app.models import Trip_closure_files_Info
+    _closed_trip_numbers = Trip_closure_files_Info.objects.values_list('tcf_tripnumber', flat=True)
+    _closed_via_closure_enq_ids = _business_trips.filter(
+        tr_tripnumber__in=_closed_trip_numbers
+    ).values_list('tr_enquirynumber_id', flat=True).distinct()
+
+    _delivered_enq_ids = list(set(
+        list(_business_trips.filter(
+            tc_financestatus_id__in=[2, 7, 9]
+        ).values_list('tr_enquirynumber_id', flat=True).distinct()) +
+        list(_closed_via_closure_enq_ids)
+    ))
+
+    # Exclusions for dead/closed enquiries
+    _all_trips = TripdetailInfo.objects.filter(tr_enquirynumber__en_customername=customer)
+    _dead_enq_ids = list(enquiries_qs.filter(en_status_id__in=[5, 8]).values_list('id', flat=True))
+    _active_trips_enq_ids = _all_trips.exclude(tc_financestatus_id__in=[2, 3, 4, 5, 7, 9]).values_list('tr_enquirynumber_id', flat=True).distinct()
+    _any_trip_enq_ids = _all_trips.values_list('tr_enquirynumber_id', flat=True).distinct()
+    _fully_closed_enq_ids = list(set(_any_trip_enq_ids) - set(_active_trips_enq_ids))
+
     if status_filter == 'active':
-        # Active = enquiries with NO vehicle allotted yet
-        allotted_trip_ids = TripdetailInfo.objects.filter(
-            tr_enquirynumber__en_customername=customer,
-            tr_vehiclenumber__isnull=False
-        ).exclude(
-            tr_vehiclenumber=''
-        ).values_list('tr_enquirynumber_id', flat=True).distinct()
-
-        from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
-        allotted_va_ids = Vehicle_allotmentInfo.objects.filter(
-            va_enquirynumber__en_customername=customer
-        ).filter(
-            ~Q(va_vehiclenumber__isnull=True) | (~Q(va_vehiclenumber_mkt='') & ~Q(va_vehiclenumber_mkt__isnull=True))
-        ).values_list('va_enquirynumber_id', flat=True).distinct()
-
-        from datetime import timedelta
+        # Active = enquiries with NO vehicle allotted, recent 3 days, not dead
         recent_limit = timezone.now() - timedelta(days=3)
-
         enquiries_qs = enquiries_qs.filter(
             en_created_at__gte=recent_limit
-        ).exclude(id__in=allotted_trip_ids).exclude(id__in=allotted_va_ids)
+        ).exclude(
+            id__in=_allotted_all_ids
+        ).exclude(
+            id__in=_dead_enq_ids
+        ).exclude(
+            id__in=_fully_closed_enq_ids
+        )
     elif status_filter == 'transit':
-        enquiries_qs = enquiries_qs.filter(tripdetailinfo__tc_financestatus_id=1).distinct()
+        # In-Transit = business trips with status 1
+        enquiries_qs = enquiries_qs.filter(id__in=_in_transit_enq_ids)
     elif status_filter == 'delivered':
-        enquiries_qs = enquiries_qs.filter(tripdetailinfo__tc_financestatus_id__in=[2, 7]).distinct()
-    elif status_filter == 'cancelled':
-        enquiries_qs = enquiries_qs.filter(tripdetailinfo__tc_financestatus_id=3).distinct()
+        # Delivered = business trips with status 2 or 7 (closed/settled)
+        enquiries_qs = enquiries_qs.filter(id__in=_delivered_enq_ids)
+    elif status_filter == 'allotted':
+        # Allotted = has vehicle, but NOT yet in-transit or delivered, and NOT dead
+        enquiries_qs = enquiries_qs.filter(
+            id__in=_allotted_all_ids
+        ).exclude(
+            id__in=_in_transit_enq_ids
+        ).exclude(
+            id__in=_delivered_enq_ids
+        ).exclude(
+            id__in=_dead_enq_ids
+        ).exclude(
+            id__in=_fully_closed_enq_ids
+        )
 
     enquiries_qs = enquiries_qs.order_by('-en_created_at')
 
@@ -488,17 +596,28 @@ def customer_enquiry_list(request):
     for enq in page_obj:
         # When status filter is active, pick the matching trip
         if status_filter == 'transit':
-            trip = enq.tripdetailinfo_set.filter(tc_financestatus_id=1).first()
+            trip = enq.tripdetailinfo_set.filter(tc_financestatus_id=1, tr_category_id=1).first()
         elif status_filter == 'delivered':
-            trip = enq.tripdetailinfo_set.filter(tc_financestatus_id__in=[2, 7]).first()
-        elif status_filter == 'cancelled':
-            trip = enq.tripdetailinfo_set.filter(tc_financestatus_id=3).first()
+            trip = enq.tripdetailinfo_set.filter(tc_financestatus_id__in=[2, 7], tr_category_id=1).first()
+        elif status_filter == 'allotted':
+            # Allotted: business trip exists but not in-transit or delivered
+            trip = enq.tripdetailinfo_set.filter(tr_category_id=1).exclude(
+                tc_financestatus_id__in=[1, 2, 3, 7]
+            ).first()
         elif status_filter == 'active':
             trip = None  # Active enquiries have no trips yet
         else:
-            trip = enq.tripdetailinfo_set.first()
+            trip = enq.tripdetailinfo_set.filter(tr_category_id=1).first()
         va = enq.vehicle_allotmentinfo_set.first()
         cn = enq.consignmentdetailinfo_set.first()
+
+        # If a search query is active, try to find a trip that matches it to display relevant info
+        if search_query:
+            matched_trip = enq.tripdetailinfo_set.filter(
+                Q(tr_vehiclenumber__icontains=search_query) | Q(tr_tripnumber__icontains=search_query)
+            ).first()
+            if matched_trip:
+                trip = matched_trip
 
         # Vehicle number: trip > allotment (own) > allotment (market)
         vehicle_no = '-'
@@ -509,6 +628,18 @@ def customer_enquiry_list(request):
                 vehicle_no = str(va.va_vehiclenumber)
             elif va.va_vehiclenumber_mkt:
                 vehicle_no = va.va_vehiclenumber_mkt
+        
+        # If the search query matched a secondary allotment not captured above, display it
+        if search_query and search_query.upper() not in vehicle_no.upper():
+            matched_va = enq.vehicle_allotmentinfo_set.filter(
+                Q(va_vehiclenumber__vm_registrationnumber__icontains=search_query) |
+                Q(va_vehiclenumber_mkt__icontains=search_query)
+            ).first()
+            if matched_va:
+                if matched_va.va_vehiclenumber:
+                    vehicle_no = str(matched_va.va_vehiclenumber)
+                elif matched_va.va_vehiclenumber_mkt:
+                    vehicle_no = matched_va.va_vehiclenumber_mkt
 
         # Customer reference
         customer_ref = enq.en_enquirynumber
@@ -556,6 +687,11 @@ def customer_enquiry_list(request):
         if trip and trip.tr_drivernumber:
             driver_number = trip.tr_drivernumber
 
+        # Is Delivered?
+        is_delivered = False
+        if trip and trip.tc_financestatus_id in [2, 7]:
+            is_delivered = True
+
         enquiry_list.append({
             'enq': enq,
             'vehicle_no': vehicle_no,
@@ -566,6 +702,7 @@ def customer_enquiry_list(request):
             'consignment_id': consignment_id,
             'cus_ref_num': cus_ref_num,
             'driver_number': driver_number,
+            'is_delivered': is_delivered,
         })
     
     return render(request, 'asset_mgt_app/customer_enquiry_list.html', {
@@ -679,9 +816,19 @@ def customer_documents(request):
     from django.core.paginator import Paginator
     from django.db.models import Prefetch
 
-    # Get all trips for this customer
+    # Get trip numbers that have a POD in the closure table
+    closure_trip_numbers = list(Trip_closure_files_Info.objects.exclude(
+        tcf_pod__isnull=True
+    ).exclude(
+        tcf_pod=''
+    ).values_list('tcf_tripnumber', flat=True))
+
+    # Get all trips for this customer that have a POD
     trips_qs = TripdetailInfo.objects.filter(
         tr_enquirynumber__en_customername=customer
+    ).filter(
+        Q(tc_pod_attachment__isnull=False, tc_pod_attachment__gt='') |
+        Q(tr_tripnumber__in=closure_trip_numbers)
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_fromlocaion',
@@ -713,17 +860,16 @@ def customer_documents(request):
         pod_source = ''
         
         if closure and closure.tcf_pod:
-            file_path = os.path.join(settings.MEDIA_ROOT, str(closure.tcf_pod))
-            if os.path.exists(file_path):
-                has_pod = True
-                pod_source = 'closure'
+            has_pod = True
+            pod_source = 'closure'
+            file_url = closure.tcf_pod.url
         if not has_pod and trip.tc_pod_attachment:
-            file_path = os.path.join(settings.MEDIA_ROOT, str(trip.tc_pod_attachment))
-            if os.path.exists(file_path):
-                has_pod = True
-                pod_source = 'trip'
+            has_pod = True
+            pod_source = 'trip'
+            file_url = trip.tc_pod_attachment.url
         
         if has_pod:
+            file_name = os.path.basename(file_url) if file_url else f"POD_{trip.tr_tripnumber}"
             documents.append({
                 'trip': trip,
                 'trip_number': trip.tr_tripnumber,
