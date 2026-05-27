@@ -86,7 +86,7 @@
                         {% endfor %}
                     </select>
 
-                    {% if not consignment.cg_ewaybill_att and not consignment.cg_invoice_att and not consignment.cg_otl_att %}
+                    {% if not consignment.cg_ewaybill_att and not consignment.cg_invoice_att and not consignment.cg_otl_att and consignment.cg_consignmenttype.consignment_type == 'Normal' %}
                     <button type="button" class="btn btn-sm btn-secondary ml-2" disabled
                         title="Please upload at least one attachment (Ewaybill/Invoice/OTL) before approving">Update</button>
                     <small class="text-danger d-block mt-1"
