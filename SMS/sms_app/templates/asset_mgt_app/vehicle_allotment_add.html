@@ -1353,6 +1353,7 @@ $("#va_vehiclesource").on("change", function () {
         if (!source) { alert("Please select a vehicle source."); return; }
 
         var form = $(this);
+        form.find(":disabled").prop("disabled", false);
         $.ajax({
             type: form.attr('method'),
             url: form.attr('action'),

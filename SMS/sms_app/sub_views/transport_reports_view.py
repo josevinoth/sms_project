@@ -4202,7 +4202,7 @@ def maintenance_report_view(request):
             branch_display = str(rec.mi_location.branch)
 
         job_card_no = rec.id  # fallback
-        prev_job_card_date = _fmt_dt(prev_rec.mi_created_at, date_only=True)
+        prev_job_card_date = _fmt_dt(prev_rec.mi_created_at, date_only=True) if prev_rec else ""
         prev_job_card_no = prev_rec.id if prev_rec else ""
 
         bills = rec.bills_v1.all()

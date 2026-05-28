@@ -81,6 +81,7 @@
             <tr>
                 <th>ID</th>
                 <th>Created On</th>
+                <th>Customer Name</th>
                 <th>Enquiry Number</th>
                 <th>Consignment Number</th>
                 <th>Consignment Date</th>
@@ -103,6 +104,7 @@
                 <th>Status</th>
                 <th>Updated On</th>
                 <th>Updated By</th>
+                <th>Created By</th>
                 <th>Edit</th>
                 <th>Delete</th>
             </tr>
@@ -143,6 +145,7 @@
             columns: [
                 { title: "ID" },
                 { title: "Created On" },
+                { title: "Customer Name" },
                 { title: "Enquiry Number" },
                 { title: "Consignment Number" },
                 { title: "Consignment Date" },
@@ -165,18 +168,19 @@
                 { title: "Status" },
                 { title: "Updated On" },
                 { title: "Updated By" },
+                { title: "Created By" },
                 { title: "Edit", orderable: false, searchable: false },
                 { title: "Delete", orderable: false, searchable: false }
             ],
             columnDefs: [
                 {
-                    targets: 24,
+                    targets: 26,
                     render: function (data, type, row) {
                         return '<a class="btn btn-primary" href="/SMS/consignmentdetail_update/' + data + '/"><i class="far fa-edit"></i></a>';
                     }
                 },
                 {
-                    targets: 25,
+                    targets: 27,
                     render: function (data, type, row) {
                         return '<form action="/SMS/consignmentdetail_delete/' + data + '/" method="post" onsubmit="return confirm(\'Are you sure?\');">' +
                             '<input type="hidden" name="csrfmiddlewaretoken" value="' + getCookie('csrftoken') + '">' +

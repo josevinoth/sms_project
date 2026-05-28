@@ -215,14 +215,22 @@ def mc_tours_calendar_events(request):
 
         cust_name = enq.effective_customer_name
         cfg = STATUS_CONFIG[status_key]
-        vehicle_source = str(enq.mc_vehicle_source) if enq.mc_vehicle_source else '-'
-        vehicle_type = enq.mc_vehicle_type or '-'
+        
+        is_tours = False
+        if enq.mc_customer_type and enq.mc_customer_type.tt_requirement.strip().lower() == 'tours':
+            is_tours = True
+
         description = (
             f"<b>[{cfg['label']}]</b><br>"
             f"Customer: {cust_name}<br>"
-            f"Destination: {enq.mc_to or '-'}<br>"
-            f"Vehicle: {vehicle_source} / {vehicle_type}"
+            f"From: {enq.mc_from or '-'}<br>"
+            f"To: {enq.mc_to or '-'}"
         )
+        if not is_tours:
+            vehicle_source = str(enq.mc_vehicle_source) if enq.mc_vehicle_source else '-'
+            vehicle_type = enq.mc_vehicle_type or '-'
+            description += f"<br>Vehicle: {vehicle_source} / {vehicle_type}"
+
         events.append({
             'title': f"{enq.enquiry_id} - {cust_name}",
             'start': enq.mc_travel_date.isoformat(),
