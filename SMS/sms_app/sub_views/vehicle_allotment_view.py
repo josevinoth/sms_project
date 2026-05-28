@@ -479,9 +479,7 @@ def vehicle_allotment_list(request):
         'va_enquirynumber',
         'va_vehiclenumber__vm_registrationnumber',
         'va_vehiclenumber_mkt',
-        'va_status_id',
-        'id',
-        'va_replaced_allotment_id'
+        'id'
     )
 
     trip_data = TripdetailInfo.objects.filter(
@@ -499,36 +497,13 @@ def vehicle_allotment_list(request):
     # -----------------------------
     # BUILD VEHICLE DICT
     # -----------------------------
-    replaced_ids = set()
-    for enq_id, reg_num, mkt_num, status_id, va_id, replaced_va_id in vehicle_data:
-        if replaced_va_id:
-            replaced_ids.add(replaced_va_id)
-
     vehicle_dict = {}
-    for enq_id, reg_num, mkt_num, status_id, va_id, replaced_va_id in vehicle_data:
-        v_num = reg_num if reg_num else mkt_num
-        if v_num:
-            if va_id in replaced_ids:
-                display_num = f"{v_num} (replaced)"
-            else:
-                display_num = v_num
-
-            if enq_id not in vehicle_dict:
-                vehicle_dict[enq_id] = []
-
-            # Check if this raw_number already exists to avoid duplicates
-            if not any(v['number'] == display_num or v['number'] == v_num for v in vehicle_dict[enq_id]):
-                vehicle_dict[enq_id].append({
-                    'id': va_id,
-                    'number': display_num
-                })
-        else:
-            if enq_id not in vehicle_dict:
-                vehicle_dict[enq_id] = []
-            vehicle_dict[enq_id].append({
-                'id': va_id,
-                'number': "None"
-            })
+    for enq_id, reg_num, mkt_num, va_id in vehicle_data:
+        display_num = reg_num or mkt_num or "None"
+        vehicle_dict.setdefault(enq_id, []).append({
+            'id': va_id,
+            'number': display_num
+        })
 
     # -----------------------------
     # BUILD TRIP DICT
@@ -754,20 +729,17 @@ def load_driver_details(request):
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license', flat=True))
     driver_license_exp_date = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license_exp_date', flat=True))
-    vendor_id = list(
-        VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_vendor_id', flat=True))
-    vendor_name = list(
-        VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_vendor__vend_name', flat=True))
-
-    driver_license_exp_date = [str(d) if d else '' for d in driver_license_exp_date]
-
+    if active_trip:
+        active_trip.tr_drivername = new_driver_name
+        active_trip.tr_drivernumber = new_driver_number
+        active_trip.tr_driverlicence = new_driver_lic
+        active_trip.tr_driver_license_exp_date = new_driver_lic_exp_date
+        active_trip.save()
     data = {
         'driver_name': driver_name,
         'driver_number': driver_number,
         'driver_license': driver_license,
         'driver_license_exp_date': driver_license_exp_date,
-        'vendor_id': vendor_id,
-        'vendor_name': vendor_name,
     }
     return HttpResponse(json.dumps(data))
 
@@ -1132,7 +1104,6 @@ def vehicle_allotment_replace(request, allotment_id):
                 new_driver_number = request.POST.get('va_drivernumber')
                 new_driver_lic = request.POST.get('va_driver_lic')
                 new_driver_lic_expiry = request.POST.get('va_driver_lic_expiry')
-                new_vendor_id = request.POST.get('va_vendor')
                 reason = request.POST.get('reason', '')
 
                 if not reason:
