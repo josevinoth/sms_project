@@ -488,4 +488,9 @@ def invoice_documents_add(request, trip_id):
             trip.tr_enquirynumber.en_enquirynumber if trip.tr_enquirynumber else ''
         ),
         'va_sale': va_sale,
+        'live_customer_ref': (
+            trip.tr_consignmentnumber.co_cusrefnum
+            if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_cusrefnum
+            else trip.tr_customerref or ''
+        ),
     })
