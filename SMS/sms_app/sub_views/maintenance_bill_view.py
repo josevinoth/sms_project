@@ -15,7 +15,11 @@ def maintenance_bill_add(request, id=None):
     if request.method == "POST":
         form = MaintenanceBillForm(request.POST, request.FILES, instance=instance)
         if form.is_valid():
-            form.save()
+            bill = form.save(commit=False)
+            if not id:
+                bill.mnb_created_by = request.user
+            bill.mnb_updated_by = request.user
+            bill.save()
             msg = "Maintenance Bill updated successfully." if id else "Maintenance Bill added successfully."
             messages.success(request, msg)
             return redirect('maintenance_bill_list')
@@ -71,8 +75,25 @@ def maintenance_bill_delete(request, id):
 
 @login_required(login_url='login_page')
 def maintenance_bill_list(request):
-    bills = MaintenanceBillInfo.objects.all().order_by('-mnb_created_at')
-    return render(request, "asset_mgt_app/maintenance_bill_list.html", {"bills": bills})
+    from_date = request.GET.get('from_date', '').strip()
+    to_date = request.GET.get('to_date', '').strip()
+
+    bills = MaintenanceBillInfo.objects.all().select_related(
+        'mnb_maintenance__mi_vehicle',
+        'mnb_created_by',
+        'mnb_updated_by'
+    ).order_by('-mnb_bill_date')
+
+    if from_date:
+        bills = bills.filter(mnb_bill_date__gte=from_date)
+    if to_date:
+        bills = bills.filter(mnb_bill_date__lte=to_date)
+
+    return render(request, "asset_mgt_app/maintenance_bill_list.html", {
+        "bills": bills,
+        "from_date": from_date,
+        "to_date": to_date,
+    })
 
 @login_required(login_url='login_page')
 def fetch_maintenance_bill_details(request):

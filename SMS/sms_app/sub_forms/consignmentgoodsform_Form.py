@@ -13,15 +13,15 @@ class ConsignmentgoodsaddForm(forms.ModelForm):
         
         # Limit cg_consignmentnumber to only the current/active record to avoid querying and rendering 9,605 options
         cg_id = None
-        if self.instance and self.instance.cg_consignmentnumber_id:
-            cg_id = self.instance.cg_consignmentnumber_id
-        elif 'initial' in kwargs and 'cg_consignmentnumber' in kwargs['initial']:
-            cg_id = kwargs['initial']['cg_consignmentnumber']
-        elif hasattr(self, 'data') and self.data and self.data.get('cg_consignmentnumber'):
+        if hasattr(self, 'data') and self.data and self.data.get('cg_consignmentnumber'):
             try:
                 cg_id = int(self.data.get('cg_consignmentnumber'))
             except (ValueError, TypeError):
                 pass
+        if not cg_id and self.instance and self.instance.cg_consignmentnumber_id:
+            cg_id = self.instance.cg_consignmentnumber_id
+        elif not cg_id and 'initial' in kwargs and 'cg_consignmentnumber' in kwargs['initial']:
+            cg_id = kwargs['initial']['cg_consignmentnumber']
                 
         if cg_id:
             self.fields['cg_consignmentnumber'].queryset = self.fields['cg_consignmentnumber'].queryset.filter(id=cg_id)
@@ -40,15 +40,15 @@ class ConsignmentgoodsaddForm(forms.ModelForm):
         self.fields['cg_description'].queryset = Stock_type.objects.all()
                 # Limit cg_consigner queryset to only the selected/active record to avoid loading all options
         cg_consigner_id = None
-        if self.instance and self.instance.cg_consigner_id:
-            cg_consigner_id = self.instance.cg_consigner_id
-        elif 'initial' in kwargs and 'cg_consigner' in kwargs['initial']:
-            cg_consigner_id = kwargs['initial']['cg_consigner']
-        elif hasattr(self, 'data') and self.data and self.data.get('cg_consigner'):
+        if hasattr(self, 'data') and self.data and self.data.get('cg_consigner'):
             try:
                 cg_consigner_id = int(self.data.get('cg_consigner'))
             except (ValueError, TypeError):
                 pass
+        if not cg_consigner_id and self.instance and self.instance.cg_consigner_id:
+            cg_consigner_id = self.instance.cg_consigner_id
+        elif not cg_consigner_id and 'initial' in kwargs and 'cg_consigner' in kwargs['initial']:
+            cg_consigner_id = kwargs['initial']['cg_consigner']
         if cg_consigner_id:
             self.fields['cg_consigner'].queryset = ConsignerInfo.objects.filter(id=cg_consigner_id)
         else:
@@ -56,15 +56,15 @@ class ConsignmentgoodsaddForm(forms.ModelForm):
 
         # Limit cg_consignee queryset to only the selected/active record to avoid loading all options
         cg_consignee_id = None
-        if self.instance and self.instance.cg_consignee_id:
-            cg_consignee_id = self.instance.cg_consignee_id
-        elif 'initial' in kwargs and 'cg_consignee' in kwargs['initial']:
-            cg_consignee_id = kwargs['initial']['cg_consignee']
-        elif hasattr(self, 'data') and self.data and self.data.get('cg_consignee'):
+        if hasattr(self, 'data') and self.data and self.data.get('cg_consignee'):
             try:
                 cg_consignee_id = int(self.data.get('cg_consignee'))
             except (ValueError, TypeError):
                 pass
+        if not cg_consignee_id and self.instance and self.instance.cg_consignee_id:
+            cg_consignee_id = self.instance.cg_consignee_id
+        elif not cg_consignee_id and 'initial' in kwargs and 'cg_consignee' in kwargs['initial']:
+            cg_consignee_id = kwargs['initial']['cg_consignee']
         if cg_consignee_id:
             self.fields['cg_consignee'].queryset = ConsigneeInfo.objects.filter(id=cg_consignee_id)
         else:

@@ -83,7 +83,19 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             return redirect(request.META['HTTP_REFERER'])
         else:
             print("Consignment Goods form is not valid", form.errors)
-            messages.error(request, 'Record Not Updated Successfully')
+            error_messages = []
+            for field in form:
+                for error in field.errors:
+                    error_messages.append(f"{field.label}: {error}")
+            for error in form.non_field_errors():
+                error_messages.append(error)
+            
+            if error_messages:
+                error_text = " | ".join(error_messages)
+                messages.error(request, f'Record Not Updated Successfully. Reason: {error_text}')
+            else:
+                messages.error(request, 'Record Not Updated Successfully')
+                
             return redirect(request.META['HTTP_REFERER'])
 
 # List consignmentgoods

@@ -595,8 +595,13 @@
                                     title="View POD">
                                     <i class="fas fa-file-pdf"></i> POD
                                 </a>
+                                {% elif item.is_delivered %}
+                                {# Trip is closed but POD file not found #}
+                                <span style="display:inline-flex; align-items:center; gap:0.3rem; color:#10b981; font-size:0.85rem; font-weight:600;" title="Delivered - POD Pending">
+                                    <i class="fas fa-check-circle"></i> Delivered
+                                </span>
                                 {% elif item.track_link %}
-                                {# No POD yet — show Track button #}
+                                {# Active trip — show Track button #}
                                 <a href="{{ item.track_link }}" target="_blank"
                                     style="display:inline-flex; align-items:center; gap:0.3rem; color:var(--primary); text-decoration:none; font-size:0.85rem;"
                                     title="Track Vehicle">

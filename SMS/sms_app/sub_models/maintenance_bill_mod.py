@@ -1,5 +1,6 @@
 from django.db import models
 from ..sub_models.maintenance_mod import MaintenanceInfo
+from ..sub_models.my_user_mod import MyUser
 
 class MaintenanceBillInfo(models.Model):
     mnb_maintenance = models.ForeignKey(MaintenanceInfo, on_delete=models.CASCADE, related_name="bills_v1")
@@ -17,6 +18,8 @@ class MaintenanceBillInfo(models.Model):
     mnb_bill_upload = models.FileField(upload_to='maintenance_bills_v1/', blank=True, null=True)
     mnb_created_at = models.DateTimeField(auto_now_add=True)
     mnb_updated_at = models.DateTimeField(auto_now=True)
+    mnb_created_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='mnb_created_bills')
+    mnb_updated_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='mnb_updated_bills')
 
     def __str__(self):
         return f"Bill {self.mnb_bill_no} for {self.mnb_maintenance.mi_vehicle.vm_registrationnumber}"

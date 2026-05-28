@@ -336,12 +336,8 @@ def invoice_documents_add(request, trip_id):
             if _copy_stored_file(invoice_doc.id_pod_doc, trip.td_pod):
                 invoice_doc.save()
     elif not invoice_doc:
-        ready_status = Tripstatusinfo.objects.filter(Q(id=9) | Q(status='Ready for Invoice')).first()
-        ready_status_id = ready_status.id if ready_status else 9
-
         invoice_doc = InvoiceDocumentInfo(
             id_tripnumber=trip.tr_tripnumber,
-            id_status=ready_status,
             id_updated_by=request.user
         )
         if files_instance.tcf_pod:
@@ -438,12 +434,8 @@ def invoice_documents_add(request, trip_id):
         settlement_form = TripSettlementForm(instance=trip)
         files_form = TripclosurefilesForm(instance=files_instance)
 
-        # Default status to Ready for Invoice (ID 9 or by name)
-        ready_status = Tripstatusinfo.objects.filter(Q(id=9) | Q(status='Ready for Invoice')).first()
-        ready_status_id = ready_status.id if ready_status else 9
-
-        if not invoice_doc:
-            invoice_form = InvoiceDocumentForm(initial={'id_status': ready_status_id})
+        if not invoice_doc or not invoice_doc.id_status:
+            invoice_form = InvoiceDocumentForm(initial={'id_status': None})
         else:
             invoice_form = InvoiceDocumentForm(instance=invoice_doc)
 
@@ -496,4 +488,9 @@ def invoice_documents_add(request, trip_id):
             trip.tr_enquirynumber.en_enquirynumber if trip.tr_enquirynumber else ''
         ),
         'va_sale': va_sale,
+        'live_customer_ref': (
+            trip.tr_consignmentnumber.co_cusrefnum
+            if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_cusrefnum
+            else trip.tr_customerref or ''
+        ),
     })

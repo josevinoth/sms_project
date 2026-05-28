@@ -385,6 +385,7 @@
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         .status-active {
@@ -600,6 +601,7 @@
         {% endif %}
 
         <div class="stats-grid">
+            <!-- Card 1: Active Booking (no vehicle yet) -->
             <a href="{% url 'customer_enquiry_list' %}?status=active" style="text-decoration: none; color: inherit;">
                 <div class="stat-card" style="cursor: pointer;">
                     <div class="stat-icon icon-blue">
@@ -609,6 +611,17 @@
                     <div class="stat-label">Active Bookings</div>
                 </div>
             </a>
+            <!-- Card 2: Vehicle Allotted (vehicle assigned, trip not started) -->
+            <a href="{% url 'customer_enquiry_list' %}?status=allotted" style="text-decoration: none; color: inherit;">
+                <div class="stat-card" style="cursor: pointer;">
+                    <div class="stat-icon" style="background: rgba(168, 85, 247, 0.1); color: #a855f7;">
+                        <i class="fas fa-truck-loading"></i>
+                    </div>
+                    <div class="stat-value">{{ allotted }}</div>
+                    <div class="stat-label">Vehicle Allotted</div>
+                </div>
+            </a>
+            <!-- Card 3: In Transit (trip started / running) -->
             <a href="{% url 'customer_enquiry_list' %}?status=transit" style="text-decoration: none; color: inherit;">
                 <div class="stat-card" style="cursor: pointer;">
                     <div class="stat-icon icon-orange">
@@ -618,6 +631,7 @@
                     <div class="stat-label">In-Transit</div>
                 </div>
             </a>
+            <!-- Card 4: Delivered (trip closed/settled — business trips only) -->
             <a href="{% url 'customer_enquiry_list' %}?status=delivered" style="text-decoration: none; color: inherit;">
                 <div class="stat-card" style="cursor: pointer;">
                     <div class="stat-icon icon-green">
@@ -625,15 +639,6 @@
                     </div>
                     <div class="stat-value">{{ delivered }}</div>
                     <div class="stat-label">Delivered (MTD)</div>
-                </div>
-            </a>
-            <a href="{% url 'customer_enquiry_list' %}?status=cancelled" style="text-decoration: none; color: inherit;">
-                <div class="stat-card" style="cursor: pointer;">
-                    <div class="stat-icon icon-pink">
-                        <i class="fas fa-ban"></i>
-                    </div>
-                    <div class="stat-value">{{ cancelled }}</div>
-                    <div class="stat-label">Cancelled</div>
                 </div>
             </a>
         </div>
@@ -687,8 +692,6 @@
                                 title="Consignment Note" target="_blank">
                                 <i class="fas fa-file-alt"></i></a>
                             {% endif %}
-                            <a href="{% url 'download_dmr' trip.id %}" class="action-icon" title="Download DMR"><i
-                                    class="fas fa-file-excel"></i></a>
                             {% if trip.tc_financestatus_id == 2 or trip.tc_financestatus_id == 7 %}
                             <a href="{% url 'download_pod' trip.id %}" class="action-icon" title="View POD"><i
                                     class="fas fa-file-pdf"></i></a>
