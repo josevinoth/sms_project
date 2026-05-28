@@ -728,17 +728,17 @@ def load_driver_details(request):
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license', flat=True))
     driver_license_exp_date = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license_exp_date', flat=True))
-    if active_trip:
-        active_trip.tr_drivername = new_driver_name
-        active_trip.tr_drivernumber = new_driver_number
-        active_trip.tr_driverlicence = new_driver_lic
-        active_trip.tr_driver_license_exp_date = new_driver_lic_exp_date
-        active_trip.save()
+    vendor_id = list(
+        VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_vendor_id', flat=True))
+
+    driver_license_exp_date = [str(d) if d else '' for d in driver_license_exp_date]
+
     data = {
         'driver_name': driver_name,
         'driver_number': driver_number,
         'driver_license': driver_license,
         'driver_license_exp_date': driver_license_exp_date,
+        'vendor_id': vendor_id,
     }
     return HttpResponse(json.dumps(data))
 
@@ -1098,6 +1098,7 @@ def vehicle_allotment_replace(request, allotment_id):
             new_driver_number = request.POST.get('va_drivernumber')
             new_driver_lic = request.POST.get('va_driver_lic')
             new_driver_lic_expiry = request.POST.get('va_driver_lic_expiry')
+            new_vendor_id = request.POST.get('va_vendor')
             reason = request.POST.get('reason', '')
 
             if not reason:
@@ -1124,7 +1125,7 @@ def vehicle_allotment_replace(request, allotment_id):
                 va_replacement_reason=reason,
                 va_replacement_date=timezone.now(),
                 va_updated_by_id=request.session.get('ses_userID'),
-                va_vendor=old_va.va_vendor,
+                va_vendor_id=new_vendor_id if new_vendor_id else None,
                 va_sale=get_decimal(request.POST.get('va_sale'), old_va.va_sale),
                 va_standardbuy=get_decimal(request.POST.get('va_standardbuy'), old_va.va_standardbuy),
                 va_specialbuy=get_decimal(request.POST.get('va_specialbuy'), old_va.va_specialbuy),
