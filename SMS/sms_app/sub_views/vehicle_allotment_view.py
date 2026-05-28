@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Sum, Q, Count
 from ..forms import VehicleallotmentForm
 from ..models import Enquirynotevehicle, TripdetailInfo, OwnershipInfo, User_extInfo, ConsignmentdetailInfo, \
@@ -1115,54 +1116,59 @@ def vehicle_allotment_replace(request, allotment_id):
     """
     if request.method == "POST":
         try:
-            old_va = Vehicle_allotmentInfo.objects.get(id=allotment_id)
+            with transaction.atomic():
+                old_va = Vehicle_allotmentInfo.objects.select_for_update().get(id=allotment_id)
 
-            # Get new details from POST
-            new_vehicle_source_id = request.POST.get('va_vehiclesource')
-            new_vehicle_id = request.POST.get('va_vehiclenumber')
-            new_vehicle_mkt = request.POST.get('va_vehiclenumber_mkt')
-            new_vehicletype_placed_id = request.POST.get('va_vehicletype_placed')
-            new_driver_name = request.POST.get('va_drivername')
-            new_driver_number = request.POST.get('va_drivernumber')
-            new_driver_lic = request.POST.get('va_driver_lic')
-            new_driver_lic_expiry = request.POST.get('va_driver_lic_expiry')
-            new_vendor_id = request.POST.get('va_vendor')
-            reason = request.POST.get('reason', '')
+                existing_replacement = old_va.replacement_chain.order_by('-id').first()
+                if old_va.va_status_id == 2 and existing_replacement:
+                    return JsonResponse({'success': True, 'new_id': existing_replacement.id})
 
-            if not reason:
-                return JsonResponse({'success': False, 'message': 'Reason for replacement is required.'})
+                # Get new details from POST
+                new_vehicle_source_id = request.POST.get('va_vehiclesource')
+                new_vehicle_id = request.POST.get('va_vehiclenumber')
+                new_vehicle_mkt = request.POST.get('va_vehiclenumber_mkt')
+                new_vehicletype_placed_id = request.POST.get('va_vehicletype_placed')
+                new_driver_name = request.POST.get('va_drivername')
+                new_driver_number = request.POST.get('va_drivernumber')
+                new_driver_lic = request.POST.get('va_driver_lic')
+                new_driver_lic_expiry = request.POST.get('va_driver_lic_expiry')
+                new_vendor_id = request.POST.get('va_vendor')
+                reason = request.POST.get('reason', '')
 
-            # Step 1: Create New Allotment
-            new_va = Vehicle_allotmentInfo.objects.create(
-                va_enquirynumber=old_va.va_enquirynumber,
-                va_vehiclesource_id=new_vehicle_source_id,
-                va_vehicletype_id=request.POST.get('va_vehicletype') or old_va.va_vehicletype_id,
-                va_vehicletype_placed_id=new_vehicletype_placed_id if new_vehicletype_placed_id else old_va.va_vehicletype_placed_id,
-                va_vehicletype_selection_requested=True if request.POST.get(
-                    'va_vehicletype_selection_requested') == 'on' else False,
-                va_vehicletype_selection_placed=True if request.POST.get(
-                    'va_vehicletype_selection_placed') == 'on' else False,
-                va_vehiclenumber_id=new_vehicle_id if new_vehicle_id else None,
-                va_vehiclenumber_mkt=new_vehicle_mkt,
-                va_drivername=new_driver_name,
-                va_drivernumber=new_driver_number,
-                va_driver_lic=new_driver_lic,
-                va_driver_lic_expiry=new_driver_lic_expiry,
-                va_status_id=2,  # Vehicle Replaced
-                va_replaced_allotment=old_va,
-                va_replacement_reason=reason,
-                va_replacement_date=timezone.now(),
-                va_updated_by_id=request.session.get('ses_userID'),
-                va_vendor_id=new_vendor_id if new_vendor_id else None,
-                va_sale=get_decimal(request.POST.get('va_sale'), old_va.va_sale),
-                va_standardbuy=get_decimal(request.POST.get('va_standardbuy'), old_va.va_standardbuy),
-                va_specialbuy=get_decimal(request.POST.get('va_specialbuy'), old_va.va_specialbuy),
-                va_profit_percentage=get_decimal(request.POST.get('va_profit_percentage'), old_va.va_profit_percentage)
-            )
+                if not reason:
+                    return JsonResponse({'success': False, 'message': 'Reason for replacement is required.'})
 
-            # Step 2: Mark Old Allotment as Replaced
-            old_va.va_status_id = 2  # Vehicle Replaced
-            old_va.save()
+                # Step 1: Create New Allotment
+                new_va = Vehicle_allotmentInfo.objects.create(
+                    va_enquirynumber=old_va.va_enquirynumber,
+                    va_vehiclesource_id=new_vehicle_source_id,
+                    va_vehicletype_id=request.POST.get('va_vehicletype') or old_va.va_vehicletype_id,
+                    va_vehicletype_placed_id=new_vehicletype_placed_id if new_vehicletype_placed_id else old_va.va_vehicletype_placed_id,
+                    va_vehicletype_selection_requested=True if request.POST.get(
+                        'va_vehicletype_selection_requested') == 'on' else False,
+                    va_vehicletype_selection_placed=True if request.POST.get(
+                        'va_vehicletype_selection_placed') == 'on' else False,
+                    va_vehiclenumber_id=new_vehicle_id if new_vehicle_id else None,
+                    va_vehiclenumber_mkt=new_vehicle_mkt,
+                    va_drivername=new_driver_name,
+                    va_drivernumber=new_driver_number,
+                    va_driver_lic=new_driver_lic,
+                    va_driver_lic_expiry=new_driver_lic_expiry,
+                    va_status_id=2,  # Vehicle Replaced
+                    va_replaced_allotment=old_va,
+                    va_replacement_reason=reason,
+                    va_replacement_date=timezone.now(),
+                    va_updated_by_id=request.session.get('ses_userID'),
+                    va_vendor=old_va.va_vendor,
+                    va_sale=get_decimal(request.POST.get('va_sale'), old_va.va_sale),
+                    va_standardbuy=get_decimal(request.POST.get('va_standardbuy'), old_va.va_standardbuy),
+                    va_specialbuy=get_decimal(request.POST.get('va_specialbuy'), old_va.va_specialbuy),
+                    va_profit_percentage=get_decimal(request.POST.get('va_profit_percentage'), old_va.va_profit_percentage)
+                )
+
+                # Step 2: Mark Old Allotment as Replaced
+                old_va.va_status_id = 2  # Vehicle Replaced
+                old_va.save()
 
             # Step 3: Update Active Trip if exists
             old_vehicle_num = str(old_va.va_vehiclenumber) if old_va.va_vehiclenumber else old_va.va_vehiclenumber_mkt

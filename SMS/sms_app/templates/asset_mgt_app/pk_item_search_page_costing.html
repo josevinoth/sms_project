@@ -1,6 +1,7 @@
 {% load widget_tweaks %}
 
 <div class="container-fluid mt-2">
+    {% if results %}
     <div class="form-section-title">
         <i class="fas fa-warehouse mr-2"></i> Packing Inventory Selection
     </div>
@@ -41,20 +42,17 @@
                             </a>
                         </td>
                     </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="9" class="text-center py-4 text-muted italic">Use the search button above to load stock items.</td>
-                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <script>
     $(document).ready(function() {
-        if (!$.fn.DataTable.isDataTable('#pk_item_search_costing_list')) {
+        if ($('#pk_item_search_costing_list tbody tr').length && !$.fn.DataTable.isDataTable('#pk_item_search_costing_list')) {
             $('#pk_item_search_costing_list').DataTable({
                 pageLength: 10,
                 dom: 'lfrtip',
@@ -62,4 +60,4 @@
             });
         }
     });
-</script>
+</script>

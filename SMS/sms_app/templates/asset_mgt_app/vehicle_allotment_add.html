@@ -1,38 +1,101 @@
-{% extends "asset_mgt_app/base_1.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+{% block title %}Vehicle Allotment{% endblock %}
 {% block content %}
-<div id="top-alert" class="alert alert-warning w-50 " role="alert" style="display: none;"></div>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<style>
+	.vehicle-allotment-modern .legacy-form-card {
+		padding: 0 !important;
+		overflow: hidden;
+	}
+
+	.vehicle-allotment-modern .form-grid-body {
+		padding: 0.9rem 1rem 0.75rem;
+	}
+
+	.vehicle-allotment-modern .form-control,
+	.vehicle-allotment-modern .custom-select {
+		background: var(--input-bg) !important;
+		border: 1.5px solid var(--input-border) !important;
+		border-radius: 8px !important;
+		color: var(--text-main) !important;
+		font-weight: 700;
+		min-height: 30px;
+	}
+
+	.vehicle-allotment-modern textarea.form-control {
+		min-height: 58px !important;
+		height: 58px !important;
+		border-radius: 8px !important;
+	}
+
+	.vehicle-allotment-modern .form-section {
+		padding: 1rem !important;
+		margin-bottom: 0.65rem !important;
+		border-radius: 14px;
+	}
+
+	.vehicle-allotment-modern .form-section-title {
+		margin-bottom: 0.65rem !important;
+		font-size: 0.78rem;
+	}
+
+	.vehicle-allotment-modern .form-group-modern {
+		margin-bottom: 0.65rem !important;
+	}
+
+	.vehicle-allotment-modern .form-label-modern {
+		margin-bottom: 0.25rem !important;
+		font-size: 0.72rem;
+	}
+
+	.vehicle-allotment-modern .form-actions {
+		margin-top: 0.35rem;
+	}
+
+	.vehicle-allotment-modern .vehicle-check-wrap {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		min-height: 34px;
+	}
+
+	.vehicle-allotment-modern .vehicle-check,
+	.vehicle-allotment-modern .modal-vehicle-check {
+		accent-color: var(--accent-blue);
+	}
+</style>
+<div id="top-alert" class="alert alert-warning w-50" role="alert" style="display: none;"></div>
 <form method="POST" action="" id="vehicle_allotment" data-vehicle_source-url="{% url 'load_vehicle_source' %}">
 	{% csrf_token %}
-	<div class="row mt-4">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3">
-					<div class="card-header text-center ">
-						<div class="d-flex align-items-center">
-							<h3>Add Vehicle Allotment</h3>
-							<a href="{% url 'vehicle_allotment_insert' enquiry_num_id %}" class="btn btn-primary ml-3">
+	<div class="container-fluid mt-2 vehicle-allotment-modern">
+		<div class="modern-card legacy-form-card mb-3">
+					<div class="modern-header mb-0">
+						<div class="d-flex align-items-center justify-content-between flex-wrap">
+							<h2 class="mb-0 text-white"><i class="fas fa-truck-loading mr-2"></i> Add Vehicle Allotment</h2>
+							<div class="d-flex align-items-center flex-wrap">
+							<a href="{% url 'vehicle_allotment_insert' enquiry_num_id %}" class="btn-modern btn-highlight-cyan">
 								<i class="fas fa-plus"></i> Add
 							</a>
 							{% if va %}
 								{% if va.va_status_id == 2 %}
-								<button type="button" class="btn btn-danger ml-2" data-toggle="modal" data-target="#replaceVehicleModal">
+								<button type="button" class="btn-modern btn-cancel" data-toggle="modal" data-target="#replaceVehicleModal">
 									<i class="fas fa-sync"></i> Replace Vehicle
 								</button>
 								{% endif %}
 								{% if va.va_status_id == 3 %}
-								<button type="button" class="btn btn-secondary ml-2" data-toggle="modal" data-target="#replaceDriverModal">
+								<button type="button" class="btn-modern btn-cancel" data-toggle="modal" data-target="#replaceDriverModal">
 									<i class="fas fa-user-edit"></i> Replace Driver
 								</button>
 								{% endif %}
 							<a href="{% url 'tripdetail_insert' %}?vehicle_allotment_id={{ va.id }}&enquiry_num_id={{ enquiry_num_id }}"
-								class="btn btn-warning ml-2 {% if va.va_status.replacement_status != 'Vehicle Assigned' and va.va_status.replacement_status != 'Vehicle Replaced' %}disable_a_href{% endif %}">
+								class="btn-modern btn-submit {% if va.va_status.replacement_status != 'Vehicle Assigned' %}disable_a_href{% endif %}">
 								<i class="fas fa-truck-loading"></i> Business Empty / Empty Trip
 							</a>
 							{% endif %}
-							<div class="col-md-4 d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
 								<!-- Email Alert Button -->
-								<button type="button" class="btn btn-warning btn-lg" data-toggle="modal"
+								<button type="button" class="btn-modern btn-submit" data-toggle="modal"
 									data-target="#vehicleAllotmentEmailModal">
 									<i class="fas fa-envelope-square"></i> Email Alert
 								</button>
@@ -40,167 +103,139 @@
 							</div>
 						</div>
 					</div>
-					<div class="card-body bg-light">
-						<div class="row" id="vehicle_allotment_id">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Enquiry Number</span>
+					<div class="form-grid-body">
+						<div class="row row-compact" id="vehicle_allotment_id">
+							<div class="col-12 col-md-6 col-xl-3 col-compact">
+								<div class="form-section h-100">
+									<div class="form-section-title"><i class="fas fa-file-alt"></i> Enquiry & Route</div>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Enquiry Number</label>
+										{% render_field vehicle_allotment_form.va_enquirynumber id="va_enquirynumber" class="form-control form-control-modern disable_a_href" %}
 									</div>
-									{% render_field vehicle_allotment_form.va_enquirynumber id="va_enquirynumber" class="form-control disable_a_href" %}
+									<div class="form-group-modern">
+										<label class="form-label-modern">Customer</label>
+										<input type="text" class="form-control form-control-modern" value="{{ customer_name }}" readonly>
+									</div>
+									<div class="form-group-modern">
+										<label class="form-label-modern">From</label>
+										<input type="text" class="form-control form-control-modern" value="{{ from_location }}" readonly>
+									</div>
+									<div class="form-group-modern">
+										<label class="form-label-modern">To</label>
+										<input type="text" class="form-control form-control-modern" value="{{ to_location }}" readonly>
+									</div>
 								</div>
-								<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Customer</span>
-								</div>
-								<input type="text" class="form-control" value="{{ customer_name }}" readonly>
 							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">From</span>
-								</div>
-								<input type="text" class="form-control" value="{{ from_location }}" readonly>
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">To</span>
-								</div>
-								<input type="text" class="form-control" value="{{ to_location }}" readonly>
-							</div>
-							</div>
-							<div class="col-3">
-								<div class="row align-items-center mb-3">
-									<div class="col-10">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Vehicle Type Requested</span>
+
+							<div class="col-12 col-md-6 col-xl-3 col-compact">
+								<div class="form-section h-100">
+									<div class="form-section-title"><i class="fas fa-truck"></i> Vehicle Details</div>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Vehicle Type Requested <span class="ml-2 text-muted">Qty: <span id="vehicle_quantity_display">0</span></span></label>
+										<div class="row no-gutters">
+											<div class="col-10 pr-1">
+												{% render_field vehicle_allotment_form.va_vehicletype id="va_vehicletype" onfocus="vehicle_requested()" class="form-control form-control-modern" %}
 											</div>
-											{% render_field vehicle_allotment_form.va_vehicletype id="va_vehicletype" onfocus="vehicle_requested()" class="form-control" %}
-											<div class="input-group-append">
-												<span class="input-group-text">Qty: <span id="vehicle_quantity_display">0</span></span>
+											<div class="col-2 vehicle-check-wrap">
+												<input type="checkbox" id="chk_requested" name="va_vehicletype_selection_requested" class="vehicle-check" style="width:22px; height:22px; cursor:pointer;" {% if va.va_vehicletype_selection_requested %}checked{% endif %}>
+												<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="Verify Requested"></i>
 											</div>
 										</div>
 									</div>
-									<div class="col-2"
-										style="display:flex; align-items:center; justify-content:center; height:38px;">
-										<input type="checkbox" id="chk_requested" name="va_vehicletype_selection_requested" class="vehicle-check mr-2"
-											style="width:22px; height:22px; cursor:pointer; vertical-align:middle;" {% if va.va_vehicletype_selection_requested %}checked{% endif %}>
-										<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top"
-											title="Verify Requested"></i>
-									</div>
-								</div>
-								<div class="row align-items-center mb-3">
-									<div class="col-10">
-										<div class="input-group input-group-sm">
-											<div class="input-group-prepend">
-												<span class="input-group-text">Vehicle Type Placed</span>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Vehicle Type Placed</label>
+										<div class="row no-gutters">
+											<div class="col-10 pr-1">
+												{% render_field vehicle_allotment_form.va_vehicletype_placed id="va_vehicletype_placed" class="form-control form-control-modern" onchange="loadAvailableVehicleNumbers()" %}
 											</div>
-											{% render_field vehicle_allotment_form.va_vehicletype_placed id="va_vehicletype_placed"  class="form-control" onchange="loadAvailableVehicleNumbers()" %}
+											<div class="col-2 vehicle-check-wrap">
+												<input type="checkbox" id="chk_placed" name="va_vehicletype_selection_placed" class="vehicle-check" style="width:22px; height:22px; cursor:pointer;" {% if va.va_vehicletype_selection_placed %}checked{% endif %}>
+												<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="Verify Placed"></i>
+											</div>
 										</div>
 									</div>
-									<div class="col-2"
-										style="display:flex; align-items:center; justify-content:center; height:38px;">
-										<input type="checkbox" id="chk_placed" name="va_vehicletype_selection_placed" class="vehicle-check mr-2"
-											   style="width:22px; height:22px; cursor:pointer; vertical-align:middle;" {% if va.va_vehicletype_selection_placed %}checked{% endif %}>
-										<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="Verify Placed"></i>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Vehicle Source</label>
+										{% render_field vehicle_allotment_form.va_vehiclesource id="va_vehiclesource" onchange="market_vehicle_enable_disable()" class="form-control form-control-modern" %}
 									</div>
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Source</span>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Vehicle Number</label>
+										{% render_field vehicle_allotment_form.va_vehiclenumber id="va_vehiclenumber" class="form-control form-control-modern" %}
 									</div>
-									{% render_field vehicle_allotment_form.va_vehiclesource id="va_vehiclesource" onchange="market_vehicle_enable_disable()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Number</span>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Vehicle Number (Market)</label>
+										{% render_field vehicle_allotment_form.va_vehiclenumber_mkt id="va_vehiclenumber_mkt" class="form-control form-control-modern market-input" maxlength="10" pattern="[A-Z0-9]{7,10}" title="Enter exactly 10 uppercase letters or digits" %}
 									</div>
-									{% render_field vehicle_allotment_form.va_vehiclenumber id="va_vehiclenumber" class="form-control" %}
 								</div>
 							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Number (Market)</span>
+
+							<div class="col-12 col-md-6 col-xl-3 col-compact">
+								<div class="form-section h-100">
+									<div class="form-section-title"><i class="fas fa-id-card"></i> Vendor & Driver</div>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Vendor Name <span id="vendor_required_star" style="color:red; display:none">*</span></label>
+										{% render_field vehicle_allotment_form.va_vendor class="form-control form-control-modern" id="va_vendor" onchange="loadVendorBuyRate()" data-selected=vehicle_allotment_form.va_vendor.value %}
 									</div>
-									{% render_field vehicle_allotment_form.va_vehiclenumber_mkt id="va_vehiclenumber_mkt" class="form-control market-input" maxlength="10" pattern="[A-Z0-9]{7,10}" title="Enter exactly 10 uppercase letters or digits" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-									<span class="input-group-text">Vendor Name <span id="vendor_required_star" style="color:red; display:none">*</span></span>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Driver Name <span id="driver_required_star" style="color:red; display:none">*</span></label>
+										{% render_field vehicle_allotment_form.va_drivername id="va_drivername" class="form-control form-control-modern" %}
 									</div>
-									{% render_field vehicle_allotment_form.va_vendor class="form-control" id="va_vendor" onchange="loadVendorBuyRate()"  data-selected=vehicle_allotment_form.va_vendor.value %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-   										 <span class="input-group-text">Driver Name <span id="driver_required_star" style="color:red; display:none">*</span></span>
+									<input type="hidden" id="va_driver_master_id" name="va_driver_master_id">
+									<div class="form-group-modern">
+										<label class="form-label-modern">Driver Number</label>
+										{% render_field vehicle_allotment_form.va_drivernumber id="va_drivernumber" pattern="\d{10}" maxlength="10" minlength="10" class+="form-control form-control-modern" title="Driver Number must be exactly 10 digits" %}
 									</div>
-									{% render_field vehicle_allotment_form.va_drivername id="va_drivername" class="form-control " %}
-								</div>
-								<input type="hidden" id="va_driver_master_id" name="va_driver_master_id">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Driver Number</span>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Driver License</label>
+										{% render_field vehicle_allotment_form.va_driver_lic id="va_driver_lic" class="form-control form-control-modern" %}
 									</div>
-									{% render_field vehicle_allotment_form.va_drivernumber id="va_drivernumber" pattern="\d{10}" maxlength="10" minlength="10" class+="form-control" title="Driver Number must be exactly 10 digits" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Driver License</span>
+									<div class="form-group-modern">
+										<label class="form-label-modern">License Expiry</label>
+										{% render_field vehicle_allotment_form.va_driver_lic_expiry id="va_driver_lic_expiry" type="Date" class="form-control form-control-modern" %}
 									</div>
-									{% render_field vehicle_allotment_form.va_driver_lic id="va_driver_lic" class="form-control " %}
 								</div>
 							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">License Expiry</span>
+
+							<div class="col-12 col-md-6 col-xl-3 col-compact">
+								<div class="form-section h-100">
+									<div class="form-section-title"><i class="fas fa-coins"></i> Commercial & Status</div>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Standard Buy</label>
+										{% render_field vehicle_allotment_form.va_standardbuy id="va_standardbuy" class="form-control form-control-modern" readonly="readonly" %}
 									</div>
-									{% render_field vehicle_allotment_form.va_driver_lic_expiry id="va_driver_lic_expiry" type="Date" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3 ">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Standard Buy</span>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Special Buy</label>
+										{% render_field vehicle_allotment_form.va_specialbuy id="va_specialbuy" class="form-control form-control-modern" %}
 									</div>
-									{% render_field vehicle_allotment_form.va_standardbuy id="va_standardbuy" class="form-control" readonly="readonly" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Special Buy</span>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Sell</label>
+										{% render_field vehicle_allotment_form.va_sale id="va_sale" class="form-control form-control-modern" %}
 									</div>
-									{% render_field vehicle_allotment_form.va_specialbuy id="va_specialbuy" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3 ">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Sell</span>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Profit %</label>
+										{% render_field vehicle_allotment_form.va_profit_percentage id="va_profit_percentage" class="form-control form-control-modern disable_a_href" readonly="readonly" %}
 									</div>
-									{% render_field vehicle_allotment_form.va_sale id="va_sale" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3 ">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Profit %</span>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Status</label>
+										<select name="va_status" id="va_status" class="form-control form-control-modern">
+											{% for choice in vehicle_allotment_form.va_status.field.queryset %}
+												<option value="{{ choice.id }}" {% if choice.id == vehicle_allotment_form.instance.va_status_id %}selected{% endif %}>
+													{{ choice.replacement_status }}
+												</option>
+											{% endfor %}
+										</select>
 									</div>
-									{% render_field vehicle_allotment_form.va_profit_percentage id="va_profit_percentage" class="form-control disable_a_href" readonly="readonly" %}
+									{% render_field vehicle_allotment_form.va_updated_by id="va_updated_by" hidden="True" class="form-control" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Status</span>
-									</div>
-									<select name="va_status" id="va_status" class="form-control">
-										{% for choice in vehicle_allotment_form.va_status.field.queryset %}
-											<option value="{{ choice.id }}" {% if choice.id == vehicle_allotment_form.instance.va_status_id %}selected{% endif %}>
-												{{ choice.replacement_status }}
-											</option>
-										{% endfor %}
-									</select>
-								</div>
-								{% render_field vehicle_allotment_form.va_updated_by id="va_updated_by" hidden="True" class="form-control" %}
 							</div>
-							<div class="input-group input-group-sm mb-3 container-fluid">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Remarks</span>
+
+							<div class="col-12 col-compact">
+								<div class="form-section">
+									<div class="form-section-title"><i class="fas fa-comment-alt"></i> Remarks</div>
+									<div class="form-group-modern mb-0">
+										{% render_field vehicle_allotment_form.va_remarks class="form-control form-control-modern" %}
+									</div>
 								</div>
-								{% render_field vehicle_allotment_form.va_remarks class="form-control" %}
 							</div>
 						</div>
 						<div class="row">
@@ -214,17 +249,19 @@
 							</div>
 							<div class="col-1"></div>
 						</div>
-						<button type="submit" class="btn btn-success" id="vehicle_allotment_submit_id"><i
-								class="fas fa-check"></i> Submit</button>
-						<button type="submit" class="btn btn-primary ml-2" id="vehicle_allotment_submit_email_id"
-							name="submit_and_email" value="1"><i class="fas fa-envelope"></i> Submit & Email</button>
-						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
+						<div class="form-actions d-flex justify-content-between align-items-center flex-wrap">
+							<div>
+								<button type="submit" class="btn-modern btn-submit" id="vehicle_allotment_submit_id"><i
+										class="fas fa-check"></i> Submit</button>
+								<button type="submit" class="btn-modern btn-highlight-cyan" id="vehicle_allotment_submit_email_id"
+									name="submit_and_email" value="1"><i class="fas fa-envelope"></i> Submit & Email</button>
+							</div>
+							<a href="{% url 'enquirynote_list' %}" class="btn-modern btn-cancel">
+								<i class="fas fa-times"></i> Cancel
+							</a>
+						</div>
 					</div>
 				</div>
-			</div>
-		</div>
 	</div>
 </form>
 <div class="modal fade" id="vehicleAllotmentEmailModal" tabindex="-1" role="dialog" aria-labelledby="emailModalLabel"
@@ -233,7 +270,7 @@
 		<div class="modal-content">
 			<form id="vehicleEmailForm" method="post" action="{% url 'vehicle_allotment_email' %}">
 				{% csrf_token %}
-				<div class="modal-header bg-info text-white">
+				<div class="modal-header modern-header text-white">
 					<h5 class="modal-title">Vehicle Allotment Email Alert</h5>
 					<button type="button" class="close" data-dismiss="modal">&times;</button>
 				</div>
@@ -248,7 +285,7 @@
 					<input type="hidden" name="va_id" value="{{ va.id }}">
 				</div>
 				<div class="modal-footer justify-content-center">
-					<button type="submit" class="btn btn-primary">
+					<button type="submit" class="btn-modern btn-submit">
 						<i class="fas fa-envelope"></i> Send Email
 					</button>
 				</div>
@@ -258,6 +295,41 @@
 </div>
 {% include "asset_mgt_app/vehicle_allotment_list_woh.html" %}
 <script>
+function normalizeDateForInput(value) {
+	if (Array.isArray(value)) {
+		value = value[0] || "";
+	}
+	if (!value) {
+		return "";
+	}
+	value = String(value).trim();
+	if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+		return value;
+	}
+	var match = value.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+	if (match) {
+		return match[3] + "-" + match[2].padStart(2, "0") + "-" + match[1].padStart(2, "0");
+	}
+	return value;
+}
+
+function setDateFieldValue(selector, value) {
+	var normalized = normalizeDateForInput(value);
+	var element = document.querySelector(selector);
+	if (!element) {
+		return;
+	}
+	if (element._flatpickr) {
+		if (normalized) {
+			element._flatpickr.setDate(normalized, true, "Y-m-d");
+		} else {
+			element._flatpickr.clear();
+		}
+	} else {
+		$(element).val(normalized).trigger("change");
+	}
+}
+
 	$(document).ready(function () {
 		document.getElementById("va_updated_by").value = '{{user_id}}';
 		document.getElementById("va_enquirynumber").value = '{{enquiry_num_id}}';
@@ -271,41 +343,6 @@
 		loadAvailableVehicleNumbers(); // Ensure list is loaded on start if values exist
 	});
 
-</script>
-<script>
-	$(document).ready(function () {
-		var enquiry_number = "{{ enquiry_num_id }}"; // Make sure this is available in the template
-		$.ajax
-			({
-				url: '{% url 'vehicle_type_counts' %}',  // Ensure this URL matches your Django URL
-				data:
-				{
-					'enquiry_number': enquiry_number,
-				},
-				success: function (response) {
-					var countsFromAjax = response.vehicle_counts;
-					var table = $("#tripdetail_list tbody tr");
-					table.each(function () {
-						var vehicleTypeCell = $(this).find("td:nth-child(3)"); // 3rd column (Vehicle Type Requested)
-						var vehicleType = vehicleTypeCell.text().trim();
-						var allottedTypeCell = $(this).find("td:nth-child(4)"); // 4th column (Vehicle Type Allotted)
-						var allottedType = allottedTypeCell.text().trim();
-						var requestedCount = countsFromAjax[vehicleType] || 0;
-						var allottedCount = countsFromAjax[allottedType] || 0;
-						if (requestedCount === allottedCount) {
-							vehicleTypeCell.css("background-color", "green").css("color", "white");
-						} else if (requestedCount < allottedCount) {
-							vehicleTypeCell.css("background-color", "red").css("color", "white");
-						} else {
-							vehicleTypeCell.css("background-color", "orange").css("color", "black");
-						}
-					});
-				},
-				error: function (xhr, status, error) {
-					console.error("Error fetching vehicle counts:", error);
-				}
-			});
-	});
 </script>
 <script>
 	// Removed duplicate va_vehiclesource handler
@@ -324,14 +361,15 @@
 				'vehicle_number': vehicle_number,
 			},
 			success: function (data) {
-				var driver_name = JSON.parse(data)["driver_name"]
-				var driver_number = JSON.parse(data)["driver_number"]
-				var driver_license = JSON.parse(data)["driver_license"]
-				var driver_license_exp_date = JSON.parse(data)["driver_license_exp_date"]
-				$("#va_drivername").val(driver_name);
-				$("#va_drivernumber").val(driver_number);
-				$("#va_driver_lic").val(driver_license);
-				$("#va_driver_lic_expiry").val(driver_license_exp_date);
+				var parsedData = JSON.parse(data);
+				var driver_name = parsedData["driver_name"] || [];
+				var driver_number = parsedData["driver_number"] || [];
+				var driver_license = parsedData["driver_license"] || [];
+				var driver_license_exp_date = parsedData["driver_license_exp_date"] || [];
+				$("#va_drivername").val(driver_name[0] || "");
+				$("#va_drivernumber").val(driver_number[0] || "");
+				$("#va_driver_lic").val(driver_license[0] || "");
+				setDateFieldValue("#va_driver_lic_expiry", driver_license_exp_date);
 			}
 		});
 	});
@@ -706,7 +744,8 @@ document.addEventListener("DOMContentLoaded", function() {
     market_vehicle_enable_disable();
 });
 </script>
-{% block scripts %}
+{% block extra_js %}
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <script>
 	$("#va_vehiclenumber").select2({
        width: 'resolve'
@@ -775,7 +814,7 @@ $(function () {
         $("#va_driver_master_id").val(ui.item.id);
         $("#va_drivernumber").val(ui.item.number || "");
         $("#va_driver_lic").val(ui.item.lic || "");
-        $("#va_driver_lic_expiry").val(ui.item.expiry || "");
+        setDateFieldValue("#va_driver_lic_expiry", ui.item.expiry);
     },
     change: function (event, ui) {
         // ❌ Manual typing → clear ID
@@ -783,7 +822,7 @@ $(function () {
             $("#va_driver_master_id").val("");
             $("#va_drivernumber").val("");
             $("#va_driver_lic").val("");
-            $("#va_driver_lic_expiry").val("");
+            setDateFieldValue("#va_driver_lic_expiry", "");
         }
     }
 });
@@ -881,7 +920,7 @@ $("#va_vehiclesource").on("change", function () {
         <div class="modal-content">
             <form id="replaceVehicleForm" method="post" action="{% url 'vehicle_allotment_replace' va.id %}">
                 {% csrf_token %}
-                <div class="modal-header bg-info text-white">
+                <div class="modal-header modern-header text-white">
                     <h5 class="modal-title">Replace Vehicle (Breakdown / Accident)</h5>
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
@@ -1029,8 +1068,8 @@ $("#va_vehiclesource").on("change", function () {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-info">Confirm Replacement</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-modern btn-submit">Confirm Replacement</button>
+                    <button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Cancel</button>
                 </div>
             </form>
         </div>
@@ -1045,7 +1084,7 @@ $("#va_vehiclesource").on("change", function () {
         <div class="modal-content">
             <form id="replaceDriverForm" method="post" action="{% url 'vehicle_allotment_driver_replace' va.id %}">
                 {% csrf_token %}
-                <div class="modal-header bg-info text-white">
+                <div class="modal-header modern-header text-white">
                     <h5 class="modal-title">Replace Driver (Only)</h5>
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
@@ -1097,8 +1136,8 @@ $("#va_vehiclesource").on("change", function () {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-info">Confirm Driver Replacement</button>
-                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-modern btn-submit">Confirm Driver Replacement</button>
+                    <button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Cancel</button>
                 </div>
             </form>
         </div>
@@ -1120,7 +1159,7 @@ $("#va_vehiclesource").on("change", function () {
             $("#modal_va_drivername").val("");
             $("#modal_va_drivernumber").val("");
             $("#modal_va_driver_lic").val("");
-            $("#modal_va_driver_lic_expiry").val("");
+            setDateFieldValue("#modal_va_driver_lic_expiry", "");
         } else {
             $("#modal_own_attached_div").show();
             $("#modal_market_div").hide();
@@ -1257,17 +1296,10 @@ $("#va_vehiclesource").on("change", function () {
                 $("#modal_va_drivername").val(d.driver_name && d.driver_name[0] ? d.driver_name[0] : "");
                 $("#modal_va_drivernumber").val(d.driver_number && d.driver_number[0] ? d.driver_number[0] : "");
                 $("#modal_va_driver_lic").val(d.driver_license && d.driver_license[0] ? d.driver_license[0] : "");
-                $("#modal_va_driver_lic_expiry").val(d.driver_license_exp_date && d.driver_license_exp_date[0] ? d.driver_license_exp_date[0] : "");
+                setDateFieldValue("#modal_va_driver_lic_expiry", d.driver_license_exp_date);
                 
                 if (d.vendor_id && d.vendor_id[0]) {
-                    var v_id = d.vendor_id[0];
-                    var v_name = (d.vendor_name && d.vendor_name[0]) ? d.vendor_name[0] : "Attached Vendor";
-                    var vendorDropdown = $("#modal_va_vendor");
-                    
-                    if (vendorDropdown.find(`option[value='${v_id}']`).length === 0) {
-                        vendorDropdown.append(`<option value="${v_id}">${v_name}</option>`);
-                    }
-                    vendorDropdown.val(v_id).trigger('change');
+                    $("#modal_va_vendor").val(d.vendor_id[0]).trigger('change');
                 }
             }
         });
@@ -1297,7 +1329,7 @@ $("#va_vehiclesource").on("change", function () {
             $("#modal_va_drivername").val(ui.item.value);
             $("#modal_va_drivernumber").val(ui.item.number || "");
             $("#modal_va_driver_lic").val(ui.item.lic || "");
-            $("#modal_va_driver_lic_expiry").val(ui.item.expiry || "");
+            setDateFieldValue("#modal_va_driver_lic_expiry", ui.item.expiry);
             return false;
         },
         open: function() {
@@ -1366,7 +1398,7 @@ $("#va_vehiclesource").on("change", function () {
             $("#modal_driver_only_name").val(ui.item.value);
             $("#modal_driver_only_number").val(ui.item.number || "");
             $("#modal_driver_only_lic").val(ui.item.lic || "");
-            $("#modal_driver_only_lic_expiry").val(ui.item.expiry || "");
+            setDateFieldValue("#modal_driver_only_lic_expiry", ui.item.expiry);
             return false;
         },
         appendTo: "#replaceDriverModal"
@@ -1397,5 +1429,5 @@ $("#va_vehiclesource").on("change", function () {
         });
     });
 </script>
-{% endblock scripts %}
+{% endblock extra_js %}
 {% endblock content %}
