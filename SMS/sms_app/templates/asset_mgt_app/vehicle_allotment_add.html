@@ -26,7 +26,7 @@
 								</button>
 								{% endif %}
 							<a href="{% url 'tripdetail_insert' %}?vehicle_allotment_id={{ va.id }}&enquiry_num_id={{ enquiry_num_id }}"
-								class="btn btn-warning ml-2 {% if va.va_status.replacement_status != 'Vehicle Assigned' %}disable_a_href{% endif %}">
+								class="btn btn-warning ml-2 {% if va.va_status.replacement_status != 'Vehicle Assigned' and va.va_status.replacement_status != 'Vehicle Replaced' %}disable_a_href{% endif %}">
 								<i class="fas fa-truck-loading"></i> Business Empty / Empty Trip
 							</a>
 							{% endif %}
@@ -1260,7 +1260,14 @@ $("#va_vehiclesource").on("change", function () {
                 $("#modal_va_driver_lic_expiry").val(d.driver_license_exp_date && d.driver_license_exp_date[0] ? d.driver_license_exp_date[0] : "");
                 
                 if (d.vendor_id && d.vendor_id[0]) {
-                    $("#modal_va_vendor").val(d.vendor_id[0]).trigger('change');
+                    var v_id = d.vendor_id[0];
+                    var v_name = (d.vendor_name && d.vendor_name[0]) ? d.vendor_name[0] : "Attached Vendor";
+                    var vendorDropdown = $("#modal_va_vendor");
+                    
+                    if (vendorDropdown.find(`option[value='${v_id}']`).length === 0) {
+                        vendorDropdown.append(`<option value="${v_id}">${v_name}</option>`);
+                    }
+                    vendorDropdown.val(v_id).trigger('change');
                 }
             }
         });
@@ -1314,6 +1321,9 @@ $("#va_vehiclesource").on("change", function () {
         if (!source) { alert("Please select a vehicle source."); return; }
 
         var form = $(this);
+        var submitBtn = form.find('button[type="submit"]');
+        submitBtn.prop("disabled", true).text("Replacing...");
+        
         form.find(":disabled").prop("disabled", false);
         $.ajax({
             type: form.attr('method'),
@@ -1328,10 +1338,12 @@ $("#va_vehiclesource").on("change", function () {
                     }
                 } else {
                     alert("Error: " + data.message);
+                    submitBtn.prop("disabled", false).text("Confirm Replacement");
                 }
             },
             error: function() {
                 alert("Server error occurred during replacement.");
+                submitBtn.prop("disabled", false).text("Confirm Replacement");
             }
         });
     });
@@ -1366,9 +1378,12 @@ $("#va_vehiclesource").on("change", function () {
     });
 
     // Handle Replace Driver Form submission
-    $("#replaceDriverForm").on("submit", function(e) {
+    $("#replaceDriverForm").on("submit", function (e) {
         e.preventDefault();
         var form = $(this);
+        var submitBtn = form.find('button[type="submit"]');
+        submitBtn.prop("disabled", true).text("Replacing...");
+
         $.ajax({
             type: form.attr('method'),
             url: form.attr('action'),
@@ -1382,10 +1397,12 @@ $("#va_vehiclesource").on("change", function () {
                     }
                 } else {
                     alert("Error: " + data.message);
+                    submitBtn.prop("disabled", false).text("Confirm Driver Replacement");
                 }
             },
             error: function() {
                 alert("Server error occurred during driver replacement.");
+                submitBtn.prop("disabled", false).text("Confirm Driver Replacement");
             }
         });
     });
