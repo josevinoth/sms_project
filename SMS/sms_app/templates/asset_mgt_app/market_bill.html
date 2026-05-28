@@ -591,28 +591,32 @@
     }
 
     function filterTripsByDateRange() {
-        const fromVal = document.getElementById("tripFromDate").value;
-        const toVal = document.getElementById("tripToDate").value;
+        if (tripsDataTable) {
+            tripsDataTable.draw();
+        } else {
+            const fromVal = document.getElementById("tripFromDate").value;
+            const toVal = document.getElementById("tripToDate").value;
 
-        const fromDate = fromVal ? parseInputDate(fromVal) : null;
-        const toDate = toVal ? parseInputDate(toVal) : null;
+            const fromDate = fromVal ? parseInputDate(fromVal) : null;
+            const toDate = toVal ? parseInputDate(toVal) : null;
 
-        document.querySelectorAll("#tripsTableBody tr").forEach(row => {
-            const dateCell = row.children[7]; // Trip Date column (index shifted after adding Customer)
-            if (!dateCell) return;
+            document.querySelectorAll("#tripsTableBody tr").forEach(row => {
+                const dateCell = row.children[7];
+                if (!dateCell) return;
 
-            const tripDateText = dateCell.textContent.trim();
-            if (!tripDateText) return;
+                const tripDateText = dateCell.textContent.trim();
+                if (!tripDateText) return;
 
-            const tripDate = parseDDMMYYYY(tripDateText);
+                const tripDate = parseDDMMYYYY(tripDateText);
 
-            let showRow = true;
+                let showRow = true;
 
-            if (fromDate && tripDate < fromDate) showRow = false;
-            if (toDate && tripDate > toDate) showRow = false;
+                if (fromDate && tripDate < fromDate) showRow = false;
+                if (toDate && tripDate > toDate) showRow = false;
 
-            row.style.display = showRow ? "" : "none";
-        });
+                row.style.display = showRow ? "" : "none";
+            });
+        }
     }
 
     /* Event bindings */
@@ -623,13 +627,51 @@
         document.getElementById("tripFromDate").value = "";
         document.getElementById("tripToDate").value = "";
 
-        document.querySelectorAll("#tripsTableBody tr").forEach(row => {
-            row.style.display = "";
-        });
+        if (tripsDataTable) {
+            tripsDataTable.draw();
+        } else {
+            document.querySelectorAll("#tripsTableBody tr").forEach(row => {
+                row.style.display = "";
+            });
+        }
     });
 
     // Initialize DataTable on page load if there's existing data (edit mode)
     $(document).ready(function () {
+        // Register DataTables custom search filter for date range
+        if (typeof $.fn.dataTable !== 'undefined') {
+            $.fn.dataTable.ext.search.push(
+                function (settings, data, dataIndex) {
+                    if (settings.nTable.id !== 'tripsTable') {
+                        return true;
+                    }
+
+                    const fromVal = document.getElementById("tripFromDate")?.value;
+                    const toVal = document.getElementById("tripToDate")?.value;
+
+                    if (!fromVal && !toVal) {
+                        return true;
+                    }
+
+                    const fromDate = fromVal ? parseInputDate(fromVal) : null;
+                    const toDate = toVal ? parseInputDate(toVal) : null;
+
+                    const tripDateText = data[7] || ""; // Column 7 is Trip Date (0-indexed)
+                    if (!tripDateText.trim()) return true;
+
+                    try {
+                        const tripDate = parseDDMMYYYY(tripDateText.trim());
+                        if (fromDate && tripDate < fromDate) return false;
+                        if (toDate && tripDate > toDate) return false;
+                    } catch (e) {
+                        console.error("Error parsing date in DataTable search:", e);
+                    }
+
+                    return true;
+                }
+            );
+        }
+
         initializeTripsDataTable();
     });
 
