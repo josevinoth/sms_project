@@ -90,7 +90,7 @@
 								</button>
 								{% endif %}
 							<a href="{% url 'tripdetail_insert' %}?vehicle_allotment_id={{ va.id }}&enquiry_num_id={{ enquiry_num_id }}"
-								class="btn-modern btn-submit {% if va.va_status.replacement_status != 'Vehicle Assigned' %}disable_a_href{% endif %}">
+								class="btn-modern btn-submit {% if va.va_status.replacement_status != 'Vehicle Assigned' and va.va_status.replacement_status != 'Vehicle Replaced' %}disable_a_href{% endif %}">
 								<i class="fas fa-truck-loading"></i> Business Empty / Empty Trip
 							</a>
 							{% endif %}

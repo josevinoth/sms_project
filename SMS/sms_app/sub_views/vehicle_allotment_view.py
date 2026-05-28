@@ -1104,6 +1104,7 @@ def vehicle_allotment_replace(request, allotment_id):
                 new_driver_number = request.POST.get('va_drivernumber')
                 new_driver_lic = request.POST.get('va_driver_lic')
                 new_driver_lic_expiry = request.POST.get('va_driver_lic_expiry')
+                new_vendor_id = request.POST.get('va_vendor')
                 reason = request.POST.get('reason', '')
 
                 if not reason:
@@ -1130,7 +1131,7 @@ def vehicle_allotment_replace(request, allotment_id):
                     va_replacement_reason=reason,
                     va_replacement_date=timezone.now(),
                     va_updated_by_id=request.session.get('ses_userID'),
-                    va_vendor=old_va.va_vendor,
+                    va_vendor_id=new_vendor_id if new_vendor_id else old_va.va_vendor_id,
                     va_sale=get_decimal(request.POST.get('va_sale'), old_va.va_sale),
                     va_standardbuy=get_decimal(request.POST.get('va_standardbuy'), old_va.va_standardbuy),
                     va_specialbuy=get_decimal(request.POST.get('va_specialbuy'), old_va.va_specialbuy),
