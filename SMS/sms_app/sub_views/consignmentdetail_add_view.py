@@ -158,6 +158,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                 consignment_detail.co_consignmentnumber = generate_next_number(ConsignmentdetailInfo, 'co_consignmentnumber', prefix, 5)
                 
                 consignment_detail.co_vehicletype = vehicle_type
+                consignment_detail.co_createdby = request.user
                 consignment_detail.save()
 
                 return redirect(f'/SMS/consignmentdetail_update/{consignment_detail.id}')
@@ -241,7 +242,7 @@ def consignmentdetail_list_ajax(request):
     branch = request.GET.get('branch', '')
 
     qs = ConsignmentdetailInfo.objects.select_related(
-        'co_enquirynumber', 'co_customer', 'co_status', 'co_lastmodifiedby',
+        'co_enquirynumber', 'co_customer', 'co_status', 'co_lastmodifiedby', 'co_createdby',
         'co_fromlocaion', 'co_tolocation', 'co_enquirynumber__en_fromlocaion',
         'co_enquirynumber__en_tolocation', 'co_enquirynumber__en_movement_type'
     ).prefetch_related('cg_consignmentnumber', 'cg_consignmentnumber__cg_consigner', 'cg_consignmentnumber__cg_consignee').all()
@@ -288,27 +289,29 @@ def consignmentdetail_list_ajax(request):
     col_map = {
         0: 'id',
         1: 'co_created_at',
-        2: 'co_enquirynumber__en_enquirynumber',
-        3: 'co_consignmentnumber',
-        4: 'co_consignmentdate',
-        5: 'co_vehicelnumber',
-        6: 'co_fromlocaion__place_name',
-        7: 'co_tolocation__place_name',
-        8: 'cg_consignmentnumber__cg_consigner__consigner_name',
-        9: 'cg_consignmentnumber__cg_consignee__consignee_name',
-        10: 'cg_consignmentnumber__cg_consignerinvoice',
-        11: 'cg_consignmentnumber__cg_consignervalue',
-        12: 'cg_consignmentnumber__cg_valueininr',
-        13: 'cg_consignmentnumber__cg_qty',
-        14: 'cg_consignmentnumber__cg_weight',
-        15: 'cg_consignmentnumber__cg_ebillno',
-        16: 'cg_consignmentnumber__cg_consignerinvoice_date',
-        17: 'cg_consignmentnumber__cg_dateofvalidity',
-        18: 'co_containerdescription',
-        20: 'co_enquirynumber__en_movement_type__mt_movementtype',
-        21: 'co_status__status_title',
-        22: 'co_updated_at',
-        23: 'co_lastmodifiedby__first_name',
+        2: 'co_customer__cu_name',
+        3: 'co_enquirynumber__en_enquirynumber',
+        4: 'co_consignmentnumber',
+        5: 'co_consignmentdate',
+        6: 'co_vehicelnumber',
+        7: 'co_fromlocaion__place_name',
+        8: 'co_tolocation__place_name',
+        9: 'cg_consignmentnumber__cg_consigner__consigner_name',
+        10: 'cg_consignmentnumber__cg_consignee__consignee_name',
+        11: 'cg_consignmentnumber__cg_consignerinvoice',
+        12: 'cg_consignmentnumber__cg_consignervalue',
+        13: 'cg_consignmentnumber__cg_valueininr',
+        14: 'cg_consignmentnumber__cg_qty',
+        15: 'cg_consignmentnumber__cg_weight',
+        16: 'cg_consignmentnumber__cg_ebillno',
+        17: 'cg_consignmentnumber__cg_consignerinvoice_date',
+        18: 'cg_consignmentnumber__cg_dateofvalidity',
+        19: 'co_containerdescription',
+        21: 'co_enquirynumber__en_movement_type__mt_movementtype',
+        22: 'co_status__status_title',
+        23: 'co_updated_at',
+        24: 'co_lastmodifiedby__first_name',
+        25: 'co_createdby__first_name',
     }
     order_field = col_map.get(order_col, 'id')
     if order_dir == 'desc':
@@ -355,30 +358,32 @@ def consignmentdetail_list_ajax(request):
         data.append([
             obj.id,                                     # 0: ID
             obj.co_created_at.strftime('%Y-%m-%d') if obj.co_created_at else '', # 1: Created On
-            str(obj.co_enquirynumber) if obj.co_enquirynumber else '', # 2: Enquiry Number
-            obj.co_consignmentnumber or '',             # 3: Consignment Number
-            obj.co_consignmentdate.strftime('%Y-%m-%d') if obj.co_consignmentdate else '', # 4: Consignment Date
-            obj.co_vehicelnumber or '',                 # 5: Vehicle Number
-            display_from,                               # 6: From Location
-            display_to,                                 # 7: To Location
-            consigner,                                  # 8: Consigner
-            consignee,                                  # 9: Consignee
-            invoice,                                    # 10: Consigner Invoice
-            str(total_value),                           # 11: Value
-            str(total_value_inr),                       # 12: Value in INR
-            str(total_qty),                             # 13: No. of Pieces
-            str(total_weight),                          # 14: Weight
-            ebill,                                      # 15: Eway-Bill No.
-            issue_date,                                 # 16: Date of Issue
-            validity_date,                              # 17: Date of Validity
-            obj.co_containerdescription or '',          # 18: Container Description
-            dimension,                                  # 19: Dimension
-            movement,                                   # 20: Movement
-            str(obj.co_status) if obj.co_status else '', # 21: Status
-            obj.co_updated_at.strftime('%Y-%m-%d') if obj.co_updated_at else '', # 22: Updated On
-            str(obj.co_lastmodifiedby) if obj.co_lastmodifiedby else '', # 23: Updated By
-            obj.id,                                     # 24: Edit
-            obj.id,                                     # 25: Delete
+            str(obj.co_customer) if obj.co_customer else '',  # 2: Customer Name
+            str(obj.co_enquirynumber) if obj.co_enquirynumber else '', # 3: Enquiry Number
+            obj.co_consignmentnumber or '',             # 4: Consignment Number
+            obj.co_consignmentdate.strftime('%Y-%m-%d') if obj.co_consignmentdate else '', # 5: Consignment Date
+            obj.co_vehicelnumber or '',                 # 6: Vehicle Number
+            display_from,                               # 7: From Location
+            display_to,                                 # 8: To Location
+            consigner,                                  # 9: Consigner
+            consignee,                                  # 10: Consignee
+            invoice,                                    # 11: Consigner Invoice
+            str(total_value),                           # 12: Value
+            str(total_value_inr),                       # 13: Value in INR
+            str(total_qty),                             # 14: No. of Pieces
+            str(total_weight),                          # 15: Weight
+            ebill,                                      # 16: Eway-Bill No.
+            issue_date,                                 # 17: Date of Issue
+            validity_date,                              # 18: Date of Validity
+            obj.co_containerdescription or '',          # 19: Container Description
+            dimension,                                  # 20: Dimension
+            movement,                                   # 21: Movement
+            str(obj.co_status) if obj.co_status else '', # 22: Status
+            obj.co_updated_at.strftime('%Y-%m-%d') if obj.co_updated_at else '', # 23: Updated On
+            str(obj.co_lastmodifiedby) if obj.co_lastmodifiedby else '', # 24: Updated By
+            str(obj.co_createdby) if hasattr(obj, 'co_createdby') and obj.co_createdby else '', # 25: Created By
+            obj.id,                                     # 26: Edit
+            obj.id,                                     # 27: Delete
         ])
 
     return JsonResponse({

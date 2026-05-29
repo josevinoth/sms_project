@@ -712,7 +712,7 @@
                 'part_code': part_code
             },
             success: function (results) {
-                var tableHtml = '<div class="table-container-modern"><table id="stockTable" class="table modern-table">';
+                var tableHtml = '<div class="table-container-modern stock-table-frame"><div class="table-responsive"><table id="stockTable" class="table modern-table" style="min-width: 1600px;">';
                 tableHtml += '<thead class="thead-dark">';
                 tableHtml += '<tr>';
                 tableHtml += '<th>ID</th>';
@@ -733,9 +733,7 @@
                 tableHtml += '<th>Select</th>';
                 tableHtml += '</tr></thead><tbody>';
 
-                if (results.length === 0) {
-                    tableHtml += '<tr><td colspan="16" class="text-center">No stock found for the given criteria.</td></tr>';
-                } else {
+                if (results.length > 0) {
                     for (var i = 0; i < results.length; i++) {
                         var row = results[i];
                         tableHtml += '<tr>';
@@ -768,15 +766,18 @@
                     }
                 }
 
-                tableHtml += '</tbody></table></div>';
-                includeContainer.html('<div id="scrollable-stock-table" style="max-height: 500px; overflow-y: auto;">' + tableHtml + '</div>');
+                tableHtml += '</tbody></table></div></div>';
+                includeContainer.html('<div id="scrollable-stock-table" style="max-height: 500px; overflow: auto;">' + tableHtml + '</div>');
 
                 if ($.fn.DataTable.isDataTable('#stockTable')) {
                     $('#stockTable').DataTable().destroy();
                 }
                 $('#stockTable').DataTable({
                     "pageLength": 5,
-                    "lengthMenu": [5, 10, 25, 50]
+                    "lengthMenu": [5, 10, 25, 50],
+                    "language": {
+                        "emptyTable": "No stock found for the given criteria."
+                    }
                 });
             }
         });
@@ -835,6 +836,4 @@
 
 </script>
 {% endblock extra_js %}
-
-
 
