@@ -479,7 +479,9 @@ def vehicle_allotment_list(request):
         'va_enquirynumber',
         'va_vehiclenumber__vm_registrationnumber',
         'va_vehiclenumber_mkt',
-        'id'
+        'va_status_id',
+        'id',
+        'va_replaced_allotment_id'
     )
 
     trip_data = TripdetailInfo.objects.filter(
@@ -495,15 +497,35 @@ def vehicle_allotment_list(request):
     )
 
     # -----------------------------
-    # BUILD VEHICLE DICT
+    # BUILD VEHICLE DICT (with deduplication)
     # -----------------------------
+    # First pass: collect all IDs that have been replaced (i.e., they appear as va_replaced_allotment_id)
+    replaced_ids = set()
+    for enq_id, reg_num, mkt_num, status_id, va_id, replaced_va_id in vehicle_data:
+        if replaced_va_id:
+            replaced_ids.add(replaced_va_id)
+
     vehicle_dict = {}
-    for enq_id, reg_num, mkt_num, va_id in vehicle_data:
-        display_num = reg_num or mkt_num or "None"
-        vehicle_dict.setdefault(enq_id, []).append({
-            'id': va_id,
-            'number': display_num
-        })
+    for enq_id, reg_num, mkt_num, status_id, va_id, replaced_va_id in vehicle_data:
+        v_num = reg_num if reg_num else mkt_num
+        if v_num:
+            if va_id in replaced_ids:
+                display_num = f"{v_num} (replaced)"
+            else:
+                display_num = v_num
+
+            vehicle_dict.setdefault(enq_id, [])
+            # Avoid duplicates: skip if this vehicle number already exists in the list
+            if not any(v['number'] == display_num or v['number'] == v_num for v in vehicle_dict[enq_id]):
+                vehicle_dict[enq_id].append({
+                    'id': va_id,
+                    'number': display_num
+                })
+        else:
+            vehicle_dict.setdefault(enq_id, []).append({
+                'id': va_id,
+                'number': 'None'
+            })
 
     # -----------------------------
     # BUILD TRIP DICT
