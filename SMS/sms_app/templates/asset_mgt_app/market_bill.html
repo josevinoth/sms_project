@@ -359,8 +359,8 @@
             totalHalting += haltingCost;
             totalHaltingDays += days;
 
-            // Calculate and display row total cost (trip cost to parking cost)
-            const rowTotal = special + loadingCost + unloadingCost + parkingCost;
+            // Calculate and display row total cost (including halting cost)
+            const rowTotal = special + loadingCost + unloadingCost + parkingCost + haltingCost;
             const rowTotalCell = row.querySelector(".row-total-cost-cell");
             if (rowTotalCell) {
                 rowTotalCell.textContent = rowTotal.toFixed(2);
@@ -522,7 +522,7 @@
                         <input type="number" name="halting_cost_${trip.id}" class="form-control form-control-sm halting-cost-input" 
                             value="${trip.halting_cost.toFixed(2)}" min="0" step="0.01" style="width: 100px;">
                     </td>
-                    <td class="row-total-cost-cell">${(trip.special_cost + trip.loading_cost + trip.unloading_cost + trip.parking_cost).toFixed(2)}</td>
+                    <td class="row-total-cost-cell">${(trip.special_cost + trip.loading_cost + trip.unloading_cost + trip.parking_cost + trip.halting_cost).toFixed(2)}</td>
                     <td class="text-center">
                         ${trip.special_cost !== trip.standard_cost ? `
                             <div class="d-flex flex-column align-items-center">
