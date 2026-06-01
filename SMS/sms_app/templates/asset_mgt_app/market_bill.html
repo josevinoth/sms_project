@@ -252,10 +252,11 @@
                                         class="form-control form-control-sm halting-days-input"
                                         value="{{ trip.halting_days }}" min="0" style="width: 70px;">
                                 </td>
-                                <td class="halting-cost-cell">
-                                    <input type="hidden" name="halting_cost_{{ trip.id }}" class="halting-cost-hidden"
-                                        value="{{ trip.halting_cost }}">
-                                    <span class="halting-cost-text">{{ trip.halting_cost|floatformat:2 }}</span>
+                                <td>
+                                    <input type="number" name="halting_cost_{{ trip.id }}"
+                                        class="form-control form-control-sm halting-cost-input"
+                                        value="{{ trip.halting_cost|default:0 }}" min="0" step="0.01"
+                                        style="width: 100px;">
                                 </td>
                                 <td class="text-center">
                                     {% if trip.special_cost != trip.standard_cost %}
@@ -328,11 +329,10 @@
         document.querySelectorAll("#tripsTableBody tr.added-row").forEach(row => {
             const cb = row.querySelector("input[data-id]");
             const daysInput = row.querySelector(".halting-days-input");
+            const days = parseInt(daysInput?.value) || 0;
 
-            // Dynamic Halting Cost calculation: Rate * Days
-            const rate = parseFloat(cb.dataset.haltingRate) || 0;
-            const days = parseInt(daysInput.value) || 0;
-            const haltingCost = rate * days;
+            const haltingInput = row.querySelector(".halting-cost-input");
+            const haltingCost = parseFloat(haltingInput?.value) || 0;
 
             const loadingInput = row.querySelector(".loading-cost-input");
             const loadingCost = parseFloat(loadingInput?.value) || 0;
@@ -340,9 +340,6 @@
             const unloadingCost = parseFloat(unloadingInput?.value) || 0;
             const parkingInput = row.querySelector(".parking-cost-input");
             const parkingCost = parseFloat(parkingInput?.value) || 0;
-
-            row.querySelector(".halting-cost-text").textContent = haltingCost.toFixed(2);
-            row.querySelector(".halting-cost-hidden").value = haltingCost.toFixed(2);
 
             const tripInput = row.querySelector(".trip-cost-input");
             const special = parseFloat(tripInput?.value) || 0;
@@ -367,7 +364,17 @@
 
     // Handle inputs change
     document.addEventListener("change", function (e) {
-        if (e.target.classList.contains("halting-days-input") ||
+        if (e.target.classList.contains("halting-days-input")) {
+            const row = e.target.closest("tr");
+            const cb = row.querySelector("input[data-id]");
+            const rate = parseFloat(cb.dataset.haltingRate) || 0;
+            const days = parseInt(e.target.value) || 0;
+            const haltingInput = row.querySelector(".halting-cost-input");
+            if (haltingInput) {
+                haltingInput.value = (rate * days).toFixed(2);
+            }
+            updateTotals();
+        } else if (e.target.classList.contains("halting-cost-input") ||
             e.target.classList.contains("parking-cost-input") ||
             e.target.classList.contains("loading-cost-input") ||
             e.target.classList.contains("trip-cost-input") ||
@@ -487,9 +494,9 @@
                         <input type="number" name="halting_days_${trip.id}" class="form-control form-control-sm halting-days-input" 
                             value="${trip.halting_days}" min="0" style="width: 70px;">
                     </td>
-                    <td class="halting-cost-cell">
-                        <input type="hidden" name="halting_cost_${trip.id}" class="halting-cost-hidden" value="${trip.halting_cost}">
-                        <span class="halting-cost-text">${trip.halting_cost.toFixed(2)}</span>
+                    <td>
+                        <input type="number" name="halting_cost_${trip.id}" class="form-control form-control-sm halting-cost-input" 
+                            value="${trip.halting_cost.toFixed(2)}" min="0" step="0.01" style="width: 100px;">
                     </td>
                     <td class="text-center">
                         ${trip.special_cost !== trip.standard_cost ? `

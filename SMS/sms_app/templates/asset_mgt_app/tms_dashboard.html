@@ -1,13 +1,30 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20260519-6">
+<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20260529-02">
 
 <style>
     /* Specific overrides for this dashboard if any */
-    html, body {
-        overflow: hidden !important;
-        height: 100% !important;
-        background: #060b26 !important;
-        font-family: 'Inter', sans-serif !important;
+    @media screen and (min-width: 992px) {
+        html, body {
+            overflow: hidden !important;
+            height: 100% !important;
+            background: #060b26 !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+    }
+    @media screen and (max-width: 991px) {
+        html, body {
+            overflow: auto !important;
+            height: auto !important;
+            background: #060b26 !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+    }
+
+    /* Disable pointer events and visual feedback for disabled dropdowns */
+    select:disabled {
+        pointer-events: none !important;
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 
     /* Style scrollbar for the custom tooltip to be visible but modern */
@@ -24,6 +41,7 @@
     }
     #custom-progress-tooltip::-webkit-scrollbar-thumb:hover {
         background: rgba(54, 209, 255, 0.7);
+        border-radius: 3px;
     }
     #custom-progress-tooltip {
         scrollbar-width: thin;
@@ -65,7 +83,7 @@
             <div class="dash-dropdown-card">
                 <label><i class="fas fa-user-tie"></i> CS Representative</label>
                 <div class="dash-select-wrap">
-                    <select id="cs-employee-select">
+                    <select id="cs-employee-select" {% if dropdown_disabled %}disabled{% endif %} data-disabled="{{ dropdown_disabled|lower }}" data-default="{{ default_employee_id }}">
                         <option value="all">All Representatives</option>
                         {% for emp in cs_employees %}<option value="{{ emp.user.id }}">{{ emp.user.first_name }}</option>{% endfor %}
                     </select>
@@ -89,9 +107,9 @@
             </div>
             <div class="dash-donuts-row">
                 <div class="chart-panel">
-                    <div class="chart-title" style="display: flex; align-items: center; width: 100%; white-space: nowrap;">
-                        <i class="fas fa-tachometer-alt"></i> Own Vehicle KM Details
-                        <div style="margin-left: auto; display: flex; gap: 0.4rem; font-size: 8px; font-weight: normal; color: #d9e3ff; align-items: center;">
+                    <div class="chart-title" style="display: flex; align-items: center; width: 100%; flex-wrap: wrap; justify-content: space-between; gap: 4px;">
+                        <div><i class="fas fa-tachometer-alt"></i> Own Vehicle KM Details</div>
+                        <div style="display: flex; gap: 0.4rem; font-size: 8px; font-weight: normal; color: #d9e3ff; align-items: center;">
                             <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%;"></span>Business</span>
                             <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #f59e0b; border-radius: 50%;"></span>Empty</span>
                             <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%;"></span>B-Empty</span>
@@ -100,9 +118,9 @@
                     <div class="chart-canvas-wrap"><canvas id="ownDonutChart"></canvas></div>
                 </div>
                 <div class="chart-panel">
-                    <div class="chart-title" style="display: flex; align-items: center; width: 100%; white-space: nowrap;">
-                        <i class="fas fa-truck"></i> Att. Vehicle KM Details
-                        <div style="margin-left: auto; display: flex; gap: 0.4rem; font-size: 8px; font-weight: normal; color: #d9e3ff; align-items: center;">
+                    <div class="chart-title" style="display: flex; align-items: center; width: 100%; flex-wrap: wrap; justify-content: space-between; gap: 4px;">
+                        <div><i class="fas fa-truck"></i> Att. Vehicle KM Details</div>
+                        <div style="display: flex; gap: 0.4rem; font-size: 8px; font-weight: normal; color: #d9e3ff; align-items: center;">
                             <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%;"></span>Business</span>
                             <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #f59e0b; border-radius: 50%;"></span>Empty</span>
                             <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%;"></span>B-Empty</span>
@@ -113,15 +131,21 @@
             </div>
         </div>
         <!-- Right Column: Vehicle Type wise Monthly Progress (expanded full height) -->
-        <div class="chart-panel">
-            <div class="chart-title" style="display: flex; align-items: center; width: 100%; gap: 10px;">
-                <button id="progress-back-btn" class="btn btn-outline-info btn-xs" style="display: none; padding: 2px 8px; font-size: 10px; border-radius: 4px; background: transparent; border: 1px solid #36d1ff; color: #36d1ff; cursor: pointer; transition: all 0.2s; align-items: center; justify-content: center; gap: 4px;">
-                    <i class="fas fa-arrow-left"></i> Back
-                </button>
-                <div><i class="fas fa-chart-line"></i> Vehicle Trip wise Monthly Progress - <span id="progress-chart-month" style="color: #36d1ff;">Current Month</span></div>
-                <input type="month" id="progress-month" class="dash-date-input" style="padding: 2px; font-size: 11px; background: #060b26; color: #fff; border: 1px solid #1a2352; border-radius: 4px; outline: none; margin-left: auto;">
+        <div class="chart-panel" style="min-width: 0; overflow: hidden;">
+            <div class="chart-title" style="display: flex; align-items: center; justify-content: space-between; width: 100%; min-width: 0; flex-wrap: nowrap; gap: 6px;">
+                <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1; overflow: hidden;">
+                    <button id="progress-back-btn" class="btn btn-outline-info btn-xs" style="display: none; padding: 2px 8px; font-size: 10px; border-radius: 4px; background: transparent; border: 1px solid #36d1ff; color: #36d1ff; cursor: pointer; transition: all 0.2s; align-items: center; justify-content: center; gap: 4px; flex-shrink: 0;">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <div style="font-size: 0.95rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;"><i class="fas fa-chart-line" style="color:#36d1ff;"></i> Vehicle Trip wise Monthly Progress &ndash; <span id="progress-chart-month" style="color: #36d1ff;">Current Month</span></div>
+                </div>
+                <input type="month" id="progress-month" class="dash-date-input" style="padding: 2px 4px; font-size: 11px; background: #060b26; color: #fff; border: 1px solid #1a2352; border-radius: 4px; outline: none; width: 110px; flex-shrink: 0;">
             </div>
-            <div class="chart-canvas-wrap"><canvas id="progressChart"></canvas></div>
+            <div class="chart-canvas-wrap" style="overflow-x: auto; overflow-y: hidden;">
+                <div id="progressChartInner" style="height: 100%; min-height: 0; position: relative; min-width: 100%;">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -266,6 +290,10 @@
         };
 
         function renderProgressChartRanges() {
+            // Reset inner container to 100% for the horizontal bar (ranges) view
+            const progressInner = document.getElementById('progressChartInner');
+            if (progressInner) progressInner.style.width = '100%';
+
             const ctxProgress = document.getElementById('progressChart').getContext('2d');
             if (progressChart) {
                 progressChart.destroy();
@@ -359,6 +387,14 @@
             const labels = vehicles.map(v => v.vehicle_number);
             const tripCounts = vehicles.map(v => v.trip_count);
 
+            // Dynamically widen inner container so many bars scroll instead of overflow
+            const progressInner = document.getElementById('progressChartInner');
+            if (progressInner) {
+                const minBarWidth = 36; // px per bar
+                const minWidth = Math.max(progressInner.parentElement.clientWidth, labels.length * minBarWidth);
+                progressInner.style.width = minWidth + 'px';
+            }
+
             const ctxProgress = document.getElementById('progressChart').getContext('2d');
             if (progressChart) {
                 progressChart.destroy();
@@ -434,6 +470,9 @@
 
         $('#progress-back-btn').on('click', function() {
             pinnedChart = false;
+            // Reset inner width back to 100% for the ranges (horizontal) view
+            const progressInner = document.getElementById('progressChartInner');
+            if (progressInner) progressInner.style.width = '100%';
             const tooltipEl = document.getElementById('custom-progress-tooltip');
             if (tooltipEl) {
                 tooltipEl.style.opacity = 0;
@@ -627,27 +666,41 @@
         }
 
         function adjustLayout() {
+            const isMobile = window.innerWidth < 992;
+            
             // Remove padding from main bootstrap containers
             $('.container-fluid').css('padding', '0');
             $('.row').css('margin', '0');
             
             // Adjust sidebar container (col-md-2)
-            $('.col-md-2').css({'padding': '0', 'flex': '0 0 auto', 'width': 'auto'});
+            $('.col-md-2').css({
+                'padding': isMobile ? '0.5rem' : '0',
+                'flex': isMobile ? '0 0 100%' : '0 0 auto',
+                'width': isMobile ? '100%' : 'auto',
+                'max-width': isMobile ? '100%' : 'none'
+            });
             
             // Adjust main content container (col-md-10)
             $('#main-content').css({
                 'padding': '0',
                 'margin': '0',
                 'max-width': '100%',
-                'flex': '1',
-                'width': 'auto'
+                'flex': isMobile ? '0 0 100%' : '1',
+                'width': '100%',
+                'min-width': '0',
+                'overflow': isMobile ? 'visible' : 'hidden'
             });
-            
+
+            // Clip charts container so bars never escape the panel
+            $('.dash-charts-container').css('overflow', isMobile ? 'visible' : 'hidden');
+
             $('.home-dashboard-wrap').css({
                 'padding': '0.5rem',
                 'width': '100%',
                 'max-width': '100%',
-                'margin': '0'
+                'margin': '0',
+                'height': isMobile ? 'auto' : 'calc(100vh - 125px)',
+                'overflow': isMobile ? 'visible' : 'hidden'
             });
         }
 
@@ -655,8 +708,40 @@
         const currentMonthVal = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
         $('#progress-month').val(currentMonthVal);
 
+        // Initialize CS Representative dropdown with role-based settings
+        const csEmployeeSelect = $('#cs-employee-select');
+        const isDisabled = csEmployeeSelect.data('disabled') === true || csEmployeeSelect.data('disabled') === 'true';
+        const defaultEmployeeId = csEmployeeSelect.data('default') || 'all';
+
+        // Set the default value
+        csEmployeeSelect.val(defaultEmployeeId);
+
+        // If disabled, apply additional jQuery prop and prevent any change events
+        if (isDisabled) {
+            csEmployeeSelect.prop('disabled', true);
+            csEmployeeSelect.on('change', function(e) {
+                e.preventDefault();
+                csEmployeeSelect.val(defaultEmployeeId);
+                return false;
+            });
+            // Prevent keyboard interactions
+            csEmployeeSelect.on('keydown', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            // Prevent mouse wheel scroll
+            csEmployeeSelect.on('wheel', function(e) {
+                e.preventDefault();
+                return false;
+            });
+        }
+
         loadDashboardData();
         adjustLayout();
+
+        $(window).on('resize', function() {
+            adjustLayout();
+        });
 
         $('#cs-employee-select, #from-date, #to-date, #progress-month').on('change', function() {
             adjustLayout();
