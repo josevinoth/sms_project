@@ -17,26 +17,101 @@ from ..sub_models.trans_invoice_mod import TransInvoiceInfo
 from ..sub_models.tr_businesstype_mod import Tr_businesstype_Info
 import json
 
+# Customer Service department ID
+CS_DEPARTMENT_ID = 4
+
 class Abs(Func):
     function = 'ABS'
 
 def tms_dashboard(request):
     first_name = request.session.get('first_name')
-    cs_dept = Department_info.objects.filter(Q(dept_name__icontains="CS") | Q(dept_name__icontains="Customer Service")).first()
-    cs_employees = []
-    if cs_dept:
-        cs_employees = User_extInfo.objects.filter(department=cs_dept, user__is_active=True).select_related('user')
-    else:
-        cs_employees = User_extInfo.objects.filter(user__is_active=True).select_related('user')
-        
+    user_id = request.session.get('ses_userID')
+
+    # Get current user's role and details
+    current_user_ext = None
+    user_role_id = None
+    current_user_id = None
+    dropdown_disabled = False
+    default_employee_id = 'all'
+
+    if user_id:
+        try:
+            current_user_ext = User_extInfo.objects.get(user_id=user_id)
+            user_role_id = current_user_ext.emp_role_id if current_user_ext.emp_role else None
+            current_user_id = user_id
+        except User_extInfo.DoesNotExist:
+            pass
+
+    # Determine dropdown behavior based on role
+    # Role IDs: 1=Admin, 3=Super User, 2=General User
+    # Department ID 4 = "Customer Service"
+    is_cs_user = (current_user_ext and
+                  current_user_ext.department_id == CS_DEPARTMENT_ID)
+
+    if user_role_id in [1, 3]:  # Admin & Super User
+        dropdown_disabled = False
+        default_employee_id = 'all'
+    elif is_cs_user:  # Customer Service Department
+        dropdown_disabled = True
+        default_employee_id = str(current_user_id)
+    else:  # General User or Other roles
+        dropdown_disabled = True
+        default_employee_id = 'all'
+
+    # Get employees to display in dropdown
+    # Always show employees from the Customer Service department (ID=4)
+    cs_employees = User_extInfo.objects.filter(
+        department_id=CS_DEPARTMENT_ID,
+        user__is_active=True
+    ).select_related('user')
+
     context = {
         'first_name': first_name,
         'cs_employees': cs_employees,
+        'dropdown_disabled': dropdown_disabled,
+        'default_employee_id': default_employee_id,
+        'user_role_id': user_role_id,
+        'current_user_id': current_user_id,
     }
     return render(request, "asset_mgt_app/tms_dashboard.html", context)
 
 def get_tms_dashboard_data(request):
+    # Get current user's role and department to enforce data filtering
+    user_id = request.session.get('ses_userID')
+    user_role_id = None
+    current_user_ext = None
+    enforce_user_filter = False
+
+    if user_id:
+        try:
+            current_user_ext = User_extInfo.objects.get(user_id=user_id)
+            user_role_id = current_user_ext.emp_role_id if current_user_ext.emp_role else None
+        except User_extInfo.DoesNotExist:
+            pass
+
+    # Check if the user belongs to the "Customer Service" department (ID=4)
+    is_cs_user = (current_user_ext and
+                  current_user_ext.department_id == CS_DEPARTMENT_ID)
+
+    # Determine filtering enforcement based on role and department
+    # Role IDs: 1=Admin, 3=Super User (can view all)
+    # Users from "Customer Service" department (ID=4): forced to see only their own data
+    # Other users: can only see 'all' (aggregate) data
     employee_id = request.GET.get('employee_id')
+
+    if user_role_id in [1, 3]:  # Admin & Super User - can view all
+        pass  # employee_id stays as selected by user
+    elif is_cs_user:  # Customer Service department - force to their own data
+        enforce_user_filter = True
+        employee_id = str(user_id)
+    else:  # Other roles/departments - only allow 'all' selection
+        if employee_id and employee_id != 'all':
+            employee_id = 'all'
+
+    # If employee_id is 'all' but user is enforced, override to their ID
+    if enforce_user_filter and (employee_id == 'all' or not employee_id):
+        employee_id = str(user_id)
+
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
 
