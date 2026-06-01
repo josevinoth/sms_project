@@ -18,8 +18,10 @@ from ..models import Warehouse_goods_info, ExpenseExtinfo, Location_info, UnitIn
 
 def finance_reports(request):
     first_name = request.session.get('first_name')
+    section = request.GET.get('section', 'all')  # 'wms', 'tms', or 'all'
     context = {
-        'first_name': first_name
+        'first_name': first_name,
+        'section': section,
     }
     return render(request, "asset_mgt_app/finance_reports.html", context)
 

@@ -157,27 +157,27 @@ def budgetform_list(request):
     first_name = request.session.get('first_name')
     budget_list = BudgetInfo.objects.all()
 
-    # Initialize subtotal variables
+    # Grand total accumulators
     income_total = 0
     department_expenses_total = 0
     employee_benefits_total = 0
-
+    interest_total = 0
     operational_expenses_total = 0
     non_operational_expenses_total = 0
     overall_total = 0
 
-    # Calculate subtotals
+    # Calculate per-row subtotals and attach them to each budget object
     for budget in budget_list:
-        income_total += (
-                budget.bf_Airport_Handling_Charges +
-                budget.bf_Crane_Handling_Charges +
-                budget.bf_Forklift_Handling_Charges +
-                budget.bf_Handling_Charges +
-                budget.bf_Packing_Charges +
-                budget.bf_Warehouse_Handling_Charges +
-                budget.bf_Warehouse_Loading_Charges +
-                budget.bf_Warehouse_Storage_Charges +
-                budget.bf_Warehouse_Unloading_Charges +
+        row_income = round((
+                (budget.bf_Airport_Handling_Charges or 0) +
+                (budget.bf_Crane_Handling_Charges or 0) +
+                (budget.bf_Forklift_Handling_Charges or 0) +
+                (budget.bf_Handling_Charges or 0) +
+                (budget.bf_Packing_Charges or 0) +
+                (budget.bf_Warehouse_Handling_Charges or 0) +
+                (budget.bf_Warehouse_Loading_Charges or 0) +
+                (budget.bf_Warehouse_Storage_Charges or 0) +
+                (budget.bf_Warehouse_Unloading_Charges or 0) +
                 (budget.bf_Halting_Charges or 0) +
                 (budget.bf_Halting_Charges_SEZ or 0) +
                 (budget.bf_Loading_Charges or 0) +
@@ -191,76 +191,99 @@ def budgetform_list(request):
                 (budget.bf_Transportation_Handling_Charges_SEZ or 0) +
                 (budget.bf_Unloading_Charges or 0) +
                 (budget.bf_Weighment_Charges or 0)
-        )  # Assuming 'bf_fixed' is for Income
+        ), 2)
 
-        department_expenses_total += (
-                budget.bf_advertisement_business_promotion +
-                budget.bf_bank_charges +
-                budget.bf_celebration_expenses +
-                budget.bf_consultancy_charges +
-                budget.bf_directors_remuneration +
-                budget.bf_housekeeping_salary +
-                budget.bf_office_repairs_maintenance +
-                budget.bf_interest_on_statutory_dues +
-                budget.bf_professional_legal_charges +
-                budget.bf_rent_furniture_fittings +
-                budget.bf_rent_office +
-                budget.bf_subscription_membership
-        )
+        row_dept = round((
+                (budget.bf_advertisement_business_promotion or 0) +
+                (budget.bf_bank_charges or 0) +
+                (budget.bf_celebration_expenses or 0) +
+                (budget.bf_consultancy_charges or 0) +
+                (budget.bf_directors_remuneration or 0) +
+                (budget.bf_housekeeping_salary or 0) +
+                (budget.bf_office_repairs_maintenance or 0) +
+                (budget.bf_interest_on_statutory_dues or 0) +
+                (budget.bf_professional_legal_charges or 0) +
+                (budget.bf_rent_furniture_fittings or 0) +
+                (budget.bf_rent_office or 0) +
+                (budget.bf_subscription_membership or 0)
+        ), 2)
 
-        employee_benefits_total += (
-                budget.bf_corp_staff +
-                budget.bf_dept_staff +
+        row_emp = round((
+                (budget.bf_corp_staff or 0) +
+                (budget.bf_dept_staff or 0) +
                 (budget.bf_driver_staff or 0)
-        )
+        ), 2)
 
-        operational_expenses_total += (
-                budget.bf_fixed +
-                budget.bf_insurance_warehouse +
-                budget.bf_insurance_wcc +
-                budget.bf_rent_premises +
-                budget.bf_security_service_charges +
-                budget.bf_manpower_supply_expenses
-        )
+        row_ops = round((
+                (budget.bf_fixed or 0) +
+                (budget.bf_insurance_warehouse or 0) +
+                (budget.bf_insurance_wcc or 0) +
+                (budget.bf_rent_premises or 0) +
+                (budget.bf_security_service_charges or 0) +
+                (budget.bf_manpower_supply_expenses or 0)
+        ), 2)
 
-        non_operational_expenses_total += (
-                budget.bf_oe_Fixed +
-                budget.bf_depreciation +
-                budget.bf_software_AMC_charges +
-                budget.bf_amc +
-                budget.bf_internet_data_card_expenses +
-                budget.bf_rent_plant_machinery +
-                budget.bf_oe_variable +
-                budget.bf_CGST_ineligible_ITC +
-                budget.bf_conveyance_expenses +
-                budget.bf_diesel_expenses_gense +
-                budget.bf_handling_expenses +
-                budget.bf_hotel_boarding_lodging_expenses +
-                budget.bf_IGST_ineligible_ITC +
-                budget.bf_office_supplies_general_expenses +
-                budget.bf_power_fuel +
-                budget.bf_postage_courier +
-                budget.bf_printing_stationery +
-                budget.bf_service_maintenance_expenses +
-                budget.bf_SGST_ineligible_ITC +
-                budget.bf_staff_welfare_staff +
-                budget.bf_telephone_mobile_expenses +
-                budget.bf_training_expenses +
-                budget.bf_travelling_expenses
-        )
+        row_non_ops = round((
+                (budget.bf_oe_Fixed or 0) +
+                (budget.bf_depreciation or 0) +
+                (budget.bf_software_AMC_charges or 0) +
+                (budget.bf_amc or 0) +
+                (budget.bf_internet_data_card_expenses or 0) +
+                (budget.bf_rent_plant_machinery or 0) +
+                (budget.bf_oe_variable or 0) +
+                (budget.bf_CGST_ineligible_ITC or 0) +
+                (budget.bf_conveyance_expenses or 0) +
+                (budget.bf_diesel_expenses_gense or 0) +
+                (budget.bf_handling_expenses or 0) +
+                (budget.bf_hotel_boarding_lodging_expenses or 0) +
+                (budget.bf_IGST_ineligible_ITC or 0) +
+                (budget.bf_office_supplies_general_expenses or 0) +
+                (budget.bf_power_fuel or 0) +
+                (budget.bf_postage_courier or 0) +
+                (budget.bf_printing_stationery or 0) +
+                (budget.bf_service_maintenance_expenses or 0) +
+                (budget.bf_SGST_ineligible_ITC or 0) +
+                (budget.bf_staff_welfare_staff or 0) +
+                (budget.bf_telephone_mobile_expenses or 0) +
+                (budget.bf_training_expenses or 0) +
+                (budget.bf_travelling_expenses or 0)
+        ), 2)
 
-    # Calculate the overall total
-    overall_total = (
-            income_total + department_expenses_total + employee_benefits_total +
-            operational_expenses_total + non_operational_expenses_total
+        row_interest = round((
+                (budget.bf_interest_on_borrowings or 0) +
+                (budget.bf_interest_on_vehicle_loan or 0)
+        ), 2)
+
+        row_total = round(row_income + row_dept + row_emp + row_interest + row_ops + row_non_ops, 2)
+
+        # Attach per-row subtotals as dynamic attributes
+        budget.row_income_subtotal = row_income
+        budget.row_dept_subtotal = row_dept
+        budget.row_emp_subtotal = row_emp
+        budget.row_interest_subtotal = row_interest
+        budget.row_ops_subtotal = row_ops
+        budget.row_non_ops_subtotal = row_non_ops
+        budget.row_total = row_total
+
+        # Accumulate grand totals
+        income_total += row_income
+        department_expenses_total += row_dept
+        employee_benefits_total += row_emp
+        interest_total += row_interest
+        operational_expenses_total += row_ops
+        non_operational_expenses_total += row_non_ops
+
+    # Calculate the overall grand total
+    overall_total = round(
+        income_total + department_expenses_total + employee_benefits_total +
+        interest_total + operational_expenses_total + non_operational_expenses_total, 2
     )
     income_total = round(income_total, 2)
     department_expenses_total = round(department_expenses_total, 2)
     employee_benefits_total = round(employee_benefits_total, 2)
-
+    interest_total = round(interest_total, 2)
     operational_expenses_total = round(operational_expenses_total, 2)
     non_operational_expenses_total = round(non_operational_expenses_total, 2)
-    overall_total = round(overall_total, 2)
 
     context = {
         'budget_list': budget_list,
@@ -268,7 +291,7 @@ def budgetform_list(request):
         'income_total': income_total,
         'department_expenses_total': department_expenses_total,
         'employee_benefits_total': employee_benefits_total,
-
+        'interest_total': interest_total,
         'operational_expenses_total': operational_expenses_total,
         'non_operational_expenses_total': non_operational_expenses_total,
         'overall_total': overall_total,

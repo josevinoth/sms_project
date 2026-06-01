@@ -3,6 +3,7 @@ from django.db import models
 from .customer_mod import CustomerInfo
 from .trbusinesstype_mod import TrbusinesstypeInfo
 from .ownership_mod import OwnershipInfo
+from .vehiclemaster_mod import VehiclemasterInfo
 from ..models import Location_info, UnitInfo, MyUser, ExpenseInfo
 
 class ExpenseExtinfo(models.Model):
@@ -16,3 +17,4 @@ class ExpenseExtinfo(models.Model):
     exp_ext_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE,blank=True, null=True, default='')
     exp_ext_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
     exp_ext_vehicle_source = models.ForeignKey(OwnershipInfo, on_delete=models.CASCADE, blank=True, null=True)
+    exp_ext_vehicle_number = models.ForeignKey(VehiclemasterInfo, on_delete=models.CASCADE, blank=True, null=True)
