@@ -58,6 +58,14 @@
                                         {% render_field form.exp_ext_unit id="exp_ext_unit" class="form-control disable_a_href" %}
                                     {% endif %}
                                 </div>
+                                {% if "bvm trans solutions" in parent_business|lower %}
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Vehicle Number</span>
+                                    </div>
+                                    {% render_field form.exp_ext_vehicle_number id="exp_ext_vehicle_number" class="form-control select2" %}
+                                </div>
+                                {% endif %}
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Amount</span>
@@ -116,6 +124,30 @@
                     document.getElementById("exp_ext_updated_by").value=updated_by;
                 }
             }
+
+            function initializeSelect2() {
+                if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+                    window.jQuery('#exp_ext_vehicle_number').select2({
+                        placeholder: "--Select Vehicle--",
+                        allowClear: true,
+                        width: 'resolve'
+                    });
+                }
+            }
+
+            if (!(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2)) {
+                // If Select2 is not loaded on the active jQuery instance (due to jQuery being reloaded at the bottom of base.html),
+                // we load it dynamically.
+                var script = document.createElement('script');
+                script.src = "https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js";
+                script.onload = function() {
+                    initializeSelect2();
+                };
+                document.head.appendChild(script);
+            } else {
+                initializeSelect2();
+            }
+
             fetchCustomerDetails();
         });
 </script>
@@ -187,6 +219,26 @@
         font-weight: 600;
         border: 1px solid #7ed2d9;
         line-height: 1.2;
+    }
+    
+    /* Ensure Select2 containers occupy remaining space inside bootstrap input-group */
+    .input-group > .select2-container--default {
+        flex: 1 1 auto;
+        width: 1% !important;
+    }
+    .input-group > .select2-container--default .select2-selection--single {
+        height: 100% !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 0 4px 4px 0 !important;
+        display: flex;
+        align-items: center;
+    }
+    .input-group > .select2-container--default .select2-selection__rendered {
+        padding-left: .75rem !important;
+        line-height: 1.5 !important;
+    }
+    .input-group > .select2-container--default .select2-selection__arrow {
+        height: 100% !important;
     }
 </style>
 {% endblock content %}

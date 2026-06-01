@@ -892,10 +892,24 @@
     }
 
     function calculateSubtotals() {
-        function sumVisibleFields(selector) {
+        // Check if a field should be included: skip if it's inside a company-specific
+        // container (company-transport / company-warehouse) that is currently hidden.
+        // We do NOT use $(this).is(':visible') because that also returns false for
+        // inputs inside collapsed Bootstrap accordion panels, causing totals to show 0
+        // on page load in edit mode even though the values are pre-populated.
+        function isFieldActive(el) {
+            var $el = $(el);
+            var $companyContainer = $el.closest('.company-transport, .company-warehouse');
+            if ($companyContainer.length && $companyContainer.css('display') === 'none') {
+                return false;
+            }
+            return true;
+        }
+
+        function sumFields(selector) {
             let total = 0;
             $(selector).find('input[type="number"], input:not([type])').each(function() {
-                if ($(this).is(':visible')) {
+                if (isFieldActive(this)) {
                     let val = parseFloat($(this).val()) || 0;
                     total += val;
                 }
@@ -904,24 +918,24 @@
         }
 
         // Income
-        $("#summary-income").text(sumVisibleFields("#collapseOne"));
+        $("#summary-income").text(sumFields("#collapseOne"));
 
         // Dept Expenses
-        $("#summary-dept").text(sumVisibleFields("#collapseTwo"));
+        $("#summary-dept").text(sumFields("#collapseTwo"));
 
         // Benefits
-        $("#summary-benefits").text(sumVisibleFields("#collapseThree"));
+        $("#summary-benefits").text(sumFields("#collapseThree"));
 
         // Operational Expenses
-        $("#summary-op-fixed").text(sumVisibleFields("#collapseFive .col-6:first-child"));
-        $("#summary-op-variable").text(sumVisibleFields("#collapseFive .col-6:last-child"));
+        $("#summary-op-fixed").text(sumFields("#collapseFive .col-6:first-child"));
+        $("#summary-op-variable").text(sumFields("#collapseFive .col-6:last-child"));
 
         // Non-Operational Expenses
-        $("#summary-nonop-fixed").text(sumVisibleFields("#collapseSix .col-6:first-child"));
-        $("#summary-nonop-variable").text(sumVisibleFields("#collapseSix .col-6:last-child"));
+        $("#summary-nonop-fixed").text(sumFields("#collapseSix .col-6:first-child"));
+        $("#summary-nonop-variable").text(sumFields("#collapseSix .col-6:last-child"));
 
         // Interest Expenses
-        $("#summary-interest").text(sumVisibleFields("#collapseSeven"));
+        $("#summary-interest").text(sumFields("#collapseSeven"));
     }
 
     $(document).ready(function() {
