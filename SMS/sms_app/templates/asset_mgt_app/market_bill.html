@@ -197,6 +197,7 @@
                                 <th>Parking Cost</th>
                                 <th>Halting Days</th>
                                 <th>Halting Cost</th>
+                                <th>Total Cost</th>
                                 <th>Mail Attach</th>
                             </tr>
                         </thead>
@@ -258,6 +259,7 @@
                                         value="{{ trip.halting_cost|default:0 }}" min="0" step="0.01"
                                         style="width: 100px;">
                                 </td>
+                                <td class="row-total-cost-cell">0.00</td>
                                 <td class="text-center">
                                     {% if trip.special_cost != trip.standard_cost %}
                                     <div class="d-flex flex-column align-items-center">
@@ -282,13 +284,13 @@
                             {% endfor %}
                             {% else %}
                             <tr>
-                                <td colspan="15" class="text-center text-muted">No trips found in this bill</td>
+                                <td colspan="16" class="text-center text-muted">No trips found in this bill</td>
                             </tr>
                             {% endif %}
                             {% else %}
                             <!-- ADD Mode: Initial empty state -->
                             <tr>
-                                <td colspan="15" class="text-center text-muted">Select a vendor to view trips</td>
+                                <td colspan="16" class="text-center text-muted">Select a vendor to view trips</td>
                             </tr>
                             {% endif %}
                         </tbody>
@@ -326,7 +328,14 @@
         let totalHalting = 0;
         let totalHaltingDays = 0;
 
-        document.querySelectorAll("#tripsTableBody tr.added-row").forEach(row => {
+        let rows;
+        if (tripsDataTable) {
+            rows = tripsDataTable.$("tr.added-row");
+        } else {
+            rows = document.querySelectorAll("#tripsTableBody tr.added-row");
+        }
+
+        const processRow = function (row) {
             const cb = row.querySelector("input[data-id]");
             const daysInput = row.querySelector(".halting-days-input");
             const days = parseInt(daysInput?.value) || 0;
@@ -349,7 +358,22 @@
             totalParking += parkingCost;
             totalHalting += haltingCost;
             totalHaltingDays += days;
-        });
+
+            // Calculate and display row total cost (trip cost to parking cost)
+            const rowTotal = special + loadingCost + unloadingCost + parkingCost;
+            const rowTotalCell = row.querySelector(".row-total-cost-cell");
+            if (rowTotalCell) {
+                rowTotalCell.textContent = rowTotal.toFixed(2);
+            }
+        };
+
+        if (rows.each) {
+            rows.each(function () {
+                processRow(this);
+            });
+        } else {
+            rows.forEach(processRow);
+        }
 
         document.getElementById("mb_trip_cost").value = totalTrip.toFixed(2);
         document.getElementById("mb_loading_cost").value = totalLoading.toFixed(2);
@@ -498,6 +522,7 @@
                         <input type="number" name="halting_cost_${trip.id}" class="form-control form-control-sm halting-cost-input" 
                             value="${trip.halting_cost.toFixed(2)}" min="0" step="0.01" style="width: 100px;">
                     </td>
+                    <td class="row-total-cost-cell">${(trip.special_cost + trip.loading_cost + trip.unloading_cost + trip.parking_cost).toFixed(2)}</td>
                     <td class="text-center">
                         ${trip.special_cost !== trip.standard_cost ? `
                             <div class="d-flex flex-column align-items-center">
@@ -532,27 +557,46 @@
 
     // ========== SELECT ALL CHECKBOX ==========
     document.getElementById("selectAllTrips").addEventListener("change", function () {
-        const checkboxes = document.querySelectorAll(".trip-checkbox");
-        checkboxes.forEach(cb => cb.checked = this.checked);
+        if (tripsDataTable) {
+            tripsDataTable.$(".trip-checkbox").prop('checked', this.checked);
+        } else {
+            const checkboxes = document.querySelectorAll(".trip-checkbox");
+            checkboxes.forEach(cb => cb.checked = this.checked);
+        }
     });
 
     // ========== ADD SELECTED TRIPS BUTTON (ADD MODE) ==========
     const addBtn = document.getElementById("addSelectedBtn");
     if (addBtn) {
         addBtn.addEventListener("click", function () {
-            const checkboxes = document.querySelectorAll(".trip-checkbox:checked");
+            let checkboxes;
+            if (tripsDataTable) {
+                checkboxes = tripsDataTable.$(".trip-checkbox:checked");
+            } else {
+                checkboxes = document.querySelectorAll(".trip-checkbox:checked");
+            }
             if (checkboxes.length === 0) return;
 
-            checkboxes.forEach(cb => {
+            const processCheckbox = function (cb) {
                 const tripId = cb.dataset.id;
                 if (!selectedTripIds.has(tripId)) {
                     selectedTripIds.add(tripId);
                     const row = cb.closest("tr");
-                    row.classList.add("added-row");
+                    if (row) {
+                        row.classList.add("added-row");
+                    }
                     cb.style.display = 'none';
                     cb.checked = false;
                 }
-            });
+            };
+
+            if (checkboxes.each) {
+                checkboxes.each(function () {
+                    processCheckbox(this);
+                });
+            } else {
+                checkboxes.forEach(processCheckbox);
+            }
 
             updateTotals();
             document.getElementById("selectAllTrips").checked = false;
@@ -563,18 +607,58 @@
     const removeBtn = document.getElementById("removeSelectedBtn");
     if (removeBtn) {
         removeBtn.addEventListener("click", function () {
-            const checkboxes = document.querySelectorAll(".trip-checkbox:checked");
+            let checkboxes;
+            if (tripsDataTable) {
+                checkboxes = tripsDataTable.$(".trip-checkbox:checked");
+            } else {
+                checkboxes = document.querySelectorAll(".trip-checkbox:checked");
+            }
             if (checkboxes.length === 0) return;
 
-            checkboxes.forEach(cb => {
+            const processRemove = function (cb) {
                 selectedTripIds.delete(cb.dataset.id);
-                cb.closest("tr").remove();
-            });
+                const row = cb.closest("tr");
+                if (row) {
+                    if (tripsDataTable) {
+                        tripsDataTable.row(row).remove().draw(false);
+                    } else {
+                        row.remove();
+                    }
+                }
+            };
+
+            if (checkboxes.each) {
+                checkboxes.each(function () {
+                    processRemove(this);
+                });
+            } else {
+                checkboxes.forEach(processRemove);
+            }
 
             updateTotals();
             document.getElementById("selectAllTrips").checked = false;
         });
     }
+
+    // Intercept form submission to include inputs from paged-out rows in the DataTable
+    document.getElementById("marketBillForm").addEventListener("submit", function (e) {
+        if (tripsDataTable) {
+            const form = this;
+            tripsDataTable.$('input').each(function () {
+                // If the input is not currently in the DOM
+                if (!$.contains(document, this)) {
+                    // Only copy inputs with a name attribute (i.e. costs, days, etc.)
+                    if (this.name) {
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = this.name;
+                        hiddenInput.value = this.value;
+                        form.appendChild(hiddenInput);
+                    }
+                }
+            });
+        }
+    });
 </script>
 
 
@@ -680,6 +764,7 @@
         }
 
         initializeTripsDataTable();
+        updateTotals();
     });
 
     // Handle Mail Upload Trigger
