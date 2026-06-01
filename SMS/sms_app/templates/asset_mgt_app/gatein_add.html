@@ -629,8 +629,22 @@ $(document).ready(function () {
     });
 </script>
 
+<script>
+    var isSubmitting = false;
+    document.getElementById("gate_in").addEventListener("submit", function(e) {
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+        isSubmitting = true;
+        var submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            setTimeout(function() {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            }, 0);
+        }
+    });
+</script>
 
 {% endblock content %}
-
-
-
