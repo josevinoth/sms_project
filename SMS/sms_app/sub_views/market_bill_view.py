@@ -342,6 +342,7 @@ def get_trips_by_vendor(request):
     trips = TripdetailInfo.objects.filter(
         (Q(tr_vehiclenumber__in=list(vendor_master_vehicles)) | 
          Q(tr_enquirynumber_id__in=list(allotted_enquiry_ids))),
+        Q(tr_departeddate__gte='2026-05-01') | Q(tr_departeddate__isnull=True, tr_created_at__gte='2026-05-01 00:00:00'),
         tc_financestatus_id__in=eligible_status_ids,
         tr_vehiclesource_id=market_ownership_id
     )
