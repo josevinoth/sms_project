@@ -106,25 +106,43 @@
                 <div class="chart-canvas-wrap"><canvas id="tripBarChart"></canvas></div>
             </div>
             <div class="dash-donuts-row">
-                <div class="chart-panel">
-                    <div class="chart-title" style="display: flex; align-items: center; width: 100%; flex-wrap: wrap; justify-content: space-between; gap: 4px;">
+                <div class="chart-panel" style="position: relative;">
+                    <div class="chart-title" style="display: flex; align-items: center; width: 100%; flex-wrap: nowrap; justify-content: space-between; gap: 4px;">
                         <div><i class="fas fa-tachometer-alt"></i> Own Vehicle KM Details</div>
-                        <div style="display: flex; gap: 0.4rem; font-size: 8px; font-weight: normal; color: #d9e3ff; align-items: center;">
-                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%;"></span>Business</span>
-                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #f59e0b; border-radius: 50%;"></span>Empty</span>
-                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%;"></span>B-Empty</span>
+                        <div style="display: flex; gap: 0.3rem; font-size: 8px; font-weight: normal; color: #d9e3ff; align-items: center;">
+                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 5px; height: 5px; background-color: #10b981; border-radius: 50%;"></span>Bus.</span>
+                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 5px; height: 5px; background-color: #f59e0b; border-radius: 50%;"></span>Emp.</span>
+                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 5px; height: 5px; background-color: #ef4444; border-radius: 50%;"></span>B-Emp.</span>
                         </div>
+                    </div>
+                    <!-- Responsive width to prevent overlap when menu bar expands -->
+                    <div class="dash-select-wrap" style="position: absolute; top: 32px; left: 10px; z-index: 10; width: 28%; max-width: 95px; min-width: 75px;">
+                        <select id="own-vehicle-select" style="padding: 2px 4px; font-size: 10px; height: 22px; line-height: 1;">
+                            <option value="all">Veh No.</option>
+                            {% for veh in own_vehicles %}
+                                <option value="{{ veh }}">{{ veh }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="chart-canvas-wrap"><canvas id="ownDonutChart"></canvas></div>
                 </div>
-                <div class="chart-panel">
-                    <div class="chart-title" style="display: flex; align-items: center; width: 100%; flex-wrap: wrap; justify-content: space-between; gap: 4px;">
+                <div class="chart-panel" style="position: relative;">
+                    <div class="chart-title" style="display: flex; align-items: center; width: 100%; flex-wrap: nowrap; justify-content: space-between; gap: 4px;">
                         <div><i class="fas fa-truck"></i> Att. Vehicle KM Details</div>
-                        <div style="display: flex; gap: 0.4rem; font-size: 8px; font-weight: normal; color: #d9e3ff; align-items: center;">
-                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%;"></span>Business</span>
-                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #f59e0b; border-radius: 50%;"></span>Empty</span>
-                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%;"></span>B-Empty</span>
+                        <div style="display: flex; gap: 0.3rem; font-size: 8px; font-weight: normal; color: #d9e3ff; align-items: center;">
+                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 5px; height: 5px; background-color: #10b981; border-radius: 50%;"></span>Bus.</span>
+                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 5px; height: 5px; background-color: #f59e0b; border-radius: 50%;"></span>Emp.</span>
+                            <span style="display: flex; align-items: center; gap: 2px;"><span style="display: inline-block; width: 5px; height: 5px; background-color: #ef4444; border-radius: 50%;"></span>B-Emp.</span>
                         </div>
+                    </div>
+                    <!-- Responsive width to prevent overlap when menu bar expands -->
+                    <div class="dash-select-wrap" style="position: absolute; top: 32px; left: 10px; z-index: 10; width: 28%; max-width: 95px; min-width: 75px;">
+                        <select id="attached-vehicle-select" style="padding: 2px 4px; font-size: 10px; height: 22px; line-height: 1;">
+                            <option value="all">Veh No.</option>
+                            {% for veh in attached_vehicles %}
+                                <option value="{{ veh }}">{{ veh }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="chart-canvas-wrap"><canvas id="attachedDonutChart"></canvas></div>
                 </div>
@@ -624,6 +642,8 @@
             const fromDate = $('#from-date').val();
             const toDate = $('#to-date').val();
             const progressMonth = $('#progress-month').val();
+            const ownVehicleNum = $('#own-vehicle-select').val();
+            const attachedVehicleNum = $('#attached-vehicle-select').val();
 
             $.ajax({
                 url: "{% url 'get_tms_dashboard_data' %}",
@@ -631,7 +651,9 @@
                     'employee_id': employeeId,
                     'from_date': fromDate,
                     'to_date': toDate,
-                    'progress_month': progressMonth
+                    'progress_month': progressMonth,
+                    'own_vehicle_number': ownVehicleNum,
+                    'attached_vehicle_number': attachedVehicleNum
                 },
                 success: function(data) {
                     // Always update totals from the same data response (backend should send both)
@@ -743,7 +765,7 @@
             adjustLayout();
         });
 
-        $('#cs-employee-select, #from-date, #to-date, #progress-month').on('change', function() {
+        $('#cs-employee-select, #from-date, #to-date, #progress-month, #own-vehicle-select, #attached-vehicle-select').on('change', function() {
             adjustLayout();
             loadDashboardData();
         });
