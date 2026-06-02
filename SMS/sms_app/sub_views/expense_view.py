@@ -7,6 +7,8 @@ from django.db.models import Q, Sum
 from ..models import ExpenseInfo, ExpenseExtinfo
 from django.shortcuts import render, redirect
 from ..forms import ExpenseaddForm,ExpenseextaddForm
+from datetime import datetime, time
+from django.utils import timezone
 
 # Invoicecity
 @login_required(login_url='login_page')
@@ -112,13 +114,25 @@ def expense_search(request):
 
     # Date filter logic (Service Start Date)
     if from_date:
-        filters &= Q(exp_service_start_date__date__gte=from_date)
+        try:
+            from_dt = datetime.strptime(from_date, '%Y-%m-%d')
+            from_dt = timezone.make_aware(datetime.combine(from_dt.date(), time.min))
+            filters &= Q(exp_service_start_date__gte=from_dt)
+        except (ValueError, TypeError):
+            pass
     if to_date:
-        filters &= Q(exp_service_start_date__date__lte=to_date)
+        try:
+            to_dt = datetime.strptime(to_date, '%Y-%m-%d')
+            to_dt = timezone.make_aware(datetime.combine(to_dt.date(), time.max))
+            filters &= Q(exp_service_start_date__lte=to_dt)
+        except (ValueError, TypeError):
+            pass
 
     expense_list_qs = ExpenseInfo.objects.filter(filters).order_by('-id')
 
-    if show_all:
+    # If date filter is applied OR show_all, return all matching records (no pagination)
+    # This ensures DataTables can search across ALL filtered results
+    if show_all or from_date or to_date:
         page_obj = expense_list_qs
     else:
         paginator = Paginator(expense_list_qs, 50)

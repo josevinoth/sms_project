@@ -4,7 +4,7 @@
 
 <div class="container-fluid py-4">
     <!-- Dashboard Stats -->
-    {% with t_count=totals.total_count|default:0 t_cft=totals.total_cft|default:0|floatformat:2 t_cost=totals.total_cost|default:0|floatformat:2 %}
+    {% with t_count=totals.current_count|default:0 t_cft=totals.current_cft|default:0|floatformat:2 t_cost=totals.current_cost|default:0|floatformat:2 %}
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="modern-card p-3 border-left-emerald text-center">
@@ -354,7 +354,7 @@
             var stockTypeVal = $('#id_sm_stock_type').val();
 
             var isRE = /\bre\b/i.test(descriptionText);
-            var isPlywood = !isRE && (/ply/i.test(stockTypeText) || /ply/i.test(descriptionText));
+            var isPlywood = !isRE && (/\bply\b/i.test(stockTypeText) || /\bply\b/i.test(descriptionText) || /\bplywood\b/i.test(stockTypeText) || /\bplywood\b/i.test(descriptionText));
             var isWood = !isRE && (/wood/i.test(stockTypeText) || /wood/i.test(descriptionText)) && !isPlywood;
             var isOther = isRE || (!isWood && !isPlywood);
 
