@@ -9,31 +9,71 @@
 
 <style>
     .custom-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-        border: none !important;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background: #ffffff;
+        border: 1px solid #e3ebf6 !important;
+        border-radius: 16px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.02);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        position: relative;
+        overflow: hidden;
     }
 
     .custom-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(52, 93, 167, 0.15);
+        border-color: #345da7 !important;
     }
 
     .custom-card-header {
-        min-height: 65px;
+        min-height: 60px;
         display: flex;
-        align-items: center;
+        align-items: flex-end;
         justify-content: center;
-        font-weight: bold;
-        background-color: #345da7 !important;
-        /* Standardized blue from screenshot */
-        color: white !important;
+        font-weight: 700;
+        font-size: 0.95rem;
+        background-color: transparent !important;
+        color: #2c3e50 !important;
+        border-bottom: none !important;
+        padding: 20px 15px 0;
+        transition: color 0.3s ease;
+        line-height: 1.3;
+    }
+
+    .custom-card:hover .custom-card-header {
+        color: #345da7 !important;
+    }
+
+    .custom-card .card-body.bg-light {
+        background-color: transparent !important;
+        padding: 1.5rem;
     }
 
     .custom-badge {
-        font-size: 2.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #e4ebf5 !important;
         color: #345da7 !important;
-        background: transparent !important;
+        font-size: 2.2rem;
+        transition: all 0.5s ease;
+    }
+
+    .custom-card:hover .custom-badge {
+        background: linear-gradient(135deg, #345da7, #1a3668) !important;
+        color: #ffffff !important;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(52, 93, 167, 0.3);
+    }
+
+    /* Stretches the link to cover the entire card */
+    .custom-badge::after {
+        content: "";
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        z-index: 10;
     }
 </style>
 
