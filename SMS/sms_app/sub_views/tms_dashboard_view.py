@@ -65,6 +65,15 @@ def tms_dashboard(request):
         user__is_active=True
     ).select_related('user')
 
+    # Get own and attached vehicle numbers
+    own_vehicles = VehiclemasterInfo.objects.filter(
+        vm_ownership__ow_ownership__icontains='OWN'
+    ).values_list('vm_registrationnumber', flat=True).order_by('vm_registrationnumber')
+
+    attached_vehicles = VehiclemasterInfo.objects.filter(
+        vm_ownership__ow_ownership__icontains='Attached'
+    ).values_list('vm_registrationnumber', flat=True).order_by('vm_registrationnumber')
+
     context = {
         'first_name': first_name,
         'cs_employees': cs_employees,
@@ -72,6 +81,8 @@ def tms_dashboard(request):
         'default_employee_id': default_employee_id,
         'user_role_id': user_role_id,
         'current_user_id': current_user_id,
+        'own_vehicles': own_vehicles,
+        'attached_vehicles': attached_vehicles,
     }
     return render(request, "asset_mgt_app/tms_dashboard.html", context)
 
@@ -188,6 +199,9 @@ def get_tms_dashboard_data(request):
     }
     
     # Donut Charts (Mileage Breakdown) — filtered by Enquiry Created Date
+    own_vehicle_num = request.GET.get('own_vehicle_number')
+    attached_vehicle_num = request.GET.get('attached_vehicle_number')
+
     def get_km_details(ownership_type):
         db_source = ownership_type
         if ownership_type == 'Own': db_source = 'OWN'
@@ -198,6 +212,11 @@ def get_tms_dashboard_data(request):
         )
         if employee_id and employee_id != 'all':
             qs = qs.filter(tr_enquirynumber__en_assignedto_id=employee_id)
+
+        if ownership_type == 'Own' and own_vehicle_num and own_vehicle_num != 'all':
+            qs = qs.filter(tr_vehiclenumber__iexact=own_vehicle_num)
+        elif ownership_type == 'Attached' and attached_vehicle_num and attached_vehicle_num != 'all':
+            qs = qs.filter(tr_vehiclenumber__iexact=attached_vehicle_num)
             
         def sum_km(filter_q):
             # Use Abs to prevent negative values from data entry errors
