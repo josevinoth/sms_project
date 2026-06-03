@@ -86,15 +86,19 @@ def part_code_delete(request, pc_id):
 @login_required(login_url='login_page')
 def get_stock_descriptions(request):
     query = request.GET.get('q', '')
+    stock_type = request.GET.get('stock_type', '')
+
     if len(query) < 2:
-        return JsonResponse([], safe=False)
-        
-    descriptions = Stockdescription.objects.filter(stock_description__icontains=query).values("id", "stock_description")[:20]
+        return JsonResponse({"results": []})
 
-    # Convert to list for JSON response
-    results = [{"id": item["id"], "stock_description": item["stock_description"]} for item in descriptions]
+    qs = Stockdescription.objects.filter(stock_description__icontains=query)
+    if stock_type:
+        qs = qs.filter(stock_type_id=stock_type)
 
-    return JsonResponse(results, safe=False)
+    descriptions = qs.values("id", "stock_description").order_by("stock_description")[:30]
+    results = [{"id": item["id"], "text": item["stock_description"]} for item in descriptions]
+
+    return JsonResponse({"results": results})
 
 @login_required(login_url='login_page')
 def get_part_code(request):
