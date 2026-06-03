@@ -195,3 +195,4 @@ from .sub_views.pk_quality_check_view import pk_quality_check_list, pk_quality_c
 from .sub_views.pk_tool_master_view import pk_tool_master_list, pk_tool_master_add, pk_tool_master_delete
 from .sub_views.privacy_policy_view import privacy_policy
 from .sub_views.deletion_log_view import deletion_log_list
+from .sub_views.stock_description_view import stock_description_add, stock_description_delete, stock_description_search
