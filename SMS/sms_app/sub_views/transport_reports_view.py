@@ -196,7 +196,7 @@ DRIVERS_ADVANCE_HEADERS = [
 
 INVOICE_PENDING_HEADERS = [
     "SNo", "Branch", "Customer Short Name", "Planning Date", "Cnote No", "From", "To", "Dept",
-    "Veh No", "Veh Type", "Consignee", "No. of Pcs", "Weight", "Trip Status",
+    "Veh No", "Veh Type", "Veh Source", "Consignee", "No. of Pcs", "Weight", "Trip Status",
     "Transportation Charges", "Toll Charges", "Parking Charges", "Loading Charges", "Unloading Charges",
     "Halting Charges", "Docket Charges", "Weighment Charges", "Handling Charges", "Cancellation Charges",
     "TOTAL"
@@ -1447,11 +1447,14 @@ def invoice_pending_report_view(request):
     # (Synced and re-applied)
     form = DmrForm()
 
+    from ..models import Location_info, OwnershipInfo
+
     context = {
         'first_name': first_name,
         'form': form,
         'headers': INVOICE_PENDING_HEADERS,
         'all_branches': Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name'),
+        'all_vehiclesources': OwnershipInfo.objects.all(),
     }
 
     return render(request, "asset_mgt_app/invoice_pending_report.html", context)
@@ -1478,6 +1481,7 @@ def invoice_pending_report_ajax_view(request):
     from_loc_id = request.GET.get('from_location', '').strip()
     to_loc_id = request.GET.get('to_location', '').strip()
     branch_id = request.GET.get('branch', '').strip()
+    vehicle_source_id = request.GET.get('vehicle_source', '').strip()
 
     # -------------------------
     # Collect all invoiced IDs (same logic as the main view)
@@ -1579,18 +1583,22 @@ def invoice_pending_report_ajax_view(request):
         except (ValueError, TypeError):
             pass
 
+    if vehicle_source_id:
+        trips = trips.filter(tr_vehiclesource_id=vehicle_source_id)
+
     # Total before global search
     records_total = trips.count()
 
-    # -------------------------
-    # Global search
-    # -------------------------
     if search_value:
         matching_invoice_trip_numbers = list(InvoiceDocumentInfo.objects.filter(
             id_status__status__icontains=search_value
+        ).exclude(
+            id_tripnumber__isnull=True
+        ).exclude(
+            id_tripnumber__exact=''
         ).values_list('id_tripnumber', flat=True))
 
-        trips = trips.filter(
+        q_objects = (
             Q(tr_vehiclenumber__icontains=search_value) |
             Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
             Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
@@ -1598,9 +1606,13 @@ def invoice_pending_report_ajax_view(request):
             Q(tr_reportedlocation__place_name__icontains=search_value) |
             Q(tr_enquirynumber__en_customerdepartment__ct_customerdepartment__icontains=search_value) |
             Q(tr_tripnumber__icontains=search_value) |
-            Q(tc_financestatus__status__icontains=search_value) |
-            Q(tr_tripnumber__in=matching_invoice_trip_numbers)
+            Q(tc_financestatus__status__icontains=search_value)
         )
+        
+        if matching_invoice_trip_numbers:
+            q_objects |= Q(tr_tripnumber__in=matching_invoice_trip_numbers)
+
+        trips = trips.filter(q_objects)
 
     records_filtered = trips.count()
 
@@ -1685,6 +1697,7 @@ def invoice_pending_report_ajax_view(request):
             safe_str(trip.tr_enquirynumber.en_customerdepartment) if trip.tr_enquirynumber else "",
             safe_str(trip.tr_vehiclenumber),
             safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype),
+            safe_str(trip.tr_vehiclesource.ow_ownership) if trip.tr_vehiclesource else "",
             safe_str(goods.cg_consignee) if goods else "",
             safe_num(goods.cg_qty) if goods else 0,
             safe_num(goods.cg_weight) if goods else 0.0,
@@ -5184,11 +5197,9 @@ def pod_pending_report_ajax_view(request):
 
     # Apply Custom Filters
     if from_date:
-        trips = trips.filter(Q(tr_reporteddate__date__gte=from_date) | Q(tr_unloading_time__date__gte=from_date) | Q(
-            tr_reporteddate_pickup__date__gte=from_date))
+        trips = trips.filter(tr_departeddate__date__gte=from_date)
     if to_date:
-        trips = trips.filter(Q(tr_reporteddate__date__lte=to_date) | Q(tr_unloading_time__date__lte=to_date) | Q(
-            tr_reporteddate_pickup__date__lte=to_date))
+        trips = trips.filter(tr_departeddate__date__lte=to_date)
 
     if branch_id:
         try:

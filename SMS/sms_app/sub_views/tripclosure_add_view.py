@@ -265,6 +265,8 @@ def tripclosure_add(request, tripclosure_id=0):
                 EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_tripclosure=tripclousre_status)
             else:
                 print("Trip Closure Main Form not Saved")
+                print("FORM ERRORS:", tripclosure_form.errors)
+                messages.error(request, 'Trip details not saved. Please check the form fields and try again.')
 
             if tripclosurefiles_form.is_valid():
                 files_obj = tripclosurefiles_form.save(commit=False)
