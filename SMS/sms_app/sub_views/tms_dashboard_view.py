@@ -148,15 +148,16 @@ def get_tms_dashboard_data(request):
             tr_qs = tr_qs.filter(tr_enquirynumber__en_assignedto_id=user_id)
             ti_qs = ti_qs.filter(ti_trip__tr_enquirynumber__en_assignedto_id=user_id)
 
-        vehicles_count = tr_qs.count()
+        from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
+        req_veh_count = Enquirynotevehicle.objects.filter(env_enquirynumber__in=en_qs).aggregate(total=Sum('env_quantity'))['total'] or 0
         cnotes_count = cn_qs.count()
 
         metrics = {
-            'enquiries': vehicles_count,
+            'enquiries': req_veh_count,
             'cnotes': cnotes_count,
-            'missed': max(0, vehicles_count - cnotes_count),
-            'settled': tr_qs.filter(tc_financestatus__status__icontains="Settle").count(),
-            'ready': tr_qs.filter(tc_financestatus__status__icontains="Settle").exclude(transinvoiceinfo__isnull=False).count(),
+            'missed': max(0, req_veh_count - cnotes_count),
+            'settled': tr_qs.filter(tc_financestatus_id=7).count(),
+            'ready': tr_qs.filter(tc_financestatus_id=9).exclude(transinvoiceinfo__isnull=False).count(),
             'invoiced': ti_qs.count(),
         }
         return metrics

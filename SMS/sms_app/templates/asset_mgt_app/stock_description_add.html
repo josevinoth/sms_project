@@ -1,0 +1,105 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-boxes mr-2"></i> Add/Update Stock Description</h2>
+        <div style="position: relative; z-index: 10;">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK TO HOME
+            </a>
+        </div>
+    </div>
+
+    <form method="POST" action="">
+        {% csrf_token %}
+        <div class="modern-card" style="padding: 1rem !important;">
+            <div class="row row-compact">
+                <div class="col-12 col-md-3 col-compact">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Stock Description</label>
+                        {% render_field form.stock_description class="form-control form-control-modern" %}
+                    </div>
+                </div>
+                <div class="col-12 col-md-3 col-compact">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Stock Type</label>
+                        {% render_field form.stock_type class="form-control form-control-modern" %}
+                    </div>
+                </div>
+                <div class="col-12 col-md-3 col-compact">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Stock Received</label>
+                        {% render_field form.stock_received class="form-control form-control-modern" %}
+                    </div>
+                </div>
+                <div class="col-12 col-md-3 col-compact">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Stock Consumption</label>
+                        {% render_field form.stock_Consumption class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Area -->
+            <div class="message-container my-1 text-center">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
+                    <i class="fas fa-info-circle"></i> {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row mt-2">
+                <div class="col-12 col-xl-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn-modern btn-submit px-5">
+                            <i class="fas fa-check mr-2"></i> Save
+                        </button>
+                        <a href="{% url 'stock_description_add' %}" class="btn-modern btn-cancel px-5">
+                            <i class="fas fa-times mr-2"></i> Clear
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    
+    <!-- List View -->
+    <div class="modern-card mt-4">
+        <div class="table-responsive">
+            <table class="table table-modern">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th>Received UOM</th>
+                        <th>Consumption UOM</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sd in page_obj %}
+                    <tr>
+                        <td>{{ sd.id }}</td>
+                        <td>{{ sd.stock_description }}</td>
+                        <td>{{ sd.stock_type }}</td>
+                        <td>{{ sd.stock_received }}</td>
+                        <td>{{ sd.stock_Consumption }}</td>
+                        <td>
+                            <a href="{% url 'stock_description_update' sd.id %}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'stock_description_delete' sd.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

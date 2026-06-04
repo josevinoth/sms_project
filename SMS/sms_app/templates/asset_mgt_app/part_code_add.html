@@ -38,7 +38,15 @@
                         <div class="form-section-title"><i class="fas fa-info-circle"></i> Identity Details</div>
                         <div class="form-group-modern">
                             <label class="form-label-modern">Stock Description</label>
-                            {% render_field form.pc_stock_description class="form-control form-control-modern select2" id="pc_stock_description" %}
+                            <!-- Hidden select keeps the real form value; select2-search-input drives the AJAX search -->
+                            {% render_field form.pc_stock_description class="form-control form-control-modern" id="pc_stock_description" style="display:none" %}
+                            <div style="position:relative;">
+                                <input type="text" id="sd_search_input" autocomplete="off"
+                                       class="form-control form-control-modern"
+                                       placeholder="Type 2+ letters to search..."
+                                       style="background:#fff;color:#222;">
+                                <div id="sd_dropdown" style="display:none;position:absolute;z-index:9999;width:100%;max-height:220px;overflow-y:auto;background:#fff;border:1px solid #ccc;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,0.18);top:100%;left:0;"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -183,26 +191,111 @@
     });
 </script>
 <script>
-    $('#pc_stock_description').select2({
-    ajax: {
-        url: "{% url 'get_stock_descriptions' %}",
-        dataType: 'json',
-        delay: 250,
-        data: function (params) {
-            return { q: params.term };
-        },
-        processResults: function (data) {
-            console.log("Received Data:", data);
-            return data; // data is already { results: [...] }
-        },
-        cache: true
-    },
-    placeholder: "Search Stock Description",
-    minimumInputLength: 1,
-    width: 'resolve',
-    dropdownAutoWidth: true
-});
+(function() {
+    var searchUrl = "{% url 'get_stock_descriptions' %}";
+    var $input    = document.getElementById('sd_search_input');
+    var $dropdown = document.getElementById('sd_dropdown');
+    var $hidden   = document.getElementById('pc_stock_description');
+    var debounceTimer = null;
 
+    // Pre-fill text box when editing existing record
+    var selectedOption = $hidden.options[$hidden.selectedIndex];
+    if (selectedOption && selectedOption.value && selectedOption.value !== '0') {
+        $input.value = selectedOption.text;
+    }
+
+    $input.addEventListener('input', function() {
+        var term = $input.value.trim();
+        clearTimeout(debounceTimer);
+
+        if (term.length < 2) {
+            $dropdown.style.display = 'none';
+            $dropdown.innerHTML = '';
+            return;
+        }
+
+        debounceTimer = setTimeout(function() {
+            fetch(searchUrl + '?q=' + encodeURIComponent(term), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var results = data.results || [];
+                $dropdown.innerHTML = '';
+
+                if (results.length === 0) {
+                    $dropdown.innerHTML = '<div style="padding:8px 12px;color:#888;">No results found</div>';
+                    $dropdown.style.display = 'block';
+                    return;
+                }
+
+                results.forEach(function(item) {
+                    var div = document.createElement('div');
+                    div.textContent = item.text;
+                    div.style.cssText = 'padding:8px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:0.93rem;color:#222;';
+                    div.addEventListener('mouseenter', function() { div.style.background = '#e8f4ff'; });
+                    div.addEventListener('mouseleave', function() { div.style.background = ''; });
+                    div.addEventListener('mousedown', function(e) {
+                        e.preventDefault(); // prevent input blur before click fires
+                        // Set hidden select value
+                        var opt = $hidden.querySelector('option[value="' + item.id + '"]');
+                        if (!opt) {
+                            opt = document.createElement('option');
+                            opt.value = item.id;
+                            opt.text  = item.text;
+                            $hidden.appendChild(opt);
+                        }
+                        $hidden.value = item.id;
+                        $input.value  = item.text;
+                        $dropdown.style.display = 'none';
+
+                        // ── Auto-populate dimensions from description ──
+                        // Expected format: "Description Name - H*W*L"
+                        var dashIdx = item.text.lastIndexOf('-');
+                        if (dashIdx !== -1) {
+                            var dimPart = item.text.substring(dashIdx + 1).trim();
+                            var parts   = dimPart.split('*');
+                            if (parts.length === 3) {
+                                var h = parseFloat(parts[0].trim());
+                                var w = parseFloat(parts[1].trim());
+                                var l = parseFloat(parts[2].trim());
+
+                                var hField = document.getElementById('pc_height');
+                                var wField = document.getElementById('pc_width');
+                                var lField = document.getElementById('pc_length');
+
+                                if (hField && !isNaN(h)) hField.value = h;
+                                if (wField && !isNaN(w)) wField.value = w;
+                                if (lField && !isNaN(l)) lField.value = l;
+                            }
+                        }
+                        // ── End auto-populate ──
+                    });
+                    $dropdown.appendChild(div);
+                });
+
+                $dropdown.style.display = 'block';
+            })
+            .catch(function() {
+                $dropdown.style.display = 'none';
+            });
+        }, 250);
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!$input.contains(e.target) && !$dropdown.contains(e.target)) {
+            $dropdown.style.display = 'none';
+        }
+    });
+
+    // Show dropdown again when input re-focused and has text
+    $input.addEventListener('focus', function() {
+        if ($input.value.trim().length >= 2 && $dropdown.innerHTML !== '') {
+            $dropdown.style.display = 'block';
+        }
+    });
+})();
 </script>
 
 {% endblock content %}
