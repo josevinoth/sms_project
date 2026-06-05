@@ -126,36 +126,36 @@ def get_tms_dashboard_data(request):
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
 
-    def apply_enquiry_date_filter(qs, field_prefix=''):
-        """Filter by enquiry created date (en_created_at is a DateTimeField, use __date__ lookup)."""
-        date_field = f"{field_prefix}en_created_at" if not field_prefix else f"{field_prefix}en_created_at"
-        if from_date:
-            qs = qs.filter(**{f"{date_field}__date__gte": from_date})
-        if to_date:
-            qs = qs.filter(**{f"{date_field}__date__lte": to_date})
-        return qs
+    # Get the enquiries filtered by the date range
+    enquiries_base_qs = EnquirynoteInfo.objects.all()
+    if from_date:
+        enquiries_base_qs = enquiries_base_qs.filter(en_created_at__date__gte=from_date)
+    if to_date:
+        enquiries_base_qs = enquiries_base_qs.filter(en_created_at__date__lte=to_date)
 
     def calculate_metrics(user_id=None):
-        # All querysets filtered by Enquiry Created Date
-        en_qs = apply_enquiry_date_filter(EnquirynoteInfo.objects.all(), '')
-        cn_qs = apply_enquiry_date_filter(ConsignmentdetailInfo.objects.all(), 'co_enquirynumber__')
-        tr_qs = apply_enquiry_date_filter(TripdetailInfo.objects.all(), 'tr_enquirynumber__')
-        ti_qs = apply_enquiry_date_filter(TransInvoiceInfo.objects.all(), 'ti_trip__tr_enquirynumber__')
-
+        en_qs = enquiries_base_qs
         if user_id and user_id != 'all':
             en_qs = en_qs.filter(en_assignedto_id=user_id)
-            cn_qs = cn_qs.filter(co_enquirynumber__en_assignedto_id=user_id)
-            tr_qs = tr_qs.filter(tr_enquirynumber__en_assignedto_id=user_id)
-            ti_qs = ti_qs.filter(ti_trip__tr_enquirynumber__en_assignedto_id=user_id)
+
+        # Get C-Notes, Trip Details, and Invoices for these specific enquiries
+        cn_qs = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=en_qs)
+        tr_qs = TripdetailInfo.objects.filter(tr_enquirynumber__in=en_qs)
+        ti_qs = TransInvoiceInfo.objects.filter(ti_trip__tr_enquirynumber__in=en_qs)
 
         from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
         req_veh_count = Enquirynotevehicle.objects.filter(env_enquirynumber__in=en_qs).aggregate(total=Sum('env_quantity'))['total'] or 0
         cnotes_count = cn_qs.count()
 
+        # Missed Enquiry: enquiries with status=6 (Work In Progress / Pending) that have NO C-Note created yet.
+        pending_en_qs = en_qs.filter(en_status_id=6)
+        enquiries_with_cnote_ids = cn_qs.exclude(co_enquirynumber__isnull=True).values_list('co_enquirynumber_id', flat=True).distinct()
+        missed_count = pending_en_qs.exclude(id__in=enquiries_with_cnote_ids).count()
+
         metrics = {
             'enquiries': req_veh_count,
             'cnotes': cnotes_count,
-            'missed': max(0, req_veh_count - cnotes_count),
+            'missed': missed_count,
             'settled': tr_qs.filter(tc_financestatus_id=7).count(),
             'ready': tr_qs.filter(tc_financestatus_id=9).exclude(transinvoiceinfo__isnull=False).count(),
             'invoiced': ti_qs.count(),
@@ -165,18 +165,18 @@ def get_tms_dashboard_data(request):
     totals = calculate_metrics('all')
     employee_metrics = calculate_metrics(employee_id)
     
-    # Chart Data: Business Trip Distribution — filtered by Enquiry Created Date
-    business_qs = apply_enquiry_date_filter(
-        TripdetailInfo.objects.filter(tr_category__category__icontains="Business"),
-        'tr_enquirynumber__'
-    )
+    # Chart Data: Business Trip Distribution — filtered by the same active enquiries
+    active_en_qs = enquiries_base_qs
     if employee_id and employee_id != 'all':
-        business_qs = business_qs.filter(tr_enquirynumber__en_assignedto_id=employee_id)
+        active_en_qs = active_en_qs.filter(en_assignedto_id=employee_id)
+
+    business_qs = TripdetailInfo.objects.filter(
+        tr_category__category__icontains="Business",
+        tr_enquirynumber__in=active_en_qs
+    )
 
     if not business_qs.exists():
-        business_qs = apply_enquiry_date_filter(TripdetailInfo.objects.all(), 'tr_enquirynumber__')
-        if employee_id and employee_id != 'all':
-            business_qs = business_qs.filter(tr_enquirynumber__en_assignedto_id=employee_id)
+        business_qs = TripdetailInfo.objects.filter(tr_enquirynumber__in=active_en_qs)
 
     trip_types = Tr_triptype_Info.objects.all()
     local_type = trip_types.filter(tr_trip_type__icontains="Local").first()
@@ -198,8 +198,26 @@ def get_tms_dashboard_data(request):
         'local': [get_trip_count(s, local_type) for s in sources] + [get_trip_count('Total', local_type)],
         'outstation': [get_trip_count(s, outstation_type) for s in sources] + [get_trip_count('Total', outstation_type)]
     }
+
+    # C-Note Count done by CS representatives
+    cs_users = User_extInfo.objects.filter(
+        department_id=CS_DEPARTMENT_ID,
+        user__is_active=True
+    ).select_related('user')
+    cs_labels = []
+    cs_cnotes_counts = []
+    for emp in cs_users:
+        emp_en_qs = enquiries_base_qs.filter(en_assignedto_id=emp.user.id)
+        emp_cnotes_count = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=emp_en_qs).count()
+        cs_labels.append(emp.user.first_name)
+        cs_cnotes_counts.append(emp_cnotes_count)
     
-    # Donut Charts (Mileage Breakdown) — filtered by Enquiry Created Date
+    cs_cnote_chart = {
+        'labels': cs_labels,
+        'counts': cs_cnotes_counts
+    }
+    
+    # Donut Charts (Mileage Breakdown) — filtered by the same active enquiries
     own_vehicle_num = request.GET.get('own_vehicle_number')
     attached_vehicle_num = request.GET.get('attached_vehicle_number')
 
@@ -207,12 +225,10 @@ def get_tms_dashboard_data(request):
         db_source = ownership_type
         if ownership_type == 'Own': db_source = 'OWN'
 
-        qs = apply_enquiry_date_filter(
-            TripdetailInfo.objects.filter(tr_vehiclesource__ow_ownership__icontains=db_source),
-            'tr_enquirynumber__'
+        qs = TripdetailInfo.objects.filter(
+            tr_vehiclesource__ow_ownership__icontains=db_source,
+            tr_enquirynumber__in=active_en_qs
         )
-        if employee_id and employee_id != 'all':
-            qs = qs.filter(tr_enquirynumber__en_assignedto_id=employee_id)
 
         if ownership_type == 'Own' and own_vehicle_num and own_vehicle_num != 'all':
             qs = qs.filter(tr_vehiclenumber__iexact=own_vehicle_num)
@@ -316,6 +332,7 @@ def get_tms_dashboard_data(request):
         'totals': totals,
         'employee': employee_metrics,
         'bar_chart': bar_chart_data,
+        'cs_cnote_chart': cs_cnote_chart,
         'donut_own': get_km_details('Own'),
         'donut_attached': get_km_details('Attached'),
         'progress_chart': {

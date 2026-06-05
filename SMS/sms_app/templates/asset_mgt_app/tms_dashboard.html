@@ -10,6 +10,16 @@
             background: #060b26 !important;
             font-family: 'Inter', sans-serif !important;
         }
+        #main-content {
+            margin-left: 65px !important;
+            padding: 0 !important;
+        }
+        .container-fluid {
+            padding-top: 8px !important;
+            padding-bottom: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
     }
     @media screen and (max-width: 991px) {
         html, body {
@@ -148,21 +158,27 @@
                 </div>
             </div>
         </div>
-        <!-- Right Column: Vehicle Type wise Monthly Progress (expanded full height) -->
-        <div class="chart-panel" style="min-width: 0; overflow: hidden;">
-            <div class="chart-title" style="display: flex; align-items: center; justify-content: space-between; width: 100%; min-width: 0; flex-wrap: nowrap; gap: 6px;">
-                <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1; overflow: hidden;">
-                    <button id="progress-back-btn" class="btn btn-outline-info btn-xs" style="display: none; padding: 2px 8px; font-size: 10px; border-radius: 4px; background: transparent; border: 1px solid #36d1ff; color: #36d1ff; cursor: pointer; transition: all 0.2s; align-items: center; justify-content: center; gap: 4px; flex-shrink: 0;">
-                        <i class="fas fa-arrow-left"></i> Back
-                    </button>
-                    <div style="font-size: 0.95rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;"><i class="fas fa-chart-line" style="color:#36d1ff;"></i> Vehicle Trip wise Monthly Progress &ndash; <span id="progress-chart-month" style="color: #36d1ff;">Current Month</span></div>
+        <!-- Right Column: Vehicle Type wise Monthly Progress and CS Representative C-Notes Count -->
+        <div class="dash-left-col" style="min-width: 0; overflow: hidden;">
+            <div class="chart-panel" style="flex: 1; min-width: 0; overflow: hidden;">
+                <div class="chart-title" style="display: flex; align-items: center; justify-content: space-between; width: 100%; min-width: 0; flex-wrap: nowrap; gap: 6px;">
+                    <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1; overflow: hidden;">
+                        <button id="progress-back-btn" class="btn btn-outline-info btn-xs" style="display: none; padding: 2px 8px; font-size: 10px; border-radius: 4px; background: transparent; border: 1px solid #36d1ff; color: #36d1ff; cursor: pointer; transition: all 0.2s; align-items: center; justify-content: center; gap: 4px; flex-shrink: 0;">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <div style="font-size: 0.95rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;"><i class="fas fa-chart-line" style="color:#36d1ff;"></i> Vehicle Trip wise Monthly Progress &ndash; <span id="progress-chart-month" style="color: #36d1ff;">Current Month</span></div>
+                    </div>
+                    <input type="month" id="progress-month" class="dash-date-input" style="padding: 2px 4px; font-size: 11px; background: #060b26; color: #fff; border: 1px solid #1a2352; border-radius: 4px; outline: none; width: 110px; flex-shrink: 0;">
                 </div>
-                <input type="month" id="progress-month" class="dash-date-input" style="padding: 2px 4px; font-size: 11px; background: #060b26; color: #fff; border: 1px solid #1a2352; border-radius: 4px; outline: none; width: 110px; flex-shrink: 0;">
+                <div class="chart-canvas-wrap" style="overflow-x: auto; overflow-y: hidden;">
+                    <div id="progressChartInner" style="height: 100%; min-height: 0; position: relative; min-width: 100%;">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
             </div>
-            <div class="chart-canvas-wrap" style="overflow-x: auto; overflow-y: hidden;">
-                <div id="progressChartInner" style="height: 100%; min-height: 0; position: relative; min-width: 100%;">
-                    <canvas id="progressChart"></canvas>
-                </div>
+            <div class="chart-panel" style="flex: 1; min-width: 0; overflow: hidden;">
+                <div class="chart-title"><i class="fas fa-user-tie"></i> C-Note Count by CS Representative</div>
+                <div class="chart-canvas-wrap"><canvas id="csCnoteChart"></canvas></div>
             </div>
         </div>
     </div>
@@ -172,7 +188,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 <script>
     $(document).ready(function() {
-        let tripBarChart, ownDonutChart, attachedDonutChart, progressChart;
+        let tripBarChart, csCnoteChart, ownDonutChart, attachedDonutChart, progressChart;
         let progressBreakdowns = {};
         let currentProgressView = 'ranges'; // 'ranges' or 'vehicles'
         let selectedBucket = null;
@@ -507,6 +523,7 @@
         function initCharts(data) {
             Chart.register(ChartDataLabels);
             const ctxBar = document.getElementById('tripBarChart').getContext('2d');
+            const ctxCsCnote = document.getElementById('csCnoteChart').getContext('2d');
             const ctxOwn = document.getElementById('ownDonutChart').getContext('2d');
             const ctxAtt = document.getElementById('attachedDonutChart').getContext('2d');
 
@@ -545,6 +562,40 @@
                     ...commonOptions,
                     plugins: {
                         ...commonOptions.plugins,
+                        datalabels: {
+                            ...commonOptions.plugins.datalabels,
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 2,
+                            color: '#36d1ff'
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#9fb1d9', font: { size: 10 } }, grid: { display: false } },
+                        y: { ticks: { color: '#9fb1d9', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
+
+            csCnoteChart = new Chart(ctxCsCnote, {
+                type: 'bar',
+                data: {
+                    labels: data.cs_cnote_chart.labels,
+                    datasets: [{
+                        label: 'C-Notes',
+                        data: data.cs_cnote_chart.counts,
+                        backgroundColor: '#25667a',
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        ...commonOptions.plugins,
+                        legend: {
+                            display: false
+                        },
                         datalabels: {
                             ...commonOptions.plugins.datalabels,
                             anchor: 'end',
@@ -676,6 +727,10 @@
                         tripBarChart.data.datasets[1].data = data.bar_chart.outstation;
                         tripBarChart.update();
 
+                        csCnoteChart.data.labels = data.cs_cnote_chart.labels;
+                        csCnoteChart.data.datasets[0].data = data.cs_cnote_chart.counts;
+                        csCnoteChart.update();
+
                         renderProgressChartRanges();
 
                         ownDonutChart.data.datasets[0].data = data.donut_own;
@@ -691,7 +746,16 @@
             const isMobile = window.innerWidth < 992;
             
             // Remove padding from main bootstrap containers
-            $('.container-fluid').css('padding', '0');
+            $('.container-fluid').css({
+                'padding-bottom': '0',
+                'padding-left': '0',
+                'padding-right': '0'
+            });
+            if (isMobile) {
+                $('.container-fluid').css('padding-top', '0');
+            } else {
+                $('.container-fluid').css('padding-top', '8px');
+            }
             $('.row').css('margin', '0');
             
             // Adjust sidebar container (col-md-2)
@@ -721,7 +785,7 @@
                 'width': '100%',
                 'max-width': '100%',
                 'margin': '0',
-                'height': isMobile ? 'auto' : 'calc(100vh - 125px)',
+                'height': isMobile ? 'auto' : 'calc(100vh - 77px)',
                 'overflow': isMobile ? 'visible' : 'hidden'
             });
         }
