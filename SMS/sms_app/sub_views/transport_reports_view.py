@@ -392,7 +392,7 @@ VENDOR_PL_MKT_MKT_HEADERS = [
 ]
 
 OWN_VEHICLE_PL_HEADERS = [
-    "S No", "Trip date", "Cnote No", "Customer Name", "From", "To",
+    "S No", "Trip date", "Vehicle No", "Cnote No", "Customer Name", "From", "To",
     "Trip Charges", "Toll Charges", "Parking Charges", "Loading Charges", "Unloading Charges",
     "Weighment Charges", "Handling charges", "Halting Charges", "Revenue",
     "Driver Salary", "Fuel Cost", "Acting Driver", "Driver Bata", "Toll Cost",
@@ -1906,8 +1906,8 @@ def vendor_p_l_mkt_report_view(request):
     else:
         form = DmrForm()
 
-    selected_month = request.POST.get('month')
-    selected_year = request.POST.get('year')
+    date_from = (request.POST.get('date_from') or request.GET.get('date_from', '')).strip()
+    date_to = (request.POST.get('date_to') or request.GET.get('date_to', '')).strip()
     from_loc_id = request.POST.get('from_location')
     to_loc_id = request.POST.get('to_location')
     branch = request.POST.get('branch', '').strip()
@@ -1956,24 +1956,18 @@ def vendor_p_l_mkt_report_view(request):
     # FILTERS
     # ------------------------------------------------
 
-    if selected_month and selected_month != '0':
+    if date_from:
         trips = trips.filter(
-            Q(tr_loading_time__month=selected_month) |
-            Q(tr_departeddate__month=selected_month) |
-            Q(tr_departeddate_pickup__month=selected_month) |
-            Q(tr_reporteddate__month=selected_month) |
-            Q(tr_unloading_time__month=selected_month) |
-            Q(tr_created_at__month=selected_month)
+            Q(tr_departeddate_pickup__date__gte=date_from) |
+            Q(tr_departeddate__date__gte=date_from) |
+            Q(tr_loading_time__date__gte=date_from)
         )
 
-    if selected_year and selected_year != '0':
+    if date_to:
         trips = trips.filter(
-            Q(tr_loading_time__year=selected_year) |
-            Q(tr_departeddate__year=selected_year) |
-            Q(tr_departeddate_pickup__year=selected_year) |
-            Q(tr_reporteddate__year=selected_year) |
-            Q(tr_unloading_time__year=selected_year) |
-            Q(tr_created_at__year=selected_year)
+            Q(tr_departeddate_pickup__date__lte=date_to) |
+            Q(tr_departeddate__date__lte=date_to) |
+            Q(tr_loading_time__date__lte=date_to)
         )
 
     if from_loc_id:
@@ -2261,18 +2255,14 @@ def vendor_p_l_mkt_report_view(request):
             # Efficient date selection
             (lambda: (
                 next((d for d in [
-                    trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
-                    trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
-                    trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
-                    trip.tr_dock_out_time, trip.tr_created_at
-                ] if d and (not selected_month or selected_month == '0' or d.month == int(selected_month)) and
-                      (not selected_year or selected_year == '0' or d.year == int(selected_year))),
-                     next((d for d in [
-                         trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
-                         trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
-                         trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
-                         trip.tr_dock_out_time, trip.tr_created_at
-                     ] if d), None))
+                    trip.tr_departeddate_pickup,
+                    trip.tr_departeddate,
+                    trip.tr_loading_time,
+                    trip.tr_reporteddate, trip.tr_reporteddate_pickup,
+                    trip.tr_reporteddate_delivery, trip.tr_unloading_time,
+                    trip.tr_dock_in_time, trip.tr_dock_out_time, trip.tr_created_at
+                ] if d),
+                None)
             ))().strftime("%d-%m-%Y") if any([
                 trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
                 trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
@@ -2378,9 +2368,8 @@ def vendor_p_l_mkt_report_view(request):
         'form': form,
         'headers': VENDOR_PL_MKT_MKT_HEADERS,
         'data_rows': data_rows,
-
-        'selected_month': selected_month,
-        'selected_year': selected_year,
+        'date_from': date_from,
+        'date_to': date_to,
         'from_location': from_loc_id,
         'to_location': to_loc_id,
         'branch': branch,
@@ -2403,8 +2392,8 @@ def vendor_p_l_attached_report_view(request):
     else:
         form = DmrForm()
 
-    selected_month = request.POST.get('month')
-    selected_year = request.POST.get('year')
+    date_from = (request.POST.get('date_from') or request.GET.get('date_from', '')).strip()
+    date_to = (request.POST.get('date_to') or request.GET.get('date_to', '')).strip()
     from_loc_id = request.POST.get('from_location')
     to_loc_id = request.POST.get('to_location')
     vendor_id = request.POST.get('vendor_id') or request.GET.get('vendor_id')
@@ -2461,24 +2450,18 @@ def vendor_p_l_attached_report_view(request):
     # FILTERS
     # ------------------------------------------------
 
-    if selected_month and selected_month != '0':
+    if date_from:
         trips = trips.filter(
-            Q(tr_loading_time__month=selected_month) |
-            Q(tr_departeddate__month=selected_month) |
-            Q(tr_departeddate_pickup__month=selected_month) |
-            Q(tr_reporteddate__month=selected_month) |
-            Q(tr_unloading_time__month=selected_month) |
-            Q(tr_created_at__month=selected_month)
+            Q(tr_departeddate_pickup__date__gte=date_from) |
+            Q(tr_departeddate__date__gte=date_from) |
+            Q(tr_loading_time__date__gte=date_from)
         )
 
-    if selected_year and selected_year != '0':
+    if date_to:
         trips = trips.filter(
-            Q(tr_loading_time__year=selected_year) |
-            Q(tr_departeddate__year=selected_year) |
-            Q(tr_departeddate_pickup__year=selected_year) |
-            Q(tr_reporteddate__year=selected_year) |
-            Q(tr_unloading_time__year=selected_year) |
-            Q(tr_created_at__year=selected_year)
+            Q(tr_departeddate_pickup__date__lte=date_to) |
+            Q(tr_departeddate__date__lte=date_to) |
+            Q(tr_loading_time__date__lte=date_to)
         )
 
     if from_loc_id:
@@ -2777,17 +2760,11 @@ def vendor_p_l_attached_report_view(request):
             trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
             trip.tr_dock_out_time, trip.tr_created_at
         ]
-        target_month = int(selected_month) if selected_month and selected_month != '0' else None
-        target_year = int(selected_year) if selected_year and selected_year != '0' else None
-
         trip_date = None
         for d in dates:
             if d:
-                month_match = (not target_month or d.month == target_month)
-                year_match = (not target_year or d.year == target_year)
-                if month_match and year_match:
-                    trip_date = d
-                    break
+                trip_date = d
+                break
         if not trip_date:
             trip_date = next((d for d in dates if d), None)
         display_date = trip_date.strftime("%d-%m-%Y") if trip_date else ""
@@ -2902,8 +2879,8 @@ def vendor_p_l_attached_report_view(request):
         'form': form,
         'headers': VENDOR_PL_ATTACHED_HEADERS,
         'data_rows': data_rows,
-        'selected_month': selected_month,
-        'selected_year': selected_year,
+        'date_from': date_from,
+        'date_to': date_to,
         'from_location': from_loc_id,
         'to_location': to_loc_id,
         'vendor_id': int(vendor_id) if vendor_id else None,
@@ -3668,6 +3645,7 @@ def own_vehicle_pl_report_view(request):
         row = [
             current_idx,
             date_val,
+            safe_str(trip.tr_vehiclenumber),
             safe_str(trip.tr_consignmentnumber),
             safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
             safe_str(trip.tr_departedlocation),

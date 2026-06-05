@@ -200,10 +200,25 @@ def trans_invoice_edit(request, invoice_id):
     # POST REQUEST (SAVE)
     # ==================================================
     if request.method == "POST":
+        # Capture the OLD invoice number and customer BEFORE form overwrites them
+        old_inv_no = invoice.ti_inv_no
+        old_customer = invoice.ti_customer
+
         form = TransInvoiceForm(request.POST, instance=invoice)
 
         if form.is_valid():
             invoice = form.save(commit=False)
+
+            # If invoice number or customer changed, update ALL WOH children
+            # so they stay linked to this master (prevents orphaning & data loss)
+            new_inv_no = invoice.ti_inv_no
+            new_customer = invoice.ti_customer
+            if old_inv_no != new_inv_no or old_customer != new_customer:
+                TransInvoiceInfo.objects.filter(
+                    ti_customer=old_customer,
+                    ti_inv_no=old_inv_no,
+                    is_woh=True
+                ).update(ti_inv_no=new_inv_no, ti_customer=new_customer)
 
             # RE-CALCULATE TOTALS FROM SAVED WOH ITEMS (Ignore form read-only inputs)
             # Fetch WOH items again to be sure
@@ -342,13 +357,22 @@ def trans_invoice_list(request):
 def trans_invoice_delete(request, invoice_id):
     invoice = get_object_or_404(TransInvoiceInfo, pk=invoice_id)
 
-    # If this is a master invoice, delete all its associated WOH detail records as well
+    # If this is a master invoice, delete ALL its associated WOH detail records as well
     if not invoice.is_woh:
         TransInvoiceInfo.objects.filter(
             ti_inv_no=invoice.ti_inv_no,
             ti_customer=invoice.ti_customer,
             is_woh=True
         ).delete()
+        # Auto-clean: delete any other orphaned WOH records for this customer
+        # whose master invoice no longer exists (prevents trips from being permanently blocked)
+        valid_master_inv_nos = TransInvoiceInfo.objects.filter(
+            ti_customer=invoice.ti_customer, is_woh=False
+        ).exclude(pk=invoice_id).values_list('ti_inv_no', flat=True)
+        TransInvoiceInfo.objects.filter(
+            ti_customer=invoice.ti_customer,
+            is_woh=True
+        ).exclude(ti_inv_no__in=valid_master_inv_nos).delete()
 
     invoice.delete()
     messages.success(request, "Transportation Invoice Deleted Successfully!")
@@ -568,9 +592,15 @@ def trans_invoice_list_woh(request, customer_id):
 
     # 2. ALL trips already assigned to ANY invoice record for this customer
     # (These must be excluded from the Master list, even if they are from another invoice)
+    # IMPORTANT: Only consider WOH detail records that have a matching master invoice (is_woh=False).
+    # Orphaned WOH records (master was deleted but child was not cleaned up) must NOT block trips.
+    valid_woh_inv_nos = TransInvoiceInfo.objects.filter(
+        ti_customer_id=customer_id, is_woh=False
+    ).values_list('ti_inv_no', flat=True)
+
     all_assigned_trip_ids = (
         TransInvoiceInfo.objects
-        .filter(ti_customer_id=customer_id, is_woh=True)
+        .filter(ti_customer_id=customer_id, is_woh=True, ti_inv_no__in=valid_woh_inv_nos)
         .exclude(ti_trip_id__isnull=True)
         .values_list('ti_trip_id', flat=True)
     )

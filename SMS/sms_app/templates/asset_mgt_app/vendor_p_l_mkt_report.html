@@ -51,16 +51,16 @@
         </select>
     </div>
 
-    <!-- Column 5: Month -->
+    <!-- From Date -->
     <div class="col-md-2">
-        <label class="form-label fw-bold">Month</label>
-        {% render_field form.month class="form-control" value=selected_month %}
+        <label class="form-label fw-bold">From Date</label>
+        <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
     </div>
 
-    <!-- Column 6: Year -->
+    <!-- To Date -->
     <div class="col-md-2">
-        <label class="form-label fw-bold">Year</label>
-        {% render_field form.year class="form-control" value=selected_year %}
+        <label class="form-label fw-bold">To Date</label>
+        <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
     </div>
 
     <!-- Row 2 -->
