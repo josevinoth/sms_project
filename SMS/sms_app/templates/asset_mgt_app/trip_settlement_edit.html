@@ -178,7 +178,7 @@
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Total Halting</label>
                             <div class="d-flex align-items-center w-50">
-                                <input type="text" name="tc_total_halting_cost" id="tc_total_halting_cost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" readonly>
+                                <input type="text" name="tc_total_halting_cost" id="tc_total_halting_cost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" readonly value="{{ trip.tc_total_halting_cost|default:'0.00' }}">
                                 {% render_field tripclosure_form.tc_total_halting_cost_check id="tc_total_halting_cost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
@@ -385,16 +385,16 @@
             $("#tc_tripcost").val("{{ va_sale }}");
         }
         
-        // Auto-tick logic for initial values
-        autoTickCheckboxes();
+    // Auto-tick logic for initial page load only — does NOT re-tick on user input changes
+    autoTickCheckboxes();
      });
-
-    // Helper function to auto-tick checkboxes based on values
+</script>
+<script>
+    // Auto-tick on page load only — runs once, never re-ticks after user manually unchecks
     function autoTickCheckboxes() {
         const mappings = [
             { cost: 'tc_tripcost', check: 'tc_tripcost_check' }
         ];
-
         mappings.forEach(m => {
             const val = parseFloat($(`#${m.cost}`).val()) || 0;
             if (val > 0) {
@@ -402,11 +402,6 @@
             }
         });
     }
-
-    // Attach listeners for manual input
-    $(document).on('input change', 'input[type="number"], input[type="text"]', function() {
-        autoTickCheckboxes();
-    });
 </script>
 <script>
 function getRoRate(force=false) {

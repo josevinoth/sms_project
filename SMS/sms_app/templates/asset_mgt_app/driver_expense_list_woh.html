@@ -30,6 +30,9 @@
                 <thead class="thead-dark">
                 <tr>
                     <th>ID</th>
+                    <th>Trip Date</th>
+                    <th>Trip Number</th>
+                    <th>C-Note No</th>
                     <th>Driver Name</th>
                     <th>Expense Type</th>
                     <th>Parking</th>
@@ -47,6 +50,9 @@
                 {% for exp in expense_list %}
                 <tr>
                     <td>{{ exp.id }}</td>
+                    <td>{% if exp.trip_date %}{{ exp.trip_date|date:"d-m-Y" }}{% else %}—{% endif %}</td>
+                    <td>{{ exp.trip_number|default:"—" }}</td>
+                    <td>{{ exp.cnote|default:"—" }}</td>
                     <td>{{ exp.driver_name.dm_name }}</td>
                     <td>{{ exp.de_expense_type }}</td>
                     <td>{{ exp.de_parkingcost }}</td>
