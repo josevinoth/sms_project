@@ -5349,8 +5349,10 @@ def enquiry_pending_report_ajax_view(request):
     from_date = request.GET.get('date_from', '')
     to_date = request.GET.get('date_to', '')
 
-    # Base Query: All Enquiries (As requested by user: 'show all enquiry')
-    enquiries = EnquirynoteInfo.objects.all()
+    # Base Query: All Enquiries (except cancelled ones, as requested)
+    enquiries = EnquirynoteInfo.objects.exclude(
+        Q(en_status_id=8) | Q(tripdetailinfo__tc_financestatus_id=3)
+    )
 
     # Filter out enquiries where unassigned vehicles <= 0
     pending_ids = list(enquiries.values_list('id', flat=True))
