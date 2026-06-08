@@ -1,5 +1,5 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20260529-02">
+<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20260608-04">
 
 <style>
     /* Specific overrides for this dashboard if any */
@@ -61,50 +61,99 @@
         background: rgba(54, 209, 255, 0.2) !important;
         box-shadow: 0 0 8px rgba(54, 209, 255, 0.5);
     }
+
+    /* KPI Card Tooltips */
+    .dash-card[data-tip] {
+        cursor: default;
+    }
+    .dash-card[data-tip]::after {
+        content: attr(data-tip);
+        position: absolute;
+        bottom: calc(100% + 10px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(6, 11, 38, 0.97);
+        color: #d9e3ff;
+        font-size: 0.62rem;
+        font-weight: 400;
+        padding: 7px 10px;
+        border-radius: 6px;
+        border: 1px solid rgba(54, 209, 255, 0.45);
+        white-space: normal;
+        width: 190px;
+        line-height: 1.5;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+        z-index: 9999;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+        text-align: left;
+    }
+    .dash-card[data-tip]::before {
+        content: '';
+        position: absolute;
+        bottom: calc(100% + 4px);
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: rgba(54, 209, 255, 0.45);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+        z-index: 9999;
+    }
+    .dash-card[data-tip]:hover::after,
+    .dash-card[data-tip]:hover::before {
+        opacity: 1;
+    }
 </style>
 
 <div class="home-dashboard-wrap">
     <div class="dash-kpi-container">
-        <!-- Row 1: Totals -->
-        <div class="dash-kpi-row">
-            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                <div class="dash-dropdown-card" style="padding: 0.25rem 0.5rem;">
-                    <label style="margin-bottom: 0.1rem;"><i class="fas fa-calendar-alt"></i> From Date</label>
-                    <div class="dash-select-wrap">
-                        <input type="date" id="from-date" class="dash-date-input" style="padding: 2px;">
-                    </div>
-                </div>
-                <div class="dash-dropdown-card" style="padding: 0.25rem 0.5rem;">
-                    <label style="margin-bottom: 0.1rem;"><i class="fas fa-calendar-alt"></i> To Date</label>
-                    <div class="dash-select-wrap">
-                        <input type="date" id="to-date" class="dash-date-input" style="padding: 2px;">
-                    </div>
+        <!-- Filter Bar (top horizontal row) -->
+        <div class="dash-filter-bar">
+            <div class="dash-dropdown-card">
+                <label><i class="fas fa-calendar-alt"></i> From Date</label>
+                <div class="dash-select-wrap" style="flex:1;">
+                    <input type="date" id="from-date" class="dash-date-input">
                 </div>
             </div>
-            <div class="dash-card card-enquiry"><i class="fas fa-poll-h"></i><div class="dash-kpi-label">Vehicle Requested</div><div class="dash-kpi-value" id="total-enquiries">0</div></div>
-            <div class="dash-card card-cnote"><i class="fas fa-file-invoice"></i><div class="dash-kpi-label">C-Notes</div><div class="dash-kpi-value" id="total-cnotes">0</div></div>
-            <div class="dash-card card-missed"><i class="fas fa-exclamation-circle"></i><div class="dash-kpi-label">Missed Enquiry</div><div class="dash-kpi-value" id="total-missed">0</div></div>
-            <div class="dash-card card-settled"><i class="fas fa-check-double"></i><div class="dash-kpi-label">Trip Settled</div><div class="dash-kpi-value" id="total-settled">0</div></div>
-            <div class="dash-card card-ready"><i class="fas fa-hourglass-half"></i><div class="dash-kpi-label">Ready to Invoice</div><div class="dash-kpi-value" id="total-ready">0</div></div>
-            <div class="dash-card card-invoiced"><i class="fas fa-file-signature"></i><div class="dash-kpi-label">Invoiced</div><div class="dash-kpi-value" id="total-invoiced">0</div></div>
-        </div>
-        <!-- Row 2: Employee Specific -->
-        <div class="dash-kpi-row">
             <div class="dash-dropdown-card">
+                <label><i class="fas fa-calendar-alt"></i> To Date</label>
+                <div class="dash-select-wrap" style="flex:1;">
+                    <input type="date" id="to-date" class="dash-date-input">
+                </div>
+            </div>
+            <div class="dash-dropdown-card" style="flex:1.2;">
                 <label><i class="fas fa-user-tie"></i> CS Representative</label>
-                <div class="dash-select-wrap">
+                <div class="dash-select-wrap" style="flex:1;">
                     <select id="cs-employee-select" {% if dropdown_disabled %}disabled{% endif %} data-disabled="{{ dropdown_disabled|lower }}" data-default="{{ default_employee_id }}">
                         <option value="all">All Representatives</option>
                         {% for emp in cs_employees %}<option value="{{ emp.user.id }}">{{ emp.user.first_name }}</option>{% endfor %}
                     </select>
                 </div>
             </div>
-            <div class="dash-card card-enquiry"><i class="fas fa-poll-h"></i><div class="dash-kpi-label">Vehicle Requested</div><div class="dash-kpi-value" id="emp-enquiries">0</div></div>
-            <div class="dash-card card-cnote"><i class="fas fa-file-invoice"></i><div class="dash-kpi-label">C-Notes</div><div class="dash-kpi-value" id="emp-cnotes">0</div></div>
-            <div class="dash-card card-missed"><i class="fas fa-exclamation-circle"></i><div class="dash-kpi-label">Missed Enquiry</div><div class="dash-kpi-value" id="emp-missed">0</div></div>
-            <div class="dash-card card-settled"><i class="fas fa-check-double"></i><div class="dash-kpi-label">Trip Settled</div><div class="dash-kpi-value" id="emp-settled">0</div></div>
-            <div class="dash-card card-ready"><i class="fas fa-hourglass-half"></i><div class="dash-kpi-label">Ready to Invoice</div><div class="dash-kpi-value" id="emp-ready">0</div></div>
-            <div class="dash-card card-invoiced"><i class="fas fa-file-signature"></i><div class="dash-kpi-label">Invoiced</div><div class="dash-kpi-value" id="emp-invoiced">0</div></div>
+            <div class="dash-dropdown-card" style="flex:1.2;">
+                <label><i class="fas fa-code-branch"></i> Branch</label>
+                <div class="dash-select-wrap" style="flex:1;">
+                    <select id="branch-select">
+                        <option value="all">All Branches</option>
+                        {% for branch in branches %}
+                        <option value="{{ branch.id }}">{{ branch.loc_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <!-- KPI Cards Row (single line, 7 cards) -->
+        <div class="dash-kpi-row">
+            <div class="dash-card card-enquiry" data-tip="Total count of enquiries created within the selected date range, CS rep, and branch filters."><i class="fas fa-poll-h"></i><div class="dash-kpi-label">Vehicle Requested</div><div class="dash-kpi-value" id="kpi-enquiries">0</div></div>
+            <div class="dash-card card-cnote" data-tip="Count of enquiries (from Vehicle Requested) that have at least one Consignment Note (C-Note) created."><i class="fas fa-file-invoice"></i><div class="dash-kpi-label">C-Notes</div><div class="dash-kpi-value" id="kpi-cnotes">0</div></div>
+            <div class="dash-card card-missed" data-tip="Enquiries with NO C-Note and NO cancelled trip. Formula: Vehicle Requested − C-Notes − Cancelled."><i class="fas fa-exclamation-circle"></i><div class="dash-kpi-label">Missed Enquiry</div><div class="dash-kpi-value" id="kpi-missed">0</div></div>
+            <div class="dash-card card-cancelled" data-tip="Enquiries without a C-Note where the associated trip is marked as 'Trip Cancelled' in the finance status."><i class="fas fa-times-circle"></i><div class="dash-kpi-label">Cancelled Trips</div><div class="dash-kpi-value" id="kpi-cancelled">0</div></div>
+            <div class="dash-card card-settled" data-tip="Count of trips linked to the filtered enquiries that have finance status 'Trip Settled'."><i class="fas fa-check-double"></i><div class="dash-kpi-label">Trip Settled</div><div class="dash-kpi-value" id="kpi-settled">0</div></div>
+            <div class="dash-card card-ready" data-tip="Trips with finance status 'Ready to Invoice' that have not yet been invoiced."><i class="fas fa-hourglass-half"></i><div class="dash-kpi-label">Ready to Invoice</div><div class="dash-kpi-value" id="kpi-ready">0</div></div>
+            <div class="dash-card card-invoiced" data-tip="Count of Trans Invoice records raised for trips linked to the filtered enquiries."><i class="fas fa-file-signature"></i><div class="dash-kpi-label">Invoiced</div><div class="dash-kpi-value" id="kpi-invoiced">0</div></div>
         </div>
     </div>
 
@@ -219,13 +268,14 @@
             }
         };
 
-        function updateKpis(data, prefix) {
-            $(`#${prefix}-enquiries`).text(data.enquiries);
-            $(`#${prefix}-cnotes`).text(data.cnotes);
-            $(`#${prefix}-missed`).text(data.missed);
-            $(`#${prefix}-settled`).text(data.settled);
-            $(`#${prefix}-ready`).text(data.ready);
-            $(`#${prefix}-invoiced`).text(data.invoiced);
+        function updateKpis(data) {
+            $(`#kpi-enquiries`).text(data.enquiries);
+            $(`#kpi-cnotes`).text(data.cnotes);
+            $(`#kpi-missed`).text(data.missed);
+            $(`#kpi-cancelled`).text(data.cancelled);
+            $(`#kpi-settled`).text(data.settled);
+            $(`#kpi-ready`).text(data.ready);
+            $(`#kpi-invoiced`).text(data.invoiced);
         }
 
         let pinnedChart = false;
@@ -695,6 +745,7 @@
             const progressMonth = $('#progress-month').val();
             const ownVehicleNum = $('#own-vehicle-select').val();
             const attachedVehicleNum = $('#attached-vehicle-select').val();
+            const branchId = $('#branch-select').val();
 
             $.ajax({
                 url: "{% url 'get_tms_dashboard_data' %}",
@@ -704,12 +755,12 @@
                     'to_date': toDate,
                     'progress_month': progressMonth,
                     'own_vehicle_number': ownVehicleNum,
-                    'attached_vehicle_number': attachedVehicleNum
+                    'attached_vehicle_number': attachedVehicleNum,
+                    'branch_id': branchId
                 },
                 success: function(data) {
-                    // Always update totals from the same data response (backend should send both)
-                    updateKpis(data.totals, 'total');
-                    updateKpis(data.employee, 'emp');
+                    // Update KPIs using the filtered CS representative data
+                    updateKpis(data.employee);
 
                     progressBreakdowns = data.progress_chart.breakdowns;
                     lastProgressData = data;
@@ -829,7 +880,7 @@
             adjustLayout();
         });
 
-        $('#cs-employee-select, #from-date, #to-date, #progress-month, #own-vehicle-select, #attached-vehicle-select').on('change', function() {
+        $('#cs-employee-select, #from-date, #to-date, #progress-month, #own-vehicle-select, #attached-vehicle-select, #branch-select').on('change', function() {
             adjustLayout();
             loadDashboardData();
         });
