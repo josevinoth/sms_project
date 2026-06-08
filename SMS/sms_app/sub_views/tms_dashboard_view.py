@@ -181,13 +181,18 @@ def get_tms_dashboard_data(request):
                  .values_list('id', flat=True)
         )
 
-        # --- Cancelled: sum of env_quantity for enquiries that have a cancelled trip ---
-        en_ids_cancelled = set(
+        # --- Cancelled: sum of env_quantity for enquiries with a cancelled trip OR enquiries that are cancelled directly ---
+        en_ids_cancelled_trips = set(
             TripdetailInfo.objects.filter(
                 tr_enquirynumber_id__in=en_qs,
                 tc_financestatus_id=3
             ).values_list('tr_enquirynumber_id', flat=True).distinct()
         )
+        en_ids_cancelled_direct = set(
+            en_qs.filter(en_status_id=8).values_list('id', flat=True)
+        )
+        en_ids_cancelled = en_ids_cancelled_trips.union(en_ids_cancelled_direct)
+        
         cancelled_en_count = Enquirynotevehicle.objects.filter(
             env_enquirynumber_id__in=en_ids_cancelled
         ).aggregate(total=Sum('env_quantity'))['total'] or 0
