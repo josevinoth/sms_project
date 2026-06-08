@@ -686,7 +686,7 @@ OWN_VS_MARKET_SALES_HEADERS = [
 ]
 
 ENQUIRY_PENDING_HEADERS = [
-    "SNo", "Date", "Enquiry No", "From", "To", "Vehicle Requested", "Unassigned Vehicles", "Vehicle Type",
+    "SNo", "Date", "Enquiry No", "From", "To", "Vehicle Requested", "Assigned Vehicles", "Unassigned Vehicles", "Vehicle Type",
     "Customer Name", "Reason"
 ]
 
@@ -5349,8 +5349,8 @@ def enquiry_pending_report_ajax_view(request):
     from_date = request.GET.get('date_from', '')
     to_date = request.GET.get('date_to', '')
 
-    # Base Query: Pending Enquiries (Status 6)
-    enquiries = EnquirynoteInfo.objects.filter(en_status_id=6)
+    # Base Query: All Enquiries (As requested by user: 'show all enquiry')
+    enquiries = EnquirynoteInfo.objects.all()
 
     # Filter out enquiries where unassigned vehicles <= 0
     pending_ids = list(enquiries.values_list('id', flat=True))
@@ -5359,13 +5359,12 @@ def enquiry_pending_report_ajax_view(request):
         'env_enquirynumber_id').annotate(tot=Sum('env_quantity'))
     req_map = {r['env_enquirynumber_id']: r['tot'] or 0 for r in reqs}
 
-    allots = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=pending_ids).values(
+    allots = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=pending_ids, va_status_id=1).values(
         'va_enquirynumber_id').annotate(tot=Count('id'))
     allots_map = {a['va_enquirynumber_id']: a['tot'] or 0 for a in allots}
 
-    valid_ids = [eid for eid in pending_ids if req_map.get(eid, 0) > allots_map.get(eid, 0)]
-
-    enquiries = enquiries.filter(id__in=valid_ids).select_related(
+    # We show all enquiries here as requested, no longer filtering out those where unassigned <= 0
+    enquiries = enquiries.select_related(
         'en_customername', 'en_fromlocaion', 'en_tolocation'
     )
 
@@ -5405,7 +5404,7 @@ def enquiry_pending_report_ajax_view(request):
         2: 'en_enquirynumber',
         3: 'en_fromlocaion__place_name',
         4: 'en_tolocation__place_name',
-        8: 'en_customername__cu_name',
+        9: 'en_customername__cu_name',
     }
     order_field = col_map.get(order_col, '-en_created_at')
     if order_dir == 'desc' and not order_field.startswith('-'):
@@ -5431,7 +5430,7 @@ def enquiry_pending_report_ajax_view(request):
         total_req_qty[vr.env_enquirynumber_id] = total_req_qty.get(vr.env_enquirynumber_id, 0) + qty
 
     # Fetch allotments
-    allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids)
+    allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids, va_status_id=1)
     allot_map = {}
     for va in allotments:
         allot_map.setdefault(va.va_enquirynumber_id, []).append(va.id)
@@ -5455,6 +5454,7 @@ def enquiry_pending_report_ajax_view(request):
             safe_str(enq.en_fromlocaion),
             safe_str(enq.en_tolocation),
             veh_req_str,
+            str(total_placed),
             str(unplaced_count),
             veh_types,
             safe_str(enq.en_customername),
