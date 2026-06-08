@@ -181,7 +181,8 @@ def get_tms_dashboard_data(request):
                  .values_list('id', flat=True)
         )
 
-        # --- Cancelled: sum of env_quantity for enquiries with a cancelled trip OR enquiries that are cancelled directly ---
+        # --- Cancelled: sum of env_quantity for enquiries with a cancelled trip OR directly cancelled ---
+        # Exclude enquiries already counted in C-Notes to prevent double-counting
         en_ids_cancelled_trips = set(
             TripdetailInfo.objects.filter(
                 tr_enquirynumber_id__in=en_qs,
@@ -191,13 +192,14 @@ def get_tms_dashboard_data(request):
         en_ids_cancelled_direct = set(
             en_qs.filter(en_status_id=8).values_list('id', flat=True)
         )
-        en_ids_cancelled = en_ids_cancelled_trips.union(en_ids_cancelled_direct)
+        en_ids_cancelled = en_ids_cancelled_trips.union(en_ids_cancelled_direct) - en_ids_with_cnote
         
         cancelled_en_count = Enquirynotevehicle.objects.filter(
             env_enquirynumber_id__in=en_ids_cancelled
         ).aggregate(total=Sum('env_quantity'))['total'] or 0
 
         # --- Missed: sum of max(0, requested quantity - allotted count) for each enquiry ---
+        # Cancelled and C-Note enquiries are excluded to avoid double-counting
         from django.db.models import Count
         # We get the requested quantity per enquiry
         req_totals = {
@@ -216,6 +218,8 @@ def get_tms_dashboard_data(request):
         
         missed_count = 0
         for enq in en_qs:
+            if enq.id in en_ids_cancelled or enq.id in en_ids_with_cnote:
+                continue  # skip — already counted in Cancelled Trips or C-Notes
             req_qty = req_totals.get(enq.id, 0)
             allot_qty = allot_totals.get(enq.id, 0)
             if req_qty > allot_qty:
@@ -241,7 +245,7 @@ def get_tms_dashboard_data(request):
         active_en_qs = active_en_qs.filter(en_assignedto_id=employee_id)
 
     business_qs = TripdetailInfo.objects.filter(
-        tr_category__category__icontains="Business",
+        tr_category__category__iexact="Business",
         tr_enquirynumber__in=active_en_qs
     )
 
