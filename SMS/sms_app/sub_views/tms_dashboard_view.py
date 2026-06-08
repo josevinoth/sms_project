@@ -15,6 +15,7 @@ from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 from ..sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from ..sub_models.trans_invoice_mod import TransInvoiceInfo
 from ..sub_models.tr_businesstype_mod import Tr_businesstype_Info
+from ..sub_models.location_info_mod import Location_info
 import json
 
 # Customer Service department ID
@@ -74,6 +75,12 @@ def tms_dashboard(request):
         vm_ownership__ow_ownership__icontains='Attached'
     ).values_list('vm_registrationnumber', flat=True).order_by('vm_registrationnumber')
 
+    # Get all branches (Location_info) that have at least one CS employee
+    branches = Location_info.objects.filter(
+        user_extinfo__department_id=CS_DEPARTMENT_ID,
+        user_extinfo__user__is_active=True
+    ).distinct().order_by('loc_name')
+
     context = {
         'first_name': first_name,
         'cs_employees': cs_employees,
@@ -83,6 +90,7 @@ def tms_dashboard(request):
         'current_user_id': current_user_id,
         'own_vehicles': own_vehicles,
         'attached_vehicles': attached_vehicles,
+        'branches': branches,
     }
     return render(request, "asset_mgt_app/tms_dashboard.html", context)
 
@@ -125,6 +133,7 @@ def get_tms_dashboard_data(request):
 
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
+    branch_id = request.GET.get('branch_id')
 
     # Get the enquiries filtered by the date range
     enquiries_base_qs = EnquirynoteInfo.objects.all()
@@ -133,29 +142,85 @@ def get_tms_dashboard_data(request):
     if to_date:
         enquiries_base_qs = enquiries_base_qs.filter(en_created_at__date__lte=to_date)
 
+    # Apply branch filter — restrict to enquiries assigned to CS users in that branch
+    if branch_id and branch_id != 'all':
+        branch_user_ids = User_extInfo.objects.filter(
+            emp_branch_id=branch_id,
+            department_id=CS_DEPARTMENT_ID,
+            user__is_active=True
+        ).values_list('user_id', flat=True)
+        enquiries_base_qs = enquiries_base_qs.filter(en_assignedto_id__in=branch_user_ids)
+
     def calculate_metrics(user_id=None):
         en_qs = enquiries_base_qs
         if user_id and user_id != 'all':
             en_qs = en_qs.filter(en_assignedto_id=user_id)
 
-        # Get C-Notes, Trip Details, and Invoices for these specific enquiries
+        # Base querysets
         cn_qs = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=en_qs)
         tr_qs = TripdetailInfo.objects.filter(tr_enquirynumber__in=en_qs)
         ti_qs = TransInvoiceInfo.objects.filter(ti_trip__tr_enquirynumber__in=en_qs)
 
+        # --- Vehicle Requested: sum of env_quantity in Enquirynotevehicle for these enquiries ---
         from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
-        req_veh_count = Enquirynotevehicle.objects.filter(env_enquirynumber__in=en_qs).aggregate(total=Sum('env_quantity'))['total'] or 0
-        cnotes_count = cn_qs.count()
+        total_enquiries = Enquirynotevehicle.objects.filter(env_enquirynumber__in=en_qs).aggregate(total=Sum('env_quantity'))['total'] or 0
 
-        # Missed Enquiry: enquiries with status=6 (Work In Progress / Pending) that have NO C-Note created yet.
-        pending_en_qs = en_qs.filter(en_status_id=6)
-        enquiries_with_cnote_ids = cn_qs.exclude(co_enquirynumber__isnull=True).values_list('co_enquirynumber_id', flat=True).distinct()
-        missed_count = pending_en_qs.exclude(id__in=enquiries_with_cnote_ids).count()
+        # --- C-Notes: sum of env_quantity for enquiries that have AT LEAST one C-Note created ---
+        en_ids_with_cnote = set(
+            cn_qs.exclude(co_enquirynumber__isnull=True)
+                 .values_list('co_enquirynumber_id', flat=True)
+                 .distinct()
+        )
+        cnotes_count = Enquirynotevehicle.objects.filter(
+            env_enquirynumber_id__in=en_ids_with_cnote
+        ).aggregate(total=Sum('env_quantity'))['total'] or 0
+
+        # --- Enquiry IDs that do NOT yet have a C-Note ---
+        en_ids_without_cnote = list(
+            en_qs.exclude(id__in=en_ids_with_cnote)
+                 .values_list('id', flat=True)
+        )
+
+        # --- Cancelled: sum of env_quantity for enquiries that have a cancelled trip ---
+        en_ids_cancelled = set(
+            TripdetailInfo.objects.filter(
+                tr_enquirynumber_id__in=en_qs,
+                tc_financestatus_id=3
+            ).values_list('tr_enquirynumber_id', flat=True).distinct()
+        )
+        cancelled_en_count = Enquirynotevehicle.objects.filter(
+            env_enquirynumber_id__in=en_ids_cancelled
+        ).aggregate(total=Sum('env_quantity'))['total'] or 0
+
+        # --- Missed: sum of max(0, requested quantity - allotted count) for each enquiry ---
+        from django.db.models import Count
+        # We get the requested quantity per enquiry
+        req_totals = {
+            r['env_enquirynumber_id']: r['tot'] or 0 
+            for r in Enquirynotevehicle.objects.filter(env_enquirynumber__in=en_qs)
+            .values('env_enquirynumber_id')
+            .annotate(tot=Sum('env_quantity'))
+        }
+        # We get the allotted vehicle count per enquiry
+        allot_totals = {
+            a['va_enquirynumber_id']: a['tot'] or 0
+            for a in Vehicle_allotmentInfo.objects.filter(va_enquirynumber__in=en_qs)
+            .values('va_enquirynumber_id')
+            .annotate(tot=Count('id'))
+        }
+        
+        missed_count = 0
+        for enq in en_qs:
+            req_qty = req_totals.get(enq.id, 0)
+            allot_qty = allot_totals.get(enq.id, 0)
+            if req_qty > allot_qty:
+                missed_count += (req_qty - allot_qty)
 
         metrics = {
-            'enquiries': req_veh_count,
+            'enquiries': total_enquiries,
             'cnotes': cnotes_count,
             'missed': missed_count,
+            'cancelled': cancelled_en_count,
             'settled': tr_qs.filter(tc_financestatus_id=7).count(),
             'ready': tr_qs.filter(tc_financestatus_id=9).exclude(transinvoiceinfo__isnull=False).count(),
             'invoiced': ti_qs.count(),
