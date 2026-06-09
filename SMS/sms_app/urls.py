@@ -1094,6 +1094,7 @@ urlpatterns = [
     # Market Bill
     path('market_bill/', views.market_bill_add, name='market_bill_add'),
     path('market_bill/list/', views.market_bill_list, name='market_bill_list'),
+    path('market_bill/export_tally/', views.market_bill_export_tally, name='market_bill_export_tally'),
     path('market_bill/<int:id>/edit/', views.market_bill_edit, name='market_bill_edit'),
     path('market_bill/<int:id>/delete/', views.market_bill_delete, name='market_bill_delete'),
     path('market_bill/<int:id>/upload/', views.market_bill_upload, name='market_bill_upload'),

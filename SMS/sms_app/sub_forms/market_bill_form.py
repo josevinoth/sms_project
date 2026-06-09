@@ -57,6 +57,21 @@ class MarketBillForm(forms.ModelForm):
         widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_total_cost"})
     )
 
+    mb_tds_percent = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control", "id": "mb_tds_percent", "step": "0.01", "min": "0", "max": "100", "placeholder": "0.00"})
+    )
+
+    mb_tds_amount = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_tds_amount"})
+    )
+
+    mb_payable_amount = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_payable_amount"})
+    )
+
     mb_mail_attachment = forms.FileField(
         required=False,
         widget=forms.ClearableFileInput(attrs={"class": "form-control", "id": "mb_mail_attachment"})
@@ -80,6 +95,9 @@ class MarketBillForm(forms.ModelForm):
             'mb_halting_cost',
             'mb_halting_days',
             'mb_total_cost',
+            'mb_tds_percent',
+            'mb_tds_amount',
+            'mb_payable_amount',
             'mb_selected_trips',
             'mb_mail_attachment',
         ]

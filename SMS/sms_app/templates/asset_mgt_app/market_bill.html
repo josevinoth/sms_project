@@ -101,6 +101,27 @@
                             {% render_field form.mb_total_cost class="form-control" %}
                         </div>
 
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">TDS %</span>
+                            </div>
+                            {% render_field form.mb_tds_percent class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">TDS Amount</span>
+                            </div>
+                            {% render_field form.mb_tds_amount class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Payable Amount</span>
+                            </div>
+                            {% render_field form.mb_payable_amount class="form-control" %}
+                        </div>
+
                     </div>
                 </div>
 
@@ -381,7 +402,11 @@
         document.getElementById("mb_parking_cost").value = totalParking.toFixed(2);
         document.getElementById("mb_halting_cost").value = totalHalting.toFixed(2);
         document.getElementById("mb_halting_days").value = totalHaltingDays;
-        document.getElementById("mb_total_cost").value = (totalTrip + totalLoading + totalUnloading + totalParking + totalHalting).toFixed(2);
+        const grandTotal = totalTrip + totalLoading + totalUnloading + totalParking + totalHalting;
+        document.getElementById("mb_total_cost").value = grandTotal.toFixed(2);
+
+        // Recalculate TDS and Payable Amount
+        updateTdsAndPayable();
 
         document.getElementById("mb_selected_trips").value = Array.from(selectedTripIds).join(",");
     }
@@ -406,6 +431,20 @@
             updateTotals();
         }
     });
+
+    // Function to calculate TDS Amount and Payable Amount
+    function updateTdsAndPayable() {
+        const totalCost = parseFloat(document.getElementById("mb_total_cost").value) || 0;
+        const tdsPercent = parseFloat(document.getElementById("mb_tds_percent").value) || 0;
+        const tdsAmount = (totalCost * tdsPercent) / 100;
+        const payableAmount = totalCost - tdsAmount;
+        document.getElementById("mb_tds_amount").value = tdsAmount.toFixed(2);
+        document.getElementById("mb_payable_amount").value = payableAmount.toFixed(2);
+    }
+
+    // Recalculate when TDS % is changed manually
+    document.getElementById("mb_tds_percent").addEventListener("input", updateTdsAndPayable);
+    document.getElementById("mb_tds_percent").addEventListener("change", updateTdsAndPayable);
 
     // DataTable instance variable
     let tripsDataTable = null;
