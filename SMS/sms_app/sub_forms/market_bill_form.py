@@ -22,6 +22,14 @@ class MarketBillForm(forms.ModelForm):
         widget=forms.DateInput(attrs={"class": "form-control", "type": "date", "id": "mb_bill_date"})
     )
 
+    # Provide a blank "Select" option as the initial value so the dropdown shows a placeholder
+    mb_tds_type = forms.ChoiceField(
+        required=False,
+        choices=[('', 'Select'), ('Company', 'Company'), ('Non company', 'Non company')],
+        initial='',
+        widget=forms.Select(attrs={"class": "form-control", "id": "mb_tds_type"})
+    )
+
     mb_trip_cost = forms.FloatField(
         required=False,
         widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_trip_cost"})
@@ -88,6 +96,7 @@ class MarketBillForm(forms.ModelForm):
             'mb_vendor',
             'mb_bill_no',
             'mb_bill_date',
+            'mb_tds_type',
             'mb_trip_cost',
             'mb_loading_cost',
             'mb_unloading_cost',

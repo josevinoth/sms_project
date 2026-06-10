@@ -19,7 +19,7 @@
     <div class="col-2"></div>
 </div>
 
-<form method="POST" action="{% url 'trip_report' %}" class="row g-3 align-items-end">
+<form id="dmr_filter_form" method="POST" action="{% url 'trip_report' %}" class="row g-3 align-items-end">
     {% csrf_token %}
 
     <!-- Customer -->
@@ -59,6 +59,7 @@
 
     <div class="col-md-2">
         <button type="submit" class="btn btn-primary mt-3">Filter</button>
+        <a href="{{ request.path }}" class="btn btn-secondary mt-3">Clear</a>
     </div>
 </form>
 <br>
@@ -152,8 +153,28 @@
 </div>
 
 <script>
-$(document).ready(function () {
-    $('#trip_report_table').DataTable({
+// Initialize DataTable with a reusable function so we can rebuild if headers change
+var tripTable = null;
+function initTripTable() {
+    tripTable = $('#trip_report_table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "{% url 'trip_report_ajax' %}",
+            type: 'GET',
+            data: function (d) {
+                d.dmr_customer = $('#id_dmr_customer').val();
+                d.customer_department = $('#id_customer_department').val();
+                d.month = $('#id_month').val();
+                d.year = $('#id_year').val();
+                d.from_location = $('#id_from_location').val();
+                d.to_location = $('#id_to_location').val();
+            },
+            dataSrc: function (json) {
+                // DataTables will render rows from json.data
+                return json.data || [];
+            }
+        },
         scrollX: true,
         scrollCollapse: true,
         autoWidth: false,
@@ -164,29 +185,76 @@ $(document).ready(function () {
             [10, 25, 50, 100, -1],
             [10, 25, 50, 100, "All"]
         ],
-        pageLength: 10,
+        pageLength: 25,
         buttons: [
-            {
-                extend: 'copy',
-                className: 'btn btn-sm btn-info'
-            },
-            {
-                extend: 'csv',
-                className: 'btn btn-sm btn-info'
-            },
-            {
-                extend: 'excelHtml5',
-                className: 'btn btn-sm btn-info',
-                text: 'Excel',
-                title: 'DMR Report'
-            },
-            {
-                extend: 'print',
-                className: 'btn btn-sm btn-info',
-                title: 'DMR Report'
-            }
+            { extend: 'copy', className: 'btn btn-sm btn-info' },
+            { extend: 'csv', className: 'btn btn-sm btn-info' },
+            { extend: 'excelHtml5', className: 'btn btn-sm btn-info', text: 'Excel', title: 'DMR Report' },
+            { extend: 'print', className: 'btn btn-sm btn-info', title: 'DMR Report' }
         ],
         order: [[1, 'desc']]
+    });
+}
+
+function currentTableHeaders() {
+    return $('#trip_report_table thead th').map(function(){ return $(this).text().trim(); }).get();
+}
+
+$(document).ready(function () {
+    initTripTable();
+
+    $('#dmr_filter_form').on('submit', function (e) {
+        e.preventDefault();
+
+        // Build params to check headers first
+        var params = {
+            header_only: 1,
+            dmr_customer: $('#id_dmr_customer').val(),
+            customer_department: $('#id_customer_department').val(),
+            month: $('#id_month').val(),
+            year: $('#id_year').val(),
+            from_location: $('#id_from_location').val(),
+            to_location: $('#id_to_location').val()
+        };
+
+        $.getJSON("{% url 'trip_report_ajax' %}", params, function(res) {
+            if (!res || !res.headers) {
+                // fallback: just reload DataTable
+                if (tripTable) tripTable.ajax.reload();
+                return;
+            }
+
+            var returnedHeaders = res.headers;
+            var existingHeaders = currentTableHeaders();
+
+            // Compare headers length and content
+            var same = (returnedHeaders.length === existingHeaders.length) && returnedHeaders.every(function(h, i){ return h.trim() === existingHeaders[i].trim(); });
+
+            if (same) {
+                // Headers match, just reload data
+                if (tripTable) tripTable.ajax.reload();
+            } else {
+                // Rebuild table: destroy, replace thead, empty tbody, re-init
+                if (tripTable) {
+                    tripTable.destroy();
+                    tripTable = null;
+                }
+
+                // Replace thead
+                var thead_html = '<tr>';
+                for (var i=0;i<returnedHeaders.length;i++) {
+                    thead_html += '<th>' + returnedHeaders[i] + '</th>';
+                }
+                thead_html += '</tr>';
+                $('#trip_report_table thead').html(thead_html);
+                $('#trip_report_table tbody').html('');
+
+                // Re-initialize DataTable
+                initTripTable();
+            }
+        }).fail(function() {
+            if (tripTable) tripTable.ajax.reload();
+        });
     });
 });
 

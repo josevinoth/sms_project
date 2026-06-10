@@ -17,6 +17,9 @@ class MarketBillInfo(models.Model):
     mb_halting_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Halting Cost")
     mb_halting_days = models.IntegerField(default=0,null=True,blank=True,verbose_name="Halting Days")
     mb_total_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Total Cost")
+    # TDS type: Company -> default 2%, Non company -> default 1%
+    mb_tds_type = models.CharField(max_length=20, null=True, blank=True, verbose_name="TDS Type",
+                                   choices=[('Company', 'Company'), ('Non company', 'Non company')], default='Non company')
     mb_tds_percent = models.FloatField(default=0.0,null=True,blank=True,verbose_name="TDS %")
     mb_tds_amount = models.FloatField(default=0.0,null=True,blank=True,verbose_name="TDS Amount")
     mb_payable_amount = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Payable Amount")

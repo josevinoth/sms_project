@@ -47,6 +47,13 @@
                             {% render_field form.mb_bill_date class="form-control" %}
                         </div>
 
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">TDS Type</span>
+                            </div>
+                            {% render_field form.mb_tds_type class="form-control" %}
+                        </div>
+
                     </div>
 
                     <!-- ========== COLUMN 2 ========== -->
@@ -445,6 +452,33 @@
     // Recalculate when TDS % is changed manually
     document.getElementById("mb_tds_percent").addEventListener("input", updateTdsAndPayable);
     document.getElementById("mb_tds_percent").addEventListener("change", updateTdsAndPayable);
+
+    // Auto set TDS % based on TDS Type selection
+    function setTdsByType() {
+        const tdsTypeEl = document.getElementById("mb_tds_type");
+        if (!tdsTypeEl) return;
+        const tdsType = tdsTypeEl.value;
+        const tdsPercentEl = document.getElementById("mb_tds_percent");
+        if (!tdsPercentEl) return;
+
+        // Explicit mapping: Company -> 2%, Non company -> 1%, blank/Select -> leave empty
+        if (tdsType === 'Company') {
+            tdsPercentEl.value = (2.0).toFixed(2);
+        } else if (tdsType === 'Non company') {
+            tdsPercentEl.value = (1.0).toFixed(2);
+        } else {
+            // Placeholder selected; clear TDS % so user can choose manually after selecting type
+            tdsPercentEl.value = '';
+        }
+        updateTdsAndPayable();
+    }
+
+    document.getElementById("mb_tds_type")?.addEventListener("change", setTdsByType);
+
+    // Ensure initial TDS % reflects the selected type on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        setTdsByType();
+    });
 
     // DataTable instance variable
     let tripsDataTable = null;

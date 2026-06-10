@@ -800,24 +800,36 @@ def trip_fuel_cost_from_period(used_km, total_fuel_price, total_km, total_litres
 @login_required(login_url='login_page')
 def vehicle_log_report_view(request):
     first_name = request.session.get('first_name')
-    select_all = request.POST.get('select_all') or request.GET.get('select_all')
+    form = DmrForm()
 
-    if request.method == "POST":
-        form = DmrForm(request.POST)
-        vehicle_number = request.POST.get('vehicle_number')
-        selected_month = request.POST.get('month')
-        selected_year = request.POST.get('year')
-        from_loc_id = request.POST.get('from_location')
-        to_loc_id = request.POST.get('to_location')
-        branch_id = request.POST.get('branch')
-    else:
-        form = DmrForm()
-        vehicle_number = ""
-        selected_month = '0'
-        selected_year = '0'
-        from_loc_id = ""
-        to_loc_id = ""
-        branch_id = ""
+    all_vehicles = VehiclemasterInfo.objects.filter(
+        vm_ownership_id__in=[1, 2]
+    ).order_by('vm_registrationnumber')
+
+    return render(request, "asset_mgt_app/vehicle_log_report.html", {
+        'first_name': first_name,
+        'form': form,
+        'headers': VEHICLE_LOG_HEADERS,
+        'data_rows': [],
+        'all_vehicles': all_vehicles,
+    })
+
+def vehicle_log_report_ajax_view(request):
+    from django.http import JsonResponse
+    from django.db.models import Q
+    from ..models import Location_info, ConsignmentgoodsInfo, TripdetailInfo
+    
+    draw = safe_int(request.GET.get('draw'), 1)
+    start = safe_int(request.GET.get('start'), 0)
+    length = safe_int(request.GET.get('length'), 10)
+
+    vehicle_number = request.GET.get('vehicle_number', '')
+    selected_month = request.GET.get('month', '0')
+    selected_year = request.GET.get('year', '0')
+    from_loc_id = request.GET.get('from_location', '')
+    to_loc_id = request.GET.get('to_location', '')
+    branch_id = request.GET.get('branch', '')
+    search_value = request.GET.get('search[value]', '').strip()
 
     trips = TripdetailInfo.objects.select_related(
         'tr_enquirynumber',
@@ -828,7 +840,6 @@ def vehicle_log_report_view(request):
         'tr_reportedlocation'
     ).filter(tr_vehiclesource_id__in=[1, 2])
 
-    # Filters
     if vehicle_number:
         trips = trips.filter(tr_vehiclenumber__icontains=vehicle_number)
 
@@ -850,13 +861,13 @@ def vehicle_log_report_view(request):
     if branch_id:
         try:
             b_id = int(branch_id)
-            if b_id == 1:  # BLR
+            if b_id == 1:
                 trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
-            elif b_id == 2:  # MAA
+            elif b_id == 2:
                 trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
-            elif b_id == 3:  # PNY
+            elif b_id == 3:
                 trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='PNY')
-            elif b_id == 4:  # HYD
+            elif b_id == 4:
                 trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='HYD')
             else:
                 loc = Location_info.objects.get(id=b_id)
@@ -864,19 +875,47 @@ def vehicle_log_report_view(request):
         except (ValueError, Location_info.DoesNotExist):
             pass
 
-    trips = trips.order_by('-tr_created_at')  # Order by created_at for consistency if loading_time is missing
+    if search_value:
+        trips = trips.filter(
+            Q(tr_vehiclenumber__icontains=search_value) |
+            Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+            Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
+            Q(tr_drivername__icontains=search_value)
+        )
 
-    # Performance Optimization: Limit results
-    if select_all == 'true':
-        trips = trips[:2000]  # Safe upper limit for report
+    records_total = trips.order_by().values('id').count()
+    records_filtered = records_total
+
+    order_column_idx = safe_int(request.GET.get('order[0][column]'), -1)
+    order_dir = request.GET.get('order[0][dir]', 'asc')
+    
+    order_map = {
+        1: 'tr_created_at',
+        2: 'tr_tripnumber',
+        3: 'tr_vehiclenumber',
+        9: 'tr_departedlocation__place_name',
+        10: 'tr_reportedlocation__place_name',
+        11: 'tr_consignmentnumber__co_consignmentnumber',
+        12: 'tr_enquirynumber__en_customername__cu_name',
+        14: 'tr_drivername',
+    }
+
+    sort_field = order_map.get(order_column_idx)
+    if sort_field:
+        if order_dir == 'desc':
+            sort_field = '-' + sort_field
+        trips = trips.order_by(sort_field)
     else:
-        # Default view or filtered view: reasonable limit for fast load
-        if not (vehicle_number or (selected_month and selected_month != '0') or from_loc_id or to_loc_id or branch_id):
-            trips = trips[:100]  # Very fast initial load
-        else:
-            trips = trips[:1000]  # Fast filtered load
+        trips = trips.order_by('-tr_created_at')
 
-    trip_cons_ids = [t.tr_consignmentnumber_id for t in trips if t.tr_consignmentnumber_id]
+    if length != -1:
+        paginated_trips = trips[start:start + length]
+    else:
+        paginated_trips = trips[start:]
+
+    all_matching_trips = list(paginated_trips)
+
+    trip_cons_ids = [t.tr_consignmentnumber_id for t in all_matching_trips if t.tr_consignmentnumber_id]
 
     goods_map = {
         g.cg_consignmentnumber_id: g
@@ -886,13 +925,11 @@ def vehicle_log_report_view(request):
     }
 
     data_rows = []
-    for idx, trip in enumerate(trips, start=1):
+    for idx, trip in enumerate(all_matching_trips, start=start + 1):
         cons_goods = goods_map.get(trip.tr_consignmentnumber_id)
 
-        # Fallback date for display
         display_date = trip.tr_loading_time or trip.tr_departeddate or trip.tr_departeddate_pickup or trip.tr_reporteddate or trip.tr_reporteddate_pickup or trip.tr_created_at
 
-        # Start / closing km — same rules as vehicle_log_used_km()
         start_km = trip.tr_reportedkm_pickup if trip.tr_reportedkm_pickup else (trip.tr_departedkm or 0)
         closing_km = trip.tr_reportedkm_delivery if trip.tr_reportedkm_delivery else (trip.tr_reportedkm or 0)
         used_km = vehicle_log_used_km(trip)
@@ -904,35 +941,22 @@ def vehicle_log_report_view(request):
             safe_str(trip.tr_vehiclenumber),
             _fmt_dt(trip.tr_departeddate)[11:] if trip.tr_departeddate else "",
             _fmt_dt(trip.tr_reporteddate)[11:] if trip.tr_reporteddate else "",
-            safe_str(start_km),  # Start Km (from loading checkpoint)
-            safe_str(closing_km),  # Closing Km (from unloading checkpoint)
-            safe_str(used_km),  # Used Km (difference)
+            safe_str(start_km),
+            safe_str(closing_km),
+            safe_str(used_km),
             safe_str(trip.tr_departedlocation),
             safe_str(trip.tr_reportedlocation),
-            safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else safe_str(
-                trip.tr_category),
-            safe_str(trip.tr_enquirynumber.en_customername),
+            safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else safe_str(trip.tr_category),
+            safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
             safe_str(cons_goods.cg_consigner) if cons_goods else "",
             safe_str(trip.tr_drivername),
         ])
 
-    all_vehicles = VehiclemasterInfo.objects.filter(
-        vm_ownership_id__in=[1, 2]
-    ).order_by('vm_registrationnumber')
-
-    return render(request, "asset_mgt_app/vehicle_log_report.html", {
-        'first_name': first_name,
-        'form': form,
-        'headers': VEHICLE_LOG_HEADERS,
-        'data_rows': data_rows,
-        'vehicle_number': vehicle_number,
-        'selected_month': selected_month,
-        'selected_year': selected_year,
-        'from_location': from_loc_id,
-        'to_location': to_loc_id,
-        'branch_id': branch_id,
-        'select_all': select_all,
-        'all_vehicles': all_vehicles,
+    return JsonResponse({
+        "draw": draw,
+        "recordsTotal": records_total,
+        "recordsFiltered": records_filtered,
+        "data": data_rows
     })
 
 
