@@ -20,7 +20,7 @@ class EnquirynoteInfo(models.Model):
     en_pickupdatetime = models.DateTimeField(default=timezone.now, null=True, blank=True)
     en_business_type = models.ForeignKey(Tr_businesstype_Info, on_delete=models.CASCADE, default=1,null=True,blank=True)
     en_movement_type = models.ForeignKey(MovementtypeInfo, on_delete=models.CASCADE, default=1,null=True,blank=True)
-    en_trip_type = models.ForeignKey(Tr_triptype_Info, on_delete=models.CASCADE, default="",null=True,blank=True)
+    en_trip_type = models.ForeignKey(Tr_triptype_Info, on_delete=models.CASCADE, null=False, blank=False)
     en_fromlocaion = models.ForeignKey(Places, on_delete=models.CASCADE, related_name='en_fromlocaion',db_column='en_fromlocaion', null=True, blank=True)
     en_tolocation = models.ForeignKey(Places, on_delete=models.CASCADE, related_name='en_tolocation',db_column='en_tolocation', null=True, blank=True)
     en_touchpoint = models.ForeignKey(Places, on_delete=models.CASCADE, related_name='en_touchpoint',db_column='en_touchpoint', null=True, blank=True)

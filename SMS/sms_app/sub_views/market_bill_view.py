@@ -318,11 +318,22 @@ def get_trips_by_vendor(request):
         vm_ownership_id=market_ownership_id
     ).values_list('vm_registrationnumber', flat=True)
 
-    # Option 2: Get enquiries allotted to this vendor
-    allotted_enquiry_ids = Vehicle_allotmentInfo.objects.filter(
+    # Option 2: Get enquiries and vehicles allotted to this vendor
+    allotted_enquiries = Vehicle_allotmentInfo.objects.filter(
         va_vendor_id=vendor_id,
         va_vehiclesource_id=market_ownership_id
-    ).values_list('va_enquirynumber_id', flat=True)
+    ).select_related('va_vehiclenumber')
+
+    allotment_filters = Q()
+    has_allotments = False
+    for allotment in allotted_enquiries:
+        reg_no = allotment.va_vehiclenumber.vm_registrationnumber if allotment.va_vehiclenumber else allotment.va_vehiclenumber_mkt
+        if reg_no:
+            allotment_filters |= Q(tr_enquirynumber_id=allotment.va_enquirynumber_id, tr_vehiclenumber__iexact=reg_no)
+            has_allotments = True
+
+    if not has_allotments:
+        allotment_filters = Q(pk__in=[])
 
     # Get all already billed trip IDs from all MarketBillInfo records
     billed_trip_ids = set()
@@ -336,12 +347,11 @@ def get_trips_by_vendor(request):
             # If any non-integer values slip in, fallback to string-based set
             billed_trip_ids.update([tid.strip() for tid in bill.mb_selected_trips.split(',') if tid.strip()])
 
-    # Filter trips for ANY vehicle or enquiry of this vendor that are not billed
+    # Filter trips for ANY vehicle or allotment of this vendor that are not billed
     # Show trips in 'Trip Settled' (ID 7) or 'Ready for Invoice' (ID 9) financial status
     # Plus double check that the trip record itself is marked as 'Market' source
     trips = TripdetailInfo.objects.filter(
-        (Q(tr_vehiclenumber__in=list(vendor_master_vehicles)) | 
-         Q(tr_enquirynumber_id__in=list(allotted_enquiry_ids))),
+        (Q(tr_vehiclenumber__in=list(vendor_master_vehicles)) | allotment_filters),
         Q(tr_departeddate__gte='2026-05-01') | Q(tr_departeddate__isnull=True, tr_created_at__gte='2026-05-01 00:00:00'),
         tc_financestatus_id__in=eligible_status_ids,
         tr_vehiclesource_id=market_ownership_id

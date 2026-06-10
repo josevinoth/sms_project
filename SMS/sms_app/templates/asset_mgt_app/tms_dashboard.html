@@ -1,5 +1,5 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20260608-04">
+<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20260609-01">
 
 <style>
     /* Specific overrides for this dashboard if any */
@@ -145,12 +145,13 @@
                 </div>
             </div>
         </div>
-        <!-- KPI Cards Row (single line, 7 cards) -->
+        <!-- KPI Cards Row (single line, 8 cards) -->
         <div class="dash-kpi-row">
             <div class="dash-card card-enquiry" data-tip="Total count of enquiries created within the selected date range, CS rep, and branch filters."><i class="fas fa-poll-h"></i><div class="dash-kpi-label">Vehicle Requested</div><div class="dash-kpi-value" id="kpi-enquiries">0</div></div>
             <div class="dash-card card-cnote" data-tip="Count of enquiries (from Vehicle Requested) that have at least one Consignment Note (C-Note) created."><i class="fas fa-file-invoice"></i><div class="dash-kpi-label">C-Notes</div><div class="dash-kpi-value" id="kpi-cnotes">0</div></div>
-            <div class="dash-card card-missed" data-tip="Enquiries with NO C-Note and NO cancelled trip. Formula: Vehicle Requested − C-Notes − Cancelled."><i class="fas fa-exclamation-circle"></i><div class="dash-kpi-label">Missed Enquiry</div><div class="dash-kpi-value" id="kpi-missed">0</div></div>
-            <div class="dash-card card-cancelled" data-tip="Enquiries without a C-Note where the associated trip is marked as 'Trip Cancelled' in the finance status."><i class="fas fa-times-circle"></i><div class="dash-kpi-label">Cancelled Trips</div><div class="dash-kpi-value" id="kpi-cancelled">0</div></div>
+            <div class="dash-card card-missed" data-tip="Enquiries with NO C-Note and NO cancelled trip. Shows unallotted vehicle quantity."><i class="fas fa-exclamation-circle"></i><div class="dash-kpi-label">Vehicles Missed</div><div class="dash-kpi-value" id="kpi-missed">0</div></div>
+            <div class="dash-card card-cancelled" data-tip="Enquiries without a C-Note where the associated trip is marked as cancelled, or the enquiry itself is directly cancelled."><i class="fas fa-times-circle"></i><div class="dash-kpi-label">Enquiries Cancelled</div><div class="dash-kpi-value" id="kpi-enquiries-cancelled">0</div></div>
+            <div class="dash-card card-trips-cancelled" data-tip="Count of individual trip records marked as cancelled (finance status = Cancelled), regardless of whether the enquiry also has a C-Note."><i class="fas fa-ban"></i><div class="dash-kpi-label">Trips Cancelled</div><div class="dash-kpi-value" id="kpi-trips-cancelled">0</div></div>
             <div class="dash-card card-settled" data-tip="Count of trips linked to the filtered enquiries that have finance status 'Trip Settled'."><i class="fas fa-check-double"></i><div class="dash-kpi-label">Trip Settled</div><div class="dash-kpi-value" id="kpi-settled">0</div></div>
             <div class="dash-card card-ready" data-tip="Trips with finance status 'Ready to Invoice' that have not yet been invoiced."><i class="fas fa-hourglass-half"></i><div class="dash-kpi-label">Ready to Invoice</div><div class="dash-kpi-value" id="kpi-ready">0</div></div>
             <div class="dash-card card-invoiced" data-tip="Count of Trans Invoice records raised for trips linked to the filtered enquiries."><i class="fas fa-file-signature"></i><div class="dash-kpi-label">Invoiced</div><div class="dash-kpi-value" id="kpi-invoiced">0</div></div>
@@ -272,7 +273,8 @@
             $(`#kpi-enquiries`).text(data.enquiries);
             $(`#kpi-cnotes`).text(data.cnotes);
             $(`#kpi-missed`).text(data.missed);
-            $(`#kpi-cancelled`).text(data.cancelled);
+            $(`#kpi-enquiries-cancelled`).text(data.enquiries_cancelled);
+            $(`#kpi-trips-cancelled`).text(data.trips_cancelled);
             $(`#kpi-settled`).text(data.settled);
             $(`#kpi-ready`).text(data.ready);
             $(`#kpi-invoiced`).text(data.invoiced);
@@ -412,10 +414,10 @@
                     plugins: {
                         legend: { display: false },
                         datalabels: {
-                            color: '#fff',
-                            anchor: 'end',
-                            align: 'right',
-                            offset: 4,
+                            color: '#ffffff',
+                            anchor: 'center',
+                            align: 'center',
+                            offset: 0,
                             font: { weight: '700', size: 10 },
                             formatter: (value) => {
                                 return value > 0 ? value : '';
@@ -506,10 +508,10 @@
                     plugins: {
                         legend: { display: false },
                         datalabels: {
-                            color: '#fff',
-                            anchor: 'end',
-                            align: 'top',
-                            offset: 2,
+                            color: '#ffffff',
+                            anchor: 'center',
+                            align: 'center',
+                            offset: 0,
                             font: { weight: '700', size: 10 },
                             formatter: (value) => {
                                 return value > 0 ? value : '';
@@ -614,10 +616,14 @@
                         ...commonOptions.plugins,
                         datalabels: {
                             ...commonOptions.plugins.datalabels,
-                            anchor: 'end',
-                            align: 'top',
-                            offset: 2,
-                            color: '#36d1ff'
+                            anchor: 'center',
+                            align: 'center',
+                            offset: 0,
+                            color: '#ffffff',
+                            font: { weight: '700', size: 10 },
+                            formatter: (value) => {
+                                return value > 0 ? value : '';
+                            }
                         }
                     },
                     scales: {
@@ -648,10 +654,14 @@
                         },
                         datalabels: {
                             ...commonOptions.plugins.datalabels,
-                            anchor: 'end',
-                            align: 'top',
-                            offset: 2,
-                            color: '#36d1ff'
+                            anchor: 'center',
+                            align: 'center',
+                            offset: 0,
+                            color: '#ffffff',
+                            font: { weight: '700', size: 10 },
+                            formatter: (value) => {
+                                return value > 0 ? value : '';
+                            }
                         }
                     },
                     scales: {

@@ -165,15 +165,13 @@ def get_tms_dashboard_data(request):
         from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
         total_enquiries = Enquirynotevehicle.objects.filter(env_enquirynumber__in=en_qs).aggregate(total=Sum('env_quantity'))['total'] or 0
 
-        # --- C-Notes: sum of env_quantity for enquiries that have AT LEAST one C-Note created ---
+        # --- C-Notes: count of individual C-Note records (representing billed trips) ---
         en_ids_with_cnote = set(
             cn_qs.exclude(co_enquirynumber__isnull=True)
                  .values_list('co_enquirynumber_id', flat=True)
                  .distinct()
         )
-        cnotes_count = Enquirynotevehicle.objects.filter(
-            env_enquirynumber_id__in=en_ids_with_cnote
-        ).aggregate(total=Sum('env_quantity'))['total'] or 0
+        cnotes_count = cn_qs.exclude(co_enquirynumber__isnull=True).count()
 
         # --- Enquiry IDs that do NOT yet have a C-Note ---
         en_ids_without_cnote = list(
@@ -181,8 +179,8 @@ def get_tms_dashboard_data(request):
                  .values_list('id', flat=True)
         )
 
-        # --- Cancelled: sum of env_quantity for enquiries with a cancelled trip OR directly cancelled ---
-        # Exclude enquiries already counted in C-Notes to prevent double-counting
+        # --- Enquiries Cancelled: enquiries directly cancelled OR with a cancelled trip,
+        #     but excluding enquiries already counted in C-Notes ---
         en_ids_cancelled_trips = set(
             TripdetailInfo.objects.filter(
                 tr_enquirynumber_id__in=en_qs,
@@ -192,34 +190,49 @@ def get_tms_dashboard_data(request):
         en_ids_cancelled_direct = set(
             en_qs.filter(en_status_id=8).values_list('id', flat=True)
         )
-        en_ids_cancelled = en_ids_cancelled_trips.union(en_ids_cancelled_direct) - en_ids_with_cnote
-        
-        cancelled_en_count = Enquirynotevehicle.objects.filter(
-            env_enquirynumber_id__in=en_ids_cancelled
+        # Enquiries Cancelled = (trip-cancelled + direct-cancelled) minus those already with C-Notes
+        en_ids_enquiries_cancelled = en_ids_cancelled_trips.union(en_ids_cancelled_direct) - en_ids_with_cnote
+        enquiries_cancelled_count = Enquirynotevehicle.objects.filter(
+            env_enquirynumber_id__in=en_ids_enquiries_cancelled
         ).aggregate(total=Sum('env_quantity'))['total'] or 0
 
-        # --- Missed: sum of max(0, requested quantity - allotted count) for each enquiry ---
-        # Cancelled and C-Note enquiries are excluded to avoid double-counting
+        # --- Trips Cancelled: actual count of TripdetailInfo records with cancelled finance status,
+        #     ONLY for enquiries that HAVE a C-Note. PLUS any cancelled C-Notes.
+        base_trips_cancelled = TripdetailInfo.objects.filter(
+            tr_enquirynumber_id__in=en_ids_with_cnote,
+            tc_financestatus_id=3
+        ).count()
+        
+        cancelled_cnotes_count = cn_qs.filter(co_status_id=8).count()
+        
+        overlap = TripdetailInfo.objects.filter(
+            tr_enquirynumber_id__in=en_ids_with_cnote,
+            tc_financestatus_id=3,
+            tr_consignmentnumber__co_status_id=8
+        ).count()
+        
+        trips_cancelled_count = base_trips_cancelled + cancelled_cnotes_count - overlap
+
+        # --- Missed (Vehicles Missed): unallotted vehicle quantity for non-cancelled, non-cnote enquiries ---
         from django.db.models import Count
-        # We get the requested quantity per enquiry
         req_totals = {
-            r['env_enquirynumber_id']: r['tot'] or 0 
+            r['env_enquirynumber_id']: r['tot'] or 0
             for r in Enquirynotevehicle.objects.filter(env_enquirynumber__in=en_qs)
             .values('env_enquirynumber_id')
             .annotate(tot=Sum('env_quantity'))
         }
-        # We get the allotted vehicle count per enquiry
         allot_totals = {
             a['va_enquirynumber_id']: a['tot'] or 0
             for a in Vehicle_allotmentInfo.objects.filter(va_enquirynumber__in=en_qs)
             .values('va_enquirynumber_id')
             .annotate(tot=Count('id'))
         }
-        
+
         missed_count = 0
         for enq in en_qs:
-            if enq.id in en_ids_cancelled or enq.id in en_ids_with_cnote:
-                continue  # skip — already counted in Cancelled Trips or C-Notes
+            if enq.id in en_ids_enquiries_cancelled:
+                continue  # skip ONLY cancelled enquiries
+
             req_qty = req_totals.get(enq.id, 0)
             allot_qty = allot_totals.get(enq.id, 0)
             if req_qty > allot_qty:
@@ -229,7 +242,8 @@ def get_tms_dashboard_data(request):
             'enquiries': total_enquiries,
             'cnotes': cnotes_count,
             'missed': missed_count,
-            'cancelled': cancelled_en_count,
+            'enquiries_cancelled': enquiries_cancelled_count,
+            'trips_cancelled': trips_cancelled_count,
             'settled': tr_qs.filter(tc_financestatus_id=7).count(),
             'ready': tr_qs.filter(tc_financestatus_id=9).exclude(transinvoiceinfo__isnull=False).count(),
             'invoiced': ti_qs.count(),
@@ -264,7 +278,13 @@ def get_tms_dashboard_data(request):
             qs = qs.filter(tr_vehiclesource__ow_ownership__icontains=db_source)
         if trip_type_obj:
             qs = qs.filter(tr_enquirynumber__en_trip_type=trip_type_obj)
-        return qs.count()
+            
+        from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
+        enq_ids = qs.values_list('tr_enquirynumber_id', flat=True).distinct()
+        total_qty = Enquirynotevehicle.objects.filter(
+            env_enquirynumber_id__in=enq_ids
+        ).aggregate(total=Sum('env_quantity'))['total'] or 0
+        return total_qty
 
     sources = ['Own', 'Market', 'Attached']
     bar_chart_data = {
