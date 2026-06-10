@@ -26,6 +26,12 @@ class AttachedBillInfo(models.Model):
     ab_extra_km_run = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     ab_extra_km_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     ab_bill_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    # TDS type and fields (match MarketBill behaviour)
+    ab_tds_type = models.CharField(max_length=20, null=True, blank=True, verbose_name="TDS Type",
+                                   choices=[('Company', 'Company'), ('Non company', 'Non company')], default='Non company')
+    ab_tds_percent = models.FloatField(default=0.0, null=True, blank=True)
+    ab_tds_amount = models.FloatField(default=0.0, null=True, blank=True)
+    ab_payable_amount = models.FloatField(default=0.0, null=True, blank=True)
     ab_bill_upload = models.FileField(upload_to=attached_bill_directory_path, null=True, blank=True)
     ab_selected_trips = models.TextField(null=True, blank=True)
 

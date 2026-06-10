@@ -47,19 +47,19 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Vendor Bill Date</span>
 									</div>
-									{% render_field expense_form.exp_vendor_bill_date type="datetime-local" id="exp_vendor_bill_date" class="form-control " %}
+									{% render_field expense_form.exp_vendor_bill_date type="date" id="exp_vendor_bill_date" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Service Start Date</span>
 									</div>
-									{% render_field expense_form.exp_service_start_date id="exp_service_start_date" type="datetime-local" class="form-control " %}
+									{% render_field expense_form.exp_service_start_date id="exp_service_start_date" type="date" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
 										<span class="input-group-text">Service End Date</span>
 									</div>
-									{% render_field expense_form.exp_service_end_date id="exp_service_end_date" type="datetime-local" class="form-control " %}
+									{% render_field expense_form.exp_service_end_date id="exp_service_end_date" type="date" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -85,7 +85,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Expense Rate (INR)</span>
 									</div>
-									{% render_field expense_form.exp_rate id="exp_rate" onchange="update_rates_fn()" class="form-control disable_a_href" %}
+									{% render_field expense_form.exp_rate id="exp_rate" onchange="update_rates_fn()" class="form-control " %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -142,14 +142,14 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text">Due Date</span>
 									</div>
-									{% render_field expense_form.exp_due_date id="exp_due_date" type="datetime-local" class="form-control " id="bill_per_day_wh_charges" %}
+									{% render_field expense_form.exp_due_date id="exp_due_date" type="date" class="form-control " id="bill_per_day_wh_charges" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Paid Date</span>
-									</div>
-									{% render_field expense_form.exp_paid_date id="exp_paid_date" type="datetime-local" class="form-control " id="bill_per_day_wh_charges" %}
-								</div>
+<!--								<div class="input-group input-group-sm mb-3">-->
+<!--									<div class="input-group-prepend">-->
+<!--										<span class="input-group-text">Paid Date</span>-->
+<!--									</div>-->
+<!--									{% render_field expense_form.exp_paid_date id="exp_paid_date" type="date" class="form-control " id="bill_per_day_wh_charges" %}-->
+<!--								</div>-->
 
 								{% render_field expense_form.exp_updated_by id="exp_updated_by"  hidden="True" class="form-control" %}
 								{% render_field expense_form.exp_updated_at id="exp_updated_at" hidden="True" class="form-control" %}
@@ -330,6 +330,34 @@
     .input-group-text {
         width: 150px;
         font-size: 13px;
+<script>
+	// Ensure these expense date fields are date-only on the frontend.
+	(function(){
+		var ids = ['exp_vendor_bill_date','exp_service_start_date','exp_service_end_date','exp_due_date','exp_paid_date'];
+		ids.forEach(function(id){
+			try{
+				var el = document.getElementById(id);
+				if(!el) return;
+				// Force input type to date
+				el.setAttribute('type','date');
+
+				// If flatpickr was attached, reinit with date-only options
+				if(window.flatpickr){
+					if(el._flatpickr){
+						try{ el._flatpickr.destroy(); }catch(e){}
+					}
+					window.flatpickr(el, {
+						enableTime: false,
+						dateFormat: 'Y-m-d',
+						altInput: true,
+						altFormat: 'd-m-Y',
+						allowInput: true
+					});
+				}
+			}catch(e){console && console.log && console.log('date-force error',e)}
+		});
+	})();
+</script>
         white-space: normal;
         text-align: left;
         display: flex;

@@ -79,13 +79,52 @@ def market_bill_add(request):
 # ==================================================
 @login_required(login_url='login_page')
 def market_bill_list(request):
-    bills = MarketBillInfo.objects.all().order_by('-mb_created_at')
+    from_date = request.GET.get('from_date', '')
+    to_date = request.GET.get('to_date', '')
+
+    # Base queryset
+    bills_qs = MarketBillInfo.objects.all().order_by('-mb_created_at')
+
+    # If no date filters provided, return bills as usual
+    if not from_date and not to_date:
+        bills = bills_qs
+    else:
+        # The user wants to filter Market Bills by the dates of the trips INSIDE the bill
+        # Collect Trip IDs that fall inside the provided date range
+        trip_filter = TripdetailInfo.objects.all()
+        # Use departed date when available, otherwise created_at as a fallback
+        if from_date:
+            trip_filter = trip_filter.filter(
+                Q(tr_departeddate__gte=from_date) | Q(tr_departeddate__isnull=True, tr_created_at__gte=from_date)
+            )
+        if to_date:
+            trip_filter = trip_filter.filter(
+                Q(tr_departeddate__lte=to_date) | Q(tr_departeddate__isnull=True, tr_created_at__lte=to_date)
+            )
+
+        trip_ids = set(trip_filter.values_list('id', flat=True))
+
+        # Evaluate bills and keep those that reference at least one matching trip id
+        bills = []
+        for bill in bills_qs:
+            if not bill.mb_selected_trips:
+                continue
+            try:
+                bill_trip_ids = [int(tid.strip()) for tid in bill.mb_selected_trips.split(',') if tid.strip()]
+            except ValueError:
+                # If non-integer values are present, skip this bill for safety
+                continue
+            # If any trip id in the bill matches the filtered trip ids, include the bill
+            if any(tid in trip_ids for tid in bill_trip_ids):
+                bills.append(bill)
 
     return render(
         request,
         "asset_mgt_app/market_bill_list.html",
         {
-            "bills": bills
+            "bills": bills,
+            "from_date": from_date,
+            "to_date": to_date,
         }
     )
 
@@ -522,3 +561,147 @@ def market_mail_upload(request, id, trip_id):
     else:
         messages.error(request, "Failed to upload mail attachment. Please select a file.")
     return redirect('market_bill_edit', id=id)
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from django.http import HttpResponse
+
+@login_required(login_url='login_page')
+def market_bill_export_tally(request):
+    from_date = request.GET.get('from_date', '')
+    to_date = request.GET.get('to_date', '')
+
+    bills = MarketBillInfo.objects.all().order_by('mb_bill_date')
+    if from_date:
+        bills = bills.filter(mb_bill_date__gte=from_date)
+    if to_date:
+        bills = bills.filter(mb_bill_date__lte=to_date)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Tally Export"
+
+    headers = [
+        "VOUCHER NUMBER", "DATE", "REF NO.", "SUNDRY CREDITORS", "TOTAL AMT",
+        "EXPENSES LEDGER", "AMOUNT", "Primary Cost Category", "Job No", 
+        "VEH. NO.", "Customer", "TDS LEDGER", "TDS AMOUNT", "NARRATION"
+    ]
+    ws.append(headers)
+
+    header_font = Font(bold=True)
+    header_fill = PatternFill("solid", fgColor="B2FFFF")
+    for cell in ws[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center")
+
+    expense_fill = PatternFill("solid", fgColor="FFE5CC")
+    
+    for bill in bills:
+        trip_ids = []
+        if bill.mb_selected_trips:
+            try:
+                trip_ids = [int(tid) for tid in bill.mb_selected_trips.split(',') if tid.strip()]
+            except ValueError:
+                pass
+        
+        trips = TripdetailInfo.objects.filter(id__in=trip_ids).select_related('tr_enquirynumber')
+        
+        # Calculate Financial Year and Month for Voucher Number
+        if bill.mb_bill_date:
+            year = bill.mb_bill_date.year
+            month = bill.mb_bill_date.month
+            if month >= 4:
+                fy_str = f"{str(year)[-2:]}-{str(year+1)[-2:]}"
+            else:
+                fy_str = f"{str(year-1)[-2:]}-{str(year)[-2:]}"
+            month_str = f"{month:02d}"
+        else:
+            fy_str = "00-00"
+            month_str = "00"
+            
+        voucher_number = f"MAA_MKT_{fy_str}_{month_str}_{bill.id:03d}"
+        bill_date = bill.mb_bill_date.strftime("%d-%m-%Y") if bill.mb_bill_date else ""
+        ref_no = bill.mb_bill_no or ""
+        vendor_name = bill.mb_vendor.vend_name if bill.mb_vendor else ""
+        total_amt = bill.mb_payable_amount if bill.mb_payable_amount else bill.mb_total_cost
+        
+        tds_amount = bill.mb_tds_amount or 0.0
+        # Set TDS ledger text based on TDS type selection on the bill
+        tds_ledger = ""
+        try:
+            tds_type = (bill.mb_tds_type or '').strip()
+            if tds_amount > 0:
+                if tds_type == 'Company':
+                    tds_ledger = "TDS Payable 194C (Company)"
+                else:
+                    # Default/Non company
+                    tds_ledger = "TDS Payable 194C (Non Company)"
+        except Exception:
+            tds_ledger = "TDS Payable 194C (Non Company)" if tds_amount > 0 else ""
+        
+        month_str = bill.mb_bill_date.strftime('%b%y') if bill.mb_bill_date else ""
+        rec_date_str = bill.mb_created_at.strftime('%d-%b-%y') if bill.mb_created_at else ""
+        narration = f"Being oncall Vehicle hire charges for the month of {month_str} (Bill Received on {rec_date_str})"
+        
+        is_first_row = True
+        
+        if not trips:
+            row = [
+                voucher_number, bill_date, ref_no, vendor_name, total_amt,
+                "Transportation", total_amt, "Maa-Mkt", "",
+                # Per requirement: do not include actual vehicle number in export; show 'mkt' instead
+                "mkt", "", tds_ledger, tds_amount if tds_amount else "", narration
+            ]
+            ws.append(row)
+            continue
+            
+        for trip in trips:
+            # Use ONLY the Consignment number (Cnote) as Job No for Tally export — no fallbacks
+            job_no = ""
+            try:
+                if getattr(trip, 'tr_consignmentnumber', None) and getattr(trip.tr_consignmentnumber, 'co_consignmentnumber', None):
+                    job_no = trip.tr_consignmentnumber.co_consignmentnumber
+                else:
+                    job_no = ""
+            except Exception:
+                job_no = ""
+            customer_name = ""
+            if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername:
+                customer_name = trip.tr_enquirynumber.en_customername.customer_name if hasattr(trip.tr_enquirynumber.en_customername, 'customer_name') else str(trip.tr_enquirynumber.en_customername)
+            
+            transport_cost = 0.0
+            allotment = Vehicle_allotmentInfo.objects.filter(
+                Q(va_enquirynumber=trip.tr_enquirynumber),
+                Q(va_vehiclenumber__vm_registrationnumber__iexact=trip.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip.tr_vehiclenumber)
+            ).first()
+            if allotment and allotment.va_specialbuy:
+                transport_cost = float(allotment.va_specialbuy)
+                
+            expenses = []
+            if transport_cost > 0: expenses.append(("Transportation", transport_cost))
+            if trip.tc_loadingcost and float(trip.tc_loadingcost) > 0: expenses.append(("Loading", float(trip.tc_loadingcost)))
+            if trip.tc_unloadingcost and float(trip.tc_unloadingcost) > 0: expenses.append(("Unloading", float(trip.tc_unloadingcost)))
+            if trip.tc_parkingcost and float(trip.tc_parkingcost) > 0: expenses.append(("Parking", float(trip.tc_parkingcost)))
+            if trip.tc_haltingcost and float(trip.tc_haltingcost) > 0: expenses.append(("Halting", float(trip.tc_haltingcost)))
+            
+            for exp_name, amt in expenses:
+                row = [
+                    voucher_number, bill_date, ref_no,
+                    vendor_name if is_first_row else "",
+                    total_amt if is_first_row else "",
+                    exp_name, amt,
+                    "Maa-Mkt", job_no,
+                    # Replace actual vehicle number with constant 'mkt' per spec
+                    "mkt", customer_name,
+                    tds_ledger if is_first_row else "",
+                    tds_amount if is_first_row and tds_amount > 0 else "",
+                    narration
+                ]
+                ws.append(row)
+                ws.cell(row=ws.max_row, column=6).fill = expense_fill
+                is_first_row = False
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="Market_Bill_Tally_Export.xlsx"'
+    wb.save(response)
+    return response
