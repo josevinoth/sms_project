@@ -2678,20 +2678,6 @@ def vendor_p_l_attached_report_view(request):
         # ---------------- BUYING ----------------
         va_info = va_map.get(trip.tr_enquirynumber_id)
 
-        vendor_name = ""
-        if va_info and va_info.va_vendor:
-            vendor_name = str(va_info.va_vendor)
-        else:
-            # Fallback to Vehicle Master
-            v_key = trip.tr_vehiclenumber.strip() if trip.tr_vehiclenumber else ""
-            v_obj = veh_vendor_map.get(v_key)
-            if v_obj:
-                vendor_name = str(v_obj)
-
-        reported_km = safe_num(trip.tr_reportedkm_delivery or trip.tr_reportedkm)
-        departed_km = safe_num(trip.tr_departedkm)
-        km_run = reported_km - departed_km if reported_km and departed_km else 0
-
         ab_bill = attached_bill_map.get(trip.id) or attached_bill_map.get(str(trip.tr_tripnumber).strip())
 
         # Fallback: Date-based matching if no explicit ID match was found
@@ -2703,6 +2689,31 @@ def vendor_p_l_attached_report_view(request):
                         b.ab_from_date <= t_date <= b.ab_to_date):
                     ab_bill = b
                     break
+
+        vendor_name = ""
+        vendor_id_match = None
+
+        if ab_bill and ab_bill.ab_vendor:
+            vendor_name = str(ab_bill.ab_vendor.vend_name)
+            vendor_id_match = ab_bill.ab_vendor_id
+        elif va_info and va_info.va_vendor:
+            vendor_name = str(va_info.va_vendor)
+            vendor_id_match = va_info.va_vendor_id
+        else:
+            # Fallback to Vehicle Master
+            v_key = trip.tr_vehiclenumber.strip() if trip.tr_vehiclenumber else ""
+            v_obj = veh_vendor_map.get(v_key)
+            if v_obj:
+                vendor_name = str(v_obj.vm_vendor) if v_obj.vm_vendor else ""
+                vendor_id_match = v_obj.vm_vendor_id
+
+        # Python-level filter to ensure the row's resolved vendor exactly matches the query
+        if vendor_id and vendor_id_match != vendor_id:
+            continue
+
+        reported_km = safe_num(trip.tr_reportedkm_delivery or trip.tr_reportedkm)
+        departed_km = safe_num(trip.tr_departedkm)
+        km_run = reported_km - departed_km if reported_km and departed_km else 0
 
         if safe_num(trip.tc_tripcost) > 0:
             buying_trip_cost = safe_num(trip.tc_tripcost)
