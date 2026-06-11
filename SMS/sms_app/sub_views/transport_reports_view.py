@@ -2702,10 +2702,10 @@ def vendor_p_l_attached_report_view(request):
         else:
             # Fallback to Vehicle Master
             v_key = trip.tr_vehiclenumber.strip() if trip.tr_vehiclenumber else ""
-            v_obj = veh_vendor_map.get(v_key)
-            if v_obj:
-                vendor_name = str(v_obj.vm_vendor) if v_obj.vm_vendor else ""
-                vendor_id_match = v_obj.vm_vendor_id
+            v_vendor_obj = veh_vendor_map.get(v_key)
+            if v_vendor_obj:
+                vendor_name = str(v_vendor_obj)
+                vendor_id_match = v_vendor_obj.id
 
         # Python-level filter to ensure the row's resolved vendor exactly matches the query
         if vendor_id and vendor_id_match != vendor_id:
