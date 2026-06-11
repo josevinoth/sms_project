@@ -44,7 +44,7 @@
 
 .dash-kpi-row {
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-columns: repeat(8, minmax(0, 1fr));
     gap: 0.4rem;
     width: 100%;
     overflow: hidden;
@@ -63,7 +63,7 @@
 .dash-card {
     position: relative;
     border-radius: 8px;
-    padding: 0.55rem 1rem;
+    padding: 0.45rem 0.6rem;
     text-align: left;
     display: flex;
     flex-direction: column;
@@ -83,9 +83,9 @@
 .dash-card i {
     position: absolute;
     top: 0.7rem;
-    right: 0.75rem;
+    right: 0.5rem;
     opacity: 0.25;
-    font-size: 2rem;
+    font-size: 1.6rem;
 }
 
 /* Specific KPI Colors (Universal Palette) */
@@ -93,14 +93,15 @@
 .card-cnote, .card-teal { background: #25667a; }   
 .card-missed, .card-orange { background: #7c2d12; }  
 .card-cancelled, .card-red { background: #7e22ce; }
+.card-trips-cancelled { background: #9a1c1c; }
 .card-settled, .card-green { background: #145c44; } 
 .card-ready, .card-indigo { background: #1e3a8a; }   
 .card-invoiced, .card-brown { background: #5c4a26; } 
 
 .dash-kpi-label {
-    font-size: 0.62rem;
+    font-size: 0.55rem;
     font-weight: 600;
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.15rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: rgba(255,255,255,0.75);
@@ -110,7 +111,7 @@
 }
 
 .dash-kpi-value {
-    font-size: 1.35rem;
+    font-size: 1.25rem;
     font-weight: 700;
     line-height: 1.1;
 }
