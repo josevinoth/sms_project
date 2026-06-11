@@ -89,6 +89,7 @@
                 <tr>
                     <th>S.No</th>
                     <th>Bill No</th>
+                    <th>Voucher No</th>
                     <th>Bill Date</th>
                     <th>Vendor</th>
                     <th>Branch</th>
@@ -107,6 +108,7 @@
                     <th>Created On</th>
                     <th>Created By</th>
                     <th>Updated By</th>
+                    <th>Updated On</th>
                     <th class="text-center">Bill Attachment</th>
                     <th class="text-center">Edit</th>
                     <th class="text-center">Delete</th>
@@ -118,6 +120,7 @@
                 <tr>
                     <td>{{ forloop.counter }}</td>
                     <td>{{ bill.mb_bill_no }}</td>
+                    <td>{{ bill.mb_voucher_no|default:"" }}</td>
                     <td>{{ bill.mb_bill_date|date:"d-m-Y" }}</td>
                     <td>{{ bill.mb_vendor }}</td>
                     <td></td> <!-- Placeholder for Branch -->
@@ -150,6 +153,7 @@
                         {{ bill.mb_updated_by.first_name|default:bill.mb_updated_by.username }}
                         {% endif %}
                     </td>
+                    <td>{{ bill.mb_updated_at|date:"d-m-Y H:i" }}</td>
                     <td class="text-center">
                         {% if bill.mb_attachment %}
                         <div class="btn-group shadow-sm">

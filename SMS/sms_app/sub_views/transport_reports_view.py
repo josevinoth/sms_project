@@ -2498,10 +2498,19 @@ def vendor_p_l_attached_report_view(request):
         trips = trips.filter(tr_vehicletype_id=vehicle_type_id)
 
     if vendor_id:
-        # Filter trips by vehicles belonging to the selected vendor
-        vendor_vehicles = VehiclemasterInfo.objects.filter(vm_vendor_id=vendor_id).values_list('vm_registrationnumber',
-                                                                                               flat=True)
-        trips = trips.filter(tr_vehiclenumber__in=vendor_vehicles)
+        # The display logic prioritizes Vehicle_allotmentInfo.va_vendor, then falls back to VehiclemasterInfo.vm_vendor
+        # We must filter using the exact same priority to ensure no mismatches
+        enquiries_with_vendor = Vehicle_allotmentInfo.objects.filter(va_vendor__isnull=False).values_list('va_enquirynumber_id', flat=True)
+        enquiries_for_this_vendor = Vehicle_allotmentInfo.objects.filter(va_vendor_id=vendor_id).values_list('va_enquirynumber_id', flat=True)
+        vendor_vehicles = VehiclemasterInfo.objects.filter(vm_vendor_id=vendor_id).values_list('vm_registrationnumber', flat=True)
+
+        trips = trips.filter(
+            Q(tr_enquirynumber_id__in=enquiries_for_this_vendor) |
+            (
+                ~Q(tr_enquirynumber_id__in=enquiries_with_vendor) & 
+                Q(tr_vehiclenumber__in=vendor_vehicles)
+            )
+        )
 
     if veh_no:
         trips = trips.filter(tr_vehiclenumber__icontains=veh_no)
@@ -2515,12 +2524,15 @@ def vendor_p_l_attached_report_view(request):
     trip_ids = [t.id for t in trips_list]
     trip_enquiries = [t.tr_enquirynumber_id for t in trips_list]
 
-    va_map = {
-        va.va_enquirynumber_id: va
-        for va in Vehicle_allotmentInfo.objects.filter(
-            va_enquirynumber_id__in=trip_enquiries
-        ).select_related('va_vendor')
-    }
+    # Build va_map prioritizing allotments that have a vendor if duplicates exist
+    va_map = {}
+    for va in Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber_id__in=trip_enquiries
+    ).select_related('va_vendor'):
+        if va.va_enquirynumber_id not in va_map:
+            va_map[va.va_enquirynumber_id] = va
+        elif va.va_vendor:
+            va_map[va.va_enquirynumber_id] = va
 
     inv_map = {
         inv.ti_trip_id: inv
@@ -5039,7 +5051,7 @@ def enquiry_pending_report_view(request):
         total_req_qty[vr.env_enquirynumber_id] = total_req_qty.get(vr.env_enquirynumber_id, 0) + qty
 
     # Vehicle Allotments mapping
-    allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids).select_related(
+    allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids, va_status_id__in=[1, 4, 5]).select_related(
         'va_vehiclenumber')
     allot_map = {}
     for va in allotments:
@@ -5385,7 +5397,7 @@ def enquiry_pending_report_ajax_view(request):
         'env_enquirynumber_id').annotate(tot=Sum('env_quantity'))
     req_map = {r['env_enquirynumber_id']: r['tot'] or 0 for r in reqs}
 
-    allots = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=pending_ids, va_status_id=1).values(
+    allots = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=pending_ids, va_status_id__in=[1, 4, 5]).values(
         'va_enquirynumber_id').annotate(tot=Count('id'))
     allots_map = {a['va_enquirynumber_id']: a['tot'] or 0 for a in allots}
 
@@ -5456,7 +5468,7 @@ def enquiry_pending_report_ajax_view(request):
         total_req_qty[vr.env_enquirynumber_id] = total_req_qty.get(vr.env_enquirynumber_id, 0) + qty
 
     # Fetch allotments
-    allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids, va_status_id=1)
+    allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids, va_status_id__in=[1, 4, 5])
     allot_map = {}
     for va in allotments:
         allot_map.setdefault(va.va_enquirynumber_id, []).append(va.id)

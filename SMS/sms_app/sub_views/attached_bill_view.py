@@ -296,15 +296,8 @@ def get_attached_vehicle_details(request):
                 leave_days_count = 0
                 curr = f_dt_obj
                 while curr <= t_dt_obj:
-                    if curr.weekday() != 6: # Mon-Sat
-                        if curr not in trip_dates:
-                            leave_days_count += 1
-                    else:
-                        # Sunday: Only count as leave if Sat, Sun, AND Mon ALL have no trips
-                        prev_day = curr - timedelta(days=1)
-                        next_day = curr + timedelta(days=1)
-                        if prev_day not in trip_dates and curr not in trip_dates and next_day not in trip_dates:
-                            leave_days_count += 1
+                    if curr not in trip_dates:
+                        leave_days_count += 1
                     curr += timedelta(days=1)
                 data['leave_days'] = leave_days_count
         else:
@@ -493,23 +486,9 @@ def attached_bill_summary(request, id):
                     all_trip_dates.add(curr_t)
                     curr_t += timedelta(days=1)
 
-    # Now calculate leave_days using the Sat-Sun-Mon rule on all_trip_dates
-    leave_days = 0
-    if from_date and to_date:
-        curr = from_date
-        while curr <= to_date:
-            if curr.weekday() != 6: # Mon-Sat
-                if curr not in all_trip_dates:
-                    leave_days += 1
-            else:
-                # Sunday: Leave ONLY if Sat, Sun, AND Mon have no trips
-                prev_day = curr - timedelta(days=1)
-                next_day = curr + timedelta(days=1)
-                if prev_day not in all_trip_dates and curr not in all_trip_dates and next_day not in all_trip_dates:
-                    leave_days += 1
-            curr += timedelta(days=1)
-
-    leave_amount = float(leave_days * leave_per_day)
+    # Use the reliably saved leave days and amount
+    leave_days = bill.ab_leave_days or 0
+    leave_amount = float(bill.ab_leave_amount or 0)
     agreed_km      = float(bill.ab_agreed_km or 0)
     total_km_saved = float(bill.ab_total_km_run or 0)   # saved total KM from ADD/EDIT
     extra_km       = float(bill.ab_extra_km_run or 0)
@@ -557,10 +536,8 @@ def attached_bill_summary(request, id):
         if t.tr_departeddate:
             summary_billed_trip_dates.add(t.tr_departeddate.date())
 
-    leave_amount = float(leave_days * leave_per_day)
-
-    # Use saved total_km_run when trips still can't be fetched
-    display_total_km = trip_km_run if trips else total_km_saved
+    # Use saved total_km_run
+    display_total_km = total_km_saved
 
     days_run   = len(summary_billed_trip_dates)
     trip_index = f"{total_trips} TRIPS / {days_run} DAYS RUN" if days_run else f"{total_trips} TRIPS"

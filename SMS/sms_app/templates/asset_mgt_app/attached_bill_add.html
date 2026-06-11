@@ -57,6 +57,13 @@
 
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
+                                <span class="input-group-text">Voucher No</span>
+                            </div>
+                            {% render_field form.ab_voucher_no class="form-control" placeholder="Enter Voucher No" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-3">
+                            <div class="input-group-prepend">
                                 <span class="input-group-text">Bill Date</span>
                             </div>
                             {% render_field form.ab_bill_date class="form-control" type="date" %}
@@ -196,9 +203,14 @@
             <div class="card-header d-flex justify-content-between align-items-center"
                 style="background-color: #17a2b8;">
                 <h5 class="mb-0">Attached Bill Trips</h5>
-                <button type="button" class="btn btn-warning btn-sm font-weight-bold text-dark" id="addTripsToForm">
-                    <i class="fas fa-plus"></i> ADD
-                </button>
+                <div>
+                    <button type="button" class="btn btn-success btn-sm font-weight-bold text-white mr-2" onclick="exportTableToExcel('tripsTable', 'Attached_Bill_Trips')">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </button>
+                    <button type="button" class="btn btn-warning btn-sm font-weight-bold text-dark" id="addTripsToForm">
+                        <i class="fas fa-plus"></i> ADD
+                    </button>
+                </div>
             </div>
             <div class="card-body bg-light text-dark pt-3 pb-3">
 
@@ -592,12 +604,45 @@
     });
 
     {% if record %}
-    extraKmRate = parseFloat("{{ record.ab_vehicle_number.vm_extrakm|default:0 }}") || 0;
-    // Trigger trip loading for existing record
-    $('#id_ab_vehicle_number').trigger('change');
-    calculateAmounts();
+        // Auto-load trips on Edit page
+        setTimeout(function() {
+            $('#id_ab_vehicle_number').trigger('change');
+        }, 500);
     {% endif %}
+
     });
+
+    function exportTableToExcel(tableID, filename = ''){
+        var tableSelect = document.getElementById(tableID);
+        var clonedTable = tableSelect.cloneNode(true);
+        
+        var inputs = tableSelect.querySelectorAll('input');
+        var clonedInputs = clonedTable.querySelectorAll('input');
+        for (var i = 0; i < inputs.length; i++) {
+            if (inputs[i].type === 'checkbox') {
+                clonedInputs[i].parentNode.innerText = inputs[i].checked ? 'Yes' : 'No';
+            } else {
+                clonedInputs[i].parentNode.innerText = inputs[i].value;
+            }
+        }
+        
+        var tableHTML = clonedTable.outerHTML;
+        var dataType = 'application/vnd.ms-excel';
+        var filename = filename ? filename + '.xls' : 'excel_data.xls';
+        
+        var downloadLink = document.createElement("a");
+        document.body.appendChild(downloadLink);
+        
+        if (navigator.msSaveOrOpenBlob) {
+            var blob = new Blob(['\ufeff', tableHTML], { type: dataType });
+            navigator.msSaveOrOpenBlob(blob, filename);
+        } else {
+            downloadLink.href = 'data:' + dataType + ';charset=utf-8,' + encodeURIComponent('\ufeff' + tableHTML);
+            downloadLink.download = filename;
+            downloadLink.click();
+        }
+        document.body.removeChild(downloadLink);
+    }
 </script>
 
 <style>

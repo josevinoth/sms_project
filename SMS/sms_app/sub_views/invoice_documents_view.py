@@ -200,7 +200,11 @@ def invoice_documents_list_ajax_view(request):
             'tr_departedlocation',
             'tr_reportedlocation',
         ).filter(
-            tc_financestatus_id__in=status_ids
+            tc_financestatus_id__in=status_ids,
+            tr_category_id=1
+        ).filter(
+            Q(tr_enquirynumber__en_customername__cu_name__icontains='MAA') |
+            Q(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
         ).exclude(
             id__in=invoiced_trip_ids
         ).exclude(
@@ -218,13 +222,29 @@ def invoice_documents_list_ajax_view(request):
         records_total = trip_list.count()
 
         if search_value:
-            trip_list = trip_list.filter(
+            matching_invoice_trip_numbers = list(InvoiceDocumentInfo.objects.filter(
+                id_status__status__icontains=search_value
+            ).exclude(
+                id_tripnumber__isnull=True
+            ).exclude(
+                id_tripnumber__exact=''
+            ).values_list('id_tripnumber', flat=True))
+
+            q_objects = (
                 Q(tr_tripnumber__icontains=search_value) |
                 Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
                 Q(tr_enquirynumber__en_enquirynumber__icontains=search_value) |
                 Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
-                Q(tr_vehiclenumber__icontains=search_value)
+                Q(tr_vehiclenumber__icontains=search_value) |
+                Q(tr_departedlocation__place_name__icontains=search_value) |
+                Q(tr_reportedlocation__place_name__icontains=search_value) |
+                Q(tc_financestatus__status__icontains=search_value)
             )
+
+            if matching_invoice_trip_numbers:
+                q_objects |= Q(tr_tripnumber__in=matching_invoice_trip_numbers)
+
+            trip_list = trip_list.filter(q_objects)
 
         records_filtered = trip_list.count()
 

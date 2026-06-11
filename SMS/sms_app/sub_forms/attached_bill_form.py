@@ -7,7 +7,7 @@ class AttachedBillForm(forms.ModelForm):
     class Meta:
         model = AttachedBillInfo
         fields = [
-            'ab_vendor', 'ab_vehicle_number', 'ab_vehicle_type', 'ab_bill_no',
+            'ab_vendor', 'ab_vehicle_number', 'ab_vehicle_type', 'ab_bill_no', 'ab_voucher_no',
             'ab_bill_date', 'ab_from_date', 'ab_to_date', 'ab_buy_cost', 'ab_toll_cost',
             'ab_leave_days', 'ab_leave_amount',
             'ab_agreed_km', 'ab_total_km_run', 'ab_extra_km_run',
@@ -41,7 +41,7 @@ class AttachedBillForm(forms.ModelForm):
                 field.widget = forms.HiddenInput()
             
             # Read-only fields (Calculated/Pulled)
-            if field_name in ['ab_vehicle_type', 'ab_total_km_run', 'ab_leave_amount', 'ab_extra_km_run', 'ab_tds_amount', 'ab_payable_amount']:
+            if field_name in ['ab_vehicle_type', 'ab_total_km_run', 'ab_leave_amount', 'ab_extra_km_run', 'ab_tds_amount', 'ab_payable_amount', 'ab_voucher_no']:
                 field.widget.attrs['readonly'] = 'readonly'
             
             # Empty labels

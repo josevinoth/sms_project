@@ -17,6 +17,12 @@ class MarketBillForm(forms.ModelForm):
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Enter Bill No"})
     )
 
+    mb_voucher_no = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={"class": "form-control", "readonly": "readonly", "placeholder": "Auto-generated"})
+    )
+
     mb_bill_date = forms.DateField(
         required=False,
         widget=forms.DateInput(attrs={"class": "form-control", "type": "date", "id": "mb_bill_date"})
@@ -95,6 +101,7 @@ class MarketBillForm(forms.ModelForm):
         fields = [
             'mb_vendor',
             'mb_bill_no',
+            'mb_voucher_no',
             'mb_bill_date',
             'mb_tds_type',
             'mb_trip_cost',

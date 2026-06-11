@@ -9,6 +9,7 @@ class MarketBillInfo(models.Model):
     mb_vendor = models.ForeignKey(Vendor_info,on_delete=models.CASCADE,null=True,blank=True,verbose_name="Vendor")
     mb_vehicle_number = models.CharField(max_length=30,null=True,blank=True,verbose_name="Vehicle Number")
     mb_bill_no = models.CharField(max_length=50,null=True,blank=True,verbose_name="Bill No")
+    mb_voucher_no = models.CharField(max_length=100, null=True, blank=True, verbose_name="Voucher No")
     mb_bill_date = models.DateField(null=True,blank=True,verbose_name="Bill Date")
     mb_trip_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Trip Cost")
     mb_loading_cost = models.FloatField(default=0.0,null=True,blank=True,verbose_name="Loading Cost")
@@ -37,6 +38,21 @@ class MarketBillInfo(models.Model):
         ordering = ['-mb_created_at']
         verbose_name = "Market Bill"
         verbose_name_plural = "Market Bills"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.mb_bill_date and self.pk:
+            year = self.mb_bill_date.year
+            month = self.mb_bill_date.month
+            if month >= 4:
+                fy_str = f"{str(year)[-2:]}-{str(year+1)[-2:]}"
+            else:
+                fy_str = f"{str(year-1)[-2:]}-{str(year)[-2:]}"
+            month_str_num = f"{month:02d}"
+            generated_voucher = f"MAA_MKT_{fy_str}_{month_str_num}_{self.pk:03d}"
+            if self.mb_voucher_no != generated_voucher:
+                self.mb_voucher_no = generated_voucher
+                super().save(update_fields=['mb_voucher_no'])
 
     def __str__(self):
         return f"{self.mb_bill_no} - {self.mb_vendor}"

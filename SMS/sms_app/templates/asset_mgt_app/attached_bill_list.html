@@ -89,6 +89,7 @@
                 <tr>
                     <th>S.No</th>
                     <th>Bill No</th>
+                    <th>Voucher No</th>
                     <th>Bill Date</th>
                     <th>Vendor</th>
                     <th>Vehicle No</th>
@@ -107,6 +108,8 @@
                     <th>Bill Attachment</th>
                     <th>Created On</th>
                     <th>Created By</th>
+                    <th>Updated By</th>
+                    <th>Updated On</th>
                     <th class="text-center">Summary</th>
                     <th class="text-center">Edit</th>
                     <th class="text-center">Delete</th>
@@ -118,6 +121,7 @@
                 <tr>
                     <td>{{ forloop.counter }}</td>
                     <td>{{ bill.ab_bill_no }}</td>
+                    <td>{{ bill.ab_voucher_no|default:"" }}</td>
                     <td>{{ bill.ab_bill_date|date:"d-m-Y" }}</td>
                     <td>{{ bill.ab_vendor.vend_name }}</td>
                     <td>{{ bill.ab_vehicle_number.vm_registrationnumber }}</td>
@@ -160,6 +164,14 @@
                         {{ bill.ab_created_by.first_name|default:bill.ab_created_by.username }}
                         {% endif %}
                     </td>
+                    <td>
+                        {% if bill.ab_updated_by %}
+                        {{ bill.ab_updated_by.first_name|default:bill.ab_updated_by.username }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>{{ bill.ab_updated_at|date:"d-m-Y H:i" }}</td>
                     <!-- Summary Button -->
                     <td class="text-center">
                         <button class="btn btn-info btn-sm summary-btn" data-id="{{ bill.id }}"
@@ -215,6 +227,9 @@
                 </table>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="exportTableToExcel('summaryTable', 'Bill_Summary')">
+                    <i class="fas fa-file-excel"></i> Excel
+                </button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <button onclick="window.print()" class="btn btn-primary"><i class="fas fa-print"></i> Print</button>
             </div>
@@ -300,6 +315,38 @@
             });
         });
     });
+
+    function exportTableToExcel(tableID, filename = ''){
+        var tableSelect = document.getElementById(tableID);
+        var clonedTable = tableSelect.cloneNode(true);
+        
+        var inputs = tableSelect.querySelectorAll('input');
+        var clonedInputs = clonedTable.querySelectorAll('input');
+        for (var i = 0; i < inputs.length; i++) {
+            if (inputs[i].type === 'checkbox') {
+                clonedInputs[i].parentNode.innerText = inputs[i].checked ? 'Yes' : 'No';
+            } else {
+                clonedInputs[i].parentNode.innerText = inputs[i].value;
+            }
+        }
+        
+        var tableHTML = clonedTable.outerHTML;
+        var dataType = 'application/vnd.ms-excel';
+        var filename = filename ? filename + '.xls' : 'excel_data.xls';
+        
+        var downloadLink = document.createElement("a");
+        document.body.appendChild(downloadLink);
+        
+        if (navigator.msSaveOrOpenBlob) {
+            var blob = new Blob(['\ufeff', tableHTML], { type: dataType });
+            navigator.msSaveOrOpenBlob(blob, filename);
+        } else {
+            downloadLink.href = 'data:' + dataType + ';charset=utf-8,' + encodeURIComponent('\ufeff' + tableHTML);
+            downloadLink.download = filename;
+            downloadLink.click();
+        }
+        document.body.removeChild(downloadLink);
+    }
 </script>
 
 <style>
