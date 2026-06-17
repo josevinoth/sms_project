@@ -32,7 +32,7 @@ class InvoiceDocumentInfo(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         if self.id_status and self.id_tripnumber:
-            from ..sub_models.trip_detail_mod import TripdetailInfo
+            from ..sub_models.tripdetail_mod import TripdetailInfo
             try:
                 trip = TripdetailInfo.objects.get(tr_tripnumber=self.id_tripnumber)
                 if trip.tc_financestatus != self.id_status:

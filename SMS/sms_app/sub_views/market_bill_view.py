@@ -515,6 +515,34 @@ def get_trips_by_vendor(request):
 
     return JsonResponse({'trips': trip_list})
 
+
+# ==================================================
+# AJAX: GET VENDOR PAN (for auto TDS type detection)
+# ==================================================
+@login_required(login_url='login_page')
+def get_vendor_pan(request):
+    vendor_id = request.GET.get('vendor_id')
+    if not vendor_id:
+        return JsonResponse({'pan': '', 'tds_type': ''})
+
+    try:
+        from ..sub_models.vendor_info_mod import Vendor_info
+        vendor = Vendor_info.objects.get(pk=vendor_id)
+        pan = (vendor.vend_pan or '').strip().upper()
+
+        # PAN format: AAAAA1234A — 4th character (index 3) identifies entity type
+        # 'C' = Company, 'F' = Firm → treat both as "Company"
+        # everything else → "Non company"
+        if len(pan) >= 4 and pan[3] in ('C', 'F'):
+            tds_type = 'Company'
+        else:
+            tds_type = 'Non company'
+
+        return JsonResponse({'pan': pan, 'tds_type': tds_type})
+    except Exception:
+        return JsonResponse({'pan': '', 'tds_type': ''})
+
+
 # ==================================================
 # UPLOAD BILL ATTACHMENT
 # ==================================================
