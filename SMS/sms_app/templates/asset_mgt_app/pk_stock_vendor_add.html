@@ -84,7 +84,7 @@
                             <th>Count</th>
                             <th>CFT</th>
                             <th>Cost</th>
-                            <th class="text-center">Edit</th>
+                            <th class="text-center">Actions</th>
                             <th class="text-center">Delete</th>
                         </tr>
                     </thead>
@@ -107,9 +107,16 @@
                             <td>{{ item.sm_total_cft }}</td>
                             <td class="text-success font-weight-bold">₹{{ item.sm_total_price }}</td>
                             <td class="text-center">
-                                <a href="{% url 'stock_maintenance_edit' item.id %}" class="btn-modern btn-submit py-1 px-2" style="font-size: 0.75rem; min-width: 35px;" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a href="{% url 'stock_maintenance_edit' item.id %}" class="btn-modern btn-submit py-1 px-2" style="font-size: 0.75rem; min-width: 35px;" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% if item.sm_stock_type_id == 1 %}
+                                    <button type="button" class="btn-modern btn-cancel py-1 px-2 text-white" style="font-size: 0.75rem; min-width: 35px; background: #e67e22; border-color: #e67e22;" title="Return to Vendor" onclick="openReturnModal('{{ item.id }}', '{{ item.sm_count }}', '{{ item.sm_partcode.pc_code|escapejs }}', '{{ item.sm_stock_purchase_number|escapejs }}')">
+                                        <i class="fas fa-reply-all"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
                             </td>
                             <td class="text-center">
                                 <button type="button" class="btn btn-outline-danger btn-sm p-1" style="border-radius: 8px; width: 35px;" title="Delete" onclick="if(confirm('Are you sure?')) document.getElementById('delete-form-{{ item.id }}').submit();">
@@ -125,8 +132,51 @@
                 </table>
             </div>
         </div>
+        </div>
     </form>
 </div>
+
+<!-- Vendor Return Modal -->
+<div class="modal fade" id="vendorReturnModal" tabindex="-1" role="dialog" aria-labelledby="vendorReturnModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content" style="background: var(--bg-card, #1e2a38); color: white; border: 1px solid rgba(255,255,255,0.1);">
+      <div class="modal-header border-bottom-0">
+        <h5 class="modal-title" id="vendorReturnModalLabel"><i class="fas fa-reply-all text-warning mr-2"></i> Return Stock to Vendor</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="vendorReturnForm" method="POST" action="">
+        {% csrf_token %}
+        <div class="modal-body">
+            <div class="alert alert-info py-2" style="font-size: 0.9rem;">
+                Returning item: <strong id="returnPartCode"></strong> (GRN: <span id="returnGRN"></span>)
+            </div>
+            
+            <div class="form-group mb-3">
+                <label class="form-label-modern text-muted">Original Qty</label>
+                <input type="text" class="form-control form-control-modern bg-dark text-white" id="originalQty" readonly>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label class="form-label-modern">Return Qty <span class="text-danger">*</span></label>
+                <input type="number" step="0.01" min="0.01" class="form-control form-control-modern" id="returnQty" name="return_qty" required>
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="form-label-modern">Reason for Return <span class="text-danger">*</span></label>
+                <textarea class="form-control form-control-modern" id="returnReason" name="return_reason" rows="3" required placeholder="E.g., Damaged, Incorrect specification..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer border-top-0">
+          <button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn-modern btn-submit" style="background: #e67e22; border-color: #e67e22;">Confirm Return</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 {% endblock content %}
 
 {% block extra_js %}
@@ -166,8 +216,23 @@
             spv_vendor_name.removeAttribute("required");
         }
     }
+
+    function openReturnModal(sm_id, maxQty, partCode, grnNumber) {
+        document.getElementById('returnPartCode').innerText = partCode;
+        document.getElementById('returnGRN').innerText = grnNumber;
+        document.getElementById('originalQty').value = maxQty;
+        document.getElementById('returnQty').setAttribute('max', maxQty);
+        document.getElementById('returnQty').value = '';
+        document.getElementById('returnReason').value = '';
+        
+        // Dynamically set form action URL
+        var actionUrl = "{% url 'pk_process_vendor_return' 0 %}".replace('0', sm_id);
+        document.getElementById('vendorReturnForm').action = actionUrl;
+        
+        $('#vendorReturnModal').modal('show');
+    }
 </script>
 {% endblock extra_js %}
 
 
-
+

@@ -22,12 +22,14 @@ from django.db.models.functions import Concat
 from .send_department_email import send_department_email
 from ..forms import DispatchaddForm
 from django.contrib.auth.decorators import login_required
-from ..models import Check_in_out,Warehouse_goods_info,Dispatch_info,GoodsPartialDispatchInfo
-from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id, get_base64_image
+from ..models import Check_in_out, Warehouse_goods_info, Dispatch_info, GoodsPartialDispatchInfo
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id, \
+    get_base64_image
 from django.contrib import messages
 import cv2
 import numpy as np
-#from pyzbar.pyzbar import decode
+
+# from pyzbar.pyzbar import decode
 qr_detector = cv2.QRCodeDetector()
 
 from ..sub_models.loadingbay_mod import Loadingbay_Info
@@ -58,7 +60,7 @@ def dispatch_add(request, dispatch_id=0):
                 'dispatch_form': dispatch_form,
                 'wh_job_id': wh_job_id,
                 'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
-                'dispatch_list':dispatch_list,
+                'dispatch_list': dispatch_list,
                 'user_id': user_id,
                 'dispatch_id': dispatch_id,
             }
@@ -68,17 +70,17 @@ def dispatch_add(request, dispatch_id=0):
             dispatch_form = DispatchaddForm(instance=dispatch_info)
             dispatch_list = Dispatch_info.objects.all()
             dispatch_num_val = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
-            dispatch_goods_list= Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
+            dispatch_goods_list = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val)
             request.session['ses_dispatch_id'] = dispatch_info.id
-            gate_out_email_count=Dispatch_info.objects.get(pk=dispatch_id).dispatch_email_count
+            gate_out_email_count = Dispatch_info.objects.get(pk=dispatch_id).dispatch_email_count
             context = {
                 'dispatch_form': dispatch_form,
                 'first_name': first_name,
-                'dispatch_list':dispatch_list,
-                'user_id':user_id,
-                'dispatch_goods_list':dispatch_goods_list,
-                'dispatch_id':dispatch_id,
-                'gate_out_email_count':gate_out_email_count,
+                'dispatch_list': dispatch_list,
+                'user_id': user_id,
+                'dispatch_goods_list': dispatch_goods_list,
+                'dispatch_id': dispatch_id,
+                'gate_out_email_count': gate_out_email_count,
             }
         return render(request, "asset_mgt_app/dispatch_add.html", context)
     else:
@@ -133,7 +135,7 @@ def dispatch_add(request, dispatch_id=0):
 
                 # Automatic Email Logic
                 try:
-                    if dispatch.dispatch_status_id == 5: # Completed
+                    if dispatch.dispatch_status_id == 5:  # Completed
                         customer = dispatch.dispatch_customer
                         if customer.cu_automatic_email == 'YES':
                             recipient_list = [customer.cu_email]
@@ -149,26 +151,29 @@ def dispatch_add(request, dispatch_id=0):
                 return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_list')
 
+
 # List Dispatch Job
 @login_required(login_url='login_page')
 def dispatch_list(request):
     first_name = request.session.get('first_name')
-    dispatch_list= (Dispatch_info.objects.all()).order_by('-dispatch_created_at')
+    dispatch_list = (Dispatch_info.objects.all()).order_by('-dispatch_created_at')
     page_number = request.GET.get('page')
-    paginator = Paginator(dispatch_list, 10000)
+    paginator = Paginator(dispatch_list, 100)
     page_obj = paginator.get_page(page_number)
     context = {
         'dispatch_list': dispatch_list,
         'first_name': first_name,
         'page_obj': page_obj,
     }
-    return render(request,"asset_mgt_app/dispatch_list.html",context)
+    return render(request, "asset_mgt_app/dispatch_list.html", context)
 
-#Delete Dispatch Job
+
+# Delete Dispatch Job
 @login_required(login_url='login_page')
-def dispatch_delete(request,dispatch_id):
-    dispatch_num=Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
-    stock_list=list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_qr_rand_num',flat=True))
+def dispatch_delete(request, dispatch_id):
+    dispatch_num = Dispatch_info.objects.get(pk=dispatch_id).dispatch_num
+    stock_list = list(
+        Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_qr_rand_num', flat=True))
     for i in stock_list:
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_dispatch_num=None)
         Warehouse_goods_info.objects.filter(wh_qr_rand_num=i).update(wh_check_in_out=1)
@@ -177,6 +182,7 @@ def dispatch_delete(request,dispatch_id):
     dispatch_del.delete()
     return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_list')
+
 
 @login_required(login_url='login_page')
 def dispatch_goods_list(request):
@@ -227,28 +233,29 @@ def dispatch_goods_list(request):
         'dispatch_master_list': dispatch_master_list,
         'first_name': first_name,
         'dispatch_num_val': dispatch_num_val,
-        "now": timezone.now().date()   # ✅ pass only date
+        "now": timezone.now().date()  # ✅ pass only date
 
     }
 
     return render(request, "asset_mgt_app/dispatch_goods_list_woh.html", context)
 
+
 @csrf_exempt
 @login_required(login_url='login_page')
 def dispatch_remove_goods(request):
     selected_stocks = request.POST.getlist('myList[]') or request.GET.getlist('myList[]')
-    print('selected_stocks',selected_stocks)
+    print('selected_stocks', selected_stocks)
     dispatch_id_val = request.session.get('ses_dispatch_id_val')
     current_dispatch = Dispatch_info.objects.get(pk=dispatch_id_val)
 
     if selected_stocks:
         check_in_out_1 = Check_in_out.objects.get(pk=1)
-        
+
         GoodsPartialDispatchInfo.objects.filter(
             pd_goods__wh_qr_rand_num__in=selected_stocks,
             pd_dispatch_info=current_dispatch
         ).delete()
-        
+
         goods_to_update = []
         goods_queryset = Warehouse_goods_info.objects.filter(wh_qr_rand_num__in=selected_stocks)
         for goods in goods_queryset:
@@ -261,24 +268,26 @@ def dispatch_remove_goods(request):
                 goods.wh_checkout_time = None
                 goods.wh_truck_type = None
                 goods_to_update.append(goods)
-                
+
         if goods_to_update:
             Warehouse_goods_info.objects.bulk_update(
                 goods_to_update,
-                ['wh_dispatch_num', 'wh_dispatch_id', 'wh_dispatch_qty', 'wh_check_in_out', 'wh_storage_time', 'wh_checkout_time', 'wh_truck_type']
+                ['wh_dispatch_num', 'wh_dispatch_id', 'wh_dispatch_qty', 'wh_check_in_out', 'wh_storage_time',
+                 'wh_checkout_time', 'wh_truck_type']
             )
 
-    dispatch_num_val=request.session.get('ses_dispatch_num_val')
+    dispatch_num_val = request.session.get('ses_dispatch_num_val')
     first_name = request.session.get('first_name')
 
     dispatch_invoice_job_update(dispatch_num_val)
     warehousevolme_area_calc(request)
     context = {
-               'first_name': first_name,
-               }
+        'first_name': first_name,
+    }
     # return redirect(request.META['HTTP_REFERER'])
     # return redirect('/SMS/dispatch_goods_list')
     return redirect('/SMS/dispatch_goods_list/' + str(dispatch_id_val))
+
 
 @csrf_exempt
 def dispatch_stock_list(request):
@@ -290,6 +299,7 @@ def dispatch_stock_list(request):
     }
     return JsonResponse(response_data)
 
+
 @csrf_exempt
 @login_required(login_url='login_page')
 def dispatch_add_goods(request):
@@ -297,7 +307,7 @@ def dispatch_add_goods(request):
     dispatch_id_val = request.session.get('ses_dispatch_id_val')
     selected_stocks = request.POST.getlist('myList[]') or request.GET.getlist('myList[]')
     current_date = now()
-    print('selected',selected_stocks)
+    print('selected', selected_stocks)
     try:
         dispatch_info = Dispatch_info.objects.get(dispatch_num=dispatch_num_val)
         vehicle_type = dispatch_info.dispatch_truck_type
@@ -370,7 +380,8 @@ def dispatch_add_goods(request):
     # Bulk update all modified goods
     Warehouse_goods_info.objects.bulk_update(
         goods_to_update,
-        ['wh_check_in_out', 'wh_dispatch_num', 'wh_checkout_time', 'wh_truck_type', 'wh_storage_time','wh_dispatch_qty','wh_goods_pieces']
+        ['wh_check_in_out', 'wh_dispatch_num', 'wh_checkout_time', 'wh_truck_type', 'wh_storage_time',
+         'wh_dispatch_qty', 'wh_goods_pieces']
     )
 
     Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_dispatch_id=dispatch_info.id)
@@ -383,17 +394,28 @@ def dispatch_add_goods(request):
     # return HttpResponseRedirect(f'/SMS/dispatch_goods_list/{dispatch_id_val}?refresh=1')
     return redirect('/SMS/dispatch_goods_list/' + str(dispatch_id_val))
 
+
 def dispatch_invoice_job_update(dispatch_num_val):
     print("Inside dispatch_invoice_job_update")
-    dispatch_invoice_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice',flat=True).distinct())
-    dispatch_job_num_list = list(Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_job_no',flat=True).distinct())
+    dispatch_invoice_list = list(
+        Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_goods_invoice',
+                                                                                          flat=True).distinct())
+    dispatch_job_num_list = list(
+        Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).values_list('wh_job_no',
+                                                                                          flat=True).distinct())
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_invoice_list=dispatch_invoice_list)
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_job_num_list=dispatch_job_num_list)
-    total_weight=Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).aggregate(Sum('wh_goods_weight'))['wh_goods_weight__sum']
-    total_goods=Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).aggregate(Sum('wh_goods_pieces'))['wh_goods_pieces__sum']
+    total_weight = \
+    Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).aggregate(Sum('wh_goods_weight'))[
+        'wh_goods_weight__sum']
+    total_goods = \
+    Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).aggregate(Sum('wh_goods_pieces'))[
+        'wh_goods_pieces__sum']
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_total_weight=total_weight)
     Dispatch_info.objects.filter(dispatch_num=dispatch_num_val).update(dispatch_total_goods=total_goods)
     return ()
+
+
 @login_required(login_url='login_page')
 def qr_dispatch_decoder(request, dispatch_id):
     # Scanning QR Code from Camera Feed (OpenCV only)
@@ -542,18 +564,18 @@ def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
         gatein_destination=F('pd_goods__wh_gate_injob_no_id__gatein_destination'),
         gatein_hawb=F('pd_goods__wh_gate_injob_no_id__gatein_hawb')
     ).values(
-    'wh_consigner',
-    'wh_goods_invoice',
-    'pieces_str',
-    'weight_str',
-    'total_weight',
-    'gatein_destination',
-    'gatein_hawb',
-    'pd_dispatch_qty',
-    'pd_goods__wh_goods_pieces',
-    'pd_goods_weight',
-    'pd_goods__wh_goods_weight'
-)
+        'wh_consigner',
+        'wh_goods_invoice',
+        'pieces_str',
+        'weight_str',
+        'total_weight',
+        'gatein_destination',
+        'gatein_hawb',
+        'pd_dispatch_qty',
+        'pd_goods__wh_goods_pieces',
+        'pd_goods_weight',
+        'pd_goods__wh_goods_weight'
+    )
 
     total_dispatch_qty = sum(d['pd_dispatch_qty'] for d in grouped_details)
     total_pieces_sum = sum(d['pd_goods__wh_goods_pieces'] for d in grouped_details)
@@ -565,7 +587,9 @@ def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
     total_weight_str = f"{total_dispatch_weight}/{total_weight_sum}"
 
     dispatch_details = Dispatch_info.objects.filter(dispatch_num=dispatch_num).order_by('-id')
-    wh_location = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_branch__loc_name', flat=True).order_by('id').first()
+    wh_location = Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num).values_list('wh_branch__loc_name',
+                                                                                                flat=True).order_by(
+        'id').first()
     for d in dispatch_details:
         d.driver_signature_base64 = get_base64_image(d.dispatch_driver_signature)
         d.supervisor_signature_base64 = get_base64_image(d.dispatch_supervisor_signature)
@@ -605,9 +629,11 @@ def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
 
     return pdf_data  # Return raw PDF data for use in email attachment
 
+
 @login_required(login_url='login_page')
 def dispatch_gatepass_pdf_download(request, dispatch_id):
     return dispatch_gatepass_pdf(request, dispatch_id, download=True)
+
 
 @login_required(login_url='login_page')
 def dispatch_goods_back(request):
@@ -615,21 +641,24 @@ def dispatch_goods_back(request):
 
     return redirect('/SMS/dispatch_update/' + str(dispatch_id))
 
+
 def send_gate_out_email_logic(dispatch_id, recipient_list, message, request=None):
     dispatch = Dispatch_info.objects.get(pk=dispatch_id)
     dispatch_number = dispatch.dispatch_num
     subject = f"{dispatch_number}_Gate-Out Alert"
-    
+
     # Generate PDF (using existing function)
     pdf_data = dispatch_gatepass_pdf(request, dispatch_id)
     file_name = f"WH_Gate_Pass_{dispatch_number}.pdf"
-    
+
     formatted_message = message.replace('\n', '<br>')
-    
-    send_department_email('warehouse', subject, formatted_message, recipient_list, pdf_data, 'application/pdf', file_name)
-    
+
+    send_department_email('warehouse', subject, formatted_message, recipient_list, pdf_data, 'application/pdf',
+                          file_name)
+
     # Update email count
     Dispatch_info.objects.filter(pk=dispatch_id).update(dispatch_email_count=F('dispatch_email_count') + 1)
+
 
 @login_required(login_url='login_page')
 def gate_out_email(request, dispatch_id=0):
@@ -638,9 +667,9 @@ def gate_out_email(request, dispatch_id=0):
         message = request.POST.get('message', '')
         recipient_list = [email.strip() for email in recipient.split(',') if email.strip()]
         dispatch_id = request.session.get('ses_dispatch_id')
-        
+
         send_gate_out_email_logic(dispatch_id, recipient_list, message, request)
-        
+
         messages.success(request, "Gate-Out E-mail sent successfully.")
         return redirect(request.META['HTTP_REFERER'])
     else:
@@ -674,7 +703,7 @@ def dispatch_partial_goods(request):
         pd_dispatch_qty=dispatch_qty,
         pd_dispatch_info=dispatch_info,
         pd_updated_by=request.user,
-        pd_goods_weight = dispatch_weight
+        pd_goods_weight=dispatch_weight
     )
     goods.wh_dispatch_num = dispatch_info.dispatch_num
     goods.wh_dispatch_id = dispatch_info
@@ -690,6 +719,7 @@ def dispatch_partial_goods(request):
 
     goods.save()
     return JsonResponse({'message': f'{dispatch_qty} units dispatched successfully.'})
+
 
 @csrf_exempt
 @login_required(login_url='login_page')
@@ -707,6 +737,8 @@ def dispatch_upload_attachment(request, pk, att_type):
         messages.error(request, 'Attachment upload failed. Please try again.')
 
     return redirect(request.META.get('HTTP_REFERER', 'gatein_list'))
+
+
 @csrf_exempt
 @login_required(login_url='login_page')
 def dispatch_delete_attachment(request, pk, att_type):

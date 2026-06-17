@@ -63,7 +63,11 @@ class PkcostingInfo(models.Model):
     ct_total_cft_display = models.FloatField(blank=True, null=True, default=0.0)
     ct_po_dimension = models.ForeignKey(POdimension, on_delete=models.CASCADE, null=True, blank=True)
     ct_job_no = models.CharField(max_length=100, blank=True, null=True)
-
+    ct_return_qty = models.FloatField(blank=True, null=True, default=0.0)
+    ct_return_status = models.CharField(max_length=50, choices=[('None', 'None'), ('Pending', 'Pending'), ('Accepted', 'Accepted')], default='None', blank=True, null=True)
+    ct_return_type = models.CharField(max_length=50, choices=[('Purchase', 'Purchase'), ('In-House', 'In-House'), ('Onsite', 'Onsite')], blank=True, null=True)
+    ct_return_reason = models.TextField(blank=True, null=True)
+    ct_is_purchase_return = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["ct_cost_type"]

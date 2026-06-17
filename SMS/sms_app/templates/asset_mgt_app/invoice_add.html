@@ -257,8 +257,7 @@
 								</div>
 							</div>
 						</div>
-						<button type="submit" class="btn btn-success" onclick="myjobnum()"><i
-								class="fas fa-check"></i>Save</button>
+						<button type="submit" class="btn btn-success" onclick="fumigation_charge_change_fn()"><i class="fas fa-check"></i> Save</button>
 						<a href="{% url 'invoice_list' %}" class="btn btn-danger float-right">
 							<i class="fas fa-times"></i> Cancel </a>
 					</div>
@@ -297,17 +296,22 @@
 	$(document).ready(function () {
 		document.getElementById("bill_updated_by").value = '{{ user_id }}';
 		var weightVal = '{{ weight_sum }}';
-		if (weightVal > 0 || !document.getElementById("bill_weight").value) document.getElementById("bill_weight").value = weightVal;
+		try {
+			var weightVal = '{{ weight_sum }}';
+			if (weightVal > 0 || !document.getElementById("bill_weight").value) document.getElementById("bill_weight").value = weightVal;
 
-		var palletsVal = '{{ no_of_pieces }}';
-		if (palletsVal > 0 || !document.getElementById("bill_no_of_pallets").value) document.getElementById("bill_no_of_pallets").value = palletsVal;
+			var palletsVal = '{{ no_of_pieces }}';
+			if (palletsVal > 0 || !document.getElementById("bill_no_of_pallets").value) document.getElementById("bill_no_of_pallets").value = palletsVal;
 
-		document.getElementById("bill_tot_crane_time").value = '{{ crane_time }}';
-		document.getElementById("bill_tot_forklift_time").value = '{{ forklift_time }}';
-		document.getElementById("bill_loading_charge").value = '{{ total_loading_cost }}';
-		document.getElementById("bill_unloading_charge").value = '{{ total_loading_cost }}'; // Unloading defaults to same as loading in this module
-		document.getElementById("bill_tot_crane_charges").value = '{{ crane_cost_sum }}';
-		document.getElementById("bill_tot_forklift_charges").value = '{{ forklift_cost_sum }}';
+			if ('{{ crane_time }}' !== 'None') document.getElementById("bill_tot_crane_time").value = '{{ crane_time }}';
+			if ('{{ forklift_time }}' !== 'None') document.getElementById("bill_tot_forklift_time").value = '{{ forklift_time }}';
+			if ('{{ total_loading_cost }}' !== 'None') document.getElementById("bill_loading_charge").value = '{{ total_loading_cost }}';
+			if ('{{ total_loading_cost }}' !== 'None') document.getElementById("bill_unloading_charge").value = '{{ total_loading_cost }}'; // Unloading defaults to same as loading in this module
+			if ('{{ crane_cost_sum }}' !== 'None') document.getElementById("bill_tot_crane_charges").value = '{{ crane_cost_sum }}';
+			if ('{{ forklift_cost_sum }}' !== 'None') document.getElementById("bill_tot_forklift_charges").value = '{{ forklift_cost_sum }}';
+		} catch (e) {
+			console.log("Error assigning sums: ", e);
+		}
 
 		var bvm_invoice = document.getElementById("bill_customer_name").value;
 		var customer_type_val = '{{ customer_type_id }}';

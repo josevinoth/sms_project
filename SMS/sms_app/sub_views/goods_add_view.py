@@ -465,8 +465,11 @@ def wh_excess_stock_email(self, *args, **kwargs):
             wh_branch=branch, wh_check_in_out=1, wh_checkin_time__lte=current_time
         ).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum'] or 0
         stock_values[name] = round(in_stock, 2)  # Use 'name' as the key
-        stock_values_in_words[name] = to_camel_case(
-            num2words(in_stock, to='currency', lang='en_IN')).replace("Euro", "Rupees").replace("Cents", "Paise")
+        try:
+            stock_values_in_words[name] = to_camel_case(
+                num2words(in_stock, to='currency', lang='en_IN')).replace("Euro", "Rupees").replace("Cents", "Paise")
+        except (OverflowError, ValueError):
+            stock_values_in_words[name] = f"INR {in_stock:,.2f} (Amount too large to convert to words)"
 
     total_stock_value = sum(stock_values.values())  # Calculate the total stock value
 

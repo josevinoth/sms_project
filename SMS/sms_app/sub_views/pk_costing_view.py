@@ -14,6 +14,44 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from .general_utils import get_branch_code, get_session_branch_id, get_financial_year
 
+def _stock_entry_ref(stock_entry):
+    return stock_entry.sm_stock_purchase_number or stock_entry.sm_invoice_no or f"SM-{stock_entry.id}"
+
+
+def _sum_abs_stock_counts(queryset):
+    return sum(abs(float(qty or 0)) for qty in queryset.values_list('sm_count', flat=True))
+
+
+def _retrieved_qty_for_stock_entry(stock_entry):
+    return _sum_abs_stock_counts(
+        StockMaintenance.objects.filter(
+            sm_stock_type_id=2,
+            sm_invoice_no=_stock_entry_ref(stock_entry),
+            sm_partcode=stock_entry.sm_partcode,
+        )
+    )
+
+
+def _vendor_returned_qty_for_stock_entry(stock_entry):
+    if not stock_entry.sm_vendor_id:
+        return 0.0
+    return _sum_abs_stock_counts(
+        StockMaintenance.objects.filter(
+            sm_stock_type_id=3,
+            sm_vendor=stock_entry.sm_vendor,
+            sm_stock_purchase_number=_stock_entry_ref(stock_entry),
+            sm_partcode=stock_entry.sm_partcode,
+        )
+    )
+
+
+def _available_qty_for_stock_entry(stock_entry):
+    original_qty = float(stock_entry.sm_count or 0.0)
+    retrieved_qty = _retrieved_qty_for_stock_entry(stock_entry)
+    vendor_returned_qty = _vendor_returned_qty_for_stock_entry(stock_entry)
+    return max(0.0, original_qty - retrieved_qty - vendor_returned_qty)
+
+
 @transaction.atomic
 @login_required(login_url='login_page')
 def costing_add(request, costing_id=0):
@@ -126,7 +164,7 @@ def costing_add(request, costing_id=0):
                             # Fetch stock purchase record from StockMaintenance (not PkstockpurchasesInfo)
                             stock_purchase = StockMaintenance.objects.get(id=stock_purchase_num_id)
                             stock_purchase_num = stock_purchase.sm_stock_purchase_number or stock_purchase.sm_invoice_no or f"SM-{stock_purchase_num_id}"
-                            stock_qty_available = stock_purchase.sm_count or 0.0
+                            stock_qty_available = _available_qty_for_stock_entry(stock_purchase)
 
                             # Validate quantity
                             stock_qty_str = request.POST.get('ct_quantity', None)
@@ -138,6 +176,10 @@ def costing_add(request, costing_id=0):
                                 stock_qty = float(stock_qty_str)
                             except ValueError:
                                 messages.error(request, 'Invalid quantity value. It should be a number.')
+                                return redirect(request.META.get('HTTP_REFERER', '/'))
+
+                            if stock_qty > stock_qty_available:
+                                messages.error(request, f'Available quantity is less than requested quantity. Available: {stock_qty_available}.')
                                 return redirect(request.META.get('HTTP_REFERER', '/'))
 
                             # Save the record - ensure we don't lose the stock reference
@@ -439,32 +481,22 @@ def pk_item_search_page_costing(request):
     for p_id in p_ids:
         p = PkpartcodeInfo.objects.select_related('pc_stock_description', 'pc_stock_type', 'pc_uom').get(id=p_id)
 
-        # Get all ledger entries for this part, ordered by date
-        ledger = StockMaintenance.objects.filter(sm_partcode_id=p_id).order_by('sm_invoice_date', 'id')
-
-        # Calculate total retrieved for this part to distribute across batches
-        total_retrieved_qty = ledger.filter(sm_stock_type_id=2).aggregate(Sum('sm_count'))['sm_count__sum'] or 0.0
-        total_retrieved_cft = ledger.filter(sm_stock_type_id=2).aggregate(Sum('sm_total_cft'))['sm_total_cft__sum'] or 0.0
-
-        # Get all "In" batches (Purchase=1, Return=3)
-        in_batches = ledger.filter(sm_stock_type_id__in=[1, 3]).order_by('sm_invoice_date', 'id')
-
-        pool_qty = total_retrieved_qty
-        pool_cft = total_retrieved_cft
+        # Vendor returns are stored as negative Return rows against the original GRN.
+        # Production returns remain positive stock-in batches.
+        in_batches = (
+            StockMaintenance.objects
+            .filter(sm_partcode_id=p_id)
+            .filter(Q(sm_stock_type_id=1) | Q(sm_stock_type_id=3, sm_count__gt=0))
+            .exclude(sm_stock_type_id=3, sm_vendor__isnull=False, sm_description__startswith='Vendor Return')
+            .order_by('sm_invoice_date', 'id')
+        )
 
         for batch in in_batches:
             batch_qty = batch.sm_count or 0.0
             batch_cft = batch.sm_total_cft or 0.0
-
-            # Use FIFO to subtract retrieved from this batch
-            used_qty = min(batch_qty, pool_qty)
-            pool_qty -= used_qty
-
-            used_cft = min(batch_cft, pool_cft)
-            pool_cft -= used_cft
-
-            available_qty = batch_qty - used_qty
-            available_cft = batch_cft - used_cft
+            available_qty = _available_qty_for_stock_entry(batch)
+            available_ratio = (available_qty / float(batch_qty)) if batch_qty else 0.0
+            available_cft = float(batch_cft or 0.0) * available_ratio
 
             # Include the batch even if available_qty is 0, so user knows it exists but is depleted
             formatted_results.append({

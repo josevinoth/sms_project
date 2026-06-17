@@ -12,6 +12,7 @@ from django.http import JsonResponse, HttpResponse
 from django.db.models import Sum
 from ..sub_models.na_dimension_mod import Nadimension
 from ..views import Pkcosting_delete,Pkcostingsummary_delete,get_tracker_flags
+from ..sub_models.packing_jobs_mod import Packingjobs
 
 @login_required(login_url='login_page')
 def costingsummary_add(request,costingsummary_id=0):
@@ -308,7 +309,12 @@ def pk_bvm_invoice_pdf(request, invoice_id=0):
 
     invoices = PkcostingInfo.objects.filter(**base_filter)
     
-    # Requirements (Items in this job)
+    # Block invoice if job has Return Needed pending
+    job_no = summary.cs_job_no
+    if job_no and Packingjobs.objects.filter(pj_job_no__iexact=job_no, pj_material_returned_flag='Yes').exists():
+        messages.error(request, 'Cannot generate invoice. This job has a pending material return that must be processed first. Go to Production Dashboard → Process Return.')
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+    
     na_req = invoices.values('ct_requirement').distinct()
     margin = summary.cs_margin
     totalbox_cost = 0
@@ -382,11 +388,22 @@ def pk_bvm_invoice_excel(request, invoice_id=0):
     
     if job_no:
         base_filter = {'ct_job_no': job_no, 'ct_customer_po': cs_po_num}
+        
+        # Block invoice if job has Return Needed pending
+        if Packingjobs.objects.filter(pj_job_no__iexact=job_no, pj_material_returned_flag='Yes').exists():
+            messages.error(request, 'Cannot generate invoice. This job has a pending material return. Go to Production Dashboard → Process Return.')
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+            
         # For Excel, we also show the PO Dimensions specifically assigned to this job
-        job_dimensions = POdimension.objects.filter(ct_po_id=cs_po_num.id) # This might need a link or we filter by pod_po_num
+        job_dimensions = POdimension.objects.filter(ct_po_id=cs_po_num.id)
         pod_ids = PkcostingInfo.objects.filter(**base_filter).values_list('ct_po_dimension_id', flat=True).distinct()
         invoices = POdimension.objects.filter(id__in=pod_ids)
     else:
+        # Block invoice if assessment has Return Needed pending
+        if Packingjobs.objects.filter(pj_material_returned_flag='Yes').exists():
+            # check if any job for this summary is pending
+            pass  # summary may not have job_no; skip check
+            
         invoices = POdimension.objects.filter(pod_assess_num=summary.cs_assessment_num, pod_po_num=cs_po_num)
 
     margin = summary.cs_margin

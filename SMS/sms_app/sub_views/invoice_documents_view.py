@@ -223,7 +223,8 @@ def invoice_documents_list_ajax_view(request):
                 Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
                 Q(tr_enquirynumber__en_enquirynumber__icontains=search_value) |
                 Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
-                Q(tr_vehiclenumber__icontains=search_value)
+                Q(tr_vehiclenumber__icontains=search_value) |
+                Q(tc_financestatus__status__icontains=search_value)
             )
 
         records_filtered = trip_list.count()

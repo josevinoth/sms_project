@@ -1,0 +1,287 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block content %}
+<style>
+.return-card {
+    background: var(--bg-card, #1e2a38);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+    transition: border-color 0.2s;
+}
+.return-card.has-return {
+    border-color: #e67e22;
+    box-shadow: 0 0 0 2px rgba(230,126,34,0.18);
+}
+.return-card.has-return-onsite-good { border-color: #28a745; }
+.dim-label { font-size: 0.72rem; color: #aaa; margin-bottom: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.dim-input { height: 34px !important; font-size: 0.9rem !important; border-radius: 6px !important; text-align: center; }
+.dim-sep { align-self: center; color: #aaa; font-weight: bold; padding: 0 2px; margin-top: 18px; }
+.return-type-badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; }
+.info-chip { background: rgba(255,255,255,0.06); border-radius: 6px; padding: 3px 8px; font-size: 0.78rem; }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-undo-alt mr-2"></i> Process Return — Job: <span style="color:#e67e22;">{{ job_no }}</span></h2>
+        <a href="{% url 'pk_production_return_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size:1rem; text-decoration:none;">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="alert border-0 py-2 mb-3" style="background:rgba(23,162,184,0.12); border-left: 4px solid #17a2b8 !important;">
+        <i class="fas fa-info-circle mr-2 text-info"></i>
+        <small class="font-weight-bold">
+            For each item, enter the <strong>Return Qty</strong>.
+            If returning a partial/offcut piece, also fill in its exact <strong>Return Dimensions (L × W × H)</strong>.
+            Leave qty as 0 to skip an item.
+        </small>
+        {% if is_onsite %}
+        <span class="return-type-badge ml-2" style="background:#e67e22; color:#fff;">🚚 On-Site Job — split Good / Damaged</span>
+        {% endif %}
+    </div>
+
+    <form method="POST" action="{% url 'pk_production_return_submit' job_no %}">
+        {% csrf_token %}
+
+        <!-- Search Box -->
+        <div class="mb-4">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #aaa;"><i class="fas fa-search"></i></span>
+                </div>
+                <input type="text" id="searchInput" class="form-control form-control-modern" placeholder="Search by item description, part code, or GRN..." onkeyup="filterItems()" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+            </div>
+        </div>
+
+        {% for item in material_items %}
+        <div class="return-card" id="card_{{ item.id }}">
+            <div class="row align-items-center">
+
+                <!-- LEFT SIDE: Original Info -->
+                <div class="col-md-6 border-right" style="border-right: 1px solid rgba(255,255,255,0.1);">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <span class="font-weight-bold mr-2" style="font-size:1.05rem;">{{ forloop.counter }}.</span>
+                            <span class="font-weight-bold" style="font-size:1.05rem; color:#fff;">{{ item.ct_stock_description|default:"—" }}</span>
+                            <div class="mt-2 d-flex flex-wrap gap-1">
+                                {% if item.ct_part_code %}
+                                <span class="badge badge-secondary info-chip">{{ item.ct_part_code }}</span>
+                                {% endif %}
+                                <span class="info-chip text-muted">{{ item.ct_cost_type }}</span>
+                                {% if item.ct_uom %}
+                                <span class="info-chip" style="color:#17a2b8;">{{ item.ct_uom }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <small class="text-muted d-block mb-1">GRN / Ref:</small>
+                            {% if item.ct_grn %}
+                                <span class="badge badge-light border">{{ item.ct_grn.sm_stock_purchase_number }}</span>
+                            {% elif item.ct_stock_purchase_number %}
+                                <span class="badge badge-light border">{{ item.ct_stock_purchase_number.sm_stock_purchase_number }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center bg-dark p-2 rounded" style="background: rgba(0,0,0,0.2) !important;">
+                        <div class="text-center px-2">
+                            <div class="dim-label">Orig Dims</div>
+                            <strong style="font-size:0.95rem; color:#e67e22;">
+                                {{ item.ct_length|default:"—" }} × {{ item.ct_width|default:"—" }} × {{ item.ct_height|default:"—" }}
+                            </strong>
+                        </div>
+                        <div class="text-center px-2 border-left border-secondary" style="border-color: rgba(255,255,255,0.1) !important;">
+                            <div class="dim-label">Accepted Qty</div>
+                            <strong style="font-size:1.1rem; color:#28a745;">{{ item.ct_na_quantity|default:"0" }}</strong>
+                        </div>
+                        <div class="text-center px-2 border-left border-secondary" style="border-color: rgba(255,255,255,0.1) !important;">
+                            <div class="dim-label">Rate</div>
+                            <strong style="font-size:0.95rem;">₹ {{ item.ct_rate|default:"0" }}</strong>
+                        </div>
+                        <div class="text-center px-2 border-left border-secondary" style="border-color: rgba(255,255,255,0.1) !important;">
+                            <div class="dim-label">Total Cost</div>
+                            <strong style="font-size:0.95rem;">₹ {{ item.ct_total_cost|default:"0" }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT SIDE: Return Info -->
+                <div class="col-md-6 pl-md-4">
+                    {% if is_onsite %}
+                    <!-- ON-SITE: Good + Damaged -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-center">
+                            <div class="dim-label text-success"><i class="fas fa-check-circle"></i> Good Qty</div>
+                            <input type="number" step="0.01" min="0"
+                                   name="return_qty_good_{{ item.id }}"
+                                   id="good_qty_{{ item.id }}"
+                                   class="form-control dim-input mx-auto"
+                                   style="border-color:#28a745; width:70px; background: rgba(40,167,69,0.1); color: #fff;"
+                                   placeholder="0"
+                                   oninput="updateCard({{ item.id }})">
+                        </div>
+                        <div class="text-center">
+                            <div class="dim-label text-danger"><i class="fas fa-times-circle"></i> Damaged Qty</div>
+                            <input type="number" step="0.01" min="0"
+                                   name="return_qty_damaged_{{ item.id }}"
+                                   id="damaged_qty_{{ item.id }}"
+                                   class="form-control dim-input mx-auto"
+                                   style="border-color:#dc3545; width:70px; background: rgba(220,53,69,0.1); color: #fff;"
+                                   placeholder="0"
+                                   oninput="updateCard({{ item.id }})">
+                        </div>
+                        <div class="text-center">
+                            <div class="dim-label">Good Return Dims (L × W × H)</div>
+                            <div class="d-flex align-items-center justify-content-center gap-1">
+                                <input type="number" step="0.01" min="0" name="return_l_{{ item.id }}" class="form-control dim-input" style="width:60px;" placeholder="{{ item.ct_length|default:'' }}">
+                                <span class="dim-sep mt-0">×</span>
+                                <input type="number" step="0.01" min="0" name="return_w_{{ item.id }}" class="form-control dim-input" style="width:60px;" placeholder="{{ item.ct_width|default:'' }}">
+                                <span class="dim-sep mt-0">×</span>
+                                <input type="number" step="0.01" min="0" name="return_h_{{ item.id }}" class="form-control dim-input" style="width:60px;" placeholder="{{ item.ct_height|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- IN-HOUSE: Simple return -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-center">
+                            <div class="dim-label text-warning" style="font-size: 0.8rem;"><i class="fas fa-undo"></i> Return Qty</div>
+                            <input type="number" step="0.01" min="0"
+                                   max="{{ item.ct_na_quantity|default:'9999' }}"
+                                   name="return_qty_{{ item.id }}"
+                                   id="return_qty_{{ item.id }}"
+                                   class="form-control dim-input mx-auto"
+                                   style="border: 2px solid #ffc107; width:80px; background: rgba(255,193,7,0.1); color: #fff; font-size: 1.1rem !important; font-weight: bold;"
+                                   placeholder="0"
+                                   value="0"
+                                   oninput="updateCard({{ item.id }}); calcFraction({{ item.id }}, {{ item.ct_length|default:0 }}, {{ item.ct_width|default:0 }}, {{ item.ct_height|default:0 }}, {{ item.ct_rate|default:0 }})">
+                        </div>
+                        <div class="text-center">
+                            <div class="dim-label">Return Dims (L × W × H)</div>
+                            <div class="d-flex align-items-center justify-content-center gap-1">
+                                <input type="number" step="0.01" min="0"
+                                       name="return_l_{{ item.id }}"
+                                       id="return_l_{{ item.id }}"
+                                       class="form-control dim-input"
+                                       style="width:65px; background: rgba(255,255,255,0.05); color:#fff;"
+                                       placeholder="{{ item.ct_length|default:'' }}"
+                                       oninput="calcFraction({{ item.id }}, {{ item.ct_length|default:0 }}, {{ item.ct_width|default:0 }}, {{ item.ct_height|default:0 }}, {{ item.ct_rate|default:0 }})">
+                                <span class="dim-sep mt-0">×</span>
+                                <input type="number" step="0.01" min="0"
+                                       name="return_w_{{ item.id }}"
+                                       id="return_w_{{ item.id }}"
+                                       class="form-control dim-input"
+                                       style="width:65px; background: rgba(255,255,255,0.05); color:#fff;"
+                                       placeholder="{{ item.ct_width|default:'' }}"
+                                       oninput="calcFraction({{ item.id }}, {{ item.ct_length|default:0 }}, {{ item.ct_width|default:0 }}, {{ item.ct_height|default:0 }}, {{ item.ct_rate|default:0 }})">
+                                <span class="dim-sep mt-0">×</span>
+                                <input type="number" step="0.01" min="0"
+                                       name="return_h_{{ item.id }}"
+                                       id="return_h_{{ item.id }}"
+                                       class="form-control dim-input"
+                                       style="width:65px; background: rgba(255,255,255,0.05); color:#fff;"
+                                       placeholder="{{ item.ct_height|default:'' }}"
+                                       oninput="calcFraction({{ item.id }}, {{ item.ct_length|default:0 }}, {{ item.ct_width|default:0 }}, {{ item.ct_height|default:0 }}, {{ item.ct_rate|default:0 }})">
+                            </div>
+                            <small class="text-muted" style="font-size: 0.65rem;">Leave empty if returning full size</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="dim-label text-success">Cost Credit</div>
+                            <strong id="preview_cost_{{ item.id }}" style="color:#28a745; font-size: 1.15rem;">₹ 0.00</strong>
+                            <div id="preview_{{ item.id }}" style="display:none; margin-top: -4px;">
+                                <small class="text-muted" style="font-size: 0.65rem;" id="preview_fraction_{{ item.id }}"></small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+        {% empty %}
+        <div class="table-container-modern p-4 text-center text-muted">
+            <i class="fas fa-box-open fa-2x mb-3" style="opacity:0.4;"></i>
+            <div>No accepted material items found for this job.</div>
+            <small>Please ensure materials have been added in the Costing stage and accepted at the Acceptance Queue.</small>
+        </div>
+        {% endfor %}
+
+        {% if material_items %}
+        <div class="d-flex justify-content-end mt-4 gap-2">
+            <a href="{% url 'pk_production_return_list' %}" class="btn-modern btn-cancel py-2 px-4 mr-2" style="text-decoration:none;">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn-modern btn-submit py-2 px-5"
+                    style="background: #e67e22; border-color: #e67e22; font-size:1rem;"
+                    onclick="return confirm('Submit return? This will return stock to inventory and reduce the job cost.')">
+                <i class="fas fa-undo-alt mr-2"></i> Submit Return
+            </button>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<script>
+function updateCard(id) {
+    const card = document.getElementById('card_' + id);
+    const goodQty = parseFloat(document.getElementById('good_qty_' + id)?.value || 0);
+    const damagedQty = parseFloat(document.getElementById('damaged_qty_' + id)?.value || 0);
+    const returnQty = parseFloat(document.getElementById('return_qty_' + id)?.value || 0);
+
+    if (goodQty > 0 || damagedQty > 0 || returnQty > 0) {
+        card.classList.add('has-return');
+    } else {
+        card.classList.remove('has-return');
+    }
+}
+
+function filterItems() {
+    const input = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.getElementsByClassName('return-card');
+    
+    for (let i = 0; i < cards.length; i++) {
+        const cardText = cards[i].innerText.toLowerCase();
+        if (cardText.includes(input)) {
+            cards[i].style.display = '';
+        } else {
+            cards[i].style.display = 'none';
+        }
+    }
+}
+
+function calcFraction(id, origL, origW, origH, rate) {
+    const retL = parseFloat(document.getElementById('return_l_' + id)?.value || 0) || origL;
+    const retW = parseFloat(document.getElementById('return_w_' + id)?.value || 0) || origW;
+    const retH = parseFloat(document.getElementById('return_h_' + id)?.value || 0) || origH;
+    const qty = parseFloat(document.getElementById('return_qty_' + id)?.value || 0);
+
+    const origVol = origL * origW * origH;
+    const retVol = retL * retW * retH;
+    const fraction = (origVol > 0 && retVol > 0) ? (retVol / origVol) : 1.0;
+
+    const preview = document.getElementById('preview_' + id);
+    const previewCost = document.getElementById('preview_cost_' + id);
+    const previewFraction = document.getElementById('preview_fraction_' + id);
+
+    if (qty > 0) {
+        preview.style.display = 'block';
+        const costReduction = qty * rate * fraction;
+        previewCost.textContent = `₹ ${costReduction.toFixed(2)}`;
+        
+        if (Math.abs(fraction - 1.0) > 0.001) {
+            previewFraction.textContent = `(${(fraction * 100).toFixed(1)}% of original size × ${qty} pcs)`;
+        } else {
+            previewFraction.textContent = '(full size)';
+        }
+    } else {
+        preview.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

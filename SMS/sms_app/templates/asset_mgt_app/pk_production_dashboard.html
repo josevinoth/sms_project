@@ -34,7 +34,7 @@
                         <th width="18%">Customer</th>
                         <th width="10%">Ref. Assessment</th>
                         <th width="12%" style="background: rgba(255,255,255,0.05);">Production Status</th>
-                        <th width="12%" style="background: rgba(255,255,255,0.05);">Material Loop</th>
+                        <th width="13%" style="background: rgba(255,255,255,0.05);">Return Status</th>
                         <th width="10%">QC Status</th>
                         <th width="12%">Gate Pass Access</th>
                         <th width="13%">REPORTS</th>
@@ -53,11 +53,11 @@
                         <td class="text-left">
                             <div class="font-weight-bold">{% if job.cs_customer_name %}{{ job.cs_customer_name.cu_name }}{% else %}{{ job.cs_customer_new_name }}{% endif %}</div>
                         </td>
-                        <td><small class="text-muted font-weight-bold">{{ job.cs_assessment_num.na_assessment_num }}</small></td>
+                        <td style="white-space: nowrap;"><small class="text-muted font-weight-bold">{{ job.cs_assessment_num.na_assessment_num }}</small></td>
 
                         <td class="px-2">
                             <select class="form-control form-control-modern status-toggle py-0" 
-                                    style="height: 32px !important; font-size: 0.85rem; border-color: var(--primary-emerald);"
+                                    style="height: 32px !important; font-size: 0.85rem; border-color: var(--primary-emerald); min-width: 120px;"
                                     data-job-no="{{ job.cs_job_no }}"
                                     data-type="production"
                                     onchange="handleStatusChange(this)">
@@ -68,13 +68,14 @@
 
                         <td class="px-2">
                             <select class="form-control form-control-modern status-toggle py-0"
-                                    style="height: 32px !important; font-size: 0.85rem; border-color: var(--accent-blue);"
+                                    style="height: 32px !important; font-size: 0.85rem; border-color: var(--accent-blue); min-width: 135px;"
                                     data-job-no="{{ job.cs_job_no }}"
                                     data-type="material"
                                     onchange="handleStatusChange(this)">
                                 <option value="Pending"   {% if tracker.pj_material_returned_flag == 'Pending' %}selected{% endif %}>⏳ Pending</option>
-                                <option value="Yes"       {% if tracker.pj_material_returned_flag == 'Yes' %}selected{% endif %}>🔼 Return Needed</option>
+                                <option value="Yes"       {% if tracker.pj_material_returned_flag == 'Yes' %}selected{% endif %}>🔼 Return In Progress</option>
                                 <option value="No"        {% if tracker.pj_material_returned_flag == 'No' %}selected{% endif %}>⏺️ No Return</option>
+                                <option value="Returned"  {% if tracker.pj_material_returned_flag == 'Returned' %}selected{% endif %}>✅ Returned</option>
                             </select>
                         </td>
 
@@ -82,7 +83,7 @@
                         <td id="qc-column-{{ job.cs_job_no|slugify }}">
                             {% if tracker.pj_production_completed_flag == 'Completed' %}
                                 {% if tracker.pj_qc_completed_flag == 'Completed' %}
-                                    <span class="badge badge-success px-3 py-2" style="border-radius: 20px;"><i class="fas fa-check-circle"></i> Passed</span>
+                                    <span class="badge badge-success px-3 py-2" style="border-radius: 20px;"><i class="fas fa-check-circle"></i> QC Passed</span>
                                 {% else %}
                                     <a href="{% url 'pk_quality_check_add' %}?job_no={{ job.cs_job_no }}" class="btn-modern btn-highlight py-1 px-3" style="font-size: 0.75rem; text-decoration: none;">
                                         <i class="fas fa-clipboard-check"></i> START QC
@@ -116,6 +117,14 @@
                                         <i class="fas fa-file-pdf mr-1"></i> QC Report
                                     </a>
                                 {% endif %}
+
+                                {% if tracker.pj_material_returned_flag == 'Yes' %}
+                                    <a href="{% url 'pk_production_return_detail' job.cs_job_no %}"
+                                       class="btn btn-sm w-100 py-1"
+                                       style="font-size:0.7rem; text-decoration:none; background:#e67e22; color:#fff; border:none;">
+                                        <i class="fas fa-undo-alt mr-1"></i> Return Process
+                                    </a>
+                                {% endif %}
                                 
                                 {% if tracker.pj_production_completed_flag == 'Completed' and tracker.pj_qc_completed_flag == 'Completed' %}
                                     {% if row.is_onsite %}
@@ -143,7 +152,7 @@
                                     {% endif %}
                                 {% endif %}
                                 
-                                {% if not row.qc_record and not row.dc_record %}
+                                {% if not row.qc_record and not row.dc_record and tracker.pj_material_returned_flag != 'Yes' %}
                                     <span class="text-muted small italic">---</span>
                                 {% endif %}
                             </div>

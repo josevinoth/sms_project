@@ -195,23 +195,7 @@
             });
         }
 
-        // Initialize Flatpickr globally for all modern date fields
-        flatpickr(".form-control-modern[type='date']", {
-            dateFormat: "Y-m-d", // Keep standard for backend
-            altInput: true,
-            altFormat: "d-m-Y", // User friendly format
-            allowInput: true,
-            animate: true,
-            onOpen: function(selectedDates, dateStr, instance) {
-                // Adjust for dark mode if needed
-                const theme = document.documentElement.getAttribute('data-theme');
-                if (theme === 'dark') {
-                    instance.calendarContainer.classList.add('dark-flatpickr');
-                } else {
-                    instance.calendarContainer.classList.remove('dark-flatpickr');
-                }
-            }
-        });
+        // Flatpickr disabled globally to allow native keyboard-friendly date inputs
     });
 </script>
 
