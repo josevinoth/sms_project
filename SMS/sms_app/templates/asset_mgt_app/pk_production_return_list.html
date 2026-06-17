@@ -1,0 +1,68 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-undo-alt mr-2"></i> Production Returns Queue</h2>
+        <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 1rem; text-decoration: none;">
+            <i class="fas fa-home"></i> Home
+        </a>
+    </div>
+
+    <div class="alert alert-warning py-2 mb-3 border-0 shadow-sm" style="border-left: 4px solid #ffc107 !important;">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        <small class="font-weight-bold">These jobs have been flagged as <strong>Return Needed</strong> from the Production Dashboard. Enter the return quantity for each material item and submit.</small>
+    </div>
+
+    <div class="table-container-modern">
+        <div class="table-responsive">
+            <table class="table modern-table text-center">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Job No.</th>
+                        <th>Customer</th>
+                        <th>Pack Type</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in return_needed_jobs %}
+                    <tr class="modern-tr">
+                        <td class="text-muted">{{ forloop.counter }}</td>
+                        <td>
+                            <span class="badge" style="background: var(--bg-dark); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); font-size: 0.85rem; padding: 5px 10px;">
+                                {{ job.pj_job_no }}
+                            </span>
+                        </td>
+                        <td class="font-weight-bold">{{ job.pj_customer }}</td>
+                        <td>{{ job.pj_pack_type }}</td>
+                        <td>
+                            <span class="badge badge-warning px-3 py-2" style="border-radius: 20px;">
+                                <i class="fas fa-undo-alt mr-1"></i> Return Needed
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'pk_production_return_detail' job.pj_job_no %}"
+                               class="btn-modern btn-submit py-2 px-4"
+                               style="font-size: 0.9rem; text-decoration: none; background: #e67e22; border-color: #e67e22;">
+                                <i class="fas fa-boxes mr-1"></i> Process Return
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fas fa-check-circle fa-2x mb-2 text-success d-block"></i>
+                            No jobs pending return. All clear!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

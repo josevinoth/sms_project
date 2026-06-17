@@ -1,0 +1,154 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block content %}
+
+<style>
+.group-card {
+    background: var(--bg-card, #1e2a38);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+.group-header {
+    background: rgba(255,255,255,0.03);
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.item-row {
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    align-items: center;
+}
+.item-row:last-child { border-bottom: none; }
+.dim-badge { background: rgba(230,126,34,0.15); color: #e67e22; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; border: 1px solid rgba(230,126,34,0.3); }
+.status-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
+.target-badge { background: rgba(23,162,184,0.14); color: #17a2b8; padding: 3px 8px; border-radius: 4px; font-size: 0.78rem; border: 1px solid rgba(23,162,184,0.28); display: inline-block; margin-top: 4px; }
+.target-badge.warn { background: rgba(255,193,7,0.16); color: #ffc107; border-color: rgba(255,193,7,0.34); }
+.target-badge.danger { background: rgba(220,53,69,0.14); color: #dc3545; border-color: rgba(220,53,69,0.3); }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white">
+            <i class="fas fa-boxes mr-2" style="color: #17a2b8;"></i> Return Acceptance Queue
+        </h2>
+        <a href="{% url 'pk_acceptance_list' %}" class="btn-modern btn-cancel py-2 px-4" style="text-decoration:none;">
+            <i class="fas fa-arrow-left"></i> To Normal Acceptance
+        </a>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="alert border-0 py-2 mb-4" style="background:rgba(23,162,184,0.12); border-left: 4px solid #17a2b8 !important;">
+        <i class="fas fa-info-circle mr-2 text-info"></i>
+        <small class="font-weight-bold">
+            These materials have been marked as returned by Production. 
+            Physically verify the quantities and dimensions before clicking "Accept".
+            Good reusable returns will be added back to inventory; damaged/scrap returns will be accepted without usable stock entry.
+        </small>
+    </div>
+
+    {% if not grouped_returns %}
+        <div class="text-center p-5 group-card">
+            <i class="fas fa-clipboard-check fa-3x mb-3 text-muted" style="opacity:0.3;"></i>
+            <h5 class="text-white">All caught up!</h5>
+            <p class="text-muted mb-0">There are no pending returns waiting for store acceptance.</p>
+        </div>
+    {% else %}
+        {% for group in grouped_returns %}
+        <div class="group-card">
+            <!-- Header for Job -->
+            <div class="group-header">
+                <div>
+                    <span class="text-muted mr-2">Job Number:</span>
+                    <strong style="font-size: 1.1rem;">{{ group.job_no }}</strong>
+                </div>
+                <form method="POST" action="{% url 'pk_accept_production_return' group.job_no %}" class="m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-modern btn-submit py-1 px-4" style="font-size:0.9rem;"
+                            onclick="return confirm('Accept all returns for Job {{ group.job_no }}? This will update warehouse inventory.')">
+                        <i class="fas fa-check-circle mr-1"></i> Accept All
+                    </button>
+                </form>
+            </div>
+
+            <!-- Items -->
+            <div>
+                {% for pr in group.items %}
+                <div class="item-row row m-0">
+                    <!-- Item Info -->
+                    <div class="col-md-5">
+                        <div class="font-weight-bold" style="font-size:0.95rem;">
+                            {{ pr.pr_costing_item.ct_stock_description|default:"—" }}
+                        </div>
+                        <div class="mt-1">
+                            {% if pr.pr_costing_item.ct_part_code %}
+                                <span class="badge badge-secondary" style="font-size:0.75rem;">{{ pr.pr_costing_item.ct_part_code }}</span>
+                            {% endif %}
+                            {% if pr.pr_orig_l > 0 or pr.pr_orig_w > 0 or pr.pr_orig_h > 0 %}
+                            <span class="text-muted ml-2" style="font-size:0.8rem;">
+                                Orig Dims: {{ pr.pr_orig_l }} × {{ pr.pr_orig_w }} × {{ pr.pr_orig_h }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted ml-2" style="font-size:0.8rem; font-style: italic;">
+                                Orig Dims: N/A
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% if pr.pr_return_type == 'Good' %}
+                            {% if pr.target_partcode_preview %}
+                                <div class="target-badge">
+                                    Stock In: {{ pr.target_partcode_preview.pc_code }} - {{ pr.target_action_preview }}
+                                </div>
+                            {% else %}
+                                <div class="target-badge warn">
+                                    {{ pr.target_action_preview }}
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="target-badge danger">
+                                No usable stock entry will be created
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Return Type -->
+                    <div class="col-md-2 text-center">
+                        {% if pr.pr_return_type == 'Damaged' %}
+                            <span class="status-badge" style="background:rgba(220,53,69,0.15); color:#dc3545;">
+                                💥 Damaged/Scrap
+                            </span>
+                        {% else %}
+                            <span class="status-badge" style="background:rgba(40,167,69,0.15); color:#28a745;">
+                                ✅ Good Stock
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Return Details -->
+                    <div class="col-md-5 text-right">
+                        <div style="font-size: 1.1rem; font-weight: 700;">
+                            Qty: <span style="color:#17a2b8;">{{ pr.pr_return_qty }}</span>
+                        </div>
+                        {% if pr.pr_return_type == 'Good' and pr.pr_fraction < 1.0 %}
+                            <div class="mt-1">
+                                <span class="dim-badge">
+                                    Offcut Dims: {{ pr.pr_return_l }} × {{ pr.pr_return_w }} × {{ pr.pr_return_h }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+</div>
+{% endblock %}

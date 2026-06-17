@@ -142,3 +142,84 @@ def pK_acceptance_cancel(request):
     assessment_num_val = request.session.get('na_assessment_id')
     retrival_summary_id=PkquotationsummaryInfo.objects.get(qs_assessment_num=assessment_num_val).id
     return redirect('/SMS/pk_retrivalsummary_update/' + str(retrival_summary_id))
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+@login_required(login_url='login_page')
+def pk_initiate_production_return(request, retrival_id):
+    if request.method == "POST":
+        return_qty = request.POST.get('return_qty')
+        if return_qty:
+            try:
+                qty = float(return_qty)
+                retrival = PkcostingInfo.objects.get(pk=retrival_id)
+                retrival.ct_return_qty = qty
+                retrival.ct_return_status = 'Pending'
+                retrival.ct_return_type = 'In-House' 
+                retrival.save(update_fields=['ct_return_qty', 'ct_return_status', 'ct_return_type'])
+                return JsonResponse({'status': 'success', 'message': 'Return initiated.'})
+            except Exception as e:
+                return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+@csrf_exempt
+@login_required(login_url='login_page')
+def pk_accept_production_return(request, retrival_id):
+    if request.method == "POST":
+        try:
+            retrival = PkcostingInfo.objects.get(pk=retrival_id)
+            user_id = request.session.get('ses_userID')
+            
+            if retrival.ct_return_status == 'Pending' and retrival.ct_return_qty and retrival.ct_return_qty > 0:
+                return_qty = float(retrival.ct_return_qty)
+                
+                if retrival.ct_na_quantity and float(retrival.ct_na_quantity) >= return_qty:
+                    retrival.ct_na_quantity = float(retrival.ct_na_quantity) - return_qty
+                elif retrival.ct_quantity and float(retrival.ct_quantity) >= return_qty:
+                    retrival.ct_quantity = float(retrival.ct_quantity) - return_qty
+                
+                if retrival.ct_rate:
+                    current_qty = float(retrival.ct_na_quantity or retrival.ct_quantity or 0)
+                    retrival.ct_total_cost = current_qty * float(retrival.ct_rate)
+                
+                retrival.ct_return_status = 'Accepted'
+                retrival.save()
+                
+                sm_return = StockMaintenance.objects.create(
+                    sm_stock_type_id=3,  # Return
+                    sm_partcode=retrival.ct_part_code if retrival.ct_part_code else (retrival.ct_stock_purchase_number.sm_partcode if retrival.ct_stock_purchase_number else None),
+                    sm_thickness=retrival.ct_height or 0,
+                    sm_width=retrival.ct_width or 0,
+                    sm_length=retrival.ct_length or 0,
+                    sm_invoice_date=datetime.now().date(),
+                    sm_invoice_no=str(retrival.ct_assessment_num.na_assessment_num) if retrival.ct_assessment_num else "",
+                    sm_description=f"Production Return (Accepted) from Assessment {retrival.ct_assessment_num.na_assessment_num if retrival.ct_assessment_num else 'N/A'} (Costing ID: {retrival.id})",
+                    sm_count=return_qty,
+                    sm_total_cft=0,
+                    sm_per_unit_cost=retrival.ct_rate or 0,
+                    sm_updated_by_id=user_id
+                )
+                
+                fy = get_financial_year()
+                branch_id = get_session_branch_id(request)
+                branch_code = get_branch_code(branch_id)
+                prefix = f"{fy}_{branch_code}_GRN_PK_"
+                sm_return.sm_stock_purchase_number = generate_next_number(StockMaintenance, 'sm_stock_purchase_number', prefix, 6)
+                sm_return.save(update_fields=['sm_stock_purchase_number'])
+                
+                # Also reduce the overall job cost in PkcostingsummaryInfo if applicable
+                if retrival.ct_assessment_num and retrival.ct_customer_po:
+                    summary = PkcostingsummaryInfo.objects.filter(cs_assessment_num=retrival.ct_assessment_num, cs_customer_po=retrival.ct_customer_po).first()
+                    if summary and summary.cs_total_material_cost:
+                        summary.cs_total_material_cost = float(summary.cs_total_material_cost) - (return_qty * float(retrival.ct_rate or 0))
+                        summary.cs_total_cost = float(summary.cs_total_cost) - (return_qty * float(retrival.ct_rate or 0))
+                        summary.save()
+                
+                return JsonResponse({'status': 'success', 'message': 'Return accepted and job cost updated.'})
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Invalid return status or quantity.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})

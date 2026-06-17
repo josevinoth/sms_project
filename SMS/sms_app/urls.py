@@ -25,6 +25,13 @@ urlpatterns = [
     path('privacy-policy/', views.privacy_policy, name='privacy_policy'), # Privacy Policy
     path('pk_production_dashboard/', views.pk_production_dashboard, name='pk_production_dashboard'),
     path('update_production_status/', views.update_production_status, name='update_production_status'),
+    path('pk_production_return_list/', views.pk_production_return_list, name='pk_production_return_list'),
+    path('pk_production_return_detail/<str:job_no>/', views.pk_production_return_detail, name='pk_production_return_detail'),
+    path('pk_production_return_submit/<str:job_no>/', views.pk_production_return_submit, name='pk_production_return_submit'),
+    path('pk_return_acceptance_list/', views.pk_return_acceptance_list, name='pk_return_acceptance_list'),
+    path('pk_accept_production_return/<str:job_no>/', views.pk_accept_production_return, name='pk_accept_production_return'),
+    path('pk_purchase_return_list/', views.pk_purchase_return_list, name='pk_purchase_return_list'),
+    path('pk_process_purchase_return/<int:costing_id>/', views.pk_process_purchase_return, name='pk_process_purchase_return'),
     path('pk_quality_check_list/', views.pk_quality_check_list, name='pk_quality_check_list'),
     path('pk_quality_check_add/', views.pk_quality_check_add, name='pk_quality_check_add'),
     path('get_job_details_for_qc/', views.get_job_details_for_qc, name='get_job_details_for_qc'),
@@ -624,6 +631,8 @@ urlpatterns = [
     # update pk_stock_vendor
     path('pk_stock_vendor_delete/<int:stock_vendor_id>', views.pk_stock_vendor_delete, name='pk_stock_vendor_delete'),
     # delete pk_stock_vendor
+    path('pk_process_vendor_return/<int:sm_id>', views.pk_process_vendor_return, name='pk_process_vendor_return'),
+    # process vendor return from stock vendor screen
     path('pk_quotation_list/', views.pk_quotation_list, name='pk_quotation_list'),  # List quotation
     path('pk_quotation_insert/', views.pk_quotation_add, name='pk_quotation_insert'),  # Add quotation
     path('pk_quotation_update/<int:quotation_id>', views.pk_quotation_add, name='pk_quotation_update'),
@@ -663,7 +672,9 @@ urlpatterns = [
     path('pk_retrival_cancel/', views.pK_retrival_cancel, name='pk_retrival_cancel'),  # cancel retrival
     path('pk_acceptance_list/', views.pk_acceptance_list, name='pk_acceptance_list'),  # List acceptance
     path('pk_acceptance_update/<int:retrival_id>', views.pk_acceptance_add, name='pk_acceptance_update'),
-    # update acceptance
+    path('pk_initiate_production_return/<int:retrival_id>/', views.pk_initiate_production_return, name='pk_initiate_production_return'),
+    path('pk_accept_production_return/<int:retrival_id>/', views.pk_accept_production_return, name='pk_accept_production_return'),
+    path('pk_acceptance_delete/<int:retrival_id>', views.pk_acceptance_delete, name='pk_acceptance_delete'),# update acceptance
     path('comments_list/', views.comments_list, name='comments_list'),  # List comments
     path('comments_insert/', views.comments_add, name='comments_insert'),  # Add comments
     path('comments_update/<int:comments_id>', views.comments_add, name='comments_update'),  # update comments

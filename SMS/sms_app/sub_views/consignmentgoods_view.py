@@ -48,13 +48,19 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
         )
         if consignmentgoods_id == 0:
             form = ConsignmentgoodsaddForm(initial={'cg_consignmentnumber': consignment_detail_id})
-            consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
-            con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
+            try:
+                consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
+                con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
+            except ConsignmentdetailInfo.DoesNotExist:
+                con_det_form = ConsignmentdetailaddForm()
 
         else:
             consignmentgoods = ConsignmentgoodsInfo.objects.get(pk=consignmentgoods_id)
-            consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
-            con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
+            try:
+                consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
+                con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
+            except ConsignmentdetailInfo.DoesNotExist:
+                con_det_form = ConsignmentdetailaddForm()
             form = ConsignmentgoodsaddForm(instance=consignmentgoods)
             form.fields['cg_description'].queryset = Stock_type.objects.all()
         context = {

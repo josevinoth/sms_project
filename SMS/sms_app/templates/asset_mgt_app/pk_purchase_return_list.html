@@ -1,0 +1,126 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block content %}
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-undo-alt mr-2"></i> Purchase Returns (Supplier Rejections)</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 1rem; text-decoration: none;">
+                <i class="fas fa-home"></i> Home
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="mb-3 d-flex justify-content-end">
+        <input type="text" id="purchase_return_search" class="form-control"
+               placeholder="🔍 Search any column..."
+               style="max-width:400px; border-radius:8px; border:2px solid #17a2b8; font-size:1rem;">
+    </div>
+
+    <!-- List Table -->
+    <div class="table-container-modern">
+        <div class="table-responsive">
+            <table id="pk_purchase_return_list" class="table modern-table text-center">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Created</th>
+                        <th>PO / Job Number</th>
+                        <th>Part Code</th>
+                        <th>Details</th>
+                        <th>Status</th>
+                        <th>Available Qty</th>
+                        <th class="text-center" style="width: 25%;">Return Processing</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in accepted_items %}
+                    <tr class="modern-tr">
+                        <td class="text-muted">{{ item.id }}</td>
+                        <td>{{ item.ct_created_at|date:"d-m-Y" }}</td>
+                        <td class="font-weight-bold">
+                            <span class="badge" style="background: var(--bg-dark); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); font-size: 0.85rem; padding: 5px 10px;">
+                                {{ item.ct_job_no|default:item.ct_customer_po }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if item.ct_part_code %}
+                                <span class="badge badge-secondary">{{ item.ct_part_code }}</span>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="text-left">
+                            <div class="font-weight-bold">{{ item.ct_cost_type }}</div>
+                            <div class="small text-muted">{{ item.ct_stock_description }}</div>
+                        </td>
+                        <td>
+                            <span class="badge badge-success px-3 py-2">
+                                In Stock
+                            </span>
+                        </td>
+                        <td class="font-weight-bold text-success">
+                            {{ item.ct_na_quantity|default:"0" }}
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex flex-column gap-2">
+                                <input type="number" step="0.01" min="0.01" max="{{ item.ct_na_quantity }}"
+                                       id="return_qty_{{ item.id }}" 
+                                       class="form-control text-center mx-auto" 
+                                       placeholder="Qty to Return">
+                                       
+                                <input type="text" id="return_reason_{{ item.id }}"
+                                       class="form-control text-center mx-auto mt-1"
+                                       placeholder="Reason (e.g., Bad Quality)">
+
+                                <button class="btn-modern btn-submit py-2 px-3 mt-1 w-100" 
+                                        onclick="processPurchaseReturn({{ item.id }})" 
+                                        style="font-size: 0.9rem; background-color: #dc3545; border-color: #dc3545;">
+                                    <i class="fas fa-truck-loading"></i> Reject to Vendor
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('purchase_return_search').addEventListener('keyup', function() {
+        var term = this.value.toLowerCase();
+        document.querySelectorAll('#pk_purchase_return_list tbody tr').forEach(function(row) {
+            row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+        });
+    });
+
+    function processPurchaseReturn(id) {
+        let qty = document.getElementById('return_qty_' + id).value;
+        let reason = document.getElementById('return_reason_' + id).value || 'Bad Quality';
+        
+        if (!qty || parseFloat(qty) <= 0) {
+            alert('Please enter a valid return quantity.');
+            return;
+        }
+        
+        if (confirm('Are you sure you want to return ' + qty + ' units back to the vendor? This will deduct it from inventory.')) {
+            fetch(`/SMS/pk_process_purchase_return/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `return_qty=${qty}&return_reason=${encodeURIComponent(reason)}`
+            }).then(response => response.json()).then(data => {
+                if (data.status === 'success') {
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}

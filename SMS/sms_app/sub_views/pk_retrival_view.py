@@ -7,6 +7,35 @@ from ..sub_models.stock_maintenance_mod import StockMaintenance
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
+def _stock_entry_ref(stock_entry):
+    return stock_entry.sm_stock_purchase_number or stock_entry.sm_invoice_no or f"SM-{stock_entry.id}"
+
+
+def _sum_abs_stock_counts(queryset):
+    return sum(abs(float(qty or 0)) for qty in queryset.values_list('sm_count', flat=True))
+
+
+def _available_qty_for_stock_entry(stock_entry):
+    retrieved_qty = _sum_abs_stock_counts(
+        StockMaintenance.objects.filter(
+            sm_stock_type_id=2,
+            sm_invoice_no=_stock_entry_ref(stock_entry),
+            sm_partcode=stock_entry.sm_partcode,
+        )
+    )
+    vendor_returned_qty = 0.0
+    if stock_entry.sm_vendor_id:
+        vendor_returned_qty = _sum_abs_stock_counts(
+            StockMaintenance.objects.filter(
+                sm_stock_type_id=3,
+                sm_vendor=stock_entry.sm_vendor,
+                sm_stock_purchase_number=_stock_entry_ref(stock_entry),
+                sm_partcode=stock_entry.sm_partcode,
+            )
+        )
+    return max(0.0, float(stock_entry.sm_count or 0.0) - retrieved_qty - vendor_returned_qty)
+
+
 @login_required(login_url='login_page')
 def pk_retrival_add(request, retrival_id=0):
     first_name = request.session.get('first_name')
@@ -53,7 +82,7 @@ def pk_retrival_add(request, retrival_id=0):
                         stock_purchase_obj = StockMaintenance.objects.get(id=stock_purchase_num_id)
                         # Use sm_stock_purchase_number (e.g. GRN/PK/1001816), NOT sm_invoice_no which can be None
                         stock_purchase_num = stock_purchase_obj.sm_stock_purchase_number or stock_purchase_obj.sm_invoice_no or f"SM-{stock_purchase_num_id}"
-                        available_qty = stock_purchase_obj.sm_count or 0
+                        available_qty = _available_qty_for_stock_entry(stock_purchase_obj)
                         print(available_qty)
                         if float(requested_qty) > float(available_qty):
                             messages.error(request, 'Available quantity is less than requested quantity')
