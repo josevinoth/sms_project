@@ -1,6 +1,28 @@
 {% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<style>
+    /* Fix Select2 alignment in Bootstrap 4 input-group */
+    .input-group > .select2-container--default {
+        flex: 1 1 auto;
+        width: 1% !important;
+    }
+    .input-group > .select2-container .select2-selection--single {
+        height: calc(1.5em + .5rem + 2px); /* Matches form-control-sm height */
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-color: #ced4da;
+        display: flex;
+        align-items: center;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: normal;
+        padding-left: 8px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 100%;
+    }
+</style>
 
 <form id="marketBillForm" method="POST" enctype="multipart/form-data"
     data-is-edit="{% if record.id %}true{% else %}false{% endif %}">
@@ -58,7 +80,14 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text">TDS Type</span>
                             </div>
-                            {% render_field form.mb_tds_type class="form-control" %}
+                            <!-- Hidden input carries the value on form submit -->
+                            <input type="hidden" name="mb_tds_type" id="mb_tds_type_hidden"
+                                   value="{{ form.mb_tds_type.value|default:'' }}">
+                            <!-- Read-only display — filled automatically from vendor PAN -->
+                            <input type="text" id="mb_tds_type_display" class="form-control"
+                                   readonly
+                                   value="{{ form.mb_tds_type.value|default:'' }}"
+                                   style="background-color:#e9ecef; cursor:default;">
                         </div>
 
                     </div>
@@ -460,31 +489,34 @@
     document.getElementById("mb_tds_percent").addEventListener("input", updateTdsAndPayable);
     document.getElementById("mb_tds_percent").addEventListener("change", updateTdsAndPayable);
 
-    // Auto set TDS % based on TDS Type selection
+    // Auto set TDS % based on TDS Type (reads from hidden input, not a dropdown)
     function setTdsByType() {
-        const tdsTypeEl = document.getElementById("mb_tds_type");
-        if (!tdsTypeEl) return;
-        const tdsType = tdsTypeEl.value;
+        const tdsTypeHidden = document.getElementById("mb_tds_type_hidden");
+        if (!tdsTypeHidden) return;
+        const tdsType = tdsTypeHidden.value;
         const tdsPercentEl = document.getElementById("mb_tds_percent");
         if (!tdsPercentEl) return;
 
-        // Explicit mapping: Company -> 2%, Non company -> 1%, blank/Select -> leave empty
+        // Company -> 2%, Non company -> 1%, empty -> clear
         if (tdsType === 'Company') {
             tdsPercentEl.value = (2.0).toFixed(2);
         } else if (tdsType === 'Non company') {
             tdsPercentEl.value = (1.0).toFixed(2);
         } else {
-            // Placeholder selected; clear TDS % so user can choose manually after selecting type
             tdsPercentEl.value = '';
         }
         updateTdsAndPayable();
     }
 
-    document.getElementById("mb_tds_type")?.addEventListener("change", setTdsByType);
+    // On page load: if editing an existing bill, run once to reflect saved TDS type
+    $(document).ready(function () {
+        const savedType = document.getElementById("mb_tds_type_hidden")?.value || '';
+        if (savedType) { setTdsByType(); }
 
-    // Ensure initial TDS % reflects the selected type on page load
-    document.addEventListener('DOMContentLoaded', function () {
-        setTdsByType();
+        // Initialize Select2 on the vendor field
+        $('#mb_vendor').select2({
+            width: '100%'
+        });
     });
 
     // DataTable instance variable
@@ -527,7 +559,7 @@
     }
 
     // ========== VENDOR CHANGE: LOAD TRIPS ==========
-    document.getElementById("mb_vendor").addEventListener("change", function () {
+    $('#mb_vendor').on("change", function () {
 
         const vendorId = this.value;
         const tbody = document.getElementById("tripsTableBody");
@@ -542,9 +574,33 @@
 
         if (!vendorId) {
             tbody.innerHTML = '<tr><td colspan="15" class="text-center text-muted">Select a vendor to view trips</td></tr>';
+            // Clear TDS Type display when vendor is cleared
+            const h = document.getElementById("mb_tds_type_hidden");
+            const d = document.getElementById("mb_tds_type_display");
+            if (h) h.value = '';
+            if (d) d.value = '';
+            setTdsByType();
             return;
         }
 
+        // ---- Auto-set TDS Type from vendor PAN ----
+        fetch("{% url 'get_vendor_pan' %}?vendor_id=" + vendorId)
+            .then(res => res.json())
+            .then(data => {
+                const h = document.getElementById("mb_tds_type_hidden");
+                const d = document.getElementById("mb_tds_type_display");
+                if (data.tds_type) {
+                    if (h) h.value = data.tds_type;
+                    if (d) d.value = data.tds_type;
+                } else {
+                    if (h) h.value = '';
+                    if (d) d.value = '';
+                }
+                setTdsByType();  // trigger TDS % update
+            })
+            .catch(err => console.error("Error fetching vendor PAN:", err));
+
+        // ---- Load trips for the selected vendor ----
         fetch("{% url 'get_trips_by_vendor' %}?vendor_id=" + vendorId)
             .then(res => res.json())
             .then(data => {

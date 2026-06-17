@@ -156,7 +156,14 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text">TDS Type</span>
                             </div>
-                            {% render_field form.ab_tds_type class="form-control" %}
+                            <!-- Hidden input carries the value on form submit -->
+                            <input type="hidden" name="ab_tds_type" id="ab_tds_type_hidden"
+                                   value="{{ form.ab_tds_type.value|default:'' }}">
+                            <!-- Read-only display — filled automatically from vendor PAN -->
+                            <input type="text" id="ab_tds_type_display" class="form-control"
+                                   readonly
+                                   value="{{ form.ab_tds_type.value|default:'' }}"
+                                   style="background-color:#e9ecef; cursor:default;">
                         </div>
 
                         <div class="input-group input-group-sm mb-3">
@@ -274,7 +281,26 @@
         $vehicleSelect.empty().append('<option value="">--Select Vehicle--</option>');
         $vehicleSelect.trigger('change');
 
+        // Clear TDS Type when vendor changes
+        $('#ab_tds_type_hidden').val('');
+        $('#ab_tds_type_display').val('');
+        setAttachedTdsByType();
+
         if (vendor_id) {
+            // Auto-detect TDS Type from vendor PAN
+            $.ajax({
+                url: "{% url 'get_vendor_pan' %}",
+                data: { 'vendor_id': vendor_id },
+                success: function (data) {
+                    if (data.tds_type) {
+                        $('#ab_tds_type_hidden').val(data.tds_type);
+                        $('#ab_tds_type_display').val(data.tds_type);
+                    }
+                    setAttachedTdsByType();
+                }
+            });
+
+            // Load vehicles for the selected vendor
             $.ajax({
                 url: "{% url 'get_vehicles_by_vendor' %}",
                 data: { 'vendor_id': vendor_id },
@@ -558,27 +584,32 @@
         $('#id_ab_payable_amount').val(payable.toFixed(2));
     }
 
-    // Auto set TDS % based on TDS Type selection for Attached Bill
+    // Auto set TDS % based on TDS Type (reads from hidden input, not a dropdown)
     function setAttachedTdsByType() {
-        var tdsTypeEl = $('#id_ab_tds_type');
-        if (!tdsTypeEl || tdsTypeEl.length === 0) return;
-        var tdsType = tdsTypeEl.val();
+        var tdsType = $('#ab_tds_type_hidden').val() || '';
         if (tdsType === 'Company') {
             $('#id_ab_tds_percent').val((2.0).toFixed(2));
         } else if (tdsType === 'Non company') {
             $('#id_ab_tds_percent').val((1.0).toFixed(2));
         } else {
-            // Placeholder selected; clear percent
             $('#id_ab_tds_percent').val('');
         }
         updateTdsAndPayable();
     }
 
-    // Bind change event
-    $(document).on('change', '#id_ab_tds_type', function () { setAttachedTdsByType(); });
-
-    // Ensure initial TDS % reflects selection on load
-    $(document).ready(function () { setAttachedTdsByType(); });
+    // On page load: if editing an existing bill, run once to reflect saved TDS type
+    $(document).ready(function () {
+        var vendorId = $('#id_ab_vendor').val();
+        if (!vendorId) {
+            // New form: Force clear regardless of Django defaults
+            $('#ab_tds_type_hidden').val('');
+            $('#ab_tds_type_display').val('');
+            $('#id_ab_tds_percent').val('');
+        } else {
+            var savedType = $('#ab_tds_type_hidden').val() || '';
+            if (savedType) { setAttachedTdsByType(); }
+        }
+    });
 
     // Handle table input changes
     $(document).on('input', '.trip-buy-cost, .trip-parking-cost, .trip-toll-cost', function() {

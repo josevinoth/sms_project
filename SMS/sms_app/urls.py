@@ -1102,6 +1102,7 @@ urlpatterns = [
     path('market_bill/<int:id>/upload/', views.market_bill_upload, name='market_bill_upload'),
     path('market_bill/<int:id>/mail_upload/<int:trip_id>/', views.market_mail_upload, name='market_mail_upload'),
     path('ajax/get_trips_by_vendor/', views.get_trips_by_vendor, name='get_trips_by_vendor'),
+    path('ajax/get_vendor_pan/', views.get_vendor_pan, name='get_vendor_pan'),
     path('vendor_bills_pending_maintenance/', views.vendor_bills_pending_maintenance_report_view, name='vendor_bills_pending_maintenance_report'),
     path('vendor_bills_pending_mkt_att_report/', views.vendor_bills_pending_mkt_att_report_view, name='vendor_bills_pending_mkt_att_report'),
     path('maintenance_bill_add/', views.maintenance_bill_add, name='maintenance_bill_add'),
