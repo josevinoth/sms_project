@@ -33,7 +33,7 @@ def trip_settlement_list_ajax_view(request):
         date_to = request.GET.get('date_to', '').strip()
         search_value = request.GET.get('search[value]', '').strip()
 
-        # Use Exists subquery instead of reverse FK join to avoid .distinct()
+        # Direct Exists subquery on the outer queryset - correct Django ORM pattern
         has_settled_consignment = Exists(
             ConsignmentdetailInfo.objects.filter(
                 co_enquirynumber=OuterRef('tr_enquirynumber_id'),
@@ -52,9 +52,11 @@ def trip_settlement_list_ajax_view(request):
         ).filter(
             Q(tc_financestatus_id=4) & (
                 Q(tr_category_id=1) |
-                Q(tr_category_id=3) & (
-                    Q(tr_consignmentnumber__co_status_id=8) |
-                    Q(pk__in=TripdetailInfo.objects.filter(has_settled_consignment).values('pk'))
+                (
+                    Q(tr_category_id=3) & (
+                        Q(tr_consignmentnumber__co_status_id=8) |
+                        has_settled_consignment
+                    )
                 )
             )
         )
