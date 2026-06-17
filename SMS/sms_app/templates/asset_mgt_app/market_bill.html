@@ -71,9 +71,9 @@
 
                         <div class="input-group input-group-sm mb-2">
                             <div class="input-group-prepend">
-                                <span class="input-group-text">Bill Date</span>
+                                <span class="input-group-text">Bill Date <span class="text-danger">*</span></span>
                             </div>
-                            {% render_field form.mb_bill_date class="form-control" %}
+                            {% render_field form.mb_bill_date class="form-control" required="required" %}
                         </div>
 
                         <div class="input-group input-group-sm mb-2">
@@ -587,6 +587,9 @@
         fetch("{% url 'get_vendor_pan' %}?vendor_id=" + vendorId)
             .then(res => res.json())
             .then(data => {
+                if (!data.pan) {
+                    alert("Please update the PAN number in the vendor master list.");
+                }
                 const h = document.getElementById("mb_tds_type_hidden");
                 const d = document.getElementById("mb_tds_type_display");
                 if (data.tds_type) {

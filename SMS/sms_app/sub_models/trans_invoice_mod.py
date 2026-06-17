@@ -13,7 +13,7 @@ class TransInvoiceInfo(models.Model):
     ti_consignment = models.ForeignKey(ConsignmentdetailInfo,on_delete=models.SET_NULL,null=True,blank=True)
     ti_inv_no = models.CharField(max_length=50)
     ti_gst_in = models.CharField(max_length=50, null=True, blank=True)
-    ti_customer_short_name = models.CharField(max_length=50)
+    ti_customer_short_name = models.CharField(max_length=100)
     ti_state= models.CharField(max_length=10,null=True,blank=True )
     ti_pincode = models.CharField(max_length=10,null=True,blank=True )
     ti_transportation_charges = models.FloatField(default=0, null=True, blank=True, )

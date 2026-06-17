@@ -292,6 +292,9 @@
                 url: "{% url 'get_vendor_pan' %}",
                 data: { 'vendor_id': vendor_id },
                 success: function (data) {
+                    if (!data.pan) {
+                        alert("Please update the PAN number in the vendor master list.");
+                    }
                     if (data.tds_type) {
                         $('#ab_tds_type_hidden').val(data.tds_type);
                         $('#ab_tds_type_display').val(data.tds_type);
