@@ -24,8 +24,8 @@ class MarketBillForm(forms.ModelForm):
     )
 
     mb_bill_date = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={"class": "form-control", "type": "date", "id": "mb_bill_date"})
+        required=True,
+        widget=forms.DateInput(attrs={"class": "form-control", "type": "date", "id": "mb_bill_date", "required": "required"})
     )
 
     # Provide a blank "Select" option as the initial value so the dropdown shows a placeholder
