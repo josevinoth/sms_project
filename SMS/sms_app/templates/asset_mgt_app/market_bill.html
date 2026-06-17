@@ -292,7 +292,8 @@
                                     <input type="number" name="trip_cost_{{ trip.id }}"
                                         class="form-control form-control-sm trip-cost-input"
                                         value="{{ trip.special_cost|default:0 }}" min="0" step="0.01"
-                                        style="width: 100px;">
+                                        readonly="readonly"
+                                        style="width: 100px; background-color:#e9ecef; cursor:default;">
                                 </td>
                                 <td>
                                     <input type="number" name="loading_cost_{{ trip.id }}"
@@ -639,7 +640,7 @@
                     <td>${trip.trip_date}</td>
                     <td class="trip-cost-cell">
                         <input type="number" name="trip_cost_${trip.id}" class="form-control form-control-sm trip-cost-input" 
-                            value="${trip.special_cost.toFixed(2)}" min="0" step="0.01" style="width: 100px;">
+                            value="${trip.special_cost.toFixed(2)}" min="0" step="0.01" readonly="readonly" style="width: 100px; background-color:#e9ecef; cursor:default;">
                     </td>
                     <td>
                         <input type="number" name="loading_cost_${trip.id}" class="form-control form-control-sm loading-cost-input" 
