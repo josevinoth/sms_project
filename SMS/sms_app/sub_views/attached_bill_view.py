@@ -10,6 +10,9 @@ from ..sub_forms.attached_bill_form import AttachedBillForm
 from ..sub_models.attached_bill_mod import AttachedBillInfo
 from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
 from ..sub_models.tripdetail_mod import TripdetailInfo
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from django.http import HttpResponse
 
 
 # ==================================================
@@ -66,12 +69,21 @@ def attached_bill_add(request):
 # ==================================================
 @login_required(login_url='login_page')
 def attached_bill_list(request):
+    from_date = request.GET.get('from_date', '')
+    to_date = request.GET.get('to_date', '')
+
     bills = AttachedBillInfo.objects.all().order_by('-ab_created_at')
+    if from_date:
+        bills = bills.filter(ab_bill_date__gte=from_date)
+    if to_date:
+        bills = bills.filter(ab_bill_date__lte=to_date)
     return render(
         request,
         "asset_mgt_app/attached_bill_list.html",
         {
-            "bills": bills
+            "bills": bills,
+            "from_date": from_date,
+            "to_date": to_date,
         }
     )
 
@@ -227,8 +239,14 @@ def get_attached_vehicle_details(request):
             last_close_km = None
 
             for trip in trips:
-                # Per-trip KM logic stays the same for display in the 'Trip KM' column
-                km = ((trip.tr_reportedkm or 0) - (trip.tr_reportedkm_pickup or 0)) if trip.tr_category_id in (2, 3) else ((trip.tr_reportedkm_delivery or 0) - (trip.tr_reportedkm_pickup or 0))
+                # Per-trip KM logic updated to match Vehicle Log Report
+                start_km = trip.tr_reportedkm_pickup if trip.tr_reportedkm_pickup else (trip.tr_departedkm or 0)
+                closing_km = trip.tr_reportedkm_delivery if trip.tr_reportedkm_delivery else (trip.tr_reportedkm or 0)
+                km = 0
+                if closing_km and start_km:
+                    diff = closing_km - start_km
+                    if 0 < diff < 15000:
+                        km = diff
 
                 # Track min departed and max reported for the entire period
                 # ONLY track KM for trips within the actual billing period
@@ -278,15 +296,8 @@ def get_attached_vehicle_details(request):
                 leave_days_count = 0
                 curr = f_dt_obj
                 while curr <= t_dt_obj:
-                    if curr.weekday() != 6: # Mon-Sat
-                        if curr not in trip_dates:
-                            leave_days_count += 1
-                    else:
-                        # Sunday: Only count as leave if Sat, Sun, AND Mon ALL have no trips
-                        prev_day = curr - timedelta(days=1)
-                        next_day = curr + timedelta(days=1)
-                        if prev_day not in trip_dates and curr not in trip_dates and next_day not in trip_dates:
-                            leave_days_count += 1
+                    if curr not in trip_dates:
+                        leave_days_count += 1
                     curr += timedelta(days=1)
                 data['leave_days'] = leave_days_count
         else:
@@ -299,6 +310,141 @@ def get_attached_vehicle_details(request):
         data['traceback'] = traceback.format_exc()
 
     return JsonResponse(data)
+
+
+@login_required(login_url='login_page')
+def attached_bill_export_tally(request):
+    """Export Attached Bills in Tally-friendly Excel format.
+    Supports optional GET params: from_date and to_date (YYYY-MM-DD).
+    """
+    from_date = request.GET.get('from_date', '')
+    to_date = request.GET.get('to_date', '')
+
+    bills = AttachedBillInfo.objects.all().order_by('ab_bill_date')
+    if from_date:
+        bills = bills.filter(ab_bill_date__gte=from_date)
+    if to_date:
+        bills = bills.filter(ab_bill_date__lte=to_date)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Tally Export"
+
+    headers = [
+        "VOUCHER NUMBER", "DATE", "REF NO.", "SUNDRY CREDITORS", "TOTAL AMT",
+        "EXPENSES LEDGER", "AMOUNT", "Primary Cost Category", "Job No",
+        "VEH. NO.", "Customer", "TDS LEDGER", "TDS AMOUNT", "NARRATION"
+    ]
+    ws.append(headers)
+
+    header_font = Font(bold=True)
+    header_fill = PatternFill("solid", fgColor="B2FFFF")
+    for cell in ws[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center")
+
+    expense_fill = PatternFill("solid", fgColor="FFE5CC")
+
+    for bill in bills:
+        selected_trip_numbers = []
+        if bill.ab_selected_trips:
+            selected_trip_numbers = [t.strip() for t in bill.ab_selected_trips.split(',') if t.strip()]
+
+        trips = TripdetailInfo.objects.filter(tr_tripnumber__in=selected_trip_numbers).select_related('tr_enquirynumber')
+
+        # Financial year and month in voucher
+        if bill.ab_bill_date:
+            year = bill.ab_bill_date.year
+            month = bill.ab_bill_date.month
+            if month >= 4:
+                fy_str = f"{str(year)[-2:]}-{str(year+1)[-2:]}"
+            else:
+                fy_str = f"{str(year-1)[-2:]}-{str(year)[-2:]}"
+            month_str_num = f"{month:02d}"
+        else:
+            fy_str = "00-00"
+            month_str_num = "00"
+
+        voucher_number = f"MAA_ATT_{fy_str}_{month_str_num}_{bill.id:03d}"
+        bill_date = bill.ab_bill_date.strftime("%d-%m-%Y") if bill.ab_bill_date else ""
+        ref_no = bill.ab_bill_no or ""
+        vendor_name = bill.ab_vendor.vend_name if bill.ab_vendor else ""
+        # Show payable amount in the TOTAL AMT column; fall back to bill amount if payable not set
+        total_amt = float(bill.ab_payable_amount if (bill.ab_payable_amount is not None and bill.ab_payable_amount != 0) else (bill.ab_bill_amount or 0.0))
+
+        tds_amount = float(bill.ab_tds_amount or 0.0)
+        # Determine TDS ledger label based on saved TDS type
+        tds_ledger = ""
+        try:
+            tds_type = (bill.ab_tds_type or '').strip()
+            if tds_amount > 0:
+                if tds_type == 'Company':
+                    tds_ledger = "TDS Payable 194C (Company)"
+                else:
+                    tds_ledger = "TDS Payable 194C (Non Company)"
+        except Exception:
+            tds_ledger = "TDS Payable 194C (Non Company)" if tds_amount > 0 else ""
+
+        month_short = bill.ab_bill_date.strftime('%b%y') if bill.ab_bill_date else ""
+        rec_date_str = bill.ab_created_at.strftime('%d-%b-%y') if bill.ab_created_at else ""
+        narration = f"Being ATT Vehicle expenses for the month of {month_short} (Bill Received on {rec_date_str})"
+
+        is_first_row = True
+
+        if not trips:
+            vehicle_disp = ""
+            if bill.ab_vehicle_number and getattr(bill.ab_vehicle_number, 'vm_registrationnumber', None):
+                vehicle_disp = f"{bill.ab_vehicle_number.vm_registrationnumber} (A)"
+            row = [
+                voucher_number, bill_date, ref_no, vendor_name, total_amt,
+                "Transportation", total_amt, "Maa-Att", "",
+                vehicle_disp, "", (tds_ledger if tds_amount > 0 else ""), (tds_amount if tds_amount > 0 else ""), narration
+            ]
+            ws.append(row)
+            continue
+
+        for trip in trips:
+            job_no = trip.tr_enquirynumber.en_enquirynumber if trip.tr_enquirynumber else (trip.tr_tripnumber or "")
+            customer_name = ""
+            if trip.tr_enquirynumber and getattr(trip.tr_enquirynumber, 'en_customername', None):
+                # attached billing used cu_name earlier
+                try:
+                    customer_name = trip.tr_enquirynumber.en_customername.cu_name
+                except:
+                    customer_name = str(trip.tr_enquirynumber.en_customername)
+
+            transport_cost = float(trip.tc_tripcost or 0)
+            expenses = []
+            # Include transport and toll only; parking is excluded per request
+            if transport_cost > 0:
+                expenses.append(("Transportation", transport_cost))
+            if trip.tc_tollcost and float(trip.tc_tollcost) > 0:
+                expenses.append(("Toll", float(trip.tc_tollcost)))
+
+            vehicle_disp = trip.tr_vehiclenumber or ""
+            if vehicle_disp:
+                vehicle_disp = f"{vehicle_disp} (A)"
+
+            for exp_name, amt in expenses:
+                row = [
+                    voucher_number, bill_date, ref_no,
+                    vendor_name if is_first_row else "",
+                    total_amt if is_first_row else "",
+                    exp_name, amt,
+                    "Maa-Att", job_no, vehicle_disp, customer_name,
+                    tds_ledger if is_first_row else "",
+                    tds_amount if is_first_row and tds_amount > 0 else "",
+                    narration
+                ]
+                ws.append(row)
+                ws.cell(row=ws.max_row, column=6).fill = expense_fill
+                is_first_row = False
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="Attached_Bill_Tally_Export.xlsx"'
+    wb.save(response)
+    return response
 
 
 @login_required(login_url='login_page')
@@ -340,23 +486,9 @@ def attached_bill_summary(request, id):
                     all_trip_dates.add(curr_t)
                     curr_t += timedelta(days=1)
 
-    # Now calculate leave_days using the Sat-Sun-Mon rule on all_trip_dates
-    leave_days = 0
-    if from_date and to_date:
-        curr = from_date
-        while curr <= to_date:
-            if curr.weekday() != 6: # Mon-Sat
-                if curr not in all_trip_dates:
-                    leave_days += 1
-            else:
-                # Sunday: Leave ONLY if Sat, Sun, AND Mon have no trips
-                prev_day = curr - timedelta(days=1)
-                next_day = curr + timedelta(days=1)
-                if prev_day not in all_trip_dates and curr not in all_trip_dates and next_day not in all_trip_dates:
-                    leave_days += 1
-            curr += timedelta(days=1)
-
-    leave_amount = float(leave_days * leave_per_day)
+    # Use the reliably saved leave days and amount
+    leave_days = bill.ab_leave_days or 0
+    leave_amount = float(bill.ab_leave_amount or 0)
     agreed_km      = float(bill.ab_agreed_km or 0)
     total_km_saved = float(bill.ab_total_km_run or 0)   # saved total KM from ADD/EDIT
     extra_km       = float(bill.ab_extra_km_run or 0)
@@ -395,14 +527,17 @@ def attached_bill_summary(request, id):
     summary_billed_trip_dates = set()
     trip_km_run = 0
     for t in trips:
-        trip_km_run += ((t.tr_reportedkm or 0) - (t.tr_reportedkm_pickup or 0)) if t.tr_category_id in (2, 3) else ((t.tr_reportedkm_delivery or 0) - (t.tr_reportedkm_pickup or 0))
+        start_km = t.tr_reportedkm_pickup if t.tr_reportedkm_pickup else (t.tr_departedkm or 0)
+        closing_km = t.tr_reportedkm_delivery if t.tr_reportedkm_delivery else (t.tr_reportedkm or 0)
+        if closing_km and start_km:
+            diff = closing_km - start_km
+            if 0 < diff < 15000:
+                trip_km_run += diff
         if t.tr_departeddate:
             summary_billed_trip_dates.add(t.tr_departeddate.date())
 
-    leave_amount = float(leave_days * leave_per_day)
-
-    # Use saved total_km_run when trips still can't be fetched
-    display_total_km = trip_km_run if trips else total_km_saved
+    # Use saved total_km_run
+    display_total_km = total_km_saved
 
     days_run   = len(summary_billed_trip_dates)
     trip_index = f"{total_trips} TRIPS / {days_run} DAYS RUN" if days_run else f"{total_trips} TRIPS"

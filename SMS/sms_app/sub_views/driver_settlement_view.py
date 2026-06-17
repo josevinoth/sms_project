@@ -40,6 +40,28 @@ def driver_settlement_add(request, ds_id=0):
 
             expense_list = expense_qs.order_by('-de_date')
 
+            # Build a trip_number -> TripdetailInfo lookup for C-Note display
+            trip_numbers = [
+                str(e.trip_number).strip() for e in expense_list
+                if e.trip_number and str(e.trip_number).strip()
+            ]
+            trip_lookup = {}
+            if trip_numbers:
+                for t in TripdetailInfo.objects.filter(
+                    tr_tripnumber__in=trip_numbers
+                ).select_related('tr_consignmentnumber'):
+                    trip_lookup[str(t.tr_tripnumber).strip()] = t
+
+            # Attach extra fields to each expense (avoids N+1 in template)
+            for exp in expense_list:
+                tn = str(exp.trip_number).strip() if exp.trip_number else ''
+                matched_trip = trip_lookup.get(tn)
+                exp.cnote = (
+                    matched_trip.tr_consignmentnumber.co_consignmentnumber
+                    if matched_trip and matched_trip.tr_consignmentnumber
+                    else ''
+                )
+
         return render(request, "asset_mgt_app/driver_settlement_add.html", {
             'form': form,
             'first_name': first_name,

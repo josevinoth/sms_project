@@ -15,6 +15,7 @@ from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 from ..sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from ..sub_models.trans_invoice_mod import TransInvoiceInfo
 from ..sub_models.tr_businesstype_mod import Tr_businesstype_Info
+from ..sub_models.location_info_mod import Location_info
 import json
 
 # Customer Service department ID
@@ -74,6 +75,12 @@ def tms_dashboard(request):
         vm_ownership__ow_ownership__icontains='Attached'
     ).values_list('vm_registrationnumber', flat=True).order_by('vm_registrationnumber')
 
+    # Get all branches (Location_info) that have at least one CS employee
+    branches = Location_info.objects.filter(
+        user_extinfo__department_id=CS_DEPARTMENT_ID,
+        user_extinfo__user__is_active=True
+    ).distinct().order_by('loc_name')
+
     context = {
         'first_name': first_name,
         'cs_employees': cs_employees,
@@ -83,6 +90,7 @@ def tms_dashboard(request):
         'current_user_id': current_user_id,
         'own_vehicles': own_vehicles,
         'attached_vehicles': attached_vehicles,
+        'branches': branches,
     }
     return render(request, "asset_mgt_app/tms_dashboard.html", context)
 
@@ -125,38 +133,124 @@ def get_tms_dashboard_data(request):
 
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
+    branch_id = request.GET.get('branch_id')
 
-    def apply_enquiry_date_filter(qs, field_prefix=''):
-        """Filter by enquiry created date (en_created_at is a DateTimeField, use __date__ lookup)."""
-        date_field = f"{field_prefix}en_created_at" if not field_prefix else f"{field_prefix}en_created_at"
-        if from_date:
-            qs = qs.filter(**{f"{date_field}__date__gte": from_date})
-        if to_date:
-            qs = qs.filter(**{f"{date_field}__date__lte": to_date})
-        return qs
+    # Get the enquiries filtered by the date range
+    enquiries_base_qs = EnquirynoteInfo.objects.all()
+    if from_date:
+        enquiries_base_qs = enquiries_base_qs.filter(en_created_at__date__gte=from_date)
+    if to_date:
+        enquiries_base_qs = enquiries_base_qs.filter(en_created_at__date__lte=to_date)
+
+    # Apply branch filter — restrict to enquiries assigned to CS users in that branch
+    if branch_id and branch_id != 'all':
+        branch_user_ids = User_extInfo.objects.filter(
+            emp_branch_id=branch_id,
+            department_id=CS_DEPARTMENT_ID,
+            user__is_active=True
+        ).values_list('user_id', flat=True)
+        enquiries_base_qs = enquiries_base_qs.filter(en_assignedto_id__in=branch_user_ids)
 
     def calculate_metrics(user_id=None):
-        # All querysets filtered by Enquiry Created Date
-        en_qs = apply_enquiry_date_filter(EnquirynoteInfo.objects.all(), '')
-        cn_qs = apply_enquiry_date_filter(ConsignmentdetailInfo.objects.all(), 'co_enquirynumber__')
-        tr_qs = apply_enquiry_date_filter(TripdetailInfo.objects.all(), 'tr_enquirynumber__')
-        ti_qs = apply_enquiry_date_filter(TransInvoiceInfo.objects.all(), 'ti_trip__tr_enquirynumber__')
-
+        en_qs = enquiries_base_qs
         if user_id and user_id != 'all':
             en_qs = en_qs.filter(en_assignedto_id=user_id)
-            cn_qs = cn_qs.filter(co_enquirynumber__en_assignedto_id=user_id)
-            tr_qs = tr_qs.filter(tr_enquirynumber__en_assignedto_id=user_id)
-            ti_qs = ti_qs.filter(ti_trip__tr_enquirynumber__en_assignedto_id=user_id)
 
-        vehicles_count = tr_qs.count()
-        cnotes_count = cn_qs.count()
+        # Base querysets
+        cn_qs = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=en_qs)
+        tr_qs = TripdetailInfo.objects.filter(tr_enquirynumber__in=en_qs)
+        ti_qs = TransInvoiceInfo.objects.filter(ti_trip__tr_enquirynumber__in=en_qs)
+
+        # --- Vehicle Requested: sum of env_quantity in Enquirynotevehicle for these enquiries ---
+        from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
+        total_enquiries = Enquirynotevehicle.objects.filter(env_enquirynumber__in=en_qs).aggregate(total=Sum('env_quantity'))['total'] or 0
+
+        # --- C-Notes: count of individual C-Note records (representing billed trips) ---
+        en_ids_with_cnote = set(
+            cn_qs.exclude(co_enquirynumber__isnull=True)
+                 .values_list('co_enquirynumber_id', flat=True)
+                 .distinct()
+        )
+        cnotes_count = cn_qs.exclude(co_enquirynumber__isnull=True).count()
+
+        # --- Enquiry IDs that do NOT yet have a C-Note ---
+        en_ids_without_cnote = list(
+            en_qs.exclude(id__in=en_ids_with_cnote)
+                 .values_list('id', flat=True)
+        )
+
+        # --- Enquiries Cancelled: Total count of cancelled vehicles/enquiries without C-notes ---
+        en_ids_cancelled_direct = set(en_qs.filter(en_status_id=8).values_list('id', flat=True))
+        
+        # 1. Enquiries fully cancelled (en_status_id=8) -> sum env_quantity
+        enquiries_cancelled_count = Enquirynotevehicle.objects.filter(
+            env_enquirynumber_id__in=en_ids_cancelled_direct
+        ).aggregate(total=Sum('env_quantity'))['total'] or 0
+        
+        # 2. Cancelled Allotments (va_status_id=4)
+        enquiries_cancelled_count += Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber__in=en_qs.exclude(en_status_id=8),
+            va_status_id=4
+        ).count()
+        
+        # 3. Cancelled Trips WITHOUT C-Notes
+        enquiries_cancelled_count += TripdetailInfo.objects.filter(
+            tr_enquirynumber__in=en_qs.exclude(en_status_id=8),
+            tc_financestatus_id=3,
+            tr_consignmentnumber__isnull=True
+        ).count()
+
+        # --- Trips Cancelled: actual count of TripdetailInfo records with cancelled finance status
+        #     that DO HAVE a C-Note. PLUS any cancelled C-Notes.
+        base_trips_cancelled = TripdetailInfo.objects.filter(
+            tr_enquirynumber__in=en_qs,
+            tc_financestatus_id=3,
+            tr_consignmentnumber__isnull=False
+        ).count()
+        
+        cancelled_cnotes_count = cn_qs.filter(co_status_id=8).count()
+        
+        overlap = TripdetailInfo.objects.filter(
+            tr_enquirynumber__in=en_qs,
+            tc_financestatus_id=3,
+            tr_consignmentnumber__co_status_id=8
+        ).count()
+        
+        trips_cancelled_count = base_trips_cancelled + cancelled_cnotes_count - overlap
+
+        # --- Missed (Vehicles Missed): unallotted vehicle quantity for non-cancelled, non-cnote enquiries ---
+        from django.db.models import Count
+        req_totals = {
+            r['env_enquirynumber_id']: r['tot'] or 0
+            for r in Enquirynotevehicle.objects.filter(env_enquirynumber__in=en_qs)
+            .values('env_enquirynumber_id')
+            .annotate(tot=Sum('env_quantity'))
+        }
+        allot_totals = {
+            a['va_enquirynumber_id']: a['tot'] or 0
+            for a in Vehicle_allotmentInfo.objects.filter(va_enquirynumber__in=en_qs)
+            .values('va_enquirynumber_id')
+            .annotate(tot=Count('id'))
+        }
+
+        missed_count = 0
+        for enq in en_qs:
+            if enq.id in en_ids_cancelled_direct:
+                continue  # skip entirely cancelled enquiries
+
+            req_qty = req_totals.get(enq.id, 0)
+            allot_qty = allot_totals.get(enq.id, 0)
+            if req_qty > allot_qty:
+                missed_count += (req_qty - allot_qty)
 
         metrics = {
-            'enquiries': vehicles_count,
+            'enquiries': total_enquiries,
             'cnotes': cnotes_count,
-            'missed': max(0, vehicles_count - cnotes_count),
-            'settled': tr_qs.filter(tc_financestatus__status__icontains="Settle").count(),
-            'ready': tr_qs.filter(tc_financestatus__status__icontains="Settle").exclude(transinvoiceinfo__isnull=False).count(),
+            'missed': missed_count,
+            'enquiries_cancelled': enquiries_cancelled_count,
+            'trips_cancelled': trips_cancelled_count,
+            'settled': tr_qs.filter(tc_financestatus_id=7).count(),
+            'ready': tr_qs.filter(tc_financestatus_id=9).exclude(transinvoiceinfo__isnull=False).count(),
             'invoiced': ti_qs.count(),
         }
         return metrics
@@ -164,18 +258,18 @@ def get_tms_dashboard_data(request):
     totals = calculate_metrics('all')
     employee_metrics = calculate_metrics(employee_id)
     
-    # Chart Data: Business Trip Distribution — filtered by Enquiry Created Date
-    business_qs = apply_enquiry_date_filter(
-        TripdetailInfo.objects.filter(tr_category__category__icontains="Business"),
-        'tr_enquirynumber__'
-    )
+    # Chart Data: Business Trip Distribution — filtered by the same active enquiries
+    active_en_qs = enquiries_base_qs
     if employee_id and employee_id != 'all':
-        business_qs = business_qs.filter(tr_enquirynumber__en_assignedto_id=employee_id)
+        active_en_qs = active_en_qs.filter(en_assignedto_id=employee_id)
+
+    business_qs = TripdetailInfo.objects.filter(
+        tr_category__category__iexact="Business",
+        tr_enquirynumber__in=active_en_qs
+    )
 
     if not business_qs.exists():
-        business_qs = apply_enquiry_date_filter(TripdetailInfo.objects.all(), 'tr_enquirynumber__')
-        if employee_id and employee_id != 'all':
-            business_qs = business_qs.filter(tr_enquirynumber__en_assignedto_id=employee_id)
+        business_qs = TripdetailInfo.objects.filter(tr_enquirynumber__in=active_en_qs)
 
     trip_types = Tr_triptype_Info.objects.all()
     local_type = trip_types.filter(tr_trip_type__icontains="Local").first()
@@ -197,8 +291,26 @@ def get_tms_dashboard_data(request):
         'local': [get_trip_count(s, local_type) for s in sources] + [get_trip_count('Total', local_type)],
         'outstation': [get_trip_count(s, outstation_type) for s in sources] + [get_trip_count('Total', outstation_type)]
     }
+
+    # C-Note Count done by CS representatives
+    cs_users = User_extInfo.objects.filter(
+        department_id=CS_DEPARTMENT_ID,
+        user__is_active=True
+    ).select_related('user')
+    cs_labels = []
+    cs_cnotes_counts = []
+    for emp in cs_users:
+        emp_en_qs = enquiries_base_qs.filter(en_assignedto_id=emp.user.id)
+        emp_cnotes_count = ConsignmentdetailInfo.objects.filter(co_enquirynumber__in=emp_en_qs).count()
+        cs_labels.append(emp.user.first_name)
+        cs_cnotes_counts.append(emp_cnotes_count)
     
-    # Donut Charts (Mileage Breakdown) — filtered by Enquiry Created Date
+    cs_cnote_chart = {
+        'labels': cs_labels,
+        'counts': cs_cnotes_counts
+    }
+    
+    # Donut Charts (Mileage Breakdown) — filtered by the same active enquiries
     own_vehicle_num = request.GET.get('own_vehicle_number')
     attached_vehicle_num = request.GET.get('attached_vehicle_number')
 
@@ -206,12 +318,10 @@ def get_tms_dashboard_data(request):
         db_source = ownership_type
         if ownership_type == 'Own': db_source = 'OWN'
 
-        qs = apply_enquiry_date_filter(
-            TripdetailInfo.objects.filter(tr_vehiclesource__ow_ownership__icontains=db_source),
-            'tr_enquirynumber__'
+        qs = TripdetailInfo.objects.filter(
+            tr_vehiclesource__ow_ownership__icontains=db_source,
+            tr_enquirynumber__in=active_en_qs
         )
-        if employee_id and employee_id != 'all':
-            qs = qs.filter(tr_enquirynumber__en_assignedto_id=employee_id)
 
         if ownership_type == 'Own' and own_vehicle_num and own_vehicle_num != 'all':
             qs = qs.filter(tr_vehiclenumber__iexact=own_vehicle_num)
@@ -315,6 +425,7 @@ def get_tms_dashboard_data(request):
         'totals': totals,
         'employee': employee_metrics,
         'bar_chart': bar_chart_data,
+        'cs_cnote_chart': cs_cnote_chart,
         'donut_own': get_km_details('Own'),
         'donut_attached': get_km_details('Attached'),
         'progress_chart': {

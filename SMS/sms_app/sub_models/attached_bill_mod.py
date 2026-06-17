@@ -13,6 +13,7 @@ class AttachedBillInfo(models.Model):
     ab_vehicle_number = models.ForeignKey(VehiclemasterInfo, on_delete=models.PROTECT, related_name='ab_vehicle_bills', db_column='ab_vehicle_number', null=True, blank=True)
     ab_vehicle_type = models.CharField(max_length=100, null=True, blank=True)
     ab_bill_no = models.CharField(max_length=50)
+    ab_voucher_no = models.CharField(max_length=100, null=True, blank=True, verbose_name="Voucher No")
     ab_bill_date = models.DateField(null=True, blank=True)
     ab_from_date = models.DateField(null=True, blank=True)
     ab_to_date = models.DateField(null=True, blank=True)
@@ -26,6 +27,12 @@ class AttachedBillInfo(models.Model):
     ab_extra_km_run = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     ab_extra_km_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     ab_bill_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    # TDS type and fields (match MarketBill behaviour)
+    ab_tds_type = models.CharField(max_length=20, null=True, blank=True, verbose_name="TDS Type",
+                                   choices=[('Company', 'Company'), ('Non company', 'Non company')], default='Non company')
+    ab_tds_percent = models.FloatField(default=0.0, null=True, blank=True)
+    ab_tds_amount = models.FloatField(default=0.0, null=True, blank=True)
+    ab_payable_amount = models.FloatField(default=0.0, null=True, blank=True)
     ab_bill_upload = models.FileField(upload_to=attached_bill_directory_path, null=True, blank=True)
     ab_selected_trips = models.TextField(null=True, blank=True)
 
@@ -42,6 +49,21 @@ class AttachedBillInfo(models.Model):
 
     class Meta:
         ordering = ['-ab_created_at']
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.ab_bill_date and self.pk:
+            year = self.ab_bill_date.year
+            month = self.ab_bill_date.month
+            if month >= 4:
+                fy_str = f"{str(year)[-2:]}-{str(year+1)[-2:]}"
+            else:
+                fy_str = f"{str(year-1)[-2:]}-{str(year)[-2:]}"
+            month_str_num = f"{month:02d}"
+            generated_voucher = f"MAA_ATT_{fy_str}_{month_str_num}_{self.pk:03d}"
+            if self.ab_voucher_no != generated_voucher:
+                self.ab_voucher_no = generated_voucher
+                super().save(update_fields=['ab_voucher_no'])
 
     def __str__(self):
         return f"{self.ab_bill_no} - {self.ab_vehicle_number}"

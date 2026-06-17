@@ -17,9 +17,23 @@ class MarketBillForm(forms.ModelForm):
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Enter Bill No"})
     )
 
+    mb_voucher_no = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={"class": "form-control", "readonly": "readonly", "placeholder": "Auto-generated"})
+    )
+
     mb_bill_date = forms.DateField(
         required=False,
         widget=forms.DateInput(attrs={"class": "form-control", "type": "date", "id": "mb_bill_date"})
+    )
+
+    # Provide a blank "Select" option as the initial value so the dropdown shows a placeholder
+    mb_tds_type = forms.ChoiceField(
+        required=False,
+        choices=[('', 'Select'), ('Company', 'Company'), ('Non company', 'Non company')],
+        initial='',
+        widget=forms.Select(attrs={"class": "form-control", "id": "mb_tds_type"})
     )
 
     mb_trip_cost = forms.FloatField(
@@ -57,6 +71,21 @@ class MarketBillForm(forms.ModelForm):
         widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_total_cost"})
     )
 
+    mb_tds_percent = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control", "id": "mb_tds_percent", "step": "0.01", "min": "0", "max": "100", "placeholder": "0.00"})
+    )
+
+    mb_tds_amount = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_tds_amount"})
+    )
+
+    mb_payable_amount = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "id": "mb_payable_amount"})
+    )
+
     mb_mail_attachment = forms.FileField(
         required=False,
         widget=forms.ClearableFileInput(attrs={"class": "form-control", "id": "mb_mail_attachment"})
@@ -72,7 +101,9 @@ class MarketBillForm(forms.ModelForm):
         fields = [
             'mb_vendor',
             'mb_bill_no',
+            'mb_voucher_no',
             'mb_bill_date',
+            'mb_tds_type',
             'mb_trip_cost',
             'mb_loading_cost',
             'mb_unloading_cost',
@@ -80,6 +111,9 @@ class MarketBillForm(forms.ModelForm):
             'mb_halting_cost',
             'mb_halting_days',
             'mb_total_cost',
+            'mb_tds_percent',
+            'mb_tds_amount',
+            'mb_payable_amount',
             'mb_selected_trips',
             'mb_mail_attachment',
         ]

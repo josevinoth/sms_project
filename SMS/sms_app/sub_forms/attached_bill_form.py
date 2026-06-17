@@ -7,12 +7,14 @@ class AttachedBillForm(forms.ModelForm):
     class Meta:
         model = AttachedBillInfo
         fields = [
-            'ab_vendor', 'ab_vehicle_number', 'ab_vehicle_type', 'ab_bill_no',
+            'ab_vendor', 'ab_vehicle_number', 'ab_vehicle_type', 'ab_bill_no', 'ab_voucher_no',
             'ab_bill_date', 'ab_from_date', 'ab_to_date', 'ab_buy_cost', 'ab_toll_cost',
             'ab_leave_days', 'ab_leave_amount',
             'ab_agreed_km', 'ab_total_km_run', 'ab_extra_km_run',
             'ab_extra_km_amount', 'ab_bill_amount', 'ab_bill_upload', 'ab_selected_trips'
         ]
+        # Add TDS related fields similar to MarketBill; include TDS type before percent
+        fields[ fields.index('ab_bill_amount')+1:fields.index('ab_bill_upload') ] = ['ab_tds_type', 'ab_tds_percent', 'ab_tds_amount', 'ab_payable_amount']
 
     def __init__(self, *args, **kwargs):
         super(AttachedBillForm, self).__init__(*args, **kwargs)
@@ -30,12 +32,16 @@ class AttachedBillForm(forms.ModelForm):
             # Date widgets
             if field_name in ['ab_bill_date', 'ab_from_date', 'ab_to_date']:
                 field.widget = forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+
+            if field_name == 'ab_tds_type':
+                # Render TDS type as a select with placeholder
+                field.widget = forms.Select(choices=[('', 'Select'), ('Company', 'Company'), ('Non company', 'Non company')], attrs={'class': 'form-control', 'id': 'id_ab_tds_type'})
             
             if field_name == 'ab_selected_trips':
                 field.widget = forms.HiddenInput()
             
             # Read-only fields (Calculated/Pulled)
-            if field_name in ['ab_vehicle_type', 'ab_total_km_run', 'ab_leave_amount', 'ab_extra_km_run']:
+            if field_name in ['ab_vehicle_type', 'ab_total_km_run', 'ab_leave_amount', 'ab_extra_km_run', 'ab_tds_amount', 'ab_payable_amount', 'ab_voucher_no']:
                 field.widget.attrs['readonly'] = 'readonly'
             
             # Empty labels

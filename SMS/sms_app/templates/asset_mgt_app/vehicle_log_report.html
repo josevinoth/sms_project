@@ -1,4 +1,4 @@
-﻿{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% load static %}
 {% block content %}
@@ -91,6 +91,7 @@
 
     <div class="col-md-2">
         <button type="submit" class="btn btn-primary mt-3">Filter</button>
+        <a href="{{ request.path }}" class="btn btn-secondary mt-3">Clear</a>
     </div>
 </form>
 <br>
@@ -101,11 +102,6 @@
         <a href="{% url 'transport_reports' %}" class="btn btn-primary">
             <i class="fas fa-arrow-left"></i> Back
         </a>
-        {% if select_all != 'true' %}
-        <a href="{% url 'vehicle_log_report' %}?select_all=true" class="btn btn-warning ml-2">
-            <i class="fas fa-check-double"></i> Show More (2,000)
-        </a>
-        {% endif %}
     </div>
 </div>
 
@@ -122,14 +118,7 @@
             </tr>
         </thead>
         <tbody>
-            <!-- DYNAMIC ROWS -->
-            {% for row in data_rows %}
-            <tr>
-                {% for cell in row %}
-                <td>{{ cell }}</td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
+            <!-- DATA LOADED VIA AJAX -->
         </tbody>
     </table>
 </div>
@@ -147,9 +136,23 @@
 <script>
     $(document).ready(function () {
 
-        $('#vehicle_log_report_table').DataTable({
+        var table = $('#vehicle_log_report_table').DataTable({
 
+            processing: true,
+            serverSide: true,
             scrollX: true,
+            ajax: {
+                url: "{% url 'vehicle_log_report_ajax' %}",
+                type: "GET",
+                data: function (d) {
+                    d.vehicle_number = $('#vehicle_number').val();
+                    d.month = $('select[name="month"]').val();
+                    d.year = $('select[name="year"]').val();
+                    d.from_location = $('select[name="from_location"]').val();
+                    d.to_location = $('select[name="to_location"]').val();
+                    d.branch = $('select[name="branch"]').val();
+                }
+            },
 
             dom: 'lBfrtip',
 
@@ -272,6 +275,11 @@
                     }
                 }
             ]
+        });
+
+        $('form').on('submit', function(e) {
+            e.preventDefault();
+            table.draw();
         });
 
     });

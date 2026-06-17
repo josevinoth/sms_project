@@ -42,9 +42,23 @@
 
                         <div class="input-group input-group-sm mb-2">
                             <div class="input-group-prepend">
+                                <span class="input-group-text">Voucher No</span>
+                            </div>
+                            {% render_field form.mb_voucher_no class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
                                 <span class="input-group-text">Bill Date</span>
                             </div>
                             {% render_field form.mb_bill_date class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">TDS Type</span>
+                            </div>
+                            {% render_field form.mb_tds_type class="form-control" %}
                         </div>
 
                     </div>
@@ -99,6 +113,27 @@
                                 <span class="input-group-text">Total Cost</span>
                             </div>
                             {% render_field form.mb_total_cost class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">TDS %</span>
+                            </div>
+                            {% render_field form.mb_tds_percent class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">TDS Amount</span>
+                            </div>
+                            {% render_field form.mb_tds_amount class="form-control" %}
+                        </div>
+
+                        <div class="input-group input-group-sm mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Payable Amount</span>
+                            </div>
+                            {% render_field form.mb_payable_amount class="form-control" %}
                         </div>
 
                     </div>
@@ -381,7 +416,11 @@
         document.getElementById("mb_parking_cost").value = totalParking.toFixed(2);
         document.getElementById("mb_halting_cost").value = totalHalting.toFixed(2);
         document.getElementById("mb_halting_days").value = totalHaltingDays;
-        document.getElementById("mb_total_cost").value = (totalTrip + totalLoading + totalUnloading + totalParking + totalHalting).toFixed(2);
+        const grandTotal = totalTrip + totalLoading + totalUnloading + totalParking + totalHalting;
+        document.getElementById("mb_total_cost").value = grandTotal.toFixed(2);
+
+        // Recalculate TDS and Payable Amount
+        updateTdsAndPayable();
 
         document.getElementById("mb_selected_trips").value = Array.from(selectedTripIds).join(",");
     }
@@ -405,6 +444,47 @@
             e.target.classList.contains("unloading-cost-input")) {
             updateTotals();
         }
+    });
+
+    // Function to calculate TDS Amount and Payable Amount
+    function updateTdsAndPayable() {
+        const totalCost = parseFloat(document.getElementById("mb_total_cost").value) || 0;
+        const tdsPercent = parseFloat(document.getElementById("mb_tds_percent").value) || 0;
+        const tdsAmount = (totalCost * tdsPercent) / 100;
+        const payableAmount = totalCost - tdsAmount;
+        document.getElementById("mb_tds_amount").value = tdsAmount.toFixed(2);
+        document.getElementById("mb_payable_amount").value = payableAmount.toFixed(2);
+    }
+
+    // Recalculate when TDS % is changed manually
+    document.getElementById("mb_tds_percent").addEventListener("input", updateTdsAndPayable);
+    document.getElementById("mb_tds_percent").addEventListener("change", updateTdsAndPayable);
+
+    // Auto set TDS % based on TDS Type selection
+    function setTdsByType() {
+        const tdsTypeEl = document.getElementById("mb_tds_type");
+        if (!tdsTypeEl) return;
+        const tdsType = tdsTypeEl.value;
+        const tdsPercentEl = document.getElementById("mb_tds_percent");
+        if (!tdsPercentEl) return;
+
+        // Explicit mapping: Company -> 2%, Non company -> 1%, blank/Select -> leave empty
+        if (tdsType === 'Company') {
+            tdsPercentEl.value = (2.0).toFixed(2);
+        } else if (tdsType === 'Non company') {
+            tdsPercentEl.value = (1.0).toFixed(2);
+        } else {
+            // Placeholder selected; clear TDS % so user can choose manually after selecting type
+            tdsPercentEl.value = '';
+        }
+        updateTdsAndPayable();
+    }
+
+    document.getElementById("mb_tds_type")?.addEventListener("change", setTdsByType);
+
+    // Ensure initial TDS % reflects the selected type on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        setTdsByType();
     });
 
     // DataTable instance variable

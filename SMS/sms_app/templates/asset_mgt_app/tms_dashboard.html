@@ -1,5 +1,5 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20260529-02">
+<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20260609-01">
 
 <style>
     /* Specific overrides for this dashboard if any */
@@ -9,6 +9,16 @@
             height: 100% !important;
             background: #060b26 !important;
             font-family: 'Inter', sans-serif !important;
+        }
+        #main-content {
+            margin-left: 65px !important;
+            padding: 0 !important;
+        }
+        .container-fluid {
+            padding-top: 8px !important;
+            padding-bottom: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
         }
     }
     @media screen and (max-width: 991px) {
@@ -51,50 +61,100 @@
         background: rgba(54, 209, 255, 0.2) !important;
         box-shadow: 0 0 8px rgba(54, 209, 255, 0.5);
     }
+
+    /* KPI Card Tooltips */
+    .dash-card[data-tip] {
+        cursor: default;
+    }
+    .dash-card[data-tip]::after {
+        content: attr(data-tip);
+        position: absolute;
+        bottom: calc(100% + 10px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(6, 11, 38, 0.97);
+        color: #d9e3ff;
+        font-size: 0.62rem;
+        font-weight: 400;
+        padding: 7px 10px;
+        border-radius: 6px;
+        border: 1px solid rgba(54, 209, 255, 0.45);
+        white-space: normal;
+        width: 190px;
+        line-height: 1.5;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+        z-index: 9999;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+        text-align: left;
+    }
+    .dash-card[data-tip]::before {
+        content: '';
+        position: absolute;
+        bottom: calc(100% + 4px);
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: rgba(54, 209, 255, 0.45);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+        z-index: 9999;
+    }
+    .dash-card[data-tip]:hover::after,
+    .dash-card[data-tip]:hover::before {
+        opacity: 1;
+    }
 </style>
 
 <div class="home-dashboard-wrap">
     <div class="dash-kpi-container">
-        <!-- Row 1: Totals -->
-        <div class="dash-kpi-row">
-            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                <div class="dash-dropdown-card" style="padding: 0.25rem 0.5rem;">
-                    <label style="margin-bottom: 0.1rem;"><i class="fas fa-calendar-alt"></i> From Date</label>
-                    <div class="dash-select-wrap">
-                        <input type="date" id="from-date" class="dash-date-input" style="padding: 2px;">
-                    </div>
-                </div>
-                <div class="dash-dropdown-card" style="padding: 0.25rem 0.5rem;">
-                    <label style="margin-bottom: 0.1rem;"><i class="fas fa-calendar-alt"></i> To Date</label>
-                    <div class="dash-select-wrap">
-                        <input type="date" id="to-date" class="dash-date-input" style="padding: 2px;">
-                    </div>
+        <!-- Filter Bar (top horizontal row) -->
+        <div class="dash-filter-bar">
+            <div class="dash-dropdown-card">
+                <label><i class="fas fa-calendar-alt"></i> From Date</label>
+                <div class="dash-select-wrap" style="flex:1;">
+                    <input type="date" id="from-date" class="dash-date-input">
                 </div>
             </div>
-            <div class="dash-card card-enquiry"><i class="fas fa-poll-h"></i><div class="dash-kpi-label">Vehicles Used</div><div class="dash-kpi-value" id="total-enquiries">0</div></div>
-            <div class="dash-card card-cnote"><i class="fas fa-file-invoice"></i><div class="dash-kpi-label">C-Notes</div><div class="dash-kpi-value" id="total-cnotes">0</div></div>
-            <div class="dash-card card-missed"><i class="fas fa-exclamation-circle"></i><div class="dash-kpi-label">Missed Enquiry</div><div class="dash-kpi-value" id="total-missed">0</div></div>
-            <div class="dash-card card-settled"><i class="fas fa-check-double"></i><div class="dash-kpi-label">Trip Settled</div><div class="dash-kpi-value" id="total-settled">0</div></div>
-            <div class="dash-card card-ready"><i class="fas fa-hourglass-half"></i><div class="dash-kpi-label">Ready to Invoice</div><div class="dash-kpi-value" id="total-ready">0</div></div>
-            <div class="dash-card card-invoiced"><i class="fas fa-file-signature"></i><div class="dash-kpi-label">Invoiced</div><div class="dash-kpi-value" id="total-invoiced">0</div></div>
-        </div>
-        <!-- Row 2: Employee Specific -->
-        <div class="dash-kpi-row">
             <div class="dash-dropdown-card">
+                <label><i class="fas fa-calendar-alt"></i> To Date</label>
+                <div class="dash-select-wrap" style="flex:1;">
+                    <input type="date" id="to-date" class="dash-date-input">
+                </div>
+            </div>
+            <div class="dash-dropdown-card" style="flex:1.2;">
                 <label><i class="fas fa-user-tie"></i> CS Representative</label>
-                <div class="dash-select-wrap">
+                <div class="dash-select-wrap" style="flex:1;">
                     <select id="cs-employee-select" {% if dropdown_disabled %}disabled{% endif %} data-disabled="{{ dropdown_disabled|lower }}" data-default="{{ default_employee_id }}">
                         <option value="all">All Representatives</option>
                         {% for emp in cs_employees %}<option value="{{ emp.user.id }}">{{ emp.user.first_name }}</option>{% endfor %}
                     </select>
                 </div>
             </div>
-            <div class="dash-card card-enquiry"><i class="fas fa-poll-h"></i><div class="dash-kpi-label">Vehicles Used</div><div class="dash-kpi-value" id="emp-enquiries">0</div></div>
-            <div class="dash-card card-cnote"><i class="fas fa-file-invoice"></i><div class="dash-kpi-label">C-Notes</div><div class="dash-kpi-value" id="emp-cnotes">0</div></div>
-            <div class="dash-card card-missed"><i class="fas fa-exclamation-circle"></i><div class="dash-kpi-label">Missed Enquiry</div><div class="dash-kpi-value" id="emp-missed">0</div></div>
-            <div class="dash-card card-settled"><i class="fas fa-check-double"></i><div class="dash-kpi-label">Trip Settled</div><div class="dash-kpi-value" id="emp-settled">0</div></div>
-            <div class="dash-card card-ready"><i class="fas fa-hourglass-half"></i><div class="dash-kpi-label">Ready to Invoice</div><div class="dash-kpi-value" id="emp-ready">0</div></div>
-            <div class="dash-card card-invoiced"><i class="fas fa-file-signature"></i><div class="dash-kpi-label">Invoiced</div><div class="dash-kpi-value" id="emp-invoiced">0</div></div>
+            <div class="dash-dropdown-card" style="flex:1.2;">
+                <label><i class="fas fa-code-branch"></i> Branch</label>
+                <div class="dash-select-wrap" style="flex:1;">
+                    <select id="branch-select">
+                        <option value="all">All Branches</option>
+                        {% for branch in branches %}
+                        <option value="{{ branch.id }}">{{ branch.loc_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <!-- KPI Cards Row (single line, 8 cards) -->
+        <div class="dash-kpi-row">
+            <div class="dash-card card-enquiry" data-tip="Total count of enquiries created within the selected date range, CS rep, and branch filters."><i class="fas fa-poll-h"></i><div class="dash-kpi-label">Vehicle Requested</div><div class="dash-kpi-value" id="kpi-enquiries">0</div></div>
+            <div class="dash-card card-cnote" data-tip="Count of enquiries (from Vehicle Requested) that have at least one Consignment Note (C-Note) created."><i class="fas fa-file-invoice"></i><div class="dash-kpi-label">C-Notes</div><div class="dash-kpi-value" id="kpi-cnotes">0</div></div>
+            <div class="dash-card card-missed" data-tip="Enquiries with NO C-Note and NO cancelled trip. Shows unallotted vehicle quantity."><i class="fas fa-exclamation-circle"></i><div class="dash-kpi-label">Vehicles Missed</div><div class="dash-kpi-value" id="kpi-missed">0</div></div>
+            <div class="dash-card card-cancelled" data-tip="Enquiries without a C-Note where the associated trip is marked as cancelled, or the enquiry itself is directly cancelled."><i class="fas fa-times-circle"></i><div class="dash-kpi-label">Enquiries Cancelled</div><div class="dash-kpi-value" id="kpi-enquiries-cancelled">0</div></div>
+            <div class="dash-card card-trips-cancelled" data-tip="Count of individual trip records marked as cancelled (finance status = Cancelled), regardless of whether the enquiry also has a C-Note."><i class="fas fa-ban"></i><div class="dash-kpi-label">Trips Cancelled</div><div class="dash-kpi-value" id="kpi-trips-cancelled">0</div></div>
+            <div class="dash-card card-settled" data-tip="Count of trips linked to the filtered enquiries that have finance status 'Trip Settled'."><i class="fas fa-check-double"></i><div class="dash-kpi-label">Trip Settled</div><div class="dash-kpi-value" id="kpi-settled">0</div></div>
+            <div class="dash-card card-ready" data-tip="Trips with finance status 'Ready to Invoice' that have not yet been invoiced."><i class="fas fa-hourglass-half"></i><div class="dash-kpi-label">Ready to Invoice</div><div class="dash-kpi-value" id="kpi-ready">0</div></div>
+            <div class="dash-card card-invoiced" data-tip="Count of Trans Invoice records raised for trips linked to the filtered enquiries."><i class="fas fa-file-signature"></i><div class="dash-kpi-label">Invoiced</div><div class="dash-kpi-value" id="kpi-invoiced">0</div></div>
         </div>
     </div>
 
@@ -148,21 +208,27 @@
                 </div>
             </div>
         </div>
-        <!-- Right Column: Vehicle Type wise Monthly Progress (expanded full height) -->
-        <div class="chart-panel" style="min-width: 0; overflow: hidden;">
-            <div class="chart-title" style="display: flex; align-items: center; justify-content: space-between; width: 100%; min-width: 0; flex-wrap: nowrap; gap: 6px;">
-                <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1; overflow: hidden;">
-                    <button id="progress-back-btn" class="btn btn-outline-info btn-xs" style="display: none; padding: 2px 8px; font-size: 10px; border-radius: 4px; background: transparent; border: 1px solid #36d1ff; color: #36d1ff; cursor: pointer; transition: all 0.2s; align-items: center; justify-content: center; gap: 4px; flex-shrink: 0;">
-                        <i class="fas fa-arrow-left"></i> Back
-                    </button>
-                    <div style="font-size: 0.95rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;"><i class="fas fa-chart-line" style="color:#36d1ff;"></i> Vehicle Trip wise Monthly Progress &ndash; <span id="progress-chart-month" style="color: #36d1ff;">Current Month</span></div>
+        <!-- Right Column: Vehicle Type wise Monthly Progress and CS Representative C-Notes Count -->
+        <div class="dash-left-col" style="min-width: 0; overflow: hidden;">
+            <div class="chart-panel" style="flex: 1; min-width: 0; overflow: hidden;">
+                <div class="chart-title" style="display: flex; align-items: center; justify-content: space-between; width: 100%; min-width: 0; flex-wrap: nowrap; gap: 6px;">
+                    <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1; overflow: hidden;">
+                        <button id="progress-back-btn" class="btn btn-outline-info btn-xs" style="display: none; padding: 2px 8px; font-size: 10px; border-radius: 4px; background: transparent; border: 1px solid #36d1ff; color: #36d1ff; cursor: pointer; transition: all 0.2s; align-items: center; justify-content: center; gap: 4px; flex-shrink: 0;">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <div style="font-size: 0.95rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;"><i class="fas fa-chart-line" style="color:#36d1ff;"></i> Vehicle Trip wise Monthly Progress &ndash; <span id="progress-chart-month" style="color: #36d1ff;">Current Month</span></div>
+                    </div>
+                    <input type="month" id="progress-month" class="dash-date-input" style="padding: 2px 4px; font-size: 11px; background: #060b26; color: #fff; border: 1px solid #1a2352; border-radius: 4px; outline: none; width: 110px; flex-shrink: 0;">
                 </div>
-                <input type="month" id="progress-month" class="dash-date-input" style="padding: 2px 4px; font-size: 11px; background: #060b26; color: #fff; border: 1px solid #1a2352; border-radius: 4px; outline: none; width: 110px; flex-shrink: 0;">
+                <div class="chart-canvas-wrap" style="overflow-x: auto; overflow-y: hidden;">
+                    <div id="progressChartInner" style="height: 100%; min-height: 0; position: relative; min-width: 100%;">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
             </div>
-            <div class="chart-canvas-wrap" style="overflow-x: auto; overflow-y: hidden;">
-                <div id="progressChartInner" style="height: 100%; min-height: 0; position: relative; min-width: 100%;">
-                    <canvas id="progressChart"></canvas>
-                </div>
+            <div class="chart-panel" style="flex: 1; min-width: 0; overflow: hidden;">
+                <div class="chart-title"><i class="fas fa-user-tie"></i> C-Note Count by CS Representative</div>
+                <div class="chart-canvas-wrap"><canvas id="csCnoteChart"></canvas></div>
             </div>
         </div>
     </div>
@@ -172,7 +238,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 <script>
     $(document).ready(function() {
-        let tripBarChart, ownDonutChart, attachedDonutChart, progressChart;
+        let tripBarChart, csCnoteChart, ownDonutChart, attachedDonutChart, progressChart;
         let progressBreakdowns = {};
         let currentProgressView = 'ranges'; // 'ranges' or 'vehicles'
         let selectedBucket = null;
@@ -203,13 +269,15 @@
             }
         };
 
-        function updateKpis(data, prefix) {
-            $(`#${prefix}-enquiries`).text(data.enquiries);
-            $(`#${prefix}-cnotes`).text(data.cnotes);
-            $(`#${prefix}-missed`).text(data.missed);
-            $(`#${prefix}-settled`).text(data.settled);
-            $(`#${prefix}-ready`).text(data.ready);
-            $(`#${prefix}-invoiced`).text(data.invoiced);
+        function updateKpis(data) {
+            $(`#kpi-enquiries`).text(data.enquiries);
+            $(`#kpi-cnotes`).text(data.cnotes);
+            $(`#kpi-missed`).text(data.missed);
+            $(`#kpi-enquiries-cancelled`).text(data.enquiries_cancelled);
+            $(`#kpi-trips-cancelled`).text(data.trips_cancelled);
+            $(`#kpi-settled`).text(data.settled);
+            $(`#kpi-ready`).text(data.ready);
+            $(`#kpi-invoiced`).text(data.invoiced);
         }
 
         let pinnedChart = false;
@@ -346,10 +414,10 @@
                     plugins: {
                         legend: { display: false },
                         datalabels: {
-                            color: '#fff',
-                            anchor: 'end',
-                            align: 'right',
-                            offset: 4,
+                            color: '#ffffff',
+                            anchor: 'center',
+                            align: 'center',
+                            offset: 0,
                             font: { weight: '700', size: 10 },
                             formatter: (value) => {
                                 return value > 0 ? value : '';
@@ -440,10 +508,10 @@
                     plugins: {
                         legend: { display: false },
                         datalabels: {
-                            color: '#fff',
-                            anchor: 'end',
-                            align: 'top',
-                            offset: 2,
+                            color: '#ffffff',
+                            anchor: 'center',
+                            align: 'center',
+                            offset: 0,
                             font: { weight: '700', size: 10 },
                             formatter: (value) => {
                                 return value > 0 ? value : '';
@@ -507,6 +575,7 @@
         function initCharts(data) {
             Chart.register(ChartDataLabels);
             const ctxBar = document.getElementById('tripBarChart').getContext('2d');
+            const ctxCsCnote = document.getElementById('csCnoteChart').getContext('2d');
             const ctxOwn = document.getElementById('ownDonutChart').getContext('2d');
             const ctxAtt = document.getElementById('attachedDonutChart').getContext('2d');
 
@@ -547,10 +616,52 @@
                         ...commonOptions.plugins,
                         datalabels: {
                             ...commonOptions.plugins.datalabels,
-                            anchor: 'end',
-                            align: 'top',
-                            offset: 2,
-                            color: '#36d1ff'
+                            anchor: 'center',
+                            align: 'center',
+                            offset: 0,
+                            color: '#ffffff',
+                            font: { weight: '700', size: 10 },
+                            formatter: (value) => {
+                                return value > 0 ? value : '';
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#9fb1d9', font: { size: 10 } }, grid: { display: false } },
+                        y: { ticks: { color: '#9fb1d9', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
+
+            csCnoteChart = new Chart(ctxCsCnote, {
+                type: 'bar',
+                data: {
+                    labels: data.cs_cnote_chart.labels,
+                    datasets: [{
+                        label: 'C-Notes',
+                        data: data.cs_cnote_chart.counts,
+                        backgroundColor: '#25667a',
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        ...commonOptions.plugins,
+                        legend: {
+                            display: false
+                        },
+                        datalabels: {
+                            ...commonOptions.plugins.datalabels,
+                            anchor: 'center',
+                            align: 'center',
+                            offset: 0,
+                            color: '#ffffff',
+                            font: { weight: '700', size: 10 },
+                            formatter: (value) => {
+                                return value > 0 ? value : '';
+                            }
                         }
                     },
                     scales: {
@@ -644,6 +755,7 @@
             const progressMonth = $('#progress-month').val();
             const ownVehicleNum = $('#own-vehicle-select').val();
             const attachedVehicleNum = $('#attached-vehicle-select').val();
+            const branchId = $('#branch-select').val();
 
             $.ajax({
                 url: "{% url 'get_tms_dashboard_data' %}",
@@ -653,12 +765,12 @@
                     'to_date': toDate,
                     'progress_month': progressMonth,
                     'own_vehicle_number': ownVehicleNum,
-                    'attached_vehicle_number': attachedVehicleNum
+                    'attached_vehicle_number': attachedVehicleNum,
+                    'branch_id': branchId
                 },
                 success: function(data) {
-                    // Always update totals from the same data response (backend should send both)
-                    updateKpis(data.totals, 'total');
-                    updateKpis(data.employee, 'emp');
+                    // Update KPIs using the filtered CS representative data
+                    updateKpis(data.employee);
 
                     progressBreakdowns = data.progress_chart.breakdowns;
                     lastProgressData = data;
@@ -676,6 +788,10 @@
                         tripBarChart.data.datasets[1].data = data.bar_chart.outstation;
                         tripBarChart.update();
 
+                        csCnoteChart.data.labels = data.cs_cnote_chart.labels;
+                        csCnoteChart.data.datasets[0].data = data.cs_cnote_chart.counts;
+                        csCnoteChart.update();
+
                         renderProgressChartRanges();
 
                         ownDonutChart.data.datasets[0].data = data.donut_own;
@@ -691,7 +807,16 @@
             const isMobile = window.innerWidth < 992;
             
             // Remove padding from main bootstrap containers
-            $('.container-fluid').css('padding', '0');
+            $('.container-fluid').css({
+                'padding-bottom': '0',
+                'padding-left': '0',
+                'padding-right': '0'
+            });
+            if (isMobile) {
+                $('.container-fluid').css('padding-top', '0');
+            } else {
+                $('.container-fluid').css('padding-top', '8px');
+            }
             $('.row').css('margin', '0');
             
             // Adjust sidebar container (col-md-2)
@@ -721,7 +846,7 @@
                 'width': '100%',
                 'max-width': '100%',
                 'margin': '0',
-                'height': isMobile ? 'auto' : 'calc(100vh - 125px)',
+                'height': isMobile ? 'auto' : 'calc(100vh - 77px)',
                 'overflow': isMobile ? 'visible' : 'hidden'
             });
         }
@@ -765,7 +890,7 @@
             adjustLayout();
         });
 
-        $('#cs-employee-select, #from-date, #to-date, #progress-month, #own-vehicle-select, #attached-vehicle-select').on('change', function() {
+        $('#cs-employee-select, #from-date, #to-date, #progress-month, #own-vehicle-select, #attached-vehicle-select, #branch-select').on('change', function() {
             adjustLayout();
             loadDashboardData();
         });

@@ -28,3 +28,15 @@ class InvoiceDocumentInfo(models.Model):
 
     def __str__(self):
         return str(self.id_tripnumber) if self.id_tripnumber else "N/A"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.id_status and self.id_tripnumber:
+            from ..sub_models.trip_detail_mod import TripdetailInfo
+            try:
+                trip = TripdetailInfo.objects.get(tr_tripnumber=self.id_tripnumber)
+                if trip.tc_financestatus != self.id_status:
+                    trip.tc_financestatus = self.id_status
+                    trip.save(update_fields=['tc_financestatus'])
+            except TripdetailInfo.DoesNotExist:
+                pass

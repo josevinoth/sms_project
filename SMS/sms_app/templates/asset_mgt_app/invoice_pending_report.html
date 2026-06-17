@@ -58,6 +58,17 @@
         {% render_field form.customer_department class="form-control" id="filter_dept" %}
     </div>
 
+    <!-- Vehicle Source -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Vehicle Source</label>
+        <select name="vehicle_source" class="form-select form-control" id="filter_vehicle_source">
+            <option value="">-- All Sources --</option>
+            {% for s in all_vehiclesources %}
+            <option value="{{ s.id }}">{{ s.ow_ownership }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
     <!-- From Date -->
     <div class="col-md-2">
         <label class="form-label fw-bold">From Date</label>
@@ -82,9 +93,12 @@
         {% render_field form.to_location class="form-control" id="filter_to_loc" %}
     </div>
 
-    <div class="col-md-1">
+    <div class="col-md-2">
         <button type="button" id="btn_filter" class="btn btn-primary mt-3">
             <i class="fas fa-filter"></i> Filter
+        </button>
+        <button type="button" id="btn_clear" class="btn btn-secondary mt-3 ms-2">
+            <i class="fas fa-times"></i> Clear
         </button>
     </div>
 
@@ -135,12 +149,13 @@
                     d.to_date            = $('#filter_to_date').val();
                     d.from_location      = $('#filter_from_loc').val();
                     d.to_location        = $('#filter_to_loc').val();
+                    d.vehicle_source     = $('#filter_vehicle_source').val();
                 }
             },
             "dom": 'lBfrtip',
             "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
             "pageLength": 50,
-            "order": [[0, 'asc']],
+            "order": [[0, 'desc']],
 
             "buttons": [
                 'copy',
@@ -203,6 +218,14 @@
 
         // Filter button triggers server-side reload
         $('#btn_filter').click(function () {
+            table.draw();
+        });
+
+        // Clear button resets the form and reloads the table
+        $('#btn_clear').click(function () {
+            $('#filter_form')[0].reset();
+            $('#filter_form select').val('');
+            $('#filter_form input').val('');
             table.draw();
         });
 

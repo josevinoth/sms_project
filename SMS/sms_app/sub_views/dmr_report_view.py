@@ -1146,3 +1146,142 @@ def get_dmr_template(customer_name, dept_name):
     # Backward compatibility wrapper
     h, k = get_dmr_headers(customer_name, dept_name, None, None)
     return h
+
+
+@login_required(login_url='login_page')
+def trip_report_ajax(request):
+    """AJAX endpoint for DataTables server-side processing for the DMR/trip report.
+
+    Accepts the same filters as `trip_report` (dmr_customer, customer_department, month, year,
+    from_location, to_location) via GET and standard DataTables parameters (draw, start, length,
+    order, search[value]). Returns JSON with draw, recordsTotal, recordsFiltered and data rows
+    (each row is a list matching the headers returned by get_dmr_headers).
+    """
+    try:
+        draw = int(request.GET.get('draw') or 1)
+        start = int(request.GET.get('start') or 0)
+        length = int(request.GET.get('length') or 10)
+    except Exception:
+        draw, start, length = 1, 0, 10
+
+    # Filters (same names as used in trip_report form)
+    customer_id = request.GET.get('dmr_customer')
+    dept_id = request.GET.get('customer_department')
+    selected_month = request.GET.get('month')
+    selected_year = request.GET.get('year')
+    from_loc = request.GET.get('from_location')
+    to_loc = request.GET.get('to_location')
+    search_value = request.GET.get('search[value]', '').strip()
+
+    # Base queryset
+    trips = TripdetailInfo.objects.filter(tr_category_id=1).select_related(
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_customerdepartment',
+        'tr_enquirynumber__en_fromlocaion',
+        'tr_enquirynumber__en_tolocation',
+        'tr_consignmentnumber',
+        'tr_departedlocation',
+        'tr_reportedlocation',
+        'tc_financestatus'
+    )
+
+    if customer_id:
+        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
+    if dept_id:
+        trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
+
+    if selected_month and selected_year:
+        try:
+            sm = int(selected_month); sy = int(selected_year)
+            if 1 <= sm <= 12:
+                first_day = date(sy, sm, 1)
+                last_day = date(sy, sm, calendar.monthrange(sy, sm)[1])
+                trips = trips.filter(
+                    Q(tr_departeddate_pickup__date__range=[first_day, last_day]) |
+                    Q(tr_departeddate__date__range=[first_day, last_day])
+                )
+        except Exception:
+            pass
+
+    if from_loc:
+        trips = trips.filter(tr_enquirynumber__en_fromlocaion_id=from_loc)
+    if to_loc:
+        trips = trips.filter(tr_enquirynumber__en_tolocation_id=to_loc)
+
+    # Ordering: simple mapping (if provided). Default to -tr_tripnumber
+    try:
+        order_col_idx = int(request.GET.get('order[0][column]') or 0)
+        order_dir = request.GET.get('order[0][dir]', 'desc')
+    except Exception:
+        order_col_idx, order_dir = 0, 'desc'
+
+    order_map = {
+        1: 'tr_departeddate',
+        2: 'tr_consignmentnumber__co_consignmentnumber',
+        3: 'tr_enquirynumber__en_customername__cu_name',
+        4: 'tr_departedlocation__place_name',
+        5: 'tr_reportedlocation__place_name',
+        6: 'tr_vehiclesource__ow_ownership',
+        7: 'tr_vehiclenumber',
+    }
+    sort_field = order_map.get(order_col_idx)
+    if sort_field:
+        if order_dir == 'desc':
+            trips = trips.order_by('-' + sort_field)
+        else:
+            trips = trips.order_by(sort_field)
+    else:
+        trips = trips.order_by('-tr_tripnumber')
+
+    # Search filtering
+    if search_value:
+        trips = trips.filter(
+            Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+            Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
+            Q(tr_vehiclenumber__icontains=search_value)
+        )
+
+    records_total = TripdetailInfo.objects.filter(tr_category_id=1).count()
+    records_filtered = trips.order_by().values('id').count()
+
+    # Pagination
+    if length != -1:
+        paginated = list(trips[start:start + length])
+    else:
+        paginated = list(trips[start:])
+
+    # Determine headers/template_key for this filter set (use customer/dept names if available)
+    cust_name = ''
+    dept_name = ''
+    if customer_id:
+        try:
+            cust_name = CustomerInfo.objects.get(id=customer_id).cu_name
+        except Exception:
+            cust_name = ''
+    if dept_id:
+        try:
+            dept_name = CustomerdepartmentInfo.objects.get(id=dept_id).ct_customerdepartment
+        except Exception:
+            dept_name = ''
+
+    headers, template_key = get_dmr_headers(cust_name, dept_name, from_loc, to_loc)
+
+    # Build rows for current page
+    data_rows = get_dmr_rows(paginated, headers, template_key, cust_name)
+
+    # If client only requested headers (to validate column mapping), return headers without full payload
+    if request.GET.get('header_only') in ('1', 'true', 'True'):
+        return JsonResponse({
+            'headers': headers,
+            'recordsFiltered': records_filtered,
+        })
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': records_total,
+        'recordsFiltered': records_filtered,
+        'data': data_rows,
+        'headers': headers,
+    })
+
