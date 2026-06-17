@@ -1,337 +1,385 @@
-{% extends "asset_mgt_app/base_modern.html" %}
+{% extends "asset_mgt_app/base.html" %}
 {% load widget_tweaks %}
 {% block content %}
 
-<style>
-    .consignment-modern-wrap .form-control,
-    .consignment-modern-wrap .form-control-modern {
-        border-radius: 8px !important;
-        font-size: 0.82rem !important;
-        min-height: 30px !important;
-        height: 36px !important;
-        padding: 0.35rem 0.75rem !important;
-    }
+<div class="row">
+	<div class="col">
+		<div class="container-fluid">
+			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
+				<div class="card-header text-center">
+					<div class="row align-items-center justify-content-between">
+						<div class="col-md-8 d-flex flex-wrap align-items-center gap-2">
+							<h3 class="mb-0 mr-3">Add/Update Consignment Details</h3>
+							<a href="{% url 'consignmentdetail_insert' %}" class="btn btn-primary ml-2">
+								<i class="fas fa-plus"></i> Add
+							</a>
+						</div>
 
-    .consignment-modern-wrap textarea.form-control {
-        min-height: 40px !important;
-        height: 40px !important;
-    }
+						<div class="col-md-4 d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
+							{% if has_invoice_or_ewaybill %}
+							<button type="button" class="btn btn-warning"
+								onclick="window.open('{% url 'consignment_note_pdf' consignmentdetail_id %}', '_blank');">
+								Consignment note <i class="fa fa-download" aria-hidden="true"></i>
+							</button>
 
-    .consignment-modern-wrap .form-section-title {
-        margin-bottom: 0.5rem !important;
-        padding-bottom: 5px !important;
-        font-size: 0.8rem !important;
-    }
+							{% else %}
+							<button class="btn btn-secondary" disabled>
+								Consignment note <i class="fa fa-download" aria-hidden="true"></i>
+							</button>
+							{% endif %}
+						</div>
+					</div>
+				</div>
+				<div class="card-body bg-light">
+					<form method="POST" action="">
+						{% csrf_token %}
+						<div class="row border border-5 rounded border-primary m-2 p-2" id="consignment_details_id">
+							<div class="col-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Enquiry Number</span>
+									</div>
+									{% render_field con_det_form.co_enquirynumber id="co_enquirynumber" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consignment Number</span>
+									</div>
+									{% render_field con_det_form.co_consignmentnumber id="co_consignmentnumber" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Number</span>
+									</div>
+									<select id="co_vehicelnumber" name="co_vehicelnumber" onfocus="vehicle_allotted()"
+										class="form-control">
+										<option value="">--Select--</option>
+									</select>
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Vehicle Type</span>
+									</div>
+									{% render_field con_det_form.co_vehicletype id="co_vehicletype" class="form-control disable_a_href" %}
+								</div>
+							</div>
 
-    .consignment-modern-wrap .form-group-modern {
-        margin-bottom: 0.5rem !important;
-    }
-
-    .consignment-modern-wrap .form-label-modern {
-        margin-bottom: 0.2rem !important;
-        font-size: 0.72rem !important;
-    }
-    
-    .consignment-modern-wrap .modern-card {
-        padding: 1.25rem !important;
-        margin-bottom: 1rem !important;
-    }
-</style>
-
-<div class="consignment-modern-wrap">
-    <div class="modern-list-header mb-3">
-        <div class="d-flex align-items-center gap-3">
-            <i class="fas fa-file-invoice" style="font-size:1.4rem;"></i>
-            <h1 style="font-size:1.2rem; margin:0; font-weight:800; letter-spacing:1px;">Add / Update Consignment Details</h1>
-            <a href="{% url 'consignmentdetail_insert' %}" class="btn-modern btn-submit ms-2" style="font-size:0.8rem; padding:0.4rem 1rem;">
-                <i class="fas fa-plus me-1"></i> New
-            </a>
-        </div>
-        <div>
-            {% if has_invoice_or_ewaybill %}
-            <button type="button" class="btn-modern btn-submit"
-                onclick="window.open('{% url 'consignment_note_pdf' consignmentdetail_id %}', '_blank');"
-                style="background: linear-gradient(135deg,#f59e0b,#ea580c); font-size:0.8rem; padding:0.4rem 1rem;">
-                <i class="fas fa-download me-1"></i> Consignment Note
-            </button>
-            {% else %}
-            <button class="btn-modern btn-cancel" disabled style="opacity:0.5; cursor:not-allowed; font-size:0.8rem; padding:0.4rem 1rem;">
-                <i class="fas fa-download me-1"></i> Consignment Note
-            </button>
-            {% endif %}
-        </div>
-    </div>
-
-<!-- ── Consignment Details Card ───────────────────────────────────────── -->
-<div class="modern-card" id="consignment_details_id">
-    <div class="form-section-title mb-4" style="color: var(--accent-orange); border-bottom: 2px solid var(--border-light); padding-bottom: 10px;">
-        <i class="fas fa-clipboard-list me-2"></i> Consignment Details
-    </div>
-
-    <form method="POST" action="">
-        {% csrf_token %}
-
-        <div class="row g-3">
-
-            <!-- Col 1 -->
-            <div class="col-md-3">
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">Enquiry Number</label>
-                    {% render_field con_det_form.co_enquirynumber id="co_enquirynumber" class="form-control form-control-modern disable_a_href" %}
-                </div>
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">Consignment Number</label>
-                    {% render_field con_det_form.co_consignmentnumber id="co_consignmentnumber" class="form-control form-control-modern disable_a_href" %}
-                </div>
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">Vehicle Number</label>
-                    <select id="co_vehicelnumber" name="co_vehicelnumber" onfocus="vehicle_allotted()"
-                        class="form-control form-control-modern">
-                        <option value="">--Select--</option>
-                    </select>
-                </div>
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">Vehicle Type</label>
-                    {% render_field con_det_form.co_vehicletype id="co_vehicletype" class="form-control form-control-modern disable_a_href" %}
-                </div>
-            </div>
-
-            <!-- Col 2 -->
-            <div class="col-md-3">
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">Customer</label>
-                    {% render_field con_det_form.co_customer id="co_customer" class="form-control form-control-modern disable_a_href" %}
-                </div>
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">Customer Code</label>
-                    {% render_field con_det_form.co_customercode id="co_customercode" class="form-control form-control-modern disable_a_href" %}
-                </div>
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">Customer Reference No.</label>
-                    <div class="d-flex gap-2">
-                        {% render_field con_det_form.co_cusrefnum class="form-control form-control-modern" %}
-                        {% render_field con_det_form.co_cusrefnum_check id="co_cusrefnum_check" class="form-control form-control-modern" style="max-width:60px;" %}
-                    </div>
-                </div>
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">Consignment Note Date</label>
-                    {% render_field con_det_form.co_consignmentdate type="Date" class="form-control form-control-modern" %}
-                </div>
-            </div>
-
-            <!-- Col 3 -->
-            <div class="col-md-3">
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">Freight Amount (INR)</label>
-                    {% render_field con_det_form.co_freight_amount id="co_freight_amount" class="form-control form-control-modern" %}
-                </div>
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">GST Payable By</label>
-                    {% render_field con_det_form.co_gst_payable_by id="co_gst_payable_by" class="form-control form-control-modern" %}
-                </div>
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">Seal No</label>
-                    {% render_field con_det_form.co_seal_number id="co_seal_number" class="form-control form-control-modern" %}
-                </div>
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">Smart Lock No</label>
-                    {% render_field con_det_form.co_smart_lock_number id="co_smart_lock_number" class="form-control form-control-modern" %}
-                </div>
-            </div>
-
-            <!-- Col 4 -->
-            <div class="col-md-3">
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">Container Number</label>
-                    {% render_field con_det_form.co_container_number id="co_container_number" class="form-control form-control-modern disable_a_href" %}
-                </div>
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">Container Description</label>
-                    {% render_field con_det_form.co_containerdescription id="co_containerdescription" class="form-control form-control-modern disable_a_href" %}
-                </div>
-                <div class="form-group-modern mb-3">
-                    <label class="form-label-modern">Status</label>
-                    {% render_field con_det_form.co_status class="form-control form-control-modern" id="consignment_status" %}
-                </div>
-                {% render_field con_det_form.co_lastmodifiedby id="co_lastmodifiedby" hidden="True" class="form-control" %}
-            </div>
-        </div>
-
-        <!-- Remarks -->
-        <div class="form-group-modern mb-2">
-            <label class="form-label-modern">Remarks</label>
-            {% render_field con_det_form.co_remarks class="form-control form-control-modern" id="co_remarks" %}
-        </div>
-
-        <!-- Messages -->
-        {% if messages %}
-        <div class="mb-3">
-            {% for message in messages %}
-            <div class="alert {% if message.tags %}{{ message.tags }}{% endif %} text-center">{{ message }}</div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        <!-- Action Buttons -->
-        <div class="d-flex justify-content-between align-items-center mt-2">
-            <button type="submit" class="btn-modern btn-submit" id="consignment_details_submit">
-                <i class="fas fa-check me-1"></i> Submit
-            </button>
-            <a href="{% url 'enquirynote_list' %}" class="btn-modern btn-cancel">
-                <i class="fas fa-times me-1"></i> Cancel
-            </a>
-        </div>
-    </form>
+							<div class="col-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer</span>
+									</div>
+									{% render_field con_det_form.co_customer id="co_customer" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Customer code</span>
+									</div>
+									{% render_field con_det_form.co_customercode id="co_customercode" class="form-control disable_a_href" %}
+								</div>
+								<div class="row">
+									<div class="col-10">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text">Customer Reference No.</span>
+											</div>
+											{% render_field con_det_form.co_cusrefnum class="form-control" %}
+										</div>
+									</div>
+									<div class="col-2">
+										<div class="input-group input-group-sm mb-3">
+											<div class="input-group-prepend">
+											</div>
+											{% render_field con_det_form.co_cusrefnum_check id="co_cusrefnum_check" class="form-control" %}
+										</div>
+									</div>
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Consignment Note Date</span>
+									</div>
+									{% render_field con_det_form.co_consignmentdate type="Date" class="form-control" %}
+								</div>
+							</div>
+							<div class="col-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Freight Amount (INR)</span>
+									</div>
+									{% render_field con_det_form.co_freight_amount id="co_freight_amount" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">GST Payable By</span>
+									</div>
+									{% render_field con_det_form.co_gst_payable_by id="co_gst_payable_by" class="form-control" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Seal No</span>
+									</div>
+									{% render_field con_det_form.co_seal_number id="co_seal_number" class="form-control " %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Smart Lock No</span>
+									</div>
+									{% render_field con_det_form.co_smart_lock_number id="co_smart_lock_number" class="form-control " %}
+								</div>
+							</div>
+							<div class="col-3">
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Container Number</span>
+									</div>
+									{% render_field con_det_form.co_container_number id="co_container_number" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Container Description</span>
+									</div>
+									{% render_field con_det_form.co_containerdescription id="co_containerdescription" class="form-control disable_a_href" %}
+								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Status</span>
+									</div>
+									{% render_field con_det_form.co_status class="form-control" id="consignment_status" %}
+								</div>
+								{% render_field con_det_form.co_lastmodifiedby id="co_lastmodifiedby" hidden="True" class="form-control" %}
+							</div>
+							<div class="container-fluid input-group input-group-sm mb-3">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Remarks</span>
+								</div>
+								{% render_field con_det_form.co_remarks class="form-control" id="co_remarks" style="height: 60px;" %}
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-1"></div>
+							<div class="col-10">
+								<div class="message text-center">
+									{% for message in messages %}
+									<a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="col-1"></div>
+						</div>
+						<button type="submit" class="btn btn-success " id="consignment_details_submit"><i
+								class="fas fa-check"></i> Submit</button>
+						<a href="{% url 'enquirynote_list' %}" class="btn btn-danger float-right">
+							<i class="fas fa-times"></i> Cancel
+						</a>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
 
-<!-- ── Consignment Goods Section ─────────────────────────────────────── -->
-<div class="modern-card mt-4 p-0" style="overflow: hidden; border-radius: 20px;">
-    <div class="modern-list-header px-4 py-3 d-flex justify-content-between align-items-center" id="headingOne" style="margin-bottom: 0; border-radius: 0;">
-        <span class="text-white" style="cursor: pointer; font-size: 1.25rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-            <i class="fas fa-boxes"></i> Consignment Goods <i class="fas fa-angle-down" style="font-size: 0.95rem;"></i>
-        </span>
-        <a href="{% url 'consignmentgoods_insert' %}" id="add_goods_btn" class="btn-modern btn-submit py-2 px-4" style="font-size: 0.9rem; text-decoration: none; border-radius: 10px; background: var(--accent-emerald); box-shadow: 0 4px 15px rgba(20, 184, 166, 0.2);">
-            <i class="fas fa-plus"></i> Add Goods
-        </a>
-    </div>
-
-    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne">
-        <div class="p-4" style="background: var(--bg-card); color: var(--text-main);">
-            {% include "asset_mgt_app/consignmentgoods_add.html" %}
-        </div>
-    </div>
+<div class="accordion container-fluid" id="accordionExample">
+	<div class="card border-info">
+		<div class="card-header bg-info" id="headingOne">
+			<div class="d-flex align-items-center">
+				<h2 class="mb-0">
+					<button class="btn btn-link text-left text-white" type="button" data-toggle="collapse"
+						data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+						Add Consignment Goods <i class="fas fa-angle-down"></i>
+					</button>
+				</h2>
+				<a href="{% url 'consignmentgoods_insert' %}" class="btn btn-primary ml-3">
+					<i class="fas fa-plus"></i> Add
+				</a>
+			</div>
+		</div>
+		<div id="collapseOne" class="collapse-show" aria-labelledby="headingOne" data-parent="#accordionExample">
+			<div class="card-body">
+				{% include "asset_mgt_app/consignmentgoods_add.html" %}
+			</div>
+		</div>
+	</div>
 </div>
 
-<!-- ── Scripts (all original logic preserved) ────────────────────────── -->
 <script>
-    $(document).ready(function () {
-        document.getElementById("co_lastmodifiedby").value = '{{user_id}}';
-        document.getElementById("cg_lastmodifiedby").value = '{{user_id}}';
-        var enquiry_num_id = document.getElementById("co_enquirynumber").value;
-        document.getElementById("cg_consignmentnumber").value = '{{consignmentdetail_id}}';
-        if (enquiry_num_id == "") {
-            document.getElementById("co_enquirynumber").value = '{{enquiry_num_id}}';
-        } else {
-            document.getElementById("co_enquirynumber").value = enquiry_num_id;
+	$(document).ready(function () {
+		document.getElementById("co_lastmodifiedby").value = '{{user_id}}';
+		document.getElementById("cg_lastmodifiedby").value = '{{user_id}}';
+		var enquiry_num_id = document.getElementById("co_enquirynumber").value
+		document.getElementById("cg_consignmentnumber").value = '{{consignmentdetail_id}}';
+		if (enquiry_num_id == "") {
+			document.getElementById("co_enquirynumber").value = '{{enquiry_num_id}}';
+		}
+		else {
+			document.getElementById("co_enquirynumber").value = enquiry_num_id;
+		}
+		var customer = document.getElementById("co_customer").value
+		if (customer == "") {
+			document.getElementById("co_customer").value = '{{customer_id}}';
+		}
+		var customer_code = document.getElementById("co_customercode").value
+		if (customer_code == "") {
+			document.getElementById("co_customercode").value = '{{ customer_code }}';
+		}
+
+		var consignmentnumber = document.getElementById("co_consignmentnumber").value;
+		if (consignmentnumber == "") {
+			$('#consignment_goods_id').addClass('disable_a_href');
+		}
+		var consignment_num = document.getElementById("cg_consignmentnumber").value;
+		if (consignment_num == "") {
+			document.getElementById("cg_consignmentnumber").value = "{{consignment_detail_id}}";
+		}
+		else {
+			document.getElementById("cg_consignmentnumber").value = consignment_num;
+		}
+		vehicle_allotted();
+	});
+</script>
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+		if (window.location.href.includes("consignmentgoods_insert")) {
+			// Enable fields
+			$('#consignment_goods_id')
+				.removeClass('disable_a_href')
+				.prop('disabled', false);
+
+			$('#consignment_details_id')
+				.addClass('disable_a_href')
+				.prop('disabled', false);
+
+			$('#consignment_details_submit')
+				.addClass('disable_a_href')
+				.prop('disabled', false);
+		}
+		else if (window.location.href.includes("consignmentgoods_update")) {
+			// Enable fields
+			$('#consignment_goods_id')
+				.removeClass('disable_a_href')
+				.prop('disabled', false);
+		}
+		else {
+			// Disable fields if on any other page
+			$('#consignment_goods_id')
+				.addClass('disable_a_href')
+				.prop('disabled', true);
+		}
+	});
+</script>
+<script>
+	function vehicle_allotted() {
+		var enquiry_number = document.getElementById("co_enquirynumber").value.trim();
+		var consignmentdetail_id_val = '{{consignmentdetail_id}}';
+
+		if (!enquiry_number) {
+			console.warn("Enquiry number is empty. Skipping request.");
+			return;
+		}
+
+		$.ajax({
+			url: '{% url "vehicle_allotted" %}',
+			type: 'GET',
+			data: {
+				'enquiry_number': enquiry_number,
+				'consignmentdetail_id_val': consignmentdetail_id_val
+			},
+			success: function (data) {
+				var final_vehicle_list = data.final_vehicle_list || [];
+				var selectedVehicle = data.selected_vehicles || "";
+
+				var vehicleDropdown = $("#co_vehicelnumber");
+				vehicleDropdown.empty();
+				vehicleDropdown.append("<option value=''>--Select--</option>");
+
+				if (selectedVehicle && selectedVehicle !== "") {
+					$("#co_vehicelnumber").append(
+						"<option value='" + selectedVehicle + "' selected>" + selectedVehicle + "</option>"
+					);
+				}
+
+				final_vehicle_list.forEach(function (vehicle) {
+					if (vehicle !== selectedVehicle) {
+						$("#co_vehicelnumber").append(
+							"<option value='" + vehicle + "'>" + vehicle + "</option>");
+					}
+				});
+
+				bind_vehicle_type_fetch();
+				vehicleDropdown.trigger('change');
+			},
+			error: function (xhr, status, error) {
+				console.error("AJAX Error:", status, error);
+			}
+		});
+	}
+</script>
+<script>
+	const getVehicleTypeUrl = '{% url "get_vehicle_type" "VEHICLE_ID" %}';
+
+	function bind_vehicle_type_fetch() {
+		$('#co_vehicelnumber').off('change').on('change', function () {
+			const vehicleId = this.value;
+			if (vehicleId) {
+				const url = getVehicleTypeUrl.replace("VEHICLE_ID", vehicleId);
+
+				fetch(url)
+					.then(response => response.json())
+					.then(data => {
+						const vehicleType = data.vehicle_type || 'Not Found';
+						document.getElementById('co_vehicletype').value = vehicleType;
+
+						updateFieldsBasedOnVehicleType(vehicleType);
+					})
+					.catch(error => console.error("Error fetching vehicle type:", error));
+			}
+		});
+	}
+</script>
+<script>
+	function updateFieldsBasedOnVehicleType(vehicleType) {
+		// const sealField = $('#co_seal_number');
+		const containerNumberField = $('#co_container_number');
+		const containerDescriptionField = $('#co_containerdescription');
+
+		if (vehicleType.toLowerCase().includes('closed')) {
+			// sealField.prop('disabled', false).removeClass('disable_a_href');
+			containerNumberField.prop('disabled', true).addClass('disable_a_href');
+			containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
+		} else if (vehicleType.toLowerCase().includes('trailer')) {
+			// sealField.prop('disabled', false).removeClass('disable_a_href');
+			containerNumberField.prop('disabled', false).removeClass('disable_a_href');
+			containerDescriptionField.prop('disabled', false).removeClass('disable_a_href');
+		} else if (vehicleType.toLowerCase().includes('open')) {
+			// sealField.prop('disabled', true).addClass('disable_a_href');
+			containerNumberField.prop('disabled', true).addClass('disable_a_href');
+			containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
+		} else {
+			// sealField.prop('disabled', true).addClass('disable_a_href');
+			containerNumberField.prop('disabled', true).addClass('disable_a_href');
+			containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
+		}
+	}
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const form = document.querySelector("form");
+    const vehicleSelect = document.getElementById("co_vehicelnumber");
+
+    form.addEventListener("submit", function (e) {
+
+        if (!vehicleSelect.value || vehicleSelect.value.trim() === "") {
+            e.preventDefault();   // stop submit
+
+            alert("Please select Vehicle Number before submitting.");
+
+            vehicleSelect.focus();
+            return false;
         }
-        var customer = document.getElementById("co_customer").value;
-        if (customer == "") {
-            document.getElementById("co_customer").value = '{{customer_id}}';
-        }
-        var customer_code = document.getElementById("co_customercode").value;
-        if (customer_code == "") {
-            document.getElementById("co_customercode").value = '{{ customer_code }}';
-        }
-        var consignmentnumber = document.getElementById("co_consignmentnumber").value;
-        if (consignmentnumber == "") {
-            $('#consignment_goods_id').addClass('disable_a_href');
-            $('#add_goods_btn').addClass('disable_a_href').prop('disabled', true);
-        }
-        var consignment_num = document.getElementById("cg_consignmentnumber").value;
-        if (consignment_num == "") {
-            document.getElementById("cg_consignmentnumber").value = "{{consignment_detail_id}}";
-        } else {
-            document.getElementById("cg_consignmentnumber").value = consignment_num;
-        }
-        vehicle_allotted();
     });
+
+});
 </script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        if (window.location.href.includes("consignmentgoods_insert")) {
-            $('#consignment_goods_id').removeClass('disable_a_href').prop('disabled', false);
-            $('#add_goods_btn').removeClass('disable_a_href').prop('disabled', false);
-            $('#consignment_details_id').addClass('disable_a_href').prop('disabled', false);
-            $('#consignment_details_submit').addClass('disable_a_href').prop('disabled', false);
-        } else if (window.location.href.includes("consignmentgoods_update")) {
-            $('#consignment_goods_id').removeClass('disable_a_href').prop('disabled', false);
-            $('#add_goods_btn').removeClass('disable_a_href').prop('disabled', false);
-        } else {
-            $('#consignment_goods_id').addClass('disable_a_href').prop('disabled', true);
-        }
-    });
-</script>
-<script>
-    function vehicle_allotted() {
-        var enquiry_number = document.getElementById("co_enquirynumber").value.trim();
-        var consignmentdetail_id_val = '{{consignmentdetail_id}}';
-        if (!enquiry_number) return;
-        $.ajax({
-            url: '{% url "vehicle_allotted" %}',
-            type: 'GET',
-            data: { 'enquiry_number': enquiry_number, 'consignmentdetail_id_val': consignmentdetail_id_val },
-            success: function (data) {
-                var final_vehicle_list = data.final_vehicle_list || [];
-                var selectedVehicle = data.selected_vehicles || "";
-                var vehicleDropdown = $("#co_vehicelnumber");
-                vehicleDropdown.empty();
-                vehicleDropdown.append("<option value=''>--Select--</option>");
-                if (selectedVehicle && selectedVehicle !== "") {
-                    $("#co_vehicelnumber").append("<option value='" + selectedVehicle + "' selected>" + selectedVehicle + "</option>");
-                }
-                final_vehicle_list.forEach(function (vehicle) {
-                    if (vehicle !== selectedVehicle) {
-                        $("#co_vehicelnumber").append("<option value='" + vehicle + "'>" + vehicle + "</option>");
-                    }
-                });
-                bind_vehicle_type_fetch();
-                vehicleDropdown.trigger('change');
-            },
-            error: function (xhr, status, error) { console.error("AJAX Error:", status, error); }
-        });
-    }
-</script>
-<script>
-    const getVehicleTypeUrl = '{% url "get_vehicle_type" "VEHICLE_ID" %}';
-    function bind_vehicle_type_fetch() {
-        $('#co_vehicelnumber').off('change').on('change', function () {
-            const vehicleId = this.value;
-            if (vehicleId) {
-                const url = getVehicleTypeUrl.replace("VEHICLE_ID", vehicleId);
-                fetch(url)
-                    .then(response => response.json())
-                    .then(data => {
-                        const vehicleType = data.vehicle_type || 'Not Found';
-                        document.getElementById('co_vehicletype').value = vehicleType;
-                        updateFieldsBasedOnVehicleType(vehicleType);
-                    })
-                    .catch(error => console.error("Error fetching vehicle type:", error));
-            }
-        });
-    }
-</script>
-<script>
-    function updateFieldsBasedOnVehicleType(vehicleType) {
-        const containerNumberField = $('#co_container_number');
-        const containerDescriptionField = $('#co_containerdescription');
-        if (vehicleType.toLowerCase().includes('closed')) {
-            containerNumberField.prop('disabled', true).addClass('disable_a_href');
-            containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
-        } else if (vehicleType.toLowerCase().includes('trailer')) {
-            containerNumberField.prop('disabled', false).removeClass('disable_a_href');
-            containerDescriptionField.prop('disabled', false).removeClass('disable_a_href');
-        } else if (vehicleType.toLowerCase().includes('open')) {
-            containerNumberField.prop('disabled', true).addClass('disable_a_href');
-            containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
-        } else {
-            containerNumberField.prop('disabled', true).addClass('disable_a_href');
-            containerDescriptionField.prop('disabled', true).addClass('disable_a_href');
-        }
-    }
-</script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const form = document.querySelector("form");
-        const vehicleSelect = document.getElementById("co_vehicelnumber");
-        form.addEventListener("submit", function (e) {
-            if (!vehicleSelect.value || vehicleSelect.value.trim() === "") {
-                e.preventDefault();
-                alert("Please select Vehicle Number before submitting.");
-                vehicleSelect.focus();
-                return false;
-            }
-        });
-    });
-</script>
-</div>
+
 {% endblock content %}
