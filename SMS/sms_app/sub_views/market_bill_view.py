@@ -237,8 +237,8 @@ def market_bill_edit(request, id):
                 standard_cost = float(allotment.va_standardbuy or 0)
                 special_cost = float(allotment.va_specialbuy or 0)
 
-                # Refinement: Try to fetch the rate from VendorratemasterInfo1 using Cnote details if available
-                if trip.tr_consignmentnumber and allotment.va_vendor:
+                # Refinement: Only use vendor rate master as a FALLBACK when va_specialbuy is not set
+                if special_cost == 0 and trip.tr_consignmentnumber and allotment.va_vendor:
                     cnote = trip.tr_consignmentnumber
                     v_type_id = trip.tr_vehicletype_id or trip.tr_vehicletype_placed_id
                     if v_type_id:
@@ -254,9 +254,8 @@ def market_bill_edit(request, id):
                         ).first()
                         if rate_obj:
                             special_cost = float(rate_obj.vr1_rate)
-                            # Always update standard_cost to match master rate if master rate is found
-                            # This prevents incorrect red highlighting when the master rate is the intended standard
-                            standard_cost = special_cost
+                            if standard_cost == 0:
+                                standard_cost = special_cost
 
             # Determine current halting rate from Master Data
             halting_rate = 0.0
@@ -430,8 +429,8 @@ def get_trips_by_vendor(request):
             standard_cost = float(allotment.va_standardbuy or 0)
             special_cost = float(allotment.va_specialbuy or 0)
 
-            # Refinement: Try to fetch the rate from VendorratemasterInfo1 using Cnote details if available
-            if trip.tr_consignmentnumber and allotment.va_vendor:
+            # Refinement: Only use vendor rate master as a FALLBACK when va_specialbuy is not set
+            if special_cost == 0 and trip.tr_consignmentnumber and allotment.va_vendor:
                 cnote = trip.tr_consignmentnumber
                 v_type_id = trip.tr_vehicletype_id or trip.tr_vehicletype_placed_id
                 if v_type_id:
@@ -447,9 +446,8 @@ def get_trips_by_vendor(request):
                     ).first()
                     if rate_obj:
                         special_cost = float(rate_obj.vr1_rate)
-                        # Always update standard_cost to match master rate if master rate is found
-                        # This prevents incorrect red highlighting when the master rate is the intended standard
-                        standard_cost = special_cost
+                        if standard_cost == 0:
+                            standard_cost = special_cost
 
         # --- Halting Cost Logic ---
         # Fetch halting rate based on customer and trip type

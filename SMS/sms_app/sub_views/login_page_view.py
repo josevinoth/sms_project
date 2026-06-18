@@ -43,6 +43,7 @@ def login_page(request):
         if user is not None:
             print(f"[login_page] Authentication successful for user '{username}'")  # Debug print
             # Login successful - set sessions
+            login(request, user)
             request.session['ses_userID'] = user_obj.id
             request.session['first_name'] = f"{user_obj.first_name} {user_obj.last_name}"
             request.session['ses_department_id'] = user_ext.department.id if user_ext.department else None
@@ -60,7 +61,6 @@ def login_page(request):
                 except UnitInfo.DoesNotExist:
                     request.session['ses_unit_name'] = None
 
-            login(request, user)
             return redirect('home_page')
         else:
             print(f"[login_page] Authentication failed for user '{username}'")  # Debug print
