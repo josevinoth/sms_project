@@ -261,3 +261,4 @@ from .sub_models.pk_quality_check_mod import PkQualityCheck, PkQualityCheckItem
 from .sub_models.pk_tool_master_mod import PkToolMaster
 from .sub_models.deletion_log_mod import DeletionLog
 from .sub_models.pk_production_return_mod import PkProductionReturn
+from .sub_models.vendor_description_mod import Vendor_description
