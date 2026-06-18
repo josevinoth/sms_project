@@ -7,7 +7,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
 from ..forms import ConsignmentgoodsaddForm, ConsignmentdetailaddForm
-from ..models import EnquirynoteInfo, ConsignmentgoodsInfo, ConsignmentdetailInfo, Stock_type, ConsigneeInfo, ConsignerInfo
+from ..models import EnquirynoteInfo, ConsignmentgoodsInfo, ConsignmentdetailInfo, Stock_type, ConsigneeInfo, \
+    ConsignerInfo
 
 
 @login_required(login_url='login_page')
@@ -30,7 +31,6 @@ def consignee_select2_search(request):
     return JsonResponse({'results': results})
 
 
-
 @login_required(login_url='login_page')
 def consignmentgoods_add(request, consignmentgoods_id=0):
     first_name = request.session.get('first_name')
@@ -48,19 +48,13 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
         )
         if consignmentgoods_id == 0:
             form = ConsignmentgoodsaddForm(initial={'cg_consignmentnumber': consignment_detail_id})
-            try:
-                consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
-                con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
-            except ConsignmentdetailInfo.DoesNotExist:
-                con_det_form = ConsignmentdetailaddForm()
+            consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
+            con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
 
         else:
             consignmentgoods = ConsignmentgoodsInfo.objects.get(pk=consignmentgoods_id)
-            try:
-                consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
-                con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
-            except ConsignmentdetailInfo.DoesNotExist:
-                con_det_form = ConsignmentdetailaddForm()
+            consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
+            con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
             form = ConsignmentgoodsaddForm(instance=consignmentgoods)
             form.fields['cg_description'].queryset = Stock_type.objects.all()
         context = {
@@ -95,29 +89,32 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
                     error_messages.append(f"{field.label}: {error}")
             for error in form.non_field_errors():
                 error_messages.append(error)
-            
+
             if error_messages:
                 error_text = " | ".join(error_messages)
                 messages.error(request, f'Record Not Updated Successfully. Reason: {error_text}')
             else:
                 messages.error(request, 'Record Not Updated Successfully')
-                
+
             return redirect(request.META['HTTP_REFERER'])
+
 
 # List consignmentgoods
 @login_required(login_url='login_page')
 def consignmentgoods_list(request):
     first_name = request.session.get('first_name')
     consignmentgoods_id_val = request.session.get('ses_consignment_id')
-    consignmentgoods_list=ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignmentgoods_id_val)
+    consignmentgoods_list = ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignmentgoods_id_val)
     context = {
-        'consignmentgoods_list' : consignmentgoods_list,
+        'consignmentgoods_list': consignmentgoods_list,
         'first_name': first_name,
     }
     return render(request, "asset_mgt_app/consignmentgoods_list.html", context)
-#Delete consignmentgoods
+
+
+# Delete consignmentgoods
 @login_required(login_url='login_page')
-def consignmentgoods_delete(request,consignmentgoods_id):
+def consignmentgoods_delete(request, consignmentgoods_id):
     consignmentgoods = ConsignmentgoodsInfo.objects.get(pk=consignmentgoods_id)
     consignmentgoods.delete()
     # return redirect('/SMS/consignmentgoods_list')
@@ -125,11 +122,11 @@ def consignmentgoods_delete(request,consignmentgoods_id):
 
 
 @login_required(login_url='login_page')
-def consignmentgoods_nav(request,consignmentdetails_id):
+def consignmentgoods_nav(request, consignmentdetails_id):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     consignmentgoods_id = ConsignmentdetailInfo.objects.get(pk=consignmentdetails_id).id
-    request.session['ses_consignment_id']=consignmentgoods_id
+    request.session['ses_consignment_id'] = consignmentgoods_id
     form = ConsignmentgoodsaddForm(request.POST)
     context = {
         'first_name': first_name,
@@ -140,19 +137,21 @@ def consignmentgoods_nav(request,consignmentdetails_id):
     }
     return render(request, "asset_mgt_app/consignmentgoods_nav.html", context)
 
+
 @login_required(login_url='login_page')
 def consignmentgoods_cancel(request):
     consignmentgoods_id_val = request.session.get('ses_consignment_id')
-    enquirynote_num=ConsignmentdetailInfo.objects.get(id=consignmentgoods_id_val).co_enquirynumber
-    enquirynote_id=EnquirynoteInfo.objects.get(en_enquirynumber=enquirynote_num).id
+    enquirynote_num = ConsignmentdetailInfo.objects.get(id=consignmentgoods_id_val).co_enquirynumber
+    enquirynote_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquirynote_num).id
     # return redirect('/SMS/consignmentdetail_nav/' + str(enquirynote_id))
     return redirect('/SMS/consignmentgoods_nav/' + str(consignmentgoods_id_val))
+
 
 @login_required(login_url='login_page')
 def consignmentgoods_back(request):
     consignmentgoods_id_val = request.session.get('ses_consignment_id')
-    enquirynote_num=ConsignmentdetailInfo.objects.get(id=consignmentgoods_id_val).co_enquirynumber
-    enquirynote_id=EnquirynoteInfo.objects.get(en_enquirynumber=enquirynote_num).id
+    enquirynote_num = ConsignmentdetailInfo.objects.get(id=consignmentgoods_id_val).co_enquirynumber
+    enquirynote_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquirynote_num).id
     return redirect('/SMS/consignmentdetail_nav/' + str(enquirynote_id))
     # return redirect('/SMS/consignmentgoods_nav/' + str(consignmentgoods_id_val))
 
@@ -185,16 +184,17 @@ def add_consigner(request):
 
     return JsonResponse({"success": False, "error": "Invalid request."})
 
+
 @csrf_exempt
 def add_consignee(request):
     if request.method == "POST":
         name = request.POST.get("name", "").strip()
         address = request.POST.get("address", "").strip()
         country_code = request.POST.get("country_code", "").strip()
-        
+
         if not name:
             return JsonResponse({"success": False, "error": "Consignee name cannot be empty."})
-        
+
         existing = ConsigneeInfo.objects.filter(consignee_name__iexact=name).first()
         if existing:
             return JsonResponse({
@@ -203,14 +203,14 @@ def add_consignee(request):
                 "name": existing.consignee_name,
                 "error": "This consignee already exists."
             })
-        
+
         new = ConsigneeInfo.objects.create(
             consignee_name=name,
             consignee_address=address if address else None,
             consignee_country_code=country_code if country_code else None
         )
         return JsonResponse({"success": True, "id": new.id, "name": new.consignee_name})
-    
+
     return JsonResponse({"success": False, "error": "Invalid request"})
 
 
@@ -234,6 +234,7 @@ def consignmentgoods_upload_attachment(request, pk, att_type):
         messages.error(request, 'Attachment upload failed. Please try again.')
 
     return redirect(request.META.get('HTTP_REFERER', 'consignmentgoods_list'))
+
 
 @csrf_exempt
 def consignmentgoods_delete_attachment(request, pk, att_type):
