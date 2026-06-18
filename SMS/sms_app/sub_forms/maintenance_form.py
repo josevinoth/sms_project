@@ -3,6 +3,8 @@ from ..sub_models.maintenance_mod import MaintenanceInfo
 from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
 from ..sub_models.driver_master_mod import DrivermasterInfo
 from ..sub_models.branch_mod import Branch
+from ..sub_models.vendor_info_mod import Vendor_info
+from ..sub_models.vendor_description_mod import Vendor_description
 
 
 class MaintenanceForm(forms.ModelForm):
@@ -26,6 +28,16 @@ class MaintenanceForm(forms.ModelForm):
         required=False,
         widget=forms.Select(attrs={"class": "form-control"}),
         label='Driver'
+    )
+
+    mi_vendor = forms.ModelChoiceField(
+        queryset=Vendor_info.objects.filter(
+            vend_description_id=2
+        ).order_by('vend_name'),
+        empty_label='-- Select Vendor --',
+        required=False,
+        widget=forms.Select(attrs={"class": "form-control", "id": "mi_vendor"}),
+        label='Vendor'
     )
 
     mi_est_delivery = forms.DateTimeField(

@@ -10,3 +10,4 @@ class VendoraddForm(forms.ModelForm):
         self.fields['vend_branch'].empty_label = "--Select--"
         self.fields['vend_service_type'].empty_label = "--Select--"
         self.fields['vend_status'].empty_label = "--Select--"
+        self.fields['vend_description'].empty_label = "--Select--"
