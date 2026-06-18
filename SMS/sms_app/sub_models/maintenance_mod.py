@@ -5,6 +5,7 @@ from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
 from ..sub_models.driver_master_mod import DrivermasterInfo
 from ..sub_models.maintenance_status_mod import Maintenance_status
 from ..sub_models.complaint_type_mod import Complaint_type
+from ..sub_models.vendor_info_mod import Vendor_info
 
 class MaintenanceInfo(models.Model):
     mi_vehicle = models.ForeignKey(VehiclemasterInfo,on_delete=models.PROTECT,related_name="maintenance_records")
@@ -17,6 +18,7 @@ class MaintenanceInfo(models.Model):
     mi_total_km_run = models.PositiveIntegerField()
     mi_service_type = models.CharField(max_length=50)
     mi_driver_name = models.ForeignKey(DrivermasterInfo,on_delete=models.PROTECT,null=True,blank=True)
+    mi_vendor = models.ForeignKey(Vendor_info, on_delete=models.SET_NULL, null=True, blank=True)
     mi_est_delivery = models.DateTimeField()
     mi_work_area = models.CharField(max_length=100)
     mi_job_card_creator = models.CharField(max_length=100)
