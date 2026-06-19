@@ -605,7 +605,7 @@
             .catch(err => console.error("Error fetching vendor PAN:", err));
 
         // ---- Load trips for the selected vendor ----
-        fetch("{% url 'get_trips_by_vendor' %}?vendor_id=" + vendorId)
+        fetch("{% url 'get_trips_by_vendor' %}?vendor_id=" + vendorId + "&_t=" + new Date().getTime())
             .then(res => res.json())
             .then(data => {
                 const availableTrips = data.trips.filter(t => !selectedTripIds.has(t.id.toString()));

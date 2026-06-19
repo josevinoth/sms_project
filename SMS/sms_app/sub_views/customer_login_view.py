@@ -110,6 +110,7 @@ def customer_login(request, business_id):
 
             user = authenticate(request, username=customer_id, password=password)
             if user is not None:
+                login(request, user)
                 request.session['ses_userID'] = user_obj.id
                 request.session['first_name'] = f"{user_obj.first_name} {user_obj.last_name}"
                 
@@ -129,7 +130,6 @@ def customer_login(request, business_id):
                 request.session['ses_role'] = user_ext.emp_role.role_name if user_ext.emp_role else None
                 request.session['ses_organisation_id'] = user_org_id
 
-                login(request, user)
                 return redirect('customer_dashboard')
             else:
                 messages.error(request, 'Customer ID or Password is incorrect')
@@ -223,6 +223,7 @@ def customer_login(request, business_id):
 
             user = authenticate(request, username=agent_name, password=password)
             if user is not None:
+                login(request, user)
                 request.session['ses_userID'] = user_obj.id
                 request.session['first_name'] = f"{user_obj.first_name} {user_obj.last_name}"
                 request.session['ses_department_id'] = user_ext.department.id if user_ext.department else None
@@ -232,7 +233,6 @@ def customer_login(request, business_id):
                 request.session['ses_organisation_id'] = user_org_id
                 request.session['agent_selected_customer_id'] = cust.id
 
-                login(request, user)
                 return redirect('customer_dashboard')
             else:
                 messages.error(request, 'Agent name or Password is incorrect')

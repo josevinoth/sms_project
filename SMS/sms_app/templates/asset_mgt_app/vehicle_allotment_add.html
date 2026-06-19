@@ -523,7 +523,7 @@ function setDateFieldValue(selector, value) {
 	});
 </script>
 <script>
-function loadVendorBuyRate() {
+function loadVendorBuyRate(isAutoLoad=false) {
     var vehicleRequested = $('#va_vehicletype').val();
     var vehiclePlaced = $('#va_vehicletype_placed').val();
     var selectedType = $('#chk_requested').is(':checked') ? vehicleRequested : vehiclePlaced;
@@ -538,9 +538,15 @@ function loadVendorBuyRate() {
             vehicle_id: selectedType
         },
         success: function(data) {
-            $("#va_standardbuy").val(data.standard_buy);
-            $("#va_specialbuy").val(data.special_buy);
-            calculateProfit();
+            if (data.standard_buy > 0 || !isAutoLoad) {
+                if (!isAutoLoad || !$("#va_standardbuy").val() || $("#va_standardbuy").val() === "0" || $("#va_standardbuy").val() === "0.0") {
+                    var stdBuy = data.standard_buy || "";
+                    var spcBuy = data.special_buy || "";
+                    if (!isAutoLoad || stdBuy) $("#va_standardbuy").val(stdBuy);
+                    if (!isAutoLoad || spcBuy) $("#va_specialbuy").val(spcBuy);
+                    calculateProfit();
+                }
+            }
         }
     });
 }
@@ -850,13 +856,7 @@ $(document).ready(function () {
     const vendor = $("#va_vendor").val();
     const placed = $("#va_vehicletype_placed").val();
     if (source === 3 && vendor && placed) {
-        loadVendorBuyRate();
-    }
-    if ($("#chk_requested").is(":checked")) {
-        loadVendorSaleRate("chk_requested");
-    }
-    if ($("#chk_placed").is(":checked")) {
-        loadVendorSaleRate("chk_placed");
+        loadVendorBuyRate(true);
     }
 });
 </script>
