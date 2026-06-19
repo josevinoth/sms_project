@@ -1118,6 +1118,7 @@ urlpatterns = [
     path('vendor_bills_pending_mkt_att_report/', views.vendor_bills_pending_mkt_att_report_view, name='vendor_bills_pending_mkt_att_report'),
     path('maintenance_bill_add/', views.maintenance_bill_add, name='maintenance_bill_add'),
     path('maintenance_bill_list/', views.maintenance_bill_list, name='maintenance_bill_list'),
+    path('maintenance_bill_export_tally/', views.maintenance_bill_export_tally, name='maintenance_bill_export_tally'),
     path('maintenance_bill/<int:id>/edit/', views.maintenance_bill_edit, name='maintenance_bill_edit'),
     path('maintenance_bill/<int:id>/delete/', views.maintenance_bill_delete, name='maintenance_bill_delete'),
     path('attached_bill_list/', views.attached_bill_list, name='attached_bill_list'),
