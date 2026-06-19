@@ -105,6 +105,19 @@ def fetch_maintenance_bill_details(request):
             advance_val = float(maintenance.mi_advance) if maintenance.mi_advance else 0
         except (ValueError, TypeError):
             advance_val = 0
+            
+        tds_type = ""
+        pan = ""
+        if maintenance.mi_technician:
+            from ..sub_models.vendor_info_mod import Vendor_info
+            vendor = Vendor_info.objects.filter(vend_name__iexact=maintenance.mi_technician).first()
+            if vendor and vendor.vend_pan:
+                pan = vendor.vend_pan.strip().upper()
+                if len(pan) >= 4 and pan[3] in ('C', 'F'):
+                    tds_type = 'Company'
+                else:
+                    tds_type = 'Non company'
+                    
         data = {
             "vehicle_no": maintenance.mi_vehicle.vm_registrationnumber,
             "vehicle_type": maintenance.mi_vehicle.vm_vehicletype.vt_vehicletype if maintenance.mi_vehicle.vm_vehicletype else "N/A",
@@ -113,6 +126,8 @@ def fetch_maintenance_bill_details(request):
             "vendor_name": maintenance.mi_technician if maintenance.mi_technician else "N/A",
             "technician": maintenance.mi_technician,
             "advance": advance_val,
+            "tds_type": tds_type,
+            "pan": pan,
         }
         return JsonResponse(data)
     except MaintenanceInfo.DoesNotExist:
@@ -149,3 +164,89 @@ def get_maintenance_records_by_vehicle(request):
         })
     
     return JsonResponse({"records": data})
+
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from django.http import HttpResponse
+
+@login_required(login_url='login_page')
+def maintenance_bill_export_tally(request):
+    from_date = request.GET.get('from_date', '')
+    to_date = request.GET.get('to_date', '')
+
+    bills = MaintenanceBillInfo.objects.all().order_by('mnb_bill_date')
+    if from_date:
+        bills = bills.filter(mnb_bill_date__gte=from_date)
+    if to_date:
+        bills = bills.filter(mnb_bill_date__lte=to_date)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Tally Export"
+
+    headers = [
+        "VOUCHER NUMBER", "DATE", "REF NO.", "SUNDRY CREDITOR", "TOTAL AMT",
+        "EXPENSES LEDGER", "AMOUNT", "Primary Cost Category", "Job No", 
+        "Vehicle No", "Customer", "TDS LEDGER", "TDS AMOUNT", "NARRATION"
+    ]
+    ws.append(headers)
+
+    header_font = Font(bold=True)
+    header_fill = PatternFill("solid", fgColor="B2FFFF")
+    for cell in ws[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center")
+
+    expense_fill = PatternFill("solid", fgColor="FFE5CC")
+    
+    for bill in bills:
+        maintenance = bill.mnb_maintenance
+        
+        voucher_number = bill.get_voucher_number
+        bill_date = bill.mnb_bill_date.strftime("%d-%m-%Y") if bill.mnb_bill_date else ""
+        ref_no = bill.mnb_bill_no or ""
+        vendor_name = maintenance.mi_technician or ""
+        total_amt = float(bill.mnb_amount_payable or bill.mnb_total_amount or 0)
+        expense_amt = float(bill.mnb_bill_amount_taxable or 0)
+        expense_ledger = bill.mnb_expenses_type or "Vehicle Maintenance"
+        
+        tds_amount = float(bill.mnb_tds_amount or 0)
+        tds_ledger = ""
+        try:
+            tds_type = (bill.mnb_tds_type or '').strip()
+            if tds_amount > 0:
+                if tds_type == 'Company':
+                    tds_ledger = "TDS Payable 194C (Company)"
+                else:
+                    tds_ledger = "TDS Payable 194C (Non Company)"
+        except Exception:
+            tds_ledger = "TDS Payable 194C (Non Company)" if tds_amount > 0 else ""
+        
+        service_type = maintenance.mi_service_type or "service"
+        month_str_narration = bill.mnb_bill_date.strftime('%b%y') if bill.mnb_bill_date else ""
+        rec_date_str = bill.mnb_created_at.strftime('%d-%b-%y') if bill.mnb_created_at else ""
+        narration = f"being {service_type} done for the month of {month_str_narration} (Bill received on -{rec_date_str})"
+        
+        job_no = "NA(J)"
+        vehicle_no = maintenance.mi_vehicle.vm_registrationnumber if maintenance.mi_vehicle else ""
+        customer_name = "NA(C)"
+        
+        primary_cost_cat = "MAA - OWN"
+        if vehicle_no and vehicle_no.upper().startswith("KA"):
+            primary_cost_cat = "BLR - OWN"
+        elif vehicle_no and vehicle_no.upper().startswith("TN"):
+            primary_cost_cat = "MAA - OWN"
+        
+        row = [
+            voucher_number, bill_date, ref_no, vendor_name, total_amt,
+            expense_ledger, expense_amt, primary_cost_cat, job_no,
+            vehicle_no, customer_name, tds_ledger, tds_amount if tds_amount else "", narration
+        ]
+        ws.append(row)
+        ws.cell(row=ws.max_row, column=6).fill = expense_fill
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="Maintenance_Bill_Tally_Export.xlsx"'
+    wb.save(response)
+    return response
