@@ -837,7 +837,33 @@ def get_remaining_quantity(request, enquiry_id, vehicle_type_id):
         return JsonResponse({'remaining': 0, 'error': str(e)})
 
 
+@login_required(login_url='login_page')
+def get_vendor_buy_rate(request):
+    vehicle_id = request.GET.get('vehicle_id')  # This is actually a vehicle type ID, not the Vehicle_allotmentInfo ID
+    vendor_id = request.GET.get('vendor_id')
+    enquiry_id = request.GET.get('enquiry_id')  # ✅ NO SESSION
 
+    print("vehicle_id:", vehicle_id)
+    print("vendor_id:", vendor_id)
+    print("enquiry_id:", enquiry_id)
+
+    enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)
+
+    # Filter for the matching vendor rate
+    rate = VendorratemasterInfo1.objects.filter(
+        vr1_vendor_id=vendor_id,
+        vr1_fromlocation=enquiry.en_fromlocaion,
+        vr1_tolocation=enquiry.en_tolocation,
+        vr1_vehicletype=vehicle_id  # This is likely a ForeignKey ID
+    ).first()
+
+    buy_rate = str(rate.vr1_rate) if rate else "0"
+    print("Buy Rate:", buy_rate)
+
+    data = {
+        'buy_rate': buy_rate,
+    }
+    return JsonResponse(data)
 
 
 @login_required(login_url='login_page')
@@ -1019,7 +1045,7 @@ def vehicle_allotment_email(request):
 def get_vendor_buy_rate(request):
     vendor_id = request.GET.get('vendor_id')
     vehicle_type_id = request.GET.get('vehicle_id')
-    enquiry_id = request.GET.get('enquiry_id')
+    enquiry_id = request.session.get('ses_enquiry_id')
 
     if not vendor_id or not vehicle_type_id or not enquiry_id:
         return JsonResponse({'standard_buy': 0, 'special_buy': 0})
