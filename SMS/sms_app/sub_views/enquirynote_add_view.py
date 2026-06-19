@@ -12,7 +12,7 @@ from django.core.paginator import Paginator
 
 from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.location_info_mod import Location_info
-from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id, is_tms_manager
 
 
 @login_required(login_url='login_page')
@@ -176,7 +176,8 @@ def enquirynote_list(request):
 
     # Extract actual role name safely
     role_name = str(user_role_obj).lower()
-    if role_name not in ["admin", "super user", "superuser"]:
+    # Admin, Super User, and TMS Managers (BVM Trans + Manager + User role) see ALL enquiries
+    if role_name not in ["admin", "super user", "superuser"] and not is_tms_manager(user_id):
         enquirynote_queryset = enquirynote_queryset.filter(
             en_assignedto=user_id
         )
