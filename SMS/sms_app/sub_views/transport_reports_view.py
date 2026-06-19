@@ -1716,8 +1716,6 @@ def invoice_pending_report_ajax_view(request):
         Q(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
     ).exclude(
         tr_consignmentnumber__isnull=True
-    ).exclude(
-        id__in=all_invoiced_ids
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
@@ -1878,7 +1876,12 @@ def invoice_pending_report_ajax_view(request):
         # Date selection logic (strictly using tr_departeddate_pickup as the planning date)
         display_date = trip.tr_departeddate_pickup.strftime("%d-%m-%Y") if trip.tr_departeddate_pickup else ""
 
-        trip_status_display = inv_status if inv_status != "-" else (safe_str(trip.tc_financestatus) if trip.tc_financestatus else "")
+        if trip.id in all_invoiced_ids:
+            trip_status_display = "Invoice Completed"
+        elif inv_status != "-":
+            trip_status_display = inv_status
+        else:
+            trip_status_display = safe_str(trip.tc_financestatus) if trip.tc_financestatus else ""
 
         data.append([
             idx,
