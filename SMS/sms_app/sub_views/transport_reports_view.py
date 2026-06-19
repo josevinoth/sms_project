@@ -1962,7 +1962,6 @@ def vendor_p_l_mkt_report_view(request):
     # BASE TRIPS
     # ------------------------------------------------
     trips = TripdetailInfo.objects.filter(
-        id__in=all_invoiced_ids,
         tc_financestatus_id__in=[2, 7, 9],
         tr_vehiclesource_id=3  # 3 = MARKET
     ).select_related(
@@ -2456,7 +2455,6 @@ def vendor_p_l_attached_report_view(request):
     # BASE TRIPS
     # ------------------------------------------------
     trips = TripdetailInfo.objects.filter(
-        id__in=all_invoiced_ids,
         tc_financestatus_id__in=[2, 7, 9],
         tr_vehiclesource_id=2  # 2 = ATTACHED
     ).select_related(
