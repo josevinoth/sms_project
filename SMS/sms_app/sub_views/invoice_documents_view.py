@@ -454,8 +454,13 @@ def invoice_documents_add(request, trip_id):
         settlement_form = TripSettlementForm(instance=trip)
         files_form = TripclosurefilesForm(instance=files_instance)
 
-        if not invoice_doc or not invoice_doc.id_status:
-            invoice_form = InvoiceDocumentForm(initial={'id_status': None})
+        # Map Ready for Invoice status by its ID 9
+        ready_status = Tripstatusinfo.objects.filter(id=9).first()
+        if invoice_doc and not invoice_doc.id_status and ready_status:
+            invoice_doc.id_status = ready_status
+
+        if not invoice_doc:
+            invoice_form = InvoiceDocumentForm(initial={'id_status': ready_status})
         else:
             invoice_form = InvoiceDocumentForm(instance=invoice_doc)
 
