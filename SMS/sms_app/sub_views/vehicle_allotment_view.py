@@ -427,15 +427,6 @@ def vehicle_allotment_list(request):
             en_customername__cu_name__icontains=branch_code
         )
 
-        # Filter last 30 days only
-        today = datetime.today().date()
-        last_days = today - timedelta(days=30)
-
-        enquirynote_queryset = enquirynote_queryset.filter(
-            en_created_at__date__gte=last_days,
-            en_created_at__date__lte=today
-        )
-
     # -----------------------------
     # Apply search filters
     # -----------------------------
@@ -457,7 +448,7 @@ def vehicle_allotment_list(request):
     # -----------------------------
     # SELECT ALL – No pagination
     # -----------------------------
-    if select_all == "true" or date_from or date_to:
+    if select_all == "true":
         page_obj = enquirynote_queryset.order_by('-en_created_at', '-id')
     else:
         paginator = Paginator(enquirynote_queryset.order_by('-en_created_at', '-id'), 50)
@@ -751,12 +742,6 @@ def load_driver_details(request):
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license', flat=True))
     driver_license_exp_date = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license_exp_date', flat=True))
-    if active_trip:
-        active_trip.tr_drivername = new_driver_name
-        active_trip.tr_drivernumber = new_driver_number
-        active_trip.tr_driverlicence = new_driver_lic
-        active_trip.tr_driver_license_exp_date = new_driver_lic_exp_date
-        active_trip.save()
     data = {
         'driver_name': driver_name,
         'driver_number': driver_number,

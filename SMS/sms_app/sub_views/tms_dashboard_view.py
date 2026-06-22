@@ -16,6 +16,7 @@ from ..sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from ..sub_models.trans_invoice_mod import TransInvoiceInfo
 from ..sub_models.tr_businesstype_mod import Tr_businesstype_Info
 from ..sub_models.location_info_mod import Location_info
+from .general_utils import is_tms_manager
 import json
 
 # Customer Service department ID
@@ -49,7 +50,10 @@ def tms_dashboard(request):
     is_cs_user = (current_user_ext and
                   current_user_ext.department_id == CS_DEPARTMENT_ID)
 
-    if user_role_id in [1, 3]:  # Admin & Super User
+    # TMS Managers (BVM Trans + Manager designation + User role) get full access
+    _is_tms_mgr = is_tms_manager(user_id)
+
+    if user_role_id in [1, 3] or _is_tms_mgr:  # Admin, Super User & TMS Managers
         dropdown_disabled = False
         default_employee_id = 'all'
     elif is_cs_user:  # Customer Service Department
@@ -118,7 +122,10 @@ def get_tms_dashboard_data(request):
     # Other users: can only see 'all' (aggregate) data
     employee_id = request.GET.get('employee_id')
 
-    if user_role_id in [1, 3]:  # Admin & Super User - can view all
+    # TMS Managers get full data access like Admin/Super User
+    _is_tms_mgr = is_tms_manager(user_id)
+
+    if user_role_id in [1, 3] or _is_tms_mgr:  # Admin, Super User & TMS Managers - can view all
         pass  # employee_id stays as selected by user
     elif is_cs_user:  # Customer Service department - force to their own data
         enforce_user_filter = True

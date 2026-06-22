@@ -7,12 +7,13 @@ from django.http import JsonResponse
 from ..forms import ConsignmentdetailaddForm, EnquirynoteaddForm, EnquirynotevehicleForm
 from ..models import Vehicle_allotmentInfo, User_extInfo, TripdetailInfo, ConsignmentdetailInfo, EnquirynoteInfo, \
     Enquirynotevehicle, VehiclemasterInfo, Tripstatusinfo, DeletionLog
+from ..sub_models.trans_invoice_mod import TransInvoiceInfo
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 
 from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.location_info_mod import Location_info
-from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
+from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id, is_tms_manager
 
 
 @login_required(login_url='login_page')
@@ -176,7 +177,8 @@ def enquirynote_list(request):
 
     # Extract actual role name safely
     role_name = str(user_role_obj).lower()
-    if role_name not in ["admin", "super user", "superuser"]:
+    # Admin, Super User, and TMS Managers (BVM Trans + Manager + User role) see ALL enquiries
+    if role_name not in ["admin", "super user", "superuser"] and not is_tms_manager(user_id):
         enquirynote_queryset = enquirynote_queryset.filter(
             en_assignedto=user_id
         )
@@ -210,6 +212,7 @@ def enquirynote_list(request):
     trip_data = TripdetailInfo.objects.filter(
         tr_enquirynumber_id__in=enquiry_ids
     ).values_list(
+        'id',
         'tr_enquirynumber',
         'tr_consignmentnumber__co_consignmentnumber',
         'tr_tripnumber',
@@ -217,6 +220,15 @@ def enquirynote_list(request):
         'tc_financestatus',
         'tr_category__category',
         'tr_vehiclenumber'
+    )
+
+    # Find which trips already have a completed invoice
+    all_page_trip_ids = [row[0] for row in trip_data]
+    invoiced_trip_ids = set(
+        TransInvoiceInfo.objects.filter(
+            ti_trip_id__in=all_page_trip_ids,
+            is_woh=True
+        ).values_list('ti_trip_id', flat=True)
     )
 
     # Pre-build consignment dict to avoid N+1 queries
@@ -263,7 +275,7 @@ def enquirynote_list(request):
 
     # Trip dict
     trip_dict = {}
-    for enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num in trip_data:
+    for trip_id, enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num in trip_data:
         # Check category safely
         cat_lower = trip_category.strip().lower() if trip_category else ""
 
@@ -275,9 +287,10 @@ def enquirynote_list(request):
             display_text = trip_category if trip_category else "No Category"
 
         display_veh_num = trip_veh_num if trip_veh_num else (trip_num or "No Trip")
+        is_invoiced = trip_id in invoiced_trip_ids
 
         trip_dict.setdefault(enq_id, []).append(
-            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, display_veh_num)
+            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, display_veh_num, is_invoiced)
         )
 
     # Vehicle limits
