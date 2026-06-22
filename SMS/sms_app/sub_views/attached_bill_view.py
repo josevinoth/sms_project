@@ -231,12 +231,36 @@ def get_attached_vehicle_details(request):
             if already_billed:
                 filters &= ~Q(tr_tripnumber__in=already_billed)
 
+            # --- Compute Vehicle Log Total KM (ALL trips, no already-billed filter) ---
+            # This matches the Vehicle Log Report total for the vehicle in the period.
+            km_filters = Q()
+            if vehicle_id:
+                km_filters &= Q(tr_vehiclenumber=vehicle.vm_registrationnumber)
+            elif vendor_id:
+                km_filters &= Q(tr_vehiclenumber__in=vehicle_reg_nos)
+            if f_dt_obj and t_dt_obj:
+                km_filters &= (
+                    Q(tr_departeddate__date__range=[f_dt_obj, t_dt_obj]) |
+                    Q(tr_departeddate_pickup__date__range=[f_dt_obj, t_dt_obj]) |
+                    Q(tr_reporteddate__date__range=[f_dt_obj, t_dt_obj]) |
+                    Q(tr_reporteddate_pickup__date__range=[f_dt_obj, t_dt_obj]) |
+                    Q(tr_loading_time__date__range=[f_dt_obj, t_dt_obj]) |
+                    Q(tr_unloading_time__date__range=[f_dt_obj, t_dt_obj])
+                )
+            
+            # Use all trip categories for KM sum to match Vehicle Log Report exactly
+            all_period_trips = TripdetailInfo.objects.filter(km_filters).filter(tr_vehiclesource_id__in=[1, 2])
+            total_km_run_sum = 0
+            for t in all_period_trips:
+                s_km = t.tr_reportedkm_pickup if t.tr_reportedkm_pickup else (t.tr_departedkm or 0)
+                c_km = t.tr_reportedkm_delivery if t.tr_reportedkm_delivery else (t.tr_reportedkm or 0)
+                if c_km and s_km:
+                    diff = c_km - s_km
+                    if 0 < diff < 15000:
+                        total_km_run_sum += diff
+
             trips = TripdetailInfo.objects.filter(filters).filter(tr_category_id=1).order_by('tr_departeddate')
             trip_dates = set()
-            
-            # For Total KM using Vehicle Log method (Last Closing - First Starting)
-            first_start_km = None
-            last_close_km = None
 
             for trip in trips:
                 # Per-trip KM logic updated to match Vehicle Log Report
@@ -248,16 +272,7 @@ def get_attached_vehicle_details(request):
                     if 0 < diff < 15000:
                         km = diff
 
-                # Track min departed and max reported for the entire period
-                # ONLY track KM for trips within the actual billing period
                 trip_dte = trip.tr_departeddate.date() if trip.tr_departeddate else None
-                if trip_dte and f_dt_obj <= trip_dte <= t_dt_obj:
-                    trip_start_km = trip.tr_departedkm or 0
-                    trip_close_km = trip.tr_reportedkm_delivery or trip.tr_reportedkm or 0
-                    if trip_start_km > 0 and first_start_km is None:
-                        first_start_km = trip_start_km
-                    if trip_close_km > 0:
-                        last_close_km = trip_close_km
 
                 if trip.tr_departeddate:
                     start_date = trip.tr_departeddate.date()
@@ -286,11 +301,8 @@ def get_attached_vehicle_details(request):
                         'total_buy_cost': 0.0 # Will be calculated on frontend
                     })
 
-            # Calculate total KM run for the period (Vehicle Log Method)
-            total_km_run = 0
-            if first_start_km is not None and last_close_km is not None:
-                total_km_run = max(0, last_close_km - first_start_km)
-            data['total_km_run'] = total_km_run
+            # Total KM = sum of Used KM for ALL period trips (matches Vehicle Log Report)
+            data['total_km_run'] = total_km_run_sum
 
             if f_dt_obj and t_dt_obj:
                 leave_days_count = 0
@@ -470,6 +482,8 @@ def attached_bill_summary(request, id):
 
     # Fetch ALL trips for this vehicle in the expanded range to calculate leave days correctly
     all_trip_dates = set()
+    actual_empty_km = 0.0
+    actual_business_empty_km = 0.0
     if vehicle:
         expanded_start = from_date - timedelta(days=1)
         expanded_end = to_date + timedelta(days=1)
@@ -485,6 +499,29 @@ def attached_bill_summary(request, id):
                 while curr_t <= ed:
                     all_trip_dates.add(curr_t)
                     curr_t += timedelta(days=1)
+
+        # Compute actual empty KM (category 2 or 3) matching Total KM run period
+        km_filters = Q(tr_vehiclenumber=vehicle.vm_registrationnumber)
+        km_filters &= (
+            Q(tr_departeddate__date__range=[from_date, to_date]) |
+            Q(tr_departeddate_pickup__date__range=[from_date, to_date]) |
+            Q(tr_reporteddate__date__range=[from_date, to_date]) |
+            Q(tr_reporteddate_pickup__date__range=[from_date, to_date]) |
+            Q(tr_loading_time__date__range=[from_date, to_date]) |
+            Q(tr_unloading_time__date__range=[from_date, to_date])
+        )
+        all_km_trips = TripdetailInfo.objects.filter(km_filters).filter(tr_vehiclesource_id__in=[1, 2])
+        for t in all_km_trips:
+            if t.tr_category_id in [2, 3]:
+                s_km = t.tr_reportedkm_pickup if t.tr_reportedkm_pickup else (t.tr_departedkm or 0)
+                c_km = t.tr_reportedkm_delivery if t.tr_reportedkm_delivery else (t.tr_reportedkm or 0)
+                if c_km and s_km:
+                    diff = c_km - s_km
+                    if 0 < diff < 15000:
+                        if t.tr_category_id == 2:
+                            actual_empty_km += diff
+                        elif t.tr_category_id == 3:
+                            actual_business_empty_km += diff
 
     # Use the reliably saved leave days and amount
     leave_days = bill.ab_leave_days or 0
@@ -542,12 +579,13 @@ def attached_bill_summary(request, id):
     days_run   = len(summary_billed_trip_dates)
     trip_index = f"{total_trips} TRIPS / {days_run} DAYS RUN" if days_run else f"{total_trips} TRIPS"
 
-    # --- Empty KM = Agreed KM − Total KM Run ---
-    empty_km           = max(0.0, agreed_km - display_total_km)
+    # --- Empty KM = from DB trips with category 2 or 3 ---
+    empty_km           = actual_empty_km
+    business_empty_km  = actual_business_empty_km
+
     per_km_amount      = (actual_amount / total_km_saved) if total_km_saved > 0 else 0
     empty_km_buy_cost  = per_km_amount * empty_km
-    business_empty_km          = empty_km
-    business_empty_km_buy_cost = empty_km_buy_cost
+    business_empty_km_buy_cost = per_km_amount * business_empty_km
 
     # --- Selling = sum of all trip charges billed to customer ---
     selling = 0.0
