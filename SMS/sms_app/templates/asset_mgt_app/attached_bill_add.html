@@ -347,16 +347,15 @@
                         }
                         extraKmRate = data.extra_km_rate || 0;
                     }
-                    if (!isInitialLoad) {
-                        // Total KM Run from backend = same as vehicle log sheet
+                    // Always set Total KM Run from backend vehicle-log sum
+                    // (same calculation as Vehicle Log Report — sum of Used KM per trip)
+                    if (data.total_km_run !== undefined && data.total_km_run > 0) {
                         $('#id_ab_total_km_run').val(data.total_km_run);
-                        // Auto-fill leave days: period days - days with trips
-                        if (data.leave_days !== undefined) {
-                            $('#id_ab_leave_days').val(data.leave_days);
-                        }
                     }
-
-                    // isInitialLoad will be reset after the first calculateAmounts call
+                    // Auto-fill leave days
+                    if (!isInitialLoad && data.leave_days !== undefined) {
+                        $('#id_ab_leave_days').val(data.leave_days);
+                    }
 
                     // Populate Trips Table FIRST, then calculate amounts so rows exist in DOM
                     tbody.empty();
@@ -397,9 +396,9 @@
                         tbody.append('<tr><td colspan="12" class="text-center text-muted">No trips found for selected criteria</td></tr>');
                     }
 
-                    // Now calculate — rows are in the DOM so Buy Cost cells can be updated
-                    isInitialLoad = false; 
-                    syncTableToHeader(); // This now handles total amounts and hidden field sync
+                    // Rows in DOM — now sync toll/trip-IDs and recalculate
+                    isInitialLoad = false;
+                    syncTableToHeader();
                 },
                 error: function (xhr, status, error) {
                     console.error("AJAX Error:", status, error);
@@ -410,8 +409,9 @@
     });
 
     // Recalculate amounts when trips are checked or unchecked
+    // Also sync total KM from checked trips
     $(document).on('change', '.trip-checkbox, #selectAllTrips', function () {
-        calculateAmounts();
+        syncTableToHeader();
     });
 
     // Handle ADD Button Click
@@ -528,7 +528,9 @@
         updateTotalBuyCostSummary();
     }
 
-    // NEW: Sync table Toll Cost and Selected Trip IDs back to header
+    // Sync table Toll Cost and Selected Trip IDs back to header
+    // NOTE: Total KM Run is NOT updated here — it comes from the backend vehicle-log sum
+    // and can also be manually overridden by the user.
     function syncTableToHeader() {
         var totalToll = 0;
         var selectedIds = [];
@@ -538,13 +540,9 @@
             totalToll += parseFloat($row.find('.trip-toll-cost').val()) || 0;
         });
         
-        // Sync to hidden fields
         $('#id_ab_selected_trips').val(selectedIds.join(','));
         $('#id_ab_toll_cost').val(totalToll.toFixed(2));
         
-        // After syncing up, we must trigger header-based recalculation for the final bill total
-        // but avoid infinite loops.
-        var curBill = parseFloat($('#id_ab_bill_amount').val()) || 0;
         calculateAmounts(); 
     }
 

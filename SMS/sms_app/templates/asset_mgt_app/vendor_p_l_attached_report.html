@@ -23,8 +23,7 @@
     <div class="col-2"></div>
 </div>
 
-<form method="POST" action="{% url 'vendor_p_l_attached_report' %}" class="row g-3 align-items-end"
-    id="report-filter-form">
+<form onsubmit="event.preventDefault(); $('#vendor_p_l_report_table').DataTable().ajax.reload();" class="row g-3 align-items-end" id="report-filter-form">
     {% csrf_token %}
 
     <!-- Hidden Customer/Dept Fields -->
@@ -120,13 +119,6 @@
             </tr>
         </thead>
         <tbody>
-            {% for row in data_rows %}
-            <tr>
-                {% for cell in row %}
-                <td class="text-nowrap">{{ cell }}</td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
         </tbody>
     </table>
 </div>
@@ -171,7 +163,7 @@
         $('#vendor_select').on('change', function () {
             // Reset vehicle selection
             $('#vehicle_number').val('').trigger('change');
-            $('#report-filter-form').submit();
+            $('#vendor_p_l_report_table').DataTable().ajax.reload();
         });
     });
 </script>
@@ -179,6 +171,20 @@
 $(document).ready(function () {
 
     $('#vendor_p_l_report_table').DataTable({
+        serverSide: true,
+        processing: true,
+        ajax: {
+            url: "{% url 'vendor_p_l_attached_report_ajax' %}",
+            data: function (d) {
+                d.vendor_id = $('#vendor_select').val();
+                d.veh_no = $('#vehicle_number').val();
+                d.vehicle_type = $('select[name="vehicle_type"]').val();
+                d.date_from = $('input[name="date_from"]').val();
+                d.date_to = $('input[name="date_to"]').val();
+                d.from_location = $('select[name="from_location"]').val();
+                d.to_location = $('select[name="to_location"]').val();
+            }
+        },
         scrollX: true,
         scrollCollapse: true,
         autoWidth: false,
