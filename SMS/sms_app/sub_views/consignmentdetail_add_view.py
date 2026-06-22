@@ -228,6 +228,7 @@ def consignmentdetail_list(request):
 def consignmentdetail_list_ajax(request):
     """Server-side DataTables AJAX endpoint for Consignment Detail List."""
     from django.db.models import Q, Sum
+    from ..models import TransInvoiceInfo
 
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
@@ -278,7 +279,8 @@ def consignmentdetail_list_ajax(request):
             Q(cg_consignmentnumber__cg_consigner__consigner_name__icontains=search_value) |
             Q(cg_consignmentnumber__cg_consignee__consignee_name__icontains=search_value) |
             Q(cg_consignmentnumber__cg_consignerinvoice__icontains=search_value) |
-            Q(cg_consignmentnumber__cg_ebillno__icontains=search_value)
+            Q(cg_consignmentnumber__cg_ebillno__icontains=search_value) |
+            Q(transinvoiceinfo__ti_inv_no__icontains=search_value)
         ).distinct()
 
     records_filtered = qs.count()
@@ -320,13 +322,24 @@ def consignmentdetail_list_ajax(request):
 
     # Slice for pagination
     if length == -1:
-        qs = qs[start:]
+        page_qs = list(qs[start:])
     else:
-        qs = qs[start:start + length]
+        page_qs = list(qs[start:start + length])
+
+    # Bulk-fetch invoice info for this page's consignments
+    page_cons_ids = [obj.id for obj in page_qs]
+    invoice_map = {}  # consignment_id -> (inv_no, ti_total)
+    for inv in TransInvoiceInfo.objects.filter(
+        ti_consignment_id__in=page_cons_ids
+    ).values('ti_consignment_id', 'ti_inv_no', 'ti_total'):
+        invoice_map[inv['ti_consignment_id']] = (
+            inv['ti_inv_no'] or '',
+            inv['ti_total'] or 0,
+        )
 
     data = []
     # Fetch data
-    for obj in qs:
+    for obj in page_qs:
         related_goods = obj.cg_consignmentnumber.all()
         # For multiple goods, we sum up totals and take the first one for individual fields
         goods = related_goods[0] if related_goods else None
@@ -355,6 +368,8 @@ def consignmentdetail_list_ajax(request):
         display_to = str(obj.co_tolocation) if obj.co_tolocation else (str(obj.co_enquirynumber.en_tolocation) if obj.co_enquirynumber else '')
         movement = str(obj.co_enquirynumber.en_movement_type) if (obj.co_enquirynumber and obj.co_enquirynumber.en_movement_type) else ''
 
+        inv_no, inv_total = invoice_map.get(obj.id, ('', 0))
+
         data.append([
             obj.id,                                     # 0: ID
             obj.co_created_at.strftime('%Y-%m-%d') if obj.co_created_at else '', # 1: Created On
@@ -382,8 +397,10 @@ def consignmentdetail_list_ajax(request):
             obj.co_updated_at.strftime('%Y-%m-%d') if obj.co_updated_at else '', # 23: Updated On
             str(obj.co_lastmodifiedby) if obj.co_lastmodifiedby else '', # 24: Updated By
             str(obj.co_createdby) if hasattr(obj, 'co_createdby') and obj.co_createdby else '', # 25: Created By
-            obj.id,                                     # 26: Edit
-            obj.id,                                     # 27: Delete
+            inv_no,                                     # 26: Invoice Number
+            inv_total,                                  # 27: Invoice Amount
+            obj.id,                                     # 28: Edit
+            obj.id,                                     # 29: Delete
         ])
 
     return JsonResponse({

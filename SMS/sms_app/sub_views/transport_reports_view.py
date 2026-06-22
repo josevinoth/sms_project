@@ -38,7 +38,6 @@ def safe_int(val, default=0):
         return default
 
 
-
 def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=None):
     from ..models import TripdetailInfo, DrivermasterInfo, DriverSalaryInfo, VehiclemasterInfo, Fuelfillinginfo
     from django.db.models import Q, Sum
@@ -133,7 +132,7 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
                 return date_cls.fromisoformat(date_to), date_cls.fromisoformat(date_to)
             except:
                 pass
-                
+
         d = getattr(trip, 'resolved_date', None)
         if not d:
             d = trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_departeddate or trip.tr_created_at
@@ -206,6 +205,7 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
 
     return fuel_lookup, salary_lookup
 
+
 def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill, prorated_fuel=None, prorated_salary=None):
     """
     Consolidated logic to calculate P&L data for a single trip.
@@ -215,22 +215,22 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill, prorat
     # Prioritize Trip Settlement fields (tc_...) if they are non-zero/checked,
     # then fallback to Invoice (ti_...) if available.
     tc_tripcost = (safe_num(trip.tc_tripcost) if (
-                getattr(trip, 'tc_tripcost_check', True) and safe_num(trip.tc_tripcost) > 0) else (
+            getattr(trip, 'tc_tripcost_check', True) and safe_num(trip.tc_tripcost) > 0) else (
         safe_num(inv.ti_transportation_charges) if inv else 0.0))
     tc_tollcost = (safe_num(trip.tc_tollcost) if (
-                getattr(trip, 'tc_tollcost_check', True) and safe_num(trip.tc_tollcost) > 0) else (
+            getattr(trip, 'tc_tollcost_check', True) and safe_num(trip.tc_tollcost) > 0) else (
         safe_num(inv.ti_toll_charges) if inv else 0.0))
     tc_supervisorcost = (safe_num(trip.tc_supervisorcost) if (
-                getattr(trip, 'tc_supervisorcost_check', True) and safe_num(trip.tc_supervisorcost) > 0) else (
+            getattr(trip, 'tc_supervisorcost_check', True) and safe_num(trip.tc_supervisorcost) > 0) else (
         safe_num(inv.ti_docket_charges) if inv else 0.0))
     tc_loadingcost = (safe_num(trip.tc_loadingcost) if (
-                getattr(trip, 'tc_loadingcost_check', True) and safe_num(trip.tc_loadingcost) > 0) else (
+            getattr(trip, 'tc_loadingcost_check', True) and safe_num(trip.tc_loadingcost) > 0) else (
         safe_num(inv.ti_loading_charges) if inv else 0.0))
     tc_unloadingcost = (safe_num(trip.tc_unloadingcost) if (
-                getattr(trip, 'tc_unloadingcost_check', True) and safe_num(trip.tc_unloadingcost) > 0) else (
+            getattr(trip, 'tc_unloadingcost_check', True) and safe_num(trip.tc_unloadingcost) > 0) else (
         safe_num(inv.ti_unloading_charges) if inv else 0.0))
     tc_weighmentcost = (safe_num(trip.tc_weighmentcost) if (
-                getattr(trip, 'tc_weighmentcost_check', True) and safe_num(trip.tc_weighmentcost) > 0) else (
+            getattr(trip, 'tc_weighmentcost_check', True) and safe_num(trip.tc_weighmentcost) > 0) else (
         safe_num(inv.ti_weighment_charges) if inv else 0.0))
 
     # Halting Logic
@@ -245,10 +245,10 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill, prorat
         tc_haltingcost = 0.0
 
     tc_handlingcost = (safe_num(trip.tc_handlingcost) if (
-                getattr(trip, 'tc_handlingcost_check', True) and safe_num(trip.tc_handlingcost) > 0) else (
+            getattr(trip, 'tc_handlingcost_check', True) and safe_num(trip.tc_handlingcost) > 0) else (
         safe_num(inv.ti_handling_charges) if inv else 0.0))
     tc_parkingcost = (safe_num(trip.tc_parkingcost) if (
-                getattr(trip, 'tc_parkingcost_check', True) and safe_num(trip.tc_parkingcost) > 0) else (
+            getattr(trip, 'tc_parkingcost_check', True) and safe_num(trip.tc_parkingcost) > 0) else (
         safe_num(inv.ti_parking_charges) if inv else 0.0))
     tc_rtocost = safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0
     tc_betacost = safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_check', True) else 0.0
@@ -298,7 +298,7 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill, prorat
             else:
                 other += cv
         total_buying = (
-                    fuel + salary + acting + bata + toll + parking + loading + unloading + weighment + handling + hire + other)
+                fuel + salary + acting + bata + toll + parking + loading + unloading + weighment + handling + hire + other)
 
     elif v_source == 2:  # ATTACHED
         if ab_bill:
@@ -686,7 +686,8 @@ OWN_VS_MARKET_SALES_HEADERS = [
 ]
 
 ENQUIRY_PENDING_HEADERS = [
-    "SNo", "Date", "Enquiry No", "From", "To", "Vehicle Requested", "Assigned Vehicles", "Unassigned Vehicles", "Vehicle Type",
+    "SNo", "Date", "Enquiry No", "From", "To", "Vehicle Requested", "Assigned Vehicles", "Unassigned Vehicles",
+    "Vehicle Type",
     "Customer Name", "Reason"
 ]
 
@@ -814,11 +815,12 @@ def vehicle_log_report_view(request):
         'all_vehicles': all_vehicles,
     })
 
+
 def vehicle_log_report_ajax_view(request):
     from django.http import JsonResponse
     from django.db.models import Q
     from ..models import Location_info, ConsignmentgoodsInfo, TripdetailInfo
-    
+
     draw = safe_int(request.GET.get('draw'), 1)
     start = safe_int(request.GET.get('start'), 0)
     length = safe_int(request.GET.get('length'), 10)
@@ -888,7 +890,7 @@ def vehicle_log_report_ajax_view(request):
 
     order_column_idx = safe_int(request.GET.get('order[0][column]'), -1)
     order_dir = request.GET.get('order[0][dir]', 'asc')
-    
+
     order_map = {
         1: 'tr_created_at',
         2: 'tr_tripnumber',
@@ -946,7 +948,8 @@ def vehicle_log_report_ajax_view(request):
             safe_str(used_km),
             safe_str(trip.tr_departedlocation),
             safe_str(trip.tr_reportedlocation),
-            safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else safe_str(trip.tr_category),
+            safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else safe_str(
+                trip.tr_category),
             safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
             safe_str(cons_goods.cg_consigner) if cons_goods else "",
             safe_str(trip.tr_drivername),
@@ -1642,6 +1645,7 @@ def invoice_pending_report_view(request):
     form = DmrForm()
 
     from ..models import Location_info, OwnershipInfo
+    from ..sub_models.trip_status_mod import Tripstatusinfo
 
     context = {
         'first_name': first_name,
@@ -1649,6 +1653,7 @@ def invoice_pending_report_view(request):
         'headers': INVOICE_PENDING_HEADERS,
         'all_branches': Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name'),
         'all_vehiclesources': OwnershipInfo.objects.all(),
+        'all_tripstatuses': Tripstatusinfo.objects.all().order_by('status'),
     }
 
     return render(request, "asset_mgt_app/invoice_pending_report.html", context)
@@ -1676,6 +1681,7 @@ def invoice_pending_report_ajax_view(request):
     to_loc_id = request.GET.get('to_location', '').strip()
     branch_id = request.GET.get('branch', '').strip()
     vehicle_source_id = request.GET.get('vehicle_source', '').strip()
+    trip_status_id = request.GET.get('trip_status', '').strip()
 
     # -------------------------
     # Collect all invoiced IDs (same logic as the main view)
@@ -1728,19 +1734,28 @@ def invoice_pending_report_ajax_view(request):
         'tc_financestatus',
     ).annotate(
         trip_total=(
-            Case(When(tc_tripcost_check=True, then=F('tc_tripcost')), default=0.0, output_field=FloatField()) +
-            Case(When(tc_tollcost_check=True, then=F('tc_tollcost')), default=0.0, output_field=FloatField()) +
-            Case(When(tc_parkingcost_check=True, then=F('tc_parkingcost')), default=0.0, output_field=FloatField()) +
-            Case(When(tc_loadingcost_check=True, then=F('tc_loadingcost')), default=0.0, output_field=FloatField()) +
-            Case(When(tc_unloadingcost_check=True, then=F('tc_unloadingcost')), default=0.0, output_field=FloatField()) +
-            Case(When(tc_haltingcost_check=True, then=F('tc_haltingcost')), default=0.0, output_field=FloatField()) +
-            Case(When(tc_rtocost_check=True, then=F('tc_rtocost')), default=0.0, output_field=FloatField()) +
-            Case(When(tc_weighmentcost_check=True, then=F('tc_weighmentcost')), default=0.0, output_field=FloatField()) +
-            Case(When(tc_handlingcost_check=True, then=F('tc_handlingcost')), default=0.0, output_field=FloatField()) +
-            Case(When(tc_supervisorcost_check=True, then=F('tc_supervisorcost')), default=0.0, output_field=FloatField()) +
-            Case(When(tc_betacost_check=True, then=F('tc_betacost')), default=0.0, output_field=FloatField()) +
-            Case(When(tc_total_halting_cost_check=True, then=F('tc_total_halting_cost')), default=0.0, output_field=FloatField()) +
-            Case(When(tc_cancellation_check=True, then=F('tc_cancellation')), default=0.0, output_field=FloatField())
+                Case(When(tc_tripcost_check=True, then=F('tc_tripcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_tollcost_check=True, then=F('tc_tollcost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_parkingcost_check=True, then=F('tc_parkingcost')), default=0.0,
+                     output_field=FloatField()) +
+                Case(When(tc_loadingcost_check=True, then=F('tc_loadingcost')), default=0.0,
+                     output_field=FloatField()) +
+                Case(When(tc_unloadingcost_check=True, then=F('tc_unloadingcost')), default=0.0,
+                     output_field=FloatField()) +
+                Case(When(tc_haltingcost_check=True, then=F('tc_haltingcost')), default=0.0,
+                     output_field=FloatField()) +
+                Case(When(tc_rtocost_check=True, then=F('tc_rtocost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_weighmentcost_check=True, then=F('tc_weighmentcost')), default=0.0,
+                     output_field=FloatField()) +
+                Case(When(tc_handlingcost_check=True, then=F('tc_handlingcost')), default=0.0,
+                     output_field=FloatField()) +
+                Case(When(tc_supervisorcost_check=True, then=F('tc_supervisorcost')), default=0.0,
+                     output_field=FloatField()) +
+                Case(When(tc_betacost_check=True, then=F('tc_betacost')), default=0.0, output_field=FloatField()) +
+                Case(When(tc_total_halting_cost_check=True, then=F('tc_total_halting_cost')), default=0.0,
+                     output_field=FloatField()) +
+                Case(When(tc_cancellation_check=True, then=F('tc_cancellation')), default=0.0,
+                     output_field=FloatField())
         )
     )
 
@@ -1778,6 +1793,13 @@ def invoice_pending_report_ajax_view(request):
     if vehicle_source_id:
         trips = trips.filter(tr_vehiclesource_id=vehicle_source_id)
 
+    if trip_status_id:
+        try:
+            ts_id = int(trip_status_id)
+            trips = trips.filter(tc_financestatus_id=ts_id)
+        except (ValueError, TypeError):
+            pass
+
     # Total before global search
     records_total = trips.count()
 
@@ -1791,16 +1813,16 @@ def invoice_pending_report_ajax_view(request):
         ).values_list('id_tripnumber', flat=True))
 
         q_objects = (
-            Q(tr_vehiclenumber__icontains=search_value) |
-            Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
-            Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
-            Q(tr_departedlocation__place_name__icontains=search_value) |
-            Q(tr_reportedlocation__place_name__icontains=search_value) |
-            Q(tr_enquirynumber__en_customerdepartment__ct_customerdepartment__icontains=search_value) |
-            Q(tr_tripnumber__icontains=search_value) |
-            Q(tc_financestatus__status__icontains=search_value)
+                Q(tr_vehiclenumber__icontains=search_value) |
+                Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
+                Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+                Q(tr_departedlocation__place_name__icontains=search_value) |
+                Q(tr_reportedlocation__place_name__icontains=search_value) |
+                Q(tr_enquirynumber__en_customerdepartment__ct_customerdepartment__icontains=search_value) |
+                Q(tr_tripnumber__icontains=search_value) |
+                Q(tc_financestatus__status__icontains=search_value)
         )
-        
+
         if matching_invoice_trip_numbers:
             q_objects |= Q(tr_tripnumber__in=matching_invoice_trip_numbers)
 
@@ -2128,8 +2150,8 @@ def vendor_p_l_mkt_report_view(request):
             selling_weighment = (safe_num(inv.ti_weighment_charges) if inv else (
                 safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0.0))
             selling_halting = (safe_num(inv.ti_halting_charges) if inv else (
-                        (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (
-                    safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0)))
+                    (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (
+                safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0)))
             selling_handling = (safe_num(inv.ti_handling_charges) if inv else (
                 safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0.0))
             selling_parking = (safe_num(inv.ti_parking_charges) if inv else (
@@ -2146,8 +2168,8 @@ def vendor_p_l_mkt_report_view(request):
             selling_weighment = (safe_num(inv.ti_weighment_charges) if inv else (
                 safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0.0))
             selling_halting = (safe_num(inv.ti_halting_charges) if inv else (
-                        (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (
-                    safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0)))
+                    (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (
+                safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0)))
             selling_handling = (safe_num(inv.ti_handling_charges) if inv else (
                 safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0.0))
             selling_parking = (safe_num(inv.ti_parking_charges) if inv else (
@@ -2288,7 +2310,7 @@ def vendor_p_l_mkt_report_view(request):
                     trip.tr_reporteddate_delivery, trip.tr_unloading_time,
                     trip.tr_dock_in_time, trip.tr_dock_out_time, trip.tr_created_at
                 ] if d),
-                None)
+                     None)
             ))().strftime("%d-%m-%Y") if any([
                 trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
                 trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
@@ -2501,15 +2523,18 @@ def vendor_p_l_attached_report_view(request):
     if vendor_id:
         # The display logic prioritizes Vehicle_allotmentInfo.va_vendor, then falls back to VehiclemasterInfo.vm_vendor
         # We must filter using the exact same priority to ensure no mismatches
-        enquiries_with_vendor = Vehicle_allotmentInfo.objects.filter(va_vendor__isnull=False).values_list('va_enquirynumber_id', flat=True)
-        enquiries_for_this_vendor = Vehicle_allotmentInfo.objects.filter(va_vendor_id=vendor_id).values_list('va_enquirynumber_id', flat=True)
-        vendor_vehicles = VehiclemasterInfo.objects.filter(vm_vendor_id=vendor_id).values_list('vm_registrationnumber', flat=True)
+        enquiries_with_vendor = Vehicle_allotmentInfo.objects.filter(va_vendor__isnull=False).values_list(
+            'va_enquirynumber_id', flat=True)
+        enquiries_for_this_vendor = Vehicle_allotmentInfo.objects.filter(va_vendor_id=vendor_id).values_list(
+            'va_enquirynumber_id', flat=True)
+        vendor_vehicles = VehiclemasterInfo.objects.filter(vm_vendor_id=vendor_id).values_list('vm_registrationnumber',
+                                                                                               flat=True)
 
         trips = trips.filter(
             Q(tr_enquirynumber_id__in=enquiries_for_this_vendor) |
             (
-                ~Q(tr_enquirynumber_id__in=enquiries_with_vendor) & 
-                Q(tr_vehiclenumber__in=vendor_vehicles)
+                    ~Q(tr_enquirynumber_id__in=enquiries_with_vendor) &
+                    Q(tr_vehiclenumber__in=vendor_vehicles)
             )
         )
 
@@ -2528,7 +2553,7 @@ def vendor_p_l_attached_report_view(request):
     # Build va_map prioritizing allotments that have a vendor if duplicates exist
     va_map = {}
     for va in Vehicle_allotmentInfo.objects.filter(
-        va_enquirynumber_id__in=trip_enquiries
+            va_enquirynumber_id__in=trip_enquiries
     ).select_related('va_vendor'):
         if va.va_enquirynumber_id not in va_map:
             va_map[va.va_enquirynumber_id] = va
@@ -2657,8 +2682,8 @@ def vendor_p_l_attached_report_view(request):
         selling_weighment = (safe_num(inv.ti_weighment_charges) if inv else (
             safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0.0))
         selling_halting = (safe_num(inv.ti_halting_charges) if inv else (
-                    (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (
-                safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0)))
+                (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (
+            safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0)))
         selling_handling = (safe_num(inv.ti_handling_charges) if inv else (
             safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0.0))
 
@@ -3484,8 +3509,6 @@ def own_vehicle_pl_report_view(request):
     # Cache for name-to-ID resolution to avoid redundant master lookups
     name_id_to_pk = {}
 
-
-
     # -------------------------------
     # PREFETCH EXPENSES
     # -------------------------------
@@ -3561,25 +3584,25 @@ def own_vehicle_pl_report_view(request):
         inv = invoice_obj_map.get(trip.id)
 
         selling_trip = (safe_num(trip.tc_tripcost) if (
-                    getattr(trip, 'tc_tripcost_check', True) and safe_num(trip.tc_tripcost) > 0) else (
+                getattr(trip, 'tc_tripcost_check', True) and safe_num(trip.tc_tripcost) > 0) else (
             safe_num(inv.ti_transportation_charges) if inv else 0.0))
         selling_toll = (safe_num(trip.tc_tollcost) if (
-                    getattr(trip, 'tc_tollcost_check', True) and safe_num(trip.tc_tollcost) > 0) else (
+                getattr(trip, 'tc_tollcost_check', True) and safe_num(trip.tc_tollcost) > 0) else (
             safe_num(inv.ti_toll_charges) if inv else 0.0))
         selling_parking = (safe_num(trip.tc_parkingcost) if (
-                    getattr(trip, 'tc_parkingcost_check', True) and safe_num(trip.tc_parkingcost) > 0) else (
+                getattr(trip, 'tc_parkingcost_check', True) and safe_num(trip.tc_parkingcost) > 0) else (
             safe_num(inv.ti_parking_charges) if inv else 0.0))
         selling_loading = (safe_num(trip.tc_loadingcost) if (
-                    getattr(trip, 'tc_loadingcost_check', True) and safe_num(trip.tc_loadingcost) > 0) else (
+                getattr(trip, 'tc_loadingcost_check', True) and safe_num(trip.tc_loadingcost) > 0) else (
             safe_num(inv.ti_loading_charges) if inv else 0.0))
         selling_unloading = (safe_num(trip.tc_unloadingcost) if (
-                    getattr(trip, 'tc_unloadingcost_check', True) and safe_num(trip.tc_unloadingcost) > 0) else (
+                getattr(trip, 'tc_unloadingcost_check', True) and safe_num(trip.tc_unloadingcost) > 0) else (
             safe_num(inv.ti_unloading_charges) if inv else 0.0))
         selling_weighment = (safe_num(trip.tc_weighmentcost) if (
-                    getattr(trip, 'tc_weighmentcost_check', True) and safe_num(trip.tc_weighmentcost) > 0) else (
+                getattr(trip, 'tc_weighmentcost_check', True) and safe_num(trip.tc_weighmentcost) > 0) else (
             safe_num(inv.ti_weighment_charges) if inv else 0.0))
         selling_handling = (safe_num(trip.tc_handlingcost) if (
-                    getattr(trip, 'tc_handlingcost_check', True) and safe_num(trip.tc_handlingcost) > 0) else (
+                getattr(trip, 'tc_handlingcost_check', True) and safe_num(trip.tc_handlingcost) > 0) else (
             safe_num(inv.ti_handling_charges) if inv else 0.0))
 
         # Halting Logic
@@ -3594,12 +3617,12 @@ def own_vehicle_pl_report_view(request):
             selling_halting = 0.0
 
         selling_supervisor = (safe_num(trip.tc_supervisorcost) if (
-                    getattr(trip, 'tc_supervisorcost_check', True) and safe_num(trip.tc_supervisorcost) > 0) else (
+                getattr(trip, 'tc_supervisorcost_check', True) and safe_num(trip.tc_supervisorcost) > 0) else (
             safe_num(inv.ti_docket_charges) if inv else 0.0))
         selling_rto = (safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0)
         selling_beta = (safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_check', True) else 0.0)
         selling_cancellation = (safe_num(trip.tc_cancellation) if (
-                    getattr(trip, 'tc_cancellation_check', True) and safe_num(trip.tc_cancellation) > 0) else (
+                getattr(trip, 'tc_cancellation_check', True) and safe_num(trip.tc_cancellation) > 0) else (
             safe_num(inv.ti_cancellation_charges) if inv else 0.0))
 
         selling_total = (
@@ -4598,7 +4621,7 @@ def diesel_vs_revenue_report_view(request):
     total_fleet_cost = sum(item['total_cost'] for item in fuel_map.values() if item['total_cost'])
     total_fleet_ltr = sum(item['total_ltr'] for item in fuel_map.values() if item['total_ltr'])
     fleet_avg_price = (
-                total_fleet_cost / total_fleet_ltr) if total_fleet_ltr > 0 else 96.0  # Fallback to 96 if no fleet data
+            total_fleet_cost / total_fleet_ltr) if total_fleet_ltr > 0 else 96.0  # Fallback to 96 if no fleet data
 
     # Vehicle Master for fixed mileage
     vehicles = VehiclemasterInfo.objects.filter(vm_registrationnumber__in=vehicle_numbers).select_related(
@@ -4640,9 +4663,9 @@ def diesel_vs_revenue_report_view(request):
     for trip in trips:
         cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper() if trip.tr_enquirynumber else ""
         row_branch = "Chennai" if "MAA" in cust_name or (
-                    trip.tr_consignmentnumber and "MAA" in str(trip.tr_consignmentnumber)) else \
+                trip.tr_consignmentnumber and "MAA" in str(trip.tr_consignmentnumber)) else \
             ("Bangalore" if "BLR" in cust_name or (
-                        trip.tr_consignmentnumber and "BLR" in str(trip.tr_consignmentnumber)) else "")
+                    trip.tr_consignmentnumber and "BLR" in str(trip.tr_consignmentnumber)) else "")
 
         # Date selection
         dates = [trip.tr_loading_time, trip.tr_departeddate, trip.tr_created_at]
@@ -4686,8 +4709,8 @@ def diesel_vs_revenue_report_view(request):
         rev_weighment = (safe_num(inv.ti_weighment_charges) if inv else (
             safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0.0))
         rev_halting = (safe_num(inv.ti_halting_charges) if inv else (
-                    (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (
-                safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0)))
+                (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (
+            safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0)))
         rev_handling = (safe_num(inv.ti_handling_charges) if inv else (
             safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0.0))
         rev_parking = (safe_num(inv.ti_parking_charges) if inv else (
@@ -5063,7 +5086,8 @@ def enquiry_pending_report_view(request):
         total_req_qty[vr.env_enquirynumber_id] = total_req_qty.get(vr.env_enquirynumber_id, 0) + qty
 
     # Vehicle Allotments mapping
-    allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids, va_status_id__in=[1, 4, 5]).select_related(
+    allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids,
+                                                      va_status_id__in=[1, 4, 5]).select_related(
         'va_vehiclenumber')
     allot_map = {}
     for va in allotments:
@@ -5409,7 +5433,8 @@ def enquiry_pending_report_ajax_view(request):
         'env_enquirynumber_id').annotate(tot=Sum('env_quantity'))
     req_map = {r['env_enquirynumber_id']: r['tot'] or 0 for r in reqs}
 
-    allots = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=pending_ids, va_status_id__in=[1, 4, 5]).values(
+    allots = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=pending_ids,
+                                                  va_status_id__in=[1, 4, 5]).values(
         'va_enquirynumber_id').annotate(tot=Count('id'))
     allots_map = {a['va_enquirynumber_id']: a['tot'] or 0 for a in allots}
 
@@ -5660,7 +5685,8 @@ def movementwise_pl_report_ajax_view(request):
         search_value = request.GET.get('search[value]', '').strip()
 
         # Base queryset
-        base_trips = get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date, to_date, selected_year)
+        base_trips = get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date, to_date,
+                                        selected_year)
         base_trips = base_trips.filter(tr_category_id=1, tc_financestatus_id__in=[7, 9])
         trips = base_trips
 
@@ -5756,7 +5782,8 @@ def movementwise_pl_report_ajax_view(request):
                     bill_no_map[str(tid).strip().upper()] = b
 
         attached_bill_map = {}
-        for b in AttachedBillInfo.objects.all().only('ab_bill_no', 'ab_selected_trips', 'ab_buy_cost', 'ab_total_km_run'):
+        for b in AttachedBillInfo.objects.all().only('ab_bill_no', 'ab_selected_trips', 'ab_buy_cost',
+                                                     'ab_total_km_run'):
             if b.ab_selected_trips:
                 for tid in [tid.strip() for tid in b.ab_selected_trips.split(',') if tid.strip()]:
                     try:
@@ -5775,8 +5802,10 @@ def movementwise_pl_report_ajax_view(request):
             inv = invoice_obj_map.get(trip.id)
             trip_expenses = expense_map.get(trip.id, [])
             va_info = va_map.get(trip.tr_enquirynumber_id)
-            ab_bill = attached_bill_map.get(trip.id) or (attached_bill_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
-            mb_bill = bill_no_map.get(trip.id) or (bill_no_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
+            ab_bill = attached_bill_map.get(trip.id) or (
+                attached_bill_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
+            mb_bill = bill_no_map.get(trip.id) or (
+                bill_no_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
 
             try:
                 prorated_fuel_val = fuel_lookup.get(trip.id, None)
@@ -5847,8 +5876,9 @@ def customerwise_pl_report_ajax_view(request):
         search_value = request.GET.get('search[value]', '').strip()
 
         # Base queryset
-        base_trips = get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date, to_date, selected_year,
-                                   customer_id=customer_id)
+        base_trips = get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date, to_date,
+                                        selected_year,
+                                        customer_id=customer_id)
         base_trips = base_trips.filter(tr_category_id=1, tc_financestatus_id__in=[7, 9])
         trips = base_trips
 
@@ -5944,7 +5974,8 @@ def customerwise_pl_report_ajax_view(request):
                     bill_no_map[str(tid).strip().upper()] = b
 
         attached_bill_map = {}
-        for b in AttachedBillInfo.objects.all().only('ab_bill_no', 'ab_selected_trips', 'ab_buy_cost', 'ab_total_km_run'):
+        for b in AttachedBillInfo.objects.all().only('ab_bill_no', 'ab_selected_trips', 'ab_buy_cost',
+                                                     'ab_total_km_run'):
             if b.ab_selected_trips:
                 for tid in [tid.strip() for tid in b.ab_selected_trips.split(',') if tid.strip()]:
                     try:
@@ -5964,8 +5995,10 @@ def customerwise_pl_report_ajax_view(request):
             inv = invoice_obj_map.get(trip.id)
             trip_expenses = expense_map.get(trip.id, [])
             va_info = va_map.get(trip.tr_enquirynumber_id)
-            ab_bill = attached_bill_map.get(trip.id) or (attached_bill_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
-            mb_bill = bill_no_map.get(trip.id) or (bill_no_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
+            ab_bill = attached_bill_map.get(trip.id) or (
+                attached_bill_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
+            mb_bill = bill_no_map.get(trip.id) or (
+                bill_no_map.get(str(trip.tr_tripnumber).strip().upper()) if trip.tr_tripnumber else None)
 
             try:
                 # Use None as default so get_trip_pl_data falls back to expense records
@@ -6241,7 +6274,7 @@ def location_pl_report_view(request):
                 ff_date__gte=min_date,
                 ff_date__lte=max_date
             ).aggregate(total_fuel=Sum('ff_fuel_price'))
-            
+
             total_fuel = safe_num(fuel_records.get('total_fuel'))
         else:
             total_fuel = 0.0
@@ -6394,7 +6427,8 @@ def location_pl_report_view(request):
             departed_km = safe_num(trip.tr_departedkm)
             km_run = max(0, reported_km - departed_km)
 
-            ab_bill = attached_bill_map.get(trip.id) or (attached_bill_map.get(str(trip.tr_tripnumber).strip()) if trip.tr_tripnumber else None)
+            ab_bill = attached_bill_map.get(trip.id) or (
+                attached_bill_map.get(str(trip.tr_tripnumber).strip()) if trip.tr_tripnumber else None)
             if ab_bill:
                 ab_buy_cost = safe_num(ab_bill.ab_buy_cost)
                 ab_total_km = safe_num(ab_bill.ab_total_km_run)
@@ -7033,7 +7067,7 @@ def vendor_bills_pending_mkt_att_report_view(request):
     allotment_map = {}
     for a in allotments:
         veh_no = (a.va_vehiclenumber.vm_registrationnumber if a.va_vehiclenumber else (
-                    a.va_vehiclenumber_mkt or "")).lower().strip()
+                a.va_vehiclenumber_mkt or "")).lower().strip()
         key = (a.va_enquirynumber_id, veh_no)
         # Store first matched allotment for enquiry+vehicle pair
         if key not in allotment_map:

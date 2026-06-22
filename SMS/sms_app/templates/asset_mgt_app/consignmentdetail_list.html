@@ -105,6 +105,8 @@
                 <th>Updated On</th>
                 <th>Updated By</th>
                 <th>Created By</th>
+                <th>Invoice Number</th>
+                <th>Invoice Amount</th>
                 <th>Edit</th>
                 <th>Delete</th>
             </tr>
@@ -169,22 +171,22 @@
                 { title: "Updated On" },
                 { title: "Updated By" },
                 { title: "Created By" },
+                { title: "Invoice Number", orderable: false },
+                { title: "Invoice Amount", orderable: false },
                 { title: "Edit", orderable: false, searchable: false },
                 { title: "Delete", orderable: false, searchable: false }
             ],
             columnDefs: [
                 {
-                    targets: 26,
+                    targets: 28,
                     render: function (data, type, row) {
                         return '<a class="btn btn-primary" href="/SMS/consignmentdetail_update/' + data + '/"><i class="far fa-edit"></i></a>';
                     }
                 },
                 {
-                    targets: 27,
+                    targets: 29,
                     render: function (data, type, row) {
-                        return '<form action="/SMS/consignmentdetail_delete/' + data + '/" method="post" onsubmit="return confirm(\'Are you sure?\');">' +
-                            '<input type="hidden" name="csrfmiddlewaretoken" value="' + getCookie('csrftoken') + '">' +
-                            '<button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button></form>';
+                        return '<form action="/SMS/consignmentdetail_delete/' + data + '/" method="post" onsubmit="return confirm(\'Are you sure?\');"><input type="hidden" name="csrfmiddlewaretoken" value="' + getCookie('csrftoken') + '"><button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button></form>';
                     }
                 }
             ],

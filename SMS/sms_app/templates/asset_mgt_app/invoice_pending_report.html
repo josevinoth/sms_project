@@ -69,6 +69,17 @@
         </select>
     </div>
 
+    <!-- Trip Status -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Trip Status</label>
+        <select name="trip_status" class="form-select form-control" id="filter_trip_status">
+            <option value="">-- All Statuses --</option>
+            {% for st in all_tripstatuses %}
+            <option value="{{ st.id }}">{{ st.status }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
     <!-- From Date -->
     <div class="col-md-2">
         <label class="form-label fw-bold">From Date</label>
@@ -150,6 +161,7 @@
                     d.from_location      = $('#filter_from_loc').val();
                     d.to_location        = $('#filter_to_loc').val();
                     d.vehicle_source     = $('#filter_vehicle_source').val();
+                    d.trip_status        = $('#filter_trip_status').val();
                 }
             },
             "dom": 'lBfrtip',
