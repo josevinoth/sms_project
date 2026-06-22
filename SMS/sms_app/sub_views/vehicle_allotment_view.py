@@ -751,12 +751,6 @@ def load_driver_details(request):
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license', flat=True))
     driver_license_exp_date = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license_exp_date', flat=True))
-    if active_trip:
-        active_trip.tr_drivername = new_driver_name
-        active_trip.tr_drivernumber = new_driver_number
-        active_trip.tr_driverlicence = new_driver_lic
-        active_trip.tr_driver_license_exp_date = new_driver_lic_exp_date
-        active_trip.save()
     data = {
         'driver_name': driver_name,
         'driver_number': driver_number,
