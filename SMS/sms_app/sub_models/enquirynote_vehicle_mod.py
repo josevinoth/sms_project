@@ -15,4 +15,4 @@ class Enquirynotevehicle(models.Model):
         ordering = ["env_enquirynumber"]
 
     def __str__(self):
-        return self.env_enquirynumber
+        return str(self.env_enquirynumber) if self.env_enquirynumber else "N/A"
