@@ -88,3 +88,34 @@ def get_base64_image(image_field):
     except (FileNotFoundError, OSError):
         # File referenced in database but doesn't exist on disk
         return None
+
+
+def is_tms_manager(user_id):
+    """
+    Returns True if the user qualifies as a 'TMS Manager':
+      - Organisation name contains 'trans'  (BVM Trans Solutions pvt ltd)
+      - Designation name contains 'manager'
+      - Role name is 'user'
+
+    These users get full super-user-level access inside TMS but are
+    restricted from all other modules (AMS, CMS, EMS, FMS, PMS, SMS, WMS).
+    """
+    if not user_id:
+        return False
+    try:
+        from ..sub_models.user_ext_mod import User_extInfo
+        user_ext = User_extInfo.objects.select_related(
+            'emp_organisation', 'emp_designation', 'emp_role'
+        ).get(user_id=user_id)
+
+        role_name        = str(user_ext.emp_role).strip().lower()        if user_ext.emp_role        else ''
+        org_name         = str(user_ext.emp_organisation).strip().lower() if user_ext.emp_organisation else ''
+        designation_name = str(user_ext.emp_designation).strip().lower() if user_ext.emp_designation else ''
+
+        return (
+            role_name == 'user' and
+            'trans' in org_name and
+            'manager' in designation_name
+        )
+    except Exception:
+        return False

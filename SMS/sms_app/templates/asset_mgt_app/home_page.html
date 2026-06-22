@@ -750,6 +750,25 @@
         {
             $('#tripapproval').css('display', 'none');
         }
+
+        // --- TMS ONLY OVERRIDE ---
+        // For Naresh Babu and Prem Sundar (TMS Managers), disable all other modules 
+        // visually but keep the buttons present in the DOM.
+        var is_tms_only = '{{ is_tms_only }}' === 'True';
+        if (is_tms_only) {
+            disableElement('employee_management_system');
+            disableElement('administration');
+            disableElement('sales');
+            disableElement('customer');
+            disableElement('asset');
+            disableElement('vendor');
+            disableElement('finance');
+            disableElement('packing');
+            disableElement('warehouse');
+            disableElement('supports');
+            
+            enableElement('transport');
+        }
     });
 </script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
