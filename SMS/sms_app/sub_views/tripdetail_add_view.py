@@ -198,6 +198,9 @@ def tripdetail_add(request, tripdetail_id=0):
             consignment_list = ConsignmentdetailInfo.objects.filter(
                 co_enquirynumber=enquiry_num_id
             ).exclude(id__in=used_consignments)
+            
+            trip_det_form.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(id=enquiry_num_id)
+            trip_det_form.fields['tr_consignmentnumber'].queryset = consignment_list
 
             context = {
                 'first_name': first_name,
@@ -286,6 +289,9 @@ def tripdetail_add(request, tripdetail_id=0):
             consignment_list = ConsignmentdetailInfo.objects.filter(
                 co_enquirynumber=enquiry_num_id
             ).exclude(id__in=used_consignments)
+            
+            trip_det_form.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(id=enquiry_num_id)
+            trip_det_form.fields['tr_consignmentnumber'].queryset = consignment_list
 
             # ⚠️ Fixed missing newline before this line
             checklist = TripHighvalueInfo.objects.filter(
