@@ -61,6 +61,7 @@ def rtratemaster_add(request,rtratemaster_id=0):
 def rtratemaster_list(request):
     first_name = request.session.get('first_name')
     search_query = request.GET.get('search', '').strip()
+    per_page = request.GET.get('per_page', '50').strip()
     
     # Base Queryset with select_related to avoid N+1 queries
     rtratemaster_qs = RtratemasterInfo.objects.select_related(
@@ -83,7 +84,16 @@ def rtratemaster_list(request):
             )
     
     # Pagination
-    paginator = Paginator(rtratemaster_qs, 50) # Reduced for performance
+    if per_page == 'All':
+        count = max(1, rtratemaster_qs.count())
+        paginator = Paginator(rtratemaster_qs, count)
+    else:
+        try:
+            limit = int(per_page)
+        except ValueError:
+            limit = 50
+        paginator = Paginator(rtratemaster_qs, limit)
+    
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
@@ -91,6 +101,7 @@ def rtratemaster_list(request):
         'page_obj' : page_obj,
         'first_name': first_name,
         'search_query': search_query,
+        'per_page': per_page,
     }
     return render(request,"asset_mgt_app/rtratemaster_list.html",context)
 
