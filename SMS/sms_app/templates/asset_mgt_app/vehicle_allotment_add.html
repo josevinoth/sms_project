@@ -676,6 +676,7 @@ function loadVendorSaleRate(checkboxId, isAutoLoad=false) {
                 const isSelected = (selectedVendorId && selectedVendorId == vendor.id) ? 'selected' : '';
                 dropdown.append(`<option value="${vendor.id}" ${isSelected}>${vendor.name}</option>`);
             });
+            dropdown.trigger('change.select2'); // Update Select2 UI
         },
         error: function(xhr) {
 		console.log("STATUS:", xhr.status);
@@ -756,6 +757,13 @@ document.addEventListener("DOMContentLoaded", function() {
 	$("#va_vehiclenumber").select2({
        width: 'resolve'
    });
+   $("#va_vendor").select2({
+       width: '100%'
+   });
+   $("#modal_va_vendor").select2({
+       width: '100%',
+       dropdownParent: $('#vendorModal') // Required for Select2 inside modals
+   });
 </script>
 <script>
 </script>
@@ -788,6 +796,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				}
 				// ✅ NOW SELECT
 				vendorDropdown.val(data.vendor_id);
+				vendorDropdown.trigger('change.select2');
 			}
 		});
 	});

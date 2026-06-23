@@ -30,4 +30,4 @@ class TripHighvalueInfo(models.Model):
     thc_vehiclenumber = models.CharField(max_length=10,blank=True,null=True)
 
     def __str__(self):
-        return self.thc_tripnumber
+        return str(self.thc_tripnumber) if self.thc_tripnumber else "N/A"

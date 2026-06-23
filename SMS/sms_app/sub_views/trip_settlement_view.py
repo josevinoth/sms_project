@@ -63,10 +63,23 @@ def trip_settlement_list_ajax_view(request):
 
         if veh_no:
             trip_list = trip_list.filter(tr_vehiclenumber__icontains=veh_no)
+        import datetime
+        from django.utils import timezone
+
         if date_from:
-            trip_list = trip_list.filter(tr_departeddate_pickup__gte=date_from)
+            try:
+                dt_from = datetime.datetime.strptime(date_from, "%Y-%m-%d")
+                aware_from = timezone.make_aware(dt_from)
+                trip_list = trip_list.filter(tr_departeddate_pickup__gte=aware_from)
+            except ValueError:
+                trip_list = trip_list.filter(tr_departeddate_pickup__gte=date_from)
         if date_to:
-            trip_list = trip_list.filter(tr_departeddate_pickup__lte=f"{date_to} 23:59:59")
+            try:
+                dt_to = datetime.datetime.strptime(f"{date_to} 23:59:59", "%Y-%m-%d %H:%M:%S")
+                aware_to = timezone.make_aware(dt_to)
+                trip_list = trip_list.filter(tr_departeddate_pickup__lte=aware_to)
+            except ValueError:
+                trip_list = trip_list.filter(tr_departeddate_pickup__lte=f"{date_to} 23:59:59")
 
         # Count before search filter for recordsTotal
         records_total = trip_list.count()
