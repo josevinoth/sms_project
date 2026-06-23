@@ -337,8 +337,7 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill, prorat
 # -------------------------
 
 VEHICLE_LOG_HEADERS = [
-    "SNo", "Date", "Trip Sheet No.", "Vehicle No.", "From Date", "To Date",
-    "Starting Time", "Closing Time",
+    "SNo", "Date", "Trip Sheet No.", "Vehicle No.", "Start Date", "End Date", "Starting Time", "Closing Time",
     "Start Km.", "Closing Km.", "Used Km.", "Starting Place", "Closing Place",
     "Cnote No", "Customer", "Shipper", "Driver Name"
 ]
@@ -802,7 +801,23 @@ def trip_fuel_cost_from_period(used_km, total_fuel_price, total_km, total_litres
 @login_required(login_url='login_page')
 def vehicle_log_report_view(request):
     first_name = request.session.get('first_name')
-    form = DmrForm()
+    
+    if request.method == "POST":
+        form = DmrForm(request.POST)
+        vehicle_number = request.POST.get('vehicle_number', '')
+        from_location = request.POST.get('from_location', '')
+        to_location = request.POST.get('to_location', '')
+        branch_id = request.POST.get('branch', '')
+        from_date = request.POST.get('from_date', '')
+        to_date = request.POST.get('to_date', '')
+    else:
+        form = DmrForm()
+        vehicle_number = ''
+        from_location = ''
+        to_location = ''
+        branch_id = ''
+        from_date = ''
+        to_date = ''
 
     all_vehicles = VehiclemasterInfo.objects.filter(
         vm_ownership_id__in=[1, 2]
@@ -814,6 +829,12 @@ def vehicle_log_report_view(request):
         'headers': VEHICLE_LOG_HEADERS,
         'data_rows': [],
         'all_vehicles': all_vehicles,
+        'vehicle_number': vehicle_number,
+        'from_location': from_location,
+        'to_location': to_location,
+        'branch_id': branch_id,
+        'from_date': from_date,
+        'to_date': to_date,
     })
 
 
@@ -827,11 +848,11 @@ def vehicle_log_report_ajax_view(request):
     length = safe_int(request.GET.get('length'), 10)
 
     vehicle_number = request.GET.get('vehicle_number', '')
-    selected_month = request.GET.get('month', '0')
-    selected_year = request.GET.get('year', '0')
     from_loc_id = request.GET.get('from_location', '')
     to_loc_id = request.GET.get('to_location', '')
     branch_id = request.GET.get('branch', '')
+    from_date = request.GET.get('from_date', '')
+    to_date = request.GET.get('to_date', '')
     search_value = request.GET.get('search[value]', '').strip()
 
     trips = TripdetailInfo.objects.select_related(
@@ -846,14 +867,34 @@ def vehicle_log_report_ajax_view(request):
     if vehicle_number:
         trips = trips.filter(tr_vehiclenumber__icontains=vehicle_number)
 
-    if selected_month and selected_month != '0' and selected_year and selected_year != '0':
+
+
+    if from_date and to_date:
         trips = trips.filter(
-            Q(tr_loading_time__month=selected_month, tr_loading_time__year=selected_year) |
-            Q(tr_departeddate__month=selected_month, tr_departeddate__year=selected_year) |
-            Q(tr_departeddate_pickup__month=selected_month, tr_departeddate_pickup__year=selected_year) |
-            Q(tr_reporteddate__month=selected_month, tr_reporteddate__year=selected_year) |
-            Q(tr_reporteddate_pickup__month=selected_month, tr_reporteddate_pickup__year=selected_year) |
-            Q(tr_unloading_time__month=selected_month, tr_unloading_time__year=selected_year)
+            (Q(tr_loading_time__date__gte=from_date) & Q(tr_loading_time__date__lte=to_date)) |
+            (Q(tr_departeddate__date__gte=from_date) & Q(tr_departeddate__date__lte=to_date)) |
+            (Q(tr_departeddate_pickup__date__gte=from_date) & Q(tr_departeddate_pickup__date__lte=to_date)) |
+            (Q(tr_reporteddate__date__gte=from_date) & Q(tr_reporteddate__date__lte=to_date)) |
+            (Q(tr_reporteddate_pickup__date__gte=from_date) & Q(tr_reporteddate_pickup__date__lte=to_date)) |
+            (Q(tr_unloading_time__date__gte=from_date) & Q(tr_unloading_time__date__lte=to_date))
+        )
+    elif from_date:
+        trips = trips.filter(
+            Q(tr_loading_time__date__gte=from_date) |
+            Q(tr_departeddate__date__gte=from_date) |
+            Q(tr_departeddate_pickup__date__gte=from_date) |
+            Q(tr_reporteddate__date__gte=from_date) |
+            Q(tr_reporteddate_pickup__date__gte=from_date) |
+            Q(tr_unloading_time__date__gte=from_date)
+        )
+    elif to_date:
+        trips = trips.filter(
+            Q(tr_loading_time__date__lte=to_date) |
+            Q(tr_departeddate__date__lte=to_date) |
+            Q(tr_departeddate_pickup__date__lte=to_date) |
+            Q(tr_reporteddate__date__lte=to_date) |
+            Q(tr_reporteddate_pickup__date__lte=to_date) |
+            Q(tr_unloading_time__date__lte=to_date)
         )
 
     if from_loc_id:
@@ -1291,9 +1332,9 @@ def vehicle_utilization_report_view(request):
             if not t_start_dt and not t_end_dt:
                 continue  # Skip drafts with no activity dates
 
-            t_start = t_start_dt.date() if t_start_dt else month_start
+            t_start = timezone.localtime(t_start_dt).date() if t_start_dt else month_start
             # If trip is unclosed, don't count until today; count as 1 day (the start date)
-            t_end = t_end_dt.date() if t_end_dt else t_start
+            t_end = timezone.localtime(t_end_dt).date() if t_end_dt else t_start
 
             # Effective overlap within the selected month (Base trip period)
             eff_start = max(t_start, month_start)
