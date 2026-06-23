@@ -4,6 +4,17 @@ from django.contrib import messages
 from ..forms import PlacesForm
 from ..models import Places
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
+
+def ajax_search_places_select2(request):
+    """AJAX view to search for places for Select2 dropdowns."""
+    query = request.GET.get('q', '').strip()
+    if query:
+        places = Places.objects.filter(place_name__icontains=query).values('id', 'place_name')[:20]
+    else:
+        places = Places.objects.all().values('id', 'place_name')[:20]
+    results = [{'id': p['id'], 'text': p['place_name']} for p in places]
+    return JsonResponse({'results': results})
 
 @login_required(login_url='login_page')
 def places_add(request,places_id=0):
