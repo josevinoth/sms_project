@@ -74,9 +74,9 @@ def attached_bill_list(request):
 
     bills = AttachedBillInfo.objects.all().order_by('-ab_created_at')
     if from_date:
-        bills = bills.filter(ab_bill_date__gte=from_date)
+        bills = bills.filter(ab_from_date__gte=from_date)
     if to_date:
-        bills = bills.filter(ab_bill_date__lte=to_date)
+        bills = bills.filter(ab_to_date__lte=to_date)
     return render(
         request,
         "asset_mgt_app/attached_bill_list.html",
@@ -334,9 +334,9 @@ def attached_bill_export_tally(request):
 
     bills = AttachedBillInfo.objects.all().order_by('ab_bill_date')
     if from_date:
-        bills = bills.filter(ab_bill_date__gte=from_date)
+        bills = bills.filter(ab_from_date__gte=from_date)
     if to_date:
-        bills = bills.filter(ab_bill_date__lte=to_date)
+        bills = bills.filter(ab_to_date__lte=to_date)
 
     wb = Workbook()
     ws = wb.active
@@ -426,13 +426,36 @@ def attached_bill_export_tally(request):
                 except:
                     customer_name = str(trip.tr_enquirynumber.en_customername)
 
+            # Calculate trip KM
+            start_km = trip.tr_reportedkm_pickup if trip.tr_reportedkm_pickup else (trip.tr_departedkm or 0)
+            closing_km = trip.tr_reportedkm_delivery if trip.tr_reportedkm_delivery else (trip.tr_reportedkm or 0)
+            trip_km = 0
+            if closing_km and start_km:
+                diff = closing_km - start_km
+                if 0 < diff < 15000:
+                    trip_km = diff
+
+            bill_buy_cost = float(bill.ab_buy_cost or 0)
+            bill_total_km = float(bill.ab_total_km_run or 0)
+
+            if bill_total_km > 0 and trip_km > 0:
+                calculated_buy_cost = (bill_buy_cost / bill_total_km) * trip_km
+            else:
+                calculated_buy_cost = 0.0
+
             transport_cost = float(trip.tc_tripcost or 0)
+            if transport_cost <= 0:
+                transport_cost = calculated_buy_cost
+
             expenses = []
             # Include transport and toll only; parking is excluded per request
             if transport_cost > 0:
                 expenses.append(("Transportation", transport_cost))
             if trip.tc_tollcost and float(trip.tc_tollcost) > 0:
                 expenses.append(("Toll", float(trip.tc_tollcost)))
+
+            if not expenses:
+                expenses.append(("Transportation", 0.0))
 
             vehicle_disp = trip.tr_vehiclenumber or ""
             if vehicle_disp:

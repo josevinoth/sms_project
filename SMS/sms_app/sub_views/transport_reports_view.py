@@ -337,7 +337,8 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill, prorat
 # -------------------------
 
 VEHICLE_LOG_HEADERS = [
-    "SNo", "Date", "Trip Sheet No.", "Vehicle No.", "Starting Time", "Closing Time",
+    "SNo", "Date", "Trip Sheet No.", "Vehicle No.", "From Date", "To Date",
+    "Starting Time", "Closing Time",
     "Start Km.", "Closing Km.", "Used Km.", "Starting Place", "Closing Place",
     "Cnote No", "Customer", "Shipper", "Driver Name"
 ]
@@ -936,11 +937,20 @@ def vehicle_log_report_ajax_view(request):
         closing_km = trip.tr_reportedkm_delivery if trip.tr_reportedkm_delivery else (trip.tr_reportedkm or 0)
         used_km = vehicle_log_used_km(trip)
 
+        from_date_display = _fmt_dt(trip.tr_departeddate, date_only=True) if trip.tr_departeddate else (
+            _fmt_dt(trip.tr_departeddate_pickup, date_only=True) if trip.tr_departeddate_pickup else ""
+        )
+        to_date_display = _fmt_dt(trip.tr_reporteddate_delivery, date_only=True) if trip.tr_reporteddate_delivery else (
+            _fmt_dt(trip.tr_reporteddate, date_only=True) if trip.tr_reporteddate else ""
+        )
+
         data_rows.append([
             idx,
             _fmt_dt(display_date, date_only=True),
             safe_str(trip.tr_tripnumber),
             safe_str(trip.tr_vehiclenumber),
+            from_date_display,
+            to_date_display,
             _fmt_dt(trip.tr_departeddate)[11:] if trip.tr_departeddate else "",
             _fmt_dt(trip.tr_reporteddate)[11:] if trip.tr_reporteddate else "",
             safe_str(start_km),
