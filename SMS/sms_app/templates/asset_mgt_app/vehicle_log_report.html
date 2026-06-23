@@ -60,17 +60,7 @@
     </div>
 
 
-    <!-- Month -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Month</label>
-        {% render_field form.month class="form-control" value=selected_month %}
-    </div>
 
-    <!-- Year -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Year</label>
-        {% render_field form.year class="form-control" value=selected_year %}
-    </div>
     <!-- From Location -->
     <div class="col-md-2">
         <label class="form-label fw-bold">From Location</label>
@@ -81,6 +71,18 @@
     <div class="col-md-2">
         <label class="form-label fw-bold">To Location</label>
         {% render_field form.to_location class="form-control" value=to_location %}
+    </div>
+
+    <!-- From Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">From Date</label>
+        <input type="date" class="form-control" name="from_date" id="from_date" value="{{ from_date }}">
+    </div>
+
+    <!-- To Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">To Date</label>
+        <input type="date" class="form-control" name="to_date" id="to_date" value="{{ to_date }}">
     </div>
 
     <!-- Branch -->
@@ -146,11 +148,11 @@
                 type: "GET",
                 data: function (d) {
                     d.vehicle_number = $('#vehicle_number').val();
-                    d.month = $('select[name="month"]').val();
-                    d.year = $('select[name="year"]').val();
                     d.from_location = $('select[name="from_location"]').val();
                     d.to_location = $('select[name="to_location"]').val();
                     d.branch = $('select[name="branch"]').val();
+                    d.from_date = $('#from_date').val();
+                    d.to_date = $('#to_date').val();
                 }
             },
 

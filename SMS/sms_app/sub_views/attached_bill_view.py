@@ -4,7 +4,8 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.db.models import Sum, Q
 import calendar
-from datetime import date as dt_date, timedelta
+from datetime import date as dt_date, timedelta, datetime as dt_datetime
+from django.utils import timezone as dj_timezone
 
 from ..sub_forms.attached_bill_form import AttachedBillForm
 from ..sub_models.attached_bill_mod import AttachedBillInfo
@@ -212,10 +213,14 @@ def get_attached_vehicle_details(request):
             filters &= Q(tr_vehiclenumber__in=vehicle_reg_nos)
         
         if f_dt_obj and t_dt_obj:
-            # Fetch trips for [start-1, end+1] to check Sunday neighbors correctly at boundaries
+            # Use IST-aware datetime boundaries to avoid UTC offset issues on server
+            # expanded_start = day before from_date, expanded_end = day after to_date
             expanded_start = f_dt_obj - timedelta(days=1)
             expanded_end = t_dt_obj + timedelta(days=1)
-            filters &= Q(tr_departeddate__date__range=[expanded_start, expanded_end])
+            # Convert to timezone-aware datetimes (start of day in IST = 00:00 IST, end = 23:59:59 IST)
+            ist_start = dj_timezone.make_aware(dt_datetime(expanded_start.year, expanded_start.month, expanded_start.day, 0, 0, 0))
+            ist_end = dj_timezone.make_aware(dt_datetime(expanded_end.year, expanded_end.month, expanded_end.day, 23, 59, 59))
+            filters &= Q(tr_departeddate__gte=ist_start, tr_departeddate__lte=ist_end)
 
         if filters:
             bill_id = request.GET.get('bill_id')
@@ -239,13 +244,16 @@ def get_attached_vehicle_details(request):
             elif vendor_id:
                 km_filters &= Q(tr_vehiclenumber__in=vehicle_reg_nos)
             if f_dt_obj and t_dt_obj:
+                # Use IST-aware datetime boundaries for KM filter
+                km_ist_start = dj_timezone.make_aware(dt_datetime(f_dt_obj.year, f_dt_obj.month, f_dt_obj.day, 0, 0, 0))
+                km_ist_end = dj_timezone.make_aware(dt_datetime(t_dt_obj.year, t_dt_obj.month, t_dt_obj.day, 23, 59, 59))
                 km_filters &= (
-                    Q(tr_departeddate__date__range=[f_dt_obj, t_dt_obj]) |
-                    Q(tr_departeddate_pickup__date__range=[f_dt_obj, t_dt_obj]) |
-                    Q(tr_reporteddate__date__range=[f_dt_obj, t_dt_obj]) |
-                    Q(tr_reporteddate_pickup__date__range=[f_dt_obj, t_dt_obj]) |
-                    Q(tr_loading_time__date__range=[f_dt_obj, t_dt_obj]) |
-                    Q(tr_unloading_time__date__range=[f_dt_obj, t_dt_obj])
+                    Q(tr_departeddate__gte=km_ist_start, tr_departeddate__lte=km_ist_end) |
+                    Q(tr_departeddate_pickup__gte=km_ist_start, tr_departeddate_pickup__lte=km_ist_end) |
+                    Q(tr_reporteddate__gte=km_ist_start, tr_reporteddate__lte=km_ist_end) |
+                    Q(tr_reporteddate_pickup__gte=km_ist_start, tr_reporteddate_pickup__lte=km_ist_end) |
+                    Q(tr_loading_time__gte=km_ist_start, tr_loading_time__lte=km_ist_end) |
+                    Q(tr_unloading_time__gte=km_ist_start, tr_unloading_time__lte=km_ist_end)
                 )
             
             # Use all trip categories for KM sum to match Vehicle Log Report exactly
@@ -272,11 +280,14 @@ def get_attached_vehicle_details(request):
                     if 0 < diff < 15000:
                         km = diff
 
-                trip_dte = trip.tr_departeddate.date() if trip.tr_departeddate else None
+                from django.utils import timezone
+                trip_dte = timezone.localtime(trip.tr_departeddate).date() if trip.tr_departeddate else None
 
                 if trip.tr_departeddate:
-                    start_date = trip.tr_departeddate.date()
-                    end_date_val = (trip.tr_reporteddate_delivery or trip.tr_reporteddate or trip.tr_departeddate).date()
+                    from django.utils import timezone
+                    start_date = timezone.localtime(trip.tr_departeddate).date()
+                    end_dt_val = (trip.tr_reporteddate_delivery or trip.tr_reporteddate or trip.tr_departeddate)
+                    end_date_val = timezone.localtime(end_dt_val).date()
                     temp_date = start_date
                     while temp_date <= end_date_val:
                         trip_dates.add(temp_date)
@@ -287,7 +298,7 @@ def get_attached_vehicle_details(request):
                     customer_name = trip.tr_enquirynumber.en_customername.cu_name if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername else "N/A"
                     data['trips'].append({
                         'id': trip.id,
-                        'trip_date': trip.tr_departeddate.strftime('%d-%m-%Y') if trip.tr_departeddate else "",
+                        'trip_date': timezone.localtime(trip.tr_departeddate).strftime('%d-%m-%Y') if trip.tr_departeddate else "",
                         'trip_no': trip.tr_tripnumber or "",
                         'cnote': trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "",
                         'customer': customer_name,
@@ -305,12 +316,27 @@ def get_attached_vehicle_details(request):
             data['total_km_run'] = total_km_run_sum
 
             if f_dt_obj and t_dt_obj:
-                leave_days_count = 0
+                # Build the full set of leave dates first
+                leave_dates_set = set()
                 curr = f_dt_obj
                 while curr <= t_dt_obj:
                     if curr not in trip_dates:
-                        leave_days_count += 1
+                        leave_dates_set.add(curr)
                     curr += timedelta(days=1)
+
+                # Sunday rule: Sunday only counts as leave if BOTH Saturday and Monday are also leave
+                leave_days_count = 0
+                for d in sorted(leave_dates_set):
+                    if d.weekday() == 6:  # Sunday
+                        saturday = d - timedelta(days=1)
+                        monday = d + timedelta(days=1)
+                        # Only count Sunday as leave if both Saturday and Monday are also leave
+                        sat_is_leave = saturday < f_dt_obj or saturday in leave_dates_set
+                        mon_is_leave = monday > t_dt_obj or monday in leave_dates_set
+                        if sat_is_leave and mon_is_leave:
+                            leave_days_count += 1
+                    else:
+                        leave_days_count += 1
                 data['leave_days'] = leave_days_count
         else:
             data['total_km_run'] = 0
@@ -363,7 +389,7 @@ def attached_bill_export_tally(request):
         if bill.ab_selected_trips:
             selected_trip_numbers = [t.strip() for t in bill.ab_selected_trips.split(',') if t.strip()]
 
-        trips = TripdetailInfo.objects.filter(tr_tripnumber__in=selected_trip_numbers).select_related('tr_enquirynumber')
+        trips = TripdetailInfo.objects.filter(tr_tripnumber__in=selected_trip_numbers).select_related('tr_enquirynumber', 'tr_consignmentnumber')
 
         # Financial year and month in voucher
         if bill.ab_bill_date:
@@ -398,7 +424,7 @@ def attached_bill_export_tally(request):
         except Exception:
             tds_ledger = "TDS Payable 194C (Non Company)" if tds_amount > 0 else ""
 
-        month_short = bill.ab_bill_date.strftime('%b%y') if bill.ab_bill_date else ""
+        month_short = bill.ab_from_date.strftime('%b%y') if bill.ab_from_date else ""
         rec_date_str = bill.ab_created_at.strftime('%d-%b-%y') if bill.ab_created_at else ""
         narration = f"Being ATT Vehicle expenses for the month of {month_short} (Bill Received on {rec_date_str})"
 
@@ -407,7 +433,7 @@ def attached_bill_export_tally(request):
         if not trips:
             vehicle_disp = ""
             if bill.ab_vehicle_number and getattr(bill.ab_vehicle_number, 'vm_registrationnumber', None):
-                vehicle_disp = f"{bill.ab_vehicle_number.vm_registrationnumber} (A)"
+                vehicle_disp = f"{bill.ab_vehicle_number.vm_registrationnumber}(A)"
             row = [
                 voucher_number, bill_date, ref_no, vendor_name, total_amt,
                 "Transportation", total_amt, "Maa-Att", "",
@@ -417,7 +443,9 @@ def attached_bill_export_tally(request):
             continue
 
         for trip in trips:
-            job_no = trip.tr_enquirynumber.en_enquirynumber if trip.tr_enquirynumber else (trip.tr_tripnumber or "")
+            # Use Consignment Note (C-Note) as Job No, fallback to enquiry number, then trip number
+            cnote = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else ""
+            job_no = cnote or (trip.tr_enquirynumber.en_enquirynumber if trip.tr_enquirynumber else (trip.tr_tripnumber or ""))
             customer_name = ""
             if trip.tr_enquirynumber and getattr(trip.tr_enquirynumber, 'en_customername', None):
                 # attached billing used cu_name earlier
@@ -459,7 +487,7 @@ def attached_bill_export_tally(request):
 
             vehicle_disp = trip.tr_vehiclenumber or ""
             if vehicle_disp:
-                vehicle_disp = f"{vehicle_disp} (A)"
+                vehicle_disp = f"{vehicle_disp}(A)"
 
             for exp_name, amt in expenses:
                 row = [
