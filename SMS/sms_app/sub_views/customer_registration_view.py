@@ -20,6 +20,16 @@ def ajax_search_customers(request):
         return JsonResponse(results, safe=False)
     return JsonResponse([], safe=False)
 
+def ajax_search_customers_select2(request):
+    """AJAX view to search for customers for Select2 dropdowns."""
+    query = request.GET.get('q', '').strip()
+    if query:
+        customers = CustomerInfo.objects.filter(cu_nameshort__icontains=query).values('id', 'cu_nameshort')[:20]
+    else:
+        customers = CustomerInfo.objects.all().values('id', 'cu_nameshort')[:20]
+    results = [{'id': c['id'], 'text': c['cu_nameshort']} for c in customers]
+    return JsonResponse({'results': results})
+
 def ajax_check_customer_code(request):
     """AJAX view to find customer by code."""
     code = request.GET.get('code', '').strip()
