@@ -3,7 +3,6 @@ from ..models import MyUser
 from ..sub_models.vendor_info_mod import Vendor_info
 from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
 
-
 def attached_bill_directory_path(instance, filename):
     return 'attached_bills/{0}/{1}'.format(instance.ab_bill_no, filename)
 
@@ -60,7 +59,57 @@ class AttachedBillInfo(models.Model):
             else:
                 fy_str = f"{str(year-1)[-2:]}-{str(year)[-2:]}"
             month_str_num = f"{month:02d}"
-            generated_voucher = f"MAA_ATT_{fy_str}_{month_str_num}_{self.pk:03d}"
+
+            prefix = "MAA"
+            if self.ab_selected_trips:
+                trip_numbers = [t.strip() for t in self.ab_selected_trips.split(',') if t.strip()]
+                if trip_numbers:
+                    from ..sub_models.tripdetail_mod import TripdetailInfo
+                    trips = TripdetailInfo.objects.filter(tr_tripnumber__in=trip_numbers)
+                    for trip in trips:
+                        if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_consignmentnumber:
+                            cnote = trip.tr_consignmentnumber.co_consignmentnumber.upper()
+                            if cnote.startswith("BLR"):
+                                prefix = "BLR"
+                                break
+                            elif cnote.startswith("MAA"):
+                                prefix = "MAA"
+                                break
+
+            # Determine the serial number sequence
+            keep_existing = False
+            current_serial = None
+            if self.ab_voucher_no:
+                parts = self.ab_voucher_no.split('_')
+                if len(parts) == 5 and parts[0] == prefix and parts[2] == fy_str:
+                    keep_existing = True
+                    try:
+                        current_serial = int(parts[4])
+                    except ValueError:
+                        pass
+
+            if keep_existing and current_serial is not None:
+                serial_no = current_serial
+            else:
+                # Find maximum serial number sequence in existing bills of the same prefix and financial year
+                search_prefix = f"{prefix}_ATT_{fy_str}_"
+                existing_vouchers = AttachedBillInfo.objects.filter(
+                    ab_voucher_no__startswith=search_prefix
+                ).exclude(pk=self.pk).values_list('ab_voucher_no', flat=True)
+
+                max_serial = 0
+                for v in existing_vouchers:
+                    v_parts = v.split('_')
+                    if len(v_parts) == 5:
+                        try:
+                            ser = int(v_parts[4])
+                            if ser > max_serial:
+                                max_serial = ser
+                        except ValueError:
+                            continue
+                serial_no = max_serial + 1
+
+            generated_voucher = f"{prefix}_ATT_{fy_str}_{month_str_num}_{serial_no:03d}"
             if self.ab_voucher_no != generated_voucher:
                 self.ab_voucher_no = generated_voucher
                 super().save(update_fields=['ab_voucher_no'])
