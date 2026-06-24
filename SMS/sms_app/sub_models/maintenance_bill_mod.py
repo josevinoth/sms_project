@@ -27,6 +27,17 @@ class MaintenanceBillInfo(models.Model):
 
     @property
     def get_voucher_number(self):
+        # --- Determine branch from MaintenanceInfo.mi_location (Branch model) ---
+        # Falls back to "MAA" if mi_location is NULL or unrecognised.
+        mi_location = getattr(self.mnb_maintenance, 'mi_location', None)
+        if mi_location and mi_location.branch:
+            branch_key = mi_location.branch.strip().upper()
+        else:
+            branch_key = "MAA"   # NULL branch defaults to MAA
+
+        branch_prefix = f"{branch_key}_MNB"
+
+        # --- Build FY and month strings ---
         if self.mnb_bill_date:
             year = self.mnb_bill_date.year
             month = self.mnb_bill_date.month
@@ -38,4 +49,25 @@ class MaintenanceBillInfo(models.Model):
         else:
             fy_str = "00-00"
             month_str = "00"
-        return f"MAA_MNB_{fy_str}_{month_str}_{self.id:03d}"
+
+        # --- Per-branch sequential rank ---
+        # Count all bills whose maintenance branch equals this branch_key
+        # and whose id <= this bill's id (preserving insertion order).
+        rank = MaintenanceBillInfo.objects.filter(
+            id__lte=self.id
+        ).filter(
+            # Bills whose mi_location matches branch_key OR whose mi_location
+            # is NULL (those also default to MAA as per business rule).
+            **({
+                "mnb_maintenance__mi_location__branch__iexact": branch_key
+            } if branch_key != "MAA" else {})
+        ).count() if branch_key != "MAA" else (
+            MaintenanceBillInfo.objects.filter(
+                id__lte=self.id
+            ).filter(
+                models.Q(mnb_maintenance__mi_location__branch__iexact="MAA") |
+                models.Q(mnb_maintenance__mi_location__isnull=True)
+            ).count()
+        )
+
+        return f"{branch_prefix}_{fy_str}_{month_str}_{rank:03d}"

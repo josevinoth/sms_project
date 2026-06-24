@@ -80,6 +80,7 @@ def maintenance_bill_list(request):
 
     bills = MaintenanceBillInfo.objects.all().select_related(
         'mnb_maintenance__mi_vehicle',
+        'mnb_maintenance__mi_location',
         'mnb_created_by',
         'mnb_updated_by'
     ).order_by('-mnb_bill_date')
@@ -174,7 +175,10 @@ def maintenance_bill_export_tally(request):
     from_date = request.GET.get('from_date', '')
     to_date = request.GET.get('to_date', '')
 
-    bills = MaintenanceBillInfo.objects.all().order_by('mnb_bill_date')
+    bills = MaintenanceBillInfo.objects.all().select_related(
+        'mnb_maintenance__mi_vehicle',
+        'mnb_maintenance__mi_location',
+    ).order_by('mnb_bill_date')
     if from_date:
         bills = bills.filter(mnb_bill_date__gte=from_date)
     if to_date:

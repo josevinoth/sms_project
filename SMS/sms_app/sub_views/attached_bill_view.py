@@ -404,7 +404,13 @@ def attached_bill_export_tally(request):
             fy_str = "00-00"
             month_str_num = "00"
 
-        voucher_number = f"MAA_ATT_{fy_str}_{month_str_num}_{bill.id:03d}"
+        voucher_number = bill.ab_voucher_no
+        if not voucher_number:
+            voucher_number = f"MAA_ATT_{fy_str}_{month_str_num}_{bill.id:03d}"
+        
+        prefix = voucher_number.split('_')[0] if '_' in voucher_number else "MAA"
+        cost_category = f"{prefix.capitalize()}-Att"
+
         bill_date = bill.ab_bill_date.strftime("%d-%m-%Y") if bill.ab_bill_date else ""
         ref_no = bill.ab_bill_no or ""
         vendor_name = bill.ab_vendor.vend_name if bill.ab_vendor else ""
@@ -436,7 +442,7 @@ def attached_bill_export_tally(request):
                 vehicle_disp = f"{bill.ab_vehicle_number.vm_registrationnumber}(A)"
             row = [
                 voucher_number, bill_date, ref_no, vendor_name, total_amt,
-                "Transportation", total_amt, "Maa-Att", "",
+                "Transportation", total_amt, cost_category, "",
                 vehicle_disp, "", (tds_ledger if tds_amount > 0 else ""), (tds_amount if tds_amount > 0 else ""), narration
             ]
             ws.append(row)
@@ -495,7 +501,7 @@ def attached_bill_export_tally(request):
                     vendor_name if is_first_row else "",
                     total_amt if is_first_row else "",
                     exp_name, amt,
-                    "Maa-Att", job_no, vehicle_disp, customer_name,
+                    cost_category, job_no, vehicle_disp, customer_name,
                     tds_ledger if is_first_row else "",
                     tds_amount if is_first_row and tds_amount > 0 else "",
                     narration
