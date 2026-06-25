@@ -40,8 +40,6 @@ def attached_bill_add(request):
                     t_parking = request.POST.get(f'trip_parking_cost_{tid}')
                     t_toll = request.POST.get(f'trip_toll_cost_{tid}')
 
-                    if t_buy is not None:
-                        trip.tc_tripcost = float(t_buy or 0)
                     if t_parking is not None: trip.tc_parkingcost = float(t_parking or 0)
                     if t_toll is not None: trip.tc_tollcost = float(t_toll or 0)
                     trip.save()
@@ -72,12 +70,22 @@ def attached_bill_add(request):
 def attached_bill_list(request):
     from_date = request.GET.get('from_date', '')
     to_date = request.GET.get('to_date', '')
+    vendor_id = request.GET.get('vendor_id', '')
 
     bills = AttachedBillInfo.objects.all().order_by('-ab_created_at')
     if from_date:
         bills = bills.filter(ab_from_date__gte=from_date)
     if to_date:
         bills = bills.filter(ab_to_date__lte=to_date)
+    if vendor_id:
+        bills = bills.filter(ab_vendor_id=vendor_id)
+
+    # Fetch only vendors who have at least one Attached vehicle (ownership_id=2)
+    from sms_app.sub_models.vendor_info_mod import Vendor_info
+    from sms_app.sub_models.vehiclemaster_mod import VehiclemasterInfo
+    attached_vendor_ids = VehiclemasterInfo.objects.filter(vm_ownership_id=2).exclude(vm_vendor=None).values_list('vm_vendor_id', flat=True).distinct()
+    vendors = Vendor_info.objects.filter(id__in=attached_vendor_ids).order_by('vend_name')
+
     return render(
         request,
         "asset_mgt_app/attached_bill_list.html",
@@ -85,6 +93,8 @@ def attached_bill_list(request):
             "bills": bills,
             "from_date": from_date,
             "to_date": to_date,
+            "vendor_id": vendor_id,
+            "vendors": vendors,
         }
     )
 
@@ -113,8 +123,6 @@ def attached_bill_edit(request, id):
                     t_parking = request.POST.get(f'trip_parking_cost_{tid}')
                     t_toll = request.POST.get(f'trip_toll_cost_{tid}')
 
-                    if t_buy is not None:
-                        trip.tc_tripcost = float(t_buy or 0)
                     if t_parking is not None: trip.tc_parkingcost = float(t_parking or 0)
                     if t_toll is not None: trip.tc_tollcost = float(t_toll or 0)
                     trip.save()
@@ -236,28 +244,9 @@ def get_attached_vehicle_details(request):
             if already_billed:
                 filters &= ~Q(tr_tripnumber__in=already_billed)
 
-            # --- Compute Vehicle Log Total KM (ALL trips, no already-billed filter) ---
-            # This matches the Vehicle Log Report total for the vehicle in the period.
-            km_filters = Q()
-            if vehicle_id:
-                km_filters &= Q(tr_vehiclenumber=vehicle.vm_registrationnumber)
-            elif vendor_id:
-                km_filters &= Q(tr_vehiclenumber__in=vehicle_reg_nos)
-            if f_dt_obj and t_dt_obj:
-                # Use IST-aware datetime boundaries for KM filter
-                km_ist_start = dj_timezone.make_aware(dt_datetime(f_dt_obj.year, f_dt_obj.month, f_dt_obj.day, 0, 0, 0))
-                km_ist_end = dj_timezone.make_aware(dt_datetime(t_dt_obj.year, t_dt_obj.month, t_dt_obj.day, 23, 59, 59))
-                km_filters &= (
-                    Q(tr_departeddate__gte=km_ist_start, tr_departeddate__lte=km_ist_end) |
-                    Q(tr_departeddate_pickup__gte=km_ist_start, tr_departeddate_pickup__lte=km_ist_end) |
-                    Q(tr_reporteddate__gte=km_ist_start, tr_reporteddate__lte=km_ist_end) |
-                    Q(tr_reporteddate_pickup__gte=km_ist_start, tr_reporteddate_pickup__lte=km_ist_end) |
-                    Q(tr_loading_time__gte=km_ist_start, tr_loading_time__lte=km_ist_end) |
-                    Q(tr_unloading_time__gte=km_ist_start, tr_unloading_time__lte=km_ist_end)
-                )
-            
-            # Use all trip categories for KM sum to match Vehicle Log Report exactly
-            all_period_trips = TripdetailInfo.objects.filter(km_filters).filter(tr_vehiclesource_id__in=[1, 2])
+            # Compute Total KM Run using the exact same filters as the bill table
+            # so that it perfectly matches the sum of the trips and avoids the "KM Difference Adjustment"
+            all_period_trips = TripdetailInfo.objects.filter(filters).filter(tr_vehiclesource_id__in=[1, 2])
             total_km_run_sum = 0
             for t in all_period_trips:
                 s_km = t.tr_reportedkm_pickup if t.tr_reportedkm_pickup else (t.tr_departedkm or 0)
@@ -357,12 +346,15 @@ def attached_bill_export_tally(request):
     """
     from_date = request.GET.get('from_date', '')
     to_date = request.GET.get('to_date', '')
+    vendor_id = request.GET.get('vendor_id', '')
 
     bills = AttachedBillInfo.objects.all().order_by('ab_bill_date')
     if from_date:
         bills = bills.filter(ab_from_date__gte=from_date)
     if to_date:
         bills = bills.filter(ab_to_date__lte=to_date)
+    if vendor_id:
+        bills = bills.filter(ab_vendor_id=vendor_id)
 
     wb = Workbook()
     ws = wb.active
@@ -390,6 +382,27 @@ def attached_bill_export_tally(request):
             selected_trip_numbers = [t.strip() for t in bill.ab_selected_trips.split(',') if t.strip()]
 
         trips = TripdetailInfo.objects.filter(tr_tripnumber__in=selected_trip_numbers).select_related('tr_enquirynumber', 'tr_consignmentnumber')
+
+        empty_trips = []
+        if bill.ab_vehicle_number and bill.ab_from_date and bill.ab_to_date:
+            km_filters = Q(tr_vehiclenumber=bill.ab_vehicle_number.vm_registrationnumber)
+            km_filters &= (
+                Q(tr_departeddate__date__range=[bill.ab_from_date, bill.ab_to_date]) |
+                Q(tr_departeddate_pickup__date__range=[bill.ab_from_date, bill.ab_to_date]) |
+                Q(tr_reporteddate__date__range=[bill.ab_from_date, bill.ab_to_date]) |
+                Q(tr_reporteddate_pickup__date__range=[bill.ab_from_date, bill.ab_to_date]) |
+                Q(tr_loading_time__date__range=[bill.ab_from_date, bill.ab_to_date]) |
+                Q(tr_unloading_time__date__range=[bill.ab_from_date, bill.ab_to_date])
+            )
+            empty_trips = TripdetailInfo.objects.filter(km_filters).filter(tr_category_id__in=[2, 3]).filter(tr_vehiclesource_id__in=[1, 2]).select_related('tr_enquirynumber', 'tr_consignmentnumber')
+
+        all_trips = list(trips) + list(empty_trips)
+        unique_trips = []
+        seen_trip_ids = set()
+        for t in all_trips:
+            if t.id not in seen_trip_ids:
+                seen_trip_ids.add(t.id)
+                unique_trips.append(t)
 
         # Financial year and month in voucher
         if bill.ab_bill_date:
@@ -430,7 +443,7 @@ def attached_bill_export_tally(request):
 
         is_first_row = True
 
-        if not trips:
+        if not unique_trips:
             vehicle_disp = ""
             if bill.ab_vehicle_number and getattr(bill.ab_vehicle_number, 'vm_registrationnumber', None):
                 vehicle_disp = f"{bill.ab_vehicle_number.vm_registrationnumber}(A)"
@@ -442,67 +455,88 @@ def attached_bill_export_tally(request):
             ws.append(row)
             continue
 
-        for trip in trips:
-            # Use Consignment Note (C-Note) as Job No, fallback to enquiry number, then trip number
+        # Separate regular trips from empty/business empty
+        regular_trips = [t for t in unique_trips if getattr(t, 'tr_category_id', None) not in [2, 3]]
+        empty_only_trips = [t for t in unique_trips if getattr(t, 'tr_category_id', None) == 2]
+        biz_empty_trips = [t for t in unique_trips if getattr(t, 'tr_category_id', None) == 3]
+
+        total_toll = sum(float(t.tc_tollcost or 0) for t in regular_trips)
+        bill_buy_cost = float(bill.ab_bill_amount or 0) - total_toll
+        bill_total_km = float(bill.ab_total_km_run or 0)
+
+        def calc_trip_km(trip):
+            start_km = trip.tr_reportedkm_pickup if trip.tr_reportedkm_pickup else (trip.tr_departedkm or 0)
+            closing_km = trip.tr_reportedkm_delivery if trip.tr_reportedkm_delivery else (trip.tr_reportedkm or 0)
+            if closing_km and start_km:
+                diff = closing_km - start_km
+                if 0 < diff < 15000:
+                    return diff
+            return 0
+
+        def calc_buy_cost(trip_km):
+            if bill_total_km > 0 and trip_km > 0:
+                return round((bill_buy_cost / bill_total_km) * trip_km, 2)
+            return 0.0
+
+        # Pre-calculate proportional amounts for ALL rows (regular + empty + biz empty)
+        # so we can adjust the last row to make the sum exactly equal bill_buy_cost
+        all_rows = []  # each entry: (type, trip_or_None, km, amount, job_no, customer_name, vehicle_disp, narration_suffix)
+
+        for trip in regular_trips:
             cnote = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else ""
             job_no = cnote or (trip.tr_enquirynumber.en_enquirynumber if trip.tr_enquirynumber else (trip.tr_tripnumber or ""))
             customer_name = ""
             if trip.tr_enquirynumber and getattr(trip.tr_enquirynumber, 'en_customername', None):
-                # attached billing used cu_name earlier
                 try:
                     customer_name = trip.tr_enquirynumber.en_customername.cu_name
                 except:
                     customer_name = str(trip.tr_enquirynumber.en_customername)
-
-            # Calculate trip KM
-            start_km = trip.tr_reportedkm_pickup if trip.tr_reportedkm_pickup else (trip.tr_departedkm or 0)
-            closing_km = trip.tr_reportedkm_delivery if trip.tr_reportedkm_delivery else (trip.tr_reportedkm or 0)
-            trip_km = 0
-            if closing_km and start_km:
-                diff = closing_km - start_km
-                if 0 < diff < 15000:
-                    trip_km = diff
-
-            bill_buy_cost = float(bill.ab_buy_cost or 0)
-            bill_total_km = float(bill.ab_total_km_run or 0)
-
-            if bill_total_km > 0 and trip_km > 0:
-                calculated_buy_cost = (bill_buy_cost / bill_total_km) * trip_km
-            else:
-                calculated_buy_cost = 0.0
-
-            transport_cost = float(trip.tc_tripcost or 0)
-            if transport_cost <= 0:
-                transport_cost = calculated_buy_cost
-
-            expenses = []
-            # Include transport and toll only; parking is excluded per request
-            if transport_cost > 0:
-                expenses.append(("Transportation", transport_cost))
+            trip_km = calc_trip_km(trip)
+            transport_cost = calc_buy_cost(trip_km)
+            vehicle_disp = f"{trip.tr_vehiclenumber}(A)" if trip.tr_vehiclenumber else ""
+            all_rows.append(("Transportation", transport_cost, job_no, vehicle_disp, customer_name, ""))
             if trip.tc_tollcost and float(trip.tc_tollcost) > 0:
-                expenses.append(("Toll", float(trip.tc_tollcost)))
+                all_rows.append(("Toll", float(trip.tc_tollcost), job_no, vehicle_disp, customer_name, ""))
 
-            if not expenses:
-                expenses.append(("Transportation", 0.0))
+        # Consolidated empty row
+        if empty_only_trips:
+            total_empty_km = sum(calc_trip_km(t) for t in empty_only_trips)
+            total_empty_amount = calc_buy_cost(total_empty_km)
+            vehicle_disp = f"{bill.ab_vehicle_number.vm_registrationnumber}(A)" if bill.ab_vehicle_number and getattr(bill.ab_vehicle_number, 'vm_registrationnumber', None) else ""
+            all_rows.append(("Transportation", total_empty_amount, "NA(J)", vehicle_disp, "NA(C)", " (Empty)"))
 
-            vehicle_disp = trip.tr_vehiclenumber or ""
-            if vehicle_disp:
-                vehicle_disp = f"{vehicle_disp}(A)"
+        # Consolidated business empty row
+        if biz_empty_trips:
+            total_biz_km = sum(calc_trip_km(t) for t in biz_empty_trips)
+            total_biz_amount = calc_buy_cost(total_biz_km)
+            vehicle_disp = f"{bill.ab_vehicle_number.vm_registrationnumber}(A)" if bill.ab_vehicle_number and getattr(bill.ab_vehicle_number, 'vm_registrationnumber', None) else ""
+            all_rows.append(("Transportation", total_biz_amount, "NA(J)", vehicle_disp, "NA(C)", " (Business Empty)"))
 
-            for exp_name, amt in expenses:
-                row = [
-                    voucher_number, bill_date, ref_no,
-                    vendor_name if is_first_row else "",
-                    total_amt if is_first_row else "",
-                    exp_name, amt,
-                    "Maa-Att", job_no, vehicle_disp, customer_name,
-                    tds_ledger if is_first_row else "",
-                    tds_amount if is_first_row and tds_amount > 0 else "",
-                    narration
-                ]
-                ws.append(row)
-                ws.cell(row=ws.max_row, column=6).fill = expense_fill
-                is_first_row = False
+        # Adjust last Transportation row so sum of all Transportation amounts = bill_buy_cost exactly
+        transport_rows_idx = [i for i, r in enumerate(all_rows) if r[0] == "Transportation"]
+        if transport_rows_idx:
+            current_transport_sum = sum(all_rows[i][1] for i in transport_rows_idx)
+            diff = round(bill_buy_cost - current_transport_sum, 2)
+            if diff != 0:
+                # Append difference as a separate adjustment row to keep empty/business empty amounts perfectly matched with summary
+                vehicle_disp = f"{bill.ab_vehicle_number.vm_registrationnumber}(A)" if bill.ab_vehicle_number and getattr(bill.ab_vehicle_number, 'vm_registrationnumber', None) else ""
+                all_rows.append(("Transportation", diff, "NA(J)", vehicle_disp, "NA(C)", " (KM Difference Adjustment)"))
+
+        # Write all rows to worksheet
+        for exp_name, amt, job_no, vehicle_disp, customer_name, narr_suffix in all_rows:
+            row = [
+                voucher_number, bill_date, ref_no,
+                vendor_name if is_first_row else "",
+                total_amt if is_first_row else "",
+                exp_name, amt,
+                "Maa-Att", job_no, vehicle_disp, customer_name,
+                tds_ledger if is_first_row else "",
+                tds_amount if is_first_row and tds_amount > 0 else "",
+                narration + narr_suffix
+            ]
+            ws.append(row)
+            ws.cell(row=ws.max_row, column=6).fill = expense_fill
+            is_first_row = False
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="Attached_Bill_Tally_Export.xlsx"'
@@ -634,7 +668,7 @@ def attached_bill_summary(request, id):
     empty_km           = actual_empty_km
     business_empty_km  = actual_business_empty_km
 
-    per_km_amount      = (actual_amount / total_km_saved) if total_km_saved > 0 else 0
+    per_km_amount      = ((actual_amount - toll_cost) / total_km_saved) if total_km_saved > 0 else 0
     empty_km_buy_cost  = per_km_amount * empty_km
     business_empty_km_buy_cost = per_km_amount * business_empty_km
 

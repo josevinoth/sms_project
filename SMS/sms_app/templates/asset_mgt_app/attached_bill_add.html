@@ -505,8 +505,10 @@
             $('#id_ab_bill_amount').val(total_bill.toFixed(2));
         }
 
-        // 5. Update table: Buy Cost = (Header Buy Cost / Total KM Run) * Trip KM
-        var rate = (total_km > 0) ? (buy_cost / total_km) : 0;
+        // 5. Update table: Buy Cost = ((Bill Amount - Toll) / Total KM Run) * Trip KM
+        // We use total_bill - toll_cost so that the UI perfectly matches the Tally Export accounting.
+        var base_transport_cost = total_bill - toll_cost;
+        var rate = (total_km > 0) ? (base_transport_cost / total_km) : 0;
         if (isNaN(rate)) rate = 0;
 
         // Auto-distribute header into table rows
@@ -574,10 +576,14 @@
     // Calculate TDS amount and payable amount based on the summary total
     function updateTdsAndPayable() {
         var tdsPercent = parseFloat($('#id_ab_tds_percent').val()) || 0;
-        var baseAmount = parseFloat($('#id_total_table_buycost_summary').val()) || 0;
-        var tdsAmount = (baseAmount * tdsPercent) / 100.0;
+        var billAmount = parseFloat($('#id_ab_bill_amount').val()) || 0;
+        
+        // Calculate TDS directly from the full Bill Amount
+        var tdsAmount = (billAmount * tdsPercent) / 100.0;
         if (isNaN(tdsAmount)) tdsAmount = 0;
-        var payable = baseAmount - tdsAmount;
+        
+        // Final Payable is Bill Amount minus TDS
+        var payable = billAmount - tdsAmount;
         if (isNaN(payable)) payable = 0;
 
         // Set form fields
