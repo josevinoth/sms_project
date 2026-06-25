@@ -246,7 +246,10 @@ def get_attached_vehicle_details(request):
 
             # Compute Total KM Run using the exact same filters as the bill table
             # so that it perfectly matches the sum of the trips and avoids the "KM Difference Adjustment"
-            all_period_trips = TripdetailInfo.objects.filter(filters).filter(tr_vehiclesource_id__in=[1, 2])
+            all_period_trips = TripdetailInfo.objects.filter(filters).filter(
+                tr_category_id__in=[1, 2, 3],
+                tr_vehiclesource_id__in=[1, 2]
+            )
             total_km_run_sum = 0
             for t in all_period_trips:
                 s_km = t.tr_reportedkm_pickup if t.tr_reportedkm_pickup else (t.tr_departedkm or 0)
@@ -385,16 +388,15 @@ def attached_bill_export_tally(request):
 
         empty_trips = []
         if bill.ab_vehicle_number and bill.ab_from_date and bill.ab_to_date:
-            km_filters = Q(tr_vehiclenumber=bill.ab_vehicle_number.vm_registrationnumber)
-            km_filters &= (
-                Q(tr_departeddate__date__range=[bill.ab_from_date, bill.ab_to_date]) |
-                Q(tr_departeddate_pickup__date__range=[bill.ab_from_date, bill.ab_to_date]) |
-                Q(tr_reporteddate__date__range=[bill.ab_from_date, bill.ab_to_date]) |
-                Q(tr_reporteddate_pickup__date__range=[bill.ab_from_date, bill.ab_to_date]) |
-                Q(tr_loading_time__date__range=[bill.ab_from_date, bill.ab_to_date]) |
-                Q(tr_unloading_time__date__range=[bill.ab_from_date, bill.ab_to_date])
-            )
-            empty_trips = TripdetailInfo.objects.filter(km_filters).filter(tr_category_id__in=[2, 3]).filter(tr_vehiclesource_id__in=[1, 2]).select_related('tr_enquirynumber', 'tr_consignmentnumber')
+            strict_filters = Q(tr_vehiclenumber=bill.ab_vehicle_number.vm_registrationnumber)
+            
+            expanded_start = bill.ab_from_date - timedelta(days=1)
+            expanded_end = bill.ab_to_date + timedelta(days=1)
+            ist_start = dj_timezone.make_aware(dt_datetime(expanded_start.year, expanded_start.month, expanded_start.day, 0, 0, 0))
+            ist_end = dj_timezone.make_aware(dt_datetime(expanded_end.year, expanded_end.month, expanded_end.day, 23, 59, 59))
+            
+            strict_filters &= Q(tr_departeddate__gte=ist_start, tr_departeddate__lte=ist_end)
+            empty_trips = TripdetailInfo.objects.filter(strict_filters).filter(tr_category_id__in=[2, 3]).filter(tr_vehiclesource_id__in=[1, 2]).select_related('tr_enquirynumber', 'tr_consignmentnumber')
 
         all_trips = list(trips) + list(empty_trips)
         unique_trips = []
@@ -518,9 +520,15 @@ def attached_bill_export_tally(request):
             current_transport_sum = sum(all_rows[i][1] for i in transport_rows_idx)
             diff = round(bill_buy_cost - current_transport_sum, 2)
             if diff != 0:
-                # Append difference as a separate adjustment row to keep empty/business empty amounts perfectly matched with summary
-                vehicle_disp = f"{bill.ab_vehicle_number.vm_registrationnumber}(A)" if bill.ab_vehicle_number and getattr(bill.ab_vehicle_number, 'vm_registrationnumber', None) else ""
-                all_rows.append(("Transportation", diff, "NA(J)", vehicle_disp, "NA(C)", " (KM Difference Adjustment)"))
+                if abs(diff) < 1.00:
+                    # Small rounding difference — absorb into the last Transportation row silently
+                    last_idx = transport_rows_idx[-1]
+                    r = all_rows[last_idx]
+                    all_rows[last_idx] = (r[0], round(r[1] + diff, 2), r[2], r[3], r[4], r[5])
+                else:
+                    # Large difference — there are genuinely unaccounted KMs, show adjustment row
+                    vehicle_disp = f"{bill.ab_vehicle_number.vm_registrationnumber}(A)" if bill.ab_vehicle_number and getattr(bill.ab_vehicle_number, 'vm_registrationnumber', None) else ""
+                    all_rows.append(("Transportation", diff, "NA(J)", vehicle_disp, "NA(C)", " (KM Difference Adjustment)"))
 
         # Write all rows to worksheet
         for exp_name, amt, job_no, vehicle_disp, customer_name, narr_suffix in all_rows:
@@ -662,7 +670,8 @@ def attached_bill_summary(request, id):
     display_total_km = total_km_saved
 
     days_run   = len(summary_billed_trip_dates)
-    trip_index = f"{total_trips} TRIPS / {days_run} DAYS RUN" if days_run else f"{total_trips} TRIPS"
+    trip_ratio = round(total_trips / days_run, 2) if days_run else 0
+    trip_index = f"{total_trips} TRIPS / {days_run} DAYS RUN = {trip_ratio} TRIPS/DAY" if days_run else f"{total_trips} TRIPS"
 
     # --- Empty KM = from DB trips with category 2 or 3 ---
     empty_km           = actual_empty_km
