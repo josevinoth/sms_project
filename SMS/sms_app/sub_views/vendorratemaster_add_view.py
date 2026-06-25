@@ -60,6 +60,7 @@ def vendorratemaster_add(request,vendorratemaster_id=0):
 def vendorratemaster_list(request):
     first_name = request.session.get('first_name')
     search_query = request.GET.get('search', '').strip()
+    per_page = request.GET.get('per_page', '50').strip()
 
     # Base Queryset with select_related to avoid N+1 queries
     vendorratemaster_qs = VendorratemasterInfo1.objects.select_related(
@@ -81,7 +82,16 @@ def vendorratemaster_list(request):
             )
 
     # Pagination
-    paginator = Paginator(vendorratemaster_qs, 50) # Reduced to 50 for even better performance
+    if per_page == 'All':
+        count = max(1, vendorratemaster_qs.count())
+        paginator = Paginator(vendorratemaster_qs, count)
+    else:
+        try:
+            limit = int(per_page)
+        except ValueError:
+            limit = 50
+        paginator = Paginator(vendorratemaster_qs, limit)
+
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -89,6 +99,7 @@ def vendorratemaster_list(request):
         'page_obj' : page_obj,
         'first_name': first_name,
         'search_query': search_query,
+        'per_page': per_page,
     }
     return render(request,"asset_mgt_app/vendorratemaster_list.html",context)
 
