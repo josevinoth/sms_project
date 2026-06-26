@@ -1,4 +1,23 @@
 <div class="container-fluid mt-4">
+    <style>
+        #driver_expense_list_wrapper .dt-buttons {
+            margin-left: 12px;
+        }
+
+        #driver_expense_list_wrapper .dt-button.btn-driver-expense-excel {
+            background: #007bff;
+            border-color: #007bff;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.25);
+        }
+
+        #driver_expense_list_wrapper .dt-button.btn-driver-expense-excel:hover {
+            background: #0069d9;
+            border-color: #0062cc;
+            color: #fff;
+        }
+    </style>
+
     <div class="card border-info">
         <div class="card-header bg-info text-white d-flex align-items-center justify-content-between">
             <h3 class="mb-0">Driver Expense List</h3>
@@ -7,9 +26,7 @@
                class="btn btn-success btn-m">
                 <i class="fas fa-plus"></i> Add
             </a>
-
         </div>
-
 
         <div class="card-body bg-light">
             <form method="get" class="form-inline mb-3">
@@ -32,6 +49,7 @@
                     <th>ID</th>
                     <th>Trip Date</th>
                     <th>Trip Number</th>
+                    <th>Vehicle Number</th>
                     <th>C-Note No</th>
                     <th>Driver Name</th>
                     <th>Expense Type</th>
@@ -40,6 +58,8 @@
                     <th>Unloading</th>
                     <th>Weighment</th>
                     <th>Supervisor</th>
+                    <th>RTO</th>
+                    <th>Batta</th>
                     <th>Total Cost</th>
                     <th>Edit</th>
                     <th>Delete</th>
@@ -50,9 +70,10 @@
                 {% for exp in expense_list %}
                 <tr>
                     <td>{{ exp.id }}</td>
-                    <td>{% if exp.trip_date %}{{ exp.trip_date|date:"d-m-Y" }}{% else %}—{% endif %}</td>
-                    <td>{{ exp.trip_number|default:"—" }}</td>
-                    <td>{{ exp.cnote|default:"—" }}</td>
+                    <td>{% if exp.trip_date %}{{ exp.trip_date|date:"d-m-Y" }}{% else %}-{% endif %}</td>
+                    <td>{{ exp.trip_number|default:"-" }}</td>
+                    <td>{{ exp.vehicle_number|default:"-" }}</td>
+                    <td>{{ exp.cnote|default:"-" }}</td>
                     <td>{{ exp.driver_name.dm_name }}</td>
                     <td>{{ exp.de_expense_type }}</td>
                     <td>{{ exp.de_parkingcost }}</td>
@@ -60,6 +81,8 @@
                     <td>{{ exp.de_unloadingcost }}</td>
                     <td>{{ exp.de_weighmentcost }}</td>
                     <td>{{ exp.de_supervisorcost }}</td>
+                    <td>{{ exp.de_rtocost }}</td>
+                    <td>{{ exp.de_battacost }}</td>
                     <td><strong>{{ exp.de_total_cost }}</strong></td>
 
                     <td>
@@ -76,9 +99,7 @@
                         </a>
                     </td>
                 </tr>
-
                 {% endfor %}
-
                 </tbody>
             </table>
         </div>
@@ -91,6 +112,20 @@
     $(document).ready(function () {
         $('#driver_expense_list').DataTable({
             order: [[0, 'desc']],
+            dom: "<'row'<'col-sm-12 col-md-6'lB><'col-sm-12 col-md-6'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: 'Excel',
+                    className: 'btn btn-primary btn-sm btn-driver-expense-excel',
+                    title: 'Driver Expense List',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+                    }
+                }
+            ],
             destroy: true
         });
     });
