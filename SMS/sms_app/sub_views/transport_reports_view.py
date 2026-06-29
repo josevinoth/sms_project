@@ -719,7 +719,7 @@ OWN_VS_MARKET_SALES_HEADERS = [
 ]
 
 ENQUIRY_PENDING_HEADERS = [
-    "SNo", "Date", "Enquiry No", "From", "To", "Vehicle Requested", "Assigned Vehicles", "Unassigned Vehicles",
+    "SNo", "Date", "Enquiry No", "From", "To", "Vehicle Requested", "Assigned Vehicles", "Unassigned Vehicles", "Cancelled Vehicles",
     "Vehicle Type",
     "Customer Name", "Reason"
 ]
@@ -843,6 +843,7 @@ def vehicle_log_report_view(request):
         branch_id = request.POST.get('branch', '')
         from_date = request.POST.get('from_date', '')
         to_date = request.POST.get('to_date', '')
+        vehicle_source = request.POST.get('vehicle_source', '')
     else:
         form = DmrForm()
         vehicle_number = ''
@@ -851,10 +852,14 @@ def vehicle_log_report_view(request):
         branch_id = ''
         from_date = ''
         to_date = ''
+        vehicle_source = ''
 
     all_vehicles = VehiclemasterInfo.objects.filter(
         vm_ownership_id__in=[1, 2]
     ).order_by('vm_registrationnumber')
+    
+    from ..models import OwnershipInfo
+    ownerships = OwnershipInfo.objects.all()
 
     return render(request, "asset_mgt_app/vehicle_log_report.html", {
         'first_name': first_name,
@@ -868,6 +873,8 @@ def vehicle_log_report_view(request):
         'branch_id': branch_id,
         'from_date': from_date,
         'to_date': to_date,
+        'vehicle_source': vehicle_source,
+        'ownerships': ownerships,
     })
 
 
@@ -886,6 +893,7 @@ def vehicle_log_report_ajax_view(request):
     branch_id = request.GET.get('branch', '')
     from_date = request.GET.get('from_date', '')
     to_date = request.GET.get('to_date', '')
+    vehicle_source = request.GET.get('vehicle_source', '')
     search_value = request.GET.get('search[value]', '').strip()
 
     trips = TripdetailInfo.objects.select_related(
@@ -895,7 +903,12 @@ def vehicle_log_report_ajax_view(request):
         'tr_consignmentnumber',
         'tr_departedlocation',
         'tr_reportedlocation'
-    ).filter(tr_vehiclesource_id__in=[1, 2])
+    )
+    
+    if vehicle_source:
+        trips = trips.filter(tr_vehiclesource_id=vehicle_source)
+    else:
+        trips = trips.filter(tr_vehiclesource_id__in=[1, 2])
 
     if vehicle_number:
         trips = trips.filter(tr_vehiclenumber__icontains=vehicle_number)
@@ -4994,17 +5007,19 @@ def enquiry_pending_report_view(request):
                                                       va_status_id__in=[1, 4, 5]).select_related(
         'va_vehiclenumber')
     allot_map = {}
+    cancelled_map = {}
     for va in allotments:
         reg_no = va.va_vehiclenumber.vm_registrationnumber if va.va_vehiclenumber else va.va_vehiclenumber_mkt
         if reg_no:
             allot_map.setdefault(va.va_enquirynumber_id, []).append(str(reg_no))
+        if va.va_status_id == 4:
+            cancelled_map.setdefault(va.va_enquirynumber_id, []).append(va.id)
 
     data_rows = []
     for idx, enq in enumerate(enquiries, start=1):
         # Vehicle Requested
         req_list = req_map.get(enq.id, [])
         veh_req_str = str(total_req_qty.get(enq.id, 0))
-
         # Vehicle Type
         # Extract unique types from req_list
         veh_types = ", ".join(list(set([r.split(" x ")[-1] for r in req_list])))
@@ -5012,6 +5027,7 @@ def enquiry_pending_report_view(request):
         # Vehicle Unplaced count
         total_req = total_req_qty.get(enq.id, 0)
         total_placed = len(allot_map.get(enq.id, []))
+        total_cancelled = len(cancelled_map.get(enq.id, []))
         unplaced_count = max(0, total_req - total_placed)
         places_str = str(unplaced_count)
 
@@ -5023,7 +5039,9 @@ def enquiry_pending_report_view(request):
                 safe_str(enq.en_fromlocaion),
                 safe_str(enq.en_tolocation),
                 veh_req_str,
+                str(total_placed),
                 places_str,
+                str(total_cancelled),
                 veh_types,
                 safe_str(enq.en_customername),
                 safe_str(" ")  # Reason field as requested by user
@@ -5411,8 +5429,11 @@ def enquiry_pending_report_ajax_view(request):
     # Fetch allotments
     allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids, va_status_id__in=[1, 4, 5])
     allot_map = {}
+    cancelled_map = {}
     for va in allotments:
         allot_map.setdefault(va.va_enquirynumber_id, []).append(va.id)
+        if va.va_status_id == 4:
+            cancelled_map.setdefault(va.va_enquirynumber_id, []).append(va.id)
 
     def safe_str(val):
         return str(val) if val else ""
@@ -5424,6 +5445,7 @@ def enquiry_pending_report_ajax_view(request):
         veh_types = ", ".join(list(set([r.split(" x ")[-1] for r in req_list])))
         total_req = total_req_qty.get(enq.id, 0)
         total_placed = len(allot_map.get(enq.id, []))
+        total_cancelled = len(cancelled_map.get(enq.id, []))
         unplaced_count = max(0, total_req - total_placed)
 
         data.append([
@@ -5435,6 +5457,7 @@ def enquiry_pending_report_ajax_view(request):
             veh_req_str,
             str(total_placed),
             str(unplaced_count),
+            str(total_cancelled),
             veh_types,
             safe_str(enq.en_customername),
             " "

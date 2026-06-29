@@ -83,31 +83,8 @@
         </div>
     </form>
 </div>
-<script>
-    // Set default dates to current month if empty in local time (avoiding UTC timezone shift bugs)
-    var today = new Date();
-    var y = today.getFullYear();
-    var m = today.getMonth();
-    
-    function formatDate(d) {
-        var month = '' + (d.getMonth() + 1);
-        var day = '' + d.getDate();
-        var year = d.getFullYear();
-        if (month.length < 2) month = '0' + month;
-        if (day.length < 2) day = '0' + day;
-        return [year, month, day].join('-');
-    }
-    
-    var firstDay = formatDate(new Date(y, m, 1));
-    var lastDay = formatDate(new Date(y, m + 1, 0));
-    
-    if (!document.getElementById('date_from').value) {
-        document.getElementById('date_from').value = firstDay;
-    }
-    if (!document.getElementById('date_to').value) {
-        document.getElementById('date_to').value = lastDay;
-    }
 
+<script>
     function exportFuelFormat() {
         var date_from = document.getElementById('date_from').value;
         var date_to = document.getElementById('date_to').value;
@@ -204,7 +181,14 @@
                 if ($.fn.DataTable) {
                     $('#fuelfilling_list').DataTable({
                         order: [0, 'desc'],
-                        dom: 'Bfrtip',
+                        dom: "<'row'<'col-sm-12 col-md-6 d-flex align-items-center gap-2'lB><'col-sm-12 col-md-6'f>>" +
+                             "<'row'<'col-sm-12'tr>>" +
+                             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                        lengthMenu: [
+                            [10, 25, 50, 100, -1],
+                            [10, 25, 50, 100, "All"]
+                        ],
+                        pageLength: 25,
                         buttons: [
                             'copy', 'csv', 'excel', 'print'
                         ],
