@@ -40,6 +40,16 @@ def tripclosure_enquiry(request, enquiry_id, trip_num):
             trip_detail = TripdetailInfo.objects.filter(tr_tripnumber=trip_num).first()
         trip_id = trip_detail.id if trip_detail else None
         print('trip_id:', trip_id)
+
+        # 🔒 Block access: Cancellation without Billing — no settlement allowed
+        if trip_detail and trip_detail.tc_financestatus_id == 11:
+            messages.error(
+                request,
+                f'Trip Settlement is locked for "{trip_num}" — '
+                f'this trip has been marked as "Cancellation without Billing" and cannot proceed to settlement.'
+            )
+            return redirect(request.META.get('HTTP_REFERER', 'enquirynote_list'))
+
         # If trip_id is provided, redirect to update
         if trip_id:
             return redirect('tripclosure_update', tripclosure_id=trip_id)
@@ -116,6 +126,16 @@ def tripclosure_add(request, tripclosure_id=0):
             print("Inside Trip closure edit")
             enquiry_num = tripclosure.tr_enquirynumber
             enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
+
+            # 🔒 Block access: Cancellation without Billing (id=11) — no settlement allowed
+            if tripclosure.tc_financestatus_id == 11:
+                messages.error(
+                    request,
+                    f'Trip Settlement is locked for "{tripclosure.tr_tripnumber}" — '
+                    f'this trip has been marked as "Cancellation without Billing" and cannot proceed to settlement.'
+                )
+                return redirect('tripdetail_update', tripdetail_id=tripclosure_id)
+
             consignment_num = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_consignmentdetails
             tripclosure_form = TripclosureaddForm(instance=tripclosure)
 

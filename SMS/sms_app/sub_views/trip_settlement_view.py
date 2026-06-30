@@ -37,7 +37,7 @@ def trip_settlement_list_ajax_view(request):
         has_settled_consignment = Exists(
             ConsignmentdetailInfo.objects.filter(
                 co_enquirynumber=OuterRef('tr_enquirynumber_id'),
-                co_status_id=8
+                co_status_id__in=[8, 9]
             )
         )
 
@@ -48,14 +48,22 @@ def trip_settlement_list_ajax_view(request):
             'tr_approval',
             'tr_approval__ta_approval_status',
             'tr_category',
-            'tc_financestatus'
+            'tc_financestatus',
+            'tr_operational_status'
         ).filter(
-            Q(tc_financestatus_id=4) & (
-                Q(tr_category_id=1) |
-                (
-                    Q(tr_category_id=3) & (
-                        Q(tr_consignmentnumber__co_status_id=8) |
-                        has_settled_consignment
+            # Path 1: Cancellation with Billing — any category, with or without consignment
+            # Check BOTH tr_operational_status (permanent) and tc_financestatus (fallback)
+            Q(tr_operational_status_id=10) |
+            (Q(tr_operational_status_id__isnull=True) & Q(tc_financestatus_id=10)) |
+            # Path 2: Normal Trip Closed (status 4) — apply category/consignment rules
+            (
+                Q(tc_financestatus_id=4) & (
+                    Q(tr_category_id=1) |
+                    (
+                        Q(tr_category_id=3) & (
+                            Q(tr_consignmentnumber__co_status_id__in=[8, 9]) |
+                            has_settled_consignment
+                        )
                     )
                 )
             )
@@ -70,16 +78,29 @@ def trip_settlement_list_ajax_view(request):
             try:
                 dt_from = datetime.datetime.strptime(date_from, "%Y-%m-%d")
                 aware_from = timezone.make_aware(dt_from)
-                trip_list = trip_list.filter(tr_departeddate_pickup__gte=aware_from)
+                # Include trips with no pickup date (e.g. cancelled) by falling back to tr_departeddate
+                trip_list = trip_list.filter(
+                    Q(tr_departeddate_pickup__gte=aware_from) |
+                    (Q(tr_departeddate_pickup__isnull=True) & Q(tr_departeddate__gte=aware_from))
+                )
             except ValueError:
-                trip_list = trip_list.filter(tr_departeddate_pickup__gte=date_from)
+                trip_list = trip_list.filter(
+                    Q(tr_departeddate_pickup__gte=date_from) |
+                    (Q(tr_departeddate_pickup__isnull=True) & Q(tr_departeddate__gte=date_from))
+                )
         if date_to:
             try:
                 dt_to = datetime.datetime.strptime(f"{date_to} 23:59:59", "%Y-%m-%d %H:%M:%S")
                 aware_to = timezone.make_aware(dt_to)
-                trip_list = trip_list.filter(tr_departeddate_pickup__lte=aware_to)
+                trip_list = trip_list.filter(
+                    Q(tr_departeddate_pickup__lte=aware_to) |
+                    (Q(tr_departeddate_pickup__isnull=True) & Q(tr_departeddate__lte=aware_to))
+                )
             except ValueError:
-                trip_list = trip_list.filter(tr_departeddate_pickup__lte=f"{date_to} 23:59:59")
+                trip_list = trip_list.filter(
+                    Q(tr_departeddate_pickup__lte=f"{date_to} 23:59:59") |
+                    (Q(tr_departeddate_pickup__isnull=True) & Q(tr_departeddate__lte=f"{date_to} 23:59:59"))
+                )
 
         # Count before search filter for recordsTotal
         records_total = trip_list.count()
@@ -135,6 +156,19 @@ def trip_settlement_list_ajax_view(request):
             edit_url = reverse('trip_settlement_edit', args=[trip.id])
             edit_btn = f'<a class="btn btn-primary" href="{edit_url}"><i class="far fa-edit"></i></a>'
             
+            from_loc = str(trip.tr_departedlocation) if trip.tr_departedlocation else ''
+            to_loc = str(trip.tr_reportedlocation) if trip.tr_reportedlocation else ''
+
+            is_cancelled = False
+            if trip.tr_operational_status_id == 10:
+                is_cancelled = True
+            elif not trip.tr_operational_status_id and trip.tc_financestatus_id == 10:
+                is_cancelled = True
+            
+            if is_cancelled and trip.tr_enquirynumber:
+                from_loc = str(trip.tr_enquirynumber.en_fromlocaion) if trip.tr_enquirynumber.en_fromlocaion else ''
+                to_loc = str(trip.tr_enquirynumber.en_tolocation) if trip.tr_enquirynumber.en_tolocation else ''
+
             data.append([
                 str(trip.tr_enquirynumber) if trip.tr_enquirynumber else '',
                 str(trip.tr_consignmentnumber) if trip.tr_consignmentnumber else '',
@@ -142,8 +176,8 @@ def trip_settlement_list_ajax_view(request):
                 str(trip.tr_category.category) if trip.tr_category else '',
                 str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername else '',
                 str(trip.tr_vehiclenumber) if trip.tr_vehiclenumber else '',
-                str(trip.tr_departedlocation) if trip.tr_departedlocation else '',
-                str(trip.tr_reportedlocation) if trip.tr_reportedlocation else '',
+                from_loc,
+                to_loc,
                 trip.tr_departeddate_pickup.strftime("%d-%m-%Y") if trip.tr_departeddate_pickup else '',
                 '' if trip.tc_tripcost is None else str(trip.tc_tripcost),
                 '' if trip.tc_parkingcost is None else str(trip.tc_parkingcost),
@@ -204,8 +238,7 @@ def trip_settlement_edit(request, trip_id):
         form = TripSettlementForm(request.POST, request.FILES, instance=trip)
         files_form = TripclosurefilesForm(request.POST, request.FILES, instance=files_instance)
 
-        # restrict statuses
-        form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7])
+        form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7, 10])
 
         # List of fields that SHOULD be editable during settlement
         editable_fields = [
@@ -257,7 +290,7 @@ def trip_settlement_edit(request, trip_id):
 
         files_form = TripclosurefilesForm(instance=files_instance)
 
-        form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7])
+        form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7, 10])
 
         # List of fields that SHOULD be editable during settlement
         editable_fields = [
@@ -289,6 +322,20 @@ def trip_settlement_edit(request, trip_id):
     ).first()
     va_sale = allotment.va_sale if allotment else 0
 
+    # Determine if this is a Cancellation with Billing trip
+    is_cancellation_billing = (
+        trip.tr_operational_status_id == 10 or
+        (not trip.tr_operational_status_id and trip.tc_financestatus_id == 10)
+    )
+
+    # Use enquiry locations for cancelled trips, otherwise use trip locations
+    if is_cancellation_billing and trip.tr_enquirynumber:
+        from_location = str(trip.tr_enquirynumber.en_fromlocaion) if trip.tr_enquirynumber.en_fromlocaion else ''
+        to_location = str(trip.tr_enquirynumber.en_tolocation) if trip.tr_enquirynumber.en_tolocation else ''
+    else:
+        from_location = str(trip.tr_departedlocation) if trip.tr_departedlocation else ''
+        to_location = str(trip.tr_reportedlocation) if trip.tr_reportedlocation else ''
+
     return render(request, "asset_mgt_app/trip_settlement_edit.html", {
         'trip': trip,
         'tripclosure_form': form,
@@ -298,4 +345,7 @@ def trip_settlement_edit(request, trip_id):
         'enquiry_num': trip.tr_enquirynumber.en_enquirynumber if trip.tr_enquirynumber else '',
         'is_edit': True,
         'va_sale': va_sale,
+        'is_cancellation_billing': is_cancellation_billing,
+        'from_location': from_location,
+        'to_location': to_location,
     })

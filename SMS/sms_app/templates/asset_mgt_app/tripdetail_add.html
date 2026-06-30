@@ -310,6 +310,13 @@
 										{% endfor %}
 									</select>
 								</div>
+								<!-- Cancellation status info banners -->
+								<div id="cancel_with_billing_info" class="alert alert-info alert-sm mt-1 mb-0 py-1 px-2" style="font-size:0.82rem; display:none;">
+									<i class="fas fa-info-circle"></i> <strong>Cancellation with Billing:</strong> Trip will proceed to <strong>Trip Settlement</strong>.
+								</div>
+								<div id="cancel_without_billing_info" class="alert alert-danger alert-sm mt-1 mb-0 py-1 px-2" style="font-size:0.82rem; display:none;">
+									<i class="fas fa-ban"></i> <strong>Cancellation without Billing:</strong> Trip will be <strong>stopped</strong>. No settlement will be created.
+								</div>
 							</div>
 
 						</div>
@@ -575,7 +582,12 @@
 		if (categoryValue === "2" || categoryValue === "3") {
 			tripStatus.disabled = false;
 			tripStatus.classList.remove("select-disabled-style");
-			tripStatus.value = "1";  // Set default status
+			// Only set default to "1" (Trip Started) for brand-new / awaiting-approval trips.
+			// Never overwrite a saved final/cancelled status.
+			var finalOrActiveTripStatuses = ["1", "2", "3", "4", "7", "9", "10", "11"];
+			if (!finalOrActiveTripStatuses.includes(tripStatus.value)) {
+				tripStatus.value = "1";  // Set default status for new trips only
+			}
 		} else if (categoryValue === "1") {
 			if (isHighValueGoods) {
 				if (checklistApprovalStatus === 1 && tripApprovalApproved) {
@@ -902,30 +914,37 @@
 
 
 		// ---- 4. Status Handling ----
+		function updateCancellationBanners(status) {
+			if (status == "10") {
+				$("#cancel_with_billing_info").show();
+				$("#cancel_without_billing_info").hide();
+			} else if (status == "11") {
+				$("#cancel_without_billing_info").show();
+				$("#cancel_with_billing_info").hide();
+			} else {
+				$("#cancel_with_billing_info").hide();
+				$("#cancel_without_billing_info").hide();
+			}
+		}
+
 		$("#tc_financestatus").on("change", function () {
 			trip_status_update();
 			let status = $(this).val();
 			let tripId = "{{ trip_instance.id|default:'' }}";
+
+			updateCancellationBanners(status);
+
 			if (!tripId) return;
 
 			// ✅ Backend now handles automatic Email Alerts for 1, 2, 3, 4.
 			// No need to show modal automatically on status change.
 
-			/*
-			if (status == "1" && !g_tripStartedSent) {
-				email_message_fn("Trip Started Alert");
-				$("#sendEmailModal").modal("show");
-				enableUnloadingStage1();
-			}
+			if (status == "1") enableUnloadingStage1();
+			validateStatusRestriction();
+		});
 
-			if (status == "2" && !g_tripClosedSent) {
-				email_message_fn("Trip Closed Alert");
-				$("#sendEmailModal").modal("show");
-			}
-			*/
-		if (status == "1") enableUnloadingStage1();
-		validateStatusRestriction();
-	});
+	// Run on page load to show banner if status is already a cancellation status
+	updateCancellationBanners($("#tc_financestatus").val());
 
 	// Trigger validation on date change
 	$("#tr_reporteddate_pickup").on("change input", function() {
@@ -938,14 +957,17 @@
 		var statusDropdown = $("#tc_financestatus");
 		var currentStatus = statusDropdown.val();
 
+		// Final/cancelled statuses — never force-reset these
+		var finalStatuses = ["2", "3", "10", "11"];
+
 		// Only apply to Category 1
 		if (category === "1") {
 			if (!startedDate || startedDate.trim() === "") {
 				// Disable "Closed" option (Value 2)
 				statusDropdown.find("option[value='2']").prop("disabled", true);
-				
-				// If user somehow has 2 selected, reset it to 1 (Started) if possible, or show alert
-				if (currentStatus == "2") {
+
+				// Only alert and reset if user is actively CHOOSING status 2 (not a saved final state)
+				if (currentStatus == "2" && !finalStatuses.includes(currentStatus)) {
 					alert("Cannot transition to Closed status. Please provide 'Vehicle Started Date & Time' in the Unloading section first.");
 					statusDropdown.val("1").trigger("change");
 				}
@@ -986,12 +1008,16 @@
 			validateStatusRestriction();
 		}
 
-		initializeWorkflow();
-
 		// ---- 7. Existing Logic Integration ----
+		// Set values BEFORE initializeWorkflow so validateStatusRestriction sees the correct saved status
 		document.getElementById("tr_updated_by").value = '{{user_id}}';
 		document.getElementById("tc_financestatus").value = '{{status_selected}}';
 		document.getElementById("tr_enquirynumber").value = '{{enquiry_num_id}}';
+
+		initializeWorkflow();
+
+		// Show cancellation banner for currently saved status
+		updateCancellationBanners(document.getElementById("tc_financestatus").value);
 
 		trip_type();
 		trip_status_update();

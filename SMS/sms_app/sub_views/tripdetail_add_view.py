@@ -188,7 +188,7 @@ def tripdetail_add(request, tripdetail_id=0):
             trip_list = TripdetailInfo.objects.select_related(
                 'tr_approval', 'tr_approval__ta_approval_status'
             ).filter(tr_enquirynumber=enquiry_num_id)
-            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8])
+            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8, 10, 11])
 
             # ✅ Exclude already-used consignments for this enquiry
             used_consignments = TripdetailInfo.objects.filter(
@@ -268,14 +268,24 @@ def tripdetail_add(request, tripdetail_id=0):
             trip_list = TripdetailInfo.objects.select_related(
                 'tr_approval', 'tr_approval__ta_approval_status'
             ).filter(tr_enquirynumber=enquiry_num_id)
-            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8])
-
             trip_instance = TripdetailInfo.objects.get(pk=tripdetail_id)
             try:
-                status_selected = trip_instance.tc_financestatus.id if trip_instance.tc_financestatus else 8
+                if trip_instance.tr_operational_status:
+                    status_selected = trip_instance.tr_operational_status.id
+                else:
+                    status_selected = trip_instance.tc_financestatus.id if trip_instance.tc_financestatus else 8
+                    # Fallback mapping for older records
+                    if status_selected in [4, 5, 6, 7, 9]:
+                        status_selected = 2
                 print('status_selected', status_selected)
             except ObjectDoesNotExist:
                 status_selected = None
+
+            allowed_statuses = [1, 2, 3, 8, 10, 11]
+            if status_selected and status_selected not in allowed_statuses:
+                allowed_statuses.append(status_selected)
+                
+            status_list = Tripstatusinfo.objects.filter(id__in=allowed_statuses)
 
             consignment_selected = trip_instance.tr_consignmentnumber.id if trip_instance.tr_consignmentnumber else None
 
@@ -544,7 +554,13 @@ def tripdetail_add(request, tripdetail_id=0):
                 # Manual capture since it's a raw select tag in HTML
                 manual_status_id = request.POST.get('tc_financestatus')
                 if manual_status_id:
-                    trip.tc_financestatus_id = int(manual_status_id)
+                    manual_status_id = int(manual_status_id)
+                    trip.tr_operational_status_id = manual_status_id
+                    # Prevent reverting advanced finance statuses back to Trip Closed (2)
+                    if manual_status_id == 2 and trip.tc_financestatus_id in [4, 5, 6, 7, 9]:
+                        pass # keep the advanced status
+                    else:
+                        trip.tc_financestatus_id = manual_status_id
 
                 pod_data = request.POST.get("pod_signature_data", None)
                 if pod_data:

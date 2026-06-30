@@ -86,6 +86,7 @@ class TripdetailInfo(models.Model):
     tc_no_of_days_halting = models.IntegerField(null=True, blank=True,default=0)
     tc_pod = models.CharField(default=" ")
     tc_financestatus = models.ForeignKey(Tripstatusinfo, on_delete=models.CASCADE,blank=True,null=True)
+    tr_operational_status = models.ForeignKey(Tripstatusinfo, on_delete=models.CASCADE, related_name='operational_status_trips', blank=True, null=True)
     tc_pod_attachment = models.FileField(upload_to=trip_attach_path, null=True,blank=True)
     tr_customerref = models.CharField(max_length=200,null=True,blank=True)
     tr_high_value = models.ForeignKey(YesNoInfo, on_delete=models.CASCADE, related_name='tr_high_value',db_column='tr_high_value', default=2)
