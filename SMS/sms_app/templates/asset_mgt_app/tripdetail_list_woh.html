@@ -62,7 +62,16 @@
                     <span class="fw-bold d-md-none me-2">Reported Date & Time :</span> {{ tripdetailinfo.tr_reporteddate }}
                 </td>
                 <td class="d-flex d-md-table-cell justify-content-between">
-                    <span class="fw-bold d-md-none me-2">Trip Status :</span> {{ tripdetailinfo.tc_financestatus }}
+                    <span class="fw-bold d-md-none me-2">Trip Status :</span>
+                    {% if tripdetailinfo.tr_operational_status %}
+                        {{ tripdetailinfo.tr_operational_status }}
+                    {% else %}
+                        {% if tripdetailinfo.tc_financestatus.id == 4 or tripdetailinfo.tc_financestatus.id == 5 or tripdetailinfo.tc_financestatus.id == 6 or tripdetailinfo.tc_financestatus.id == 7 or tripdetailinfo.tc_financestatus.id == 9 %}
+                            Trip Closed
+                        {% else %}
+                            {{ tripdetailinfo.tc_financestatus }}
+                        {% endif %}
+                    {% endif %}
                 </td>
                 <td class="d-flex d-md-table-cell justify-content-between">
                     <span class="fw-bold d-md-none me-2">Updated By :</span> {{ tripdetailinfo.tr_updated_by }}

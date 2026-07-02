@@ -69,17 +69,6 @@ def fuelfilling_list(request):
     date_to = request.GET.get('date_to', '')
     vehicle_id = request.GET.get('vehicle_id', '')
     
-    # Default to current month's start and end dates if not provided
-    if not date_from or not date_to:
-        today = date.today()
-        d_from = today.replace(day=1)
-        if today.month == 12:
-            d_to = date(today.year + 1, 1, 1) - datetime.timedelta(days=1)
-        else:
-            d_to = date(today.year, today.month + 1, 1) - datetime.timedelta(days=1)
-        date_from = d_from.strftime('%Y-%m-%d')
-        date_to = d_to.strftime('%Y-%m-%d')
-        
     queryset = Fuelfillinginfo.objects.all()
     if date_from and date_to:
         queryset = queryset.filter(ff_date__range=[date_from, date_to])
@@ -153,13 +142,13 @@ def fuelfilling_export_excel(request):
         
     try:
         from datetime import datetime
+        d_from = datetime.strptime(date_from, '%Y-%m-%d').date()
         d_to = datetime.strptime(date_to, '%Y-%m-%d').date()
     except ValueError:
         return HttpResponse("Invalid date format", status=400)
     
-    last_date_of_month = d_to
-    month = d_to.strftime('%B')
-    year = d_to.strftime('%Y')
+    month = d_from.strftime('%B')
+    year = d_from.strftime('%Y')
     
     queryset = Fuelfillinginfo.objects.filter(
         ff_date__range=[date_from, date_to]
@@ -208,12 +197,12 @@ def fuelfilling_export_excel(request):
         vehicle = data['vehicle']
         
         # Voucher format: Diesel_{month}_{FY}-{serial}
-        mm = str(d_to.month).zfill(2)
-        fy = get_financial_year(d_to)
+        mm = str(d_from.month).zfill(2)
+        fy = get_financial_year(d_from)
         voucher_no = f"Diesel_{mm}_{fy}-{str(idx).zfill(3)}"
         
         # Ref No: Month-Year (e.g., Apr-26)
-        ref_no = d_to.strftime('%b-%y')
+        ref_no = d_from.strftime('%b-%y')
         
         # Get Primary Cost Category from Vehicle Master Ownership
         primary_cost_category = ""
@@ -228,7 +217,7 @@ def fuelfilling_export_excel(request):
 
         row = [
             voucher_no,
-            last_date_of_month.strftime("%d/%m/%Y"),
+            d_from.strftime("%d/%m/%Y"),
             ref_no,
             data['vendor'],
             data['total_amt'],
@@ -245,7 +234,7 @@ def fuelfilling_export_excel(request):
     wb.save(buffer)
     buffer.seek(0)
     
-    filename = f"Fuel_Export_{month}_{year}.xlsx"
+    filename = f"Fuel_Export_{d_from.strftime('%d-%m-%Y')}_to_{d_to.strftime('%d-%m-%Y')}.xlsx"
     response = HttpResponse(
         buffer.getvalue(), 
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

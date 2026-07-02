@@ -77,11 +77,19 @@
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Departed Location</label>
-                            {% render_field tripclosure_form.tr_departedlocation id="tr_departedlocation" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% if is_cancellation_billing %}
+                                <input type="text" class="form-control form-control-modern form-control-sm" value="{{ from_location }}" readonly>
+                            {% else %}
+                                {% render_field tripclosure_form.tr_departedlocation id="tr_departedlocation" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% endif %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Reported Location</label>
-                            {% render_field tripclosure_form.tr_reportedlocation id="tr_reportedlocation" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% if is_cancellation_billing %}
+                                <input type="text" class="form-control form-control-modern form-control-sm" value="{{ to_location }}" readonly>
+                            {% else %}
+                                {% render_field tripclosure_form.tr_reportedlocation id="tr_reportedlocation" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% endif %}
                         </div>
                     </div>
                 </div>

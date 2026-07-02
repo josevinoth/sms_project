@@ -39,8 +39,8 @@ def safe_int(val, default=0):
 
 
 def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=None):
-    from ..models import TripdetailInfo, DrivermasterInfo, DriverSalaryInfo, VehiclemasterInfo, Fuelfillinginfo
-    from django.db.models import Q, Sum
+    from ..models import TripdetailInfo, DrivermasterInfo, DriverSalaryInfo, Fuelfillinginfo
+    from django.db.models import Q
     from django.db.models.functions import Coalesce
     import calendar
     from datetime import date as date_cls
@@ -77,7 +77,7 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
             q_filter,
             resolved_date__month=m,
             resolved_date__year=y,
-            tr_category_id=1
+            tr_category_id__in=[1, 2, 3]
         ).count()
 
         salary_rec = DriverSalaryInfo.objects.filter(
@@ -109,12 +109,8 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
             if d:
                 salary_lookup[t.id] = salary_lookup_raw.get((d_id, d.month, d.year), 0.0)
 
-    vehicle_map = {
-        v.vm_registrationnumber: v for v in VehiclemasterInfo.objects.all()
-    }
-
     fuel_lookup = {}
-    fuel_period_cache = {}
+    fuel_interval_cache = {}
 
     def _trip_period_bounds(trip):
         if date_from and date_to:
@@ -143,34 +139,72 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
         month_end = date_cls(d.year, d.month, calendar.monthrange(d.year, d.month)[1])
         return month_start, month_end
 
-    def _period_fuel_stats(veh_no, period_start, period_end):
+    def _trip_report_date(trip):
+        d = getattr(trip, 'resolved_date', None)
+        if not d:
+            d = trip.tr_departeddate_pickup or trip.tr_loading_time or trip.tr_departeddate or trip.tr_created_at
+        return d.date() if hasattr(d, 'date') else d
+
+    def _vehicle_fuel_intervals(veh_no, period_start, period_end):
         cache_key = (veh_no, period_start, period_end)
-        if cache_key in fuel_period_cache:
-            return fuel_period_cache[cache_key]
+        if cache_key in fuel_interval_cache:
+            return fuel_interval_cache[cache_key]
 
-        fuel_agg = Fuelfillinginfo.objects.filter(
-            ff_vehicle_num__vm_registrationnumber__iexact=veh_no,
-            ff_date__gte=period_start,
-            ff_date__lte=period_end,
-        ).aggregate(total_cost=Sum('ff_fuel_price'), total_ltr=Sum('ff_filled_ltr'))
-
-        period_trips = TripdetailInfo.objects.filter(
-            tr_vehiclenumber__iexact=veh_no,
-            tr_category_id=1,
-        ).filter(
-            Q(tr_departeddate_pickup__date__range=[period_start, period_end])
-            | Q(tr_loading_time__date__range=[period_start, period_end])
-            | Q(tr_departeddate__date__range=[period_start, period_end])
-            | Q(tr_created_at__date__range=[period_start, period_end])
+        previous_fill = (
+            Fuelfillinginfo.objects.filter(
+                ff_vehicle_num__vm_registrationnumber__iexact=veh_no,
+                ff_date__lt=period_start,
+            )
+            .order_by('-ff_date', '-ff_odometer_reading', '-id')
+            .first()
         )
+        fuel_records = list(
+            Fuelfillinginfo.objects.filter(
+                ff_vehicle_num__vm_registrationnumber__iexact=veh_no,
+                ff_date__gte=period_start,
+                ff_date__lte=period_end,
+            )
+            .order_by('ff_date', 'ff_odometer_reading', 'id')
+        )
+        if previous_fill:
+            fuel_records.insert(0, previous_fill)
 
-        stats = {
-            'total_fuel_price': safe_num(fuel_agg.get('total_cost')),
-            'total_litres': safe_num(fuel_agg.get('total_ltr')),
-            'total_km': sum(vehicle_log_used_km(pt) for pt in period_trips),
-        }
-        fuel_period_cache[cache_key] = stats
-        return stats
+        if not fuel_records:
+            fuel_interval_cache[cache_key] = []
+            return []
+
+        intervals = []
+        for idx, fuel_rec in enumerate(fuel_records):
+            interval_start = fuel_rec.ff_date
+            next_fuel_rec = fuel_records[idx + 1] if idx + 1 < len(fuel_records) else None
+            interval_end = next_fuel_rec.ff_date if next_fuel_rec else period_end
+            include_end = next_fuel_rec is None
+
+            if interval_end < period_start or interval_start > period_end:
+                continue
+
+            period_trips = TripdetailInfo.objects.filter(
+                tr_vehiclenumber__iexact=veh_no,
+                tr_category_id__in=[1, 2, 3],
+            ).annotate(
+                resolved_date=Coalesce('tr_loading_time', 'tr_departeddate', 'tr_created_at')
+            ).filter(
+                resolved_date__date__gte=interval_start,
+                **{'resolved_date__date__lte' if include_end else 'resolved_date__date__lt': interval_end}
+            )
+
+            total_km = sum(vehicle_log_used_km(pt) for pt in period_trips)
+            per_km_cost = (safe_num(fuel_rec.ff_fuel_price) / total_km) if total_km > 0 else 0.0
+
+            intervals.append({
+                'start': interval_start,
+                'end': interval_end,
+                'include_end': include_end,
+                'per_km_cost': per_km_cost,
+            })
+
+        fuel_interval_cache[cache_key] = intervals
+        return intervals
 
     for t in trips_list:
         if t.tr_vehiclesource_id != 1: continue
@@ -184,24 +218,23 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
             fuel_lookup[t.id] = 0.0
             continue
 
-        stats = _period_fuel_stats(veh_no, period_start, period_end)
-        vm = vehicle_map.get(veh_no)
-        period_mileage = (
-            (stats['total_km'] / stats['total_litres'])
-            if stats['total_litres'] > 0 else 0
-        )
-        eff_mileage = effective_mileage_km_per_litre(t, vm, period_mileage)
         used_km = vehicle_log_used_km(t)
-        fuel_lookup[t.id] = round(
-            trip_fuel_cost_from_period(
-                used_km,
-                stats['total_fuel_price'],
-                stats['total_km'],
-                stats['total_litres'],
-                eff_mileage,
-            ),
-            2,
-        )
+        trip_date = _trip_report_date(t)
+        trip_fuel_cost = 0.0
+
+        if trip_date and used_km > 0:
+            for interval in _vehicle_fuel_intervals(veh_no, period_start, period_end):
+                starts_inside = trip_date >= interval['start']
+                ends_inside = (
+                    trip_date <= interval['end']
+                    if interval['include_end']
+                    else trip_date < interval['end']
+                )
+                if starts_inside and ends_inside:
+                    trip_fuel_cost = used_km * interval['per_km_cost']
+                    break
+
+        fuel_lookup[t.id] = round(trip_fuel_cost, 2)
 
     return fuel_lookup, salary_lookup
 
@@ -392,7 +425,7 @@ VENDOR_PL_MKT_MKT_HEADERS = [
 ]
 
 OWN_VEHICLE_PL_HEADERS = [
-    "S No", "Trip date", "Vehicle No", "Cnote No", "Customer Name", "From", "To",
+    "S No", "Trip date", "Vehicle No", "Cnote No", "Trip Category", "Customer Name", "From", "To",
     "Trip Charges", "Toll Charges", "Parking Charges", "Loading Charges", "Unloading Charges",
     "Weighment Charges", "Handling charges", "Halting Charges", "Revenue",
     "Driver Salary", "Fuel Cost", "Acting Driver", "Driver Bata", "Toll Cost",
@@ -686,7 +719,7 @@ OWN_VS_MARKET_SALES_HEADERS = [
 ]
 
 ENQUIRY_PENDING_HEADERS = [
-    "SNo", "Date", "Enquiry No", "From", "To", "Vehicle Requested", "Assigned Vehicles", "Unassigned Vehicles",
+    "SNo", "Date", "Enquiry No", "From", "To", "Vehicle Requested", "Assigned Vehicles", "Unassigned Vehicles", "Cancelled Vehicles",
     "Vehicle Type",
     "Customer Name", "Reason"
 ]
@@ -810,6 +843,7 @@ def vehicle_log_report_view(request):
         branch_id = request.POST.get('branch', '')
         from_date = request.POST.get('from_date', '')
         to_date = request.POST.get('to_date', '')
+        vehicle_source = request.POST.get('vehicle_source', '')
     else:
         form = DmrForm()
         vehicle_number = ''
@@ -818,10 +852,14 @@ def vehicle_log_report_view(request):
         branch_id = ''
         from_date = ''
         to_date = ''
+        vehicle_source = ''
 
     all_vehicles = VehiclemasterInfo.objects.filter(
         vm_ownership_id__in=[1, 2]
     ).order_by('vm_registrationnumber')
+    
+    from ..models import OwnershipInfo
+    ownerships = OwnershipInfo.objects.all()
 
     return render(request, "asset_mgt_app/vehicle_log_report.html", {
         'first_name': first_name,
@@ -835,6 +873,8 @@ def vehicle_log_report_view(request):
         'branch_id': branch_id,
         'from_date': from_date,
         'to_date': to_date,
+        'vehicle_source': vehicle_source,
+        'ownerships': ownerships,
     })
 
 
@@ -853,6 +893,7 @@ def vehicle_log_report_ajax_view(request):
     branch_id = request.GET.get('branch', '')
     from_date = request.GET.get('from_date', '')
     to_date = request.GET.get('to_date', '')
+    vehicle_source = request.GET.get('vehicle_source', '')
     search_value = request.GET.get('search[value]', '').strip()
 
     trips = TripdetailInfo.objects.select_related(
@@ -862,7 +903,12 @@ def vehicle_log_report_ajax_view(request):
         'tr_consignmentnumber',
         'tr_departedlocation',
         'tr_reportedlocation'
-    ).filter(tr_vehiclesource_id__in=[1, 2])
+    )
+    
+    if vehicle_source:
+        trips = trips.filter(tr_vehiclesource_id=vehicle_source)
+    else:
+        trips = trips.filter(tr_vehiclesource_id__in=[1, 2])
 
     if vehicle_number:
         trips = trips.filter(tr_vehiclenumber__icontains=vehicle_number)
@@ -3312,11 +3358,13 @@ def own_vehicle_pl_report_view(request):
     # BASE QUERY – OWN VEHICLES ONLY
     # -------------------------------
     trips = TripdetailInfo.objects.filter(
-        tc_financestatus_id__in=[7, 9],  # Settled & Ready for Invoice
         tr_vehiclesource_id=1,  # BVM - OWN only
-        tr_category_id=1  # Business trips only
+    ).filter(
+        Q(tr_category_id=1, tc_financestatus_id__in=[7, 9]) |
+        Q(tr_category_id__in=[2, 3])
     ).select_related(
         'tr_vehicletype',
+        'tr_category',
         'tr_departedlocation',
         'tr_reportedlocation',
         'tr_enquirynumber__en_customername',
@@ -3503,9 +3551,7 @@ def own_vehicle_pl_report_view(request):
         fuel_expense = 0.0
 
         # Pull Driver Salary from pre-calculated lookup (if available)
-        d_id = trip.tr_driver_master_id
-        d_date = trip.resolved_date
-        driver_salary = round(salary_lookup.get((d_id, d_date.month, d_date.year), 0.0) if d_id and d_date else 0.0, 2)
+        driver_salary = round(salary_lookup.get(trip.id, 0.0), 2)
 
         acting_driver = 0.0
         driver_bata = 0.0
@@ -3584,6 +3630,7 @@ def own_vehicle_pl_report_view(request):
             date_val,
             safe_str(trip.tr_vehiclenumber),
             safe_str(trip.tr_consignmentnumber),
+            safe_str(trip.tr_category),
             safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
             safe_str(trip.tr_departedlocation),
             safe_str(trip.tr_reportedlocation),
@@ -3627,6 +3674,8 @@ def own_vehicle_pl_report_view(request):
     business_empty_km_val = 0.0
     total_revenue = 0.0
     total_operational_expense = 0.0
+    revenue_idx = OWN_VEHICLE_PL_HEADERS.index("Revenue")
+    total_expense_idx = OWN_VEHICLE_PL_HEADERS.index("Total Expense")
 
     # Calculate months for Prorated Fixed Costs
     months_count = 1
@@ -3650,7 +3699,7 @@ def own_vehicle_pl_report_view(request):
         if trip.tr_departeddate:
             working_days_set.add(trip.tr_departeddate.date())
 
-        km_diff = safe_num(trip.tr_reportedkm) - safe_num(trip.tr_departedkm)
+        km_diff = vehicle_log_used_km(trip)
         total_km += km_diff
 
         # Category 2 = Empty, Category 3 = Business Empty
@@ -3659,8 +3708,8 @@ def own_vehicle_pl_report_view(request):
         elif trip.tr_category_id == 3:
             business_empty_km_val += km_diff
 
-        total_revenue += row[14]  # selling_total is at index 14
-        total_operational_expense += row[26]  # total_expense is at index 26
+        total_revenue += row[revenue_idx]
+        total_operational_expense += row[total_expense_idx]
 
     num_days_working = len(working_days_set)
     num_idle_days = max(0, total_days_in_period - num_days_working)
@@ -3749,7 +3798,7 @@ def own_vehicle_pl_report_view(request):
         'days_working': num_days_working,
         'idle_days': num_idle_days,
         'total_trips': total_trips,
-        'trip_index': round(total_trips / max(1.0, months_count), 2),
+        'trip_index': round(total_trips / max(1, num_days_working), 2),
         'total_km': round(total_km, 2),
         'empty_km': round(empty_km_val, 2),
         'business_empty_km': round(business_empty_km_val, 2),
@@ -4958,17 +5007,19 @@ def enquiry_pending_report_view(request):
                                                       va_status_id__in=[1, 4, 5]).select_related(
         'va_vehiclenumber')
     allot_map = {}
+    cancelled_map = {}
     for va in allotments:
         reg_no = va.va_vehiclenumber.vm_registrationnumber if va.va_vehiclenumber else va.va_vehiclenumber_mkt
         if reg_no:
             allot_map.setdefault(va.va_enquirynumber_id, []).append(str(reg_no))
+        if va.va_status_id == 4:
+            cancelled_map.setdefault(va.va_enquirynumber_id, []).append(va.id)
 
     data_rows = []
     for idx, enq in enumerate(enquiries, start=1):
         # Vehicle Requested
         req_list = req_map.get(enq.id, [])
         veh_req_str = str(total_req_qty.get(enq.id, 0))
-
         # Vehicle Type
         # Extract unique types from req_list
         veh_types = ", ".join(list(set([r.split(" x ")[-1] for r in req_list])))
@@ -4976,6 +5027,7 @@ def enquiry_pending_report_view(request):
         # Vehicle Unplaced count
         total_req = total_req_qty.get(enq.id, 0)
         total_placed = len(allot_map.get(enq.id, []))
+        total_cancelled = len(cancelled_map.get(enq.id, []))
         unplaced_count = max(0, total_req - total_placed)
         places_str = str(unplaced_count)
 
@@ -4987,7 +5039,9 @@ def enquiry_pending_report_view(request):
                 safe_str(enq.en_fromlocaion),
                 safe_str(enq.en_tolocation),
                 veh_req_str,
+                str(total_placed),
                 places_str,
+                str(total_cancelled),
                 veh_types,
                 safe_str(enq.en_customername),
                 safe_str(" ")  # Reason field as requested by user
@@ -5375,8 +5429,11 @@ def enquiry_pending_report_ajax_view(request):
     # Fetch allotments
     allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enquiry_ids, va_status_id__in=[1, 4, 5])
     allot_map = {}
+    cancelled_map = {}
     for va in allotments:
         allot_map.setdefault(va.va_enquirynumber_id, []).append(va.id)
+        if va.va_status_id == 4:
+            cancelled_map.setdefault(va.va_enquirynumber_id, []).append(va.id)
 
     def safe_str(val):
         return str(val) if val else ""
@@ -5388,6 +5445,7 @@ def enquiry_pending_report_ajax_view(request):
         veh_types = ", ".join(list(set([r.split(" x ")[-1] for r in req_list])))
         total_req = total_req_qty.get(enq.id, 0)
         total_placed = len(allot_map.get(enq.id, []))
+        total_cancelled = len(cancelled_map.get(enq.id, []))
         unplaced_count = max(0, total_req - total_placed)
 
         data.append([
@@ -5399,6 +5457,7 @@ def enquiry_pending_report_ajax_view(request):
             veh_req_str,
             str(total_placed),
             str(unplaced_count),
+            str(total_cancelled),
             veh_types,
             safe_str(enq.en_customername),
             " "

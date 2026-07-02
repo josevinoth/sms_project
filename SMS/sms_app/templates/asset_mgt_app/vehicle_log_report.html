@@ -59,6 +59,19 @@
         </select>
     </div>
 
+    <!-- Vehicle Source -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">Vehicle Source</label>
+        <select name="vehicle_source" id="vehicle_source" class="form-control select2">
+            <option value="">All Sources</option>
+            {% for source in ownerships %}
+            <option value="{{ source.id }}" {% if vehicle_source == source.id|stringformat:"s" %}selected{% endif %}>
+                {{ source.ow_ownership }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
 
 
     <!-- From Location -->
@@ -133,6 +146,13 @@
             placeholder: 'Search Vehicle...',
             allowClear: true
         });
+        
+        $jq('#vehicle_source').select2({
+            width: '100%',
+            theme: 'bootstrap4',
+            placeholder: 'All Sources',
+            allowClear: true
+        });
     });
 </script>
 <script>
@@ -153,6 +173,7 @@
                     d.branch = $('select[name="branch"]').val();
                     d.from_date = $('#from_date').val();
                     d.to_date = $('#to_date').val();
+                    d.vehicle_source = $('#vehicle_source').val();
                 }
             },
 
