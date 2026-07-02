@@ -44,6 +44,15 @@
 </div>
 <hr>
 
+<style>
+    /* Mobile-only visual labels for From/To. These are added via CSS so exports (copy/csv/excel/print)
+       don't include the literal labels in the table cell text. */
+    @media (max-width: 767.98px) {
+        .mobile-from:before { content: "From : "; font-weight: 700; margin-right: .5rem; }
+        .mobile-to:before { content: "To : "; font-weight: 700; margin-right: .5rem; }
+    }
+</style>
+
 {% if messages %}
 <div class="container-fluid">
     {% for message in messages %}
@@ -65,7 +74,8 @@
                 <th>Customer Name</th>
                 <th>Customer Code</th>
                 <th>Product</th>
-                <th>Attachments</th>
+                <th>From</th>
+                <th>To</th>
                 <th style="display: none;">Contact Person Name</th>
                 <th style="display: none;">Contact No</th>
                 <th style="display: none;">Mail</th>
@@ -90,14 +100,30 @@
                 <td>{{enquiry.customer_code}}</td>
                 <td>{{enquiry.get_product_names}}</td>
                 <td>
-                    <ul class="list-unstyled mb-0" style="font-size: 0.85em;">
-                        {% if enquiry.wh_attachment %}<li><a href="{{ enquiry.wh_attachment.url }}" target="_blank"><i class="fas fa-file-alt text-info"></i> Warehouse</a></li>{% endif %}
-                        {% if enquiry.tr_attachment %}<li><a href="{{ enquiry.tr_attachment.url }}" target="_blank"><i class="fas fa-file-alt text-info"></i> Transport</a></li>{% endif %}
-                        {% if enquiry.pa_attachment %}<li><a href="{{ enquiry.pa_attachment.url }}" target="_blank"><i class="fas fa-file-alt text-info"></i> Packing</a></li>{% endif %}
-                        {% if enquiry.ex_attachment %}<li><a href="{{ enquiry.ex_attachment.url }}" target="_blank"><i class="fas fa-file-alt text-info"></i> Express</a></li>{% endif %}
-                        {% if enquiry.su_attachment %}<li><a href="{{ enquiry.su_attachment.url }}" target="_blank"><i class="fas fa-file-alt text-info"></i> Support</a></li>{% endif %}
-                        {% if enquiry.mc_attachment %}<li><a href="{{ enquiry.mc_attachment.url }}" target="_blank"><i class="fas fa-file-alt text-info"></i> MC Tours</a></li>{% endif %}
-                    </ul>
+                    <span class="mobile-from"></span>
+                    {% comment %} Choose the appropriate "From" value: prefer transport, then express, then MC. {% endcomment %}
+                    {% if enquiry.tr_from %}
+                        {{ enquiry.tr_from|default:'-' }}
+                    {% elif enquiry.ex_pickup %}
+                        {{ enquiry.ex_pickup|default:'-' }}
+                    {% elif enquiry.mc_from %}
+                        {{ enquiry.mc_from|default:'-' }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="mobile-to"></span>
+                    {% comment %} Choose the appropriate "To" value: prefer transport, then express, then MC. {% endcomment %}
+                    {% if enquiry.tr_to %}
+                        {{ enquiry.tr_to|default:'-' }}
+                    {% elif enquiry.ex_delivery %}
+                        {{ enquiry.ex_delivery|default:'-' }}
+                    {% elif enquiry.mc_to %}
+                        {{ enquiry.mc_to|default:'-' }}
+                    {% else %}
+                        -
+                    {% endif %}
                 </td>
                 <td style="display: none;">{{enquiry.contact_person_name}}</td>
                 <td style="display: none;">{{enquiry.contact_no}}</td>
