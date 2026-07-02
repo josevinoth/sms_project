@@ -16,11 +16,15 @@
         pointer-events: none !important;
     }
 
-    #tripdetail_id .form-group-modern {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-    }
+	#tripdetail_id .form-group-modern {
+		display: flex !important;
+		flex-direction: column !important;
+		align-items: stretch !important;
+	}
+
+	#tripdetail_id .form-group-modern.empty-field-hidden {
+		display: none !important;
+	}
 
     #tripdetail_id .form-label-modern {
         display: block !important;
@@ -89,7 +93,7 @@
     </div>
     {% endif %}
 
-    <form method="POST" action="" id="tripdetail_add" enctype="multipart/form-data">
+	<form method="POST" action="" id="tripdetail_add" enctype="multipart/form-data" onsubmit="return enableTripForm(this);">
         {% csrf_token %}
         <div class="modern-card" style="padding: 1rem !important;">
             <div class="row" id="tripdetail_id">
@@ -177,22 +181,22 @@
                             <label class="form-label-modern small mb-1">From Location</label>
                             {% render_field trip_det_form.tr_departedlocation id="tr_departedlocation" class="form-control form-control-modern form-control-sm" %}
                         </div>
-                        <div class="form-group-modern mb-2">
-                            <label class="form-label-modern small mb-1">Vehicle Reported Date & Time</label>
-                            {% render_field trip_det_form.tr_departeddate_pickup id="tr_departeddate_pickup" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
-                        </div>
-                        <div class="form-group-modern mb-2">
+						<div class="form-group-modern mb-2 empty-field">
+							<label class="form-label-modern small mb-1">Vehicle Reported Date & Time</label>
+							{% render_field trip_det_form.tr_departeddate_pickup id="tr_departeddate_pickup" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+						</div>
+                        <div class="form-group-modern mb-2 empty-field">
                             <label class="form-label-modern small mb-1">Vehicle Reported KM</label>
                             {% render_field trip_det_form.tr_departedkm id="tr_departedkm" class="form-control form-control-modern form-control-sm" %}
                         </div>
-                        <div class="form-group-modern mb-2">
-                            <label class="form-label-modern small mb-1">Dock-In Time</label>
-                            {% render_field trip_det_form.tr_loading_time id="tr_loading_time" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
-                        </div>
-                        <div class="form-group-modern mb-2">
-                            <label class="form-label-modern small mb-1">Dock-Out Time</label>
-                            {% render_field trip_det_form.tr_dock_out_time id="tr_dock_out_time" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
-                        </div>
+						<div class="form-group-modern mb-2 empty-field">
+							<label class="form-label-modern small mb-1">Dock-In Time</label>
+							{% render_field trip_det_form.tr_loading_time id="tr_loading_time" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+						</div>
+						<div class="form-group-modern mb-2 empty-field">
+							<label class="form-label-modern small mb-1">Dock-Out Time</label>
+							{% render_field trip_det_form.tr_dock_out_time id="tr_dock_out_time" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+						</div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Started Date & Time</label>
                             {% render_field trip_det_form.tr_departeddate id="tr_departeddate" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
@@ -221,22 +225,22 @@
                             <label class="form-label-modern small mb-1">Vehicle Reported KM</label>
                             {% render_field trip_det_form.tr_reportedkm id="tr_reportedkm" class="form-control form-control-modern form-control-sm" %}
                         </div>
-                        <div class="form-group-modern mb-2">
-                            <label class="form-label-modern small mb-1">Dock-In Time</label>
-                            {% render_field trip_det_form.tr_departeddate_delivery id="tr_departeddate_delivery" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
-                        </div>
-                        <div class="form-group-modern mb-2">
-                            <label class="form-label-modern small mb-1">Dock-Out Time</label>
-                            {% render_field trip_det_form.tr_unloading_time id="tr_unloading_time" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
-                        </div>
-                        <div class="form-group-modern mb-2">
-                            <label class="form-label-modern small mb-1">Vehicle Started Date & Time</label>
-                            {% render_field trip_det_form.tr_reporteddate_pickup id="tr_reporteddate_pickup" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
-                        </div>
-                        <div class="form-group-modern mb-2">
-                            <label class="form-label-modern small mb-1">Vehicle Started KM</label>
-                            {% render_field trip_det_form.tr_reportedkm_delivery id="tr_reportedkm_delivery" class="form-control form-control-modern form-control-sm" %}
-                        </div>
+						<div class="form-group-modern mb-2 empty-field">
+							<label class="form-label-modern small mb-1">Dock-In Time</label>
+							{% render_field trip_det_form.tr_departeddate_delivery id="tr_departeddate_delivery" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+						</div>
+						<div class="form-group-modern mb-2 empty-field">
+							<label class="form-label-modern small mb-1">Dock-Out Time</label>
+							{% render_field trip_det_form.tr_unloading_time id="tr_unloading_time" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+						</div>
+						<div class="form-group-modern mb-2 empty-field">
+							<label class="form-label-modern small mb-1">Vehicle Started Date & Time</label>
+							{% render_field trip_det_form.tr_reporteddate_pickup id="tr_reporteddate_pickup" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+						</div>
+						<div class="form-group-modern mb-2 empty-field">
+							<label class="form-label-modern small mb-1">Vehicle Started KM</label>
+							{% render_field trip_det_form.tr_reportedkm_delivery id="tr_reportedkm_delivery" class="form-control form-control-modern form-control-sm" %}
+						</div>
                     </div>
                 </div>
 
@@ -339,10 +343,10 @@
                 </div>
                 
                 <!-- Action Buttons -->
-                <div class="col-12 mt-4 d-flex justify-content-between align-items-center">
-                    <button type="submit" class="btn-modern btn-submit py-2 px-5">
-                        <i class="fas fa-check mr-2"></i> Submit
-                    </button>
+				<div class="col-12 mt-4 d-flex justify-content-between align-items-center">
+					<button type="submit" id="tripdetail_submit_id" class="btn-modern btn-submit py-2 px-5">
+						<i class="fas fa-check mr-2"></i> Submit
+					</button>
                     <a href="{% url 'tripdetail_list' %}" class="btn-modern btn-cancel py-2 px-5">
                         <i class="fas fa-times mr-2"></i> Cancel
                     </a>
@@ -432,20 +436,20 @@
 		}
 	});
 </script>
-<script>-->
-<!--	function trip_track() {-->
-<!--    var tr_vehiclesource = document.getElementById("tr_vehiclesource").value;-->
-<!--    if (tr_vehiclesource == "3") {-->
-<!--        $('#tr_track_link').removeClass('disable_a_href');-->
-<!--    } else {-->
-<!--        $('#tr_track_link').addClass('disable_a_href');-->
-<!--    }-->
-<!--}-->
-<!--document.addEventListener("DOMContentLoaded", function () {-->
-<!--    $('#tr_consignmentnumber').on('change', trip_track);  // Call on change-->
-<!--    trip_track();-->
-<!--});-->
-<!--</script>
+<!--
+function trip_track() {
+	var tr_vehiclesource = document.getElementById("tr_vehiclesource").value;
+	if (tr_vehiclesource == "3") {
+		$('#tr_track_link').removeClass('disable_a_href');
+	} else {
+		$('#tr_track_link').addClass('disable_a_href');
+	}
+}
+document.addEventListener("DOMContentLoaded", function () {
+	$('#tr_consignmentnumber').on('change', trip_track);  // Call on change
+	trip_track();
+});
+-->
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
 		if (window.location.href.includes("tripdetail_insert")) {
@@ -484,6 +488,10 @@
 
 	function trip_type() {
 		var categoryValue = document.getElementById('tr_category').value;
+		// Fallback: detect by option text (in case the select uses labels or different IDs)
+		var categoryText = '';
+		try { categoryText = $('#tr_category option:selected').text().trim().toLowerCase(); } catch (e) { categoryText = ''; }
+
 		var tripStatus = document.getElementById('tc_financestatus');
 		var loadingTimeDiv = document.getElementById("tr_loading_time").closest('.form-group-modern');
 		var unloadingTimeDiv = document.getElementById("tr_unloading_time").closest('.form-group-modern');
@@ -491,12 +499,10 @@
 		// ----------------------
 		// 1️⃣ Finance Status Logic
 		// ----------------------
-		// Treat category 3 the same as category 2
-		if (categoryValue === "2" || categoryValue === "3") {
+		// Treat category 3 the same as category 2, also treat labels containing 'empty' as empty category
+		if (categoryValue === "2" || categoryValue === "3" || categoryText.indexOf('empty') !== -1) {
 			tripStatus.disabled = false;
 			tripStatus.classList.remove("select-disabled-style");
-			// Only set default to "1" (Trip Started) for brand-new / awaiting-approval trips.
-			// Never overwrite a saved final/cancelled status.
 			var finalOrActiveTripStatuses = ["1", "2", "3", "4", "7", "9", "10", "11"];
 			if (!finalOrActiveTripStatuses.includes(tripStatus.value)) {
 				tripStatus.value = "1";  // Set default status for new trips only
@@ -530,7 +536,8 @@
 		// ----------------------
 		// 2️⃣ POD Attachment Logic
 		// ----------------------
-		if (categoryValue == 1) {
+		// treat label 'empty' same as non-1 categories
+		if (categoryValue == 1 && categoryText.indexOf('empty') === -1) {
 			$('#tc_pod_attachment').prop('disabled', false).css('background-color', '#fff');
 			$('#tc_pod').prop('disabled', false).css('background-color', '#fff');
 			$('#pod-sign-btn').prop('disabled', false).removeClass('disable_a_href');
@@ -545,8 +552,7 @@
 		// ----------------------
 		// 3️⃣ Loading & Unloading Time Visibility
 		// ----------------------
-		// Treat category 3 the same as category 2
-		if (categoryValue == "2" || categoryValue == "3") {
+		if (categoryValue == "2" || categoryValue == "3" || categoryText.indexOf('empty') !== -1) {
 			loadingTimeDiv.style.display = "none";
 			unloadingTimeDiv.style.display = "none";
 
@@ -579,6 +585,8 @@
 <script>
 	function hideEmptyFields() {
 		let categoryValue = document.getElementById("tr_category").value;
+		let categoryText = '';
+		try { categoryText = $('#tr_category option:selected').text().trim().toLowerCase(); } catch (e) { categoryText = ''; }
 
 		// Date fields in empty-field class
 		const emptyDateFields = [
@@ -589,9 +597,12 @@
 			"tr_departeddate", "tr_reporteddate"
 		];
 
-		// ✅ EMPTY = category 2 or 3
-		if (categoryValue === "2" || categoryValue === "3") {
-			$(".empty-field").hide();   // ✅ Hide unwanted fields
+		// ✅ EMPTY = category 2 or 3 (or label contains 'empty')
+		if (categoryValue === "2" || categoryValue === "3" || categoryText.indexOf('empty') !== -1) {
+			// Use CSS class with !important to override the flex styling
+			$(".empty-field").addClass('empty-field-hidden');
+
+
 
 			emptyDateFields.forEach(id => {
 				try {
@@ -616,7 +627,10 @@
 			$("#tr_reporteddate").prop("disabled", false).removeClass('disable_a_href');
 			$("#tr_reportedkm").prop("disabled", false).removeClass('disable_a_href');
 		} else {
-			$(".empty-field").show();   // ✅ Show all for normal trip
+			// Remove hidden class to show fields again
+			$(".empty-field").removeClass('empty-field-hidden').each(function () {
+				this.style.removeProperty('display');
+			});
 
 			let tripStatusVal = document.getElementById('tc_financestatus').value;
 			let isAwaitingVal = (tripStatusVal === "8" || tripStatusVal === "");
@@ -663,6 +677,16 @@
 	$("#tr_category").on("change", function () {
 		hideEmptyFields();
 		trip_status_update();
+		// When category changes, try to fetch enquiry locations (same behavior as old UI)
+		try {
+			if (typeof loadEnquiryLocations === 'function') {
+				loadEnquiryLocations();
+			}
+		} catch (e) {
+			console.warn('loadEnquiryLocations not available:', e);
+		}
+		// Also refresh last KM if vehicle number present (helps when switching between categories)
+		try { if (typeof fetchLastKM === 'function') fetchLastKM(); } catch (e) { console.warn(e); }
 	});
 
 	// ✅ Trigger on page load
@@ -708,7 +732,7 @@
 			}, 200);
 		}
 
-		function loadEnquiryLocations() {
+		window.loadEnquiryLocations = function () {
 			var enquiry_number = $("#tr_enquirynumber").val();   // Enquiry number (ID)
 			var trip_category = $("#tr_category").val();          // Trip category (1 = Normal, 2 = Special)
 
@@ -751,7 +775,7 @@
 		$("#tr_enquirynumber").change(loadEnquiryLocations);
 
 		// 🔹 Also fetch automatically when page loads
-		loadEnquiryLocations();
+		if (typeof loadEnquiryLocations === 'function') loadEnquiryLocations();
 	});
 </script>
 <script>
@@ -800,7 +824,9 @@
 	$(document).ready(function () {
 		// ---- 1. Form Submission Handling ----
 		$("#tripdetail_add").on("submit", function (e) {
-			$(this).find(':input').prop('disabled', false);
+			var $form = $(this);
+			enableTripForm(this);
+			return true;
 		});
 
 		// ---- 2. Check if this is a new trip or existing trip ----
@@ -942,11 +968,9 @@
 					enableUnloadingStage1();
 				}
 			} else {
-				// For Category 2/3, Stage 1 is usually enough or handled by hideEmptyFields
-				// but let's call it if status is active
-				if (status == "1" || status == "2") {
-					enableUnloadingStage1();
-				}
+				// For Category 2/3 (Empty trips), Unloading Stage 1 fields
+				// should always be accessible — no status gating needed.
+				enableUnloadingStage1();
 			}
 			validateStatusRestriction();
 		}
@@ -991,6 +1015,24 @@
 				$("#tr_unloading_time").removeAttr("required");
 			}
 		}
+	}
+</script>
+<script>
+	// Fallback enable function attached to form onsubmit attribute so it runs even if other JS fails
+	function enableTripForm(formEl) {
+		try {
+			var $form = $(formEl);
+			$form.find(':input').prop('disabled', false);
+			$form.find('select').prop('disabled', false).each(function () {
+				if ($(this).hasClass('select2-hidden-accessible')) {
+					$(this).trigger('change.select2');
+				}
+			});
+			$form.find('input[type=file]').prop('disabled', false);
+		} catch (e) {
+			console.warn('enableTripForm error', e);
+		}
+		return true;
 	}
 </script>
 <script>
