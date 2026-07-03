@@ -21,9 +21,9 @@ def get_financial_year():
 def get_branch_code(branch_id):
     """
     Returns the short code for a branch ID.
-    1: BLR, 2: MAA, 4: HYD
+    1: BLR, 2: MAA, 3: PNY, 4: HYD, 5: CBE, 6: MC
     """
-    branch_code_map = {1: "BLR", 2: "MAA", 3: "PNY", 4: "HYD", 5: "CBE"}
+    branch_code_map = {1: "BLR", 2: "MAA", 3: "PNY", 4: "HYD", 5: "CBE", 6: "MC"}
     return branch_code_map.get(branch_id, "UNK")
 
 def get_session_branch_id(request):

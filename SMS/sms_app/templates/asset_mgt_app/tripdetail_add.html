@@ -1,442 +1,384 @@
-{% extends "asset_mgt_app/base_1.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+
 {% block content %}
-<div class="row">
-	<div class="col">
-		{% if trip_instance.tr_category.id == 1 %}
-		<div class="d-flex flex-row gap-2">
-			{% if trip_instance.tr_high_value.id == 1 and not checklist %}
-			<div class="alert alert-warning w-50" role="alert">
-				Please fill the high value checklist.
-			</div>
+<style>
+    /* Styling for disabled fields */
+    input:disabled, select:disabled, textarea:disabled, [readonly] {
+        background-color: #e8f5e9 !important; /* light green tint */
+        opacity: 1 !important; /* override default bootstrap opacity */
+        cursor: not-allowed;
+        color: #666;
+    }
 
-			{% elif checklist %}
-			{% if checklist.thc_approval_status_id == 2 %}
-			<div class="alert alert-danger w-50" role="alert">
-				Awaiting High Value Checklist Approval.
-			</div>
-			{% elif checklist.thc_approval_status_id == 1 %}
-			<div class="alert alert-success w-50" role="alert">
-				High Value Checklist Approved.
-			</div>
-			{% else %}
-			<div class="alert alert-secondary w-50" role="alert">
-				Status unknown.
-			</div>
-			{% endif %}
-			{% endif %}
+    .disable_a_href {
+        cursor: not-allowed !important;
+        pointer-events: none !important;
+    }
 
-			{% if trip_approvallist %}
-			<div class="alert alert-success w-50 ml-2" role="alert">
-				Invoice & E-WayBill Approved
-			</div>
-			{% else %}
-			<div class="alert alert-danger w-50 ml-2" role="alert">
-				Awaiting For Invoice & E-WayBill Approval
-			</div>
-			{% endif %}
-		</div>
-		{% endif %}
+	#tripdetail_id .form-group-modern {
+		display: flex !important;
+		flex-direction: column !important;
+		align-items: stretch !important;
+	}
 
-		<div class="container-fluid">
-			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-				<div class="card-header text-center">
-					<div class="row align-items-center justify-content-between">
-						<div class="col-md-8 d-flex flex-wrap align-items-center gap-2">
-							<h3 class="mb-0 mr-3">Add/Update Trip Detail</h3>
-							<a href="{% url 'tripdetail_insert' %}" class="btn btn-primary ml-2">
-								<i class="fas fa-plus"></i> Add
-							</a>
-							<a href="{% url 'trip_highvalue_add' %}" id="checklist-btn"
-								class="btn btn-primary ml-2 disable_a_href">
-								Goods High Value Checklist
-							</a>
+	#tripdetail_id .form-group-modern.empty-field-hidden {
+		display: none !important;
+	}
+
+    #tripdetail_id .form-label-modern {
+        display: block !important;
+        width: 100% !important;
+        white-space: nowrap !important;
+        font-size: 0.72rem !important;
+        letter-spacing: 0.8px !important;
+    }
+
+    #tripdetail_id .form-control-modern,
+    #tripdetail_id input[type="datetime-local"].form-control-modern {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+</style>
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-route mr-2"></i> Add/Update Trip Detail</h2>
+        <div style="position: relative; z-index: 10;">
+            <a href="{% url 'tripdetail_insert' %}" class="btn-modern btn-cancel py-2 px-4 mr-2" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-plus"></i> ADD
+            </a>
+            <a href="{% url 'trip_highvalue_add' %}" id="checklist-btn" class="btn-modern btn-cancel py-2 px-4 mr-2 disable_a_href" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                Goods High Value Checklist
+            </a>
+            <a href="{% url 'tripdetail_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK TO LIST
+            </a>
+        </div>
+    </div>
+
+    <!-- Alerts Section -->
+    {% if trip_instance.tr_category.id == 1 %}
+    <div class="d-flex flex-row gap-2 mb-3">
+        {% if trip_instance.tr_high_value.id == 1 and not checklist %}
+        <div class="alert alert-warning w-50" role="alert">
+            Please fill the high value checklist.
+        </div>
+        {% elif checklist %}
+            {% if checklist.thc_approval_status_id == 2 %}
+            <div class="alert alert-danger w-50" role="alert">
+                Awaiting High Value Checklist Approval.
+            </div>
+            {% elif checklist.thc_approval_status_id == 1 %}
+            <div class="alert alert-success w-50" role="alert">
+                High Value Checklist Approved.
+            </div>
+            {% else %}
+            <div class="alert alert-secondary w-50" role="alert">
+                Status unknown.
+            </div>
+            {% endif %}
+        {% endif %}
+
+        {% if trip_approvallist %}
+        <div class="alert alert-success w-50 ml-2" role="alert">
+            Invoice & E-WayBill Approved
+        </div>
+        {% else %}
+        <div class="alert alert-danger w-50 ml-2" role="alert">
+            Awaiting For Invoice & E-WayBill Approval
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+	<form method="POST" action="" id="tripdetail_add" enctype="multipart/form-data" onsubmit="return enableTripForm(this);">
+        {% csrf_token %}
+        <div class="modern-card" style="padding: 1rem !important;">
+            <div class="row" id="tripdetail_id">
+
+                <!-- Column 1: Trip Info -->
+                <div class="col-12 col-md-6 col-lg-3 mb-3">
+                    <div class="form-section h-100 p-3">
+                        <div class="form-section-title mb-3" style="font-size:0.95rem;"><i class="fas fa-info-circle"></i> Trip Info</div>
+
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Enquiry Number</label>
+                            {% render_field trip_det_form.tr_enquirynumber id="tr_enquirynumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Trip Number</label>
+                            {% render_field trip_det_form.tr_tripnumber id="tr_tripnumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Consignment Number</label>
+                            <select name="tr_consignmentnumber" id="tr_consignmentnumber" class="form-control form-control-modern form-control-sm select2-consignment">
+                                <option value="">--Select--</option>
+                                {% for item in consignment_list %}
+                                <option value="{{ item.id }}" {% if trip_instance and trip_instance.tr_consignmentnumber_id == item.id %}selected{% elif request.POST.tr_consignmentnumber|default_if_none:'' == item.id|stringformat:'s' %}selected{% endif %}>
+                                {{ item.co_consignmentnumber }}{% if item.co_vehicelnumber %} ({{ item.co_vehicelnumber }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Vehicle Number</label>
+                            {% render_field trip_det_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Vehicle Source</label>
+                            {% render_field trip_det_form.tr_vehiclesource id="tr_vehiclesource" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Tracking Link</label>
+                            {% render_field trip_det_form.tr_track_link id="tr_track_link" class="form-control form-control-modern form-control-sm" placeholder="Paste your Sim-Track link here" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Vehicle & Driver -->
+                <div class="col-12 col-md-6 col-lg-3 mb-3">
+                    <div class="form-section h-100 p-3">
+                        <div class="form-section-title mb-3" style="font-size:0.95rem;"><i class="fas fa-truck"></i> Vehicle & Driver</div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Vehicle Type Requested</label>
+                            {% render_field trip_det_form.tr_vehicletype id="tr_vehicletype" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Vehicle Type Placed</label>
+                            {% render_field trip_det_form.tr_vehicletype_placed id="tr_vehicletype_placed" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Driver Name</label>
+                            {% render_field trip_det_form.tr_drivername id="tr_drivername" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Driver Number</label>
+                            {% render_field trip_det_form.tr_drivernumber id="tr_drivernumber" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Driver License</label>
+                            {% render_field trip_det_form.tr_driver_lic id="tr_driver_lic" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Trip Category</label>
+                            {% if trip_instance.pk %}
+                            {% render_field trip_det_form.tr_category id="tr_category" class="form-control form-control-modern form-control-sm disable_a_href" %}
+                            {% else %}
+                            {% render_field trip_det_form.tr_category id="tr_category" class="form-control form-control-modern form-control-sm" onchange="trip_type()" %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Loading Details -->
+                <div class="col-12 col-md-6 col-lg-3 mb-3">
+                    <div class="form-section h-100 p-3">
+                        <div class="form-section-title mb-3" style="font-size:0.95rem;"><i class="fas fa-box-open"></i> Loading Details</div>
+
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">From Location</label>
+                            {% render_field trip_det_form.tr_departedlocation id="tr_departedlocation" class="form-control form-control-modern form-control-sm" %}
+                        </div>
+						<div class="form-group-modern mb-2 empty-field">
+							<label class="form-label-modern small mb-1">Vehicle Reported Date & Time</label>
+							{% render_field trip_det_form.tr_departeddate_pickup id="tr_departeddate_pickup" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
 						</div>
-
-						<div class="col-md-4 d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
+                        <div class="form-group-modern mb-2 empty-field">
+                            <label class="form-label-modern small mb-1">Vehicle Reported KM</label>
+                            {% render_field trip_det_form.tr_departedkm id="tr_departedkm" class="form-control form-control-modern form-control-sm" %}
+                        </div>
+						<div class="form-group-modern mb-2 empty-field">
+							<label class="form-label-modern small mb-1">Dock-In Time</label>
+							{% render_field trip_det_form.tr_loading_time id="tr_loading_time" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
 						</div>
-					</div>
-				</div>
-
-				<div class="card-body bg-light">
-					<form method="POST" action="" id="tripdetail_add" enctype="multipart/form-data">
-						{% csrf_token %}
-						<div class="row" id="tripdetail_id">
-							<div class=" col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Enquiry Number</span>
-									</div>
-									{% render_field trip_det_form.tr_enquirynumber id="tr_enquirynumber" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Trip Number</span>
-									</div>
-									{% render_field trip_det_form.tr_tripnumber id="tr_tripnumber" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consignment Number</span>
-									</div>
-
-									<select name="tr_consignmentnumber" id="tr_consignmentnumber"
-										class="form-control select2-consignment">
-
-										<option value="">--Select--</option>
-
-										{% for item in consignment_list %}
-										<option value="{{ item.id }}"
-												{% if trip_instance and trip_instance.tr_consignmentnumber_id == item.id %}
-												selected
-												{% elif request.POST.tr_consignmentnumber|default_if_none:'' == item.id|stringformat:'s' %}
-										selected
-										{% endif %}
-										>
-										{{ item.co_consignmentnumber }}
-										{% if item.co_vehicelnumber %} ({{ item.co_vehicelnumber }}){% endif %}
-										</option>
-										{% endfor %}
-
-									</select>
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Number</span>
-									</div>
-									{% render_field trip_det_form.tr_vehiclenumber id="tr_vehiclenumber" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Source</span>
-									</div>
-									{% render_field trip_det_form.tr_vehiclesource id="tr_vehiclesource" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Tracking Link</span>
-									</div>
-									{% render_field trip_det_form.tr_track_link id="tr_track_link" class="form-control " placeholder="Paste your Sim-Track link here" %}
-								</div>
-							</div>
-							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Type Requested</span>
-									</div>
-									{% render_field trip_det_form.tr_vehicletype id="tr_vehicletype" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Type Placed</span>
-									</div>
-									{% render_field trip_det_form.tr_vehicletype_placed id="tr_vehicletype_placed" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Driver Name</span>
-									</div>
-									{% render_field trip_det_form.tr_drivername id="tr_drivername" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Driver Number</span>
-									</div>
-									{% render_field trip_det_form.tr_drivernumber id="tr_drivernumber" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Driver License</span>
-									</div>
-									{% render_field trip_det_form.tr_driver_lic id="tr_driver_lic" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Trip Category</span>
-									</div>
-									{% if trip_instance.pk %}
-									{% render_field trip_det_form.tr_category id="tr_category" class="form-control disable_a_href" %}
-									{% else %}
-									{% render_field trip_det_form.tr_category id="tr_category" class="form-control" onchange="trip_type()" %}
-									{% endif %}
-								</div>
-
-							</div>
-							<div class="  col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-								<!-- ✅ HEADING -->
-								<div class="text-center font-weight-bold text-white bg-info p-1 rounded mb-2">
-									Loading Details
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">From Location</span>
-									</div>
-									{% render_field trip_det_form.tr_departedlocation id="tr_departedlocation" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm m-1 empty-field">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Reported Date & Time </span>
-									</div>
-									{% render_field trip_det_form.tr_departeddate_pickup id="tr_departeddate_pickup" type="Datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm m-1 empty-field">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Reported KM</span>
-									</div>
-									{% render_field trip_det_form.tr_departedkm id="tr_departedkm" class="form-control" %}
-								</div>
-
-								<div class="input-group input-group-sm m-1 empty-field">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Dock in Time</span>
-									</div>
-									{% render_field trip_det_form.tr_loading_time id="tr_loading_time" type="Datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm m-1 empty-field">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Dock out Time</span>
-									</div>
-									{% render_field trip_det_form.tr_dock_out_time id="tr_dock_out_time" type="Datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle started Date & Time</span>
-									</div>
-									{% render_field trip_det_form.tr_departeddate id="tr_departeddate" type="Datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Started KM</span>
-									</div>
-									{% render_field trip_det_form.tr_reportedkm_pickup id="tr_reportedkm_pickup" class="form-control" %}
-								</div>
-
-							</div>
-							<div class="col-12 col-md-6 col-lg-3  shadow bg-white rounded border p-2">
-								<!-- ✅ HEADING -->
-								<div class="text-center font-weight-bold text-white bg-info p-1 rounded mb-2">
-									Unloading Details
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">To Location</span>
-									</div>
-									{% render_field trip_det_form.tr_reportedlocation id="tr_reportedlocation" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Reported Date & Time</span>
-									</div>
-									{% render_field trip_det_form.tr_reporteddate id="tr_reporteddate" type="Datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Reported KM</span>
-									</div>
-									{% render_field trip_det_form.tr_reportedkm id="tr_reportedkm" class="form-control" %}
-								</div>
-
-								<div class="input-group input-group-sm m-1 empty-field">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Dock-In Time</span>
-									</div>
-									{% render_field trip_det_form.tr_departeddate_delivery id="tr_departeddate_delivery" type="Datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm m-1 empty-field">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Dock-Out Time</span>
-									</div>
-									{% render_field trip_det_form.tr_unloading_time id="tr_unloading_time" type="Datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm m-1 empty-field">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Started Date & Time</span>
-									</div>
-									{% render_field trip_det_form.tr_reporteddate_pickup id="tr_reporteddate_pickup" type="Datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm m-1 empty-field">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Started KM</span>
-									</div>
-									{% render_field trip_det_form.tr_reportedkm_delivery id="tr_reportedkm_delivery" class="form-control" %}
-								</div>
-							</div>
-						</div> <!-- ✅ CLOSE THE 4 COLUMN ROW HERE -->
-
-						<!-- ✅ UTILIZED KM ROW -->
-				<div class="row mt-2 justify-content-end">
-					<div class="col-12 col-md-4">
-						<div class="input-group input-group-sm m-1">
-							<div class="input-group-prepend">
-								<span class="input-group-text bg-warning font-weight-bold">Utilized KM</span>
-							</div>
-							<input type="text" id="utilized_km_display" class="form-control font-weight-bold" readonly placeholder="Auto calculated" style="background:#fff8e1;">
+						<div class="form-group-modern mb-2 empty-field">
+							<label class="form-label-modern small mb-1">Dock-Out Time</label>
+							{% render_field trip_det_form.tr_dock_out_time id="tr_dock_out_time" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
 						</div>
-					</div>
-				</div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Vehicle Started Date & Time</label>
+                            {% render_field trip_det_form.tr_departeddate id="tr_departeddate" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Vehicle Started KM</label>
+                            {% render_field trip_det_form.tr_reportedkm_pickup id="tr_reportedkm_pickup" class="form-control form-control-modern form-control-sm" %}
+                        </div>
+                    </div>
+                </div>
 
-						<!-- ✅ NEW ROW FOR GOODS HIGH VALUE + TRIP STATUS -->
-						<div class="row mt-2">
+                <!-- Column 4: Unloading Details -->
+                <div class="col-12 col-md-6 col-lg-3 mb-3">
+                    <div class="form-section h-100 p-3">
+                        <div class="form-section-title mb-3" style="font-size:0.95rem;"><i class="fas fa-boxes"></i> Unloading Details</div>
 
-							<!-- Goods High Value -->
-							<div class="col-12 col-md-6">
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Goods High Value Check</span>
-									</div>
-									{% render_field trip_det_form.tr_high_value id="tr_high_value" class="form-control" %}
-								</div>
-
-								{% render_field trip_det_form.tr_updated_by id="tr_updated_by" hidden="True" class="form-control" %}
-								{% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control" %}
-							</div>
-
-							<!-- Trip Status -->
-							<div class="col-12 col-md-6">
-								<div class="input-group input-group-sm m-1">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Trip Status</span>
-									</div>
-									<select name="tc_financestatus" id="tc_financestatus" class="form-control">
-										{% for item in status_list %}
-										<option value="{{ item.id }}"
-												{% if item.id == status_selected %}
-												selected
-												{% elif not status_selected and item.id == 8 %}
-												selected
-												{% endif %}>
-											{{ item.status }}
-										</option>
-										{% endfor %}
-									</select>
-								</div>
-								<!-- Cancellation status info banners -->
-								<div id="cancel_with_billing_info" class="alert alert-info alert-sm mt-1 mb-0 py-1 px-2" style="font-size:0.82rem; display:none;">
-									<i class="fas fa-info-circle"></i> <strong>Cancellation with Billing:</strong> Trip will proceed to <strong>Trip Settlement</strong>.
-								</div>
-								<div id="cancel_without_billing_info" class="alert alert-danger alert-sm mt-1 mb-0 py-1 px-2" style="font-size:0.82rem; display:none;">
-									<i class="fas fa-ban"></i> <strong>Cancellation without Billing:</strong> Trip will be <strong>stopped</strong>. No settlement will be created.
-								</div>
-							</div>
-
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">To Location</label>
+                            {% render_field trip_det_form.tr_reportedlocation id="tr_reportedlocation" class="form-control form-control-modern form-control-sm" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Vehicle Reported Date & Time</label>
+                            {% render_field trip_det_form.tr_reporteddate id="tr_reporteddate" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern small mb-1">Vehicle Reported KM</label>
+                            {% render_field trip_det_form.tr_reportedkm id="tr_reportedkm" class="form-control form-control-modern form-control-sm" %}
+                        </div>
+						<div class="form-group-modern mb-2 empty-field">
+							<label class="form-label-modern small mb-1">Dock-In Time</label>
+							{% render_field trip_det_form.tr_departeddate_delivery id="tr_departeddate_delivery" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
 						</div>
-
-						<!-- ✅ Remarks Full Width -->
-						<div class="row">
-							<div class="col-12">
-								<div class="input-group input-group-sm mb-2 container-fluid">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Remarks</span>
-									</div>
-									{% render_field trip_det_form.tr_remarks class="form-control" style="height: 60px;" %}
-								</div>
-							</div>
+						<div class="form-group-modern mb-2 empty-field">
+							<label class="form-label-modern small mb-1">Dock-Out Time</label>
+							{% render_field trip_det_form.tr_unloading_time id="tr_unloading_time" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
 						</div>
-
-						<div class="row mt-2 justify-content-center">
-
-							<!-- Attachment -->
-							<div class="col-12 col-lg-5">
-								<div class="p-3 bg-dark rounded-sm text-white mb-2">
-									<div class="input-group input-group-sm">
-										<div class="input-group-prepend">
-											<span class="input-group-text">POD Attachment</span>
-										</div>
-										{% render_field trip_det_form.tc_pod_attachment id="tc_pod_attachment" class="form-control disable_a_href" %}
-									</div>
-								</div>
-							</div>
-
-							<!-- Invoice -->
-							<div class="col-12 col-lg-5">
-								<div class="p-3 bg-dark rounded-sm text-white mb-2">
-									<div class="input-group input-group-sm">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Invoice Number</span>
-										</div>
-										{% render_field trip_det_form.tc_pod id="tc_pod" class="form-control disable_a_href" %}
-									</div>
-								</div>
-							</div>
-
+						<div class="form-group-modern mb-2 empty-field">
+							<label class="form-label-modern small mb-1">Vehicle Started Date & Time</label>
+							{% render_field trip_det_form.tr_reporteddate_pickup id="tr_reporteddate_pickup" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
 						</div>
-
-						<!-- ✅ POD Signature Center -->
-						<div class="row mt-2 justify-content-center">
-							<div class="col-12 col-lg-6">
-								<div class="p-3 bg-dark rounded-sm text-white mb-2 text-center">
-
-									<button type="button" class="btn btn-primary btn-sm mb-2" data-toggle="modal"
-										data-target="#podSignatureModal" id="pod-sign-btn" disabled>
-										POD Signature
-									</button>
-
-									<div id="pod-signature-preview" class="mt-2"
-										style="background-color: white; padding: 5px; border-radius: 4px;">
-										{% if trip_det_form.instance.td_pod %}
-										<img src="{{ trip_det_form.instance.td_pod.url }}" alt="POD Signature"
-											class="img-fluid" style="max-height: 100px;">
-										{% endif %}
-									</div>
-
-									<input type="hidden" name="pod_signature_data" id="pod-signature-data">
-								</div>
-							</div>
-
-							<!-- POD Signature Modal -->
-							<div class="modal fade" id="podSignatureModal" tabindex="-1">
-								<div class="modal-dialog modal-lg modal-dialog-centered"> <!-- Centered vertically -->
-									<div class="modal-content">
-										<div class="modal-header">
-											<h5 class="modal-title text-dark">POD Signature</h5>
-											<button type="button" class="close" data-dismiss="modal">&times;</button>
-										</div>
-										<div class="modal-body d-flex justify-content-center">
-											<!-- Center canvas horizontally -->
-											<canvas id="pod-pad" width="800" height="300"
-												style="border:1px solid #ccc; max-width:100%;"></canvas>
-										</div>
-										<div class="modal-footer d-flex justify-content-between">
-											<button type="button" id="clear-pod"
-												class="btn btn-warning btn-sm">Clear</button>
-											<button type="button" id="save-pod"
-												class="btn btn-success btn-sm">Save</button>
-										</div>
-									</div>
-								</div>
-							</div>
+						<div class="form-group-modern mb-2 empty-field">
+							<label class="form-label-modern small mb-1">Vehicle Started KM</label>
+							{% render_field trip_det_form.tr_reportedkm_delivery id="tr_reportedkm_delivery" class="form-control form-control-modern form-control-sm" %}
 						</div>
+                    </div>
+                </div>
 
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								{% for message in messages %}
-								<div class="message text-center {% if message.tags %}{{ message.tags }}{% endif %}">
-									{{ message }}
-								</div>
-								{% endfor %}
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<div class="d-flex justify-content-between align-items-center mt-3">
-							<div>
-								<button id="tripdetail_submit_id" type="submit" name="submit_action" value="save"
-									class="btn btn-success mr-2">
-									<i class="fas fa-check"></i> Submit
-								</button>
-							</div>
-							<a href="{% url 'enquirynote_list' %}" class="btn btn-danger">
-								<i class="fas fa-times"></i> Cancel
-							</a>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-	</div>
+                <!-- Extras & Bottom rows -->
+                <div class="col-12 col-lg-6 offset-lg-6 mb-3">
+                    <div class="form-section p-3">
+                        <div class="row">
+                            <div class="col-12 col-md-6 d-flex align-items-center mb-2 mb-md-0">
+                                <span class="badge bg-warning text-dark mr-2 py-2 px-3" style="border-radius:20px;">Utilized KM</span>
+                                <input type="text" id="utilized_km_display" class="form-control form-control-modern form-control-sm form-control-plaintext ml-2 text-dark font-weight-bold" readonly placeholder="Auto calculated" style="max-width: 150px; display: inline-block; background: transparent; border: none; font-size: 1rem;">
+                            </div>
+                            <div class="col-12 col-md-6 d-flex justify-content-md-end text-danger text-md-right">
+                                <strong>* Please check standard km chart when actual km is high</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 mb-3">
+                    <div class="form-section p-3 h-100">
+                        <div class="form-group-modern mb-0">
+                            <label class="form-label-modern small mb-1">Goods High Value Check</label>
+                            {% render_field trip_det_form.tr_high_value id="tr_high_value" class="form-control form-control-modern form-control-sm" %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 mb-3">
+                    <div class="form-section p-3 h-100">
+                        <div class="form-group-modern mb-0">
+                            <label class="form-label-modern small mb-1">Trip Status</label>
+                            <select name="tc_financestatus" id="tc_financestatus" class="form-control form-control-modern form-control-sm border-success">
+                                {% for item in status_list %}
+                                <option value="{{ item.id }}"
+                                        {% if item.id == status_selected %}
+                                        selected
+                                        {% elif not status_selected and item.id == 8 %}
+                                        selected
+                                        {% endif %}>
+                                    {{ item.status }}
+                                </option>
+                                {% endfor %}
+                            </select>
+
+                            <!-- Cancellation status info banners -->
+                            <div id="cancel_with_billing_info" class="alert alert-info alert-sm mt-1 mb-0 py-1 px-2" style="font-size:0.82rem; display:none;">
+                                <i class="fas fa-info-circle"></i> <strong>Cancellation with Billing:</strong> Trip will proceed to <strong>Trip Settlement</strong>.
+                            </div>
+                            <div id="cancel_without_billing_info" class="alert alert-danger alert-sm mt-1 mb-0 py-1 px-2" style="font-size:0.82rem; display:none;">
+                                <i class="fas fa-ban"></i> <strong>Cancellation without Billing:</strong> Trip will be <strong>stopped</strong>. No settlement will be created.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 mb-3">
+                    <div class="form-section p-3">
+                        <div class="form-group-modern mb-0">
+                            <label class="form-label-modern small mb-1">Remarks</label>
+                            {% render_field trip_det_form.tr_remarks class="form-control form-control-modern form-control-sm" rows="3" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- POD Attachment, Invoice Number and Signature - Single Horizontal Row -->
+                <div class="col-12 mb-3">
+                    <div class="form-section p-3">
+                        <div class="row align-items-end">
+                                 <!-- POD Attachment -->
+                            <div class="col-12 col-md-4 mb-2 mb-md-0 d-flex flex-column">
+                                <label class="form-label-modern small mb-1">POD Attachment</label>
+                                {% render_field trip_det_form.tc_pod_attachment id="tc_pod_attachment" class="form-control form-control-modern form-control-sm" %}
+                            </div>
+                            <!-- Invoice Number -->
+                            <div class="col-12 col-md-4 mb-2 mb-md-0 d-flex flex-column">
+                                <label class="form-label-modern small mb-1">Invoice Number</label>
+                                {% render_field trip_det_form.tc_pod id="tc_pod" class="form-control form-control-modern form-control-sm" %}
+                            </div>
+                            <!-- POD Signature -->
+                            <div class="col-12 col-md-4 d-flex flex-column">
+                                <label class="form-label-modern small mb-1">POD Signature</label>
+                                <button type="button" class="btn btn-primary btn-sm" style="height: calc(1.5em + .5rem + 2px);" data-toggle="modal" data-target="#podSignatureModal" id="pod-sign-btn" disabled>
+                                    <i class="fas fa-pen mr-1"></i> Sign POD
+                                </button>
+                                <div id="pod-signature-preview" class="mt-1 text-center" style="background-color: white; padding: 4px; border-radius: 4px; min-height: 0;">
+                                    {% if trip_det_form.instance.td_pod %}
+                                    <img src="{{ trip_det_form.instance.td_pod.url }}" alt="POD Signature" class="img-fluid" style="max-height: 50px; margin: 0 auto;">
+                                    {% endif %}
+                                </div>
+                                <input type="hidden" name="pod_signature_data" id="pod-signature-data">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden inputs -->
+                <div class="d-none">
+                    {% render_field tripdetailfiles_form.tdf_tripnumber id="tdf_tripnumber" class="form-control" %}
+                    {% render_field trip_det_form.tr_updated_by id="tr_updated_by" class="form-control" %}
+                </div>
+
+                <!-- Action Buttons -->
+				<div class="col-12 mt-4 d-flex justify-content-between align-items-center">
+					<button type="submit" id="tripdetail_submit_id" class="btn-modern btn-submit py-2 px-5">
+						<i class="fas fa-check mr-2"></i> Submit
+					</button>
+                    <a href="{% url 'tripdetail_list' %}" class="btn-modern btn-cancel py-2 px-5">
+                        <i class="fas fa-times mr-2"></i> Cancel
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </form>
 </div>
-<div class="table-responsive shadow-box-table">
-	{% include "asset_mgt_app/tripdetail_list_woh.html" %}
+
+<!-- POD Signature Modal -->
+<div class="modal fade" id="podSignatureModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-dark">POD Signature</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body d-flex justify-content-center">
+                <canvas id="pod-pad" width="800" height="300" style="border:1px solid #ccc; max-width:100%; touch-action: none; background-color: #fff;"></canvas>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="clear-pod">Clear</button>
+                <button type="button" class="btn btn-primary" id="save-pod">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="table-responsive shadow-box-table mt-4">
+    {% include "asset_mgt_app/tripdetail_list_woh.html" %}
 </div>
 <script>
 	$(document).ready(function () {
@@ -449,7 +391,6 @@
 
 	});
 </script>
-
 <script>
 	$("#tr_consignmentnumber").change(function () {
 		var consignment_number = $(this).val();
@@ -495,22 +436,20 @@
 		}
 	});
 </script>
-
-
-<!--<script>-->
-<!--	function trip_track() {-->
-<!--    var tr_vehiclesource = document.getElementById("tr_vehiclesource").value;-->
-<!--    if (tr_vehiclesource == "3") {-->
-<!--        $('#tr_track_link').removeClass('disable_a_href');-->
-<!--    } else {-->
-<!--        $('#tr_track_link').addClass('disable_a_href');-->
-<!--    }-->
-<!--}-->
-<!--document.addEventListener("DOMContentLoaded", function () {-->
-<!--    $('#tr_consignmentnumber').on('change', trip_track);  // Call on change-->
-<!--    trip_track();-->
-<!--});-->
-<!--</script>-->
+<!--
+function trip_track() {
+	var tr_vehiclesource = document.getElementById("tr_vehiclesource").value;
+	if (tr_vehiclesource == "3") {
+		$('#tr_track_link').removeClass('disable_a_href');
+	} else {
+		$('#tr_track_link').addClass('disable_a_href');
+	}
+}
+document.addEventListener("DOMContentLoaded", function () {
+	$('#tr_consignmentnumber').on('change', trip_track);  // Call on change
+	trip_track();
+});
+-->
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
 		if (window.location.href.includes("tripdetail_insert")) {
@@ -540,50 +479,30 @@
 		else {
 			// Disable fields if on any other page
 			$('#tripdetail_id,#tripdetail_submit_id')
-				.addClass('disable_a_href')
-				.prop('disabled', true);
+				.addClass('disable_a_href');
 		}
 	});
-</script>
 
-<script>
-	document.addEventListener('DOMContentLoaded', function () {
-		const trHighValue = document.getElementById('tr_high_value');
-		const checklistBtn = document.getElementById('checklist-btn');
-
-		function updateButtonState() {
-			if (trHighValue.value === '1') {
-				checklistBtn.classList.remove('disable_a_href');
-
-			} else {
-				checklistBtn.classList.add('disable_a_href');
-			}
-		}
-		updateButtonState();
-	});
-
-</script>
-
-<script>
-	var checklistApprovalStatus = parseInt("{{ checklist.thc_approval_status_id|default:0 }}");
 	var tripApprovalApproved = "{{ trip_approvallist|yesno:'true,false' }}" === "true";
 	var isHighValueGoods = "{{ trip_instance.tr_high_value_id }}" === "1";
 
 	function trip_type() {
 		var categoryValue = document.getElementById('tr_category').value;
+		// Fallback: detect by option text (in case the select uses labels or different IDs)
+		var categoryText = '';
+		try { categoryText = $('#tr_category option:selected').text().trim().toLowerCase(); } catch (e) { categoryText = ''; }
+
 		var tripStatus = document.getElementById('tc_financestatus');
-		var loadingTimeDiv = document.getElementById("tr_loading_time").closest('.input-group');
-		var unloadingTimeDiv = document.getElementById("tr_unloading_time").closest('.input-group');
+		var loadingTimeDiv = document.getElementById("tr_loading_time").closest('.form-group-modern');
+		var unloadingTimeDiv = document.getElementById("tr_unloading_time").closest('.form-group-modern');
 
 		// ----------------------
 		// 1️⃣ Finance Status Logic
 		// ----------------------
-		// Treat category 3 the same as category 2
-		if (categoryValue === "2" || categoryValue === "3") {
+		// Treat category 3 the same as category 2, also treat labels containing 'empty' as empty category
+		if (categoryValue === "2" || categoryValue === "3" || categoryText.indexOf('empty') !== -1) {
 			tripStatus.disabled = false;
 			tripStatus.classList.remove("select-disabled-style");
-			// Only set default to "1" (Trip Started) for brand-new / awaiting-approval trips.
-			// Never overwrite a saved final/cancelled status.
 			var finalOrActiveTripStatuses = ["1", "2", "3", "4", "7", "9", "10", "11"];
 			if (!finalOrActiveTripStatuses.includes(tripStatus.value)) {
 				tripStatus.value = "1";  // Set default status for new trips only
@@ -617,13 +536,14 @@
 		// ----------------------
 		// 2️⃣ POD Attachment Logic
 		// ----------------------
-		if (categoryValue == 1) {
-			$('#tc_pod_attachment').removeClass('disable_a_href');
-			$('#tc_pod').removeClass('disable_a_href');
+		// treat label 'empty' same as non-1 categories
+		if (categoryValue == 1 && categoryText.indexOf('empty') === -1) {
+			$('#tc_pod_attachment').prop('disabled', false).css('background-color', '#fff');
+			$('#tc_pod').prop('disabled', false).css('background-color', '#fff');
 			$('#pod-sign-btn').prop('disabled', false).removeClass('disable_a_href');
 		} else {
-			$('#tc_pod_attachment').addClass('disable_a_href');
-			$('#tc_pod').addClass('disable_a_href');
+			$('#tc_pod_attachment').prop('disabled', true).css('background-color', '#e8f5e9');
+			$('#tc_pod').prop('disabled', true).css('background-color', '#e8f5e9');
 			$('#tc_pod_attachment').val('');
 			$('#tc_pod').val('');
 			$('#pod-sign-btn').prop('disabled', true).addClass('disable_a_href');
@@ -632,8 +552,7 @@
 		// ----------------------
 		// 3️⃣ Loading & Unloading Time Visibility
 		// ----------------------
-		// Treat category 3 the same as category 2
-		if (categoryValue == "2" || categoryValue == "3") {
+		if (categoryValue == "2" || categoryValue == "3" || categoryText.indexOf('empty') !== -1) {
 			loadingTimeDiv.style.display = "none";
 			unloadingTimeDiv.style.display = "none";
 
@@ -666,6 +585,8 @@
 <script>
 	function hideEmptyFields() {
 		let categoryValue = document.getElementById("tr_category").value;
+		let categoryText = '';
+		try { categoryText = $('#tr_category option:selected').text().trim().toLowerCase(); } catch (e) { categoryText = ''; }
 
 		// Date fields in empty-field class
 		const emptyDateFields = [
@@ -676,9 +597,12 @@
 			"tr_departeddate", "tr_reporteddate"
 		];
 
-		// ✅ EMPTY = category 2 or 3
-		if (categoryValue === "2" || categoryValue === "3") {
-			$(".empty-field").hide();   // ✅ Hide unwanted fields
+		// ✅ EMPTY = category 2 or 3 (or label contains 'empty')
+		if (categoryValue === "2" || categoryValue === "3" || categoryText.indexOf('empty') !== -1) {
+			// Use CSS class with !important to override the flex styling
+			$(".empty-field").addClass('empty-field-hidden');
+
+
 
 			emptyDateFields.forEach(id => {
 				try {
@@ -703,7 +627,10 @@
 			$("#tr_reporteddate").prop("disabled", false).removeClass('disable_a_href');
 			$("#tr_reportedkm").prop("disabled", false).removeClass('disable_a_href');
 		} else {
-			$(".empty-field").show();   // ✅ Show all for normal trip
+			// Remove hidden class to show fields again
+			$(".empty-field").removeClass('empty-field-hidden').each(function () {
+				this.style.removeProperty('display');
+			});
 
 			let tripStatusVal = document.getElementById('tc_financestatus').value;
 			let isAwaitingVal = (tripStatusVal === "8" || tripStatusVal === "");
@@ -750,6 +677,16 @@
 	$("#tr_category").on("change", function () {
 		hideEmptyFields();
 		trip_status_update();
+		// When category changes, try to fetch enquiry locations (same behavior as old UI)
+		try {
+			if (typeof loadEnquiryLocations === 'function') {
+				loadEnquiryLocations();
+			}
+		} catch (e) {
+			console.warn('loadEnquiryLocations not available:', e);
+		}
+		// Also refresh last KM if vehicle number present (helps when switching between categories)
+		try { if (typeof fetchLastKM === 'function') fetchLastKM(); } catch (e) { console.warn(e); }
 	});
 
 	// ✅ Trigger on page load
@@ -757,7 +694,6 @@
 		hideEmptyFields();
 	});
 </script>
-
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
 <script>
 	const podPad = new SignaturePad(document.getElementById('pod-pad'));
@@ -796,7 +732,7 @@
 			}, 200);
 		}
 
-		function loadEnquiryLocations() {
+		window.loadEnquiryLocations = function () {
 			var enquiry_number = $("#tr_enquirynumber").val();   // Enquiry number (ID)
 			var trip_category = $("#tr_category").val();          // Trip category (1 = Normal, 2 = Special)
 
@@ -839,10 +775,9 @@
 		$("#tr_enquirynumber").change(loadEnquiryLocations);
 
 		// 🔹 Also fetch automatically when page loads
-		loadEnquiryLocations();
+		if (typeof loadEnquiryLocations === 'function') loadEnquiryLocations();
 	});
 </script>
-
 <script>
 	// ---- Global State Variables ----
 	var g_loadingSent = "{{ trip_instance.tr_loading_report_mail_sent|yesno:'true,false' }}" === 'true';
@@ -892,10 +827,44 @@
 	$(document).ready(function () {
 		// ---- 1. Form Submission Handling ----
 		$("#tripdetail_add").on("submit", function (e) {
-			$(this).find(':input').prop('disabled', false);
+			var $form = $(this);
+			enableTripForm(this);
+			return true;
 		});
 
-		// ---- 2. Field State Management ----
+		// ---- 2. Check if this is a new trip or existing trip ----
+		let isNewTrip = !("{{ trip_instance.id|default:'' }}");
+
+		// ---- Initialize POD fields based on category ----
+		function initializePODFields() {
+			let catVal = $("#tr_category").val();
+
+			// For new trips: enable POD fields by default (user will select category)
+			// For existing trips: enable/disable based on category
+			if (isNewTrip && !catVal) {
+				// New trip with no category selected yet - ENABLE POD fields
+				$('#tc_pod_attachment').prop('disabled', false).css('background-color', '#fff');
+				$('#tc_pod').prop('disabled', false).css('background-color', '#fff');
+				$('#pod-sign-btn').prop('disabled', false);
+			} else if (catVal == 1) {
+				// Category 1 (Normal trip) - ENABLE POD fields
+				$('#tc_pod_attachment').prop('disabled', false).css('background-color', '#fff');
+				$('#tc_pod').prop('disabled', false).css('background-color', '#fff');
+				$('#pod-sign-btn').prop('disabled', false);
+			} else {
+				// Other categories or no category on existing trip - DISABLE POD fields
+				$('#tc_pod_attachment').prop('disabled', true).css('background-color', '#e8f5e9');
+				$('#tc_pod').prop('disabled', true).css('background-color', '#e8f5e9');
+				$('#pod-sign-btn').prop('disabled', true);
+			}
+		}
+		initializePODFields();
+
+		// ---- Update POD fields when category changes ----
+		$("#tr_category").on("change", function () {
+			initializePODFields();
+		});
+
 		function lockLoadingFieldsInitially() {
 			$("#tr_departedlocation, #tr_departeddate_pickup, #tr_departedkm").prop("disabled", false).removeClass('disable_a_href');
 			if ($("#tr_category").val() !== "2" && $("#tr_category").val() !== "3") {
@@ -1002,11 +971,9 @@
 					enableUnloadingStage1();
 				}
 			} else {
-				// For Category 2/3, Stage 1 is usually enough or handled by hideEmptyFields
-				// but let's call it if status is active
-				if (status == "1" || status == "2") {
-					enableUnloadingStage1();
-				}
+				// For Category 2/3 (Empty trips), Unloading Stage 1 fields
+				// should always be accessible — no status gating needed.
+				enableUnloadingStage1();
 			}
 			validateStatusRestriction();
 		}
@@ -1053,30 +1020,76 @@
 		}
 	}
 </script>
-
-{% block scripts %}
+<script>
+	// Fallback enable function attached to form onsubmit attribute so it runs even if other JS fails
+	function enableTripForm(formEl) {
+		try {
+			var $form = $(formEl);
+			$form.find(':input').prop('disabled', false);
+			$form.find('select').prop('disabled', false).each(function () {
+				if ($(this).hasClass('select2-hidden-accessible')) {
+					$(this).trigger('change.select2');
+				}
+			});
+			$form.find('input[type=file]').prop('disabled', false);
+		} catch (e) {
+			console.warn('enableTripForm error', e);
+		}
+		return true;
+	}
+</script>
 <script>
 	$(document).ready(function () {
 		$("#tr_departedlocation, #tr_reportedlocation").select2({
-			width: 'resolve',
+			width: '100%',
 			placeholder: "-- Select --",
 			allowClear: true
 		});
+		$(".disable_a_href").on("click", function(e) {
+			e.preventDefault();
+		});
 	});
 </script>
-
 <script>
+	document.addEventListener('DOMContentLoaded', function () {
+		const trHighValue = document.getElementById('tr_high_value');
+		const checklistBtn = document.getElementById('checklist-btn');
+
+		function updateButtonState() {
+            if (!checklistBtn) return;
+			if (trHighValue && trHighValue.value === '1') {
+				checklistBtn.classList.remove('disable_a_href');
+			} else {
+				checklistBtn.classList.add('disable_a_href');
+			}
+		}
+		updateButtonState();
+
+        if (trHighValue) {
+            trHighValue.addEventListener('change', updateButtonState);
+        }
+	});
+</script>
+<script>
+	var checklistApprovalStatus = parseInt("{{ checklist.thc_approval_status_id|default:0 }}");
 	function fetchLastKM() {
-		let tripId = "{{ trip_instance.id|default:'' }}";
-		if (tripId) return;
+		let vehicle_number = $("#tr_vehiclenumber").val();
+		if (!vehicle_number) return;
 
-		let vehicle = $("#tr_vehiclenumber").val();
-		if (!vehicle) return;
-
-		$.get("/SMS/get_last_reported_km/", { vehicle: vehicle }, function (data) {
-			if (data.reported_km) {
-				$("#tr_departedkm").val(data.reported_km);
-				$("#tr_reportedkm_pickup").val(data.reported_km); // mirror to Loading Started KM
+		$.ajax({
+			url: '/SMS/get_last_reported_km/',
+			type: 'GET',
+			data: { 'vehicle': vehicle_number },
+			dataType: 'json',
+			success: function (data) {
+				if (data.reported_km) {
+					$("#tr_departedkm").val(data.reported_km);
+					$("#tr_reportedkm_pickup").val(data.reported_km); // mirror to Loading Started KM
+					calculateUtilizedKM();
+				}
+			},
+			error: function () {
+				console.log("Error fetching last reported KM");
 			}
 		});
 	}
@@ -1115,6 +1128,4 @@
 		calculateUtilizedKM();
 	});
 </script>
-{% endblock scripts %}
-
-{% endblock content %}
+{% endblock %}

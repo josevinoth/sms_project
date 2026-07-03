@@ -3,246 +3,260 @@
 <div class="row">
 	<div class="col">
 		<div class="container-fluid">
-			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-				<div class="card-body bg-light" id="consignment_goods_id">
-					<form method="POST" action="" enctype="multipart/form-data">
-						{% csrf_token %}
-						<div class="row">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consignment Number</span>
-									</div>
-									{% render_field form.cg_consignmentnumber id="cg_consignmentnumber" class="form-control disable_a_href" %}
-
+			<!-- Removed the old bg-info card wrappers, now using modern-card and form-section structures -->
+			<div class="modern-card" style="padding:1.5rem !important; border-top:none; box-shadow:none; background:transparent;">
+				<form method="POST" action="" enctype="multipart/form-data">
+					{% csrf_token %}
+					<div class="row row-compact" id="consignment_goods_id">
+						
+						<!-- ── Column 1: Document Details ── -->
+						<div class="col-12 col-md-6 col-xl-3 col-compact">
+							<div class="form-section h-100">
+								<div class="form-section-title">
+									<i class="fas fa-file-invoice"></i> Document Details
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consigner Invoice</span>
-									</div>
+								
+								<div class="form-group-modern">
+									<label class="form-label-modern">Consignment Number</label>
+									{% render_field form.cg_consignmentnumber id="cg_consignmentnumber" class="form-control form-control-modern disable_a_href" %}
+								</div>
+
+								<div class="form-group-modern">
+									<label class="form-label-modern">Consigner Invoice</label>
 									<input list="invoiceList" id="cg_consignerinvoice" name="cg_consignerinvoice"
-										   class="form-control" value="{{ form.cg_consignerinvoice.value|default:'' }}">
+										   class="form-control form-control-modern" value="{{ form.cg_consignerinvoice.value|default:'' }}">
 									<datalist id="invoiceList">
 										{% for invoice in existing_invoices %}
 										<option value="{{ invoice }}">
-											{% endfor %}
+										{% endfor %}
 									</datalist>
 								</div>
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consigner Invoice Date</span>
-									</div>
-									{% render_field form.cg_consignerinvoice_date id="cg_consignerinvoice_date" type="Date" class="form-control" %}
+								<div class="form-group-modern">
+									<label class="form-label-modern">Consigner Invoice Date</label>
+									{% render_field form.cg_consignerinvoice_date id="cg_consignerinvoice_date" type="Date" class="form-control form-control-modern" %}
 								</div>
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">HAWB</span>
-									</div>
-									{% render_field form.cg_hawbno class="form-control" %}
+								<div class="form-group-modern">
+									<label class="form-label-modern">HAWB</label>
+									{% render_field form.cg_hawbno class="form-control form-control-modern" %}
 								</div>
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">MAWB</span>
-									</div>
-									{% render_field form.cg_mawbno class="form-control" %}
+								<div class="form-group-modern">
+									<label class="form-label-modern">MAWB</label>
+									{% render_field form.cg_mawbno class="form-control form-control-modern" %}
 								</div>
-
-
-
 							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consigner</span>
-									</div>
-									{% render_field form.cg_consigner class="form-control" id="cg_consigner" %}
-									<div class="input-group-append">
-										<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addConsignerModal">Add</button>
+						</div>
+
+						<!-- ── Column 2: Parties & Type ── -->
+						<div class="col-12 col-md-6 col-xl-3 col-compact">
+							<div class="form-section h-100">
+								<div class="form-section-title">
+									<i class="fas fa-user-friends"></i> Parties & Type
+								</div>
+
+								<div class="form-group-modern">
+									<label class="form-label-modern">Consigner</label>
+									<div class="d-flex" style="gap:6px;">
+										<div style="flex:1;">
+											{% render_field form.cg_consigner class="form-control form-control-modern" id="cg_consigner" %}
+										</div>
+										<button type="button" class="btn-modern btn-submit" style="min-width:auto; padding:0.4rem 0.8rem; border-radius:10px; font-size:0.85rem;" data-toggle="modal" data-target="#addConsignerModal">Add</button>
 									</div>
 								</div>
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consignee</span>
+								<div class="form-group-modern">
+									<label class="form-label-modern">Consignee</label>
+									<div class="d-flex" style="gap:6px;">
+										<div style="flex:1;">
+											{% render_field form.cg_consignee class="form-control form-control-modern" id="cg_consignee" %}
+										</div>
+										<button type="button" class="btn-modern btn-submit" style="min-width:auto; padding:0.4rem 0.8rem; border-radius:10px; font-size:0.85rem;" data-toggle="modal" data-target="#addConsigneeModal">Add</button>
 									</div>
-									{% render_field form.cg_consignee class="form-control" id="cg_consignee" %}
-									<div class="input-group-append">
-										<button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#addConsigneeModal">Add</button>
-									</div>
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Consignment Type</span>
-									</div>
-									{% render_field form.cg_consignmenttype id="cg_consignmenttype" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Currency Type</span>
-									</div>
-									{% render_field form.cg_currency_type id="cg_currency_type" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Invoice Value</span>
-									</div>
-									{% render_field form.cg_consignervalue id="cg_consignervalue" class="form-control" %}
 								</div>
 
+								<div class="form-group-modern">
+									<label class="form-label-modern">Consignment Type</label>
+									{% render_field form.cg_consignmenttype id="cg_consignmenttype" class="form-control form-control-modern" %}
+								</div>
+
+								<div class="form-group-modern">
+									<label class="form-label-modern">Currency Type</label>
+									{% render_field form.cg_currency_type id="cg_currency_type" class="form-control form-control-modern" %}
+								</div>
+
+								<div class="form-group-modern">
+									<label class="form-label-modern">Invoice Value</label>
+									{% render_field form.cg_consignervalue id="cg_consignervalue" class="form-control form-control-modern" %}
+								</div>
 							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Value in INR</span>
-									</div>
-									{% render_field form.cg_valueininr id="cg_valueininr" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Description</span>
-									</div>
-									{% render_field form.cg_description class="form-control" id="cg_description" %}
-									<div class="input-group-append">
-										<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addDescriptionModal">
-											Add
-										</button>
-									</div>
-								</div>
-								<!-- Add Description Modal -->
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Eway bill No.</span>
-									</div>
-									{% render_field form.cg_ebillno id="cg_ebillno" class="form-control" maxlength="12" pattern="[A-Z0-9]{10,12}" title="Enter exactly 12 uppercase letters or digits" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Date Of Issue</span>
-									</div>
-									{% render_field form.cg_dateofissue id="cg_dateofissue" type="Date" class="form-control" %}
+						</div>
+
+						<!-- ── Column 3: E-Way Bill & Description ── -->
+						<div class="col-12 col-md-6 col-xl-3 col-compact">
+							<div class="form-section h-100">
+								<div class="form-section-title">
+									<i class="fas fa-barcode"></i> E-Way & Description
 								</div>
 
+								<div class="form-group-modern">
+									<label class="form-label-modern">Value in INR</label>
+									{% render_field form.cg_valueininr id="cg_valueininr" class="form-control form-control-modern" %}
+								</div>
+
+								<div class="form-group-modern">
+									<label class="form-label-modern">Description</label>
+									<div class="d-flex" style="gap:6px;">
+										<div style="flex:1;">
+											{% render_field form.cg_description class="form-control form-control-modern" id="cg_description" %}
+										</div>
+										<button type="button" class="btn-modern btn-submit" style="min-width:auto; padding:0.4rem 0.8rem; border-radius:10px; font-size:0.85rem;" data-toggle="modal" data-target="#addDescriptionModal">Add</button>
+									</div>
+								</div>
+
+								<div class="form-group-modern">
+									<label class="form-label-modern">Eway bill No.</label>
+									{% render_field form.cg_ebillno id="cg_ebillno" class="form-control form-control-modern" maxlength="12" pattern="[A-Z0-9]{10,12}" title="Enter exactly 12 uppercase letters or digits" %}
+								</div>
+
+								<div class="form-group-modern">
+									<label class="form-label-modern">Date Of Issue</label>
+									{% render_field form.cg_dateofissue id="cg_dateofissue" type="Date" class="form-control form-control-modern" %}
+								</div>
 							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Date Of Validity</span>
-									</div>
-									{% render_field form.cg_dateofvalidity id="cg_dateofvalidity" type="Date" class="form-control" %}
+						</div>
+
+						<!-- ── Column 4: Quantities & Weight ── -->
+						<div class="col-12 col-md-6 col-xl-3 col-compact">
+							<div class="form-section h-100">
+								<div class="form-section-title">
+									<i class="fas fa-weight-hanging"></i> Quantities & Weight
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total Quantity</span>
-									</div>
-									{% render_field form.cg_qty class="form-control" %}
+
+								<div class="form-group-modern">
+									<label class="form-label-modern">Date Of Validity</label>
+									{% render_field form.cg_dateofvalidity id="cg_dateofvalidity" type="Date" class="form-control form-control-modern" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Loaded Quantity</span>
-									</div>
-									{% render_field form.cg_loaded_qty class="form-control" %}
+
+								<div class="form-group-modern">
+									<label class="form-label-modern">Total Quantity</label>
+									{% render_field form.cg_qty class="form-control form-control-modern" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Invoice Weight</span>
-									</div>
-									{% render_field form.cg_weight class="form-control" %}
+
+								<div class="form-group-modern">
+									<label class="form-label-modern">Loaded Quantity</label>
+									{% render_field form.cg_loaded_qty class="form-control form-control-modern" %}
 								</div>
+
+								<div class="form-group-modern">
+									<label class="form-label-modern">Invoice Weight</label>
+									{% render_field form.cg_weight class="form-control form-control-modern" %}
+								</div>
+
 								{% render_field form.cg_lastmodifiedby id="cg_lastmodifiedby" hidden="True" class="form-control" %}
 							</div>
-							<div class="container-fluid row">
-								<div class="col-1"></div>
-								<div class="col-3 bg-dark p-2 mb-2 mr-1 rounded-sm text-white">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Eway Bill Attachment</span>
-										</div>
-										{% render_field form.cg_ewaybill_att id="cg_ewaybill_att" class="form-control" %}
-									</div>
+						</div>
+					</div><!-- /.row -->
+
+					<!-- ── Attachments Row (Compact & Modernized) ── -->
+					<div class="row mt-3">
+						<div class="col-12">
+							<div class="form-section">
+								<div class="form-section-title">
+									<i class="fas fa-paperclip"></i> Attachments
 								</div>
-								<div class="col-3 bg-dark p-2 mb-2 mr-1 rounded-sm text-white">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend ">
-											<span class="input-group-text">Invoice Attachment</span>
+								<div class="row">
+									<div class="col-12 col-md-4 mb-2">
+										<div class="p-3 rounded-lg" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+											<label class="form-label-modern mb-2">Eway Bill Attachment</label>
+											{% render_field form.cg_ewaybill_att id="cg_ewaybill_att" class="form-control form-control-modern" style="padding: 4px;" %}
 										</div>
-										{% render_field form.cg_invoice_att id="cg_invoice_att" class="form-control" %}
 									</div>
-								</div>
-								<div class="col-3 bg-dark p-2 mb-2 rounded-sm text-white">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend ">
-											<span class="input-group-text">OTL Attachment</span>
+									<div class="col-12 col-md-4 mb-2">
+										<div class="p-3 rounded-lg" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+											<label class="form-label-modern mb-2">Invoice Attachment</label>
+											{% render_field form.cg_invoice_att id="cg_invoice_att" class="form-control form-control-modern" style="padding: 4px;" %}
 										</div>
-										{% render_field form.cg_otl_att id="cg_otl_att" class="form-control" %}
+									</div>
+									<div class="col-12 col-md-4 mb-2">
+										<div class="p-3 rounded-lg" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+											<label class="form-label-modern mb-2">OTL Attachment</label>
+											{% render_field form.cg_otl_att id="cg_otl_att" class="form-control form-control-modern" style="padding: 4px;" %}
+										</div>
 									</div>
 								</div>
 							</div>
 						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
+					</div>
+
+					<!-- Form Actions & Messages -->
+					<div class="row mt-3">
+						<div class="col-12 text-center">
+							<div class="message text-center">
+								{% for message in messages %}
+								<div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
+									<i class="fas fa-info-circle"></i> {{ message }}
 								</div>
+								{% endfor %}
 							</div>
-							<div class="col-1"></div>
 						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Save</button>
-						<!--						<a href="{% url 'consignmentgoods_cancel' %}" class="btn btn-danger float-right">-->
-						<!--							<i class="fas fa-times"></i> Cancel-->
-						<!--						</a>-->
-					</form>
-				</div>
+					</div>
+
+					<div class="d-flex justify-content-start mt-3">
+						<button type="submit" class="btn-modern btn-submit px-5"><i class="fas fa-check mr-2"></i> Save</button>
+					</div>
+				</form>
 			</div>
 		</div>
 	</div>
 </div>
+
+<!-- Modal Styles Modernized -->
 <div class="modal fade" id="addDescriptionModal" tabindex="-1" role="dialog" aria-labelledby="addDescriptionModalLabel" aria-hidden="true">
 	<div class="modal-dialog" role="document">
 		<form id="add-description-form" method="POST" action="{% url 'add_description' %}">
 			{% csrf_token %}
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title">Add Description</h5>
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			<div class="modal-content" style="background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); border-radius: 16px;">
+				<div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+					<h5 class="modal-title text-white">Add Description</h5>
+					<button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
 					</button>
 				</div>
 				<div class="modal-body">
-					<div class="input-group input-group-sm mb-3">
-						<div class="input-group-prepend">
-							<span class="input-group-text">Description:</span>
-						</div>
-						<input type="text" class="form-control" name="cg_description" id="new_cg_description" required>
+					<div class="form-group-modern">
+						<label class="form-label-modern">Description:</label>
+						<input type="text" class="form-control form-control-modern" name="cg_description" id="new_cg_description" required>
 					</div>
 				</div>
-				<div class="modal-footer">
-					<button type="submit" class="btn btn-primary">Add</button>
-					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				<div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
+					<button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Close</button>
+					<button type="submit" class="btn-modern btn-submit">Add</button>
 				</div>
 			</div>
 		</form>
 	</div>
 </div>
+
 <!-- Modal for adding new consigner -->
 <div class="modal fade" id="addConsignerModal" tabindex="-1" role="dialog" aria-labelledby="addConsignerModalLabel" aria-hidden="true">
 	<div class="modal-dialog" role="document">
 		<form id="addConsignerForm">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title">Add New Consigner</h5>
-					<button type="button" class="close" data-dismiss="modal">&times;</button>
+			<div class="modal-content" style="background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); border-radius: 16px;">
+				<div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+					<h5 class="modal-title text-white">Add New Consigner</h5>
+					<button type="button" class="close text-white" data-dismiss="modal">&times;</button>
 				</div>
 				<div class="modal-body">
-					<input type="text" class="form-control" name="name" placeholder="Enter new consigner name" required>
+					<div class="form-group-modern">
+						<label class="form-label-modern">Consigner Name</label>
+						<input type="text" class="form-control form-control-modern" name="name" placeholder="Enter new consigner name" required>
+					</div>
 				</div>
-				<div class="modal-footer">
-					<button type="submit" class="btn btn-primary">Save</button>
+				<div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
+					<button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Close</button>
+					<button type="submit" class="btn-modern btn-submit">Save</button>
 				</div>
 			</div>
 		</form>
@@ -253,21 +267,28 @@
 <div class="modal fade" id="addConsigneeModal" tabindex="-1" role="dialog" aria-labelledby="addConsigneeModalLabel" aria-hidden="true">
 	<div class="modal-dialog" role="document">
 		<form id="addConsigneeForm">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title">Add New Consignee</h5>
-					<button type="button" class="close" data-dismiss="modal">&times;</button>
+			<div class="modal-content" style="background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); border-radius: 16px;">
+				<div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+					<h5 class="modal-title text-white">Add New Consignee</h5>
+					<button type="button" class="close text-white" data-dismiss="modal">&times;</button>
 				</div>
 				<div class="modal-body">
-					<input type="text" class="form-control mb-2" name="name" placeholder="Enter new consignee name"
-						required>
-					<textarea class="form-control mb-2" name="address" placeholder="Enter consignee address "
-						rows="3"></textarea>
-					<input type="text" class="form-control" name="country_code"
-						placeholder="Enter country code (e.g., +91)" maxlength="10">
+					<div class="form-group-modern mb-2">
+						<label class="form-label-modern">Consignee Name</label>
+						<input type="text" class="form-control form-control-modern" name="name" placeholder="Enter new consignee name" required>
+					</div>
+					<div class="form-group-modern mb-2">
+						<label class="form-label-modern">Address</label>
+						<textarea class="form-control form-control-modern" name="address" placeholder="Enter consignee address" rows="3"></textarea>
+					</div>
+					<div class="form-group-modern">
+						<label class="form-label-modern">Country Code</label>
+						<input type="text" class="form-control form-control-modern" name="country_code" placeholder="Enter country code (e.g., +91)" maxlength="10">
+					</div>
 				</div>
-				<div class="modal-footer">
-					<button type="submit" class="btn btn-primary">Save</button>
+				<div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
+					<button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Close</button>
+					<button type="submit" class="btn-modern btn-submit">Save</button>
 				</div>
 			</div>
 		</form>
@@ -275,178 +296,129 @@
 </div>
 
 
-<hr>
+<hr style="border-top: 1px solid rgba(255,255,255,0.1);">
 <div class="container-fluid">
-	<table id="consignmentgoods_list" class="table table-striped table-bordered">
-		<thead class="thead-dark">
-			<tr>
-				<th>ID</th>
-				<th>Created On</th>
-				<th>Consignment Number</th>
-				<th>Consigner</th>
-				<th>Consignee</th>
-				<th>Consigner Invoice</th>
-				<th>Value in INR</th>
-				<th style="width: 100px; text-align: center;">No. of Pieces</th>
-				<th>Invoice Weight</th>
-				<th>E-Bill No.</th>
-				<th>Link / Attachment</th>
-				<th>Date of Issue</th>
-				<th>Date of Validity</th>
-				<th>Updated On</th>
-				<th>Updated By</th>
-				<th>Edit</th>
-				<th>Delete</th>
-		</thead>
-		<tbody>
-			{% for consignmentgoodsinfo in consignmentgoods_list %}
-			<tr>
-				<td> {{consignmentgoodsinfo.id}}</td>
-				<td> {{consignmentgoodsinfo.cg_created_at}}</td>
-				<td> {{consignmentgoodsinfo.cg_consignmentnumber}}</td>
-				<td> {{consignmentgoodsinfo.cg_consigner}}</td>
-				<td> {{consignmentgoodsinfo.cg_consignee}}</td>
-				<td> {{consignmentgoodsinfo.cg_consignerinvoice}}</td>
-				<td> {{consignmentgoodsinfo.cg_valueininr}}</td>
-				<td>{{ consignmentgoodsinfo.cg_loaded_qty }}/{{ consignmentgoodsinfo.cg_qty }}</td>
-				<td> {{consignmentgoodsinfo.cg_weight}}</td>
-				<td> {{consignmentgoodsinfo.cg_ebillno}}</td>
-				<td style="min-width: 350px;">
-					<!-- Eway -->
-					<div class="mb-2">
-						{% if consignmentgoodsinfo.cg_ewaybill_att %}
-						<a href="{{ consignmentgoodsinfo.cg_ewaybill_att.url }}" class="btn btn-sm btn-info mb-1"
-							target="_blank">View</a>
+	<div class="table-responsive">
+		<table id="consignmentgoods_list" class="table table-striped table-bordered text-center" style="background: var(--bg-card); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+			<thead>
+				<tr style="background: rgba(255,255,255,0.05); color: var(--text-main);">
+					<th>ID</th>
+					<th>Created On</th>
+					<th>Consignment Number</th>
+					<th>Consigner</th>
+					<th>Consignee</th>
+					<th>Consigner Invoice</th>
+					<th>Value in INR</th>
+					<th style="width: 100px; text-align: center;">No. of Pieces</th>
+					<th>Invoice Weight</th>
+					<th>E-Bill No.</th>
+					<th>Link / Attachment</th>
+					<th>Date of Issue</th>
+					<th>Date of Validity</th>
+					<th>Updated On</th>
+					<th>Updated By</th>
+					<th>Edit</th>
+					<th>Delete</th>
+				</tr>
+			</thead>
+			<tbody style="color: var(--text-main);">
+				{% for consignmentgoodsinfo in consignmentgoods_list %}
+				<tr style="background: transparent;">
+					<td> {{consignmentgoodsinfo.id}}</td>
+					<td> {{consignmentgoodsinfo.cg_created_at}}</td>
+					<td> {{consignmentgoodsinfo.cg_consignmentnumber}}</td>
+					<td> {{consignmentgoodsinfo.cg_consigner}}</td>
+					<td> {{consignmentgoodsinfo.cg_consignee}}</td>
+					<td> {{consignmentgoodsinfo.cg_consignerinvoice}}</td>
+					<td> {{consignmentgoodsinfo.cg_valueininr}}</td>
+					<td>{{ consignmentgoodsinfo.cg_loaded_qty }}/{{ consignmentgoodsinfo.cg_qty }}</td>
+					<td> {{consignmentgoodsinfo.cg_weight}}</td>
+					<td> {{consignmentgoodsinfo.cg_ebillno}}</td>
+					<td style="min-width: 320px; text-align: center; vertical-align: middle;">
+						<div class="d-flex flex-column align-items-center justify-content-center" style="gap: 6px;">
+							<!-- Top Button: Eway Bill -->
+							<div>
+								{% if consignmentgoodsinfo.cg_ewaybill_att %}
+								<a href="{{ consignmentgoodsinfo.cg_ewaybill_att.url }}" class="btn btn-primary btn-sm py-1 px-3" target="_blank" style="background-color: #007bff; border-color: #007bff;">Eway Bill</a>
+								{% else %}
+								<form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'eway' %}" enctype="multipart/form-data" class="d-inline">
+									{% csrf_token %}
+									<label class="btn btn-primary btn-sm mb-0 py-1 px-3" style="cursor:pointer; background-color: #007bff; border-color: #007bff;">
+										Eway Bill
+										<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+									</label>
+								</form>
+								{% endif %}
+							</div>
 
-						<form method="post"
-							action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'eway' %}"
-							enctype="multipart/form-data" class="d-inline">
+							<!-- Middle Row Buttons: View | Re-attach/Attach Invoice | Delete -->
+							<div class="d-flex align-items-center justify-content-center" style="gap: 5px;">
+								<!-- View -->
+								{% if consignmentgoodsinfo.cg_invoice_att %}
+								<a href="{{ consignmentgoodsinfo.cg_invoice_att.url }}" class="btn btn-info btn-sm py-1 px-2 text-white" target="_blank" style="background-color: #17a2b8; border-color: #17a2b8;">View</a>
+								{% else %}
+								<button class="btn btn-info btn-sm py-1 px-2 text-white" disabled style="opacity: 0.5; background-color: #17a2b8; border-color: #17a2b8;">View</button>
+								{% endif %}
+
+								<!-- Re-attach Invoice / Attach Invoice -->
+								<form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'invoice' %}" enctype="multipart/form-data" class="d-inline">
+									{% csrf_token %}
+									<label class="btn btn-warning btn-sm mb-0 py-1 px-2" style="cursor:pointer; background-color: #ffc107; border-color: #ffc107; color: #212529;">
+										{% if consignmentgoodsinfo.cg_invoice_att %}Re-attach Invoice{% else %}Attach Invoice{% endif %}
+										<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+									</label>
+								</form>
+
+								<!-- Delete -->
+								{% if consignmentgoodsinfo.cg_invoice_att %}
+								<form method="post" action="{% url 'consignmentgoods_delete_attachment' consignmentgoodsinfo.id 'invoice' %}" class="d-inline" onsubmit="return confirm('Delete Invoice attachment?');">
+									{% csrf_token %}
+									<button type="submit" class="btn btn-danger btn-sm py-1 px-2" style="background-color: #dc3545; border-color: #dc3545;">Delete</button>
+								</form>
+								{% else %}
+								<button class="btn btn-danger btn-sm py-1 px-2" disabled style="opacity: 0.5; background-color: #dc3545; border-color: #dc3545;">Delete</button>
+								{% endif %}
+							</div>
+
+							<!-- Bottom Button: OTL -->
+							<div>
+								{% if consignmentgoodsinfo.cg_otl_att %}
+								<a href="{{ consignmentgoodsinfo.cg_otl_att.url }}" class="btn btn-primary btn-sm py-1 px-3" target="_blank" style="background-color: #007bff; border-color: #007bff;">OTL</a>
+								{% else %}
+								<form method="post" action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'otl' %}" enctype="multipart/form-data" class="d-inline">
+									{% csrf_token %}
+									<label class="btn btn-primary btn-sm mb-0 py-1 px-3" style="cursor:pointer; background-color: #007bff; border-color: #007bff;">
+										OTL
+										<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
+									</label>
+								</form>
+								{% endif %}
+							</div>
+						</div>
+					</td>
+					<td> {{consignmentgoodsinfo.cg_dateofissue}}</td>
+					<td> {{consignmentgoodsinfo.cg_dateofvalidity}}</td>
+					<td> {{consignmentgoodsinfo.cg_updated_at}}</td>
+					<td> {{consignmentgoodsinfo.cg_lastmodifiedby}}</td>
+					<td>
+						<a class="btn btn-primary btn-sm py-1 px-2" style="min-width:auto;" href="{% url 'consignmentgoods_update' consignmentgoodsinfo.id %}">
+							<i class="fas fa-edit"></i>
+						</a>
+					</td>
+					<td>
+						<form action="{% url 'consignmentgoods_delete' consignmentgoodsinfo.id %}" method="post"
+							onclick="return confirm('Are you sure?');">
 							{% csrf_token %}
-							<label class="btn btn-sm btn-warning mb-0">
-								Re-attach Eway Bill
-								<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-							</label>
+							<button type="submit" class="btn btn-danger btn-sm py-1 px-2" style="min-width:auto;">
+								<i class="fas fa-trash-alt"></i>
+							</button>
 						</form>
-
-						<!-- Delete Eway -->
-						<form method="post"
-							action="{% url 'consignmentgoods_delete_attachment' consignmentgoodsinfo.id 'eway' %}"
-							class="d-inline" onsubmit="return confirm('Delete Eway Bill attachment?');">
-							{% csrf_token %}
-							<button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
-						</form>
-						{% else %}
-						<form method="post"
-							action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'eway' %}"
-							enctype="multipart/form-data" class="d-inline">
-							{% csrf_token %}
-							<label class="btn btn-sm btn-primary mb-0">
-								Eway Bill
-								<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-							</label>
-						</form>
-						{% endif %}
-					</div>
-
-					<!-- Invoice -->
-					<div class="mb-2">
-						{% if consignmentgoodsinfo.cg_invoice_att %}
-						<a href="{{ consignmentgoodsinfo.cg_invoice_att.url }}" class="btn btn-sm btn-info mb-1"
-							target="_blank">View</a>
-
-						<form method="post"
-							action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'invoice' %}"
-							enctype="multipart/form-data" class="d-inline">
-							{% csrf_token %}
-							<label class="btn btn-sm btn-warning mb-0">
-								Re-attach Invoice
-								<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-							</label>
-						</form>
-
-						<!-- Delete Invoice -->
-						<form method="post"
-							action="{% url 'consignmentgoods_delete_attachment' consignmentgoodsinfo.id 'invoice' %}"
-							class="d-inline" onsubmit="return confirm('Delete Invoice attachment?');">
-							{% csrf_token %}
-							<button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
-						</form>
-						{% else %}
-						<form method="post"
-							action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'invoice' %}"
-							enctype="multipart/form-data" class="d-inline">
-							{% csrf_token %}
-							<label class="btn btn-sm btn-primary mb-0">
-								Invoice
-								<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-							</label>
-						</form>
-						{% endif %}
-					</div>
-
-					<!-- OTL -->
-					<div>
-						{% if consignmentgoodsinfo.cg_otl_att %}
-						<a href="{{ consignmentgoodsinfo.cg_otl_att.url }}" class="btn btn-sm btn-info mb-1"
-							target="_blank">View</a>
-
-						<form method="post"
-							action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'otl' %}"
-							enctype="multipart/form-data" class="d-inline">
-							{% csrf_token %}
-							<label class="btn btn-sm btn-warning mb-0">
-								Re-attach OTL
-								<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-							</label>
-						</form>
-
-						<!-- Delete OTL -->
-						<form method="post"
-							action="{% url 'consignmentgoods_delete_attachment' consignmentgoodsinfo.id 'otl' %}"
-							class="d-inline" onsubmit="return confirm('Delete OTL attachment?');">
-							{% csrf_token %}
-							<button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
-						</form>
-						{% else %}
-						<form method="post"
-							action="{% url 'consignmentgoods_upload_attachment' consignmentgoodsinfo.id 'otl' %}"
-							enctype="multipart/form-data" class="d-inline">
-							{% csrf_token %}
-							<label class="btn btn-sm btn-primary mb-0">
-								OTL
-								<input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-							</label>
-						</form>
-						{% endif %}
-					</div>
-
-				</td>
-
-
-				</td>
-
-				<td> {{consignmentgoodsinfo.cg_dateofissue}}</td>
-				<td> {{consignmentgoodsinfo.cg_dateofvalidity}}</td>
-				<td> {{consignmentgoodsinfo.cg_updated_at}}</td>
-				<td> {{consignmentgoodsinfo.cg_lastmodifiedby}}</td>
-				<td>
-					<a class="btn btn-primary" href="{% url 'consignmentgoods_update' consignmentgoodsinfo.id %}">
-						<i class="far fa-edit"></i>
-					</a>
-				</td>
-				<td>
-					<form action="{% url 'consignmentgoods_delete' consignmentgoodsinfo.id %}" method="post"
-						onclick="return confirm('Are you sure?');">
-						{% csrf_token %}
-						<button type="submit" class="btn btn-danger">
-							<i class="fas fa-trash-alt"></i>
-						</button>
-					</form>
-				</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-	</table>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
 </div>
 
 <script>
@@ -454,7 +426,7 @@
 		$('#consignmentgoods_list').DataTable({
 			scrollX: true,
 			order: [0, 'desc'],
-			dom: 'lBfrtip',
+			dom: '<"d-flex justify-content-between align-items-center mb-2"l><"d-flex justify-content-between align-items-center mb-2"Bf>rtip',
 			buttons: [
 				'copy', 'csv', 'excel', 'print'
 			]
@@ -464,9 +436,11 @@
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
 		const input = document.getElementById("cg_ebillno");
-		input.addEventListener("input", function () {
-			this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
-		});
+		if (input) {
+			input.addEventListener("input", function () {
+				this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
+			});
+		}
 	});
 </script>
 <script>
@@ -616,12 +590,15 @@
 </script>
 
 <script>
-	document.getElementById('existingInvoiceSelect').addEventListener('change', function () {
-		const selectedInvoice = this.value;
-		if (selectedInvoice) {
-			document.getElementById('cg_consignerinvoice').value = selectedInvoice;
-		}
-	});
+	const existingInvoiceSelect = document.getElementById('existingInvoiceSelect');
+	if (existingInvoiceSelect) {
+		existingInvoiceSelect.addEventListener('change', function () {
+			const selectedInvoice = this.value;
+			if (selectedInvoice) {
+				document.getElementById('cg_consignerinvoice').value = selectedInvoice;
+			}
+		});
+	}
 </script>
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
@@ -634,7 +611,7 @@
 			if (!el) return;
 
 			// hide parent
-			let group = el.closest(".input-group");
+			let group = el.closest(".form-group-modern");
 			if (group) group.style.display = "none";
 		}
 
@@ -643,12 +620,12 @@
 			const el = document.getElementById(id);
 			if (!el) return;
 
-			let group = el.closest(".input-group");
+			let group = el.closest(".form-group-modern");
 			if (group) group.style.display = "";
 		}
 
 		function applyRules() {
-
+			if (!consType) return;
 			let val = (consType.options[consType.selectedIndex].text || "").trim().toLowerCase();
 
 			// always show all first
@@ -710,46 +687,53 @@
 		}
 
 		// init
-		applyRules();
-		consType.addEventListener("change", applyRules);
-		consType.addEventListener("click", applyRules);
+		if (consType) {
+			applyRules();
+			consType.addEventListener("change", applyRules);
+			consType.addEventListener("click", applyRules);
+		}
 
 	});
 </script>
 <script>
-	$("#cg_consigner").select2({
-    width: '230px',
-    ajax: {
-        url: '/SMS/consigner_select2_search/',
-        dataType: 'json',
-        delay: 250,
-        data: function (params) {
-            return { q: params.term };
-        },
-        processResults: function (data) {
-            return { results: data.results };
-        },
-        cache: true
-    },
-    minimumInputLength: 1,
-});
-$("#cg_consignee").select2({
-    width: '230px',
-    ajax: {
-        url: '/SMS/consignee_select2_search/',
-        dataType: 'json',
-        delay: 250,
-        data: function (params) {
-            return { q: params.term };
-        },
-        processResults: function (data) {
-            return { results: data.results };
-        },
-        cache: true
-    },
-    minimumInputLength: 1,
-});
-
+	$(document).ready(function () {
+		if ($("#cg_consigner").length) {
+			$("#cg_consigner").select2({
+				width: '100%',
+				ajax: {
+					url: '/SMS/consigner_select2_search/',
+					dataType: 'json',
+					delay: 250,
+					data: function (params) {
+						return { q: params.term };
+					},
+					processResults: function (data) {
+						return { results: data.results };
+					},
+					cache: true
+				},
+				minimumInputLength: 1,
+			});
+		}
+		if ($("#cg_consignee").length) {
+			$("#cg_consignee").select2({
+				width: '100%',
+				ajax: {
+					url: '/SMS/consignee_select2_search/',
+					dataType: 'json',
+					delay: 250,
+					data: function (params) {
+						return { q: params.term };
+					},
+					processResults: function (data) {
+						return { results: data.results };
+					},
+					cache: true
+				},
+				minimumInputLength: 1,
+			});
+		}
+	});
 </script>
 
 <script>
@@ -757,8 +741,27 @@ $("#cg_consignee").select2({
 
 		const consType = document.getElementById("cg_consignmenttype");
 
-		function applyConsignmentRules() {
+		// hide helper
+		function hideFieldAndNotRequired(id) {
+			const el = document.getElementById(id);
+			if (!el) return;
+			let group = el.closest(".form-group-modern");
+			if (group) group.style.display = "none";
+			el.required = false;
+			el.value = "";
+		}
 
+		// show helper
+		function showFieldAndRequired(id) {
+			const el = document.getElementById(id);
+			if (!el) return;
+			let group = el.closest(".form-group-modern");
+			if (group) group.style.display = "";
+			// Only make it required if it was originally designed to be so
+		}
+
+		function applyConsignmentRules() {
+			if (!consType) return;
 			const selectedText =
 				consType.options[consType.selectedIndex].text.toLowerCase();
 
@@ -806,10 +809,11 @@ $("#cg_consignee").select2({
 		}
 
 		// init on load
-		applyConsignmentRules();
-
-		// apply on change
-		consType.addEventListener("change", applyConsignmentRules);
+		if (consType) {
+			applyConsignmentRules();
+			// apply on change
+			consType.addEventListener("change", applyConsignmentRules);
+		}
 	});
 </script>
 
