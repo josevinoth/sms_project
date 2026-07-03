@@ -107,6 +107,7 @@
                             <thead class="bg-light">
                                 <tr>
                                     <th>Ref No</th>
+                                    <th>PO Number</th>
                                     <th>Customer / Remarks</th>
                                     <th class="text-center">Qty Used</th>
                                     <th class="text-center">Type</th>
@@ -192,21 +193,35 @@
                         var html = '';
                         var totalModal = 0;
                         data.usage.forEach(function(item) {
-                            totalModal += parseFloat(item.quantity || 0);
+                            var qty = parseFloat(item.quantity || 0);
+                            
                             var typeBadge = '<span class="badge badge-secondary">Manual</span>';
                             if (item.type === 'Automated') typeBadge = '<span class="badge badge-success">Auto</span>';
+                            if (item.is_return) typeBadge = '<span class="badge badge-info">Returned</span>';
+                            
                             var displayRef = item.job_no !== 'N/A' ? item.job_no : item.assessment_num;
                             
-                            html += '<tr class="modern-tr">' +
+                            var qtyDisplay = qty;
+                            var rowClass = "modern-tr";
+                            if (item.is_return) {
+                                totalModal -= qty;
+                                qtyDisplay = '<span class="text-success">-' + qty + ' (Returned)</span>';
+                                rowClass = "modern-tr bg-emerald-soft";
+                            } else {
+                                totalModal += qty;
+                            }
+                            
+                            html += '<tr class="' + rowClass + '">' +
                                 '<td><span class="badge badge-info">' + displayRef + '</span></td>' +
+                                '<td><span class="badge badge-dark">' + (item.po_num || 'N/A') + '</span></td>' +
                                 '<td class="text-left">' + item.customer_name + '<br><small class="text-muted">' + (item.remarks || "") + '</small></td>' +
-                                '<td class="text-center font-weight-bold text-dark">' + (item.quantity || 0) + '</td>' +
+                                '<td class="text-center font-weight-bold text-dark">' + qtyDisplay + '</td>' +
                                 '<td class="text-center">' + typeBadge + '</td>' +
                                 '<td class="text-right small text-muted">' + item.date + '</td>' +
                                 '</tr>';
                         });
                         
-                        html += '<tr class="bg-light"><td colspan="2" class="text-right font-weight-bold">Total Detailed:</td><td class="text-center font-weight-bold text-primary">' + totalModal.toFixed(2) + '</td><td colspan="2"></td></tr>';
+                        html += '<tr class="bg-light"><td colspan="3" class="text-right font-weight-bold">Total Net Used:</td><td class="text-center font-weight-bold text-primary">' + totalModal.toFixed(2) + '</td><td colspan="2"></td></tr>';
                         
                         $('#usageTableBody').html(html);
                         $('#modalContent').show();

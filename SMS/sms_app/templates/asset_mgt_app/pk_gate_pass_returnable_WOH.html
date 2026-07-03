@@ -47,10 +47,6 @@
                                value="{{ gatepassreturn.pod_total_value|default:0 }}" style="height: 34px !important; font-size: 0.85rem; text-align: center;" readonly>
                     </td>
                 </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="9" class="text-center py-4 text-muted italic">No items found for this gate pass.</td>
-                </tr>
                 {% endfor %}
             </tbody>
         </table>

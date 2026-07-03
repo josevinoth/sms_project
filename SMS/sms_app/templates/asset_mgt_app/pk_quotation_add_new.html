@@ -630,7 +630,7 @@
                 tableHtml += '</tr></thead><tbody>';
 
                 if (results.length === 0) {
-                    tableHtml += '<tr><td colspan="16" class="text-center">No stock found for the given criteria.</td></tr>';
+                    // Let DataTables handle empty state
                 } else {
                     for (var i = 0; i < results.length; i++) {
                         var row = results[i];

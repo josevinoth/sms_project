@@ -46,7 +46,7 @@
                                 <span class="badge badge-warning px-3 py-2"><i class="fas fa-clock"></i> Pending</span>
                             {% endif %}
                         </td>
-                        <td class="font-weight-bold">{{ qc.qc_conducted_by.username|default:"N/A" }}</td>
+                        <td class="font-weight-bold">{{ qc.qc_conducted_by.first_name|default:qc.qc_conducted_by.username|default:"N/A" }}</td>
                         <td class="text-center">
                             <a href="{% url 'pk_quality_check_add' %}?job_no={{ qc.qc_job_no }}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; text-decoration: none;" title="View/Edit QC">
                                 <i class="fas fa-eye"></i>

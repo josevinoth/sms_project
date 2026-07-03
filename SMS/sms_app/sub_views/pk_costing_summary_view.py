@@ -33,11 +33,11 @@ def costingsummary_add(request,costingsummary_id=0):
             }
         else:
             print('Inside costing summary Get edit')
-            costingsummary=PkcostingsummaryInfo.objects.get(pk=costingsummary_id)
-            needassessment_num = PkcostingsummaryInfo.objects.get(pk=costingsummary_id).cs_assessment_num
+            costingsummary = get_object_or_404(PkcostingsummaryInfo, pk=costingsummary_id)
+            needassessment_num = costingsummary.cs_assessment_num
             needassessment_id = PkneedassessmentInfo.objects.get(na_assessment_num=needassessment_num).id
-            customer_name_id = PkcostingsummaryInfo.objects.get(pk=costingsummary_id).cs_customer_name.id
-            customer_po_id = PkcostingsummaryInfo.objects.get(pk=costingsummary_id).cs_customer_po.id
+            customer_name_id = costingsummary.cs_customer_name.id if costingsummary.cs_customer_name else None
+            customer_po_id = costingsummary.cs_customer_po.id if costingsummary.cs_customer_po else None
             request.session['na_assessment_id'] = needassessment_id
             request.session['na_customer_name_id'] = customer_name_id
             request.session['ses_customer_po_id'] = customer_po_id
@@ -189,7 +189,7 @@ def costingsummary_add(request,costingsummary_id=0):
                 return redirect(request.META['HTTP_REFERER'])
         else:
             print("Inside pk_costing_summary post edit")
-            costingsummary = PkcostingsummaryInfo.objects.get(pk=costingsummary_id)
+            costingsummary = get_object_or_404(PkcostingsummaryInfo, pk=costingsummary_id)
             form = PkcostingsummaryForm(request.POST,instance=costingsummary)
             if form.is_valid():
                 summary = form.save()

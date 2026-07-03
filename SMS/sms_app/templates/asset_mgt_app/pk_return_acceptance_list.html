@@ -62,23 +62,30 @@
     {% else %}
         {% for group in grouped_returns %}
         <div class="group-card">
-            <!-- Header for Job -->
             <div class="group-header">
                 <div>
                     <span class="text-muted mr-2">Job Number:</span>
                     <strong style="font-size: 1.1rem;">{{ group.job_no }}</strong>
                 </div>
-                <form method="POST" action="{% url 'pk_accept_production_return' group.job_no %}" class="m-0">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-modern btn-submit py-1 px-4" style="font-size:0.9rem;"
-                            onclick="return confirm('Accept all returns for Job {{ group.job_no }}? This will update warehouse inventory.')">
+                <div class="d-flex gap-2">
+                    <form method="POST" action="{% url 'pk_reject_production_return' group.job_no %}" class="m-0 mr-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-modern btn-cancel py-1 px-4" style="font-size:0.9rem;"
+                                onclick="return confirm('Reject returns for Job {{ group.job_no }}? This will send them back to Production.')">
+                            <i class="fas fa-times-circle mr-1"></i> Reject Return
+                        </button>
+                    </form>
+                    <button type="button" class="btn-modern btn-submit py-1 px-4" style="font-size:0.9rem;"
+                            onclick="if(confirm('Accept all returns for Job {{ group.job_no }}? This will update warehouse inventory.')) { document.getElementById('accept_form_{{ group.job_no }}').submit(); }">
                         <i class="fas fa-check-circle mr-1"></i> Accept All
                     </button>
-                </form>
+                </div>
             </div>
 
             <!-- Items -->
             <div>
+                <form id="accept_form_{{ group.job_no }}" method="POST" action="{% url 'pk_accept_production_return' group.job_no %}">
+                {% csrf_token %}
                 {% for pr in group.items %}
                 <div class="item-row row m-0">
                     <!-- Item Info -->
@@ -132,19 +139,37 @@
 
                     <!-- Return Details -->
                     <div class="col-md-5 text-right">
-                        <div style="font-size: 1.1rem; font-weight: 700;">
-                            Qty: <span style="color:#17a2b8;">{{ pr.pr_return_qty }}</span>
-                        </div>
-                        {% if pr.pr_return_type == 'Good' and pr.pr_fraction < 1.0 %}
-                            <div class="mt-1">
-                                <span class="dim-badge">
-                                    Offcut Dims: {{ pr.pr_return_l }} × {{ pr.pr_return_w }} × {{ pr.pr_return_h }}
-                                </span>
+                        {% if is_admin %}
+                            <div class="d-flex justify-content-end align-items-center mb-1">
+                                <span style="font-size: 0.95rem; font-weight: 700; margin-right: 8px;">Qty:</span>
+                                <input type="number" step="0.01" min="0" name="return_qty_{{ pr.id }}" value="{{ pr.pr_return_qty }}" class="form-control form-control-sm d-inline-block text-center" style="width: 70px; border-color: #17a2b8; font-weight: bold; color: #17a2b8;">
                             </div>
+                            {% if pr.pr_return_type == 'Good' and pr.pr_fraction <= 1.0 %}
+                                <div class="mt-2 d-flex justify-content-end align-items-center gap-1">
+                                    <span class="text-muted" style="font-size: 0.8rem; margin-right: 4px;">Dims (L×W×H):</span>
+                                    <input type="number" step="0.01" min="0" name="return_l_{{ pr.id }}" value="{{ pr.pr_return_l }}" class="form-control form-control-sm text-center" style="width: 55px; font-size: 0.75rem;">
+                                    <span class="text-muted mx-1">×</span>
+                                    <input type="number" step="0.01" min="0" name="return_w_{{ pr.id }}" value="{{ pr.pr_return_w }}" class="form-control form-control-sm text-center" style="width: 55px; font-size: 0.75rem;">
+                                    <span class="text-muted mx-1">×</span>
+                                    <input type="number" step="0.01" min="0" name="return_h_{{ pr.id }}" value="{{ pr.pr_return_h }}" class="form-control form-control-sm text-center" style="width: 55px; font-size: 0.75rem;">
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div style="font-size: 1.1rem; font-weight: 700;">
+                                Qty: <span style="color:#17a2b8;">{{ pr.pr_return_qty }}</span>
+                            </div>
+                            {% if pr.pr_return_type == 'Good' and pr.pr_fraction < 1.0 %}
+                                <div class="mt-1">
+                                    <span class="dim-badge">
+                                        Offcut Dims: {{ pr.pr_return_l }} × {{ pr.pr_return_w }} × {{ pr.pr_return_h }}
+                                    </span>
+                                </div>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </div>
                 {% endfor %}
+                </form>
             </div>
         </div>
         {% endfor %}

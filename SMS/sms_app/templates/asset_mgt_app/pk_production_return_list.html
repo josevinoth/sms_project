@@ -10,12 +10,19 @@
         </a>
     </div>
 
+    {% if messages %}
+    {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }} py-2 mb-3">{{ msg }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Section 1: Needs Return (Not yet submitted) -->
     <div class="alert alert-warning py-2 mb-3 border-0 shadow-sm" style="border-left: 4px solid #ffc107 !important;">
         <i class="fas fa-exclamation-triangle mr-2"></i>
         <small class="font-weight-bold">These jobs have been flagged as <strong>Return Needed</strong> from the Production Dashboard. Enter the return quantity for each material item and submit.</small>
     </div>
 
-    <div class="table-container-modern">
+    <div class="table-container-modern mb-5">
         <div class="table-responsive">
             <table class="table modern-table text-center">
                 <thead>
@@ -54,7 +61,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">
+                        <td colspan="6" class="text-center py-4 text-muted">
                             <i class="fas fa-check-circle fa-2x mb-2 text-success d-block"></i>
                             No jobs pending return. All clear!
                         </td>
@@ -64,5 +71,67 @@
             </table>
         </div>
     </div>
+
+    <!-- Section 2: Submitted but Pending Store Acceptance (Admin can edit) -->
+    {% if pending_return_jobs %}
+    <div class="alert border-0 py-2 mb-3 shadow-sm" style="background:rgba(230,126,34,0.12); border-left: 4px solid #e67e22 !important;">
+        <i class="fas fa-clock mr-2" style="color:#e67e22;"></i>
+        <small class="font-weight-bold">These jobs have been <strong>submitted</strong> and are awaiting store acceptance.
+        <strong>Admin can still edit</strong> the return quantities before store processes them.</small>
+    </div>
+
+    <div class="table-container-modern">
+        <div class="table-responsive">
+            <table class="table modern-table text-center">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Job No.</th>
+                        <th>Customer</th>
+                        <th>Pack Type</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in pending_return_jobs %}
+                    <tr class="modern-tr">
+                        <td class="text-muted">{{ forloop.counter }}</td>
+                        <td>
+                            <span class="badge" style="background: var(--bg-dark); color: #e67e22; border: 1px solid #e67e22; font-size: 0.85rem; padding: 5px 10px;">
+                                {{ job.pj_job_no }}
+                            </span>
+                        </td>
+                        <td class="font-weight-bold">{{ job.pj_customer }}</td>
+                        <td>{{ job.pj_pack_type }}</td>
+                        <td>
+                            <span class="badge px-3 py-2" style="border-radius: 20px; background:rgba(230,126,34,0.15); color:#e67e22; border:1px solid #e67e22;">
+                                <i class="fas fa-hourglass-half mr-1"></i> Pending Store Acceptance
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{% url 'pk_production_return_edit' job.pj_job_no %}"
+                                   class="btn-modern py-2 px-3"
+                                   style="font-size: 0.9rem; text-decoration: none; background: #27ae60; border-color: #27ae60; color: white; border-radius: 6px;">
+                                    <i class="fas fa-edit mr-1"></i> Edit Return
+                                </a>
+                                <a href="{% url 'pk_production_return_reset' job.pj_job_no %}"
+                                   class="btn-modern py-2 px-3"
+                                   onclick="return confirm('Are you sure you want to completely reject/reset this return? It will be sent back to the Return Needed queue.')"
+                                   style="font-size: 0.9rem; text-decoration: none; background: #dc3545; border-color: #dc3545; color: white; border-radius: 6px;">
+                                    <i class="fas fa-trash-restore mr-1"></i> Reset
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}
+

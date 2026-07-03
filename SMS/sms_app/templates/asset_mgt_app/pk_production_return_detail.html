@@ -53,7 +53,7 @@
                 <div class="input-group-prepend">
                     <span class="input-group-text" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #aaa;"><i class="fas fa-search"></i></span>
                 </div>
-                <input type="text" id="searchInput" class="form-control form-control-modern" placeholder="Search by item description, part code, or GRN..." onkeyup="filterItems()" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                <input type="text" id="searchInput" class="form-control form-control-modern" placeholder="Search by item description, part code, or GRN..." onkeyup="filterItems()" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); color: inherit;">
             </div>
         </div>
 
@@ -66,7 +66,7 @@
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
                             <span class="font-weight-bold mr-2" style="font-size:1.05rem;">{{ forloop.counter }}.</span>
-                            <span class="font-weight-bold" style="font-size:1.05rem; color:#fff;">{{ item.ct_stock_description|default:"—" }}</span>
+                            <span class="font-weight-bold" style="font-size:1.05rem; color:inherit;">{{ item.ct_stock_description|default:"—" }}</span>
                             <div class="mt-2 d-flex flex-wrap gap-1">
                                 {% if item.ct_part_code %}
                                 <span class="badge badge-secondary info-chip">{{ item.ct_part_code }}</span>
@@ -97,7 +97,7 @@
                             </strong>
                         </div>
                         <div class="text-center px-2 border-left border-secondary" style="border-color: rgba(255,255,255,0.1) !important;">
-                            <div class="dim-label">Accepted Qty</div>
+                            <div class="dim-label">Issued Qty</div>
                             <strong style="font-size:1.1rem; color:#28a745;">{{ item.ct_na_quantity|default:"0" }}</strong>
                         </div>
                         <div class="text-center px-2 border-left border-secondary" style="border-color: rgba(255,255,255,0.1) !important;">
@@ -113,91 +113,49 @@
 
                 <!-- RIGHT SIDE: Return Info -->
                 <div class="col-md-6 pl-md-4">
-                    {% if is_onsite %}
-                    <!-- ON-SITE: Good + Damaged -->
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-center">
-                            <div class="dim-label text-success"><i class="fas fa-check-circle"></i> Good Qty</div>
-                            <input type="number" step="0.01" min="0"
-                                   name="return_qty_good_{{ item.id }}"
-                                   id="good_qty_{{ item.id }}"
-                                   class="form-control dim-input mx-auto"
-                                   style="border-color:#28a745; width:70px; background: rgba(40,167,69,0.1); color: #fff;"
-                                   placeholder="0"
-                                   oninput="updateCard({{ item.id }})">
-                        </div>
-                        <div class="text-center">
-                            <div class="dim-label text-danger"><i class="fas fa-times-circle"></i> Damaged Qty</div>
-                            <input type="number" step="0.01" min="0"
-                                   name="return_qty_damaged_{{ item.id }}"
-                                   id="damaged_qty_{{ item.id }}"
-                                   class="form-control dim-input mx-auto"
-                                   style="border-color:#dc3545; width:70px; background: rgba(220,53,69,0.1); color: #fff;"
-                                   placeholder="0"
-                                   oninput="updateCard({{ item.id }})">
-                        </div>
-                        <div class="text-center">
-                            <div class="dim-label">Good Return Dims (L × W × H)</div>
-                            <div class="d-flex align-items-center justify-content-center gap-1">
-                                <input type="number" step="0.01" min="0" name="return_l_{{ item.id }}" class="form-control dim-input" style="width:60px;" placeholder="{{ item.ct_length|default:'' }}">
-                                <span class="dim-sep mt-0">×</span>
-                                <input type="number" step="0.01" min="0" name="return_w_{{ item.id }}" class="form-control dim-input" style="width:60px;" placeholder="{{ item.ct_width|default:'' }}">
-                                <span class="dim-sep mt-0">×</span>
-                                <input type="number" step="0.01" min="0" name="return_h_{{ item.id }}" class="form-control dim-input" style="width:60px;" placeholder="{{ item.ct_height|default:'' }}">
+                    <div id="return_container_{{ item.id }}">
+                        <!-- Unified: Good + Damaged -->
+                        <div class="d-flex justify-content-between align-items-center return-row-wrapper mt-2 pb-2" style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
+                            <div class="text-center">
+                                <div class="dim-label text-success"><i class="fas fa-check-circle"></i> Good Qty</div>
+                                <input type="number" step="0.01" min="0"
+                                       name="return_qty_good_{{ item.id }}"
+                                       id="good_qty_{{ item.id }}"
+                                       class="form-control dim-input mx-auto"
+                                       style="border-color:#28a745; width:70px; background: rgba(40,167,69,0.1); color: inherit;"
+                                       placeholder="0"
+                                       oninput="updateCard({{ item.id }})">
                             </div>
+                            <div class="text-center">
+                                <div class="dim-label text-danger"><i class="fas fa-times-circle"></i> Damaged Qty</div>
+                                <input type="number" step="0.01" min="0"
+                                       name="return_qty_damaged_{{ item.id }}"
+                                       id="damaged_qty_{{ item.id }}"
+                                       class="form-control dim-input mx-auto"
+                                       style="border-color:#dc3545; width:70px; background: rgba(220,53,69,0.1); color: inherit;"
+                                       placeholder="0"
+                                       oninput="updateCard({{ item.id }})">
+                            </div>
+                            {% if item.ct_length %}
+                            <div class="text-center">
+                                <div class="dim-label">Return Dims (L × W × H)</div>
+                                <div class="d-flex align-items-center justify-content-center gap-1">
+                                    <input type="number" step="0.01" min="0" name="return_l_{{ item.id }}" class="form-control dim-input" style="width:60px;" placeholder="{{ item.ct_length|default:'' }}">
+                                    <span class="dim-sep mt-0">×</span>
+                                    <input type="number" step="0.01" min="0" name="return_w_{{ item.id }}" class="form-control dim-input" style="width:60px;" placeholder="{{ item.ct_width|default:'' }}">
+                                    <span class="dim-sep mt-0">×</span>
+                                    <input type="number" step="0.01" min="0" name="return_h_{{ item.id }}" class="form-control dim-input" style="width:60px;" placeholder="{{ item.ct_height|default:'' }}">
+                                </div>
+                                <small class="text-muted" style="font-size: 0.65rem;">Leave empty if returning full size</small>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
-                    {% else %}
-                    <!-- IN-HOUSE: Simple return -->
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-center">
-                            <div class="dim-label text-warning" style="font-size: 0.8rem;"><i class="fas fa-undo"></i> Return Qty</div>
-                            <input type="number" step="0.01" min="0"
-                                   max="{{ item.ct_na_quantity|default:'9999' }}"
-                                   name="return_qty_{{ item.id }}"
-                                   id="return_qty_{{ item.id }}"
-                                   class="form-control dim-input mx-auto"
-                                   style="border: 2px solid #ffc107; width:80px; background: rgba(255,193,7,0.1); color: #fff; font-size: 1.1rem !important; font-weight: bold;"
-                                   placeholder="0"
-                                   value="0"
-                                   oninput="updateCard({{ item.id }}); calcFraction({{ item.id }}, {{ item.ct_length|default:0 }}, {{ item.ct_width|default:0 }}, {{ item.ct_height|default:0 }}, {{ item.ct_rate|default:0 }})">
-                        </div>
-                        <div class="text-center">
-                            <div class="dim-label">Return Dims (L × W × H)</div>
-                            <div class="d-flex align-items-center justify-content-center gap-1">
-                                <input type="number" step="0.01" min="0"
-                                       name="return_l_{{ item.id }}"
-                                       id="return_l_{{ item.id }}"
-                                       class="form-control dim-input"
-                                       style="width:65px; background: rgba(255,255,255,0.05); color:#fff;"
-                                       placeholder="{{ item.ct_length|default:'' }}"
-                                       oninput="calcFraction({{ item.id }}, {{ item.ct_length|default:0 }}, {{ item.ct_width|default:0 }}, {{ item.ct_height|default:0 }}, {{ item.ct_rate|default:0 }})">
-                                <span class="dim-sep mt-0">×</span>
-                                <input type="number" step="0.01" min="0"
-                                       name="return_w_{{ item.id }}"
-                                       id="return_w_{{ item.id }}"
-                                       class="form-control dim-input"
-                                       style="width:65px; background: rgba(255,255,255,0.05); color:#fff;"
-                                       placeholder="{{ item.ct_width|default:'' }}"
-                                       oninput="calcFraction({{ item.id }}, {{ item.ct_length|default:0 }}, {{ item.ct_width|default:0 }}, {{ item.ct_height|default:0 }}, {{ item.ct_rate|default:0 }})">
-                                <span class="dim-sep mt-0">×</span>
-                                <input type="number" step="0.01" min="0"
-                                       name="return_h_{{ item.id }}"
-                                       id="return_h_{{ item.id }}"
-                                       class="form-control dim-input"
-                                       style="width:65px; background: rgba(255,255,255,0.05); color:#fff;"
-                                       placeholder="{{ item.ct_height|default:'' }}"
-                                       oninput="calcFraction({{ item.id }}, {{ item.ct_length|default:0 }}, {{ item.ct_width|default:0 }}, {{ item.ct_height|default:0 }}, {{ item.ct_rate|default:0 }})">
-                            </div>
-                            <small class="text-muted" style="font-size: 0.65rem;">Leave empty if returning full size</small>
-                        </div>
-                        <div class="text-center">
-                            <div class="dim-label text-success">Cost Credit</div>
-                            <strong id="preview_cost_{{ item.id }}" style="color:#28a745; font-size: 1.15rem;">₹ 0.00</strong>
-                            <div id="preview_{{ item.id }}" style="display:none; margin-top: -4px;">
-                                <small class="text-muted" style="font-size: 0.65rem;" id="preview_fraction_{{ item.id }}"></small>
-                            </div>
-                        </div>
+                    {% if item.ct_length %}
+                    <div class="text-right mt-1">
+                        <button type="button" class="btn btn-sm" style="font-size: 0.75rem; color: #17a2b8; background: transparent; border: 1px dashed #17a2b8;" onclick="splitItem({{ item.id }})">
+                            <i class="fas fa-plus"></i> Split Return (for Offcuts)
+                        </button>
                     </div>
                     {% endif %}
                 </div>
@@ -219,7 +177,7 @@
             </a>
             <button type="submit" class="btn-modern btn-submit py-2 px-5"
                     style="background: #e67e22; border-color: #e67e22; font-size:1rem;"
-                    onclick="return confirm('Submit return? This will return stock to inventory and reduce the job cost.')">
+                    onclick="return confirm('Submit return? This will return stock to inventory.')">
                 <i class="fas fa-undo-alt mr-2"></i> Submit Return
             </button>
         </div>
@@ -256,32 +214,59 @@ function filterItems() {
 }
 
 function calcFraction(id, origL, origW, origH, rate) {
-    const retL = parseFloat(document.getElementById('return_l_' + id)?.value || 0) || origL;
-    const retW = parseFloat(document.getElementById('return_w_' + id)?.value || 0) || origW;
-    const retH = parseFloat(document.getElementById('return_h_' + id)?.value || 0) || origH;
-    const qty = parseFloat(document.getElementById('return_qty_' + id)?.value || 0);
+    // Feature disabled: Cost Credit UI removed as per user request.
+}
 
-    const origVol = origL * origW * origH;
-    const retVol = retL * retW * retH;
-    const fraction = (origVol > 0 && retVol > 0) ? (retVol / origVol) : 1.0;
+// Keep track of split index to generate unique IDs
+let splitCounters = {};
 
-    const preview = document.getElementById('preview_' + id);
-    const previewCost = document.getElementById('preview_cost_' + id);
-    const previewFraction = document.getElementById('preview_fraction_' + id);
-
-    if (qty > 0) {
-        preview.style.display = 'block';
-        const costReduction = qty * rate * fraction;
-        previewCost.textContent = `₹ ${costReduction.toFixed(2)}`;
-        
-        if (Math.abs(fraction - 1.0) > 0.001) {
-            previewFraction.textContent = `(${(fraction * 100).toFixed(1)}% of original size × ${qty} pcs)`;
-        } else {
-            previewFraction.textContent = '(full size)';
-        }
+function splitItem(id) {
+    if (!splitCounters[id]) {
+        splitCounters[id] = 1;
     } else {
-        preview.style.display = 'none';
+        splitCounters[id]++;
     }
+    
+    let splitId = id + '_split' + splitCounters[id];
+    let container = document.getElementById('return_container_' + id);
+    
+    // Get the first row in the container
+    let originalRow = container.querySelector('.return-row-wrapper');
+    
+    // Clone it
+    let newRow = originalRow.cloneNode(true);
+    
+    // Update inputs inside the new row
+    let inputs = newRow.querySelectorAll('input');
+    inputs.forEach(input => {
+        // Reset value
+        input.value = '';
+        
+        // Update name
+        if (input.name.includes('_' + id)) {
+            input.name = input.name.replace('_' + id, '_' + splitId);
+        }
+        
+        // Update id if exists
+        if (input.id) {
+            input.id = input.id.replace('_' + id, '_' + splitId);
+        }
+        
+        // Update oninput function reference
+        if (input.hasAttribute('oninput')) {
+            // Keep the same visual update tied to the original item ID
+            input.setAttribute('oninput', 'updateCard(' + id + ')');
+        }
+    });
+    
+    // Add a delete button to the new row
+    let deleteBtn = document.createElement('div');
+    deleteBtn.className = 'text-center pl-2';
+    deleteBtn.innerHTML = '<button type="button" class="btn btn-sm btn-link text-danger p-0 mt-3" title="Remove Split" onclick="this.closest(\'.return-row-wrapper\').remove()"><i class="fas fa-trash"></i></button>';
+    newRow.appendChild(deleteBtn);
+    
+    // Append to container
+    container.appendChild(newRow);
 }
 </script>
 {% endblock %}

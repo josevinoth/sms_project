@@ -70,18 +70,16 @@ def loadingbay_add(request, loadingbay_id=0):
     # //Calculate Crane and Forklift cost
     wh_job_id = request.session.get('ses_gatein_id_nam')
     customer_name = Gatein_info.objects.get(gatein_job_no=wh_job_id).gatein_customer
-    customer_id = CustomerInfo.objects.get(cu_name=customer_name).id
-    try:
-        crane_1st_2hr = WhratemasterInfo.objects.get(whrm_customer_name=customer_id, whrm_charge_type=5).whrm_rate
-        crane_nxt_2hr = WhratemasterInfo.objects.get(whrm_customer_name=customer_id, whrm_charge_type=6).whrm_rate
-        forklift_1st_2hr = WhratemasterInfo.objects.get(whrm_customer_name=customer_id, whrm_charge_type=4).whrm_rate
-        forklift_nxt_2hr = WhratemasterInfo.objects.get(whrm_customer_name=customer_id, whrm_charge_type=7).whrm_rate
-
-    except ObjectDoesNotExist:
-        crane_1st_2hr = None
-        crane_nxt_2hr = None
-        forklift_1st_2hr = None
-        forklift_nxt_2hr = None
+    customer_info = CustomerInfo.objects.filter(cu_name=customer_name).first()
+    customer_id = customer_info.id if customer_info else None
+    crane_1st_2hr_obj = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=5).first()
+    crane_1st_2hr = crane_1st_2hr_obj.whrm_rate if crane_1st_2hr_obj else None
+    crane_nxt_2hr_obj = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=6).first()
+    crane_nxt_2hr = crane_nxt_2hr_obj.whrm_rate if crane_nxt_2hr_obj else None
+    forklift_1st_2hr_obj = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=4).first()
+    forklift_1st_2hr = forklift_1st_2hr_obj.whrm_rate if forklift_1st_2hr_obj else None
+    forklift_nxt_2hr_obj = WhratemasterInfo.objects.filter(whrm_customer_name=customer_id, whrm_charge_type=7).first()
+    forklift_nxt_2hr = forklift_nxt_2hr_obj.whrm_rate if forklift_nxt_2hr_obj else None
 
     if request.method == "GET":
         if loadingbay_id == 0:

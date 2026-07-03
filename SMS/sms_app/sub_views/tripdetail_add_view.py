@@ -354,19 +354,20 @@ def tripdetail_add(request, tripdetail_id=0):
                 va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
 
             if trip_det_form.is_valid():
-                trip_status_list = TripdetailInfo.objects.filter(
-                    tr_enquirynumber=enquiry_num, tr_vehiclenumber=vehicle_number
-                )
-                if cosnignment_number:
-                    trip_status_list = trip_status_list.filter(tr_consignmentnumber=cosnignment_number)
-
-                for trip in trip_status_list:
-                    if trip.tc_financestatus and trip.tc_financestatus.id == 1:
-                        messages.error(
-                            request,
-                            'A trip for this vehicle is still open. Please close it before creating a new one.'
-                        )
-                        return redirect(request.META['HTTP_REFERER'])
+                # ✅ FIX 1: Open trip check is now GLOBAL across ALL enquiries for this vehicle
+                # Prevents users from creating a new trip for a vehicle that is already open in a different enquiry
+                open_trip_global = TripdetailInfo.objects.filter(
+                    tr_vehiclenumber=vehicle_number,
+                    tc_financestatus_id=1  # Open / Started
+                ).first()
+                if open_trip_global:
+                    messages.error(
+                        request,
+                        f'Vehicle {vehicle_number} already has an open trip '
+                        f'(Trip No: {open_trip_global.tr_tripnumber}). '
+                        f'Please close it before creating a new one.'
+                    )
+                    return redirect(request.META['HTTP_REFERER'])
 
                 # ✅ NEW LOCATION MATCHING VALIDATION HERE
                 # Skip for Market Vehicles (Source 3)
@@ -378,10 +379,19 @@ def tripdetail_add(request, tripdetail_id=0):
 
                     if last_trip_for_loc:
                         departed_loc_id = request.POST.get('tr_departedlocation')
-                        if departed_loc_id and str(departed_loc_id) != str(last_trip_for_loc.tr_reportedlocation.id):
-                            last_loc_name = last_trip_for_loc.tr_reportedlocation.place_name if hasattr(
-                                last_trip_for_loc.tr_reportedlocation, 'place_name') else str(
-                                last_trip_for_loc.tr_reportedlocation)
+                        last_loc_name = last_trip_for_loc.tr_reportedlocation.place_name if hasattr(
+                            last_trip_for_loc.tr_reportedlocation, 'place_name') else str(
+                            last_trip_for_loc.tr_reportedlocation)
+
+                        # ✅ FIX 2: Block if departed location is EMPTY or does NOT match last reported location
+                        if not departed_loc_id:
+                            messages.error(
+                                request,
+                                f"Departed location is required. Vehicle's last destination was '{last_loc_name}'."
+                            )
+                            return redirect(request.META.get('HTTP_REFERER', 'tripdetail_list'))
+
+                        if str(departed_loc_id) != str(last_trip_for_loc.tr_reportedlocation.id):
                             messages.error(
                                 request,
                                 f"Warning: Vehicle's last destination was '{last_loc_name}'. Please create an 'Empty Trip' or 'Business Empty Trip' from '{last_loc_name}' first."
@@ -456,8 +466,21 @@ def tripdetail_add(request, tripdetail_id=0):
                         recipients = get_auto_recipients(trip)
 
                         if not recipients:
+                            # ✅ FIX: Even if no email recipients found, still mark the flag as True
+                            # so the workflow (dock in/out field unlocking) can progress.
                             messages.warning(request,
                                              f"Alert Skipped: {label} - No email ID found for this customer in the email master.")
+                            # Mark the appropriate flag so fields unlock properly
+                            flag_map = {
+                                "Loading Reported": "tr_loading_report_mail_sent",
+                                "Trip Started": "tr_trip_started_mail_sent",
+                                "Unloading Reported": "tr_unloading_report_mail_sent",
+                                "Trip Closed": "tr_trip_closed_mail_sent",
+                            }
+                            flag_field = flag_map.get(label)
+                            if flag_field and not getattr(trip, flag_field, True):
+                                setattr(trip, flag_field, True)
+                                trip.save(update_fields=[flag_field])
                             return
 
                         response = alert_func(request)
@@ -474,6 +497,18 @@ def tripdetail_add(request, tripdetail_id=0):
                             messages.info(request, f"Automated Alert Sent: {label} (To: {rec_str})")
                     except Exception as e:
                         print(f"Alert trigger error ({label}): {e}")
+                        messages.error(request, f"Alert Failed: {label} (Email Server Error)")
+                        # Even if SMTP fails, mark flag as True so fields unlock
+                        flag_map = {
+                            "Loading Reported": "tr_loading_report_mail_sent",
+                            "Trip Started": "tr_trip_started_mail_sent",
+                            "Unloading Reported": "tr_unloading_report_mail_sent",
+                            "Trip Closed": "tr_trip_closed_mail_sent",
+                        }
+                        flag_field = flag_map.get(label)
+                        if flag_field and not getattr(trip, flag_field, True):
+                            setattr(trip, flag_field, True)
+                            trip.save(update_fields=[flag_field])
 
                 is_open = status_open and trip.tc_financestatus_id == status_open.id
                 is_closed = status_closed and trip.tc_financestatus_id == status_closed.id
@@ -582,8 +617,21 @@ def tripdetail_add(request, tripdetail_id=0):
                         recipients = get_auto_recipients(trip)
 
                         if not recipients:
+                            # ✅ FIX: Even if no email recipients found, still mark the flag as True
+                            # so the workflow (dock in/out field unlocking) can progress.
                             messages.warning(request,
                                              f"Alert Skipped: {label} - No email ID found for this customer in the email master.")
+                            # Mark the appropriate flag so fields unlock properly
+                            flag_map = {
+                                "Loading Reported": "tr_loading_report_mail_sent",
+                                "Trip Started": "tr_trip_started_mail_sent",
+                                "Unloading Reported": "tr_unloading_report_mail_sent",
+                                "Trip Closed": "tr_trip_closed_mail_sent",
+                            }
+                            flag_field = flag_map.get(label)
+                            if flag_field and not getattr(trip, flag_field, True):
+                                setattr(trip, flag_field, True)
+                                trip.save(update_fields=[flag_field])
                             return
 
                         response = alert_func(request)
@@ -600,6 +648,18 @@ def tripdetail_add(request, tripdetail_id=0):
                             messages.info(request, f"Automated Alert Sent: {label} (To: {rec_str})")
                     except Exception as e:
                         print(f"Alert trigger error ({label}): {e}")
+                        messages.error(request, f"Alert Failed: {label} (Email Server Error)")
+                        # Even if SMTP fails, mark flag as True so fields unlock
+                        flag_map = {
+                            "Loading Reported": "tr_loading_report_mail_sent",
+                            "Trip Started": "tr_trip_started_mail_sent",
+                            "Unloading Reported": "tr_unloading_report_mail_sent",
+                            "Trip Closed": "tr_trip_closed_mail_sent",
+                        }
+                        flag_field = flag_map.get(label)
+                        if flag_field and not getattr(trip, flag_field, True):
+                            setattr(trip, flag_field, True)
+                            trip.save(update_fields=[flag_field])
 
                 # Boolean checks for status
                 # Fallback to IDs 1/2 if name lookup fails, but prioritize names
@@ -1283,7 +1343,7 @@ def trip_send_loading_report_mail(request):
 
     recipients = get_trip_recipients(request, trip)
 
-    enquiry = EnquirynoteInfo.objects.select_related("en_customername").get(en_enquirynumber=trip.tr_enquirynumber)
+    enquiry = EnquirynoteInfo.objects.select_related("en_customername").get(id=trip.tr_enquirynumber_id)
 
     customer_name = enquiry.en_customername.cu_name if enquiry.en_customername else "N/A"
     from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
@@ -1355,7 +1415,7 @@ def trip_send_trip_started_mail(request):
 
     recipients = get_trip_recipients(request, trip)
 
-    enquiry = EnquirynoteInfo.objects.select_related("en_customername").get(en_enquirynumber=trip.tr_enquirynumber)
+    enquiry = EnquirynoteInfo.objects.select_related("en_customername").get(id=trip.tr_enquirynumber_id)
 
     customer_name = enquiry.en_customername.cu_name if enquiry.en_customername else "N/A"
     from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
@@ -1445,7 +1505,7 @@ def trip_send_unloading_report_mail(request):
 
     recipients = get_trip_recipients(request, trip)
 
-    enquiry = EnquirynoteInfo.objects.select_related("en_customername").get(en_enquirynumber=trip.tr_enquirynumber)
+    enquiry = EnquirynoteInfo.objects.select_related("en_customername").get(id=trip.tr_enquirynumber_id)
 
     customer_name = enquiry.en_customername.cu_name if enquiry.en_customername else "N/A"
     from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
@@ -1525,7 +1585,7 @@ def trip_send_trip_closed_mail(request):
 
     recipients = get_trip_recipients(request, trip)
 
-    enquiry = EnquirynoteInfo.objects.select_related("en_customername").get(en_enquirynumber=trip.tr_enquirynumber)
+    enquiry = EnquirynoteInfo.objects.select_related("en_customername").get(id=trip.tr_enquirynumber_id)
 
     customer_name = enquiry.en_customername.cu_name if enquiry.en_customername else "N/A"
     vehicle_number = trip.tr_vehiclenumber or "N/A"

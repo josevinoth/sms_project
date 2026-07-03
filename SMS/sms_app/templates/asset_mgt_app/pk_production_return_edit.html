@@ -1,0 +1,239 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block content %}
+<style>
+.edit-card {
+    background: var(--bg-card, #1e2a38);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 14px;
+    transition: border-color 0.2s;
+}
+.edit-card:hover { border-color: rgba(230,126,34,0.5); }
+.dim-label { font-size: 0.72rem; color: #aaa; margin-bottom: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.dim-input { height: 36px !important; font-size: 0.9rem !important; border-radius: 6px !important; text-align: center; }
+.dim-sep { align-self: center; color: #aaa; font-weight: bold; padding: 0 3px; margin-top: 18px; }
+.type-badge-good  { background: rgba(40,167,69,0.15);  color: #28a745; border: 1px solid #28a745;  border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; font-weight: 600; }
+.type-badge-dmg   { background: rgba(220,53,69,0.15);  color: #dc3545; border: 1px solid #dc3545;  border-radius: 20px; padding: 3px 10px; font-size: 0.75rem; font-weight: 600; }
+.delete-warn { font-size: 0.7rem; color: #aaa; margin-top: 4px; }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-edit mr-2"></i> Edit Return — Job: <span style="color:#e67e22;">{{ job_no }}</span></h2>
+        <a href="{% url 'pk_production_return_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size:1rem; text-decoration:none;">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="alert border-0 py-2 mb-4" style="background:rgba(230,126,34,0.12); border-left: 4px solid #e67e22 !important;">
+        <i class="fas fa-exclamation-triangle mr-2" style="color:#e67e22;"></i>
+        <small class="font-weight-bold">
+            <strong>Admin Edit Mode</strong> — These return records are still <strong>Pending store acceptance</strong>.
+            You can correct quantities and dimensions below. Setting Qty to <strong>0</strong> will <strong>delete</strong> that return entry.
+        </small>
+    </div>
+
+    {% if messages %}
+    {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }} py-2 mb-3">{{ msg }}</div>
+    {% endfor %}
+    {% endif %}
+
+    {% if pending_returns %}
+    <form method="POST" action="{% url 'pk_production_return_edit_save' job_no %}">
+        {% csrf_token %}
+
+        {% for pr in pending_returns %}
+        <input type="hidden" name="pr_id" value="{{ pr.id }}">
+
+        <div class="edit-card">
+            <div class="row align-items-center">
+
+                <!-- LEFT: Item Info -->
+                <div class="col-md-5 border-right" style="border-right: 1px solid rgba(255,255,255,0.1);">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="font-weight-bold mr-2" style="font-size:1rem;">{{ forloop.counter }}.</span>
+                        <span class="font-weight-bold" style="font-size:1rem;">
+                            {{ pr.pr_costing_item.ct_stock_description|default:"—" }}
+                        </span>
+                        <span class="ml-2 {% if pr.pr_return_type == 'Good' %}type-badge-good{% else %}type-badge-dmg{% endif %}">
+                            {{ pr.pr_return_type }}
+                        </span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        {% if pr.pr_costing_item.ct_part_code %}
+                        <span class="badge badge-secondary" style="font-size:0.78rem;">{{ pr.pr_costing_item.ct_part_code }}</span>
+                        {% endif %}
+                        <span class="badge badge-secondary" style="font-size:0.78rem;">{{ pr.pr_costing_item.ct_uom|default:"—" }}</span>
+                        <span class="text-muted" style="font-size:0.78rem;">Rate: ₹{{ pr.pr_rate }}</span>
+                    </div>
+                    <!-- Original dims info -->
+                    <div class="d-flex align-items-center" style="background:rgba(0,0,0,0.2); border-radius:8px; padding:8px 12px;">
+                        <div class="mr-4">
+                            <div class="dim-label">Orig Dims</div>
+                            <strong style="color:#e67e22; font-size:0.9rem;">
+                                {{ pr.pr_orig_l|default:"—" }} × {{ pr.pr_orig_w|default:"—" }} × {{ pr.pr_orig_h|default:"—" }}
+                            </strong>
+                        </div>
+                        <div class="mr-4">
+                            <div class="dim-label">Current Ret Dims</div>
+                            <strong style="color:#17a2b8; font-size:0.9rem;">
+                                {{ pr.pr_return_l }} × {{ pr.pr_return_w }} × {{ pr.pr_return_h }}
+                            </strong>
+                        </div>
+                        <div>
+                            <div class="dim-label">Submitted On</div>
+                            <small class="text-muted">{{ pr.pr_created_at|date:"d M Y H:i" }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Edit Inputs -->
+                <div class="col-md-7 pl-md-4 border-left border-light">
+                    <div class="row align-items-center" id="edit_container_{{ pr.id }}">
+
+                        <!-- Qty -->
+                        <div class="col-md-3">
+                            <div class="dim-label">Return Qty</div>
+                            <input type="number" step="0.01" min="0"
+                                   name="edit_qty_{{ pr.id }}"
+                                   value="{{ pr.pr_return_qty }}"
+                                   class="form-control dim-input"
+                                   style="border-color:#e67e22;">
+                            <div class="delete-warn">Set to 0 to remove this entry</div>
+                        </div>
+
+                        <!-- Show dims when the return record has dimension data or always allow editing -->
+                        {% if pr.pr_return_l or pr.pr_orig_l %}
+                        <div class="col-md-9">
+                            <div class="dim-label">Return Dimensions (L × W × H)</div>
+                            <div class="d-flex align-items-center">
+                                <input type="number" step="0.01" min="0"
+                                       name="edit_l_{{ pr.id }}"
+                                       value="{{ pr.pr_return_l }}"
+                                       class="form-control dim-input"
+                                       style="width:80px;"
+                                       placeholder="L">
+                                <span class="dim-sep">×</span>
+                                <input type="number" step="0.01" min="0"
+                                       name="edit_w_{{ pr.id }}"
+                                       value="{{ pr.pr_return_w }}"
+                                       class="form-control dim-input"
+                                       style="width:80px;"
+                                       placeholder="W">
+                                <span class="dim-sep">×</span>
+                                <input type="number" step="0.01" min="0"
+                                       name="edit_h_{{ pr.id }}"
+                                       value="{{ pr.pr_return_h }}"
+                                       class="form-control dim-input"
+                                       style="width:80px;"
+                                       placeholder="H">
+                            </div>
+                            <small class="text-muted" style="font-size:0.65rem;">Leave as original dims if not a partial piece</small>
+                            <div class="text-right mt-1">
+                                <button type="button" class="btn btn-sm" style="font-size: 0.75rem; color: #17a2b8; background: transparent; border: 1px dashed #17a2b8;" onclick="splitEditItem({{ pr.id }})">
+                                    <i class="fas fa-plus"></i> Split Return (for Offcuts)
+                                </button>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-md-9 d-flex align-items-center">
+                            <span class="text-muted" style="font-size:0.82rem;"><i class="fas fa-info-circle mr-1"></i> No dimensions (counted by quantity only)</span>
+                        </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-end mt-4 gap-2">
+            <a href="{% url 'pk_production_return_list' %}" class="btn-modern btn-cancel py-2 px-4 mr-2" style="text-decoration:none;">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn-modern btn-submit py-2 px-5"
+                    style="background:#27ae60; border-color:#27ae60; font-size:1rem;"
+                    onclick="return confirm('Save changes to these return records?')">
+                <i class="fas fa-save mr-2"></i> Save Changes
+            </button>
+        </div>
+    </form>
+
+    {% else %}
+    <div class="table-container-modern p-5 text-center text-muted">
+        <i class="fas fa-check-circle fa-2x mb-3 text-success d-block"></i>
+        No pending return records found for this job.<br>
+        <small>They may have already been accepted by the store.</small>
+    </div>
+    {% endif %}
+
+</div>
+<script>
+let editSplitCounters = {};
+
+function splitEditItem(prId) {
+    if (!editSplitCounters[prId]) {
+        editSplitCounters[prId] = 1;
+    } else {
+        editSplitCounters[prId]++;
+    }
+    
+    let splitId = prId + '_' + editSplitCounters[prId];
+    let container = document.getElementById('edit_container_' + prId);
+    
+    // We clone the container itself but we only want to append the row content.
+    // Instead of cloning the container wrapper, we create a new div for the split row.
+    let newRow = document.createElement('div');
+    newRow.className = 'row align-items-center mt-3 pt-3 border-top border-light';
+    
+    // Copy HTML from the original row container
+    newRow.innerHTML = container.innerHTML;
+    
+    // Remove the split button from the clone so they can't chain split off splits endlessly
+    let splitBtn = newRow.querySelector('button');
+    if (splitBtn) {
+        splitBtn.parentElement.remove();
+    }
+    
+    // Update inputs inside the new row
+    let inputs = newRow.querySelectorAll('input');
+    inputs.forEach(input => {
+        // Reset value to 0 for splits by default, except for LWH which can be cleared
+        if (input.name.includes('edit_qty')) {
+            input.value = '1'; 
+        } else {
+            input.value = '';
+        }
+        
+        // Update name: edit_qty_45 -> new_split_qty_45_1
+        if (input.name.includes('edit_qty_')) {
+            input.name = input.name.replace('edit_qty_' + prId, 'new_split_qty_' + splitId);
+        } else if (input.name.includes('edit_l_')) {
+            input.name = input.name.replace('edit_l_' + prId, 'new_split_l_' + splitId);
+        } else if (input.name.includes('edit_w_')) {
+            input.name = input.name.replace('edit_w_' + prId, 'new_split_w_' + splitId);
+        } else if (input.name.includes('edit_h_')) {
+            input.name = input.name.replace('edit_h_' + prId, 'new_split_h_' + splitId);
+        }
+    });
+    
+    // Add a delete button to the new row (inside the first col)
+    let qtyCol = newRow.querySelector('.col-md-3');
+    if (qtyCol) {
+        let deleteBtn = document.createElement('div');
+        deleteBtn.innerHTML = '<button type="button" class="btn btn-sm btn-link text-danger p-0 mt-2" onclick="this.closest(\'.row\').remove()"><i class="fas fa-trash"></i> Remove Split</button>';
+        qtyCol.appendChild(deleteBtn);
+    }
+    
+    // Append to container's parent so it sits below the original
+    container.parentElement.appendChild(newRow);
+}
+</script>
+{% endblock %}

@@ -410,11 +410,11 @@
 						<div class="row">
 							<div class="col-1"></div>
 							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
-									{% endfor %}
+								{% for message in messages %}
+								<div class="message text-center {% if message.tags %}{{ message.tags }}{% endif %}">
+									{{ message }}
 								</div>
+								{% endfor %}
 							</div>
 							<div class="col-1"></div>
 						</div>
@@ -849,6 +849,9 @@
 	var g_tripStartedSent = "{{ trip_instance.tr_trip_started_mail_sent|yesno:'true,false' }}" === 'true';
 	var g_unloadingSent = "{{ trip_instance.tr_unloading_report_mail_sent|yesno:'true,false' }}" === 'true';
 	var g_tripClosedSent = "{{ trip_instance.tr_trip_closed_mail_sent|yesno:'true,false' }}" === 'true';
+	// ✅ FIX: Fallback — unlock loading fields if pickup date is already saved in DB
+	// Covers trips that got stuck because no email recipients were configured
+	var g_pickupDateSaved = {% if trip_instance.tr_departeddate_pickup %}true{% else %}false{% endif %};
 
 
 	// ---- Helper Functions to be accessible globally ----
@@ -989,7 +992,7 @@
 			lockLoadingFieldsInitially();
 			lockUnloadingFields();
 
-			if (g_loadingSent) {
+			if (g_loadingSent || g_pickupDateSaved) {
 				enableLoadingFields();
 			}
 			// Broad logic for Normal workflow

@@ -244,10 +244,10 @@ def stock_usage_breakdown(request):
         return JsonResponse({'error': 'Part ID is required'}, status=400)
     
     # We use StockMaintenance as the base because it is the actual source 
-    # for the 'Retrieved' totals shown in the main list.
+    # for the 'Retrieved' totals shown in the main list. We also include returns (3).
     sm_records = StockMaintenance.objects.filter(
         sm_partcode_id=part_id,
-        sm_stock_type_id=2
+        sm_stock_type_id__in=[2, 3]
     ).order_by('-sm_created_at')
     
     # We'll pre-fetch PkcostingInfo (linked records) to enrich the SM data
@@ -311,28 +311,72 @@ def stock_usage_breakdown(request):
 
         # Strategy 3: Parse assessment from sm_description (e.g. "Retrieved for Assessment Assess_1000103")
         job_no = "N/A"
+        po_num = "N/A"
         if linked:
             assessment = linked.ct_assessment_num.na_assessment_num if linked.ct_assessment_num else "N/A"
             job_no = linked.ct_job_no or "N/A"
             customer = linked.ct_customer_name.cu_name if linked.ct_customer_name else (linked.ct_customer_new_name or "N/A")
             usage_type = "Automated"
+            # Extract PO Number safely
+            if linked.ct_assessment_num:
+                from ..models import PkpurchaseorderInfo
+                po_obj = PkpurchaseorderInfo.objects.filter(po_assessment_num=linked.ct_assessment_num).first()
+                if po_obj:
+                    po_num = po_obj.po_num
+        elif sm.sm_stock_type_id == 3:
+            # It's a Return - parse Job from description or invoice_no
+            usage_type = "Returned"
+            if sm.sm_description and "Job: " in sm.sm_description:
+                job_no = sm.sm_description.split("Job: ")[-1].split(")")[0].split(" |")[0].strip()
+            elif sm.sm_invoice_no and "JOB" in sm.sm_invoice_no:
+                job_no = sm.sm_invoice_no
+            elif sm.sm_invoice_no and "AS" in sm.sm_invoice_no:
+                assessment = sm.sm_invoice_no
+                
+            # If we found Job or Assessment, let's fetch Customer and PO from PkcostingInfo or PkpurchaseorderInfo
+            from ..models import PkpurchaseorderInfo
+            lookup_costing = None
+            if job_no != "N/A":
+                lookup_costing = PkcostingInfo.objects.filter(ct_job_no=job_no).first()
+            elif assessment != "N/A":
+                lookup_costing = PkcostingInfo.objects.filter(ct_assessment_num__na_assessment_num=assessment).first()
+                
+            if lookup_costing:
+                assessment = lookup_costing.ct_assessment_num.na_assessment_num if lookup_costing.ct_assessment_num else assessment
+                job_no = lookup_costing.ct_job_no or job_no
+                customer = lookup_costing.ct_customer_name.cu_name if lookup_costing.ct_customer_name else (lookup_costing.ct_customer_new_name or customer)
+                if lookup_costing.ct_assessment_num:
+                    po_obj = PkpurchaseorderInfo.objects.filter(po_assessment_num=lookup_costing.ct_assessment_num).first()
+                    if po_obj:
+                        po_num = po_obj.po_num
         elif sm.sm_description and "Assessment " in sm.sm_description:
             try:
                 assessment = sm.sm_description.split("Assessment ")[-1].strip()
                 # Try to extract Job No if present in description (e.g. "... (Job: XX)")
                 if "(Job: " in sm.sm_description:
-                    job_no = sm.sm_description.split("(Job: ")[-1].split(")")[0]
+                    job_no = sm.sm_description.split("(Job: ")[-1].split(")")[0].split(" |")[0].strip()
                 usage_type = "Historical"
+                
+                # Fetch customer/po for historical
+                from ..models import PkpurchaseorderInfo
+                lookup_costing = PkcostingInfo.objects.filter(ct_assessment_num__na_assessment_num=assessment).first()
+                if lookup_costing:
+                    customer = lookup_costing.ct_customer_name.cu_name if lookup_costing.ct_customer_name else (lookup_costing.ct_customer_new_name or customer)
+                    po_obj = PkpurchaseorderInfo.objects.filter(po_assessment_num=lookup_costing.ct_assessment_num).first()
+                    if po_obj:
+                        po_num = po_obj.po_num
             except:
                 pass
 
         data.append({
             'assessment_num': assessment,
             'job_no': job_no,
+            'po_num': po_num,
             'customer_name': customer,
             'quantity': sm.sm_count or 0.0,
             'date': date_full,
             'type': usage_type,
+            'is_return': sm.sm_stock_type_id == 3,
             'remarks': sm.sm_description or ""
         })
         

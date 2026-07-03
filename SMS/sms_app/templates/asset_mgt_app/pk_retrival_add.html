@@ -256,7 +256,7 @@
                 tableHtml += '</tr></thead><tbody>';
 
                 if (results.length === 0) {
-                    tableHtml += '<tr><td colspan="8" class="text-center py-4">No matching stock found.</td></tr>';
+                    // Let DataTables handle empty state
                 } else {
                     for (var i = 0; i < results.length; i++) {
                         var row = results[i];

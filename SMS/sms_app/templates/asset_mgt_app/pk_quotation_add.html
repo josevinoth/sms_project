@@ -481,19 +481,24 @@
             document.getElementById("pkqt_stock_description").value = ""
             $('#pkqt_quantity_req').removeClass('disable_a_href');
             $('#pkqt_days').addClass('disable_a_href');
+            
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
             var quantity = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+            
+            // Bring in the Project's Aggregate Total CFT
             document.getElementById("pkqt_total_cft_display").value = "{{ total_cft_display }}";
             var total_cft = parseFloat(document.getElementById("pkqt_total_cft_display").value) || 0;
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
-
+            
+            document.getElementById("pkqt_cft_sqft_req").innerText = total_cft.toFixed(2);
+            
             // If total_cft is the project total, we divide by na_quantity to get unit cost per box
             var unit_cft = total_cft / na_quantity;
             var totalCost = rate * unit_cft;
             
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
             var totalboxCost = totalCost * na_quantity;
-            document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
+            document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2);
         }
         else if (jn == 6) {
             $('#pkqt_stock_type').addClass('disable_a_href');
@@ -685,7 +690,7 @@
                 tableHtml += '</tr></thead><tbody>';
 
                 if (results.length === 0) {
-                    tableHtml += '<tr><td colspan="16" class="text-center">No stock found for the given criteria.</td></tr>';
+                    // Let DataTables handle empty state
                 } else {
                     for (var i = 0; i < results.length; i++) {
                         var row = results[i];

@@ -102,34 +102,22 @@
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-tasks"></i> Visual & Assembly Audit</div>
                         <div class="audit-modern-list">
-                            <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded" style="background: #f8fafc; border: 1px solid #edf2f7;">
+                            <label class="d-flex align-items-center mb-3 p-3 rounded" style="background:#f8fafc; border:1px solid #edf2f7; cursor:pointer; gap:12px; margin:0;">
+                                <input type="checkbox" name="qc_wood_twist" id="twist" style="width:18px;height:18px;flex-shrink:0;accent-color:#10b981;">
                                 <span class="font-weight-bold">Woodstwist</span>
-                                <label class="pms-switch">
-                                    <input type="checkbox" name="qc_wood_twist" id="twist">
-                                    <span class="pms-slider"></span>
-                                </label>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded" style="background: #f8fafc; border: 1px solid #edf2f7;">
+                            </label>
+                            <label class="d-flex align-items-center mb-3 p-3 rounded" style="background:#f8fafc; border:1px solid #edf2f7; cursor:pointer; gap:12px; margin:0;">
+                                <input type="checkbox" name="qc_seal" id="seal" style="width:18px;height:18px;flex-shrink:0;accent-color:#10b981;">
                                 <span class="font-weight-bold">Seal</span>
-                                <label class="pms-switch">
-                                    <input type="checkbox" name="qc_seal" id="seal">
-                                    <span class="pms-slider"></span>
-                                </label>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded" style="background: #f8fafc; border: 1px solid #edf2f7;">
+                            </label>
+                            <label class="d-flex align-items-center mb-3 p-3 rounded" style="background:#f8fafc; border:1px solid #edf2f7; cursor:pointer; gap:12px; margin:0;">
+                                <input type="checkbox" name="qc_cracks" id="cracks" style="width:18px;height:18px;flex-shrink:0;accent-color:#10b981;">
                                 <span class="font-weight-bold">Cracks</span>
-                                <label class="pms-switch">
-                                    <input type="checkbox" name="qc_cracks" id="cracks">
-                                    <span class="pms-slider"></span>
-                                </label>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center p-3 rounded" style="background: #f8fafc; border: 1px solid #edf2f7;">
+                            </label>
+                            <label class="d-flex align-items-center p-3 rounded" style="background:#f8fafc; border:1px solid #edf2f7; cursor:pointer; gap:12px; margin:0;">
+                                <input type="checkbox" name="qc_pasting" id="pasting" style="width:18px;height:18px;flex-shrink:0;accent-color:#10b981;">
                                 <span class="font-weight-bold">Pasting</span>
-                                <label class="pms-switch">
-                                    <input type="checkbox" name="qc_pasting" id="pasting">
-                                    <span class="pms-slider"></span>
-                                </label>
-                            </div>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -143,18 +131,27 @@
             
             <!-- Action Buttons Row -->
             <div class="row mt-4">
-                <div class="col-12 col-xl-12">
+                <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center">
                         <a href="{% url 'pk_quality_check_list' %}" class="btn-modern btn-cancel px-5" style="text-decoration: none;">
                             <i class="fas fa-times mr-2"></i> Cancel
                         </a>
-                        <div class="d-flex align-items-center" style="gap: 15px;">
-                            <select name="qc_status" class="form-control form-control-modern" style="width: 160px; height: 46px !important; border-radius: 12px; font-weight: 800; border-color: var(--primary-emerald);" required>
-                                <option value="Passed">✅ PASSED</option>
-                                <option value="Failed">❌ FAILED</option>
-                            </select>
-                            <button type="submit" class="btn-modern btn-submit px-5" id="submit_qc" disabled>
-                                <i class="fas fa-check mr-2"></i> Save Report
+                        <div class="d-flex align-items-center" style="gap: 12px;">
+                            <!-- Hidden input holds the final status -->
+                            <input type="hidden" name="qc_status" id="qc_status_input" value="Passed">
+                            <!-- PASSED = set status + submit -->
+                            <button type="submit" id="btn_passed"
+                                    onclick="document.getElementById('qc_status_input').value='Passed'"
+                                    class="btn-modern px-5"
+                                    style="background:#10b981; border-color:#10b981; color:#fff; font-weight:800; font-size:1rem;">
+                                <i class="fas fa-check-circle mr-2"></i> PASSED
+                            </button>
+                            <!-- FAILED = set status + submit -->
+                            <button type="submit" id="btn_failed"
+                                    onclick="document.getElementById('qc_status_input').value='Failed'"
+                                    class="btn-modern px-5"
+                                    style="background:#ef4444; border-color:#ef4444; color:#fff; font-weight:800; font-size:1rem;">
+                                <i class="fas fa-times-circle mr-2"></i> FAILED
                             </button>
                         </div>
                     </div>
@@ -265,23 +262,51 @@
                                            style="height: 44px !important; border-color: #ef4444;"
                                            readonly>
                                 </td>
-                                <td class="text-left p-3" style="background-color: #f1f5f9; border-radius: 12px;">
-                                    <div class="row no-gutters small font-weight-bold">
-                                        <div class="col-6 mb-1"><input type="checkbox" name="check_type_${item.id}" ${item_eqc && item_eqc.c_type ? 'checked' : ''}> Work: ${data.na_details.type_of_work}</div>
-                                        <div class="col-6 mb-1"><input type="checkbox" name="check_scope_${item.id}" ${item_eqc && item_eqc.c_scope ? 'checked' : ''}> Scope: ${data.na_details.client_scope}</div>
-                                        <div class="col-6 mb-1"><input type="checkbox" name="check_treatment_${item.id}" ${item_eqc && item_eqc.c_treat ? 'checked' : ''}> Treat: ${data.na_details.wood_treatment}</div>
-                                        <div class="col-6 mb-1"><input type="checkbox" name="check_norms_${item.id}" ${item_eqc && item_eqc.c_norms ? 'checked' : ''}> Norms: ${data.na_details.wood_norms}</div>
-                                        <div class="col-6 mb-1"><input type="checkbox" name="check_lifting_${item.id}" ${item_eqc && item_eqc.c_lift ? 'checked' : ''}> Lift: ${data.na_details.lifting}</div>
-                                        <div class="col-6 mb-1"><input type="checkbox" name="check_req_${item.id}" ${item_eqc && item_eqc.c_req ? 'checked' : ''}> Req: ${data.na_details.req_type}</div>
-                                        <div class="col-6 mb-1"><input type="checkbox" name="check_wood_${item.id}" ${item_eqc && item_eqc.c_wood ? 'checked' : ''}> Wood: ${data.na_details.wood_type}</div>
-                                        <div class="col-6 mb-1"><input type="checkbox" name="check_desc_${item.id}" ${item_eqc && item_eqc.c_desc ? 'checked' : ''}> Desc: ${data.na_details.wood_description}</div>
-                                    </div>
-                                </td>
+                                 <td class="text-left p-2" style="background-color: #f1f5f9; border-radius: 12px; min-width:220px;">
+                                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px 10px; font-size:0.78rem; font-weight:600;">
+                                         <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                                             <input type="checkbox" name="check_type_${item.id}" ${item_eqc && item_eqc.c_type ? 'checked' : ''} style="width:15px;height:15px;flex-shrink:0;">
+                                             <span>Work: ${data.na_details.type_of_work}</span>
+                                         </label>
+                                         <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                                             <input type="checkbox" name="check_scope_${item.id}" ${item_eqc && item_eqc.c_scope ? 'checked' : ''} style="width:15px;height:15px;flex-shrink:0;">
+                                             <span>Scope: ${data.na_details.client_scope}</span>
+                                         </label>
+                                         <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                                             <input type="checkbox" name="check_treatment_${item.id}" ${item_eqc && item_eqc.c_treat ? 'checked' : ''} style="width:15px;height:15px;flex-shrink:0;">
+                                             <span>Treat: ${data.na_details.wood_treatment}</span>
+                                         </label>
+                                         <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                                             <input type="checkbox" name="check_norms_${item.id}" ${item_eqc && item_eqc.c_norms ? 'checked' : ''} style="width:15px;height:15px;flex-shrink:0;">
+                                             <span>Norms: ${data.na_details.wood_norms}</span>
+                                         </label>
+                                         <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                                             <input type="checkbox" name="check_barks_${item.id}" ${item_eqc && item_eqc.c_barks ? 'checked' : ''} style="width:15px;height:15px;flex-shrink:0;">
+                                             <span>Barks: ${data.na_details.barks || 'N/A'}</span>
+                                         </label>
+                                         <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                                             <input type="checkbox" name="check_lifting_${item.id}" ${item_eqc && item_eqc.c_lift ? 'checked' : ''} style="width:15px;height:15px;flex-shrink:0;">
+                                             <span>Lift: ${data.na_details.lifting}</span>
+                                         </label>
+                                         <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                                             <input type="checkbox" name="check_req_${item.id}" ${item_eqc && item_eqc.c_req ? 'checked' : ''} style="width:15px;height:15px;flex-shrink:0;">
+                                             <span>Req: ${data.na_details.req_type}</span>
+                                         </label>
+                                         <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                                             <input type="checkbox" name="check_wood_${item.id}" ${item_eqc && item_eqc.c_wood ? 'checked' : ''} style="width:15px;height:15px;flex-shrink:0;">
+                                             <span>Wood: ${data.na_details.wood_type}</span>
+                                         </label>
+                                         <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                                             <input type="checkbox" name="check_desc_${item.id}" ${item_eqc && item_eqc.c_desc ? 'checked' : ''} style="width:15px;height:15px;flex-shrink:0;">
+                                             <span>Desc: ${data.na_details.wood_description}</span>
+                                         </label>
+                                     </div>
+                                 </td>
                             </tr>`;
                         });
                     }
                     $('#items_body').html(rows);
-                    $('#submit_qc').prop('disabled', false);
+                    $('#btn_passed, #btn_failed').prop('disabled', false);
                 },
                 error: function(xhr, status, error) {
                     $('#items_body').html('<tr><td colspan="10" class="text-center py-5 text-danger">Connection error: ' + error + '</td></tr>');
