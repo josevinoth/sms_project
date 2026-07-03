@@ -2,162 +2,18 @@
 {% load widget_tweaks %}
 
 {% block content %}
-<style>
-    /* Styling for disabled fields */
-    input:disabled, select:disabled, textarea:disabled, [readonly] {
-        background-color: #e8f5e9 !important; /* light green tint */
-        opacity: 1 !important; /* override default bootstrap opacity */
-        cursor: not-allowed;
-        color: #666;
-    }
-
-    .disable_a_href {
-        cursor: not-allowed !important;
-        pointer-events: none !important;
-    }
-
-	#tripdetail_id .form-group-modern {
-		display: flex !important;
-		flex-direction: column !important;
-		align-items: stretch !important;
-	}
-
-	#tripdetail_id .form-group-modern.empty-field-hidden {
-		display: none !important;
-	}
-
-    #tripdetail_id .form-label-modern {
-        display: block !important;
-        width: 100% !important;
-        white-space: nowrap !important;
-        font-size: 0.72rem !important;
-        letter-spacing: 0.8px !important;
-    }
-
-    #tripdetail_id .form-control-modern,
-    #tripdetail_id input[type="datetime-local"].form-control-modern {
-        display: block !important;
-        width: 100% !important;
-        min-width: 0 !important;
-    }
-
-    .trip-detail-modern {
-        padding-top: 0.5rem !important;
-        padding-bottom: 0.5rem !important;
-    }
-
-    .trip-detail-modern .modern-header {
-        margin-bottom: 0.65rem !important;
-        padding: 0.85rem 1.25rem !important;
-    }
-
-    .trip-detail-modern .modern-card {
-        padding: 0.75rem 1rem !important;
-    }
-
-    .trip-detail-modern #tripdetail_id > [class*="col-"] {
-        margin-bottom: 0.55rem !important;
-    }
-
-    .trip-detail-modern #tripdetail_id .form-section {
-        padding: 0.75rem 0.85rem !important;
-        border-radius: 12px !important;
-    }
-
-    .trip-detail-modern #tripdetail_id .form-section-title {
-        margin-bottom: 0.55rem !important;
-        font-size: 0.78rem !important;
-    }
-
-    .trip-detail-modern #tripdetail_id .form-group-modern {
-        margin-bottom: 0.5rem !important;
-    }
-
-    .trip-detail-modern #tripdetail_id .form-label-modern {
-        margin-bottom: 0.22rem !important;
-    }
-
-    .trip-detail-modern #tripdetail_id .form-control-modern,
-    .trip-detail-modern #tripdetail_id select {
-        min-height: 32px !important;
-        height: 32px !important;
-        padding: 0.35rem 0.75rem !important;
-        font-size: 0.78rem !important;
-        border-radius: 8px !important;
-    }
-
-    .trip-detail-modern #tr_remarks {
-        min-height: 48px !important;
-        height: 48px !important;
-        resize: vertical;
-    }
-
-    .trip-detail-modern .trip-pod-row {
-        margin-bottom: 0.45rem !important;
-    }
-
-    .trip-detail-modern .trip-pod-row .form-section {
-        padding-top: 0.7rem !important;
-        padding-bottom: 0.7rem !important;
-    }
-
-    .trip-detail-modern #pod-sign-btn {
-        height: 32px !important;
-        min-height: 32px !important;
-        padding: 0.35rem 0.75rem !important;
-    }
-
-    .trip-detail-modern #pod-signature-preview {
-        align-items: center;
-        background: #fff;
-        border: 1px solid var(--input-border);
-        border-radius: 8px;
-        display: flex;
-        justify-content: center;
-        margin-top: 0.4rem;
-        min-height: 44px;
-        padding: 0.25rem;
-    }
-
-    .trip-detail-modern #pod-signature-preview:empty {
-        display: none;
-        min-height: 0;
-        padding: 0;
-    }
-
-    .trip-detail-modern .trip-actions {
-        margin-top: 0.45rem !important;
-        margin-bottom: 0 !important;
-    }
-
-    .trip-detail-modern .utilized-km-section .row {
-        align-items: center;
-    }
-
-    .trip-detail-modern .utilized-km-section .badge {
-        border-radius: 16px !important;
-        font-size: 0.68rem;
-        padding: 0.35rem 0.65rem !important;
-    }
-
-    .trip-detail-modern .utilized-km-section .km-note {
-        font-size: 0.68rem;
-        line-height: 1.2;
-        margin-top: 0.35rem;
-    }
-</style>
 <div class="container-fluid py-4 trip-detail-modern">
     <!-- Page Header -->
     <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
         <h2 class="mb-0 text-white"><i class="fas fa-route mr-2"></i> Add/Update Trip Detail</h2>
-        <div style="position: relative; z-index: 10;">
-            <a href="{% url 'tripdetail_insert' %}" class="btn-modern btn-cancel py-2 px-4 mr-2" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+        <div class="trip-header-actions">
+            <a href="{% url 'tripdetail_insert' %}" class="btn-modern btn-cancel trip-header-action py-2 px-4 mr-2">
                 <i class="fas fa-plus"></i> ADD
             </a>
-            <a href="{% url 'trip_highvalue_add' %}" id="checklist-btn" class="btn-modern btn-cancel py-2 px-4 mr-2 disable_a_href" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+            <a href="{% url 'trip_highvalue_add' %}" id="checklist-btn" class="btn-modern btn-cancel trip-header-action py-2 px-4 mr-2 disable_a_href">
                 Goods High Value Checklist
             </a>
-            <a href="{% url 'tripdetail_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+            <a href="{% url 'tripdetail_list' %}" class="btn-modern btn-cancel trip-header-action py-2 px-4">
                 <i class="fas fa-arrow-left"></i> BACK TO LIST
             </a>
         </div>
@@ -166,7 +22,7 @@
     {% if messages %}
     <div class="mb-2">
         {% for message in messages %}
-        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-2 px-3 mb-2">
+        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-2 px-3 mb-2 page-message">
             <i class="fas fa-info-circle mr-1"></i> {{ message }}
         </div>
         {% endfor %}
@@ -210,13 +66,13 @@
 
 	<form method="POST" action="" id="tripdetail_add" enctype="multipart/form-data" onsubmit="return enableTripForm(this);">
         {% csrf_token %}
-        <div class="modern-card" style="padding: 1rem !important;">
+        <div class="modern-card">
             <div class="row" id="tripdetail_id">
 
                 <!-- Column 1: Trip Info -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="form-section h-100 p-3">
-                        <div class="form-section-title mb-3" style="font-size:0.95rem;"><i class="fas fa-info-circle"></i> Trip Info</div>
+                        <div class="form-section-title mb-3"><i class="fas fa-info-circle"></i> Trip Info</div>
 
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Enquiry Number</label>
@@ -255,7 +111,7 @@
                 <!-- Column 2: Vehicle & Driver -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="form-section h-100 p-3">
-                        <div class="form-section-title mb-3" style="font-size:0.95rem;"><i class="fas fa-truck"></i> Vehicle & Driver</div>
+                        <div class="form-section-title mb-3"><i class="fas fa-truck"></i> Vehicle & Driver</div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Type Requested</label>
                             {% render_field trip_det_form.tr_vehicletype id="tr_vehicletype" class="form-control form-control-modern form-control-sm disable_a_href" %}
@@ -290,7 +146,7 @@
                 <!-- Column 3: Loading Details -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="form-section h-100 p-3">
-                        <div class="form-section-title mb-3" style="font-size:0.95rem;"><i class="fas fa-box-open"></i> Loading Details</div>
+                        <div class="form-section-title mb-3"><i class="fas fa-box-open"></i> Loading Details</div>
 
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">From Location</label>
@@ -326,7 +182,7 @@
                 <!-- Column 4: Unloading Details -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="form-section h-100 p-3">
-                        <div class="form-section-title mb-3" style="font-size:0.95rem;"><i class="fas fa-boxes"></i> Unloading Details</div>
+                        <div class="form-section-title mb-3"><i class="fas fa-boxes"></i> Unloading Details</div>
 
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">To Location</label>
@@ -366,7 +222,7 @@
                             <label class="form-label-modern small mb-1">Utilized KM</label>
                             <div class="d-flex align-items-center">
                                 <span class="badge bg-warning text-dark mr-2">Utilized KM</span>
-                                <input type="text" id="utilized_km_display" class="form-control form-control-modern form-control-sm form-control-plaintext text-dark font-weight-bold" readonly placeholder="Auto calculated" style="background: transparent; border: none;">
+                                <input type="text" id="utilized_km_display" class="form-control form-control-modern form-control-sm form-control-plaintext text-dark font-weight-bold utilized-km-value" readonly placeholder="Auto calculated">
                             </div>
                             <div class="km-note text-danger font-weight-bold">
                                 * Please check standard km chart when actual km is high
@@ -402,10 +258,10 @@
                             </select>
 
                             <!-- Cancellation status info banners -->
-                            <div id="cancel_with_billing_info" class="alert alert-info alert-sm mt-1 mb-0 py-1 px-2" style="font-size:0.82rem; display:none;">
+                            <div id="cancel_with_billing_info" class="alert alert-info alert-sm trip-status-info mt-1 mb-0 py-1 px-2">
                                 <i class="fas fa-info-circle"></i> <strong>Cancellation with Billing:</strong> Trip will proceed to <strong>Trip Settlement</strong>.
                             </div>
-                            <div id="cancel_without_billing_info" class="alert alert-danger alert-sm mt-1 mb-0 py-1 px-2" style="font-size:0.82rem; display:none;">
+                            <div id="cancel_without_billing_info" class="alert alert-danger alert-sm trip-status-info mt-1 mb-0 py-1 px-2">
                                 <i class="fas fa-ban"></i> <strong>Cancellation without Billing:</strong> Trip will be <strong>stopped</strong>. No settlement will be created.
                             </div>
                         </div>
@@ -438,12 +294,12 @@
                             <!-- POD Signature -->
                             <div class="col-12 col-md-4 d-flex flex-column">
                                 <label class="form-label-modern small mb-1">POD Signature</label>
-                                <button type="button" class="btn btn-primary btn-sm" style="height: calc(1.5em + .5rem + 2px);" data-toggle="modal" data-target="#podSignatureModal" id="pod-sign-btn" disabled>
+                                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#podSignatureModal" id="pod-sign-btn" disabled>
                                     <i class="fas fa-pen mr-1"></i> Sign POD
                                 </button>
                                 <div id="pod-signature-preview" class="text-center">
                                     {% if trip_det_form.instance.td_pod %}
-                                    <img src="{{ trip_det_form.instance.td_pod.url }}" alt="POD Signature" class="img-fluid" style="max-height: 48px; margin: 0 auto;">
+                                    <img src="{{ trip_det_form.instance.td_pod.url }}" alt="POD Signature" class="img-fluid pod-signature-img">
                                     {% endif %}
                                 </div>
                                 <input type="hidden" name="pod_signature_data" id="pod-signature-data">
@@ -482,7 +338,7 @@
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body d-flex justify-content-center">
-                <canvas id="pod-pad" width="800" height="300" style="border:1px solid #ccc; max-width:100%; touch-action: none; background-color: #fff;"></canvas>
+                <canvas id="pod-pad" class="pod-pad-canvas" width="800" height="300"></canvas>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="clear-pod">Clear</button>
@@ -821,7 +677,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			const data = podPad.toDataURL();
 			document.getElementById('pod-signature-data').value = data;
 			const preview = document.getElementById('pod-signature-preview');
-			preview.innerHTML = `<img src="${data}" class="img-fluid" style="max-height: 48px; margin: 0 auto;">`;
+			preview.innerHTML = `<img src="${data}" class="img-fluid pod-signature-img">`;
 			preview.style.display = 'flex';
 			$('#podSignatureModal').modal('hide');
 		} else {

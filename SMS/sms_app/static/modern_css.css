@@ -1131,6 +1131,188 @@ body, .modern-card, .form-section, .form-control-modern, .modern-table td, .tabl
 }
 
 /* ==========================================================================
+   TRIP DETAIL MODERN PAGE
+   ========================================================================== */
+
+.trip-detail-modern {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
+.trip-detail-modern input:disabled,
+.trip-detail-modern select:disabled,
+.trip-detail-modern textarea:disabled,
+.trip-detail-modern [readonly] {
+    background-color: #e8f5e9 !important;
+    opacity: 1 !important;
+    cursor: not-allowed;
+    color: #666;
+}
+
+.trip-detail-modern .disable_a_href {
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.trip-detail-modern .modern-header {
+    margin-bottom: 0.65rem !important;
+    padding: 0.85rem 1.25rem !important;
+}
+
+.trip-detail-modern .trip-header-actions {
+    position: relative;
+    z-index: 10;
+}
+
+.trip-detail-modern .trip-header-action {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white !important;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.trip-detail-modern .modern-card {
+    padding: 0.75rem 1rem !important;
+}
+
+.trip-detail-modern #tripdetail_id > [class*="col-"] {
+    margin-bottom: 0.55rem !important;
+}
+
+.trip-detail-modern #tripdetail_id .form-section {
+    padding: 0.75rem 0.85rem !important;
+    border-radius: 12px !important;
+}
+
+.trip-detail-modern #tripdetail_id .form-section-title {
+    margin-bottom: 0.55rem !important;
+    font-size: 0.78rem !important;
+}
+
+.trip-detail-modern #tripdetail_id .form-group-modern {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.trip-detail-modern #tripdetail_id .form-group-modern.empty-field-hidden {
+    display: none !important;
+}
+
+.trip-detail-modern #tripdetail_id .form-label-modern {
+    display: block !important;
+    width: 100% !important;
+    white-space: nowrap !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.8px !important;
+    margin-bottom: 0.22rem !important;
+}
+
+.trip-detail-modern #tripdetail_id .form-control-modern,
+.trip-detail-modern #tripdetail_id input[type="datetime-local"].form-control-modern,
+.trip-detail-modern #tripdetail_id select {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 32px !important;
+    height: 32px !important;
+    padding: 0.35rem 0.75rem !important;
+    font-size: 0.78rem !important;
+    border-radius: 8px !important;
+}
+
+.trip-detail-modern #tr_remarks {
+    min-height: 48px !important;
+    height: 48px !important;
+    resize: vertical;
+}
+
+.trip-detail-modern .trip-pod-row {
+    margin-bottom: 0.45rem !important;
+}
+
+.trip-detail-modern .trip-pod-row .form-section {
+    padding-top: 0.7rem !important;
+    padding-bottom: 0.7rem !important;
+}
+
+.trip-detail-modern #pod-sign-btn {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0.35rem 0.75rem !important;
+}
+
+.trip-detail-modern #pod-signature-preview {
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    margin-top: 0.4rem;
+    min-height: 44px;
+    padding: 0.25rem;
+}
+
+.trip-detail-modern #pod-signature-preview:empty {
+    display: none;
+    min-height: 0;
+    padding: 0;
+}
+
+.trip-detail-modern .pod-signature-img {
+    max-height: 48px;
+    margin: 0 auto;
+}
+
+.trip-detail-modern .trip-actions {
+    margin-top: 0.45rem !important;
+    margin-bottom: 0 !important;
+}
+
+.trip-detail-modern .utilized-km-section .row {
+    align-items: center;
+}
+
+.trip-detail-modern .utilized-km-section .badge {
+    border-radius: 16px !important;
+    font-size: 0.68rem;
+    padding: 0.35rem 0.65rem !important;
+}
+
+.trip-detail-modern .utilized-km-section .km-note {
+    font-size: 0.68rem;
+    line-height: 1.2;
+    margin-top: 0.35rem;
+}
+
+.trip-detail-modern .utilized-km-value {
+    background: transparent !important;
+    border: none !important;
+}
+
+.trip-detail-modern .trip-status-info {
+    display: none;
+    font-size: 0.82rem;
+}
+
+.trip-detail-modern .pod-pad-canvas {
+    border: 1px solid #ccc;
+    max-width: 100%;
+    touch-action: none;
+    background-color: #fff;
+}
+
+.trip-detail-modern .alert,
+.trip-detail-modern .alert *,
+.trip-detail-modern .page-message,
+.trip-detail-modern .page-message * {
+    color: #111827 !important;
+}
+
+/* ==========================================================================
    HIGH-DENSITY DASHBOARD UTILITIES
    ========================================================================== */
 
