@@ -40,8 +40,113 @@
         width: 100% !important;
         min-width: 0 !important;
     }
+
+    .trip-detail-modern {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+
+    .trip-detail-modern .modern-header {
+        margin-bottom: 0.65rem !important;
+        padding: 0.85rem 1.25rem !important;
+    }
+
+    .trip-detail-modern .modern-card {
+        padding: 0.75rem 1rem !important;
+    }
+
+    .trip-detail-modern #tripdetail_id > [class*="col-"] {
+        margin-bottom: 0.55rem !important;
+    }
+
+    .trip-detail-modern #tripdetail_id .form-section {
+        padding: 0.75rem 0.85rem !important;
+        border-radius: 12px !important;
+    }
+
+    .trip-detail-modern #tripdetail_id .form-section-title {
+        margin-bottom: 0.55rem !important;
+        font-size: 0.78rem !important;
+    }
+
+    .trip-detail-modern #tripdetail_id .form-group-modern {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .trip-detail-modern #tripdetail_id .form-label-modern {
+        margin-bottom: 0.22rem !important;
+    }
+
+    .trip-detail-modern #tripdetail_id .form-control-modern,
+    .trip-detail-modern #tripdetail_id select {
+        min-height: 32px !important;
+        height: 32px !important;
+        padding: 0.35rem 0.75rem !important;
+        font-size: 0.78rem !important;
+        border-radius: 8px !important;
+    }
+
+    .trip-detail-modern #tr_remarks {
+        min-height: 48px !important;
+        height: 48px !important;
+        resize: vertical;
+    }
+
+    .trip-detail-modern .trip-pod-row {
+        margin-bottom: 0.45rem !important;
+    }
+
+    .trip-detail-modern .trip-pod-row .form-section {
+        padding-top: 0.7rem !important;
+        padding-bottom: 0.7rem !important;
+    }
+
+    .trip-detail-modern #pod-sign-btn {
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 0.35rem 0.75rem !important;
+    }
+
+    .trip-detail-modern #pod-signature-preview {
+        align-items: center;
+        background: #fff;
+        border: 1px solid var(--input-border);
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        margin-top: 0.4rem;
+        min-height: 44px;
+        padding: 0.25rem;
+    }
+
+    .trip-detail-modern #pod-signature-preview:empty {
+        display: none;
+        min-height: 0;
+        padding: 0;
+    }
+
+    .trip-detail-modern .trip-actions {
+        margin-top: 0.45rem !important;
+        margin-bottom: 0 !important;
+    }
+
+    .trip-detail-modern .utilized-km-section .row {
+        align-items: center;
+    }
+
+    .trip-detail-modern .utilized-km-section .badge {
+        border-radius: 16px !important;
+        font-size: 0.68rem;
+        padding: 0.35rem 0.65rem !important;
+    }
+
+    .trip-detail-modern .utilized-km-section .km-note {
+        font-size: 0.68rem;
+        line-height: 1.2;
+        margin-top: 0.35rem;
+    }
 </style>
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 trip-detail-modern">
     <!-- Page Header -->
     <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
         <h2 class="mb-0 text-white"><i class="fas fa-route mr-2"></i> Add/Update Trip Detail</h2>
@@ -57,6 +162,16 @@
             </a>
         </div>
     </div>
+
+    {% if messages %}
+    <div class="mb-2">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-2 px-3 mb-2">
+            <i class="fas fa-info-circle mr-1"></i> {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- Alerts Section -->
     {% if trip_instance.tr_category.id == 1 %}
@@ -245,21 +360,22 @@
                 </div>
 
                 <!-- Extras & Bottom rows -->
-                <div class="col-12 col-lg-6 offset-lg-6 mb-3">
-                    <div class="form-section p-3">
-                        <div class="row">
-                            <div class="col-12 col-md-6 d-flex align-items-center mb-2 mb-md-0">
-                                <span class="badge bg-warning text-dark mr-2 py-2 px-3" style="border-radius:20px;">Utilized KM</span>
-                                <input type="text" id="utilized_km_display" class="form-control form-control-modern form-control-sm form-control-plaintext ml-2 text-dark font-weight-bold" readonly placeholder="Auto calculated" style="max-width: 150px; display: inline-block; background: transparent; border: none; font-size: 1rem;">
+                <div class="col-12 col-md-6 col-lg-3 mb-2">
+                    <div class="form-section p-3 h-100 utilized-km-section">
+                        <div class="form-group-modern mb-0">
+                            <label class="form-label-modern small mb-1">Utilized KM</label>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-warning text-dark mr-2">Utilized KM</span>
+                                <input type="text" id="utilized_km_display" class="form-control form-control-modern form-control-sm form-control-plaintext text-dark font-weight-bold" readonly placeholder="Auto calculated" style="background: transparent; border: none;">
                             </div>
-                            <div class="col-12 col-md-6 d-flex justify-content-md-end text-danger text-md-right">
-                                <strong>* Please check standard km chart when actual km is high</strong>
+                            <div class="km-note text-danger font-weight-bold">
+                                * Please check standard km chart when actual km is high
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-12 col-md-6 mb-3">
+                <div class="col-12 col-md-6 col-lg-3 mb-2">
                     <div class="form-section p-3 h-100">
                         <div class="form-group-modern mb-0">
                             <label class="form-label-modern small mb-1">Goods High Value Check</label>
@@ -268,7 +384,7 @@
                     </div>
                 </div>
 
-                <div class="col-12 col-md-6 mb-3">
+                <div class="col-12 col-md-6 col-lg-3 mb-2">
                     <div class="form-section p-3 h-100">
                         <div class="form-group-modern mb-0">
                             <label class="form-label-modern small mb-1">Trip Status</label>
@@ -296,17 +412,17 @@
                     </div>
                 </div>
 
-                <div class="col-12 mb-3">
-                    <div class="form-section p-3">
+                <div class="col-12 col-md-6 col-lg-3 mb-2">
+                    <div class="form-section p-3 h-100">
                         <div class="form-group-modern mb-0">
                             <label class="form-label-modern small mb-1">Remarks</label>
-                            {% render_field trip_det_form.tr_remarks class="form-control form-control-modern form-control-sm" rows="3" %}
+                            {% render_field trip_det_form.tr_remarks id="tr_remarks" class="form-control form-control-modern form-control-sm" rows="2" %}
                         </div>
                     </div>
                 </div>
 
                 <!-- POD Attachment, Invoice Number and Signature - Single Horizontal Row -->
-                <div class="col-12 mb-3">
+                <div class="col-12 mb-2 trip-pod-row">
                     <div class="form-section p-3">
                         <div class="row align-items-end">
                                  <!-- POD Attachment -->
@@ -325,9 +441,9 @@
                                 <button type="button" class="btn btn-primary btn-sm" style="height: calc(1.5em + .5rem + 2px);" data-toggle="modal" data-target="#podSignatureModal" id="pod-sign-btn" disabled>
                                     <i class="fas fa-pen mr-1"></i> Sign POD
                                 </button>
-                                <div id="pod-signature-preview" class="mt-1 text-center" style="background-color: white; padding: 4px; border-radius: 4px; min-height: 0;">
+                                <div id="pod-signature-preview" class="text-center">
                                     {% if trip_det_form.instance.td_pod %}
-                                    <img src="{{ trip_det_form.instance.td_pod.url }}" alt="POD Signature" class="img-fluid" style="max-height: 50px; margin: 0 auto;">
+                                    <img src="{{ trip_det_form.instance.td_pod.url }}" alt="POD Signature" class="img-fluid" style="max-height: 48px; margin: 0 auto;">
                                     {% endif %}
                                 </div>
                                 <input type="hidden" name="pod_signature_data" id="pod-signature-data">
@@ -343,11 +459,11 @@
                 </div>
 
                 <!-- Action Buttons -->
-				<div class="col-12 mt-4 d-flex justify-content-between align-items-center">
+				<div class="col-12 trip-actions d-flex justify-content-between align-items-center">
 					<button type="submit" id="tripdetail_submit_id" class="btn-modern btn-submit py-2 px-5">
 						<i class="fas fa-check mr-2"></i> Submit
 					</button>
-                    <a href="{% url 'tripdetail_list' %}" class="btn-modern btn-cancel py-2 px-5">
+                    <a href="{% url 'enquirynote_list' %}" class="btn-modern btn-cancel py-2 px-5">
                         <i class="fas fa-times mr-2"></i> Cancel
                     </a>
                 </div>
@@ -704,7 +820,9 @@ document.addEventListener("DOMContentLoaded", function () {
 		if (!podPad.isEmpty()) {
 			const data = podPad.toDataURL();
 			document.getElementById('pod-signature-data').value = data;
-			document.getElementById('pod-signature-preview').innerHTML = `<img src="${data}" class="img-fluid mt-2" style="max-height: 80px;">`;
+			const preview = document.getElementById('pod-signature-preview');
+			preview.innerHTML = `<img src="${data}" class="img-fluid" style="max-height: 48px; margin: 0 auto;">`;
+			preview.style.display = 'flex';
 			$('#podSignatureModal').modal('hide');
 		} else {
 			alert("Please sign before saving the POD signature.");

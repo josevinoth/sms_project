@@ -342,13 +342,27 @@ def tripdetail_add(request, tripdetail_id=0):
             enquiry_num = enquiry_num_id
             cosnignment_number = request.POST.get('tr_consignmentnumber')
             vehicle_number = request.POST.get('tr_vehiclenumber')
+            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8, 10, 11])
+            consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
+            trip_det_form.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(id=enquiry_num_id)
+            trip_det_form.fields['tr_consignmentnumber'].queryset = consignment_list
 
             # ✅ Prevent using same consignment again (backend check)
             if cosnignment_number and TripdetailInfo.objects.filter(
                     tr_consignmentnumber=cosnignment_number
             ).exists():
                 messages.error(request, 'This consignment number is already used in another trip.')
-                return redirect(request.META['HTTP_REFERER'])
+                return render(request, "asset_mgt_app/tripdetail_add.html", {
+                    'first_name': first_name,
+                    'user_id': user_id,
+                    'trip_det_form': trip_det_form,
+                    'tripclosurefiles_form': tripclosurefiles_form,
+                    'enquiry_num_id': enquiry_num_id,
+                    'status_list': status_list,
+                    'consignment_list': consignment_list,
+                    'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
+                    'status_selected': request.POST.get('tc_financestatus') or 8,
+                })
 
             if vehicle_allotment_id:
                 va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
@@ -454,7 +468,12 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip.td_pod = data
 
                 trip.save()
-                tripclosurefiles_form.save()
+                if tripclosurefiles_form.is_valid():
+                    tripclosurefiles_form.save()
+                else:
+                    for field, errors in tripclosurefiles_form.errors.items():
+                        for error in errors:
+                            messages.warning(request, f"Attachment not saved - {field}: {error}")
 
                 # ✅ AUTOMATED EMAIL TRIGGERS
                 def trigger_alert(alert_func, label):
@@ -549,7 +568,27 @@ def tripdetail_add(request, tripdetail_id=0):
 
             else:
                 print("Main Form is not Valid")
+                for field, errors in trip_det_form.errors.items():
+                    field_label = trip_det_form.fields[field].label if field in trip_det_form.fields else field
+                    for error in errors:
+                        print(f"Error in {field}: {error}")
+                        messages.error(request, f"{field_label}: {error}")
                 messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
+                status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8, 10, 11])
+                consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
+                trip_det_form.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(id=enquiry_num_id)
+                trip_det_form.fields['tr_consignmentnumber'].queryset = consignment_list
+                return render(request, "asset_mgt_app/tripdetail_add.html", {
+                    'first_name': first_name,
+                    'user_id': user_id,
+                    'trip_det_form': trip_det_form,
+                    'tripclosurefiles_form': tripclosurefiles_form,
+                    'enquiry_num_id': enquiry_num_id,
+                    'status_list': status_list,
+                    'consignment_list': consignment_list,
+                    'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
+                    'status_selected': request.POST.get('tc_financestatus') or 8,
+                })
 
         else:
             print("I am inside post edit tripdetails")
@@ -605,7 +644,12 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip.td_pod = data
 
                 trip.save()
-                tripclosurefiles_form.save()
+                if tripclosurefiles_form.is_valid():
+                    tripclosurefiles_form.save()
+                else:
+                    for field, errors in tripclosurefiles_form.errors.items():
+                        for error in errors:
+                            messages.warning(request, f"Attachment not saved - {field}: {error}")
 
                 # ✅ AUTOMATED EMAIL TRIGGERS
                 def trigger_alert(alert_func, label):
