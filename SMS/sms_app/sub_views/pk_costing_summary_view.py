@@ -143,6 +143,35 @@ def costingsummary_add(request,costingsummary_id=0):
             costingsummary.refresh_from_db()
             form = PkcostingsummaryForm(instance=costingsummary)
 
+            # Calculate Job Type wise totals
+            job_type_dict = {}
+            for item in costing_list:
+                job_type = str(item.ct_requirement) if item.ct_requirement else "None"
+                cost = float(item.ct_totalbox_cost or 0)
+                if job_type not in job_type_dict:
+                    po_num = "—"
+                    po_value = "—"
+                    if item.ct_requirement:
+                        po_dim = POdimension.objects.filter(pod_nad=item.ct_requirement).first()
+                        if po_dim:
+                            if po_dim.pod_po_num:
+                                po_num = po_dim.pod_po_num.po_num
+                            if po_dim.pod_value:
+                                po_value = po_dim.pod_value
+                    
+                    job_type_dict[job_type] = {'total': 0.0, 'po_num': po_num, 'po_value': po_value}
+                job_type_dict[job_type]['total'] += cost
+                
+            job_type_totals = [
+                {
+                    'job_type': jt, 
+                    'total': round(data['total'], 2), 
+                    'po_num': data['po_num'], 
+                    'po_value': data['po_value']
+                } 
+                for jt, data in job_type_dict.items() if jt != "None"
+            ]
+
             context={
                     'form': form,
                     'first_name': first_name,
@@ -164,6 +193,7 @@ def costingsummary_add(request,costingsummary_id=0):
                     'retrival_list': costing_list.filter(ct_cost_type=8, ct_stock_status__in=[1, 3]),
                     'acceptance_list': costing_list.filter(ct_cost_type=8, ct_stock_status=2),
                     'tracker_flags': get_tracker_flags(needassessment_id),
+                    'job_type_totals': job_type_totals,
                     }
         return render(request, "asset_mgt_app/pk_costingsummary_add.html", context)
     else:

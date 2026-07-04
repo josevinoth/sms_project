@@ -19,15 +19,7 @@
         </div>
     </div>
 
-    {% if messages %}
-    <div class="mb-2">
-        {% for message in messages %}
-        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-2 px-3 mb-2 page-message">
-            <i class="fas fa-info-circle mr-1"></i> {{ message }}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
+
 
     <!-- Alerts Section -->
     {% if trip_instance.tr_category.id == 1 %}
@@ -314,6 +306,17 @@
                     {% render_field trip_det_form.tr_updated_by id="tr_updated_by" class="form-control" %}
                 </div>
 
+                <!-- Messages -->
+                {% if messages %}
+                <div class="col-12 text-center mb-3" style="font-size: 1.2rem;">
+                    {% for message in messages %}
+                    <span class="{% if 'alert-success' in message.tags %}text-success{% elif 'alert-danger' in message.tags %}text-danger font-weight-bold{% elif 'alert-warning' in message.tags %}text-warning font-weight-bold{% else %}text-info{% endif %}">
+                        {{ message }}
+                    </span><br>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
                 <!-- Action Buttons -->
 				<div class="col-12 trip-actions d-flex justify-content-between align-items-center">
 					<button type="submit" id="tripdetail_submit_id" class="btn-modern btn-submit py-2 px-5">
@@ -404,7 +407,7 @@
 			});
 		} else {
 			console.log("No consignment number entered.");
-			alert("Please enter a consignment number.");
+			// alert("Please enter a consignment number.");
 		}
 	});
 </script>
@@ -479,32 +482,40 @@ document.addEventListener("DOMContentLoaded", function () {
 			if (!finalOrActiveTripStatuses.includes(tripStatus.value)) {
 				tripStatus.value = "1";  // Set default status for new trips only
 			}
-		} else if (categoryValue === "1") {
-			if (isHighValueGoods) {
-				if (checklistApprovalStatus === 1 && tripApprovalApproved) {
-					tripStatus.disabled = false;
-					tripStatus.classList.remove("select-disabled-style");
-				} else {
-					tripStatus.disabled = true;
-					tripStatus.classList.add("select-disabled-style");
-					tripStatus.selectedIndex = 0;
-				}
-			} else {
-				if (tripApprovalApproved) {
-					tripStatus.disabled = false;
-					tripStatus.classList.remove("select-disabled-style");
-				} else {
-					tripStatus.disabled = true;
-					tripStatus.classList.add("select-disabled-style");
-					tripStatus.selectedIndex = 0;
-				}
-			}
-		} else {
-			tripStatus.disabled = true;
-			tripStatus.classList.add("select-disabled-style");
-			tripStatus.selectedIndex = 0;
-		}
-
+} else if (categoryValue === "1") {
+    if (isHighValueGoods) {
+        if (checklistApprovalStatus === 1 && tripApprovalApproved) {
+            tripStatus.disabled = false;
+            tripStatus.classList.remove("select-disabled-style");
+        } else {
+            tripStatus.disabled = true;
+            tripStatus.classList.add("select-disabled-style");
+            // ✅ Only reset if new trip or already at Awaiting status
+            if (tripStatus.value === "8" || tripStatus.value === "") {
+                tripStatus.selectedIndex = 0;
+            }
+        }
+    } else {
+        if (tripApprovalApproved) {
+            tripStatus.disabled = false;
+            tripStatus.classList.remove("select-disabled-style");
+        } else {
+            tripStatus.disabled = true;
+            tripStatus.classList.add("select-disabled-style");
+            // ✅ Only reset if new trip or already at Awaiting status
+            if (tripStatus.value === "8" || tripStatus.value === "") {
+                tripStatus.selectedIndex = 0;
+            }
+        }
+    }
+} else {
+    tripStatus.disabled = true;
+    tripStatus.classList.add("select-disabled-style");
+    // ✅ Only reset if new trip or already at Awaiting status
+    if (tripStatus.value === "8" || tripStatus.value === "") {
+        tripStatus.selectedIndex = 0;
+    }
+}
 		// ----------------------
 		// 2️⃣ POD Attachment Logic
 		// ----------------------
@@ -562,7 +573,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 		// Date fields in empty-field class
 		const emptyDateFields = [
-			"tr_departeddate_pickup", "tr_loading_time", "tr_dock_in_time", 
+			"tr_departeddate_pickup", "tr_loading_time", "tr_dock_in_time",
 			"tr_departeddate_delivery", "tr_unloading_time", "tr_reporteddate_pickup"
 		];
 		const otherDateFields = [
@@ -692,8 +703,8 @@ document.addEventListener("DOMContentLoaded", function () {
 		// Lock the From Location if needed
 		if (g_locationLocked) {
 			var $loc = $("#tr_departedlocation");
-			$loc.on('select2:opening', function (e) { 
-				e.preventDefault(); 
+			$loc.on('select2:opening', function (e) {
+				e.preventDefault();
 				var locName = $("#tr_departedlocation option:selected").text().trim();
 				alert("Warning: Vehicle's last destination was '" + locName + "'. Please create an 'Empty Trip' or 'Business Empty Trip' from '" + locName + "' first.");
 			});
@@ -774,12 +785,12 @@ document.addEventListener("DOMContentLoaded", function () {
 	}
 	function enableUnloadingStage1() {
 		$("#tr_reportedlocation, #tr_reporteddate, #tr_reportedkm").prop("disabled", false).removeClass('disable_a_href');
-		
+
 		// If Stage 1 info already exists (either from DB or just typed), check if we can unlock Stage 2
 		// We use broad logic here: if not Category 2/3, allow unlocking next stage
 		var cat = $("#tr_category").val();
 		var hasReportedDate = $("#tr_reporteddate").val() !== "";
-		
+
 		if (cat !== "2" && cat !== "3") {
 			$("#tr_reporteddate").prop("required", true);
 			if (g_unloadingSent || hasReportedDate) {
@@ -788,7 +799,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		} else {
 			$("#tr_reporteddate").removeAttr("required");
 		}
-		
+
 		validateStatusRestriction();
 	}
 	function enableUnloadingStage2() {
@@ -849,7 +860,7 @@ document.addEventListener("DOMContentLoaded", function () {
 				$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time").prop("disabled", true).addClass('disable_a_href');
 				$("#tr_departeddate, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
 			}
-			
+
 			$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time, #tr_departeddate").removeAttr("required");
 		}
 
@@ -971,7 +982,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		var trip_status = document.getElementById("tc_financestatus").value;
 		var trip_category = document.getElementById("tr_category").value;
 		var isNewTrip = !("{{ trip_instance.id|default:'' }}");
-		
+
 		if (trip_status == 1) {
 			if (trip_category !== "2" && trip_category !== "3") {
 				$("#tr_departedlocation, #tr_departedkm, #tr_departeddate, #tr_loading_time").attr("required", "required");
@@ -1047,26 +1058,36 @@ document.addEventListener("DOMContentLoaded", function () {
 <script>
 	var checklistApprovalStatus = parseInt("{{ checklist.thc_approval_status_id|default:0 }}");
 	function fetchLastKM() {
-		let vehicle_number = $("#tr_vehiclenumber").val();
-		if (!vehicle_number) return;
+	let vehicle_number = $("#tr_vehiclenumber").val();
+	if (!vehicle_number) return;
 
-		$.ajax({
-			url: '/SMS/get_last_reported_km/',
-			type: 'GET',
-			data: { 'vehicle': vehicle_number },
-			dataType: 'json',
-			success: function (data) {
-				if (data.reported_km) {
-					$("#tr_departedkm").val(data.reported_km);
-					$("#tr_reportedkm_pickup").val(data.reported_km); // mirror to Loading Started KM
-					calculateUtilizedKM();
-				}
-			},
-			error: function () {
-				console.log("Error fetching last reported KM");
-			}
-		});
+	// ✅ Skip auto-fill if this is an existing trip with already-saved KM values
+	let isExistingTrip = !!({{ trip_instance.id|default:0 }});
+	let hasExistingDepartedKM = $("#tr_departedkm").val() !== "" && $("#tr_departedkm").val() !== "0";
+	if (isExistingTrip && hasExistingDepartedKM) {
+		console.log("Skipping fetchLastKM — existing trip with saved KM values.");
+		calculateUtilizedKM();  // Still recalculate display
+		return;
 	}
+
+	$.ajax({
+		url: '/SMS/get_last_reported_km/',
+		type: 'GET',
+		data: { 'vehicle': vehicle_number },
+		dataType: 'json',
+		success: function (data) {
+			if (data.reported_km) {
+				// ✅ Only set Loading KM fields — NEVER touch Unloading KM
+				$("#tr_departedkm").val(data.reported_km);
+				$("#tr_reportedkm_pickup").val(data.reported_km);
+				calculateUtilizedKM();
+			}
+		},
+		error: function () {
+			console.log("Error fetching last reported KM");
+		}
+	});
+}
 
 	// ── LOADING: Reported KM → Started KM mirror ──────────────────────────────
 	$(document).on("input change", "#tr_departedkm", function () {
