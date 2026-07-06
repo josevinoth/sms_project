@@ -48,7 +48,8 @@ def tripdetail_enquiry(request, enquiry_id, trip_num):
         ).order_by('-id').first()
         if not trip:
             request.session['enquiry_num_id'] = enquiry_id
-            messages.warning(request, "Trip number was not found for this enquiry. Please create or select the trip again.")
+            messages.warning(request,
+                             "Trip number was not found for this enquiry. Please create or select the trip again.")
             return redirect('tripdetail_insert')
 
         trip_id = trip.id
@@ -198,7 +199,7 @@ def tripdetail_add(request, tripdetail_id=0):
             consignment_list = ConsignmentdetailInfo.objects.filter(
                 co_enquirynumber=enquiry_num_id
             ).exclude(id__in=used_consignments)
-            
+
             trip_det_form.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(id=enquiry_num_id)
             trip_det_form.fields['tr_consignmentnumber'].queryset = consignment_list
 
@@ -221,7 +222,7 @@ def tripdetail_add(request, tripdetail_id=0):
             enquiry_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_enquirynumber
             enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
             tripdetail = TripdetailInfo.objects.get(pk=tripdetail_id)
-            
+
             # ✅ Sync Driver/Vehicle info with LATEST Allotment if trip is not closed
             # (Statuses: 1: Open/Started, 8: Awaiting Approval)
             if tripdetail.tc_financestatus_id in [1, 8] and tripdetail.tr_consignmentnumber:
@@ -230,9 +231,10 @@ def tripdetail_add(request, tripdetail_id=0):
                     latest_allotment = Vehicle_allotmentInfo.objects.filter(
                         va_enquirynumber=enquiry_num_id
                     ).filter(
-                        Q(va_vehiclenumber__vm_registrationnumber=truck_number.strip()) | Q(va_vehiclenumber_mkt=truck_number.strip())
+                        Q(va_vehiclenumber__vm_registrationnumber=truck_number.strip()) | Q(
+                            va_vehiclenumber_mkt=truck_number.strip())
                     ).last()
-                    
+
                     if latest_allotment:
                         needs_save = False
                         if tripdetail.tr_drivername != latest_allotment.va_drivername:
@@ -256,10 +258,10 @@ def tripdetail_add(request, tripdetail_id=0):
                         if tripdetail.tr_vehicletype_placed != latest_allotment.va_vehicletype_placed:
                             tripdetail.tr_vehicletype_placed = latest_allotment.va_vehicletype_placed
                             needs_save = True
-                            
+
                         if needs_save:
                             tripdetail.save()
-            
+
             request.session['ses_tripdetail_id'] = tripdetail_id
 
             trip_det_form = TripdetailaddForm(instance=tripdetail)
@@ -277,14 +279,24 @@ def tripdetail_add(request, tripdetail_id=0):
                     # Fallback mapping for older records
                     if status_selected in [4, 5, 6, 7, 9]:
                         status_selected = 2
-                print('status_selected', status_selected)
+
+                # ✅ Auto-progress status based on filled data
+                # Only auto-progress if still at "Awaiting Approval" (8)
+                if status_selected == 8:
+                    if trip_instance.tr_reporteddate_pickup:
+                        status_selected = 2  # Trip Closed
+                    elif trip_instance.tr_departeddate:
+                        status_selected = 1  # Trip Started
+                    elif trip_instance.tr_departeddate_pickup:
+                        status_selected = 8  # Still Awaiting
+
+                print('status_selected (auto)', status_selected)
             except ObjectDoesNotExist:
                 status_selected = None
-
             allowed_statuses = [1, 2, 3, 8, 10, 11]
             if status_selected and status_selected not in allowed_statuses:
                 allowed_statuses.append(status_selected)
-                
+
             status_list = Tripstatusinfo.objects.filter(id__in=allowed_statuses)
 
             consignment_selected = trip_instance.tr_consignmentnumber.id if trip_instance.tr_consignmentnumber else None
@@ -299,7 +311,7 @@ def tripdetail_add(request, tripdetail_id=0):
             consignment_list = ConsignmentdetailInfo.objects.filter(
                 co_enquirynumber=enquiry_num_id
             ).exclude(id__in=used_consignments)
-            
+
             trip_det_form.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(id=enquiry_num_id)
             trip_det_form.fields['tr_consignmentnumber'].queryset = consignment_list
 
@@ -468,12 +480,14 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip.td_pod = data
 
                 trip.save()
-                if tripclosurefiles_form.is_valid():
-                    tripclosurefiles_form.save()
-                else:
-                    for field, errors in tripclosurefiles_form.errors.items():
-                        for error in errors:
-                            messages.warning(request, f"Attachment not saved - {field}: {error}")
+
+                # ✅ Auto-advance status if data filled but status still "Awaiting Approval"
+                if trip.tc_financestatus_id == 8:
+                    if trip.tr_departeddate:
+                        trip.tc_financestatus_id = 1
+                        trip.tr_operational_status_id = 1
+                        trip.save(update_fields=['tc_financestatus', 'tr_operational_status'])
+                        messages.info(request, "Trip status automatically updated to 'Trip Started'.")
 
                 # ✅ AUTOMATED EMAIL TRIGGERS
                 def trigger_alert(alert_func, label):
@@ -632,7 +646,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip.tr_operational_status_id = manual_status_id
                     # Prevent reverting advanced finance statuses back to Trip Closed (2)
                     if manual_status_id == 2 and trip.tc_financestatus_id in [4, 5, 6, 7, 9]:
-                        pass # keep the advanced status
+                        pass  # keep the advanced status
                     else:
                         trip.tc_financestatus_id = manual_status_id
 
@@ -1190,7 +1204,7 @@ def load_truck_details(request):
         # Fetch vehicle details from Vehicle_allotmentInfo (search in both fields)
         vehicle_info = filtered_records.filter(
             Q(va_vehiclenumber__vm_registrationnumber=truck_number) | Q(va_vehiclenumber_mkt=truck_number)
-        ).last()  #  Fix: Get LATEST matching record (for replacements)
+        ).last()  # Fix: Get LATEST matching record (for replacements)
 
         if vehicle_info:
             data = {
@@ -1745,6 +1759,7 @@ def get_trip_email_recipients(request):
 
         if email_obj:
             to = email_obj.em_to_names or ""
+
             cc = email_obj.em_cc_names or ""
             recipients = to
             if cc:

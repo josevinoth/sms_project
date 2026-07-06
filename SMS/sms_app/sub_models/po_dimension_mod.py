@@ -32,6 +32,7 @@ class POdimension(models.Model):
     pod_gst_rate = models.FloatField(default=0.0, blank=True, null=True)
     pod_gst_amount = models.FloatField(default=0.0, blank=True, null=True)
     pod_total_value = models.FloatField(default=0.0, blank=True, null=True)
+    pod_value = models.FloatField(default=0.0, blank=True, null=True, verbose_name="PO Value (₹)")
     pod_returnable_status = models.CharField(max_length=50, choices=[('Returnable', 'Returnable'), ('Non-Returnable', 'Non-Returnable')], default='Non-Returnable')
 
     class Meta:
