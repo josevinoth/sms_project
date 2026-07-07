@@ -246,6 +246,10 @@
         document.getElementById("sqft").value = sqft.toFixed(2);
         var total_sqft = sqft * quantity;
         document.getElementById("total_sqft").value = total_sqft.toFixed(2);
+        
+        if (typeof change_cost_type === 'function') {
+            change_cost_type();
+        }
     }
 
     function run_all_calculations() {

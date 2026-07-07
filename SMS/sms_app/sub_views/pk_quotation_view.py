@@ -52,6 +52,15 @@ def pk_quotation_add(request, quotation_id=0):
 
             # form = PkquotationForm(initial=initial_data)
             form = PkquotationForm
+            # Calculate total_cft_display dynamically for the assessment
+            from django.db.models import Sum, F
+            aggregate_cft = PkquotationInfo.objects.filter(
+                pkqt_assessment_num=na_assessment_num_id,
+                pkqt_cost_type=8,
+                pkqt_stock_type__in=[1, 4, 5]
+            ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
+            project_total_cft = round(aggregate_cft, 3) if aggregate_cft is not None else 0.0
+
             context = {
                 'form': form,
                 'first_name': first_name,
@@ -62,13 +71,23 @@ def pk_quotation_add(request, quotation_id=0):
                 'role': role,
                 'role_id': role_id,
                 'quotation_list': PkquotationInfo.objects.filter(pkqt_assessment_num=na_assessment_num_id),
-                'total_cft_display': request.session.get('total_cft_display', 0),
+                'total_cft_display': project_total_cft,
 
             }
         else:
             print("Inside PK quotation get edit")
             quotation = PkquotationInfo.objects.get(pk=quotation_id)
             form = PkquotationForm(instance=quotation)
+            
+            # Calculate total_cft_display dynamically for the assessment
+            from django.db.models import Sum, F
+            aggregate_cft = PkquotationInfo.objects.filter(
+                pkqt_assessment_num=na_assessment_num_id,
+                pkqt_cost_type=8,
+                pkqt_stock_type__in=[1, 4, 5]
+            ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
+            project_total_cft = round(aggregate_cft, 3) if aggregate_cft is not None else 0.0
+            
             context = {
                 'form': form,
                 'first_name': first_name,
@@ -77,6 +96,7 @@ def pk_quotation_add(request, quotation_id=0):
                 'role_id': role_id,
                 'na_assessment_num_id': na_assessment_num_id,
                 'quotation_list': PkquotationInfo.objects.filter(pkqt_assessment_num=na_assessment_num_id),
+                'total_cft_display': project_total_cft,
             }
         return render(request, "asset_mgt_app/pk_quotation_add.html", context)
 

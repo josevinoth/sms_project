@@ -1,3 +1,4 @@
+{% if po_dimension_list %}
 <div class="table-responsive">
     <table id="po_dimension_list" class="table modern-table">
         <thead>
@@ -10,6 +11,7 @@
                 <th>H</th>
                 <th>Qty</th>
                 <th class="text-primary">Remaining</th>
+                <th class="text-success">PO Value (₹)</th>
                 <th class="text-center">Edit</th>
                 <th class="text-center">Delete</th>
             </tr>
@@ -25,6 +27,7 @@
                 <td>{{ po_dimensioninfo.pod_height }}</td>
                 <td class="font-weight-bold">{{ po_dimensioninfo.pod_quantity }}</td>
                 <td class="font-weight-bold text-primary">{{ po_dimensioninfo.remaining_qty|floatformat:2 }}</td>
+                <td class="font-weight-bold text-success">{% if po_dimensioninfo.pod_value %}₹{{ po_dimensioninfo.pod_value }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
                 <td class="text-center">
                     <a href="{% url 'po_dimension_update' po_dimensioninfo.id %}" class="btn btn-outline-primary btn-sm" title="Edit">
                         <i class="far fa-edit"></i>
@@ -39,25 +42,26 @@
                     </form>
                 </td>
             </tr>
-            {% empty %}
-            <tr>
-                <td colspan="10" class="text-center py-5" style="background: var(--bg-section);">
-                    <div class="mb-3">
-                        <i class="fas fa-ruler-combined fa-3x text-muted opacity-25"></i>
-                    </div>
-                    <p class="text-muted italic mb-3">No dimension data found for this Sales Order.</p>
-                    <a href="{% url 'po_dimension_insert' %}" class="btn-modern btn-submit py-2 px-4 shadow-sm" style="background: var(--accent-blue); text-decoration: none; font-size: 0.9rem;">
-                        <i class="fas fa-plus-circle"></i> ADD DIMENSIONS NOW
-                    </a>
-                </td>
-            </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+{% else %}
+<div class="text-center py-5 rounded" style="background: var(--bg-section); border: 1px dashed #ced4da;">
+    <div class="mb-3">
+        <i class="fas fa-ruler-combined fa-3x text-muted opacity-25"></i>
+    </div>
+    <p class="text-muted italic mb-3">No dimension data found for this Sales Order.</p>
+    <a href="{% url 'po_dimension_insert' %}" class="btn-modern btn-submit py-2 px-4 shadow-sm" style="background: var(--accent-blue); text-decoration: none; font-size: 0.9rem;">
+        <i class="fas fa-plus-circle"></i> ADD DIMENSIONS NOW
+    </a>
+</div>
+{% endif %}
 
 <script>
-$(document).ready(function() {
+// Do NOT initialize DataTable on document.ready — the table is inside a collapsed div.
+// Instead, initialize it the first time the accordion is opened.
+$(document).on('shown.bs.collapse', '#collapseTwo', function () {
     if (!$.fn.DataTable.isDataTable('#po_dimension_list')) {
         $('#po_dimension_list').DataTable({
             dom: "<'row mb-2'<'col-sm-6'B><'col-sm-6'f>>" +

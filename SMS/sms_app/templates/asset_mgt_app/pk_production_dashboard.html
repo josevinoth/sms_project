@@ -72,10 +72,10 @@
                                     data-job-no="{{ job.cs_job_no }}"
                                     data-type="material"
                                     onchange="handleStatusChange(this)">
-                                <option value="Pending"   {% if tracker.pj_material_returned_flag == 'Pending' %}selected{% endif %}>⏳ Pending</option>
-                                <option value="Yes"       {% if tracker.pj_material_returned_flag == 'Yes' %}selected{% endif %}>🔼 Return In Progress</option>
-                                <option value="No"        {% if tracker.pj_material_returned_flag == 'No' %}selected{% endif %}>⏺️ No Return</option>
-                                <option value="Returned"  {% if tracker.pj_material_returned_flag == 'Returned' %}selected{% endif %}>✅ Returned</option>
+                                <option value="Pending"   {% if tracker.pj_material_returned_flag == 'Pending' %}selected{% endif %}>⏳ RETURN NEEDED</option>
+                                <option value="Yes"       {% if tracker.pj_material_returned_flag == 'Yes' %}selected{% endif %}>🔼 RETURN IN PROGRESS</option>
+                                <option value="Returned"  {% if tracker.pj_material_returned_flag == 'Returned' %}selected{% endif %}>✅ RETURNED</option>
+                                <option value="No"        {% if tracker.pj_material_returned_flag == 'No' %}selected{% endif %}>⏺️ NO RETURN</option>
                             </select>
                         </td>
 
@@ -113,14 +113,14 @@
                         <td>
                             <div class="d-flex flex-column gap-1 align-items-center">
                                 {% if row.qc_record %}
-                                    <a href="{% url 'pk_quality_check_pdf' row.qc_record.id %}" class="btn btn-sm btn-outline-info w-100 py-1" style="font-size: 0.7rem; text-decoration: none;">
+                                    <a href="{% url 'pk_quality_check_pdf' row.qc_record.id %}" class="btn btn-sm btn-outline-info w-100 py-1 px-1" style="font-size: 0.7rem; text-decoration: none;">
                                         <i class="fas fa-file-pdf mr-1"></i> QC Report
                                     </a>
                                 {% endif %}
 
                                 {% if tracker.pj_material_returned_flag == 'Yes' %}
                                     <a href="{% url 'pk_production_return_detail' job.cs_job_no %}"
-                                       class="btn btn-sm w-100 py-1"
+                                       class="btn btn-sm w-100 py-1 px-1"
                                        style="font-size:0.7rem; text-decoration:none; background:#e67e22; color:#fff; border:none;">
                                         <i class="fas fa-undo-alt mr-1"></i> Return Process
                                     </a>
@@ -130,22 +130,22 @@
                                     {% if row.is_onsite %}
                                         {# On-Site -> Delivery Challan #}
                                         {% if row.dc_record %}
-                                            <a href="{% url 'packing_delivery_pdf' row.dc_record.id %}" class="btn btn-sm btn-outline-success w-100 py-1" style="font-size: 0.7rem; text-decoration: none;">
+                                            <a href="{% url 'packing_delivery_pdf' row.dc_record.id %}" class="btn btn-sm btn-outline-success w-100 py-1 px-1" style="font-size: 0.7rem; text-decoration: none;">
                                                 <i class="fas fa-file-invoice mr-1"></i> DC PDF
                                             </a>
                                         {% else %}
-                                            <a href="{% url 'packing_delivery' %}?assessment_id={{ job.cs_assessment_num.id }}&po_id={{ job.cs_customer_po.id }}" class="btn btn-sm btn-primary w-100 py-1" style="font-size: 0.7rem; text-decoration: none; background: var(--accent-blue); border: none;">
+                                            <a href="{% url 'packing_delivery' %}?assessment_id={{ job.cs_assessment_num.id }}&po_id={{ job.cs_customer_po.id }}" class="btn btn-sm btn-primary w-100 py-1 px-1" style="font-size: 0.7rem; text-decoration: none; background: var(--accent-blue); border: none;">
                                                 <i class="fas fa-plus mr-1"></i> Create DC
                                             </a>
                                         {% endif %}
                                     {% else %}
                                         {# In-House -> Gate Pass #}
                                         {% if row.gp_record %}
-                                            <a href="{% url 'packing_gate_pdf' row.gp_record.id %}" class="btn btn-sm btn-outline-warning w-100 py-1" style="font-size: 0.7rem; text-decoration: none;">
+                                            <a href="{% url 'packing_gate_pdf' row.gp_record.id %}" class="btn btn-sm btn-outline-warning w-100 py-1 px-1" style="font-size: 0.7rem; text-decoration: none;">
                                                 <i class="fas fa-file-alt mr-1"></i> GP PDF
                                             </a>
                                         {% else %}
-                                            <a href="{% url 'packing_gate' %}?job_no={{ job.cs_job_no }}" class="btn btn-sm btn-info w-100 py-1" style="font-size: 0.7rem; text-decoration: none;">
+                                            <a href="{% url 'packing_gate' %}?job_no={{ job.cs_job_no }}" class="btn btn-sm btn-info w-100 py-1 px-1" style="font-size: 0.7rem; text-decoration: none;">
                                                 <i class="fas fa-plus mr-1"></i> Create GP
                                             </a>
                                         {% endif %}

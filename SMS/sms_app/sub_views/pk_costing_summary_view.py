@@ -33,11 +33,11 @@ def costingsummary_add(request,costingsummary_id=0):
             }
         else:
             print('Inside costing summary Get edit')
-            costingsummary=PkcostingsummaryInfo.objects.get(pk=costingsummary_id)
-            needassessment_num = PkcostingsummaryInfo.objects.get(pk=costingsummary_id).cs_assessment_num
+            costingsummary = get_object_or_404(PkcostingsummaryInfo, pk=costingsummary_id)
+            needassessment_num = costingsummary.cs_assessment_num
             needassessment_id = PkneedassessmentInfo.objects.get(na_assessment_num=needassessment_num).id
-            customer_name_id = PkcostingsummaryInfo.objects.get(pk=costingsummary_id).cs_customer_name.id
-            customer_po_id = PkcostingsummaryInfo.objects.get(pk=costingsummary_id).cs_customer_po.id
+            customer_name_id = costingsummary.cs_customer_name.id if costingsummary.cs_customer_name else None
+            customer_po_id = costingsummary.cs_customer_po.id if costingsummary.cs_customer_po else None
             request.session['na_assessment_id'] = needassessment_id
             request.session['na_customer_name_id'] = customer_name_id
             request.session['ses_customer_po_id'] = customer_po_id
@@ -143,6 +143,35 @@ def costingsummary_add(request,costingsummary_id=0):
             costingsummary.refresh_from_db()
             form = PkcostingsummaryForm(instance=costingsummary)
 
+            # Calculate Job Type wise totals
+            job_type_dict = {}
+            for item in costing_list:
+                job_type = str(item.ct_requirement) if item.ct_requirement else "None"
+                cost = float(item.ct_totalbox_cost or 0)
+                if job_type not in job_type_dict:
+                    po_num = "—"
+                    po_value = "—"
+                    if item.ct_requirement:
+                        po_dim = POdimension.objects.filter(pod_nad=item.ct_requirement).first()
+                        if po_dim:
+                            if po_dim.pod_po_num:
+                                po_num = po_dim.pod_po_num.po_num
+                            if po_dim.pod_value:
+                                po_value = po_dim.pod_value
+                    
+                    job_type_dict[job_type] = {'total': 0.0, 'po_num': po_num, 'po_value': po_value}
+                job_type_dict[job_type]['total'] += cost
+                
+            job_type_totals = [
+                {
+                    'job_type': jt, 
+                    'total': round(data['total'], 2), 
+                    'po_num': data['po_num'], 
+                    'po_value': data['po_value']
+                } 
+                for jt, data in job_type_dict.items() if jt != "None"
+            ]
+
             context={
                     'form': form,
                     'first_name': first_name,
@@ -164,6 +193,7 @@ def costingsummary_add(request,costingsummary_id=0):
                     'retrival_list': costing_list.filter(ct_cost_type=8, ct_stock_status__in=[1, 3]),
                     'acceptance_list': costing_list.filter(ct_cost_type=8, ct_stock_status=2),
                     'tracker_flags': get_tracker_flags(needassessment_id),
+                    'job_type_totals': job_type_totals,
                     }
         return render(request, "asset_mgt_app/pk_costingsummary_add.html", context)
     else:
@@ -189,7 +219,7 @@ def costingsummary_add(request,costingsummary_id=0):
                 return redirect(request.META['HTTP_REFERER'])
         else:
             print("Inside pk_costing_summary post edit")
-            costingsummary = PkcostingsummaryInfo.objects.get(pk=costingsummary_id)
+            costingsummary = get_object_or_404(PkcostingsummaryInfo, pk=costingsummary_id)
             form = PkcostingsummaryForm(request.POST,instance=costingsummary)
             if form.is_valid():
                 summary = form.save()

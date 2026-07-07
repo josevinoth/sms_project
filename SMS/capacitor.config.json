@@ -3,7 +3,8 @@
   "appName": "BVM SMS",
   "webDir": "sms_app/templates",
   "server": {
-    "url": "https://sms.thebvmgroup.com/SMS/customer_login/2/",
+    "url": "http://sms.thebvmgroup.com/SMS/customer_login/2/",
+    "cleartext": true,
     "allowNavigation": [
       "sms.thebvmgroup.com",
       "localhost"

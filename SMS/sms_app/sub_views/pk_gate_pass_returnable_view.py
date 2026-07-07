@@ -173,12 +173,7 @@ def gate_return_pdf(request, gate_id):
 
     print("Warehouse Location:", wh_location)
     
-    # Fallback for HSN Code if missing
-    if not gate.gp_hsn_code and gate.gp_assessment_num:
-        from ..models import Nadimension
-        hsn = Nadimension.objects.filter(na_assessment_num=gate.gp_assessment_num).values_list('na_hsn_code', flat=True).first()
-        if hsn:
-            gate.gp_hsn_code = hsn
+    # Removed faulty HSN fallback since Nadimension does not have an HSN code field
 
     if not wh_location:
         wh_location = "BVM Chennai"

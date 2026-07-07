@@ -293,22 +293,52 @@
 
     <!-- Sub-Section: Items Management -->
     <div class="mt-2">
-        <div class="modern-header d-flex justify-content-between align-items-center mb-4" style="background: linear-gradient(135deg, #2c3e50, #4ca1af);">
-            <h4 class="mb-0 text-white"><i class="fas fa-boxes mr-2"></i> Costed Items Breakdown</h4>
-            <div class="d-flex gap-2">
-                <a href="{% url 'costing_insert' %}" id="add_costing" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; background: var(--accent-orange); text-decoration: none;">
-                    <i class="fas fa-plus"></i> Add/Modify Items
-                </a>
-                <a id="EBOM" href="{% url 'export_costingreport' %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; background: #f39c12; text-decoration: none;">
-                    <i class="fas fa-file-excel"></i> EBOM Export
-                </a>
+        <div class="table-container-modern">
+            <div class="modern-header mb-0 d-flex justify-content-between align-items-center" style="border-radius: 8px 8px 0 0;">
+                <h4 class="mb-0 text-white"><i class="fas fa-tag mr-2"></i> Item Number &amp; Total Cost Summary</h4>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'costing_insert' %}" id="add_costing" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; background: var(--accent-orange); text-decoration: none;">
+                        <i class="fas fa-plus"></i> Add/Modify Items
+                    </a>
+                    <a id="EBOM" href="{% url 'export_costingreport' %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; background: #f39c12; text-decoration: none;">
+                        <i class="fas fa-file-excel"></i> EBOM Export
+                    </a>
+                </div>
+            </div>
+
+            <div class="p-3 bg-white" style="border-radius: 0 0 8px 8px;">
+                <div class="table-responsive">
+                    <table class="table modern-table mb-0">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Item Number (Job Type)</th>
+                                <th>PO Number</th>
+                                <th class="text-right">PO Value (₹)</th>
+                                <th class="text-right">Total Cost (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for jt in job_type_totals %}
+                            <tr class="modern-tr">
+                                <td class="text-muted">{{ forloop.counter }}</td>
+                                <td class="font-weight-bold">{{ jt.job_type }}</td>
+                                <td>{{ jt.po_num }}</td>
+                                <td class="text-right font-weight-bold text-primary">{% if jt.po_value != "—" %}₹{{ jt.po_value }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                                <td class="text-right font-weight-bold text-success" style="font-size: 1rem;">₹{{ jt.total }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">No items found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        
-        <div class="table-container-modern p-0" style="border: none; background: transparent; box-shadow: none;">
-            {% include "asset_mgt_app/pk_costing_list_WOH.html" %}
-        </div>
     </div>
+
 
     <!-- Nested Workflows (Retrieval & Acceptance) -->
     {% if retrival_list %}
@@ -422,7 +452,6 @@
 
         if(document.getElementById("cs_assessment_num").value == "") { $('#add_costing').addClass('disable_a_href'); }
 
-        $('#costing_list').DataTable({ scrollX: true, dom: 'Bfrtip', buttons: ['copy', 'excel', 'print'] });
 
         var initial_po_val = $("#cs_customer_po").val();
         if (initial_po_val != '') { $("#cs_customer_po").attr("data-initial-val", initial_po_val); }

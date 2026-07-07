@@ -3,7 +3,89 @@
 
 {% block content %}
 
-<div class="container-fluid py-4">
+<style>
+    .consignment-detail-modern {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+
+    .consignment-detail-modern .modern-header {
+        margin-bottom: 0.65rem !important;
+        padding: 0.85rem 1.25rem !important;
+    }
+
+    .consignment-detail-modern .modern-header h3 {
+        font-size: 1.05rem !important;
+    }
+
+    .consignment-detail-modern .form-card-compact {
+        padding: 0.75rem 1rem !important;
+    }
+
+    .consignment-detail-modern .form-section {
+        padding: 0.85rem 1rem !important;
+        border-radius: 12px !important;
+    }
+
+    .consignment-detail-modern .form-section-title {
+        margin-bottom: 0.55rem !important;
+        font-size: 0.78rem !important;
+    }
+
+    .consignment-detail-modern .form-group-modern {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .consignment-detail-modern .form-label-modern {
+        margin-bottom: 0.22rem !important;
+        font-size: 0.72rem !important;
+    }
+
+    .consignment-detail-modern .form-control-modern,
+    .consignment-detail-modern .form-control,
+    .consignment-detail-modern select {
+        min-height: 32px !important;
+        height: 32px !important;
+        padding: 0.35rem 0.75rem !important;
+        font-size: 0.78rem !important;
+        border-radius: 8px !important;
+    }
+
+    .consignment-detail-modern textarea#co_remarks {
+        min-height: 48px !important;
+        height: 48px !important;
+        resize: vertical;
+    }
+
+    .consignment-detail-modern .remarks-row {
+        margin-top: 0.65rem !important;
+    }
+
+    .consignment-detail-modern .message-row,
+    .consignment-detail-modern .form-actions {
+        margin-top: 0.55rem !important;
+    }
+
+    .consignment-detail-modern .alert {
+        margin-bottom: 0 !important;
+        padding-top: 0.25rem !important;
+        padding-bottom: 0.25rem !important;
+    }
+
+    .consignment-detail-modern .btn-modern {
+        min-height: 30px;
+        padding-top: 0.38rem !important;
+        padding-bottom: 0.38rem !important;
+        font-size: 0.78rem !important;
+        border-radius: 8px !important;
+    }
+
+    .consignment-detail-modern .goods-card {
+        margin-top: 0.75rem !important;
+    }
+</style>
+
+<div class="container-fluid py-4 consignment-detail-modern">
 
     <!-- ══ Page Header ══ -->
     <div class="modern-header d-flex justify-content-between align-items-center mb-4">
@@ -36,7 +118,7 @@
     <form method="POST" action="">
         {% csrf_token %}
 
-        <div class="modern-card" style="padding:1.5rem !important; border-top:none;">
+        <div class="modern-card form-card-compact" style="border-top:none;">
             <div class="row row-compact" id="consignment_details_id">
 
                 <!-- ── Column 1: Consignment Info & Vehicle ── -->
@@ -162,21 +244,21 @@
             </div><!-- /.row -->
 
             <!-- ── Remarks Section (Compact Height) ── -->
-            <div class="row mt-3">
+            <div class="row remarks-row">
                 <div class="col-12">
                     <div class="form-section">
                         <div class="form-section-title">
                             <i class="fas fa-comment-alt"></i> Remarks
                         </div>
                         <div class="form-group-modern">
-                            {% render_field con_det_form.co_remarks class="form-control form-control-modern" id="co_remarks" style="height:36px;" %}
+                            {% render_field con_det_form.co_remarks class="form-control form-control-modern" id="co_remarks" rows="2" %}
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Messages -->
-            <div class="row mt-2">
+            <div class="row message-row">
                 <div class="col-12 text-center">
                     <div class="message text-center">
                         {% for message in messages %}
@@ -189,7 +271,7 @@
             </div>
 
             <!-- Form Actions -->
-            <div class="d-flex justify-content-between align-items-center mt-4 px-2">
+            <div class="d-flex justify-content-between align-items-center form-actions px-2">
                 <button type="submit" class="btn-modern btn-submit px-5" id="consignment_details_submit">
                     <i class="fas fa-check mr-2"></i> Submit
                 </button>
@@ -202,7 +284,7 @@
     </form>
 
     <!-- ══ Consignment Goods Section ══ -->
-    <div class="modern-card mt-4 p-0" style="overflow:hidden; border-radius:20px;">
+    <div class="modern-card goods-card p-0" style="overflow:hidden; border-radius:20px;">
         <div class="modern-list-header px-4 py-3 d-flex justify-content-between align-items-center"
              style="margin-bottom:0; border-radius:0;">
             <span class="text-white"

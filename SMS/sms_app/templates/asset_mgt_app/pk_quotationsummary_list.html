@@ -116,6 +116,7 @@
 <script>
     $(document).ready(function() {
         $('#quotationsummary_list').DataTable({
+            destroy: true,
             order: [[0, 'desc']],
             scrollX: true,
             dom: "<'row mb-2'<'col-sm-6'B><'col-sm-6'f>>" +

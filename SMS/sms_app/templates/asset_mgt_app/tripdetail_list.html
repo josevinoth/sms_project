@@ -1,68 +1,71 @@
-{% extends "asset_mgt_app/base.html" %}
-{% block content %}
-<div class="container-fluid py-3">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-3 rounded text-center bg-info shadow-box">
-            <h3 class="mb-0 text-white">Trip Details List</h3>
-        </div>
-    </div>
-</div>
+{% extends "asset_mgt_app/base_modern.html" %}
 
-<div class="container-fluid mt-3">
-    <div class="row mb-3">
-        <div class="col-md-1">
-            <a href="{% url 'home_page' %}" class="btn btn-warning btn-block">
+{% block title %}Trip Details List | BVM Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- ══ Page Header ══ -->
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+            <i class="fas fa-truck mr-2"></i> Trip Details List
+        </h3>
+        <div>
+            <a href="{% url 'home_page' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
                 <i class="fas fa-arrow-left"></i> Back
             </a>
         </div>
     </div>
-    <div class="card shadow">
-        <div class="card-body">
-            <form method="GET" class="form-row align-items-end">
-                <div class="col-md-3">
-                    <label for="branch" class="font-weight-bold">Branch</label>
-                    <select name="branch" id="branch" class="form-control select2">
-                        <option value="">-- All Branches --</option>
-                        <option value="MAA" {% if branch == 'MAA' %}selected{% endif %}>MAA</option>
-                        <option value="BLR" {% if branch == 'BLR' %}selected{% endif %}>BLR</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="trip_status" class="font-weight-bold">Trip Status</label>
-                    <select name="trip_status" id="trip_status" class="form-control select2">
-                        <option value="">-- All Status --</option>
-                        {% for status in status_list %}
-                        <option value="{{ status.id }}" {% if selected_status == status.id %}selected{% endif %}>{{ status.status }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label for="date_from" class="font-weight-bold">From Date</label>
-                    <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
-                </div>
-                <div class="col-md-2">
-                    <label for="date_to" class="font-weight-bold">To Date</label>
-                    <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
-                </div>
-                <div class="col-md-1">
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-                <div class="col-md-1">
-                    <a href="{% url 'tripdetail_list' %}" class="btn btn-secondary btn-block">
-                        <i class="fas fa-undo"></i>
-                    </a>
-                </div>
-            </form>
-        </div>
+
+    <!-- ══ Search Form Filter Row ══ -->
+    <div class="form-section mb-4">
+        <form method="GET" class="d-flex flex-wrap align-items-end" style="gap:15px;">
+
+            <div class="form-group-modern mb-0" style="flex: 1 1 180px;">
+                <label for="branch" class="form-label-modern">Branch</label>
+                <select name="branch" id="branch" class="form-control form-control-modern select2">
+                    <option value="">-- All Branches --</option>
+                    <option value="MAA" {% if branch == 'MAA' %}selected{% endif %}>MAA</option>
+                    <option value="BLR" {% if branch == 'BLR' %}selected{% endif %}>BLR</option>
+                </select>
+            </div>
+
+            <div class="form-group-modern mb-0" style="flex: 1 1 220px;">
+                <label for="trip_status" class="form-label-modern">Trip Status</label>
+                <select name="trip_status" id="trip_status" class="form-control form-control-modern select2">
+                    <option value="">-- All Status --</option>
+                    {% for status in status_list %}
+                    <option value="{{ status.id }}" {% if selected_status == status.id %}selected{% endif %}>{{ status.status }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group-modern mb-0" style="flex: 1 1 160px;">
+                <label for="date_from" class="form-label-modern">From Date</label>
+                <input type="date" name="date_from" id="date_from" class="form-control form-control-modern" value="{{ date_from }}">
+            </div>
+
+            <div class="form-group-modern mb-0" style="flex: 1 1 160px;">
+                <label for="date_to" class="form-label-modern">To Date</label>
+                <input type="date" name="date_to" id="date_to" class="form-control form-control-modern" value="{{ date_to }}">
+            </div>
+
+            <div class="d-flex" style="gap:10px; flex: 0 0 auto;">
+                <button type="submit" class="btn btn-submit" style="height: 42px; border-radius: 10px; min-width: 50px;">
+                    <i class="fas fa-search"></i>
+                </button>
+                <a href="{% url 'tripdetail_list' %}" class="btn btn-cancel d-flex align-items-center justify-content-center" style="height: 42px; border-radius: 10px; min-width: 50px; text-decoration:none;">
+                    <i class="fas fa-undo"></i>
+                </a>
+            </div>
+
+        </form>
     </div>
-</div>
-<hr>
-<div class="container-fluid">
-    <div class="table-responsive shadow-box-table p-3">
-        <table class="table table-striped table-bordered" id="tripdetail_list">
-            <thead class="thead-dark">
+
+    <!-- ══ Table Container ══ -->
+    <div class="table-container-modern p-4">
+        <table id="tripdetail_list" class="table table-striped table-bordered modern-table w-100">
+            <thead>
                 <tr>
                     <th>Created On</th>
                     <th>Enquiry Number</th>
@@ -87,8 +90,11 @@
             </tbody>
         </table>
     </div>
-</div>
 
+</div>
+{% endblock content %}
+
+{% block extra_js %}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         var params = new URLSearchParams(window.location.search);
@@ -96,13 +102,14 @@
         $('#tripdetail_list').DataTable({
             processing: true,
             serverSide: true,
+            scrollX: true,
             ajax: {
                 url: "{% url 'tripdetail_list_ajax' %}",
                 data: function (d) {
-                    d.branch = params.get('branch') || '';
+                    d.branch      = params.get('branch')      || '';
                     d.trip_status = params.get('trip_status') || '';
-                    d.date_from = params.get('date_from') || '';
-                    d.date_to = params.get('date_to') || '';
+                    d.date_from   = params.get('date_from')   || '';
+                    d.date_to     = params.get('date_to')     || '';
                 }
             },
             order: [[0, 'desc']],
@@ -123,11 +130,11 @@
                 { title: "To Location" },
                 { title: "Ending KM" },
                 { title: "Ending Date & Time" },
-                { title: "Track", orderable: false },
+                { title: "Track",      orderable: false },
                 { title: "Trip Status" },
                 { title: "Updated By" },
                 { title: "Updated On" },
-                { title: "Edit", orderable: false, searchable: false },
+                { title: "Edit",   orderable: false, searchable: false },
                 { title: "Delete", orderable: false, searchable: false }
             ],
             columnDefs: [
@@ -135,9 +142,9 @@
                     targets: 11,
                     render: function (data, type, row) {
                         if (data) {
-                            return '<a href="' + data + '" target="_blank" class="btn btn-info btn-sm">Track</a>';
+                            return '<a href="' + data + '" target="_blank" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; gap:4px; font-size:0.8rem;"><i class="fas fa-map-marker-alt"></i> Track</a>';
                         } else if (row[4]) {
-                            return '<a href="{% url "track_vehicle_position" %}?vehicle=' + row[4] + '" class="btn btn-sm btn-info" target="_blank">Live Track</a>';
+                            return '<a href="{% url "track_vehicle_position" %}?vehicle=' + row[4] + '" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; gap:4px; font-size:0.8rem;" target="_blank"><i class="fas fa-satellite-dish"></i> Live Track</a>';
                         }
                         return '';
                     }
@@ -145,19 +152,19 @@
                 {
                     targets: 15,
                     render: function (data, type, row) {
-                        return '<a class="btn btn-sm btn-primary" href="/SMS/tripdetail_update/' + row[15] + '/"><i class="far fa-edit"></i></a>';
+                        return '<a class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;" href="/SMS/tripdetail_update/' + row[16] + '/"><i class="far fa-edit"></i></a>';
                     }
                 },
                 {
                     targets: 16,
                     render: function (data, type, row) {
-                        return '<form action="/SMS/tripdetail_delete/' + row[15] + '/" method="post" onsubmit="return confirm(\'Are you sure?\');">' +
+                        return '<form action="/SMS/tripdetail_delete/' + row[16] + '/" method="post" onsubmit="return confirm(\'Are you sure?\');" style="display:inline;">' +
                             '<input type="hidden" name="csrfmiddlewaretoken" value="' + getCookie('csrftoken') + '">' +
-                            '<button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash-alt"></i></button></form>';
+                            '<button type="submit" class="btn-modern btn-cancel py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;"><i class="fas fa-trash-alt"></i></button></form>';
                     }
                 }
             ],
-            dom: 'lBfrtip',
+            dom: '<"d-flex justify-content-between align-items-center mb-2"l><"d-flex justify-content-between align-items-center mb-2"Bf>rtip',
             buttons: ['copy', 'csv', 'excel', 'print']
         });
     });
@@ -177,5 +184,4 @@
         return cookieValue;
     }
 </script>
-
-{% endblock content %}
+{% endblock extra_js %}

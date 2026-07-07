@@ -483,6 +483,24 @@ def invoice_documents_add(request, trip_id):
         settlement_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(
             Q(id=9) | Q(status='Ready for Invoice'))
 
+        # Restrict huge querysets for disabled fields to speed up page loading
+        if trip.tr_enquirynumber_id:
+            settlement_form.fields['tr_enquirynumber'].queryset = settlement_form.fields['tr_enquirynumber'].queryset.filter(id=trip.tr_enquirynumber_id)
+        if trip.tr_consignmentnumber_id:
+            settlement_form.fields['tr_consignmentnumber'].queryset = settlement_form.fields['tr_consignmentnumber'].queryset.filter(id=trip.tr_consignmentnumber_id)
+        if trip.tr_departedlocation_id:
+            settlement_form.fields['tr_departedlocation'].queryset = settlement_form.fields['tr_departedlocation'].queryset.filter(id=trip.tr_departedlocation_id)
+        if trip.tr_reportedlocation_id:
+            settlement_form.fields['tr_reportedlocation'].queryset = settlement_form.fields['tr_reportedlocation'].queryset.filter(id=trip.tr_reportedlocation_id)
+        if trip.tr_vehiclesource_id:
+            settlement_form.fields['tr_vehiclesource'].queryset = settlement_form.fields['tr_vehiclesource'].queryset.filter(id=trip.tr_vehiclesource_id)
+        if trip.tr_vehicletype_id:
+            settlement_form.fields['tr_vehicletype'].queryset = settlement_form.fields['tr_vehicletype'].queryset.filter(id=trip.tr_vehicletype_id)
+        if trip.tr_vehicletype_placed_id:
+            settlement_form.fields['tr_vehicletype_placed'].queryset = settlement_form.fields['tr_vehicletype_placed'].queryset.filter(id=trip.tr_vehicletype_placed_id)
+        if trip.tr_category_id:
+            settlement_form.fields['tr_category'].queryset = settlement_form.fields['tr_category'].queryset.filter(id=trip.tr_category_id)
+
         # Disable all settlement fields except status
         for field in settlement_form.fields:
             if field not in editable_fields:
