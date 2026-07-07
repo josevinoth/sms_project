@@ -586,6 +586,29 @@ urlpatterns = [
          name='enquirynotevehicle_delete'),  # delete enquirynotevehicle
     path('enquirynotevehicle_cancel/', views.enquirynotevehicle_cancel, name='enquirynotevehicle_cancel'),
     # Cancel enquirynotevehicle
+
+    # ---- Prime Business Type – Vehicle Details ----
+    path('prime_enquiry_vehicle_list/', views.prime_enquiry_vehicle_list, name='prime_enquiry_vehicle_list'),
+    # List prime enquiry vehicles
+    path('prime_enquiry_list/', views.prime_enquiry_booking_list, name='prime_enquiry_list'),
+    path('prime_enquiry_insert/', views.prime_enquiry_vehicle_add, name='prime_enquiry_insert'),
+    path('prime_enquiry_vehicle_update/<int:pev_id>', views.prime_enquiry_vehicle_add,
+         name='prime_enquiry_vehicle_update'),  # update prime enquiry vehicle
+    path('prime_enquiry_vehicle_delete/<int:pev_id>', views.prime_enquiry_vehicle_delete,
+         name='prime_enquiry_vehicle_delete'),  # delete prime enquiry vehicle
+    path('prime_enquiry_vehicle_cancel/', views.prime_enquiry_vehicle_cancel,
+         name='prime_enquiry_vehicle_cancel'),  # cancel prime enquiry vehicle
+    path('prime_enquiry_update/<int:enquiry_num_id>/', views.prime_enquiry_vehicle_add,
+         name='prime_enquiry_update', kwargs={}),  # Prime enquiry update redirect target
+    path('prime_vehicle_allotment_insert/<int:pev_id>/', views.prime_vehicle_allotment_add,
+         name='prime_vehicle_allotment_insert'),
+    path('prime_vehicle_allotment_update/<int:vehicle_allotment_id>/', views.prime_vehicle_allotment_add,
+         name='prime_vehicle_allotment_update'),
+    path('prime_vehicle_allotment_list/', views.prime_vehicle_allotment_list,
+         name='prime_vehicle_allotment_list'),
+    path('prime_vehicle_simplified_replace/', views.prime_vehicle_simplified_replace,
+         name='prime_vehicle_simplified_replace'),
+
     path('consignmentgoods_list/', views.consignmentgoods_list, name='consignmentgoods_list'),  # List consignmentgoods
     path('consignmentgoods_insert/', views.consignmentgoods_add, name='consignmentgoods_insert'),
     # Add consignmentgoods

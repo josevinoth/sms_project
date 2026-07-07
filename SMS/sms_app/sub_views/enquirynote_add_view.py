@@ -148,7 +148,7 @@ def enquirynote_list(request):
     # Use select_related for foreign keys to reduce queries
     enquirynote_queryset = EnquirynoteInfo.objects.select_related(
         'en_customername', 'en_fromlocaion', 'en_tolocation', 'en_assignedto', 'en_status'
-    )
+    ).exclude(en_enquirynumber__icontains='_ENP_')
 
     # Filter by enquiry no.
     if enquiry_number:

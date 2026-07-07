@@ -416,7 +416,7 @@ def vehicle_allotment_list(request):
     # -----------------------------
     # BASE QUERYSET
     # -----------------------------
-    enquirynote_queryset = EnquirynoteInfo.objects.all()
+    enquirynote_queryset = EnquirynoteInfo.objects.exclude(en_enquirynumber__icontains='_ENP_')
 
     from datetime import datetime, timedelta
 
