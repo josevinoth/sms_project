@@ -1,38 +1,51 @@
-{% extends "asset_mgt_app/base_1.html" %}
-{% block content %}
+{% extends "asset_mgt_app/base_modern.html" %}
 
-<!-- ================= HEADER ================= -->
-<div class="container-fluid py-3">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-4 rounded text-center bg-info shadow-box">
-            <h3 class="mb-0 text-white">Transport Invoice List</h3>
+{% block title %}Transport Invoice List | BVM Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Fix header zoom/wrap issue */
+    #trans_invoice_list thead th {
+        white-space: nowrap !important;
+        vertical-align: middle !important;
+        font-size: 0.78rem !important;
+        padding: 0.55rem 0.7rem !important;
+    }
+    #trans_invoice_list tbody td {
+        vertical-align: middle !important;
+        font-size: 0.82rem !important;
+        padding: 0.45rem 0.7rem !important;
+    }
+    /* Match header width to body in scrollX mode */
+    .dataTables_scrollHeadInner,
+    .dataTables_scrollHeadInner table {
+        width: 100% !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- ══ Page Header ══ -->
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+            <i class="fas fa-file-invoice-dollar mr-2"></i> Transport Invoice List
+        </h3>
+        <div class="d-flex" style="gap:10px;">
+            <a href="{% url 'trans_invoice_add' %}" class="btn btn-submit" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                <i class="fas fa-plus"></i> Add Invoice
+            </a>
+            <a href="{% url 'home_page' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
         </div>
     </div>
-</div>
 
-<!-- ================= ACTION BAR ================= -->
-<div class="container-fluid row">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-
-    <div class="col-md-1">
-        <a href="{% url 'trans_invoice_add' %}" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-plus"></i> Add
-        </a>
-    </div>
-</div>
-
-
-<hr>
-
-<!-- ================= TABLE ================= -->
-<div class="container-fluid">
-    <div class="table-responsive shadow-box-table p-3">
-        <table class="table table-striped table-bordered" id="trans_invoice_list">
-            <thead class="thead-dark">
+    <!-- ══ Table Container ══ -->
+    <div class="table-container-modern p-4">
+        <table id="trans_invoice_list" class="table table-striped table-bordered modern-table w-100">
+            <thead>
                 <tr>
                     <th>Invoice Date</th>
                     <th>Invoice No</th>
@@ -41,30 +54,37 @@
                     <th>GST IN</th>
                     <th>State</th>
                     <th>Total Charges</th>
-                    <th>Invoice Documents</th>
-                    <th>Tally to Excel</th>
-                    <th>Excel</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
+                    <th class="text-center">Invoice Documents</th>
+                    <th class="text-center">Tally to Excel</th>
+                    <th class="text-center">Excel</th>
+                    <th class="text-center">Edit</th>
+                    <th class="text-center">Delete</th>
                 </tr>
             </thead>
-
-
             <tbody>
                 {% for invoice in trans_invoice_list %}
                 <tr>
                     <td>{{ invoice.ti_inv_date|date:"d/m/Y" }}</td>
-                    <td>{{ invoice.ti_inv_no }}</td>
+                    <td>
+                        <span style="font-size:0.82rem; font-weight:600; color:var(--accent-blue);">
+                            {{ invoice.ti_inv_no }}
+                        </span>
+                    </td>
                     <td>{{ invoice.ti_customer_short_name }}</td>
                     <td>{{ invoice.ti_customer }}</td>
                     <td>{{ invoice.ti_gst_in }}</td>
                     <td>{{ invoice.ti_state }}</td>
-                    <td><strong>{{ invoice.ti_total }}</strong></td>
+                    <td>
+                        <span class="badge badge-pill" style="background:#3a9e96; color:#fff; font-size:0.85rem; padding:5px 12px;">
+                            &#8377; {{ invoice.ti_total }}
+                        </span>
+                    </td>
 
                     <!-- Invoice Documents -->
                     <td class="text-center">
                         {% if invoice.ti_merged_pdf %}
-                        <a href="{{ invoice.ti_merged_pdf.url }}" target="_blank" class="btn btn-sm btn-success">
+                        <a href="{{ invoice.ti_merged_pdf.url }}" target="_blank"
+                           style="color:#e05252; font-size:1.5rem;" title="View PDF">
                             <i class="fas fa-file-pdf"></i>
                         </a>
                         {% else %}
@@ -74,22 +94,24 @@
 
                     <!-- Tally to Excel -->
                     <td class="text-center">
-                        <a href="{% url 'trans_invoice_tally_excel' invoice.ti_inv_no %}" class="btn btn-sm btn-info"
-                            title="Tally to Excel">
+                        <a href="{% url 'trans_invoice_tally_excel' invoice.ti_inv_no %}"
+                           style="color:#8f6cc4; font-size:1.5rem;" title="Tally to Excel">
                             <i class="fas fa-file-invoice"></i>
                         </a>
                     </td>
 
                     <!-- Excel -->
                     <td class="text-center">
-                        <a href="{% url 'trans_invoice_excel' invoice.ti_inv_no %}" class="btn btn-sm btn-success">
+                        <a href="{% url 'trans_invoice_excel' invoice.ti_inv_no %}"
+                           style="color:#4d9e72; font-size:1.5rem;" title="Download Excel">
                             <i class="fas fa-file-excel"></i>
                         </a>
                     </td>
 
                     <!-- Edit -->
                     <td class="text-center">
-                        <a href="{% url 'trans_invoice_edit' invoice.id %}" class="btn btn-sm btn-primary">
+                        <a href="{% url 'trans_invoice_edit' invoice.id %}"
+                           style="color:#3b82f6; font-size:1.5rem;" title="Edit Invoice">
                             <i class="far fa-edit"></i>
                         </a>
                     </td>
@@ -97,9 +119,12 @@
                     <!-- Delete -->
                     <td class="text-center">
                         <form action="{% url 'trans_invoice_delete' invoice.id %}" method="post"
-                            onsubmit="return confirm('Are you sure you want to delete this invoice?');">
+                              onsubmit="return confirm('Are you sure you want to delete this invoice?');"
+                              style="display:inline; margin:0;">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-danger">
+                            <button type="submit"
+                                    style="background:none; border:none; padding:0; cursor:pointer; color:#e05252; font-size:1.5rem;"
+                                    title="Delete Invoice">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </form>
@@ -107,35 +132,30 @@
                 </tr>
                 {% endfor %}
             </tbody>
-
         </table>
     </div>
-</div>
 
-<!-- ================= DATATABLE ================= -->
+</div>
+{% endblock content %}
+
+{% block extra_js %}
 <script>
     $(document).ready(function () {
         $('#trans_invoice_list').DataTable({
             scrollX: true,
-            autoWidth: false,
+            autoWidth: true,
             responsive: false,
             order: [],
             pageLength: 10,
-            lengthMenu: [5, 10, 25, 50],
-            dom:
-                "<'row mb-2'<'col-md-6'l><'col-md-6 text-end'f>>" +
-                "<'row mb-2'<'col-md-12'B>>" +
-                "<'row'<'col-md-12'tr>>" +
-                "<'row mt-2'<'col-md-5'i><'col-md-7'p>>",
-            buttons: [
-                { extend: 'copy', className: 'btn btn-secondary btn-sm' },
-                { extend: 'csv', className: 'btn btn-secondary btn-sm' },
-                { extend: 'excel', className: 'btn btn-secondary btn-sm' },
-                { extend: 'print', className: 'btn btn-secondary btn-sm' }
+            lengthMenu: [5, 10, 25, 50, 100],
+            dom: '<"d-flex justify-content-between align-items-center mb-2"l><"d-flex justify-content-between align-items-center mb-2"Bf>rtip',
+            buttons: ['copy', 'csv', 'excel', 'print'],
+            columnDefs: [
+                { targets: [7, 8, 9, 10, 11], width: '60px', className: 'text-center' },
+                { targets: [0], width: '90px' },
+                { targets: [4], width: '130px' },
             ]
         });
     });
 </script>
-
-
-{% endblock content %}
+{% endblock extra_js %}

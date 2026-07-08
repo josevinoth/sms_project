@@ -572,9 +572,14 @@ def trans_invoice_list_woh(request, customer_id):
     # ==========================
     # FETCH LIST SHOWN BELOW
     # ==========================
-    # Capture invoice_id for filtering
+    # Capture invoice_id for filtering — guard against 'None' string or non-numeric value
     invoice_id = request.GET.get('invoice_id')
     inv_no_filter = ""
+    try:
+        invoice_id = int(invoice_id) if invoice_id else None
+    except (ValueError, TypeError):
+        invoice_id = None
+
     if invoice_id:
         master_inv = TransInvoiceInfo.objects.filter(id=invoice_id).first()
         if master_inv:

@@ -111,7 +111,9 @@
                     <th>Updated On</th>
                     <th class="text-center">Bill Attachment</th>
                     <th class="text-center">Edit</th>
+                    {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Super User' %}
                     <th class="text-center">Delete</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -178,6 +180,7 @@
                             <i class="far fa-edit"></i>
                         </a>
                     </td>
+                    {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Super User' %}
                     <td class="text-center">
                         <form method="POST" action="{% url 'market_bill_delete' bill.id %}" style="display:inline;"
                             onsubmit="return confirm('Are you sure you want to delete this record?');">
@@ -187,6 +190,7 @@
                             </button>
                         </form>
                     </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
                 {% endif %}

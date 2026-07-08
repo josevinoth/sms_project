@@ -1,251 +1,267 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
 
+
 <style>
-  /* Ensure conditional fields flow naturally in the grid */
-  .cond-field {
-    /* No special styling needed if using col classes directly, 
-       but we use this class for JS targeting */
-  }
+    .trans-invoice-modern {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+
+    .trans-invoice-modern .modern-header {
+        margin-bottom: 0.65rem !important;
+        padding: 1.5rem 2rem !important;
+    }
+
+    .trans-invoice-modern .modern-header h3 {
+        font-size: 1.4rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 1px !important;
+    }
+
+    .trans-invoice-modern .form-card-compact {
+        padding: 0.75rem 1rem !important;
+    }
+
+    .trans-invoice-modern .form-section {
+        padding: 0.85rem 1rem !important;
+        border-radius: 12px !important;
+        /* No background override — use var(--bg-section) = white from modern_css */
+    }
+
+    .trans-invoice-modern .form-section-title {
+        margin-bottom: 0.55rem !important;
+        font-size: 0.78rem !important;
+    }
+
+    .trans-invoice-modern .form-group-modern {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .trans-invoice-modern .form-label-modern {
+        margin-bottom: 0.22rem !important;
+        font-size: 0.72rem !important;
+    }
+
+    .trans-invoice-modern .form-control-modern,
+    .trans-invoice-modern .form-control,
+    .trans-invoice-modern select {
+        min-height: 32px !important;
+        height: 32px !important;
+        padding: 0.35rem 0.75rem !important;
+        font-size: 0.78rem !important;
+        border-radius: 8px !important;
+    }
+
+    .trans-invoice-modern .remarks-row {
+        margin-top: 0.65rem !important;
+    }
+
+    .trans-invoice-modern .btn-modern {
+        min-height: 30px;
+        padding-top: 0.38rem !important;
+        padding-bottom: 0.38rem !important;
+        font-size: 0.78rem !important;
+        border-radius: 8px !important;
+    }
 </style>
+
 
 <form method="POST">
   {% csrf_token %}
 
-  <div class="container-fluid">
-    <div class="card text-white bg-info mb-3" style="max-width:100%;">
+  <div class="container-fluid trans-invoice-modern">
+    
 
       <!-- ================= HEADER ================= -->
-      <div class="card-header text-center position-relative">
-        <h3 class="mb-0">Add / Update Transport Invoice</h3>
-        {% if invoice %}
-        <a href="{% url 'trans_invoice_list_woh' invoice.ti_customer.id %}?invoice_id={{ invoice.id }}"
-          class="btn btn-light btn-sm position-absolute" style="right: 20px; top: 50%; transform: translateY(-50%);">
-          <i class="fas fa-list"></i> Trans Invoice List
-        </a>
+      <div class="modern-header d-flex justify-content-between align-items-center mb-2">
+<div class="header-title">
+<h3 class="mb-0"><i class="fas fa-file-invoice"></i> Add / Update Transport Invoice</h3>
+</div>
+                {% if invoice and invoice.id %}
+        <a href="{% url 'trans_invoice_list_woh' invoice.ti_customer.id %}?invoice_id={{ invoice.id }}" class="btn btn-light btn-sm"><i class="fas fa-list"></i> Trans Invoice List</a>
         {% endif %}
       </div>
 
       <!-- ================= BODY ================= -->
-      <div class="card-body bg-light text-dark">
+      <div class="modern-card form-card-compact shadow-sm" style="background: white; border-radius: 12px;">
         {% if form.errors %}
-        <div class="container-fluid">
-          <div class="alert alert-danger fade show" role="alert">
+        <div class="alert alert-danger fade show" role="alert">
             {% for field, errors in form.errors.items %}
             {% for error in errors %}
             {{ error }}<br>
             {% endfor %}
             {% endfor %}
-          </div>
         </div>
         {% endif %}
 
-        <div class="row">
+        <div class="row row-compact">
 
           <!-- ================= COLUMN 1 ================= -->
-          <div class="col-12 col-md-3">
+          <div class="col-12 col-md-6 col-xl-3 col-compact">
+            <div class="form-section h-100">
+              <div class="form-section-title"><i class="fas fa-file-invoice"></i> Invoice Info</div>
 
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Invoice Date</span>
+              <div class="form-group-modern">
+                <label class="form-label-modern">Invoice Date</label>
+                {% render_field form.ti_inv_date type="date" class="form-control form-control-modern" %}
               </div>
-              {% render_field form.ti_inv_date type="date" class="form-control" %}
-            </div>
 
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Invoice No</span>
+              <div class="form-group-modern">
+                <label class="form-label-modern">Invoice No</label>
+                {% render_field form.ti_inv_no class="form-control form-control-modern" %}
               </div>
-              {% render_field form.ti_inv_no class="form-control" %}
-            </div>
 
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Customer Short Name</span>
+              <div class="form-group-modern">
+                <label class="form-label-modern">Customer Short Name</label>
+                {% render_field form.ti_customer class="form-control form-control-modern" %}
               </div>
-              {% render_field form.ti_customer class="form-control" %}
-            </div>
 
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Customer</span>
+              <div class="form-group-modern">
+                <label class="form-label-modern">Customer</label>
+                {% render_field form.ti_customer_short_name class="form-control form-control-modern" readonly="readonly" %}
               </div>
-              {% render_field form.ti_customer_short_name class="form-control" readonly="readonly" %}
-            </div>
 
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">GSTIN</span>
+              <div class="form-group-modern">
+                <label class="form-label-modern">GSTIN</label>
+                {% render_field form.ti_gst_in class="form-control form-control-modern" readonly="readonly" %}
               </div>
-              {% render_field form.ti_gst_in class="form-control" readonly="readonly" %}
-            </div>
 
-            <!-- 🔹 CONDITIONAL MANUAL ENTRY FIELDS (Below Customer) -->
+              <!-- 🔹 CONDITIONAL MANUAL ENTRY FIELDS -->
 
-            <!-- AAI SNO (DSV only) -->
-            <div class="cond-field cond-DSV" style="display: none;">
-              <div class="input-group input-group-sm mb-3">
-                <div class="input-group-prepend">
-                  <span class="input-group-text">AAI SNO</span>
+              <!-- AAI SNO (DSV only) -->
+              <div class="cond-field cond-DSV" style="display: none;">
+                <div class="form-group-modern">
+                  <label class="form-label-modern">AAI SNO</label>
+                  {% render_field form.ti_aai_sno class="form-control form-control-modern" %}
                 </div>
-                {% render_field form.ti_aai_sno class="form-control" %}
               </div>
-            </div>
 
-            <!-- Type of Rate (DBS only) -->
-            <div class="cond-field cond-DBS" style="display: none;">
-              <div class="input-group input-group-sm mb-3">
-                <div class="input-group-prepend">
-                  <span class="input-group-text">Adhoc Rate /Contracted Rate</span>
+              <!-- Type of Rate (DBS only) -->
+              <div class="cond-field cond-DBS" style="display: none;">
+                <div class="form-group-modern">
+                  <label class="form-label-modern">Adhoc Rate / Contracted Rate</label>
+                  {% render_field form.ti_type_of_rate class="form-control form-control-modern" %}
                 </div>
-                {% render_field form.ti_type_of_rate class="form-control" %}
               </div>
-            </div>
 
-            <!-- SOW (EIPL only) -->
-            <div class="cond-field cond-EIPL" style="display: none;">
-              <div class="input-group input-group-sm mb-3">
-                <div class="input-group-prepend">
-                  <span class="input-group-text">Billing SOW/Non BillingSOW</span>
+              <!-- SOW (EIPL only) -->
+              <div class="cond-field cond-EIPL" style="display: none;">
+                <div class="form-group-modern">
+                  <label class="form-label-modern">Billing SOW / Non Billing SOW</label>
+                  {% render_field form.ti_sow class="form-control form-control-modern" %}
                 </div>
-                {% render_field form.ti_sow class="form-control" %}
               </div>
+
             </div>
-
-
           </div>
 
           <!-- ================= COLUMN 2 ================= -->
-          <div class="col-12 col-md-3">
+          <div class="col-12 col-md-6 col-xl-3 col-compact">
+            <div class="form-section h-100">
+              <div class="form-section-title"><i class="fas fa-map-marker-alt"></i> Location &amp; Primary</div>
 
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">State</span>
+              <div class="form-group-modern">
+                <label class="form-label-modern">State</label>
+                {% render_field form.ti_state class="form-control form-control-modern" readonly="readonly" %}
               </div>
-              {% render_field form.ti_state class="form-control" readonly="readonly" %}
-            </div>
 
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Pincode</span>
+              <div class="form-group-modern">
+                <label class="form-label-modern">Pincode</label>
+                {% render_field form.ti_pincode class="form-control form-control-modern" readonly="readonly" %}
               </div>
-              {% render_field form.ti_pincode class="form-control" readonly="readonly" %}
-            </div>
 
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Transportation Charges</span>
+              <div class="form-group-modern">
+                <label class="form-label-modern">Transportation Charges</label>
+                {% render_field form.ti_transportation_charges class="form-control form-control-modern charge" %}
               </div>
-              {% render_field form.ti_transportation_charges class="form-control charge" %}
-            </div>
 
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Toll Charges</span>
+              <div class="form-group-modern">
+                <label class="form-label-modern">Toll Charges</label>
+                {% render_field form.ti_toll_charges class="form-control form-control-modern charge" %}
               </div>
-              {% render_field form.ti_toll_charges class="form-control charge" %}
+
             </div>
-
-
-
-
           </div>
 
           <!-- ================= COLUMN 3 ================= -->
-          <div class="col-12 col-md-3">
+          <div class="col-12 col-md-6 col-xl-3 col-compact">
+            <div class="form-section h-100">
+              <div class="form-section-title"><i class="fas fa-truck-loading"></i> Handling Charges</div>
 
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Parking Charges</span>
+              <div class="form-group-modern">
+                <label class="form-label-modern">Parking Charges</label>
+                {% render_field form.ti_parking_charges class="form-control form-control-modern charge" %}
               </div>
-              {% render_field form.ti_parking_charges class="form-control charge" %}
-            </div>
 
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Loading Charges</span>
+              <div class="form-group-modern">
+                <label class="form-label-modern">Loading Charges</label>
+                {% render_field form.ti_loading_charges class="form-control form-control-modern charge" %}
               </div>
-              {% render_field form.ti_loading_charges class="form-control charge" %}
-            </div>
 
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Unloading Charges</span>
+              <div class="form-group-modern">
+                <label class="form-label-modern">Unloading Charges</label>
+                {% render_field form.ti_unloading_charges class="form-control form-control-modern charge" %}
               </div>
-              {% render_field form.ti_unloading_charges class="form-control charge" %}
-            </div>
 
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Halting Charges</span>
+              <div class="form-group-modern">
+                <label class="form-label-modern">Halting Charges</label>
+                {% render_field form.ti_halting_charges class="form-control form-control-modern charge" %}
               </div>
-              {% render_field form.ti_halting_charges class="form-control charge" %}
+
             </div>
-
-
-
-
           </div>
 
           <!-- ================= COLUMN 4 ================= -->
-          <div class="col-12 col-md-3">
+          <div class="col-12 col-md-6 col-xl-3 col-compact">
+            <div class="form-section h-100">
+              <div class="form-section-title"><i class="fas fa-receipt"></i> Other &amp; Total</div>
 
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Weighment Charges</span>
-              </div>
-              {% render_field form.ti_weighment_charges class="form-control charge" %}
-            </div>
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Handling Charges</span>
-              </div>
-              {% render_field form.ti_handling_charges class="form-control charge" %}
-            </div>
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Cancellation Charges</span>
-              </div>
-              {% render_field form.ti_cancellation_charges class="form-control charge" %}
-            </div>
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text fw-bold">Total Charges</span>
+              <div class="form-group-modern">
+                <label class="form-label-modern">Weighment Charges</label>
+                {% render_field form.ti_weighment_charges class="form-control form-control-modern charge" %}
               </div>
 
-              <input type="text" id="id_ti_total" name="ti_total" class="form-control" value="{{ total_charges }}"
-                readonly>
+              <div class="form-group-modern">
+                <label class="form-label-modern">Handling Charges</label>
+                {% render_field form.ti_handling_charges class="form-control form-control-modern charge" %}
+              </div>
+
+              <div class="form-group-modern">
+                <label class="form-label-modern">Cancellation Charges</label>
+                {% render_field form.ti_cancellation_charges class="form-control form-control-modern charge" %}
+              </div>
+
+              <div class="form-group-modern">
+                <label class="form-label-modern fw-bold">Total Charges</label>
+                <input type="text" id="id_ti_total" name="ti_total" class="form-control form-control-modern" value="{{ total_charges }}" readonly>
+              </div>
+
             </div>
-
-
-
-
           </div>
 
-        </div>
+        </div><!-- /.row row-compact -->
 
         <!-- ================= ACTION BUTTONS ================= -->
-        {% if not saved %}
-        <button type="submit" class="btn btn-success">
-          <i class="fas fa-check"></i> Save
-        </button>
-        {% else %}
-        <div class="alert alert-success mt-2">
-          Invoice saved successfully
+        <div class="row mt-3 pt-2 border-top">
+          <div class="col-12 d-flex justify-content-between align-items-center" style="gap:10px;">
+            {% if not saved %}
+            <button type="submit" class="btn-modern btn-submit">
+              <i class="fas fa-check mr-1"></i> Save
+            </button>
+            {% else %}
+            <div class="alert alert-success mb-0 py-1 px-3">
+              Invoice saved successfully
+            </div>
+            {% endif %}
+            <a href="{% url 'trans_invoice_list' %}" class="btn-modern btn-cancel">
+              <i class="fas fa-times mr-1"></i> Cancel
+            </a>
+          </div>
         </div>
-        {% endif %}
-        <a href="{% url 'trans_invoice_list' %}" class="btn btn-danger float-right">
-          <i class="fas fa-times"></i> Cancel
-        </a>
-
-      </div>
-    </div>
-  </div>
+      </div><!-- /.modern-card -->
+  </div><!-- /.container-fluid trans-invoice-modern -->
 </form>
 
 <!--================ AFTER SAVE LIST =================-->

@@ -68,6 +68,10 @@ def maintenance_bill_edit(request, id):
 
 @login_required(login_url='login_page')
 def maintenance_bill_delete(request, id):
+    if request.session.get('ses_role') not in ['Admin', 'Super User']:
+        messages.error(request, "You do not have permission to delete this record.")
+        return redirect('maintenance_bill_list')
+
     bill = get_object_or_404(MaintenanceBillInfo, id=id)
     bill.delete()
     messages.success(request, "Maintenance Bill deleted successfully.")
