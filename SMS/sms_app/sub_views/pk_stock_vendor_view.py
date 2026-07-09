@@ -296,3 +296,80 @@ def pk_process_vendor_return_all(request, stock_vendor_id):
             return JsonResponse({'error': str(e)}, status=500)
         messages.error(request, f"Error processing Return All: {str(e)}")
         return redirect('pk_stock_vendor_update', stock_vendor_id)
+
+
+@login_required(login_url='login_page')
+def pk_process_vendor_return_selected(request, stock_vendor_id):
+    """
+    Return all remaining physical stock for the selected vendor bill items.
+    """
+    if request.method != "POST":
+        messages.error(request, 'Invalid request method (POST required).')
+        return redirect('pk_stock_vendor_update', stock_vendor_id)
+
+    selected_ids = request.POST.getlist('selected_items')
+    if not selected_ids:
+        messages.error(request, 'No items selected for return.')
+        return redirect('pk_stock_vendor_update', stock_vendor_id)
+
+    try:
+        with transaction.atomic():
+            created = []
+            skipped = []
+            total_returned = 0.0
+            user_id = request.session.get('ses_userID')
+            purchase_items = StockMaintenance.objects.filter(id__in=selected_ids, sm_vendor_id=stock_vendor_id, sm_stock_type_id=1)
+
+            for orig in purchase_items:
+                original_qty = float(orig.sm_count or 0)
+                remaining, already_returned, retrieved = _vendor_returnable_qty_for_purchase(orig)
+                if remaining <= 0:
+                    skipped.append({
+                        'partcode': orig.sm_partcode.pc_code if orig.sm_partcode else None,
+                        'purchase_number': _purchase_ref(orig),
+                        'remaining': 0,
+                    })
+                    continue
+
+                new_desc = f"Vendor Return (Selected) - Ref: {orig.sm_description or ''}"[:255]
+                cft_ratio = (remaining / original_qty) if original_qty else 0
+                return_cft = -abs(float(orig.sm_total_cft or 0) * cft_ratio)
+                return_total_price = -abs(float(orig.sm_per_unit_cost or 0) * remaining)
+
+                return_sm = StockMaintenance.objects.create(
+                    sm_stock_type_id=3,
+                    sm_invoice_date=orig.sm_invoice_date,
+                    sm_invoice_no=orig.sm_invoice_no,
+                    sm_stock_purchase_number=_purchase_ref(orig),
+                    sm_vendor=orig.sm_vendor,
+                    sm_partcode=orig.sm_partcode,
+                    sm_description=new_desc,
+                    sm_thickness=orig.sm_thickness,
+                    sm_width=orig.sm_width,
+                    sm_length=orig.sm_length,
+                    sm_uom=orig.sm_uom,
+                    sm_count=-abs(remaining),
+                    sm_cft=-abs(float(orig.sm_cft or 0) * cft_ratio),
+                    sm_total_cft=return_cft,
+                    sm_per_unit_cost=orig.sm_per_unit_cost,
+                    sm_total_price=return_total_price,
+                    sm_updated_by_id=user_id,
+                )
+
+                created.append({
+                    'partcode': orig.sm_partcode.pc_code if orig.sm_partcode else None,
+                    'purchase_number': _purchase_ref(orig),
+                    'qty_returned': remaining,
+                    'return_id': return_sm.id,
+                })
+                total_returned += remaining
+
+        if created:
+            messages.success(request, f"Successfully created {len(created)} return entries (total qty {total_returned}).")
+        else:
+            messages.info(request, "No items were eligible for return from the selected ones.")
+        return redirect('pk_stock_vendor_update', stock_vendor_id)
+
+    except Exception as e:
+        messages.error(request, f"Error processing selected return: {str(e)}")
+        return redirect('pk_stock_vendor_update', stock_vendor_id)

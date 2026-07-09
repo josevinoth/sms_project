@@ -53,7 +53,6 @@ def pk_quotation_add(request, quotation_id=0):
             # form = PkquotationForm(initial=initial_data)
             form = PkquotationForm
             # Calculate total_cft_display dynamically for the assessment
-            from django.db.models import Sum, F
             aggregate_cft = PkquotationInfo.objects.filter(
                 pkqt_assessment_num=na_assessment_num_id,
                 pkqt_cost_type=8,
@@ -80,7 +79,6 @@ def pk_quotation_add(request, quotation_id=0):
             form = PkquotationForm(instance=quotation)
             
             # Calculate total_cft_display dynamically for the assessment
-            from django.db.models import Sum, F
             aggregate_cft = PkquotationInfo.objects.filter(
                 pkqt_assessment_num=na_assessment_num_id,
                 pkqt_cost_type=8,

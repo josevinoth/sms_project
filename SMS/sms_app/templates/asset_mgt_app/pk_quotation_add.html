@@ -461,7 +461,7 @@
             $('#pkqt_days').removeClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
             var quantity = parseInt(document.getElementById("pkqt_quantity_req").value) || 0;
-            var days = parseInt(document.getElementById("pkqt_days").value) || 1; // Default to 1 to avoid 0 cost
+            var days = parseFloat(document.getElementById("pkqt_days").value) || 1;
             var totalCost = rate * days * quantity;
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
@@ -538,7 +538,7 @@
             $('#pkqt_days').removeClass('disable_a_href');
             var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
             var quantity = parseInt(document.getElementById("pkqt_quantity_req").value) || 0;
-            var days = parseInt(document.getElementById("pkqt_days").value) || 0;
+var days = parseFloat(document.getElementById("pkqt_days").value) || 0;
             var totalCost = rate * days * quantity;
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2)
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
