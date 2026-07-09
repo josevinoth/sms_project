@@ -48,11 +48,11 @@ def costingsummary_add(request,costingsummary_id=0):
             
             if job_no:
                 # Job-based summary (Group multiple NAs by Job No)
-                costing_list = PkcostingInfo.objects.filter(ct_job_no=job_no, ct_customer_po=customer_po_id)
+                costing_list = PkcostingInfo.objects.filter(ct_job_no=job_no, ct_customer_po=customer_po_id).order_by('-id')
                 base_filter = {'ct_job_no': job_no, 'ct_customer_po': customer_po_id}
             else:
                 # Legacy / Manual summary (Single NA)
-                costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_customer_po=customer_po_id)
+                costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_customer_po=customer_po_id).order_by('-id')
                 base_filter = {'ct_assessment_num': needassessment_id, 'ct_customer_po': customer_po_id}
 
             Invoice = PkcostingInfo.objects.filter(**base_filter).values_list('ct_stock_status', flat=True)
