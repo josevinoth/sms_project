@@ -12,7 +12,7 @@ from django.utils import timezone
 from .send_department_email import send_department_email
 from ..forms import TripclosurefilesForm, TripdetailaddForm
 from ..models import Vehicle_allotmentInfo, ConsignmentdetailInfo, Tripstatusinfo, Trip_closure_files_Info, \
-    EnquirynoteInfo, TripdetailInfo, VehiclemasterInfo, TripHighvalueInfo, Emailmaster, Email_type
+    EnquirynoteInfo, TripdetailInfo, VehiclemasterInfo, TripHighvalueInfo, Emailmaster, Email_type, User_extInfo, TransInvoiceInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
@@ -325,9 +325,16 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip_instance.tr_approval and trip_instance.tr_approval.ta_approval_status_id == 1
             )
 
+            # Check user role and invoice status
+            user_ext = User_extInfo.objects.filter(user_id=user_id).first()
+            user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
+            is_invoiced = TransInvoiceInfo.objects.filter(ti_trip=trip_instance).exists()
+
             context = {
                 'first_name': first_name,
                 'user_id': user_id,
+                'user_role': user_role,
+                'is_invoiced': is_invoiced,
                 'trip_det_form': trip_det_form,
                 'tripclosurefiles_form': tripclosurefiles_form,
                 'enquiry_num_id': enquiry_num_id,
