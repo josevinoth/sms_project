@@ -11,7 +11,7 @@ from django.shortcuts import render, redirect
 @login_required(login_url='login_page')
 def delivery_challan_add(request, delivery_id=0):
     first_name = request.session.get('first_name')
-    delivery_list = Pkdeliverychallan.objects.all()
+    delivery_list = Pkdeliverychallan.objects.all().order_by('-id')
     if request.method == "GET":
         if delivery_id == 0:
             print("I am inside Get add dispatch")
@@ -59,7 +59,7 @@ def delivery_challan_add(request, delivery_id=0):
 @login_required(login_url='login_page')
 def delivery_challan_list(request):
     first_name = request.session.get('first_name')
-    delivery_list = Pkdeliverychallan.objects.all()
+    delivery_list = Pkdeliverychallan.objects.all().order_by('-id')
     context = {'delivery_list': delivery_list, 'first_name': first_name}
     return render(request,"asset_mgt_app/pk_deliverychallan_list.html",context)
 

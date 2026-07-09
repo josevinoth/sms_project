@@ -40,6 +40,11 @@ urlpatterns = [
     path('pk_quality_check_add/', views.pk_quality_check_add, name='pk_quality_check_add'),
     path('get_job_details_for_qc/', views.get_job_details_for_qc, name='get_job_details_for_qc'),
     path('pk_quality_check_pdf/<int:qc_id>/', views.pk_quality_check_pdf, name='pk_quality_check_pdf'),
+    path('pk_invoice_list/', views.pk_invoice_list, name='pk_invoice_list'),
+    path('pk_invoice_add/', views.pk_invoice_add, name='pk_invoice_add'),
+    path('pk_invoice_edit/<int:invoice_id>/', views.pk_invoice_add, name='pk_invoice_edit'),
+    path('pk_invoice_pdf/<int:invoice_id>/', views.pk_invoice_pdf, name='pk_invoice_pdf'),
+    path('pk_invoice_get_po_items/', views.pk_invoice_get_po_items, name='pk_invoice_get_po_items'),
     path('asset_insert', views.assetinfo_add, name='asset_insert'),  # Add Asset
     path('asset_update/<int:asset_id>/', views.assetinfo_add, name='asset_update'),  # Update asset
     path('asset_delete/<int:asset_id>/', views.asset_delete, name='asset_delete'),  # Delete asset
@@ -634,7 +639,8 @@ urlpatterns = [
     path('pk_stock_vendor_list/', views.pk_stock_vendor_list, name='pk_stock_vendor_list'),  # List pk_stock_vendor
     path('pk_stock_vendor_insert/', views.pk_stock_vendor_add, name='pk_stock_vendor_insert'),  # Add pk_stock_vendor
     path('pk_stock_vendor_update/<int:stock_vendor_id>', views.pk_stock_vendor_add, name='pk_stock_vendor_update'),
-    # update pk_stock_vendor
+    path('pk_process_vendor_return_selected/<int:stock_vendor_id>', views.pk_process_vendor_return_selected, name='pk_process_vendor_return_selected'),
+    # update Pkstock vendor
     path('pk_stock_vendor_delete/<int:stock_vendor_id>', views.pk_stock_vendor_delete, name='pk_stock_vendor_delete'),
     # delete pk_stock_vendor
     path('pk_process_vendor_return/<int:sm_id>', views.pk_process_vendor_return, name='pk_process_vendor_return'),

@@ -64,14 +64,20 @@
         <div class="table-container-modern mt-4">
             <div class="form-section-title d-flex justify-content-between align-items-center">
                 <span><i class="fas fa-boxes"></i> Stock Maintenance Entries</span>
-                <a href="{% url 'stock_maintenance_add_for_vendor' %}?new=1" id="stock_purchase_item_add" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.9rem; text-decoration: none;">
-                    <i class="fas fa-plus"></i> ADD STOCKS
-                </a>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn-modern py-1 px-3" style="font-size: 0.9rem; background: #e67e22; border-color: #e67e22; color: white;" onclick="submitSelectedReturns()">
+                        <i class="fas fa-reply-all"></i> RETURN SELECTED
+                    </button>
+                    <a href="{% url 'stock_maintenance_add_for_vendor' %}?new=1" id="stock_purchase_item_add" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.9rem; text-decoration: none;">
+                        <i class="fas fa-plus"></i> ADD STOCKS
+                    </a>
+                </div>
             </div>
             <div class="table-responsive">
                 <table id="stock_maintenance_table" class="table modern-table display nowrap" style="width:100%">
                     <thead>
                         <tr>
+                            <th class="text-center"><input type="checkbox" id="selectAllReturns" onclick="toggleAllReturns(this)"></th>
                             <th>Created On</th>
                             <th>GRN Number</th>
                             <th>Stock Type</th>
@@ -91,6 +97,11 @@
                     <tbody>
                         {% for item in stockmaintenance_list %}
                         <tr>
+                            <td class="text-center">
+                                {% if item.sm_stock_type_id == 1 %}
+                                <input type="checkbox" class="return-checkbox" value="{{ item.id }}">
+                                {% endif %}
+                            </td>
                             <td>
                                 <div class="font-weight-bold">{{ item.sm_created_at|date:"d-m-Y" }}</div>
                                 <div class="small text-muted">{{ item.sm_created_at|date:"H:i" }}</div>
@@ -111,11 +122,6 @@
                                     <a href="{% url 'stock_maintenance_edit' item.id %}" class="btn-modern btn-submit py-1 px-2" style="font-size: 0.75rem; min-width: 35px;" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    {% if item.sm_stock_type_id == 1 %}
-                                    <button type="button" class="btn-modern btn-cancel py-1 px-2 text-white" style="font-size: 0.75rem; min-width: 35px; background: #e67e22; border-color: #e67e22;" title="Return to Vendor" onclick="openReturnModal('{{ item.id }}', '{{ item.sm_count }}', '{{ item.sm_partcode.pc_code|escapejs }}', '{{ item.sm_stock_purchase_number|escapejs }}')">
-                                        <i class="fas fa-reply-all"></i>
-                                    </button>
-                                    {% endif %}
                                 </div>
                             </td>
                             <td class="text-center">
@@ -230,6 +236,41 @@
         document.getElementById('vendorReturnForm').action = actionUrl;
         
         $('#vendorReturnModal').modal('show');
+    }
+
+    function toggleAllReturns(source) {
+        $('.return-checkbox').prop('checked', source.checked);
+    }
+
+    function submitSelectedReturns() {
+        var selected = [];
+        $('.return-checkbox:checked').each(function() {
+            selected.push($(this).val());
+        });
+        if (selected.length === 0) {
+            alert("Please select at least one stock to return.");
+            return;
+        }
+        if (confirm("Are you sure you want to return the selected stocks?")) {
+            var form = $('<form>', {
+                'method': 'POST',
+                'action': "{% if psv_form.instance.id %}{% url 'pk_process_vendor_return_selected' psv_form.instance.id %}{% else %}#{% endif %}"
+            });
+            form.append($('<input>', {
+                'type': 'hidden',
+                'name': 'csrfmiddlewaretoken',
+                'value': '{{ csrf_token }}'
+            }));
+            $.each(selected, function(i, val) {
+                form.append($('<input>', {
+                    'type': 'hidden',
+                    'name': 'selected_items',
+                    'value': val
+                }));
+            });
+            $('body').append(form);
+            form.submit();
+        }
     }
 </script>
 {% endblock extra_js %}

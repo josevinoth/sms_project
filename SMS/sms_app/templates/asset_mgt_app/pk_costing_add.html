@@ -524,6 +524,7 @@
 				var na_uom_id_val = data.pod_uom_id || 0;
 
 				if (document.getElementById("ct_requirement_size")) document.getElementById("ct_requirement_size").value = po_dimension_box_val;
+				// Job Qty = Job Release Qty from PO (used to multiply total costs)
 				if (document.getElementById("ct_na_quantity")) document.getElementById("ct_na_quantity").value = po_quantity;
 				if (document.getElementById("ct_item")) {
                     $("#ct_item").val(data.pod_item_id);
@@ -584,6 +585,7 @@
 			},
 			success: function (data) {
 				$("#ct_requirement").removeClass('disable_a_href');
+				var current_req_val = $("#ct_requirement").val();
 				$("#ct_requirement").empty().append('<option value="">--Select--</option>');
 				for (var i = 0; i < data.po_requirement_type_id.length; i++) {
 					// option value = Nadimension ID (for form FK), data-pod-id = POdimension ID (for AJAX details fetch)
@@ -594,7 +596,10 @@
 					}
 					$("#ct_requirement").append(opt);
 				}
-				if(data.po_requirement_type_id.length == 1) {
+				
+				if (current_req_val && $("#ct_requirement option[value='" + current_req_val + "']").length > 0) {
+					$("#ct_requirement").val(current_req_val).trigger('change');
+				} else if(data.po_requirement_type_id.length == 1) {
 					$("#ct_requirement").val(data.po_requirement_type_id[0]).trigger('change');
 				}
 			}

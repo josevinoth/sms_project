@@ -200,7 +200,7 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
 @login_required(login_url='login_page')
 def pk_quotationsummary_list(request):
     first_name = request.session.get('first_name')
-    context = {'quotationsummary_list' : PkquotationsummaryInfo.objects.all(),'first_name': first_name}
+    context = {'quotationsummary_list' : PkquotationsummaryInfo.objects.all().order_by('-id'),'first_name': first_name}
     return render(request,"asset_mgt_app/pk_quotationsummary_list.html",context)
 
 #Delete quotationsummary
