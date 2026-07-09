@@ -128,7 +128,7 @@ def pk_stock_vendor_add(request,stock_vendor_id=0):
 @login_required(login_url='login_page')
 def pk_stock_vendor_list(request):
     first_name = request.session.get('first_name')
-    context = {'pk_stock_vendor_list' : PkstockvebdorInfo.objects.all(),'first_name': first_name}
+    context = {'pk_stock_vendor_list' : PkstockvebdorInfo.objects.all().order_by('-id'),'first_name': first_name}
     return render(request,"asset_mgt_app/pk_stock_vendor_list.html",context)
 
 #Delete places

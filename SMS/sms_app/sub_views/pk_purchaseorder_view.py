@@ -151,7 +151,7 @@ def purchaseorder_add(request, purchaseorder_id=0):
 @login_required(login_url='login_page')
 def purchaseorder_list(request):
     first_name = request.session.get('first_name')
-    context = {'purchaseorder_list' : PkpurchaseorderInfo.objects.all(),'first_name': first_name}
+    context = {'purchaseorder_list' : PkpurchaseorderInfo.objects.all().order_by('-id'),'first_name': first_name}
     return render(request,"asset_mgt_app/pk_purchaseorder_list.html",context)
 
 #Delete purchaseorder

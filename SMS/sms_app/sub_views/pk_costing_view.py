@@ -372,7 +372,7 @@ def update_reduced_dimensions(stock_purchase_num,last_id):
 @login_required(login_url='login_page')
 def costing_list(request):
     first_name = request.session.get('first_name')
-    context = {'costing_list' : PkcostingInfo.objects.all(),
+    context = {'costing_list' : PkcostingInfo.objects.all().order_by('-id'),
                            'excess_costing_list': PkcostingInfo.objects.filter(ct_stock_status=4),
 'first_name': first_name}
     return render(request,"asset_mgt_app/pk_costing_list.html",context)

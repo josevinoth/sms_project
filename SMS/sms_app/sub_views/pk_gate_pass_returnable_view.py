@@ -15,7 +15,7 @@ from .general_utils import get_financial_year, generate_next_number, get_branch_
 def gate_return_add(request, gate_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    gate_list = PackingGateReturn.objects.all()
+    gate_list = PackingGateReturn.objects.all().order_by('-id')
     
     if request.method == "GET":
         if gate_id == 0:
@@ -125,7 +125,7 @@ def gate_return_add(request, gate_id=0):
 @login_required(login_url='login_page')
 def gate_return_list(request):
     first_name = request.session.get('first_name')
-    gate_list = PackingGateReturn.objects.all()
+    gate_list = PackingGateReturn.objects.all().order_by('-id')
     context = {'gate_list': gate_list, 'first_name': first_name}
     return render(request,"asset_mgt_app/pk_gate_pass_returnable_list.html",context)
 
