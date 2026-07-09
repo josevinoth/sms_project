@@ -80,6 +80,8 @@ def _try_merge_pdfs(inv_obj, closure_obj=None):
         from pypdf import PdfWriter, PdfReader
         writer = PdfWriter()
 
+        seen_sizes = set()
+
         for file_field in file_fields:
             if not file_field or not file_field.name:
                 continue
@@ -87,6 +89,12 @@ def _try_merge_pdfs(inv_obj, closure_obj=None):
                 content = _stored_file_content(file_field)
                 if content is None:
                     continue
+                
+                content_size = len(content)
+                if content_size in seen_sizes:
+                    continue
+                seen_sizes.add(content_size)
+
                 fname = file_field.name.lower()
 
                 if fname.endswith('.pdf'):
@@ -147,6 +155,85 @@ def _try_merge_pdfs(inv_obj, closure_obj=None):
         except:
             pass
 
+
+def sync_closure_files_to_invoice(request, trip, files_obj):
+    """
+    Sync files uploaded via TripclosurefilesForm (tcf_*) to InvoiceDocumentInfo (id_*).
+    Then regenerate the merged PDF.
+    """
+    invoice_doc = InvoiceDocumentInfo.objects.filter(id_tripnumber=trip.tr_tripnumber).first()
+    if not invoice_doc:
+        invoice_doc = InvoiceDocumentInfo(
+            id_tripnumber=trip.tr_tripnumber,
+            id_updated_by=request.user
+        )
+        # Assign default status 9 (Ready for Invoice) if it doesn't exist
+        ready_status = Tripstatusinfo.objects.filter(id=9).first()
+        if ready_status:
+            invoice_doc.id_status = ready_status
+
+    changed = False
+
+    if 'tcf_trip_cost' in request.FILES and files_obj.tcf_trip_cost:
+        _copy_stored_file(invoice_doc.id_trip_cost_doc, files_obj.tcf_trip_cost)
+        changed = True
+    elif request.POST.get('tcf_trip_cost-clear'):
+        invoice_doc.id_trip_cost_doc = None
+        changed = True
+
+    if 'tcf_parking_cost' in request.FILES and files_obj.tcf_parking_cost:
+        _copy_stored_file(invoice_doc.id_parking_doc, files_obj.tcf_parking_cost)
+        changed = True
+    elif request.POST.get('tcf_parking_cost-clear'):
+        invoice_doc.id_parking_doc = None
+        changed = True
+
+    if 'tcf_toll_cost' in request.FILES and files_obj.tcf_toll_cost:
+        _copy_stored_file(invoice_doc.id_toll_doc, files_obj.tcf_toll_cost)
+        changed = True
+    elif request.POST.get('tcf_toll_cost-clear'):
+        invoice_doc.id_toll_doc = None
+        changed = True
+
+    if 'tcf_loading_cost' in request.FILES and files_obj.tcf_loading_cost:
+        _copy_stored_file(invoice_doc.id_loading_doc, files_obj.tcf_loading_cost)
+        changed = True
+    elif request.POST.get('tcf_loading_cost-clear'):
+        invoice_doc.id_loading_doc = None
+        changed = True
+
+    if 'tcf_unloading_cost' in request.FILES and files_obj.tcf_unloading_cost:
+        _copy_stored_file(invoice_doc.id_unloading_doc, files_obj.tcf_unloading_cost)
+        changed = True
+    elif request.POST.get('tcf_unloading_cost-clear'):
+        invoice_doc.id_unloading_doc = None
+        changed = True
+
+    if 'tcf_weighment_cost' in request.FILES and files_obj.tcf_weighment_cost:
+        _copy_stored_file(invoice_doc.id_weighment_doc, files_obj.tcf_weighment_cost)
+        changed = True
+    elif request.POST.get('tcf_weighment_cost-clear'):
+        invoice_doc.id_weighment_doc = None
+        changed = True
+
+    if 'tcf_handling_cost' in request.FILES and files_obj.tcf_handling_cost:
+        _copy_stored_file(invoice_doc.id_handling_doc, files_obj.tcf_handling_cost)
+        changed = True
+    elif request.POST.get('tcf_handling_cost-clear'):
+        invoice_doc.id_handling_doc = None
+        changed = True
+
+    if 'tcf_pod' in request.FILES and files_obj.tcf_pod:
+        _copy_stored_file(invoice_doc.id_pod_doc, files_obj.tcf_pod)
+        changed = True
+    elif request.POST.get('tcf_pod-clear'):
+        invoice_doc.id_pod_doc = None
+        changed = True
+
+    if changed or not invoice_doc.pk:
+        invoice_doc.id_updated_by = request.user
+        invoice_doc.save()
+        _try_merge_pdfs(invoice_doc)
 
 @login_required
 def invoice_documents_list(request):
@@ -438,6 +525,50 @@ def invoice_documents_add(request, trip_id):
                 elif trip_obj.td_pod:
                     _copy_stored_file(inv_obj.id_pod_doc, trip_obj.td_pod)
             inv_obj.save()
+
+            # --- Sync from invoice documents to trip closure files ---
+            if 'id_trip_cost_doc' in request.FILES and inv_obj.id_trip_cost_doc:
+                _copy_stored_file(files_obj.tcf_trip_cost, inv_obj.id_trip_cost_doc)
+            elif request.POST.get('id_trip_cost_doc-clear'):
+                files_obj.tcf_trip_cost = None
+
+            if 'id_parking_doc' in request.FILES and inv_obj.id_parking_doc:
+                _copy_stored_file(files_obj.tcf_parking_cost, inv_obj.id_parking_doc)
+            elif request.POST.get('id_parking_doc-clear'):
+                files_obj.tcf_parking_cost = None
+
+            if 'id_toll_doc' in request.FILES and inv_obj.id_toll_doc:
+                _copy_stored_file(files_obj.tcf_toll_cost, inv_obj.id_toll_doc)
+            elif request.POST.get('id_toll_doc-clear'):
+                files_obj.tcf_toll_cost = None
+
+            if 'id_loading_doc' in request.FILES and inv_obj.id_loading_doc:
+                _copy_stored_file(files_obj.tcf_loading_cost, inv_obj.id_loading_doc)
+            elif request.POST.get('id_loading_doc-clear'):
+                files_obj.tcf_loading_cost = None
+
+            if 'id_unloading_doc' in request.FILES and inv_obj.id_unloading_doc:
+                _copy_stored_file(files_obj.tcf_unloading_cost, inv_obj.id_unloading_doc)
+            elif request.POST.get('id_unloading_doc-clear'):
+                files_obj.tcf_unloading_cost = None
+
+            if 'id_weighment_doc' in request.FILES and inv_obj.id_weighment_doc:
+                _copy_stored_file(files_obj.tcf_weighment_cost, inv_obj.id_weighment_doc)
+            elif request.POST.get('id_weighment_doc-clear'):
+                files_obj.tcf_weighment_cost = None
+
+            if 'id_handling_doc' in request.FILES and inv_obj.id_handling_doc:
+                _copy_stored_file(files_obj.tcf_handling_cost, inv_obj.id_handling_doc)
+            elif request.POST.get('id_handling_doc-clear'):
+                files_obj.tcf_handling_cost = None
+
+            if 'id_pod_doc' in request.FILES and inv_obj.id_pod_doc:
+                _copy_stored_file(files_obj.tcf_pod, inv_obj.id_pod_doc)
+            elif request.POST.get('id_pod_doc-clear'):
+                files_obj.tcf_pod = None
+
+            files_obj.save()
+            # -------------------------------------------------------
 
             # Synchronize trip status with document status for consistency
             if inv_obj.id_status and trip_obj.tc_financestatus != inv_obj.id_status:

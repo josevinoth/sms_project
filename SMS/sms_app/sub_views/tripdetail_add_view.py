@@ -68,7 +68,7 @@ def tripdetail_nav(request, tripdetail_id=0):
     enquiry_num_id = tripdetail_id
     request.session['enquiry_num_id'] = enquiry_num_id
     tripdetail_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id)
-    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8])
+    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8])
     consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
     context = {
         'first_name': first_name,
@@ -189,7 +189,7 @@ def tripdetail_add(request, tripdetail_id=0):
             trip_list = TripdetailInfo.objects.select_related(
                 'tr_approval', 'tr_approval__ta_approval_status'
             ).filter(tr_enquirynumber=enquiry_num_id)
-            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8, 10, 11])
+            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8, 10, 11])
 
             # ✅ Exclude already-used consignments for this enquiry
             used_consignments = TripdetailInfo.objects.filter(
@@ -293,7 +293,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 print('status_selected (auto)', status_selected)
             except ObjectDoesNotExist:
                 status_selected = None
-            allowed_statuses = [1, 2, 3, 8, 10, 11]
+            allowed_statuses = [1, 2, 8, 10, 11]
             if status_selected and status_selected not in allowed_statuses:
                 allowed_statuses.append(status_selected)
 
@@ -361,7 +361,7 @@ def tripdetail_add(request, tripdetail_id=0):
             enquiry_num = enquiry_num_id
             cosnignment_number = request.POST.get('tr_consignmentnumber')
             vehicle_number = request.POST.get('tr_vehiclenumber')
-            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8, 10, 11])
+            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8, 10, 11])
             consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
             trip_det_form.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(id=enquiry_num_id)
             trip_det_form.fields['tr_consignmentnumber'].queryset = consignment_list
@@ -595,7 +595,7 @@ def tripdetail_add(request, tripdetail_id=0):
                         print(f"Error in {field}: {error}")
                         messages.error(request, f"{field_label}: {error}")
                 messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
-                status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8, 10, 11])
+                status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8, 10, 11])
                 consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
                 trip_det_form.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(id=enquiry_num_id)
                 trip_det_form.fields['tr_consignmentnumber'].queryset = consignment_list
@@ -781,7 +781,7 @@ def tripdetail_list(request):
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
 
-    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8])
+    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8])
 
     context = {
         'first_name': first_name,

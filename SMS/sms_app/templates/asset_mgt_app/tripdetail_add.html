@@ -492,7 +492,7 @@ document.addEventListener("DOMContentLoaded", function () {
             tripStatus.classList.add("select-disabled-style");
             // ✅ Only reset if new trip or already at Awaiting status
             if (tripStatus.value === "8" || tripStatus.value === "") {
-                tripStatus.selectedIndex = 0;
+                tripStatus.value = "8";
             }
         }
     } else {
@@ -504,7 +504,7 @@ document.addEventListener("DOMContentLoaded", function () {
             tripStatus.classList.add("select-disabled-style");
             // ✅ Only reset if new trip or already at Awaiting status
             if (tripStatus.value === "8" || tripStatus.value === "") {
-                tripStatus.selectedIndex = 0;
+                tripStatus.value = "8";
             }
         }
     }
@@ -513,7 +513,7 @@ document.addEventListener("DOMContentLoaded", function () {
     tripStatus.classList.add("select-disabled-style");
     // ✅ Only reset if new trip or already at Awaiting status
     if (tripStatus.value === "8" || tripStatus.value === "") {
-        tripStatus.selectedIndex = 0;
+        tripStatus.value = "8";
     }
 }
 		// ----------------------
