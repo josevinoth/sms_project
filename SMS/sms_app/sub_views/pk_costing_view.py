@@ -126,7 +126,7 @@ def costing_add(request, costing_id=0):
                 ct_assessment_num=na_assessment_num_id, 
                 ct_customer_po=ses_customer_po_id,
                 ct_job_no=current_job_no_val
-            ),
+            ).order_by('-id'),
             'excess_costing_list': PkcostingInfo.objects.all(),
             'total_cft_display': request.session.get('ct_total_cft_display', 0),
             'job_no_list': job_no_list_qs,
@@ -308,7 +308,7 @@ def costing_add(request, costing_id=0):
                     ct_assessment_num=na_assessment_num_id,
                     ct_customer_po=ses_customer_po_id,
                     ct_job_no=current_job_no_val
-                ),
+                ).order_by('-id'),
                 'excess_costing_list': PkcostingInfo.objects.all(),
                 'total_cft_display': request.session.get('ct_total_cft_display', 0),
                 'job_no_list': job_no_list_qs,
