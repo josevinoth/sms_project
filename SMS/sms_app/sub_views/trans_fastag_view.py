@@ -61,7 +61,7 @@ def fastag_enquiry_view(request):
 
                     print(f"res_code = {res_code}, txn_list count = {len(txn_list)}")
 
-                    if res_code in [res_code, "SUCCESS"] and isinstance(txn_list, list):
+                    if res_code in ["0", "SUCCESS"] and isinstance(txn_list, list):
                         toll_count = len(txn_list)
                         total_amount = 0.0
 

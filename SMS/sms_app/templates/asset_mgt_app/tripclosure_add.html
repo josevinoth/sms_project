@@ -512,11 +512,8 @@
                 console.log("✅ Toll data fetched successfully:", data);
                 buildTxnTable(data.txn_list);
 
-                // Update toll cost total field
-                const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-                if (tollField) {
-                    tollField.value = data.total_amount.toFixed(2);
-                }
+                // Update toll cost total field using name selector (more reliable than id)
+                $('[name="tc_tollcost"]').val(data.total_amount.toFixed(2));
             } else {
                 alert("⚠️ " + (data.error || "No toll transactions found."));
                 document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
@@ -590,11 +587,8 @@
             total += parseFloat(c.dataset.amount);
         });
 
-        // Try both ID and name selectors to ensure it finds the input
-        const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-        if (tollField) {
-            tollField.value = total.toFixed(2);
-        }
+        // Use jQuery name selector — more reliable than getElementById (Django uses id_fieldname)
+        $('[name="tc_tollcost"]').val(total.toFixed(2));
     }
 </script>
 
@@ -891,10 +885,8 @@
                 buildTxnTable(data.txn_list);
 
                 // Update toll cost total field
-                const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-                if (tollField) {
-                    tollField.value = data.total_amount.toFixed(2);
-                }
+                // Use jQuery name selector — Django uses id_fieldname prefix so getElementById fails
+                $('[name="tc_tollcost"]').val(data.total_amount.toFixed(2));
             } else {
                 alert("⚠️ " + (data.error || "No toll transactions found."));
                 document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
@@ -969,10 +961,8 @@
         });
 
         // Try both ID and name selectors to ensure it finds the input
-        const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-        if (tollField) {
-            tollField.value = total.toFixed(2);
-        }
+        // Use jQuery name selector — Django uses id_fieldname prefix so getElementById fails
+        $('[name="tc_tollcost"]').val(total.toFixed(2));
     }
 </script>
 
@@ -1268,10 +1258,8 @@
                 buildTxnTable(data.txn_list);
 
                 // Update toll cost total field
-                const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-                if (tollField) {
-                    tollField.value = data.total_amount.toFixed(2);
-                }
+                // Use jQuery name selector — Django uses id_fieldname prefix so getElementById fails
+                $('[name="tc_tollcost"]').val(data.total_amount.toFixed(2));
             } else {
                 alert("⚠️ " + (data.error || "No toll transactions found."));
                 document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
@@ -1346,10 +1334,8 @@
         });
 
         // Try both ID and name selectors to ensure it finds the input
-        const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-        if (tollField) {
-            tollField.value = total.toFixed(2);
-        }
+        // Use jQuery name selector — Django uses id_fieldname prefix so getElementById fails
+        $('[name="tc_tollcost"]').val(total.toFixed(2));
     }
 </script>
 
@@ -1645,10 +1631,8 @@
                 buildTxnTable(data.txn_list);
 
                 // Update toll cost total field
-                const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-                if (tollField) {
-                    tollField.value = data.total_amount.toFixed(2);
-                }
+                // Use jQuery name selector — Django uses id_fieldname prefix so getElementById fails
+                $('[name="tc_tollcost"]').val(data.total_amount.toFixed(2));
             } else {
                 alert("⚠️ " + (data.error || "No toll transactions found."));
                 document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
@@ -1723,388 +1707,8 @@
         });
 
         // Try both ID and name selectors to ensure it finds the input
-        const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-        if (tollField) {
-            tollField.value = total.toFixed(2);
-        }
-    }
-</script>
-
-<script>
-	$(document).ready(function() {
-        function fetchCustomerRef() {
-            var consignmentId = $('#tr_consignmentnumber').val();
-
-            if (consignmentId) {
-                $.ajax({
-                    url: "{% url 'get_customer_ref' %}",
-                    data: {
-                        'consignment_id': consignmentId
-                    },
-                    dataType: 'json',
-                    success: function(data) {
-                        console.log("Fetched Customer Ref:", data);
-                        if (data.customer_ref) {
-                            $('#tr_customerref').val(data.customer_ref);
-                        } else {
-                            $('#tr_customerref').val('');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("AJAX Error:", error);
-                    }
-                });
-            } else {
-                $('#tr_customerref').val('');
-            }
-        }
-
-        // Run automatically if field already has a value
-        fetchCustomerRef();
-
-        // Also run if user changes consignment manually later
-        $(document).on('change', '#tr_consignmentnumber', fetchCustomerRef);
-    });
-</script>
-
-<script>
-	function fetchHaltingCharge() {
-        var enquiryNo = $("#tr_enquirynumber").val();
-        var tripType  = $("#tr_category").val();
-
-        if (!enquiryNo || !tripType) {
-            return;
-        }
-
-        $.ajax({
-            url: "{% url 'get_halting_charge' %}",
-            method: "GET",
-            data: {
-                enquiry_id: enquiryNo,
-                trip_type: tripType
-            },
-               success: function (data) {
-                var current = parseFloat($("#tc_haltingcost").val()) || 0;
-                
-                // Only overwrite if the field is currently zero/empty
-                if (current === 0) {
-                    if (data.status === true) {
-                        $("#tc_haltingcost").val(data.halting_charge);
-                    } else {
-                        $("#tc_haltingcost").val(0);
-                    }
-                }
-
-                // Recalculate after AJAX updates value
-                calcTotalHalting();
-            },
-            error: function (xhr, status, error) {
-                console.error("Halting AJAX ERROR:", error);
-            }
-        });
-    }
-
-    $(document).ready(function () {
-        fetchHaltingCharge();
-        $("#tr_category").change(fetchHaltingCharge);
-        $("#tr_enquirynumber").change(fetchHaltingCharge);
-    });
-</script>
-<script>
-	function calcTotalHalting() {
-        let halting = parseFloat($("#tc_haltingcost").val()) || 0;
-        let days = parseFloat($("#tc_no_of_days_halting").val()) || 0;
-
-        let total = halting * days;
-
-        $("#tc_total_halting_cost").val(total.toFixed(2));
-    }
-
-    $(document).ready(function () {
-
-        // Calculate when user types in days OR when halting cost changes
-        $("#tc_no_of_days_halting").on("input", calcTotalHalting);
-        $("#tc_haltingcost").on("input", calcTotalHalting);
-
-        // Also calculate once on load
-        calcTotalHalting();
-    });
-
-</script>
-
-<script>
-	function fetchCancellationCharge() {
-        var enquiryId = $("#tr_enquirynumber").val();
-        var vehicleTypeId = $("#tr_vehicletype_placed").val() || $("#tr_vehicletype").val();
-
-        if (!enquiryId || !vehicleTypeId) {
-            return;
-        }
-
-        $.ajax({
-            url: "{% url 'get_cancellation_charge' %}",
-            method: "GET",
-            data: {
-                enquiry_id: enquiryId,
-                vehicle_type_id: vehicleTypeId
-            },
-            success: function (data) {
-                if (data.status === true) {
-                    // Only auto-fill if the field is empty or zero
-                    var current = parseFloat($("#tc_cancellation").val()) || 0;
-                    if (current === 0) {
-                        $("#tc_cancellation").val(data.cancellation_charge);
-                    }
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error("Cancellation Charge AJAX ERROR:", error);
-            }
-        });
-    }
-
-    $(document).ready(function () {
-        fetchCancellationCharge();
-        $("#tr_vehicletype_placed, #tr_vehicletype, #tr_enquirynumber").change(fetchCancellationCharge);
-    });
-</script>
-
-<script>
-	$(document).ready(function() {
-        document.getElementById("tr_updated_by").value ='{{user_id}}';
-
-        // Determine the target status:
-        var currentStatus = "{{ status_selected|default:'' }}";
-        var isBusinessEmptyAndCancelled = {% if is_business_empty_and_cancelled %}true{% else %}false{% endif %};
-
-        if (isBusinessEmptyAndCancelled) {
-            // Business Empty with cancelled consignment allows manual choice.
-            // Do not force automatically. Select the current status if it exists.
-            if (document.getElementById("tc_financestatus") && currentStatus) {
-                var sel = document.getElementById("tc_financestatus");
-                var opt = sel.querySelector('option[value="' + currentStatus + '"]');
-                if (opt) {
-                    opt.selected = true;
-                }
-                sel.value = currentStatus;
-            }
-        } else {
-            // If the trip is already Cancelled (status=3), keep it as 3.
-            // Otherwise force it to 4 (Trip Closed).
-            var targetStatus = (currentStatus === '3') ? '3' : '4';
-
-            if (document.getElementById("tc_financestatus")) {
-                var sel = document.getElementById("tc_financestatus");
-                var opt = sel.querySelector('option[value="' + targetStatus + '"]');
-                if (opt) {
-                    opt.selected = true;
-                }
-                sel.value = targetStatus;
-            }
-            if (document.getElementById("tc_financestatus_hidden")) {
-                document.getElementById("tc_financestatus_hidden").value = targetStatus;
-            }
-        }
-        trip_status=document.getElementById("tc_financestatus").value
-        var tr_enquirynumber_val=document.getElementById("tr_enquirynumber").value;
-        if (tr_enquirynumber_val=="")
-        {
-            document.getElementById("tr_enquirynumber").value ='{{enquiry_num}}';
-        }
-        else
-        {
-            document.getElementById("tr_enquirynumber").value =tr_enquirynumber_val;
-        }
-        getRoRate();
-
-        // Default Trip Charges to Sell value if currently zero
-        var tc_tripcost_val = $("#tc_tripcost").val();
-        if (tc_tripcost_val == "0" || tc_tripcost_val == "0.0" || tc_tripcost_val == "") {
-            $("#tc_tripcost").val("{{ va_sale }}");
-        }
-
-     });
-</script>
-<script>
-	function getRoRate() {
-        var selectedFromLocation = $("#tr_departedlocation").val();
-        var selectedToLocation = $("#tr_reportedlocation").val();
-        var selectedVehicleType = $("#tr_vehicletype_placed").val();
-        var selectedTripCategory = $("#tr_category").val();
-        var selectedEnquiryNumber= $("#tr_enquirynumber").val();
-
-        $.ajax({
-            url: '{% url 'transport_calculate_trip_charges' %}',
-            method: "GET",
-            data: {
-                'from_location': selectedFromLocation,
-                'to_location': selectedToLocation,
-                'vehicle_type': selectedVehicleType,
-                'trip_category': selectedTripCategory,
-                'enquirynumber': selectedEnquiryNumber,
-            },
-            success: function(data) {
-                if (data.ro_rate === 0 || data.ro_rate === 100) {
-                    // Fallback to Sell value if Master rate is missing or not applicable
-                    var current_val = $("#tc_tripcost").val();
-                    if (current_val == "0" || current_val == "0.0" || current_val == "") {
-                        $("#tc_tripcost").val("{{ va_sale }}");
-                    }
-                }
-                else
-                {
-                    // Update the ro_rate field with the retrieved value
-                    $("#tc_tripcost").val(data.ro_rate);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX error:', error);
-            }
-        });
-    }
-
-    function attachEventListeners() {
-        $("#tr_departedlocation, #tr_reportedlocation, #tr_vehicletype_placed, #tr_category","#tr_enquirynumber").change(function() {
-            getRoRate();
-        });
-    }
-
-    $(document).ready(function() {
-        attachEventListeners();
-    });
-</script>
-<script>
-	document.addEventListener('DOMContentLoaded', function () {
-      // Add "data-bs-toggle" and "title" attributes to each checkbox dynamically
-      ['tc_tripcost_check','tc_parkingcost_check','tc_tollcost_check', 'tc_loadingcost_check', 'tc_unloadingcost_check', 'tc_weighmentcost_check', 'tc_handlingcost_check', 'tc_supervisorcost_check', 'tc_haltingcost_check', 'tc_total_halting_cost_check', 'tc_rtocost_check', 'tc_betacost_check', 'tc_cancellation_check'].forEach(function (id) {
-        const checkbox = document.getElementById(id);
-        if (checkbox) {
-          checkbox.setAttribute('data-bs-toggle', 'tooltip');
-          checkbox.setAttribute('data-bs-placement', 'top');
-          checkbox.setAttribute('title', 'Verify');
-        }
-      });
-
-      // Initialize Bootstrap tooltips
-      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-      tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-        new bootstrap.Tooltip(tooltipTriggerEl);
-      });
-    });
-</script>
-<script>
-	document.addEventListener("DOMContentLoaded", function() {
-        // Run dummy toll data fetch once the page is ready
-        fetchTollCost();
-
-        // Ensure "View" button works even if fetch hasn't been called yet
-        window.showTollTxnDialog = function() {
-            const modal = new bootstrap.Modal(document.getElementById('tollTxnModal'));
-            modal.show();
-        };
-    });
-
-    function fetchTollCost() {
-    const trip_num = document.getElementById("tr_tripnumber").value;
-    if (!trip_num) {
-        alert("Trip number missing.");
-        return;
-    }
-
-    console.log("🚀 Fetching toll cost for Trip:", trip_num);
-
-    $.ajax({
-        url: "{% url 'get_fastag_toll_cost_ajax' %}",
-        method: "GET",
-        data: { 'trip_num': trip_num },
-        success: function(data) {
-            if (data.success) {
-                console.log("✅ Toll data fetched successfully:", data);
-                buildTxnTable(data.txn_list);
-
-                // Update toll cost total field
-                const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-                if (tollField) {
-                    tollField.value = data.total_amount.toFixed(2);
-                }
-            } else {
-                alert("⚠️ " + (data.error || "No toll transactions found."));
-                document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error("❌ AJAX Error:", error);
-            alert("Failed to fetch toll data. Please try again.");
-        }
-    });
-}
-
-    function buildTxnTable(txn_list) {
-        if (!txn_list || txn_list.length === 0) {
-            document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
-            return;
-        }
-
-        let table = `
-            <p style="color: black;">
-                <strong>Total Transactions:</strong> ${txn_list.length}
-            </p>
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Select</th>
-                            <th>Date</th>
-                            <th>Vehicle No</th>
-                            <th>Txn ID</th>
-                            <th>Plaza</th>
-                            <th>Vehicle Type</th>
-                            <th>Amount</th>
-                            <th>Lane</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
-
-        txn_list.forEach((txn, idx) => {
-            table += `
-                <tr>
-                    <td class="text-center">
-                        <input type="checkbox" class="toll-checkbox" data-amount="${parseFloat(txn.txnAmt)}" checked>
-                    </td>
-                    <td>${txn.txnPostedtime}</td>
-                    <td>${txn.vehicleNo}</td>
-                    <td>${txn.originalTxnId}</td>
-                    <td>${txn.tollplazaname}</td>
-                    <td>${txn.vehicleDesc}</td>
-                    <td>₹${parseFloat(txn.txnAmt).toFixed(2)}</td>
-                    <td>${txn.laneId}</td>
-                </tr>`;
-        });
-
-        table += `</tbody></table></div>`;
-
-        document.getElementById("tollTxnContent").innerHTML = table;
-
-        // Attach checkbox listeners
-        document.querySelectorAll('.toll-checkbox').forEach(chk => {
-            chk.addEventListener('change', updateSelectedTollCost);
-        });
-
-        // Update total immediately
-        updateSelectedTollCost();
-    }
-
-    function updateSelectedTollCost() {
-        let total = 0;
-        document.querySelectorAll('.toll-checkbox:checked').forEach(c => {
-            total += parseFloat(c.dataset.amount);
-        });
-
-        // Try both ID and name selectors to ensure it finds the input
-        const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-        if (tollField) {
-            tollField.value = total.toFixed(2);
-        }
+        // Use jQuery name selector — Django uses id_fieldname prefix so getElementById fails
+        $('[name="tc_tollcost"]').val(total.toFixed(2));
     }
 </script>
 
@@ -2401,10 +2005,8 @@
                 buildTxnTable(data.txn_list);
 
                 // Update toll cost total field
-                const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-                if (tollField) {
-                    tollField.value = data.total_amount.toFixed(2);
-                }
+                // Use jQuery name selector — Django uses id_fieldname prefix so getElementById fails
+                $('[name="tc_tollcost"]').val(data.total_amount.toFixed(2));
             } else {
                 alert("⚠️ " + (data.error || "No toll transactions found."));
                 document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
@@ -2479,10 +2081,8 @@
         });
 
         // Try both ID and name selectors to ensure it finds the input
-        const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-        if (tollField) {
-            tollField.value = total.toFixed(2);
-        }
+        // Use jQuery name selector — Django uses id_fieldname prefix so getElementById fails
+        $('[name="tc_tollcost"]').val(total.toFixed(2));
     }
 </script>
 
@@ -2779,10 +2379,8 @@
                 buildTxnTable(data.txn_list);
 
                 // Update toll cost total field
-                const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-                if (tollField) {
-                    tollField.value = data.total_amount.toFixed(2);
-                }
+                // Use jQuery name selector — Django uses id_fieldname prefix so getElementById fails
+                $('[name="tc_tollcost"]').val(data.total_amount.toFixed(2));
             } else {
                 alert("⚠️ " + (data.error || "No toll transactions found."));
                 document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
@@ -2857,10 +2455,8 @@
         });
 
         // Try both ID and name selectors to ensure it finds the input
-        const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-        if (tollField) {
-            tollField.value = total.toFixed(2);
-        }
+        // Use jQuery name selector — Django uses id_fieldname prefix so getElementById fails
+        $('[name="tc_tollcost"]').val(total.toFixed(2));
     }
 </script>
 
@@ -3157,10 +2753,8 @@
                 buildTxnTable(data.txn_list);
 
                 // Update toll cost total field
-                const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-                if (tollField) {
-                    tollField.value = data.total_amount.toFixed(2);
-                }
+                // Use jQuery name selector — Django uses id_fieldname prefix so getElementById fails
+                $('[name="tc_tollcost"]').val(data.total_amount.toFixed(2));
             } else {
                 alert("⚠️ " + (data.error || "No toll transactions found."));
                 document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
@@ -3235,10 +2829,382 @@
         });
 
         // Try both ID and name selectors to ensure it finds the input
-        const tollField = document.getElementById("tc_tollcost") || document.getElementsByName("tc_tollcost")[0];
-        if (tollField) {
-            tollField.value = total.toFixed(2);
+        // Use jQuery name selector — Django uses id_fieldname prefix so getElementById fails
+        $('[name="tc_tollcost"]').val(total.toFixed(2));
+    }
+</script>
+
+<script>
+	$(document).ready(function() {
+        function fetchCustomerRef() {
+            var consignmentId = $('#tr_consignmentnumber').val();
+
+            if (consignmentId) {
+                $.ajax({
+                    url: "{% url 'get_customer_ref' %}",
+                    data: {
+                        'consignment_id': consignmentId
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        console.log("Fetched Customer Ref:", data);
+                        if (data.customer_ref) {
+                            $('#tr_customerref').val(data.customer_ref);
+                        } else {
+                            $('#tr_customerref').val('');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error:", error);
+                    }
+                });
+            } else {
+                $('#tr_customerref').val('');
+            }
         }
+
+        // Run automatically if field already has a value
+        fetchCustomerRef();
+
+        // Also run if user changes consignment manually later
+        $(document).on('change', '#tr_consignmentnumber', fetchCustomerRef);
+    });
+</script>
+
+<script>
+	function fetchHaltingCharge() {
+        var enquiryNo = $("#tr_enquirynumber").val();
+        var tripType  = $("#tr_category").val();
+
+        if (!enquiryNo || !tripType) {
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'get_halting_charge' %}",
+            method: "GET",
+            data: {
+                enquiry_id: enquiryNo,
+                trip_type: tripType
+            },
+               success: function (data) {
+                var current = parseFloat($("#tc_haltingcost").val()) || 0;
+                
+                // Only overwrite if the field is currently zero/empty
+                if (current === 0) {
+                    if (data.status === true) {
+                        $("#tc_haltingcost").val(data.halting_charge);
+                    } else {
+                        $("#tc_haltingcost").val(0);
+                    }
+                }
+
+                // Recalculate after AJAX updates value
+                calcTotalHalting();
+            },
+            error: function (xhr, status, error) {
+                console.error("Halting AJAX ERROR:", error);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        fetchHaltingCharge();
+        $("#tr_category").change(fetchHaltingCharge);
+        $("#tr_enquirynumber").change(fetchHaltingCharge);
+    });
+</script>
+<script>
+	function calcTotalHalting() {
+        let halting = parseFloat($("#tc_haltingcost").val()) || 0;
+        let days = parseFloat($("#tc_no_of_days_halting").val()) || 0;
+
+        let total = halting * days;
+
+        $("#tc_total_halting_cost").val(total.toFixed(2));
+    }
+
+    $(document).ready(function () {
+
+        // Calculate when user types in days OR when halting cost changes
+        $("#tc_no_of_days_halting").on("input", calcTotalHalting);
+        $("#tc_haltingcost").on("input", calcTotalHalting);
+
+        // Also calculate once on load
+        calcTotalHalting();
+    });
+
+</script>
+
+<script>
+	function fetchCancellationCharge() {
+        var enquiryId = $("#tr_enquirynumber").val();
+        var vehicleTypeId = $("#tr_vehicletype_placed").val() || $("#tr_vehicletype").val();
+
+        if (!enquiryId || !vehicleTypeId) {
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'get_cancellation_charge' %}",
+            method: "GET",
+            data: {
+                enquiry_id: enquiryId,
+                vehicle_type_id: vehicleTypeId
+            },
+            success: function (data) {
+                if (data.status === true) {
+                    // Only auto-fill if the field is empty or zero
+                    var current = parseFloat($("#tc_cancellation").val()) || 0;
+                    if (current === 0) {
+                        $("#tc_cancellation").val(data.cancellation_charge);
+                    }
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("Cancellation Charge AJAX ERROR:", error);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        fetchCancellationCharge();
+        $("#tr_vehicletype_placed, #tr_vehicletype, #tr_enquirynumber").change(fetchCancellationCharge);
+    });
+</script>
+
+<script>
+	$(document).ready(function() {
+        document.getElementById("tr_updated_by").value ='{{user_id}}';
+
+        // Determine the target status:
+        var currentStatus = "{{ status_selected|default:'' }}";
+        var isBusinessEmptyAndCancelled = {% if is_business_empty_and_cancelled %}true{% else %}false{% endif %};
+
+        if (isBusinessEmptyAndCancelled) {
+            // Business Empty with cancelled consignment allows manual choice.
+            // Do not force automatically. Select the current status if it exists.
+            if (document.getElementById("tc_financestatus") && currentStatus) {
+                var sel = document.getElementById("tc_financestatus");
+                var opt = sel.querySelector('option[value="' + currentStatus + '"]');
+                if (opt) {
+                    opt.selected = true;
+                }
+                sel.value = currentStatus;
+            }
+        } else {
+            // If the trip is already Cancelled (status=3), keep it as 3.
+            // Otherwise force it to 4 (Trip Closed).
+            var targetStatus = (currentStatus === '3') ? '3' : '4';
+
+            if (document.getElementById("tc_financestatus")) {
+                var sel = document.getElementById("tc_financestatus");
+                var opt = sel.querySelector('option[value="' + targetStatus + '"]');
+                if (opt) {
+                    opt.selected = true;
+                }
+                sel.value = targetStatus;
+            }
+            if (document.getElementById("tc_financestatus_hidden")) {
+                document.getElementById("tc_financestatus_hidden").value = targetStatus;
+            }
+        }
+        trip_status=document.getElementById("tc_financestatus").value
+        var tr_enquirynumber_val=document.getElementById("tr_enquirynumber").value;
+        if (tr_enquirynumber_val=="")
+        {
+            document.getElementById("tr_enquirynumber").value ='{{enquiry_num}}';
+        }
+        else
+        {
+            document.getElementById("tr_enquirynumber").value =tr_enquirynumber_val;
+        }
+        getRoRate();
+
+        // Default Trip Charges to Sell value if currently zero
+        var tc_tripcost_val = $("#tc_tripcost").val();
+        if (tc_tripcost_val == "0" || tc_tripcost_val == "0.0" || tc_tripcost_val == "") {
+            $("#tc_tripcost").val("{{ va_sale }}");
+        }
+
+     });
+</script>
+<script>
+	function getRoRate() {
+        var selectedFromLocation = $("#tr_departedlocation").val();
+        var selectedToLocation = $("#tr_reportedlocation").val();
+        var selectedVehicleType = $("#tr_vehicletype_placed").val();
+        var selectedTripCategory = $("#tr_category").val();
+        var selectedEnquiryNumber= $("#tr_enquirynumber").val();
+
+        $.ajax({
+            url: '{% url 'transport_calculate_trip_charges' %}',
+            method: "GET",
+            data: {
+                'from_location': selectedFromLocation,
+                'to_location': selectedToLocation,
+                'vehicle_type': selectedVehicleType,
+                'trip_category': selectedTripCategory,
+                'enquirynumber': selectedEnquiryNumber,
+            },
+            success: function(data) {
+                if (data.ro_rate === 0 || data.ro_rate === 100) {
+                    // Fallback to Sell value if Master rate is missing or not applicable
+                    var current_val = $("#tc_tripcost").val();
+                    if (current_val == "0" || current_val == "0.0" || current_val == "") {
+                        $("#tc_tripcost").val("{{ va_sale }}");
+                    }
+                }
+                else
+                {
+                    // Update the ro_rate field with the retrieved value
+                    $("#tc_tripcost").val(data.ro_rate);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX error:', error);
+            }
+        });
+    }
+
+    function attachEventListeners() {
+        $("#tr_departedlocation, #tr_reportedlocation, #tr_vehicletype_placed, #tr_category","#tr_enquirynumber").change(function() {
+            getRoRate();
+        });
+    }
+
+    $(document).ready(function() {
+        attachEventListeners();
+    });
+</script>
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+      // Add "data-bs-toggle" and "title" attributes to each checkbox dynamically
+      ['tc_tripcost_check','tc_parkingcost_check','tc_tollcost_check', 'tc_loadingcost_check', 'tc_unloadingcost_check', 'tc_weighmentcost_check', 'tc_handlingcost_check', 'tc_supervisorcost_check', 'tc_haltingcost_check', 'tc_total_halting_cost_check', 'tc_rtocost_check', 'tc_betacost_check', 'tc_cancellation_check'].forEach(function (id) {
+        const checkbox = document.getElementById(id);
+        if (checkbox) {
+          checkbox.setAttribute('data-bs-toggle', 'tooltip');
+          checkbox.setAttribute('data-bs-placement', 'top');
+          checkbox.setAttribute('title', 'Verify');
+        }
+      });
+
+      // Initialize Bootstrap tooltips
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    });
+</script>
+<script>
+	document.addEventListener("DOMContentLoaded", function() {
+        // Run dummy toll data fetch once the page is ready
+        fetchTollCost();
+
+        // Ensure "View" button works even if fetch hasn't been called yet
+        window.showTollTxnDialog = function() {
+            const modal = new bootstrap.Modal(document.getElementById('tollTxnModal'));
+            modal.show();
+        };
+    });
+
+    function fetchTollCost() {
+    const trip_num = document.getElementById("tr_tripnumber").value;
+    if (!trip_num) {
+        alert("Trip number missing.");
+        return;
+    }
+
+    console.log("🚀 Fetching toll cost for Trip:", trip_num);
+
+    $.ajax({
+        url: "{% url 'get_fastag_toll_cost_ajax' %}",
+        method: "GET",
+        data: { 'trip_num': trip_num },
+        success: function(data) {
+            if (data.success) {
+                console.log("✅ Toll data fetched successfully:", data);
+                buildTxnTable(data.txn_list);
+
+                // Update toll cost total field
+                // Use jQuery name selector — Django uses id_fieldname prefix so getElementById fails
+                $('[name="tc_tollcost"]').val(data.total_amount.toFixed(2));
+            } else {
+                alert("⚠️ " + (data.error || "No toll transactions found."));
+                document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("❌ AJAX Error:", error);
+            alert("Failed to fetch toll data. Please try again.");
+        }
+    });
+}
+
+    function buildTxnTable(txn_list) {
+        if (!txn_list || txn_list.length === 0) {
+            document.getElementById("tollTxnContent").innerHTML = "<p>No toll transactions found.</p>";
+            return;
+        }
+
+        let table = `
+            <p style="color: black;">
+                <strong>Total Transactions:</strong> ${txn_list.length}
+            </p>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Select</th>
+                            <th>Date</th>
+                            <th>Vehicle No</th>
+                            <th>Txn ID</th>
+                            <th>Plaza</th>
+                            <th>Vehicle Type</th>
+                            <th>Amount</th>
+                            <th>Lane</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+        txn_list.forEach((txn, idx) => {
+            table += `
+                <tr>
+                    <td class="text-center">
+                        <input type="checkbox" class="toll-checkbox" data-amount="${parseFloat(txn.txnAmt)}" checked>
+                    </td>
+                    <td>${txn.txnPostedtime}</td>
+                    <td>${txn.vehicleNo}</td>
+                    <td>${txn.originalTxnId}</td>
+                    <td>${txn.tollplazaname}</td>
+                    <td>${txn.vehicleDesc}</td>
+                    <td>₹${parseFloat(txn.txnAmt).toFixed(2)}</td>
+                    <td>${txn.laneId}</td>
+                </tr>`;
+        });
+
+        table += `</tbody></table></div>`;
+
+        document.getElementById("tollTxnContent").innerHTML = table;
+
+        // Attach checkbox listeners
+        document.querySelectorAll('.toll-checkbox').forEach(chk => {
+            chk.addEventListener('change', updateSelectedTollCost);
+        });
+
+        // Update total immediately
+        updateSelectedTollCost();
+    }
+
+    function updateSelectedTollCost() {
+        let total = 0;
+        document.querySelectorAll('.toll-checkbox:checked').forEach(c => {
+            total += parseFloat(c.dataset.amount);
+        });
+
+        // Try both ID and name selectors to ensure it finds the input
+        // Use jQuery name selector — Django uses id_fieldname prefix so getElementById fails
+        $('[name="tc_tollcost"]').val(total.toFixed(2));
     }
 </script>
 

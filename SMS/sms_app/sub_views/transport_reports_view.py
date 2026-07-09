@@ -1750,7 +1750,7 @@ def invoice_pending_report_view(request):
         'headers': INVOICE_PENDING_HEADERS,
         'all_branches': Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name'),
         'all_vehiclesources': OwnershipInfo.objects.all(),
-        'all_tripstatuses': Tripstatusinfo.objects.all().order_by('status'),
+        'all_tripstatuses': Tripstatusinfo.objects.exclude(id=3).order_by('status'),
     }
 
     return render(request, "asset_mgt_app/invoice_pending_report.html", context)

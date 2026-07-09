@@ -18,6 +18,7 @@ from django.contrib import messages
 from django.db.models import Q
 
 from django.http import JsonResponse
+from .invoice_documents_view import sync_closure_files_to_invoice
 from ..sub_models.haltingcharges_mod import Haltingcharges
 from ..models import EnquirynoteInfo
 
@@ -268,6 +269,10 @@ def tripclosure_add(request, tripclosure_id=0):
                         except (FileNotFoundError, ValueError) as e:
                             print(f"Error copying td_pod: {e}")
                 files_obj.save()
+                
+                if trip_detail:
+                    sync_closure_files_to_invoice(request, trip_detail, files_obj)
+                    
                 print("Trip Closure files Form Saved")
                 messages.success(request, 'Record Updated Successfully')
             else:
@@ -332,6 +337,10 @@ def tripclosure_add(request, tripclosure_id=0):
                         except (FileNotFoundError, ValueError) as e:
                             print(f"Error copying td_pod: {e}")
                 files_obj.save()
+                
+                if trip_detail:
+                    sync_closure_files_to_invoice(request, trip_detail, files_obj)
+                    
                 print("Trip Closure files Form Saved")
                 messages.success(request, 'Record Updated Successfully')
             else:
@@ -611,7 +620,7 @@ def calculate_toll(vehicle_num, from_date, to_date):
 
             print(f"resCode={res_code}, Message={res_msg}, Transactions={len(txn_list)}")
 
-            if res_code == "SUCCESS" and isinstance(txn_list, list):
+            if res_code in ["SUCCESS", "0"] and isinstance(txn_list, list):
                 for idx, txn in enumerate(txn_list):
                     try:
                         amount = float(txn.get("txnAmt", 0))
