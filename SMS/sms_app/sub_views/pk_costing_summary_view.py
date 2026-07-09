@@ -62,7 +62,7 @@ def costingsummary_add(request,costingsummary_id=0):
                 output = 0
 
             # Combined Wood Cost
-            wood_cost = PkcostingInfo.objects.filter(ct_stock_type__in=[1, 4], ct_cost_type=8, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            wood_cost = PkcostingInfo.objects.filter(ct_stock_type__in=[1, 4], ct_cost_type=8, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
             wood_cost = round(wood_cost, 2)
 
             # Combined Total CFT
@@ -70,31 +70,31 @@ def costingsummary_add(request,costingsummary_id=0):
             total_cft = round(total_cft, 2)
 
             # Combined Engineer Cost
-            engineer_cost = PkcostingInfo.objects.filter(ct_cost_type=2, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            engineer_cost = PkcostingInfo.objects.filter(ct_cost_type=2, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
             engineer_cost = round(engineer_cost, 2)
 
             # Combined Packing/Labour Cost
-            packing_labour_cost = PkcostingInfo.objects.filter(ct_cost_type=3, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            packing_labour_cost = PkcostingInfo.objects.filter(ct_cost_type=3, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
             labour_cost = round(packing_labour_cost, 2)
 
             # Combined Crane Cost
-            crane_cost = PkcostingInfo.objects.filter(ct_cost_type=6, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            crane_cost = PkcostingInfo.objects.filter(ct_cost_type=6, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
             crane_cost = round(crane_cost, 2)
 
             # Combined HT Cost
-            ht_cost = PkcostingInfo.objects.filter(ct_cost_type=5, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            ht_cost = PkcostingInfo.objects.filter(ct_cost_type=5, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
             ht_cost = round(ht_cost, 2)
 
             # Combined Management Cost
-            management_cost = PkcostingInfo.objects.filter(ct_cost_type=7, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            management_cost = PkcostingInfo.objects.filter(ct_cost_type=7, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
             management_cost = round(management_cost, 2)
 
             # Combined Material Cost (Consumables)
-            material_cost = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type=2, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            material_cost = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type=2, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
             material_cost = round(material_cost, 2)
 
             # Combined Transport Cost
-            transport_cost = PkcostingInfo.objects.filter(ct_cost_type=4, **base_filter).aggregate(Sum('ct_total_cost'))['ct_total_cost__sum'] or 0.0
+            transport_cost = PkcostingInfo.objects.filter(ct_cost_type=4, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
             transport_cost = round(transport_cost, 2)
 
             # Others Cost (from existing model record)
@@ -147,7 +147,7 @@ def costingsummary_add(request,costingsummary_id=0):
             job_type_dict = {}
             for item in costing_list:
                 job_type = str(item.ct_requirement) if item.ct_requirement else "None"
-                cost = float(item.ct_total_cost or 0)
+                cost = float(item.ct_totalbox_cost or 0)
                 if job_type not in job_type_dict:
                     po_num = "—"
                     po_value = "—"
