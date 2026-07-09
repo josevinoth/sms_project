@@ -75,7 +75,16 @@
 </div>
 <script>
     $(document).ready(function() {
-    $('#vendor_list').DataTable();
-} );
+        $('#vendor_list').DataTable({
+            dom: 'lBfrtip',
+            lengthMenu: [
+                [10, 25, 50, -1],
+                [10, 25, 50, 'All']
+            ],
+            buttons: [
+                'copy', 'csv', 'excel', 'print'
+            ]
+        });
+    });
 </script>
 {% endblock content %}

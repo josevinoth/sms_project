@@ -595,6 +595,8 @@ urlpatterns = [
          name='enquirynotevehicle_delete'),  # delete enquirynotevehicle
     path('enquirynotevehicle_cancel/', views.enquirynotevehicle_cancel, name='enquirynotevehicle_cancel'),
     # Cancel enquirynotevehicle
+
+
     path('consignmentgoods_list/', views.consignmentgoods_list, name='consignmentgoods_list'),  # List consignmentgoods
     path('consignmentgoods_insert/', views.consignmentgoods_add, name='consignmentgoods_insert'),
     # Add consignmentgoods

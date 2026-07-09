@@ -111,6 +111,10 @@ def tripclosure_add(request, tripclosure_id=0):
             enquiry_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_enquirynumber
             print("I am inside Get add Tripclosure")
             tripclosure_form = TripclosureaddForm()
+            # Restrict dropdown to "Awaiting Trip Settlement" (ID 4) and set default
+            tripclosure_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id=4)
+            tripclosure_form.fields['tc_financestatus'].empty_label = None
+            tripclosure_form.fields['tc_financestatus'].initial = Tripstatusinfo.objects.filter(id=4).first()
             tripclosurefiles_form = TripclosurefilesForm()
             status_list = list(Tripstatusinfo.objects.filter(id__in=[4, 5, 6, 7]))
             context = {
@@ -138,6 +142,12 @@ def tripclosure_add(request, tripclosure_id=0):
 
             consignment_num = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_consignmentdetails
             tripclosure_form = TripclosureaddForm(instance=tripclosure)
+            
+            # Restrict dropdown to "Awaiting Trip Settlement" (ID 4) and set default
+            tripclosure_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id=4)
+            tripclosure_form.fields['tc_financestatus'].empty_label = None
+            if not tripclosure.tc_financestatus:
+                tripclosure_form.fields['tc_financestatus'].initial = Tripstatusinfo.objects.filter(id=4).first()
 
             # Populate Customer Name and Trip Date
             if tripclosure.tr_enquirynumber:
@@ -191,7 +201,11 @@ def tripclosure_add(request, tripclosure_id=0):
                 Q(va_vehiclenumber__vm_registrationnumber=trip.tr_vehiclenumber) |
                 Q(va_vehiclenumber_mkt=trip.tr_vehiclenumber)
             ).first()
-            va_sale = allotment.va_sale if allotment else 0
+            va_sale = allotment.va_sale if (allotment and allotment.va_sale is not None) else 0.0
+
+            # Pre-populate Trip Charges from va_sale if currently zero
+            if not trip.tc_tripcost or trip.tc_tripcost == 0.0:
+                tripclosure_form.initial['tc_tripcost'] = va_sale
 
             is_business_empty_and_cancelled = False
             if trip.tr_category_id == 3 and trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_status_id == 8:

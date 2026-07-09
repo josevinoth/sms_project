@@ -13,7 +13,6 @@ from django.core.paginator import Paginator
 
 from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.location_info_mod import Location_info
-from ..models import Places
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id, is_tms_manager
 
 
@@ -56,14 +55,6 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
         if enquirynote_id == 0:
             print("I am inside Get add Enquirynote")
             form = EnquirynoteaddForm(initial={'en_assignedto': user_id})
-            
-            # Prevent massive DOM rendering by emptying querysets
-            form.fields['en_fromlocaion'].queryset = Places.objects.none()
-            form.fields['en_tolocation'].queryset = Places.objects.none()
-            form.fields['en_touchpoint'].queryset = Places.objects.none()
-            form.fields['en_touchpoint2'].queryset = Places.objects.none()
-            form.fields['en_touchpoint3'].queryset = Places.objects.none()
-            form.fields['en_touchpoint4'].queryset = Places.objects.none()
 
             enquiryvechicle_form = EnquirynotevehicleForm()
             context = {
@@ -80,20 +71,6 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
             tr_enqiury_id = enquirynote.en_enquirynumber
             request.session['ses_enqiury_id'] = tr_enqiury_id  # Keep for backward compat if needed
             form = EnquirynoteaddForm(instance=enquirynote)
-            
-            # Limit querysets to only the currently selected option to prevent huge HTML DOM
-            if enquirynote.en_fromlocaion_id: form.fields['en_fromlocaion'].queryset = Places.objects.filter(id=enquirynote.en_fromlocaion_id)
-            else: form.fields['en_fromlocaion'].queryset = Places.objects.none()
-            if enquirynote.en_tolocation_id: form.fields['en_tolocation'].queryset = Places.objects.filter(id=enquirynote.en_tolocation_id)
-            else: form.fields['en_tolocation'].queryset = Places.objects.none()
-            if getattr(enquirynote, 'en_touchpoint_id', None): form.fields['en_touchpoint'].queryset = Places.objects.filter(id=enquirynote.en_touchpoint_id)
-            else: form.fields['en_touchpoint'].queryset = Places.objects.none()
-            if enquirynote.en_touchpoint2_id: form.fields['en_touchpoint2'].queryset = Places.objects.filter(id=enquirynote.en_touchpoint2_id)
-            else: form.fields['en_touchpoint2'].queryset = Places.objects.none()
-            if enquirynote.en_touchpoint3_id: form.fields['en_touchpoint3'].queryset = Places.objects.filter(id=enquirynote.en_touchpoint3_id)
-            else: form.fields['en_touchpoint3'].queryset = Places.objects.none()
-            if enquirynote.en_touchpoint4_id: form.fields['en_touchpoint4'].queryset = Places.objects.filter(id=enquirynote.en_touchpoint4_id)
-            else: form.fields['en_touchpoint4'].queryset = Places.objects.none()
 
             # enquirynotevehicle = Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
             enquiryvechicle_form = EnquirynotevehicleForm()

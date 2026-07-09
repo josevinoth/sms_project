@@ -152,6 +152,10 @@ def attached_bill_edit(request, id):
 # ==================================================
 @login_required(login_url='login_page')
 def attached_bill_delete(request, id):
+    if request.session.get('ses_role') not in ['Admin', 'Super User']:
+        messages.error(request, "You do not have permission to delete this record.")
+        return redirect('attached_bill_list')
+
     record = get_object_or_404(AttachedBillInfo, id=id)
     if request.method == "POST":
         record.delete()
