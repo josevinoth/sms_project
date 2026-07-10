@@ -317,7 +317,7 @@
                                                 <div class="col-4">
                                                     
                                                     <div class="bg-info text-white text-center p-1 mb-2">Corp Staff</div>
-                                                     {% render_field form.bf_corp_staff id="bf_corp_staff" hidden="True" %}
+                                                     {% render_field form.bf_corp_staff id="bf_corp_staff" hidden="True" data-subtotal="True" %}
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend"><span class="input-group-text">Bonus Corp Staff</span></div>
                                                         {% render_field form.bf_bonus_corp_staff id="bf_bonus_corp_staff" class="form-control" %}
@@ -366,7 +366,7 @@
                                                 <div class="col-4">
                                                     
                                                     <div class="bg-info text-white text-center p-1 mb-2">Dept Staff</div>
-                                                     {% render_field form.bf_dept_staff id="bf_dept_staff" hidden="True" %}
+                                                     {% render_field form.bf_dept_staff id="bf_dept_staff" hidden="True" data-subtotal="True" %}
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend"><span class="input-group-text">Bonus Dep Staff</span></div>
                                                         {% render_field form.bf_bonus_staff id="bf_bonus_staff" class="form-control" %}
@@ -415,7 +415,7 @@
                                                 <div class="col-4 company-transport">
                                                     
                                                     <div class="bg-info text-white text-center p-1 mb-2">Drivers</div>
-                                                     {% render_field form.bf_driver_staff id="bf_driver_staff" hidden="True" %}
+                                                     {% render_field form.bf_driver_staff id="bf_driver_staff" hidden="True" data-subtotal="True" %}
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend"><span class="input-group-text">Bonus Drivers</span></div>
                                                         {% render_field form.bf_bonus_drivers id="bf_bonus_drivers" class="form-control" %}
@@ -524,7 +524,7 @@
                                                     </div>
                                                     
                                                     <div class="bg-info text-white text-center p-1 mb-2">Fixed</div>
-                                                     {% render_field form.bf_fixed id="bf_fixed" hidden="True" %}
+                                                     {% render_field form.bf_fixed id="bf_fixed" hidden="True" data-subtotal="True" %}
                                                     
                                                     <!-- Warehouse Fixed Ops -->
                                                     <div class="company-warehouse">
@@ -576,7 +576,7 @@
                                                     </div>
                                                     
                                                     <div class="bg-info text-white text-center p-1 mb-2">Variable</div>
-                                                     {% render_field form.bf_variable id="bf_variable" hidden="True" %}
+                                                     {% render_field form.bf_variable id="bf_variable" hidden="True" data-subtotal="True" %}
 
                                                     <!-- Warehouse Variable Ops -->
                                                     <div class="company-warehouse">
@@ -693,7 +693,7 @@
                                                     </div>
                                                     
                                                     <div class="bg-info text-white text-center p-1 mb-2">Fixed</div>
-                                                     {% render_field form.bf_oe_Fixed id="bf_oe_Fixed" hidden="True" %}
+                                                     {% render_field form.bf_oe_Fixed id="bf_oe_Fixed" hidden="True" data-subtotal="True" %}
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
                                                             <span class="input-group-text">Depreciation Expenses</span>
@@ -735,7 +735,7 @@
                                                     </div>
                                                     
                                                     <div class="bg-info text-white text-center p-1 mb-2">Variable</div>
-                                                     {% render_field form.bf_oe_variable id="bf_oe_variable" hidden="True" %}
+                                                     {% render_field form.bf_oe_variable id="bf_oe_variable" hidden="True" data-subtotal="True" %}
                                                     <div class="input-group input-group-sm mb-3">
                                                         <div class="input-group-prepend">
                                                             <span class="input-group-text">CGST Ineligible ITC</span>
@@ -908,7 +908,11 @@
 
         function sumFields(selector) {
             let total = 0;
-            $(selector).find('input[type="number"], input:not([type])').each(function() {
+            // Exclude fields with HTML [hidden] attribute — these are pre-computed subtotals
+            // (e.g. bf_oe_Fixed, bf_oe_variable, bf_corp_staff, bf_dept_staff, bf_driver_staff,
+            //  bf_fixed, bf_variable) stored in hidden inputs. Including them would double-count
+            // because their individual component fields are also summed below them.
+            $(selector).find('input[type="number"], input:not([type])').not('[hidden]').each(function() {
                 if (isFieldActive(this)) {
                     let val = parseFloat($(this).val()) || 0;
                     total += val;
