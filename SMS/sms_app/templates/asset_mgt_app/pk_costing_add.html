@@ -686,10 +686,10 @@
                         $('#ct_uom').val(data.pc_uom_id);
                     }
                     
-                    // Also update dimensions if available
-                    if(data.pc_length) $('#ct_length_req').val(data.pc_length);
-                    if(data.pc_width) $('#ct_width_req').val(data.pc_width);
-                    if(data.pc_height) $('#ct_height_req').val(data.pc_height);
+                    // Dimensions from part code intentionally omitted per user request.
+                    // if(data.pc_length) $('#ct_length_req').val(data.pc_length);
+                    // if(data.pc_width) $('#ct_width_req').val(data.pc_width);
+                    // if(data.pc_height) $('#ct_height_req').val(data.pc_height);
                     
                     change_cost_type();
                 }
