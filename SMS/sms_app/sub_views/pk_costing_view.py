@@ -149,6 +149,15 @@ def costing_add(request, costing_id=0):
             )
         if form.is_valid():
             print('Form is valid')
+            
+            # --- BACKEND OVERRIDE FOR TOTAL COST ---
+            # To ensure the total cost is always correctly calculated regardless of JS calculation errors
+            costing_temp = form.save(commit=False)
+            unit_cost = float(costing_temp.ct_total_cost or 0)
+            qty = float(costing_temp.ct_na_quantity or 0)
+            form.instance.ct_totalbox_cost = round(unit_cost * qty, 2)
+            # ---------------------------------------
+            
             # Be defensive: ct_cost_type may be missing or empty (e.g. placeholder). Default to 0.
             cost_type_raw = request.POST.get('ct_cost_type') or '0'
             try:
@@ -638,7 +647,10 @@ def pk_store_po_dimension_id(request):
     try:
         b = POdimension.objects.get(id=ct_requirement_id)
     except (POdimension.DoesNotExist, ValueError):
-        return JsonResponse({'error': 'Not found'}, status=200)
+        # Fallback if ct_requirement_id is the Nadimension ID instead of POdimension ID
+        b = POdimension.objects.filter(pod_nad_id=ct_requirement_id, pod_po_num=ct_customer_po).order_by('-id').first()
+        if not b:
+            return JsonResponse({'error': 'Not found'}, status=200)
 
     # pod_quantity for costing calculation always comes from POdimension (quantity given when creating job number)
     # This ensures cost calculations use the job-level quantity, NOT the NA assessment quantity
