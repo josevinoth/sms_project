@@ -147,7 +147,7 @@ def costingsummary_add(request,costingsummary_id=0):
             job_type_dict = {}
             for item in costing_list:
                 job_type = str(item.ct_requirement) if item.ct_requirement else "None"
-                cost = float(item.ct_totalbox_cost or 0)
+                cost = float(item.ct_total_cost or 0)
                 if job_type not in job_type_dict:
                     po_num = "—"
                     po_value = "—"
