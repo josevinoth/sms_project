@@ -418,6 +418,12 @@ def pk_create_batch_job(request):
             quotations = PkquotationInfo.objects.filter(pkqt_requirement=pod.pod_nad)
             
             for q in quotations:
+                # Calculate ratio to scale total values based on the PO Job Quantity vs original Need Assessment Quantity
+                old_qty = float(q.pkqt_na_quantity or 1)
+                if old_qty == 0:
+                    old_qty = 1
+                ratio = job_qty / old_qty
+
                 PkcostingInfo.objects.create(
                     ct_cost_type=q.pkqt_cost_type,
                     ct_stock_description=q.pkqt_stock_description,
@@ -427,7 +433,7 @@ def pk_create_batch_job(request):
                     ct_rate=q.pkqt_rate,
                     ct_days=q.pkqt_days,
                     ct_total_cost=q.pkqt_total_cost,
-                    ct_quantity=q.pkqt_quantity,
+                    ct_quantity=round(float(q.pkqt_quantity or 0) * ratio),
                     ct_size=q.pkqt_size,
                     ct_uom=q.pkqt_uom,
                     ct_assessment_num=q.pkqt_assessment_num,
@@ -441,17 +447,17 @@ def pk_create_batch_job(request):
                     ct_width_req=q.pkqt_width_req,
                     ct_height_req=q.pkqt_height_req,
                     ct_length_req=q.pkqt_length_req,
-                    ct_quantity_req=job_qty,  # CRITICAL: Use the SPECIFIED JOB QUANTITY
-                    ct_sqrt_req=q.pkqt_sqrt_req,
+                    ct_quantity_req=q.pkqt_quantity_req,  # Retain per-unit requirement from quotation
+                    ct_sqrt_req=round(float(q.pkqt_sqrt_req or 0) * ratio, 2),
                     ct_stock_status=stock_status_instance,
                     ct_customer_name=q.pkqt_customer_name,
                     ct_customer_new_name=q.pkqt_customer_new_name2,
                     ct_customer_po=po,
                     ct_updated_by=request.user,
-                    ct_na_quantity=q.pkqt_na_quantity,
-                    ct_totalbox_cost=q.pkqt_totalbox_cost,
+                    ct_na_quantity=job_qty,  # The actual PO Job quantity
+                    ct_totalbox_cost=round(float(q.pkqt_total_cost or 0) * job_qty, 2),
                     ct_part_code=q.pkqt_part_code,
-                    ct_total_cft_display=q.pkqt_total_cft_display,
+                    ct_total_cft_display=round(float(q.pkqt_total_cft_display or 0) * ratio, 2),
                     ct_po_dimension=pod,
                     ct_job_no=job_no  # Tag with unique job number
                 )
