@@ -714,14 +714,12 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
         // -----------------------------------------
-        // 3️⃣ OWN / ATTACHED VEHICLES (ID = 1 or 2) → SELL RATE REQUIRED
+        // 3️⃣ SELL RATE REQUIRED
         // -----------------------------------------
-        if (vehicleSource === 1 || vehicleSource === 2) {
-            if (sellRate === "" || sellRate === "0") {
-                event.preventDefault();
-                alert("Sell Rate is required for Own or Attached Vehicles. Please assign a Sell Rate before submitting.");
-                return false;
-            }
+        if (sellRate === "" || sellRate === "0") {
+            event.preventDefault();
+            alert("Sell Rate is required. Please assign a Sell Rate before submitting.");
+            return false;
         }
         // -----------------------------------------
         // 4️⃣ MARKET VEHICLE (ID = 3) → VENDOR REQUIRED
