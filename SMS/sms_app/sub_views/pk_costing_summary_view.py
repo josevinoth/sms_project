@@ -172,6 +172,31 @@ def costingsummary_add(request,costingsummary_id=0):
                 for jt, data in job_type_dict.items() if jt != "None"
             ]
 
+            retrival_queryset = costing_list.filter(ct_cost_type=8, ct_stock_status__in=[1, 3])
+            grouped_indent = {}
+            for item in retrival_queryset:
+                part_code = item.ct_part_code
+                if not part_code:
+                    continue
+                part_code_id = part_code.id
+                key = f"{part_code_id}"
+                
+                if key not in grouped_indent:
+                    grouped_indent[key] = {
+                        'ids': [item.id],
+                        'ct_part_code': part_code.pc_code,
+                        'ct_part_code_name': part_code.pc_stock_description.stock_description if part_code.pc_stock_description else '',
+                        'ct_uom': part_code.pc_uom.unit_of_measure if part_code.pc_uom else '',
+                        'total_quantity_req': float(item.ct_quantity_req or 0) * float(item.ct_na_quantity or 1),
+                        'ct_stock_status': item.ct_stock_status.status_name if item.ct_stock_status else '',
+                        'status_id': item.ct_stock_status.id if item.ct_stock_status else 1,
+                    }
+                else:
+                    grouped_indent[key]['ids'].append(item.id)
+                    grouped_indent[key]['total_quantity_req'] += float(item.ct_quantity_req or 0) * float(item.ct_na_quantity or 1)
+            
+            indent_summary_list = list(grouped_indent.values())
+
             context={
                     'form': form,
                     'first_name': first_name,
@@ -190,7 +215,8 @@ def costingsummary_add(request,costingsummary_id=0):
                     'role_id': role_id,
                     'output': output,
                     'current_step': 'costing',
-                    'retrival_list': costing_list.filter(ct_cost_type=8, ct_stock_status__in=[1, 3]),
+                    'retrival_list': retrival_queryset,
+                    'indent_summary_list': indent_summary_list,
                     'acceptance_list': costing_list.filter(ct_cost_type=8, ct_stock_status=2),
                     'tracker_flags': get_tracker_flags(needassessment_id),
                     'job_type_totals': job_type_totals,
