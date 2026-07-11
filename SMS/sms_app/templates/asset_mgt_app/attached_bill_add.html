@@ -324,8 +324,18 @@
         var from_date = $('#id_ab_from_date').val();
         var to_date = $('#id_ab_to_date').val();
 
-        if (vendor_id || vehicle_id) {
+        if (vehicle_id) {
             var tbody = $('#tripsTableBody');
+
+            // Don't fetch trips until BOTH dates are filled — otherwise backend
+            // returns all trips for the vehicle (no date filter) and km is wrong.
+            if (!from_date || !to_date) {
+                tbody.empty().append('<tr><td colspan="12" class="text-center text-muted">Please select both From Date and To Date to load trips</td></tr>');
+                $('#id_ab_total_km_run').val(0);
+                calculateAmounts();
+                return;
+            }
+
             tbody.empty().append('<tr><td colspan="12" class="text-center">Loading trips... <i class="fas fa-spinner fa-spin"></i></td></tr>');
 
             $.ajax({
@@ -347,9 +357,9 @@
                         }
                         extraKmRate = data.extra_km_rate || 0;
                     }
-                    // Always set Total KM Run from backend vehicle-log sum
-                    // (same calculation as Vehicle Log Report — sum of Used KM per trip)
-                    if (data.total_km_run !== undefined && data.total_km_run > 0) {
+                    // Always update Total KM Run from backend — even if 0 — so
+                    // changing to a shorter date range properly clears the stale value.
+                    if (data.total_km_run !== undefined) {
                         $('#id_ab_total_km_run').val(data.total_km_run);
                     }
                     // Auto-fill leave days
@@ -405,6 +415,15 @@
                     tbody.empty().append('<tr><td colspan="12" class="text-center text-danger">Error loading data. Please try again.</td></tr>');
                 }
             });
+        } else {
+            // Clear the form and table if no vehicle is selected
+            $('#tripsTableBody').empty().append('<tr><td colspan="12" class="text-center text-muted">Please select a vehicle to load trips</td></tr>');
+            $('#id_ab_vehicle_type').val('');
+            $('#id_ab_buy_cost').val('0');
+            $('#id_ab_agreed_km').val('0');
+            $('#id_ab_total_km_run').val('0');
+            $('#id_ab_leave_days').val('0');
+            calculateAmounts();
         }
     });
 

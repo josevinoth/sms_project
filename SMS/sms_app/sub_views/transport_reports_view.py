@@ -907,8 +907,6 @@ def vehicle_log_report_ajax_view(request):
     
     if vehicle_source:
         trips = trips.filter(tr_vehiclesource_id=vehicle_source)
-    else:
-        trips = trips.filter(tr_vehiclesource_id__in=[1, 2])
 
     if vehicle_number:
         trips = trips.filter(tr_vehiclenumber__icontains=vehicle_number)
@@ -917,31 +915,13 @@ def vehicle_log_report_ajax_view(request):
 
     if from_date and to_date:
         trips = trips.filter(
-            (Q(tr_loading_time__date__gte=from_date) & Q(tr_loading_time__date__lte=to_date)) |
-            (Q(tr_departeddate__date__gte=from_date) & Q(tr_departeddate__date__lte=to_date)) |
-            (Q(tr_departeddate_pickup__date__gte=from_date) & Q(tr_departeddate_pickup__date__lte=to_date)) |
-            (Q(tr_reporteddate__date__gte=from_date) & Q(tr_reporteddate__date__lte=to_date)) |
-            (Q(tr_reporteddate_pickup__date__gte=from_date) & Q(tr_reporteddate_pickup__date__lte=to_date)) |
-            (Q(tr_unloading_time__date__gte=from_date) & Q(tr_unloading_time__date__lte=to_date))
+            tr_departeddate__date__gte=from_date,
+            tr_departeddate__date__lte=to_date
         )
     elif from_date:
-        trips = trips.filter(
-            Q(tr_loading_time__date__gte=from_date) |
-            Q(tr_departeddate__date__gte=from_date) |
-            Q(tr_departeddate_pickup__date__gte=from_date) |
-            Q(tr_reporteddate__date__gte=from_date) |
-            Q(tr_reporteddate_pickup__date__gte=from_date) |
-            Q(tr_unloading_time__date__gte=from_date)
-        )
+        trips = trips.filter(tr_departeddate__date__gte=from_date)
     elif to_date:
-        trips = trips.filter(
-            Q(tr_loading_time__date__lte=to_date) |
-            Q(tr_departeddate__date__lte=to_date) |
-            Q(tr_departeddate_pickup__date__lte=to_date) |
-            Q(tr_reporteddate__date__lte=to_date) |
-            Q(tr_reporteddate_pickup__date__lte=to_date) |
-            Q(tr_unloading_time__date__lte=to_date)
-        )
+        trips = trips.filter(tr_departeddate__date__lte=to_date)
 
     if from_loc_id:
         trips = trips.filter(tr_departedlocation_id=from_loc_id)

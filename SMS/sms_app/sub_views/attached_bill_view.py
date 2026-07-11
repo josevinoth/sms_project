@@ -225,14 +225,12 @@ def get_attached_vehicle_details(request):
             filters &= Q(tr_vehiclenumber__in=vehicle_reg_nos)
         
         if f_dt_obj and t_dt_obj:
-            # Use IST-aware datetime boundaries to avoid UTC offset issues on server
-            # expanded_start = day before from_date, expanded_end = day after to_date
-            expanded_start = f_dt_obj - timedelta(days=1)
-            expanded_end = t_dt_obj + timedelta(days=1)
-            # Convert to timezone-aware datetimes (start of day in IST = 00:00 IST, end = 23:59:59 IST)
-            ist_start = dj_timezone.make_aware(dt_datetime(expanded_start.year, expanded_start.month, expanded_start.day, 0, 0, 0))
-            ist_end = dj_timezone.make_aware(dt_datetime(expanded_end.year, expanded_end.month, expanded_end.day, 23, 59, 59))
-            filters &= Q(tr_departeddate__gte=ist_start, tr_departeddate__lte=ist_end)
+            from_date_str = f_dt_obj.isoformat()  # YYYY-MM-DD
+            to_date_str   = t_dt_obj.isoformat()
+            filters &= (
+            Q(tr_departeddate__date__gte=from_date_str) &
+            Q(tr_departeddate__date__lte=to_date_str)
+        )
 
         if filters:
             bill_id = request.GET.get('bill_id')
@@ -244,15 +242,12 @@ def get_attached_vehicle_details(request):
             for b_trips in billed_trips_query.values_list('ab_selected_trips', flat=True):
                 if b_trips:
                     already_billed.extend([t.strip() for t in b_trips.split(',') if t.strip()])
-            
-            if already_billed:
-                filters &= ~Q(tr_tripnumber__in=already_billed)
 
-            # Compute Total KM Run using the exact same filters as the bill table
-            # so that it perfectly matches the sum of the trips and avoids the "KM Difference Adjustment"
+            # ── Compute Total KM BEFORE excluding already-billed trips ──────────────
+            # This ensures Total KM always matches the Vehicle Log Report (all trips
+            # for the vehicle in the period, regardless of billing status).
             all_period_trips = TripdetailInfo.objects.filter(filters).filter(
-                tr_category_id__in=[1, 2, 3],
-                tr_vehiclesource_id__in=[1, 2]
+                tr_category_id__in=[1, 2, 3]  # Regular + Empty + Business Empty
             )
             total_km_run_sum = 0
             for t in all_period_trips:
@@ -262,7 +257,15 @@ def get_attached_vehicle_details(request):
                     diff = c_km - s_km
                     if 0 < diff < 15000:
                         total_km_run_sum += diff
+            # ────────────────────────────────────────────────────────────────────────
 
+            # NOW apply already_billed exclusion so the trip TABLE only shows
+            # trips that are not yet billed in another bill.
+            if already_billed:
+                filters &= ~Q(tr_tripnumber__in=already_billed)
+
+            # Trips table stays category 1 only — this list is what gets billed per-trip,
+            # Empty/Business Empty trips aren't individually billable line items.
             trips = TripdetailInfo.objects.filter(filters).filter(tr_category_id=1).order_by('tr_departeddate')
             trip_dates = set()
 
@@ -310,7 +313,7 @@ def get_attached_vehicle_details(request):
 
             # Total KM = sum of Used KM for ALL period trips (matches Vehicle Log Report)
             data['total_km_run'] = total_km_run_sum
-
+            data['debug_version'] = 'v2-allcats-fix'
             if f_dt_obj and t_dt_obj:
                 # Build the full set of leave dates first
                 leave_dates_set = set()
