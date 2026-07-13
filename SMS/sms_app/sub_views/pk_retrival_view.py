@@ -48,11 +48,14 @@ def pk_retrival_add(request, retrival_id=0):
         else:
             retrival = PkcostingInfo.objects.get(pk=retrival_id)
             form = PkretrivalForm(instance=retrival)
+            total_req_qty = float(retrival.ct_quantity_req or 0) * float(retrival.ct_na_quantity or 1)
+            
         context = {
             'form': form,
             'first_name': first_name,
             'user_id': user_id,
             'na_assessment_num_id': na_assessment_num_id,
+            'total_req_qty': total_req_qty if retrival_id != 0 else 0,
         }
         return render(request, "asset_mgt_app/pk_retrival_add.html", context)
 
@@ -74,8 +77,9 @@ def pk_retrival_add(request, retrival_id=0):
             form = PkretrivalForm(request.POST, instance=retrival)
             if form.is_valid():
                 stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
-                requested_qty = request.POST.get('ct_quantity_req')
-                print(requested_qty)
+                # Try getting the total_req_qty (the fully multiplied amount), fallback to ct_quantity_req
+                requested_qty = request.POST.get('total_req_qty') or request.POST.get('ct_quantity_req')
+                print("Requested Qty:", requested_qty)
 
                 if stock_purchase_num_id:
                     try:
@@ -99,10 +103,9 @@ def pk_retrival_add(request, retrival_id=0):
                                 ref_no = stock_purchase_num # This is the original GRN number (e.g. GRN/PK/1001816)
                                 if not StockMaintenance.objects.filter(sm_stock_type_id=2, sm_invoice_no=ref_no, sm_description__endswith=f"(Costing ID: {retrival_id})").exists():
                                     try:
-                                        # Use ct_na_quantity (job type qty * job type quantity) 
-                                        # which is the actual stock count being retrieved
+                                        # Use the submitted requested_qty which represents the total needed
                                         retrival_obj = PkcostingInfo.objects.get(pk=retrival_id)
-                                        actual_qty = float(retrival_obj.ct_na_quantity or requested_qty or 0)
+                                        actual_qty = float(requested_qty)
                                         
                                         StockMaintenance.objects.create(
                                             sm_stock_type_id=2, # Retrieval

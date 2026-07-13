@@ -51,7 +51,8 @@
                             <div class="x-small text-muted">Asmnt: {{ pk_retrivalinfo.ct_assessment_num }}</div>
                         </td>
                         <td>
-                            <div class="small">{{ pk_retrivalinfo.ct_customer_po }}</div>
+                            <div class="font-weight-bold text-dark">{{ pk_retrivalinfo.ct_customer_name.cu_name|default:"-" }}</div>
+                            <div class="small text-muted">{{ pk_retrivalinfo.ct_customer_po }}</div>
                         </td>
                         <td><span class="badge badge-secondary">{{ pk_retrivalinfo.ct_stock_purchase_number }}</span></td>
                         <td><span class="badge badge-info">{{ pk_retrivalinfo.ct_stock_type }}</span></td>

@@ -264,7 +264,9 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
     client_scope=PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_client_scope
     bvm_scope=PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_bvm_scope
     needassessment_num=PkneedassessmentInfo.objects.get(pk=needassessment_id).na_assessment_num
-    quotation=Nadimension.objects.filter(nad_assess_num=needassessment_id)
+    quotation = list(Nadimension.objects.filter(nad_assess_num=needassessment_id))
+    for q in quotation:
+        q.formatted_assess_num = str(q.nad_assess_num.na_assessment_num).replace('_', '_ ')
     # get requirement type from need assessment dimension model
     na_req=Nadimension.objects.filter(nad_assess_num=needassessment_id)
     quotation_number = PkquotationsummaryInfo.objects.get(qs_assessment_num=needassessment_id).qs_quotation_number

@@ -120,12 +120,90 @@ def pk_acceptance_add(request,retrival_id=0):
 @login_required(login_url='login_page')
 def pk_acceptance_list(request):
     first_name = request.session.get('first_name')
+    acceptance_queryset = PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=2).order_by('-id')
+
+    grouped_acceptance = {}
+    for item in acceptance_queryset:
+        job_no = item.ct_job_no
+        part_code_id = item.ct_part_code_id
+        stock_id = item.ct_stock_purchase_number.sm_stock_purchase_number if item.ct_stock_purchase_number else ''
+        key = f"{job_no}_{part_code_id}_{stock_id}"
+        
+        if key not in grouped_acceptance:
+            grouped_acceptance[key] = {
+                'ids': [str(item.id)],
+                'job_no': job_no,
+                'customer_name': item.ct_assessment_num.na_customer_name.cu_name if item.ct_assessment_num and item.ct_assessment_num.na_customer_name else '',
+                'part_code': item.ct_part_code.pc_code if item.ct_part_code else '',
+                'description': item.ct_part_code.pc_stock_description.stock_description if item.ct_part_code and item.ct_part_code.pc_stock_description else '',
+                'quantity': float(item.ct_na_quantity or 0) * float(item.ct_quantity_req or 0),
+                'stock_id': stock_id,
+                'updated_at': item.ct_updated_at,
+                'updated_by': item.ct_updated_by.first_name if item.ct_updated_by else '',
+            }
+        else:
+            grouped_acceptance[key]['ids'].append(str(item.id))
+            grouped_acceptance[key]['quantity'] += float(item.ct_na_quantity or 0) * float(item.ct_quantity_req or 0)
+            
+    for k, v in grouped_acceptance.items():
+        v['ids_csv'] = ",".join(v['ids'])
+
     context = {
-                'pk_retrival_list' : PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=2).order_by('-id'),
-                'first_name': first_name,
-                'current_step': 'acceptance',
-               }
+        'grouped_list' : list(grouped_acceptance.values()),
+        'first_name': first_name,
+        'current_step': 'acceptance',
+    }
     return render(request,"asset_mgt_app/pk_acceptance_list.html",context)
+
+@login_required(login_url='login_page')
+def pk_acceptance_accept_group(request):
+    if request.method == "POST":
+        ids_csv = request.POST.get('ids_csv', '')
+        if ids_csv:
+            ids = [int(x) for x in ids_csv.split(',') if x]
+            for pk_id in ids:
+                try:
+                    retrival = PkcostingInfo.objects.get(pk=pk_id)
+                    retrival.ct_stock_status_id = 4 # 4 is Received/Accepted
+                    retrival.save(update_fields=['ct_stock_status'])
+                    
+                    # Also log the automatic return if applicable
+                    if retrival.ct_exe_quantity_req and retrival.ct_exe_quantity_req > 0:
+                        if not StockMaintenance.objects.filter(sm_stock_type_id=3, sm_description__contains=f"Costing ID: {retrival.id}").exists():
+                            user_id = request.session.get('ses_userID')
+                            sm_return = StockMaintenance.objects.create(
+                                sm_stock_type_id=3,
+                                sm_partcode=retrival.ct_part_code,
+                                sm_thickness=retrival.ct_exe_height_req or 0,
+                                sm_width=retrival.ct_exe_width_req or 0,
+                                sm_length=retrival.ct_exe_length_req or 0,
+                                sm_invoice_date=datetime.now().date(),
+                                sm_invoice_no=str(retrival.ct_assessment_num.na_assessment_num) if retrival.ct_assessment_num else "",
+                                sm_description=f"Automatic Excess Return from Assessment {retrival.ct_assessment_num.na_assessment_num if retrival.ct_assessment_num else 'N/A'} (Costing ID: {retrival.id})",
+                                sm_count=retrival.ct_exe_quantity_req or 0,
+                                sm_total_cft=retrival.ct_exe_sqrt_req or 0,
+                                sm_per_unit_cost=retrival.ct_rate or 0,
+                                sm_updated_by_id=user_id
+                            )
+                            # Generate Stock Maintenance number
+                            fy = get_financial_year()
+                            branch_id = get_session_branch_id(request)
+                            branch_code = get_branch_code(branch_id)
+                            prefix = f"{fy}_{branch_code}_GRN_PK_"
+                            sm_return.sm_stock_purchase_number = generate_next_number(StockMaintenance, 'sm_stock_purchase_number', prefix, 6)
+                            sm_return.save(update_fields=['sm_stock_purchase_number'])
+
+                            if retrival.ct_excess_status and retrival.ct_excess_status.id == 3:
+                                from ..sub_models.excess_mod import ExcessStock
+                                try:
+                                    retrival.ct_excess_status = ExcessStock.objects.get(id=5)
+                                    retrival.save(update_fields=['ct_excess_status'])
+                                except ExcessStock.DoesNotExist:
+                                    pass
+                except Exception as e:
+                    print(f"Error accepting item {pk_id}: {e}")
+            messages.success(request, 'Group items successfully accepted.')
+    return redirect('pk_acceptance_list')
 
 #Delete retrival
 @login_required(login_url='login_page')

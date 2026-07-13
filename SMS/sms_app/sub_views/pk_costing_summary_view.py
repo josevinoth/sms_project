@@ -55,7 +55,7 @@ def costingsummary_add(request,costingsummary_id=0):
                 costing_list = PkcostingInfo.objects.filter(ct_assessment_num=needassessment_id, ct_customer_po=customer_po_id).order_by('-id')
                 base_filter = {'ct_assessment_num': needassessment_id, 'ct_customer_po': customer_po_id}
 
-            Invoice = PkcostingInfo.objects.filter(**base_filter).values_list('ct_stock_status', flat=True)
+            Invoice = PkcostingInfo.objects.filter(ct_cost_type=8, **base_filter).values_list('ct_stock_status', flat=True)
             if all(status in [4] for status in Invoice) and len(Invoice) > 0:
                 output = 1
             else:
@@ -172,7 +172,7 @@ def costingsummary_add(request,costingsummary_id=0):
                 for jt, data in job_type_dict.items() if jt != "None"
             ]
 
-            retrival_queryset = costing_list.filter(ct_cost_type=8, ct_stock_status__in=[1, 3])
+            retrival_queryset = costing_list.filter(ct_cost_type=8)
             grouped_indent = {}
             for item in retrival_queryset:
                 part_code = item.ct_part_code
@@ -215,9 +215,7 @@ def costingsummary_add(request,costingsummary_id=0):
                     'role_id': role_id,
                     'output': output,
                     'current_step': 'costing',
-                    'retrival_list': retrival_queryset,
                     'indent_summary_list': indent_summary_list,
-                    'acceptance_list': costing_list.filter(ct_cost_type=8, ct_stock_status=2),
                     'tracker_flags': get_tracker_flags(needassessment_id),
                     'job_type_totals': job_type_totals,
                     }

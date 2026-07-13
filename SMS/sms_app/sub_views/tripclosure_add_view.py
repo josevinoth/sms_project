@@ -550,6 +550,10 @@ def get_fastag_toll_cost_ajax(request):
         from_date = trip.tr_departeddate
         to_date = trip.tr_reporteddate
 
+        if not from_date or not to_date:
+            result["error"] = "Trip departed date or reported date is missing."
+            return JsonResponse(result)
+
         total_amount, txn_list = calculate_toll(vehicle_num, from_date, to_date)
 
         result["success"] = True
