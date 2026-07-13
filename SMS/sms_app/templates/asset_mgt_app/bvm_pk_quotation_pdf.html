@@ -41,26 +41,28 @@
 
 <!-- Item Table -->
 <table class="report-table">
+    <colgroup>
+        <col width="4%">
+        <col width="18%">
+        <col width="6%">
+        <col width="6%">
+        <col width="6%">
+        <col width="30%">
+        <col width="10%">
+        <col width="8%">
+        <col width="12%">
+    </colgroup>
     <thead>
         <tr>
             <th>#</th>
             <th>Description</th>
-            <th colspan="3">OD Dim (mm)</th>
+            <th>L (mm)</th>
+            <th>W (mm)</th>
+            <th>H (mm)</th>
             <th>Assessment No</th>
-            <th>Unit<br>INR</th>
+            <th>Unit INR</th>
             <th>Qty</th>
-            <th>Total<br>INR</th>
-        </tr>
-        <tr>
-            <th></th>
-            <th></th>
-            <th>L</th>
-            <th>W</th>
-            <th>H</th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
+            <th>Total INR</th>
         </tr>
     </thead>
     <tbody>
@@ -71,7 +73,7 @@
             <td>{{ quote.nad_length }}</td>
             <td>{{ quote.nad_width }}</td>
             <td>{{ quote.nad_height }}</td>
-            <td>{{ quote.nad_assess_num.na_assessment_num }}</td>
+            <td style="font-size: 8px;">{{ quote.formatted_assess_num }}</td>
             <td>{{ quote.nad_cost_unit }}</td>
             <td>{{ quote.nad_quantity }}</td>
             <td>{{ quote.nad_cost_total }}</td>

@@ -118,8 +118,14 @@
                         <div class="row no-gutters">
                             <div class="col-6 pr-1">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Qty Req</label>
-                                    {% render_field form.ct_quantity_req id="ct_quantity_req" class="form-control form-control-modern" onchange="change_cost_type()" %}
+                                    <label class="form-label-modern font-weight-bold text-dark">Qty Req (Total)</label>
+                                    <input type="text" name="total_req_qty" id="ct_quantity_req" class="form-control form-control-modern disable_a_href font-weight-bold text-dark" style="color: #000 !important; font-size: 1.1rem;" value="{{ total_req_qty }}" readonly>
+                                    <div style="display: none;">
+                                        {% render_field form.ct_quantity_req %}
+                                    </div>
+                                    <div class="small font-weight-bold text-dark mt-1">
+                                        Per Job: {{ form.instance.ct_quantity_req }} &times; Job Qty: {{ form.instance.ct_na_quantity }}
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-6 pl-1">

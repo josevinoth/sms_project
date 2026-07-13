@@ -683,6 +683,7 @@ urlpatterns = [
     # delete retrival
     path('pk_retrival_cancel/', views.pK_retrival_cancel, name='pk_retrival_cancel'),  # cancel retrival
     path('pk_acceptance_list/', views.pk_acceptance_list, name='pk_acceptance_list'),  # List acceptance
+    path('pk_acceptance_accept_group/', views.pk_acceptance_accept_group, name='pk_acceptance_accept_group'),
     path('pk_acceptance_update/<int:retrival_id>', views.pk_acceptance_add, name='pk_acceptance_update'),
     path('pk_initiate_production_return/<int:retrival_id>/', views.pk_initiate_production_return, name='pk_initiate_production_return'),
     path('pk_accept_production_return/<int:retrival_id>/', views.pk_accept_production_return, name='pk_accept_production_return'),
