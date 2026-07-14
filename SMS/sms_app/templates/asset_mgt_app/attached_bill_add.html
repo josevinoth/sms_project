@@ -683,24 +683,18 @@
             }
         }
         
-        var tableHTML = clonedTable.outerHTML;
-        var dataType = 'application/vnd.ms-excel';
-        var filename = filename ? filename + '.xls' : 'excel_data.xls';
+        // Remove hidden columns/elements so they don't appear in Excel
+        var hiddenElements = clonedTable.querySelectorAll('.d-none');
+        hiddenElements.forEach(function(el) {
+            el.remove();
+        });
         
-        var downloadLink = document.createElement("a");
-        document.body.appendChild(downloadLink);
-        
-        if (navigator.msSaveOrOpenBlob) {
-            var blob = new Blob(['\ufeff', tableHTML], { type: dataType });
-            navigator.msSaveOrOpenBlob(blob, filename);
-        } else {
-            downloadLink.href = 'data:' + dataType + ';charset=utf-8,' + encodeURIComponent('\ufeff' + tableHTML);
-            downloadLink.download = filename;
-            downloadLink.click();
-        }
-        document.body.removeChild(downloadLink);
+        // Generate Excel book
+        var wb = XLSX.utils.table_to_book(clonedTable, {sheet:"Sheet1", raw:true});
+        XLSX.writeFile(wb, (filename ? filename : 'excel_data') + '.xlsx');
     }
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
     .input-group-text {
