@@ -9,7 +9,7 @@ from django.template.loader import get_template, render_to_string
 from xhtml2pdf import pisa
 
 from ..forms import ConsignmentdetailaddForm,ConsignmentgoodsaddForm
-from ..models import VehiclemasterInfo,User_extInfo,Location_info,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo, MyUser
+from ..models import VehiclemasterInfo,User_extInfo,Location_info,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo, MyUser, DeletionLog
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
@@ -416,16 +416,27 @@ def consignmentdetail_list_ajax(request):
 def consignmentdetail_delete(request,consignmentdetail_id):
     print("Inside Delete")
     consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
-    enquiry_num = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id).co_enquirynumber
+    enquiry_num = consignmentdetail.co_enquirynumber
+    
+    reason = request.POST.get('deletion_reason', 'No reason provided')
+    identifier = consignmentdetail.co_consignmentnumber
+    
+    DeletionLog.objects.create(
+        dl_model_name='ConsignmentdetailInfo',
+        dl_record_id=consignmentdetail_id,
+        dl_record_identifier=identifier,
+        dl_deleted_by=request.user,
+        dl_reason=reason
+    )
+    
     consignmentdetail.delete()
     try:
         consignmentdetail_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num).values_list('co_consignmentnumber', flat=True)
-        EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_consignmentdetails=list(consignmentdetail_list))
+        EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num.en_enquirynumber).update(en_consignmentdetails=list(consignmentdetail_list))
     except ObjectDoesNotExist:
         consignmentdetail_list=[]
-        EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_consignmentdetails=list(consignmentdetail_list))
-    # return redirect('/SMS/consignmentdetail_list')
-    return redirect(request.META['HTTP_REFERER'])
+        EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num.en_enquirynumber).update(en_consignmentdetails=list(consignmentdetail_list))
+    return redirect(request.META.get('HTTP_REFERER', '/SMS/consignmentdetail_list'))
 
 @login_required(login_url='login_page')
 @xframe_options_exempt

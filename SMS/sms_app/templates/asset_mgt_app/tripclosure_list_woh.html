@@ -52,9 +52,10 @@
                             </a>
                         </td>
                         <td>
-                            <form action="{% url 'tripclosure_delete' tripclosureinfo.id %}" method="post" onclick="return confirm('Are you sure?');" class="d-inline">
+                            <form id="delete-form-tc-{{ tripclosureinfo.id }}" action="{% url 'tripclosure_delete' tripclosureinfo.id %}" method="post" class="d-inline" style="margin: 0;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.8rem; background: #e74c3c; border-color: #e74c3c; color: white !important;">
+                                <input type="hidden" name="deletion_reason" id="reason-tc-{{ tripclosureinfo.id }}">
+                                <button type="button" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.8rem; background: #e74c3c; border-color: #e74c3c; color: white !important;" onclick="confirmTCDeletion('{{ tripclosureinfo.id }}', '{{ tripclosureinfo.tr_tripnumber }}')">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </form>
@@ -76,5 +77,15 @@
             });
         }
     });
+
+    function confirmTCDeletion(id, identifier) {
+        let reason = prompt("⚠️ Warning: You are about to delete trip closure " + identifier + ".\n\nPlease provide a reason for this deletion:");
+        if (reason !== null && reason.trim() !== "") {
+            document.getElementById("reason-tc-" + id).value = reason;
+            document.getElementById("delete-form-tc-" + id).submit();
+        } else if (reason !== null) {
+            alert("Deletion cancelled. A reason is required to delete records.");
+        }
+    }
 </script>
 {% endblock content %}

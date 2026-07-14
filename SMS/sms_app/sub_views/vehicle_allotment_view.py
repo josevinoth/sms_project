@@ -10,7 +10,7 @@ from django.db import transaction
 from django.db.models import Sum, Q, Count
 from ..forms import VehicleallotmentForm
 from ..models import Enquirynotevehicle, TripdetailInfo, OwnershipInfo, User_extInfo, ConsignmentdetailInfo, \
-    VehiclemasterInfo, EnquirynoteInfo, Vehicle_allotmentInfo, VendorratemasterInfo1, RtratemasterInfo, VehicletypeInfo
+    VehiclemasterInfo, EnquirynoteInfo, Vehicle_allotmentInfo, VendorratemasterInfo1, RtratemasterInfo, VehicletypeInfo, DeletionLog
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from .send_department_email import send_department_email
@@ -599,20 +599,21 @@ def vehicle_allotment_list(request):
 @login_required(login_url='login_page')
 def vehicle_allotment_delete(request, vehicle_allotment_id):
     vehicle_allotment = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
-    enquiry_num = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id).va_enquirynumber
-    enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
+    enquiry_num = vehicle_allotment.va_enquirynumber
+    
+    reason = request.POST.get('deletion_reason', 'No reason provided')
+    identifier = vehicle_allotment.va_vehiclenumber.vm_registrationnumber if vehicle_allotment.va_vehiclenumber else (vehicle_allotment.va_vehiclenumber_mkt or str(vehicle_allotment_id))
+    
+    DeletionLog.objects.create(
+        dl_model_name='Vehicle_allotmentInfo',
+        dl_record_id=vehicle_allotment_id,
+        dl_record_identifier=identifier,
+        dl_deleted_by=request.user,
+        dl_reason=reason
+    )
+    
     vehicle_allotment.delete()
-    # vehicle_allotment_list = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id).values_list('va_vehiclenumber',flat=True))
-    # vehicle_numbers = []
-    # for i in vehicle_allotment_list:
-    #     vehicle_numbers.append(str(VehiclemasterInfo.objects.get(id=i).vm_registrationnumber))
-    # try:
-    #     EnquirynoteInfo.objects.filter(id=enquiry_num_id).update(en_vehicle_allotment=vehicle_numbers)
-    # except ObjectDoesNotExist:
-    #     EnquirynoteInfo.objects.filter(id=enquiry_num_id).update(en_vehicle_allotment=vehicle_numbers)
-
-    # return redirect('/SMS/vehicle_allotment_list')
-    return redirect(request.META['HTTP_REFERER'])
+    return redirect(request.META.get('HTTP_REFERER', '/SMS/vehicle_allotment_list'))
 
 
 @login_required(login_url='login_page')

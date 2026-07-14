@@ -87,10 +87,10 @@
                 </td>
                 <td class="d-flex d-md-table-cell justify-content-between">
                     <span class="fw-bold d-md-none me-2">Delete :</span>
-                    <form action="{% url 'tripdetail_delete' tripdetailinfo.id %}" method="post" class="ms-auto ms-md-0"
-                          onsubmit="return confirm('Are you sure?');">
+                    <form id="delete-form-tr-{{ tripdetailinfo.id }}" action="{% url 'tripdetail_delete' tripdetailinfo.id %}" method="post" class="ms-auto ms-md-0" style="margin: 0;">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-danger">
+                        <input type="hidden" name="deletion_reason" id="reason-tr-{{ tripdetailinfo.id }}">
+                        <button type="button" class="btn btn-sm btn-danger" onclick="confirmTRDeletion('{{ tripdetailinfo.id }}', '{{ tripdetailinfo.tr_tripnumber }}')">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </form>
@@ -111,5 +111,15 @@
         buttons: ['copy', 'csv', 'excel', 'print']
       });
     });
+
+    function confirmTRDeletion(id, identifier) {
+        let reason = prompt("⚠️ Warning: You are about to delete trip " + identifier + ".\n\nPlease provide a reason for this deletion:");
+        if (reason !== null && reason.trim() !== "") {
+            document.getElementById("reason-tr-" + id).value = reason;
+            document.getElementById("delete-form-tr-" + id).submit();
+        } else if (reason !== null) {
+            alert("Deletion cancelled. A reason is required to delete records.");
+        }
+    }
 </script>
 {% endblock content %}

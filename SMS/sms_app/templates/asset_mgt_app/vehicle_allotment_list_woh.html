@@ -132,9 +132,10 @@
                 </a>
             </td>
             <td>
-                <form action="{% url 'vehicle_allotment_delete' vehicle_allot_info.id %}" method="post" onclick="return confirm('Are you sure?');">
+                <form id="delete-form-va-{{ vehicle_allot_info.id }}" action="{% url 'vehicle_allotment_delete' vehicle_allot_info.id %}" method="post" style="margin: 0;">
                     {% csrf_token %}
-                    <button type="submit" class="btn-modern btn-cancel" title="Delete">
+                    <input type="hidden" name="deletion_reason" id="reason-va-{{ vehicle_allot_info.id }}">
+                    <button type="button" class="btn-modern btn-cancel" title="Delete" onclick="confirmVADeletion('{{ vehicle_allot_info.id }}', '{% if vehicle_allot_info.va_vehiclenumber %}{{ vehicle_allot_info.va_vehiclenumber }}{% else %}{{ vehicle_allot_info.va_vehiclenumber_mkt|default:"Vehicle" }}{% endif %}')">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </form>
@@ -159,4 +160,15 @@
         vehicleAllotmentTable.search(this.value).draw();
     });
 } );
+</script>
+<script>
+    function confirmVADeletion(id, identifier) {
+        let reason = prompt("⚠️ Warning: You are about to delete vehicle " + identifier + ".\n\nPlease provide a reason for this deletion:");
+        if (reason !== null && reason.trim() !== "") {
+            document.getElementById("reason-va-" + id).value = reason;
+            document.getElementById("delete-form-va-" + id).submit();
+        } else if (reason !== null) {
+            alert("Deletion cancelled. A reason is required to delete records.");
+        }
+    }
 </script>
