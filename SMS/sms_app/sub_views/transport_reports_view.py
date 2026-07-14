@@ -1799,6 +1799,8 @@ def invoice_pending_report_ajax_view(request):
         Q(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
     ).exclude(
         tr_consignmentnumber__isnull=True
+    ).exclude(
+        id__in=all_invoiced_ids
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
@@ -2568,7 +2570,8 @@ def vendor_p_l_attached_report_ajax_view(request):
 
     trips = TripdetailInfo.objects.filter(
         tc_financestatus_id__in=[2, 7, 9],
-        tr_vehiclesource_id=2  # 2 = ATTACHED
+        tr_vehiclesource_id=2,  # 2 = ATTACHED
+        tr_category_id=1
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
@@ -2706,6 +2709,7 @@ def vendor_p_l_attached_report_ajax_view(request):
                     attached_bill_map[t_id_int] = b
                 except:
                     bill_no_map[tid] = b.ab_bill_no
+                    attached_bill_map[tid] = b
 
     from ..models import VehiclemasterInfo
     vehicles = VehiclemasterInfo.objects.filter(vm_ownership_id=2).select_related('vm_vendor')
@@ -2759,10 +2763,18 @@ def vendor_p_l_attached_report_ajax_view(request):
         km_run_val = ""
 
         att_bill = attached_bill_map.get(trip.id)
+        if not att_bill and trip.tr_tripnumber:
+            try:
+                att_bill = attached_bill_map.get(int(trip.tr_tripnumber))
+            except:
+                pass
+            if not att_bill:
+                att_bill = attached_bill_map.get(str(trip.tr_tripnumber).strip())
+                
         if att_bill:
             total_trips = len([t for t in str(att_bill.ab_selected_trips).split(',') if t.strip()])
             if total_trips > 0:
-                buying_trip_cost = safe_num(att_bill.ab_buy_cost) / total_trips
+                buying_trip_cost = round(safe_num(att_bill.ab_buy_cost) / total_trips, 2)
             km_run_val = safe_num(att_bill.ab_total_km_run)
 
         buying_loading = buying_unloading = buying_weighment = buying_aai = 0.0
