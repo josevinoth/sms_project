@@ -2734,7 +2734,10 @@ def vendor_p_l_attached_report_ajax_view(request):
         if vendor_id and v_id != vendor_id:
             continue
 
-        selling_trip = safe_num(inv.ti_transportation_charges) if inv else (safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0.0)
+        if trip.tr_category_id in [2, 3]:
+            selling_trip = 0.0
+        else:
+            selling_trip = safe_num(inv.ti_transportation_charges) if inv else (safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0.0)
         selling_toll = safe_num(inv.ti_toll_charges) if inv else (safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0.0)
         selling_aai = safe_num(inv.ti_docket_charges) if inv else (safe_num(trip.tc_supervisorcost) if trip.tc_supervisorcost_check else 0.0)
         selling_loading = safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0.0)

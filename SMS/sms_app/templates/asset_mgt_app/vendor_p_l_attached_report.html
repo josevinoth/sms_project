@@ -161,8 +161,41 @@
 
         // Auto-submit on vendor change
         $('#vendor_select').on('change', function () {
-            // Reset vehicle selection
-            $('#vehicle_number').val('').trigger('change');
+            var vendorId = $(this).val();
+            var $vehicleSelect = $('#vehicle_number');
+            
+            // Clear existing options
+            $vehicleSelect.empty().append('<option value="">Select Vehicle</option>');
+            
+            if (vendorId) {
+                $.ajax({
+                    url: "{% url 'get_vehicles_by_vendor' %}",
+                    data: { 'vendor_id': vendorId },
+                    success: function (data) {
+                        if (data.vehicles && data.vehicles.length > 0) {
+                            $.each(data.vehicles, function (index, vehicle) {
+                                // For P&L report, the value is the registration number, not the ID
+                                $vehicleSelect.append('<option value="' + vehicle.reg_no + '">' + vehicle.reg_no + '</option>');
+                            });
+                        } else if (Array.isArray(data)) {
+                            // Fallback if data is just a flat list of strings
+                            $.each(data, function(index, regNo) {
+                                $vehicleSelect.append('<option value="' + regNo + '">' + regNo + '</option>');
+                            });
+                        }
+                        $vehicleSelect.trigger('change');
+                    },
+                    error: function() {
+                        $vehicleSelect.trigger('change');
+                    }
+                });
+            } else {
+                $vehicleSelect.trigger('change');
+            }
+        });
+        
+        // Auto-reload datatable when vehicle changes
+        $('#vehicle_number').on('change', function() {
             $('#vendor_p_l_report_table').DataTable().ajax.reload();
         });
     });
