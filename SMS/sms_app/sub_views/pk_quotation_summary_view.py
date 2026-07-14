@@ -89,6 +89,49 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             material_cost = get_aggregate_cost(needassessment_id, 8, [2])
             transport_cost = get_aggregate_cost(needassessment_id, 4)
 
+            # Grouping by job type for the table
+            aggregated_jobs = []
+            # Group by the string identifier 'nad_item' to combine identical job types
+            # Using set() to remove duplicates because Django's distinct() fails over joins with default ordering
+            job_types = set(PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id).values_list('pkqt_requirement__nad_item', flat=True))
+            
+            for job_type_name in job_types:
+                if not job_type_name: continue
+
+                # Helper to get cost for specific job type string
+                def get_job_cost(cost_type, stock_types=None):
+                    filter_kwargs = {
+                        'pkqt_assessment_num': needassessment_id, 
+                        'pkqt_cost_type': cost_type, 
+                        'pkqt_requirement__nad_item': job_type_name
+                    }
+                    if stock_types:
+                        filter_kwargs['pkqt_stock_type__in'] = stock_types
+                    cost = PkquotationInfo.objects.filter(**filter_kwargs).aggregate(Sum('pkqt_totalbox_cost'))['pkqt_totalbox_cost__sum']
+                    return round(cost, 3) if cost is not None else 0.0
+
+                j_wood = get_job_cost(8, [1, 4, 5])
+                j_consumables = get_job_cost(8, [2])
+                j_engineer = get_job_cost(2)
+                j_labour = get_job_cost(3)
+                j_crane = get_job_cost(6)
+                j_ht = get_job_cost(5)
+                j_transport = get_job_cost(4)
+                
+                j_unit_cost = sum([j_wood, j_consumables, j_engineer, j_labour, j_crane, j_ht, j_transport])
+                
+                aggregated_jobs.append({
+                    'job_type': job_type_name,
+                    'wood_cost': j_wood,
+                    'consumables': j_consumables,
+                    'engineer_cost': j_engineer,
+                    'labour_cost': j_labour,
+                    'crane_cost': j_crane,
+                    'ht_cost': j_ht,
+                    'transport_cost': j_transport,
+                    'unit_cost': j_unit_cost
+                })
+
             # Update quotation summary
             PkquotationsummaryInfo.objects.filter(qs_assessment_num=needassessment_id).update(
                 qs_wood_cost=wood_cost,
@@ -110,6 +153,7 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 'first_name': first_name,
                 'user_id': user_id,
                 'quotation_list': quotation_list,
+                'aggregated_jobs': aggregated_jobs,
                 'wood_cost': wood_cost,
                 'engineer_cost': engineer_cost,
                 'labour_cost': labour_cost,
