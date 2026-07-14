@@ -1795,8 +1795,8 @@ def invoice_pending_report_ajax_view(request):
     trips = TripdetailInfo.objects.filter(
         tr_category_id=1
     ).filter(
-        Q(tr_enquirynumber__en_customername__cu_name__icontains='MAA') |
-        Q(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
+        Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') |
+        Q(tr_consignmentnumber__co_consignmentnumber__icontains='BLR')
     ).exclude(
         tr_consignmentnumber__isnull=True
     ).exclude(
@@ -1863,9 +1863,9 @@ def invoice_pending_report_ajax_view(request):
         try:
             b_id = int(branch_id)
             if b_id == 2:  # MAA
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
+                trips = trips.filter(tr_consignmentnumber__co_consignmentnumber__icontains='MAA')
             elif b_id == 1:  # BLR
-                trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='BLR')
+                trips = trips.filter(tr_consignmentnumber__co_consignmentnumber__icontains='BLR')
         except (ValueError, TypeError):
             pass
 
@@ -1962,17 +1962,11 @@ def invoice_pending_report_ajax_view(request):
 
         # Branch
         branch_name = "OTH"
-        cu_name = str(trip.tr_enquirynumber.en_customername if trip.tr_enquirynumber else "").upper()
-        if 'MAA' in cu_name:
+        cnote_str = str(cons.co_consignmentnumber if cons else "").upper()
+        if 'MAA' in cnote_str:
             branch_name = 'MAA'
-        elif 'BLR' in cu_name:
+        elif 'BLR' in cnote_str:
             branch_name = 'BLR'
-        elif 'HYD' in cu_name:
-            branch_name = 'HYD'
-        elif 'PNY' in cu_name:
-            branch_name = 'PNY'
-        elif 'CJB' in cu_name:
-            branch_name = 'CJB'
 
         # Date selection logic (strictly using tr_departeddate_pickup as the planning date)
         display_date = trip.tr_departeddate_pickup.strftime("%d-%m-%Y") if trip.tr_departeddate_pickup else ""
@@ -2773,9 +2767,24 @@ def vendor_p_l_attached_report_ajax_view(request):
                 
         if att_bill:
             total_trips = len([t for t in str(att_bill.ab_selected_trips).split(',') if t.strip()])
-            if total_trips > 0:
+            
+            bill_amt = safe_num(att_bill.ab_bill_amount)
+            total_km = safe_num(att_bill.ab_total_km_run)
+            
+            if total_km > 0 and bill_amt > 0:
+                trip_km = 0
+                start_km = trip.tr_reportedkm_pickup if trip.tr_reportedkm_pickup else (trip.tr_departedkm or 0)
+                closing_km = trip.tr_reportedkm_delivery if trip.tr_reportedkm_delivery else (trip.tr_reportedkm or 0)
+                if closing_km and start_km:
+                    diff = closing_km - start_km
+                    if 0 < diff < 15000:
+                        trip_km = diff
+                cost_per_km = bill_amt / total_km
+                buying_trip_cost = round(trip_km * cost_per_km, 2)
+            elif total_trips > 0:
                 buying_trip_cost = round(safe_num(att_bill.ab_buy_cost) / total_trips, 2)
-            km_run_val = safe_num(att_bill.ab_total_km_run)
+                
+            km_run_val = total_km
 
         buying_loading = buying_unloading = buying_weighment = buying_aai = 0.0
         buying_toll = buying_halting = buying_handling = buying_parking = buying_rto = buying_batta = 0.0
