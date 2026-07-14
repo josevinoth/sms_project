@@ -12,7 +12,7 @@ from django.utils import timezone
 from .send_department_email import send_department_email
 from ..forms import TripclosurefilesForm, TripdetailaddForm
 from ..models import Vehicle_allotmentInfo, ConsignmentdetailInfo, Tripstatusinfo, Trip_closure_files_Info, \
-    EnquirynoteInfo, TripdetailInfo, VehiclemasterInfo, TripHighvalueInfo, Emailmaster, Email_type, User_extInfo, TransInvoiceInfo
+    EnquirynoteInfo, TripdetailInfo, VehiclemasterInfo, TripHighvalueInfo, Emailmaster, Email_type, User_extInfo, TransInvoiceInfo, DeletionLog
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
@@ -921,8 +921,20 @@ def tripdetail_list_ajax(request):
 @login_required(login_url='login_page')
 def tripdetail_delete(request, tripdetail_id):
     tripdetail = TripdetailInfo.objects.get(pk=tripdetail_id)
-    enquiry_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_enquirynumber
-    trip_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_tripnumber
+    enquiry_num = tripdetail.tr_enquirynumber
+    trip_num = tripdetail.tr_tripnumber
+    
+    reason = request.POST.get('deletion_reason', 'No reason provided')
+    identifier = trip_num
+    
+    DeletionLog.objects.create(
+        dl_model_name='TripdetailInfo',
+        dl_record_id=tripdetail_id,
+        dl_record_identifier=identifier,
+        dl_deleted_by=request.user,
+        dl_reason=reason
+    )
+    
     tripdetail.delete()
     try:
         tripdetail_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num).values_list('tr_tripnumber',
@@ -936,8 +948,7 @@ def tripdetail_delete(request, tripdetail_id):
     for i in trip_closure_files:
         trip_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=i)
         trip_files.delete()
-    # return redirect('/SMS/tripdetail_list')
-    return redirect(request.META['HTTP_REFERER'])
+    return redirect(request.META.get('HTTP_REFERER', '/SMS/tripdetail_list'))
 
 
 @login_required(login_url='login_page')

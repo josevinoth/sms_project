@@ -11,7 +11,7 @@ from django.core.files.base import ContentFile
 
 from ..forms import TripclosurefilesForm, TripclosureaddForm
 from ..models import RtratemasterInfo, User_extInfo, Trip_closure_files_Info, EnquirynoteInfo, TripdetailInfo, \
-    Tripstatusinfo, Vehicle_allotmentInfo
+    Tripstatusinfo, Vehicle_allotmentInfo, DeletionLog
 from ..sub_models.ownership_mod import OwnershipInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -486,9 +486,20 @@ def tripclosure_list_ajax(request):
 @login_required(login_url='login_page')
 def tripclosure_delete(request, tripclosure_id):
     tripclosure = TripdetailInfo.objects.get(pk=tripclosure_id)
+    
+    reason = request.POST.get('deletion_reason', 'No reason provided')
+    identifier = tripclosure.tr_tripnumber
+    
+    DeletionLog.objects.create(
+        dl_model_name='Tripclosure (TripdetailInfo)',
+        dl_record_id=tripclosure_id,
+        dl_record_identifier=identifier,
+        dl_deleted_by=request.user,
+        dl_reason=reason
+    )
+    
     tripclosure.delete()
-    return redirect(request.META['HTTP_REFERER'])
-    # return redirect('/SMS/tripclosure_list')
+    return redirect(request.META.get('HTTP_REFERER', '/SMS/tripclosure_list'))
 
 
 @login_required(login_url='login_page')
