@@ -460,6 +460,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	var tripApprovalApproved = "{{ trip_approvallist|yesno:'true,false' }}" === "true";
 	var isHighValueGoods = "{{ trip_instance.tr_high_value_id }}" === "1";
+	var tripIdGlobal = "{{ trip_instance.id|default:'' }}";
+	var isNewTripGlobal = !tripIdGlobal;
 
 	function trip_type() {
 		var categoryValue = document.getElementById('tr_category').value;
@@ -482,40 +484,40 @@ document.addEventListener("DOMContentLoaded", function () {
 			if (!finalOrActiveTripStatuses.includes(tripStatus.value)) {
 				tripStatus.value = "1";  // Set default status for new trips only
 			}
-} else if (categoryValue === "1") {
-    if (isHighValueGoods) {
-        if (checklistApprovalStatus === 1 && tripApprovalApproved) {
-            tripStatus.disabled = false;
-            tripStatus.classList.remove("select-disabled-style");
-        } else {
-            tripStatus.disabled = true;
-            tripStatus.classList.add("select-disabled-style");
-            // ✅ Only reset if new trip or already at Awaiting status
-            if (tripStatus.value === "8" || tripStatus.value === "") {
-                tripStatus.value = "8";
-            }
-        }
-    } else {
-        if (tripApprovalApproved) {
-            tripStatus.disabled = false;
-            tripStatus.classList.remove("select-disabled-style");
-        } else {
-            tripStatus.disabled = true;
-            tripStatus.classList.add("select-disabled-style");
-            // ✅ Only reset if new trip or already at Awaiting status
-            if (tripStatus.value === "8" || tripStatus.value === "") {
-                tripStatus.value = "8";
-            }
-        }
-    }
-} else {
-    tripStatus.disabled = true;
-    tripStatus.classList.add("select-disabled-style");
-    // ✅ Only reset if new trip or already at Awaiting status
-    if (tripStatus.value === "8" || tripStatus.value === "") {
-        tripStatus.value = "8";
-    }
-}
+		} else if (categoryValue === "1") {
+			if (isHighValueGoods) {
+				if (checklistApprovalStatus === 1 && tripApprovalApproved) {
+					tripStatus.disabled = false;
+					tripStatus.classList.remove("select-disabled-style");
+				} else {
+					tripStatus.disabled = true;
+					tripStatus.classList.add("select-disabled-style");
+					// ✅ Only reset if new trip or already at Awaiting status
+					if (isNewTripGlobal || tripStatus.value === "8" || tripStatus.value === "") {
+						tripStatus.value = "8";
+					}
+				}
+			} else {
+				if (tripApprovalApproved) {
+					tripStatus.disabled = false;
+					tripStatus.classList.remove("select-disabled-style");
+				} else {
+					tripStatus.disabled = true;
+					tripStatus.classList.add("select-disabled-style");
+					// ✅ Only reset if new trip or already at Awaiting status
+					if (isNewTripGlobal || tripStatus.value === "8" || tripStatus.value === "") {
+						tripStatus.value = "8";
+					}
+				}
+			}
+		} else {
+			tripStatus.disabled = true;
+			tripStatus.classList.add("select-disabled-style");
+			// ✅ Only reset if new trip or already at Awaiting status
+			if (isNewTripGlobal || tripStatus.value === "8" || tripStatus.value === "") {
+				tripStatus.value = "8";
+			}
+		}
 		// ----------------------
 		// 2️⃣ POD Attachment Logic
 		// ----------------------
@@ -790,9 +792,14 @@ document.addEventListener("DOMContentLoaded", function () {
 		// We use broad logic here: if not Category 2/3, allow unlocking next stage
 		var cat = $("#tr_category").val();
 		var hasReportedDate = $("#tr_reporteddate").val() !== "";
+		var status = $("#tc_financestatus").val();
 
 		if (cat !== "2" && cat !== "3") {
-			$("#tr_reporteddate").prop("required", true);
+			if (status == "2") {
+				$("#tr_reporteddate").prop("required", true);
+			} else {
+				$("#tr_reporteddate").removeAttr("required");
+			}
 			if (g_unloadingSent) {
 				enableUnloadingStage2();
 			}
@@ -896,7 +903,10 @@ document.addEventListener("DOMContentLoaded", function () {
 			// ✅ Backend now handles automatic Email Alerts for 1, 2, 3, 4.
 			// No need to show modal automatically on status change.
 
-			if (status == "1") enableLoadingFields();
+			if (status == "1") {
+				enableLoadingFields();
+				enableUnloadingStage1();
+			}
 			validateStatusRestriction();
 		});
 
@@ -946,13 +956,13 @@ document.addEventListener("DOMContentLoaded", function () {
 			lockLoadingFieldsInitially();
 			lockUnloadingFields();
 
-			if (status == "1" || status == "2") {
+			if (status == "1" || status == "2" || !isNewTrip) {
 				enableLoadingFields();
 			}
 			// Broad logic for Normal workflow
 			var cat = $("#tr_category").val();
 			if (cat !== "2" && cat !== "3") {
-				if (g_tripStartedSent || status == "2") {
+				if (g_tripStartedSent || status == "2" || status == "1") {
 					enableUnloadingStage1();
 				}
 			} else {
