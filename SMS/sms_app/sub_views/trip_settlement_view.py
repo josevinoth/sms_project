@@ -239,7 +239,7 @@ def trip_settlement_edit(request, trip_id):
         form = TripSettlementForm(request.POST, request.FILES, instance=trip)
         files_form = TripclosurefilesForm(request.POST, request.FILES, instance=files_instance)
 
-        form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7, 10])
+        form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7])
 
         # List of fields that SHOULD be editable during settlement
         editable_fields = [
@@ -294,7 +294,7 @@ def trip_settlement_edit(request, trip_id):
 
         files_form = TripclosurefilesForm(instance=files_instance)
 
-        form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7, 10])
+        form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7])
 
         # List of fields that SHOULD be editable during settlement
         editable_fields = [
