@@ -244,6 +244,9 @@
         }
 
         var enquiry_num = document.getElementById("en_enquirynumber").value;
+        if (document.getElementById("display_env_enquirynumber")) {
+            document.getElementById("display_env_enquirynumber").value = enquiry_num;
+        }
 
         if (enquiry_num == "") {
             $('#vehicledetails').addClass('disable_a_href');

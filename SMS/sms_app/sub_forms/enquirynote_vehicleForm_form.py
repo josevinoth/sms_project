@@ -9,7 +9,7 @@ class EnquirynotevehicleForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(EnquirynotevehicleForm,self).__init__(*args, **kwargs)
-        self.fields['env_enquirynumber'].widget = forms.TextInput(attrs={'readonly': 'readonly'})
+        self.fields['env_enquirynumber'].widget = forms.HiddenInput()
         self.fields['env_vehicletype'].empty_label = "--Vehicle Type--"
         self.fields['env_vehiclecategory'].empty_label = "--Vehicle Category--"
         self.fields['env_updated_by'].empty_label = "--Select--"
