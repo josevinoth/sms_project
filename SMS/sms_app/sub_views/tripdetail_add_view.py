@@ -280,20 +280,18 @@ def tripdetail_add(request, tripdetail_id=0):
                     if status_selected in [4, 5, 6, 7, 9]:
                         status_selected = 2
 
-                # ✅ Auto-progress status based on filled data
-                # Only auto-progress if still at "Awaiting Approval" (8)
-                if status_selected == 8:
+                # Auto-progress logic for Open/Started trips
+                if status_selected == 1:
                     if trip_instance.tr_reporteddate_pickup:
                         status_selected = 2  # Trip Closed
-                    elif trip_instance.tr_departeddate:
-                        status_selected = 1  # Trip Started
-                    elif trip_instance.tr_departeddate_pickup:
-                        status_selected = 8  # Still Awaiting
 
                 print('status_selected (auto)', status_selected)
             except ObjectDoesNotExist:
                 status_selected = None
-            allowed_statuses = [1, 2, 8, 10, 11]
+            if status_selected == 8:
+                allowed_statuses = [8, 10, 11]
+            else:
+                allowed_statuses = [1, 2, 8, 10, 11]
             if status_selected and status_selected not in allowed_statuses:
                 allowed_statuses.append(status_selected)
 
@@ -488,13 +486,7 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 trip.save()
 
-                # ✅ Auto-advance status if data filled but status still "Awaiting Approval"
-                if trip.tc_financestatus_id == 8:
-                    if trip.tr_departeddate:
-                        trip.tc_financestatus_id = 1
-                        trip.tr_operational_status_id = 1
-                        trip.save(update_fields=['tc_financestatus', 'tr_operational_status'])
-                        messages.info(request, "Trip status automatically updated to 'Trip Started'.")
+                # Removed auto-advance logic to strictly require trip approval
 
                 # ✅ AUTOMATED EMAIL TRIGGERS
                 def trigger_alert(alert_func, label):
@@ -506,21 +498,14 @@ def tripdetail_add(request, tripdetail_id=0):
                         recipients = get_auto_recipients(trip)
 
                         if not recipients:
-                            # ✅ FIX: Even if no email recipients found, still mark the flag as True
-                            # so the workflow (dock in/out field unlocking) can progress.
-                            messages.warning(request,
-                                             f"Alert Skipped: {label} - No email ID found for this customer in the email master.")
-                            # Mark the appropriate flag so fields unlock properly
-                            flag_map = {
-                                "Loading Reported": "tr_loading_report_mail_sent",
-                                "Trip Started": "tr_trip_started_mail_sent",
-                                "Unloading Reported": "tr_unloading_report_mail_sent",
-                                "Trip Closed": "tr_trip_closed_mail_sent",
-                            }
-                            flag_field = flag_map.get(label)
-                            if flag_field and not getattr(trip, flag_field, True):
-                                setattr(trip, flag_field, True)
-                                trip.save(update_fields=[flag_field])
+                            if label == "Trip Started":
+                                messages.error(request, "This customer don't have mail please add mail to start the trip.")
+                                # Revert to Trip Open so unloading details stay frozen
+                                trip.tc_financestatus_id = 8
+                                trip.save(update_fields=['tc_financestatus'])
+                            else:
+                                display_label = "starting trip" if label == "Loading Reported" else label
+                                messages.error(request, f"This customer don't have mail please add mail for {display_label}.")
                             return
 
                         response = alert_func(request)
@@ -682,21 +667,14 @@ def tripdetail_add(request, tripdetail_id=0):
                         recipients = get_auto_recipients(trip)
 
                         if not recipients:
-                            # ✅ FIX: Even if no email recipients found, still mark the flag as True
-                            # so the workflow (dock in/out field unlocking) can progress.
-                            messages.warning(request,
-                                             f"Alert Skipped: {label} - No email ID found for this customer in the email master.")
-                            # Mark the appropriate flag so fields unlock properly
-                            flag_map = {
-                                "Loading Reported": "tr_loading_report_mail_sent",
-                                "Trip Started": "tr_trip_started_mail_sent",
-                                "Unloading Reported": "tr_unloading_report_mail_sent",
-                                "Trip Closed": "tr_trip_closed_mail_sent",
-                            }
-                            flag_field = flag_map.get(label)
-                            if flag_field and not getattr(trip, flag_field, True):
-                                setattr(trip, flag_field, True)
-                                trip.save(update_fields=[flag_field])
+                            if label == "Trip Started":
+                                messages.error(request, "This customer don't have mail please add mail to start the trip.")
+                                # Revert to Trip Open so unloading details stay frozen
+                                trip.tc_financestatus_id = 8
+                                trip.save(update_fields=['tc_financestatus'])
+                            else:
+                                display_label = "starting trip" if label == "Loading Reported" else label
+                                messages.error(request, f"This customer don't have mail please add mail for {display_label}.")
                             return
 
                         response = alert_func(request)

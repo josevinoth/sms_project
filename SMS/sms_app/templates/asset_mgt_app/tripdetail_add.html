@@ -308,7 +308,7 @@
 
                 <!-- Messages -->
                 {% if messages %}
-                <div class="col-12 text-center mb-3" style="font-size: 1.2rem;">
+                <div class="col-12 text-center mb-3" style="font-size: 1.5rem;">
                     {% for message in messages %}
                     <span class="{% if 'alert-success' in message.tags %}text-success{% elif 'alert-danger' in message.tags %}text-danger font-weight-bold{% elif 'alert-warning' in message.tags %}text-warning font-weight-bold{% else %}text-info{% endif %}">
                         {{ message }}
@@ -793,7 +793,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 		if (cat !== "2" && cat !== "3") {
 			$("#tr_reporteddate").prop("required", true);
-			if (g_unloadingSent || hasReportedDate) {
+			if (g_unloadingSent) {
 				enableUnloadingStage2();
 			}
 		} else {
@@ -896,7 +896,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			// ✅ Backend now handles automatic Email Alerts for 1, 2, 3, 4.
 			// No need to show modal automatically on status change.
 
-			if (status == "1") enableUnloadingStage1();
+			if (status == "1") enableLoadingFields();
 			validateStatusRestriction();
 		});
 
@@ -946,13 +946,13 @@ document.addEventListener("DOMContentLoaded", function () {
 			lockLoadingFieldsInitially();
 			lockUnloadingFields();
 
-			if (g_loadingSent || g_pickupDateSaved) {
+			if (status == "1" || status == "2") {
 				enableLoadingFields();
 			}
 			// Broad logic for Normal workflow
 			var cat = $("#tr_category").val();
 			if (cat !== "2" && cat !== "3") {
-				if (status == "1" || status == "2" || g_tripStartedSent) {
+				if (g_tripStartedSent || status == "2") {
 					enableUnloadingStage1();
 				}
 			} else {
