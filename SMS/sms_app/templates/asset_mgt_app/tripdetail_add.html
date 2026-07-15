@@ -956,7 +956,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			lockLoadingFieldsInitially();
 			lockUnloadingFields();
 
-			if (status == "1" || status == "2" || !isNewTrip) {
+			if (status !== "8" && status !== "") {
 				enableLoadingFields();
 			}
 			// Broad logic for Normal workflow

@@ -213,7 +213,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 'status_list': status_list,
                 'consignment_list': consignment_list,
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
-                'status_selected': 8,
+                'status_selected': 1 if initial_data.get('tr_category') in [2, 3] else 8,
                 'location_locked': location_locked,
             }
 
