@@ -3344,6 +3344,15 @@
     $(document).ready(function () {
         fetchCancellationCharge();
         $("#tr_vehicletype_placed, #tr_vehicletype, #tr_enquirynumber").change(fetchCancellationCharge);
+        
+        // Make fields with disable_a_href truly readonly
+        $(".disable_a_href").prop("readonly", true);
+        $("select.disable_a_href").prop("disabled", true);
+
+        // Ensure disabled selects are enabled before form submission so their values are sent
+        $("form").on("submit", function() {
+            $("select.disable_a_href").prop("disabled", false);
+        });
     });
 </script>
 
