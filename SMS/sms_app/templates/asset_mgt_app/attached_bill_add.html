@@ -352,8 +352,26 @@
                     if (vehicle_id) {
                         $('#id_ab_vehicle_type').val(data.vehicle_type);
                         if (!isInitialLoad) {
-                            $('#id_ab_buy_cost').val(data.buy_cost);
-                            $('#id_ab_agreed_km').val(data.agreed_km);
+                            var monthly_buy_cost = parseFloat(data.buy_cost) || 0;
+                            var monthly_agreed_km = parseFloat(data.agreed_km) || 0;
+                            var prorated_buy_cost = monthly_buy_cost;
+                            var prorated_agreed_km = monthly_agreed_km;
+                            
+                            if (from_date && to_date) {
+                                var sDt = new Date(from_date);
+                                var eDt = new Date(to_date);
+                                
+                                if (!isNaN(sDt.getTime()) && !isNaN(eDt.getTime())) {
+                                    var dDays = Math.ceil(Math.abs(eDt - sDt) / (1000 * 60 * 60 * 24)) + 1;
+                                    var dInMonth = new Date(sDt.getFullYear(), sDt.getMonth() + 1, 0).getDate(); // Days in month of From Date
+                                    
+                                    prorated_buy_cost = (monthly_buy_cost / dInMonth) * dDays;
+                                    prorated_agreed_km = (monthly_agreed_km / dInMonth) * dDays;
+                                }
+                            }
+                            
+                            $('#id_ab_buy_cost').val(prorated_buy_cost.toFixed(2));
+                            $('#id_ab_agreed_km').val(prorated_agreed_km.toFixed(2));
                         }
                         extraKmRate = data.extra_km_rate || 0;
                     }
