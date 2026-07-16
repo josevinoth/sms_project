@@ -53,6 +53,7 @@ def update_trip_approval(request, trip_id):
 
         if status_obj.approval_name == "Approved":
             trip.tc_financestatus_id = 1
+            trip.tr_operational_status_id = 1
             
             # ✅ AUTOMATED EMAIL: Trip Started
             if not trip.tr_trip_started_mail_sent:
