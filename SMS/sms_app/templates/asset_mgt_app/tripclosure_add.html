@@ -3347,4 +3347,41 @@
     });
 </script>
 
+<script>
+    function toggleCancellationFields() {
+        var status = $('#tc_financestatus').val();
+        // 10: Cancellation with Billing, 11: Cancellation without Billing
+        var isCancelled = (status === '10' || status === '11');
+
+        var fieldsToHide = [
+            '#tc_tripcost', '#tc_parkingcost', '#tc_tollcost', '#tc_loadingcost',
+            '#tc_unloadingcost', '#tc_weighmentcost', '#tc_supervisorcost',
+            '#tc_handlingcost', '#tc_haltingcost', '#tc_no_of_days_halting',
+            '#tc_total_halting_cost', '#tc_rtocost', '#tc_betacost',
+            '#tr_departedlocation'
+        ];
+
+        if (isCancelled) {
+            fieldsToHide.forEach(function(selector) {
+                $(selector).closest('.d-flex, .form-group-modern').hide();
+                $(selector).prop('required', false);
+            });
+            $('#tc_cancellation').closest('.d-flex').css('background-color', '#fff3cd');
+            
+            // Only hide the labels/values for Departed Location specifically if they use form-group-modern
+            $('#tr_departedlocation').closest('.form-group-modern').hide();
+        } else {
+            fieldsToHide.forEach(function(selector) {
+                $(selector).closest('.d-flex, .form-group-modern').show();
+            });
+            $('#tc_cancellation').closest('.d-flex').css('background-color', '');
+            $('#tr_departedlocation').closest('.form-group-modern').show();
+        }
+    }
+
+    $(document).ready(function() {
+        toggleCancellationFields();
+        $('#tc_financestatus').change(toggleCancellationFields);
+    });
+</script>
 {% endblock content %}

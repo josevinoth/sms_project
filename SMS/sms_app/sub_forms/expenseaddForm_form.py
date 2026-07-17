@@ -26,6 +26,7 @@ class ExpenseaddForm(forms.ModelForm):
             self.fields['exp_uom'].empty_label = "--Select--"
             self.fields['exp_category'].empty_label = "--Select--"
             self.fields['exp_business'].empty_label = "--Select--"
+            self.fields['exp_credit_ledger'].empty_label = "--Select--"
         except Exception:
             pass
 

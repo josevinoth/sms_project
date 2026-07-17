@@ -156,8 +156,9 @@ def expense_ext_add(request, expense_ext_id=0):
     expense_id = request.session.get('ses_expense_id')
 
     if request.method == "GET":
+        parent_expense = ExpenseInfo.objects.get(pk=expense_id)
         if expense_ext_id == 0:
-            form = ExpenseextaddForm()
+            form = ExpenseextaddForm(initial={'exp_ext_credit_ledger': parent_expense.exp_credit_ledger})
         else:
             try:
                 expense_ext = ExpenseExtinfo.objects.get(pk=expense_ext_id)
@@ -167,7 +168,6 @@ def expense_ext_add(request, expense_ext_id=0):
                 return redirect('/SMS/expense_ext_list')
 
         expense_ext_list = ExpenseExtinfo.objects.filter(exp_ext_expense_number=expense_id)
-        parent_expense = ExpenseInfo.objects.get(pk=expense_id)
 
         context = {
             'form': form,
@@ -190,14 +190,15 @@ def expense_ext_add(request, expense_ext_id=0):
 
                 form.save()
 
-                expense_id = request.session.get('ses_expense_id')
-
-                expense_ext_id = max(
-                    ExpenseExtinfo.objects.filter(exp_ext_expense_number=expense_id).values_list('id', flat=True))
-
                 messages.success(request, 'Saved successfully.')
 
-                return redirect(f'/SMS/expense_ext_update/{expense_ext_id}')
+                if 'save_and_add' in request.POST:
+                    return redirect('/SMS/expense_ext_add')
+                else:
+                    expense_id = request.session.get('ses_expense_id')
+                    expense_ext_id = max(
+                        ExpenseExtinfo.objects.filter(exp_ext_expense_number=expense_id).values_list('id', flat=True))
+                    return redirect(f'/SMS/expense_ext_update/{expense_ext_id}')
 
             else:
 
@@ -227,7 +228,10 @@ def expense_ext_add(request, expense_ext_id=0):
 
                 messages.success(request, 'Saved successfully.')
 
-                return redirect(request.META['HTTP_REFERER'])
+                if 'save_and_add' in request.POST:
+                    return redirect('/SMS/expense_ext_add')
+                else:
+                    return redirect(request.META.get('HTTP_REFERER', '/SMS/expense_ext_list'))
 
             else:
 

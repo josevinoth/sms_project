@@ -8,7 +8,12 @@
         <div class="col">
             <div class="container-fluid">
                 <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="card-header text-center"><h3>Add/Update Expense</h3></div>
+                    <div class="card-header text-center">
+                        <a href="{% url 'expense_ext_add' %}" class="btn btn-primary float-right" id="add-new-btn">
+                            <i class="fas fa-plus"></i> Add
+                        </a>
+                        <h3 style="display: inline-block;">Add/Update Expense</h3>
+                    </div>
                     <div class="card-body bg-light">
                         <div class="row">
                             <div class="col">
@@ -35,6 +40,12 @@
                                         <span class="input-group-text">Business model</span>
                                     </div>
                                     {% render_field form.exp_ext_businessmodel id="exp_ext_businessmodel"  class="form-control disable_a_href" %}
+                                </div>
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Credit Ledger</span>
+                                    </div>
+                                    {% render_field form.exp_ext_credit_ledger id="exp_ext_credit_ledger" class="form-control" %}
                                 </div>
                             </div>
                             <div class="col-6">
@@ -230,12 +241,11 @@
         height: 100% !important;
         border: 1px solid #ced4da !important;
         border-radius: 0 4px 4px 0 !important;
-        display: flex;
-        align-items: center;
+        padding-top: 2px;
     }
     .input-group > .select2-container--default .select2-selection__rendered {
         padding-left: .75rem !important;
-        line-height: 1.5 !important;
+        line-height: 24px !important;
     }
     .input-group > .select2-container--default .select2-selection__arrow {
         height: 100% !important;

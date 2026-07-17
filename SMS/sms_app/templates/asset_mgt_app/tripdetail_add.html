@@ -992,6 +992,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		var trip_status = document.getElementById("tc_financestatus").value;
 		var trip_category = document.getElementById("tr_category").value;
 		var isNewTrip = !("{{ trip_instance.id|default:'' }}");
+		var isCancelled = ("{{ trip_instance.tc_cancellation_check|yesno:'true,false' }}" === "true") || (parseFloat("{{ trip_instance.tc_cancellation|default:'0' }}") > 0);
 
 		if (trip_status == 1) {
 			if (trip_category !== "2" && trip_category !== "3") {
@@ -1006,7 +1007,9 @@ document.addEventListener("DOMContentLoaded", function () {
 				$("#tr_departedkm, #tr_loading_time").removeAttr("required");
 			}
 		} else if (trip_status == 2) {
-			if (trip_category !== "2" && trip_category !== "3") {
+			if (isCancelled) {
+				$("#tr_unloading_time, #tr_reportedlocation, #tr_reportedkm, #tr_reporteddate").removeAttr("required");
+			} else if (trip_category !== "2" && trip_category !== "3") {
 				$("#tr_unloading_time, #tr_reportedlocation, #tr_reportedkm, #tr_reporteddate").attr("required", "required");
 			} else {
 				$("#tr_reportedlocation, #tr_reportedkm, #tr_reporteddate").attr("required", "required");

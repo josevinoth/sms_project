@@ -1,6 +1,6 @@
 from django.db import models
 from ..models import iou_info,Business_Sol_info,ExpenseCategoryInfo,MyUser,Vendor_info,ExpenseTypeInfo,ExpenseUOMInfo
-
+from .credit_ledger_mod import CreditLedgerInfo
 
 class ExpenseInfo(models.Model):
     exp_vendor = models.ForeignKey(Vendor_info, on_delete=models.CASCADE,blank=True, null=True)
@@ -8,6 +8,7 @@ class ExpenseInfo(models.Model):
     exp_vendor_bill_date=models.DateTimeField(blank=True, null=True)
     exp_service_start_date=models.DateTimeField(blank=True, null=True)
     exp_service_end_date=models.DateTimeField(blank=True, null=True)
+    exp_credit_ledger = models.ForeignKey(CreditLedgerInfo, on_delete=models.SET_NULL, blank=True, null=True)
     exp_expense_type = models.ForeignKey(ExpenseTypeInfo, on_delete=models.CASCADE)
     exp_uom = models.ForeignKey(ExpenseUOMInfo, on_delete=models.CASCADE, blank=True, null=True)
     exp_rate=models.FloatField(default=0.0,blank=True,null=True)

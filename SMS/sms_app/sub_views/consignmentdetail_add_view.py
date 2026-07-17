@@ -9,7 +9,7 @@ from django.template.loader import get_template, render_to_string
 from xhtml2pdf import pisa
 
 from ..forms import ConsignmentdetailaddForm,ConsignmentgoodsaddForm
-from ..models import VehiclemasterInfo,User_extInfo,Location_info,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo, MyUser, DeletionLog
+from ..models import VehiclemasterInfo,User_extInfo,Location_info,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo, MyUser, DeletionLog, TripdetailInfo, OwnershipInfo, VehicletypeInfo, Trip_category_info
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
@@ -99,6 +99,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     customer_code = customer_obj.cu_customercode
 
     if request.method == "GET":
+        existing_cancellation_charge = 0.0
         if consignmentdetail_id == 0:
             con_det_form = ConsignmentdetailaddForm(initial={'co_enquirynumber': enquiry_num_id, 'co_customer': customer_id})
             form = ConsignmentgoodsaddForm(initial={'cg_consignmentnumber': 0})
@@ -110,6 +111,10 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
             form = ConsignmentgoodsaddForm(initial={'cg_consignmentnumber': consignmentdetail_id})
             vehicle_type = consignmentdetail.co_vehicletype
+            
+            existing_dummy = TripdetailInfo.objects.filter(tr_consignmentnumber=consignmentdetail).first()
+            if existing_dummy and existing_dummy.tc_cancellation:
+                existing_cancellation_charge = existing_dummy.tc_cancellation
 
         context = {
             'first_name': first_name,
@@ -127,7 +132,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             'vehicle_type': vehicle_type,
             'user_branch': user_branch,
             'has_invoice_or_ewaybill': has_invoice_or_ewaybill,  # ✅ Add this flag
-
+            'existing_cancellation_charge': existing_cancellation_charge,
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 
@@ -161,6 +166,38 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                 consignment_detail.co_createdby = request.user
                 consignment_detail.save()
 
+                # --- NEW LOGIC: Handle Cancellation without Trip ---
+                status_id = int(request.POST.get('co_status') or 0)
+                if status_id in [9, 10]:
+                    cancellation_charge = float(request.POST.get('consignment_cancellation_charge', '0.0'))
+                    trip_status_id = 10 if status_id == 9 else 11
+                    
+                    existing_dummy = TripdetailInfo.objects.filter(tr_consignmentnumber=consignment_detail).first()
+                    if not existing_dummy:
+                        branch_id = get_session_branch_id(request)
+                        branch_code = get_branch_code(branch_id)
+                        current_fy = get_financial_year()
+                        prefix = f"{current_fy}_{branch_code}_TN_"
+                        trip_num_next = generate_next_number(TripdetailInfo, 'tr_tripnumber', prefix, 7)
+                        
+                        default_ownership = OwnershipInfo.objects.first()
+                        default_vehicletype = VehicletypeInfo.objects.first()
+                        default_category = Trip_category_info.objects.first()
+
+                        TripdetailInfo.objects.create(
+                            tr_enquirynumber=consignment_detail.co_enquirynumber,
+                            tr_consignmentnumber=consignment_detail,
+                            tr_tripnumber=trip_num_next,
+                            tr_vehiclesource=default_ownership,
+                            tr_vehicletype=default_vehicletype,
+                            tr_vehicletype_placed=default_vehicletype,
+                            tr_category=default_category,
+                            tc_financestatus_id=trip_status_id,
+                            tc_cancellation=cancellation_charge,
+                            tc_cancellation_check=(status_id == 9),
+                            tr_updated_by=request.user
+                        )
+
                 return redirect(f'/SMS/consignmentdetail_update/{consignment_detail.id}')
             else:
                 consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
@@ -169,6 +206,44 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                     consignment_detail = con_det_form.save(commit=False)
                     consignment_detail.co_vehicletype = vehicle_type
                     consignment_detail.save()
+
+                    # --- NEW LOGIC: Handle Cancellation without Trip ---
+                    status_id = int(request.POST.get('co_status') or 0)
+                    if status_id in [9, 10]:
+                        cancellation_charge = float(request.POST.get('consignment_cancellation_charge', '0.0'))
+                        trip_status_id = 10 if status_id == 9 else 11
+                        
+                        existing_dummy = TripdetailInfo.objects.filter(tr_consignmentnumber=consignment_detail).first()
+                        if not existing_dummy:
+                            branch_id = get_session_branch_id(request)
+                            branch_code = get_branch_code(branch_id)
+                            current_fy = get_financial_year()
+                            prefix = f"{current_fy}_{branch_code}_TN_"
+                            trip_num_next = generate_next_number(TripdetailInfo, 'tr_tripnumber', prefix, 7)
+                            
+                            default_ownership = OwnershipInfo.objects.first()
+                            default_vehicletype = VehicletypeInfo.objects.first()
+                            default_category = Trip_category_info.objects.first()
+
+                            TripdetailInfo.objects.create(
+                                tr_enquirynumber=consignment_detail.co_enquirynumber,
+                                tr_consignmentnumber=consignment_detail,
+                                tr_tripnumber=trip_num_next,
+                                tr_vehiclesource=default_ownership,
+                                tr_vehicletype=default_vehicletype,
+                                tr_vehicletype_placed=default_vehicletype,
+                                tr_category=default_category,
+                                tc_financestatus_id=trip_status_id,
+                                tc_cancellation=cancellation_charge,
+                                tc_cancellation_check=(status_id == 9),
+                                tr_updated_by=request.user
+                            )
+                        else:
+                            # Update existing dummy trip if they changed the charge
+                            existing_dummy.tc_cancellation = cancellation_charge
+                            existing_dummy.tc_cancellation_check = (status_id == 9)
+                            existing_dummy.tc_financestatus_id = trip_status_id
+                            existing_dummy.save()
 
                     enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
                     consignmentdetail_list = list(
