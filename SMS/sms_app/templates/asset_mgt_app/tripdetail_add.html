@@ -952,11 +952,12 @@ document.addEventListener("DOMContentLoaded", function () {
 		// ---- 6. Initialization Logic ----
 		function initializeWorkflow() {
 			let status = $("#tc_financestatus").val();
+			let reportedDate = $("#tr_departeddate_pickup").val();
 
 			lockLoadingFieldsInitially();
 			lockUnloadingFields();
 
-			if (status !== "8" && status !== "") {
+			if ((status !== "8" && status !== "") || (reportedDate && reportedDate.trim() !== "")) {
 				enableLoadingFields();
 			}
 			// Broad logic for Normal workflow
