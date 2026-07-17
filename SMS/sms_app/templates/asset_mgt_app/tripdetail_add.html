@@ -486,7 +486,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			}
 		} else if (categoryValue === "1") {
 			if (isHighValueGoods) {
-				if (checklistApprovalStatus === 1 && tripApprovalApproved) {
+				if (checklistApprovalStatus === 1) {
 					tripStatus.disabled = false;
 					tripStatus.classList.remove("select-disabled-style");
 				} else {
@@ -498,17 +498,8 @@ document.addEventListener("DOMContentLoaded", function () {
 					}
 				}
 			} else {
-				if (tripApprovalApproved) {
-					tripStatus.disabled = false;
-					tripStatus.classList.remove("select-disabled-style");
-				} else {
-					tripStatus.disabled = true;
-					tripStatus.classList.add("select-disabled-style");
-					// ✅ Only reset if new trip or already at Awaiting status
-					if (isNewTripGlobal || tripStatus.value === "8" || tripStatus.value === "") {
-						tripStatus.value = "8";
-					}
-				}
+				tripStatus.disabled = false;
+				tripStatus.classList.remove("select-disabled-style");
 			}
 		} else {
 			tripStatus.disabled = true;
@@ -518,6 +509,26 @@ document.addEventListener("DOMContentLoaded", function () {
 				tripStatus.value = "8";
 			}
 		}
+
+		// ----------------------
+		// 1.5️⃣ Hide specific statuses based on approval
+		// ----------------------
+		$('#tc_financestatus option').each(function() {
+			var optText = $(this).text().trim().toLowerCase();
+			if (optText === 'trip started' || optText === 'trip closed') {
+				// Hide if Category is 1 and trip is not approved
+				if (categoryValue === "1" && !tripApprovalApproved) {
+					$(this).hide();
+					$(this).prop('disabled', true);
+					if (tripStatus.value === $(this).val()) {
+						tripStatus.value = "8";
+					}
+				} else {
+					$(this).show();
+					$(this).prop('disabled', false);
+				}
+			}
+		});
 		// ----------------------
 		// 2️⃣ POD Attachment Logic
 		// ----------------------
