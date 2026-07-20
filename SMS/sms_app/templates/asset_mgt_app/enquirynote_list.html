@@ -226,7 +226,9 @@
                     <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Updated On"></th>
                     <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Updated By"></th>
                     <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Status"></th>
+                    {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Superuser' or request.user.is_superuser %}
                     <th></th>
+                    {% endif %}
                     <th></th>
                 </tr>
                 <tr>
@@ -246,7 +248,9 @@
                     <th>Updated On</th>
                     <th>Updated By</th>
                     <th>Status</th>
+                    {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Superuser' or request.user.is_superuser %}
                     <th class="text-center">History</th>
+                    {% endif %}
                     <th class="text-center">Delete</th>
                 </tr>
                 </thead>
@@ -396,6 +400,7 @@
                         <span class="badge badge-secondary px-3 py-2 text-white" style="font-size: 0.8rem;"><i class="fas fa-info-circle mr-1"></i> {{ data.enquiry.en_status }}</span>
                         {% endif %}
                     </td>
+                    {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Superuser' or request.user.is_superuser %}
                     <td class="text-center">
                         <button class="btn btn-sm btn-info view-history-btn mb-1 d-block mx-auto text-white" 
                                 style="border-radius: 8px; padding: 6px 12px; font-weight: bold; font-size: 0.8rem; background-color: #0ea5e9; border: none;"
@@ -406,6 +411,7 @@
                             <i class="fas fa-history"></i> History
                         </button>
                     </td>
+                    {% endif %}
                     <!-- Edit moved to 3rd column -->
                     <td class="text-center">
                         <form id="delete-form-{{ data.enquiry.id }}" action="{% url 'enquirynote_delete' data.enquiry.id %}" method="post" style="margin: 0;">
