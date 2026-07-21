@@ -40,7 +40,7 @@ def tripdetail_enquiry(request, enquiry_id, trip_num):
     # If no trip is associated, store enquiry ID in session and redirect to insert
     if trip_num == 'none' or trip_num == '':
         request.session['enquiry_num_id'] = enquiry_id
-        return redirect('tripdetail_insert')  # Define this URL in urls.py
+        return redirect(f"{reverse('tripdetail_insert')}?enq_id={enquiry_id}")
     else:
         trip = TripdetailInfo.objects.filter(
             tr_enquirynumber=enquiry,
@@ -50,7 +50,7 @@ def tripdetail_enquiry(request, enquiry_id, trip_num):
             request.session['enquiry_num_id'] = enquiry_id
             messages.warning(request,
                              "Trip number was not found for this enquiry. Please create or select the trip again.")
-            return redirect('tripdetail_insert')
+            return redirect(f"{reverse('tripdetail_insert')}?enq_id={enquiry_id}")
 
         trip_id = trip.id
         print('trip_id:', trip_id)
@@ -88,9 +88,18 @@ def tripdetail_add(request, tripdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
 
-    # ✅ Get enquiry_num_id safely from URL or session
-    # Prioritize 'enquiry_num_id' (integer) over 'ses_enqiury_id' (string)
-    enquiry_num_id = request.GET.get('enquiry_num_id') or request.session.get('enquiry_num_id')
+    enq_id_param = request.GET.get('enq_id') or request.GET.get('enquiry_num_id')
+    if enq_id_param:
+        enquiry_num_id = int(enq_id_param)
+        request.session['enquiry_num_id'] = enquiry_num_id
+        request.session['ses_enqiury_id'] = enquiry_num_id
+        try:
+            enquiry = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
+            request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
+        except ObjectDoesNotExist:
+            pass
+    else:
+        enquiry_num_id = request.session.get('enquiry_num_id')
 
     # Fallback to string-based session key if needed (though we should avoid this)
     if not enquiry_num_id:
