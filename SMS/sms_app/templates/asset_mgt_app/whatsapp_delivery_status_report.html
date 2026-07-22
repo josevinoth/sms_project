@@ -99,16 +99,16 @@
         {% render_field form.customer_department class="form-control select2" value=dept_id %}
     </div>
 
-    <!-- Month -->
-    <div class="col-md-1">
-        <label class="form-label fw-bold">Month</label>
-        {% render_field form.month class="form-control" value=selected_month %}
+    <!-- From Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">From Date</label>
+        {% render_field form.from_date class="form-control" %}
     </div>
 
-    <!-- Year -->
-    <div class="col-md-1">
-        <label class="form-label fw-bold">Year</label>
-        {% render_field form.year class="form-control" value=selected_year %}
+    <!-- To Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">To Date</label>
+        {% render_field form.to_date class="form-control" %}
     </div>
 
     <div class="col-md-auto">

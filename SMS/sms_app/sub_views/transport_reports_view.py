@@ -1050,8 +1050,8 @@ def trip_cancellation_report_view(request):
         form = DmrForm()
 
     customer_id = request.POST.get('dmr_customer')
-    selected_month = request.POST.get('month')
-    selected_year = request.POST.get('year')
+    from_date = request.POST.get('from_date')
+    to_date = request.POST.get('to_date')
     from_loc_id = request.POST.get('from_location')
     to_loc_id = request.POST.get('to_location')
     trip_category_id = request.POST.get('trip_category')
@@ -1059,7 +1059,7 @@ def trip_cancellation_report_view(request):
     vehicle_search = request.POST.get('vehicle_search', '').strip()
 
     trips = TripdetailInfo.objects.filter(
-        Q(tc_financestatus_id=3)
+        Q(tc_financestatus_id__in=[3, 10, 11]) | Q(tc_cancellation_check=True)
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
@@ -1082,24 +1082,14 @@ def trip_cancellation_report_view(request):
     if trip_category_id:
         trips = trips.filter(tr_enquirynumber__en_trip_type_id=trip_category_id)
 
-    if selected_month and selected_month != '0':
+    if from_date and to_date:
         trips = trips.filter(
-            Q(tr_loading_time__month=selected_month) |
-            Q(tr_departeddate__month=selected_month) |
-            Q(tr_departeddate_pickup__month=selected_month) |
-            Q(tr_reporteddate__month=selected_month) |
-            Q(tr_unloading_time__month=selected_month) |
-            Q(tr_created_at__month=selected_month)
-        )
-
-    if selected_year and selected_year != '0':
-        trips = trips.filter(
-            Q(tr_loading_time__year=selected_year) |
-            Q(tr_departeddate__year=selected_year) |
-            Q(tr_departeddate_pickup__year=selected_year) |
-            Q(tr_reporteddate__year=selected_year) |
-            Q(tr_unloading_time__year=selected_year) |
-            Q(tr_created_at__year=selected_year)
+            Q(tr_loading_time__date__gte=from_date, tr_loading_time__date__lte=to_date) |
+            Q(tr_departeddate__date__gte=from_date, tr_departeddate__date__lte=to_date) |
+            Q(tr_departeddate_pickup__date__gte=from_date, tr_departeddate_pickup__date__lte=to_date) |
+            Q(tr_reporteddate__date__gte=from_date, tr_reporteddate__date__lte=to_date) |
+            Q(tr_unloading_time__date__gte=from_date, tr_unloading_time__date__lte=to_date) |
+            Q(tr_created_at__date__gte=from_date, tr_created_at__date__lte=to_date)
         )
 
     if from_loc_id:
@@ -1149,19 +1139,7 @@ def trip_cancellation_report_view(request):
             trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
             trip.tr_dock_out_time, trip.tr_created_at
         ]
-        target_month = int(selected_month) if selected_month and selected_month != '0' else None
-        target_year = int(selected_year) if selected_year and selected_year != '0' else None
-
-        trip_date = None
-        for d in dates:
-            if d:
-                month_match = (not target_month or d.month == target_month)
-                year_match = (not target_year or d.year == target_year)
-                if month_match and year_match:
-                    trip_date = d
-                    break
-        if not trip_date:
-            trip_date = next((d for d in dates if d), None)
+        trip_date = next((d for d in dates if d), None)
         display_date = trip_date.strftime("%d-%m-%Y") if trip_date else ""
 
         trip_category = str(trip.tr_category) if trip.tr_category else ""
@@ -1199,7 +1177,7 @@ def trip_cancellation_report_view(request):
             safe_str(trip.tr_vehiclesource),
             rate_sheet_charge,
             trip.tc_cancellation,
-            safe_str(trip.tr_remarks),
+            "Cancellation with Billing" if trip.tc_financestatus_id == 10 else ("Cancellation without Billing" if trip.tc_financestatus_id == 11 else safe_str(trip.tr_remarks)),
         ])
     from ..models import Location_info, VehiclemasterInfo
     return render(request, "asset_mgt_app/trip_cancellation_report.html", {
@@ -1209,8 +1187,8 @@ def trip_cancellation_report_view(request):
         'data_rows': data_rows,
         'page_obj': page_obj,
         'customer_id': int(customer_id) if customer_id else None,
-        'selected_month': int(selected_month) if selected_month else None,
-        'selected_year': int(selected_year) if selected_year else None,
+        'from_date': from_date,
+        'to_date': to_date,
         'from_location': int(from_loc_id) if from_loc_id else None,
         'to_location': int(to_loc_id) if to_loc_id else None,
         'trip_category_id': int(trip_category_id) if trip_category_id else None,
@@ -1237,37 +1215,36 @@ def vehicle_utilization_report_view(request):
     if request.method == "POST":
         form = DmrForm(request.POST)
         vehicle_search = request.POST.get('vehicle_search') or ""
-        selected_month = request.POST.get('month') or "0"
-        selected_year = request.POST.get('year') or "0"
+        from_date = request.POST.get('from_date') or ""
+        to_date = request.POST.get('to_date') or ""
         branch_id = request.POST.get('branch') or ""
         vehicle_source = request.POST.get('vehicle_source') or ""
     else:
         form = DmrForm(request.GET or None)
 
         vehicle_search = request.GET.get('vehicle_search', '').strip()
-        selected_month = request.GET.get('month', str(date.today().month))
-        selected_year = request.GET.get('year', str(date.today().year))
+        from_date = request.GET.get('from_date', '')
+        to_date = request.GET.get('to_date', '')
         branch_id = request.GET.get('branch', '')
         vehicle_source = request.GET.get('vehicle_source', '')
 
-    # Convert month/year to integers for calculation
-    try:
-        month_int = int(selected_month)
-        year_int = int(selected_year)
-    except (ValueError, TypeError):
-        month_int = date.today().month
-        year_int = date.today().year
-
-    if month_int == 0:
-        month_int = date.today().month
-    if year_int == 0:
-        year_int = date.today().year
-
-    # Calculate month boundaries
-    month_start = date(year_int, month_int, 1)
-    last_day = calendar.monthrange(year_int, month_int)[1]
-    month_end = date(year_int, month_int, last_day)
-    total_days_in_month = last_day
+    from datetime import datetime
+    
+    if from_date and to_date:
+        try:
+            month_start = datetime.strptime(from_date, "%Y-%m-%d").date()
+            month_end = datetime.strptime(to_date, "%Y-%m-%d").date()
+            total_days_in_month = (month_end - month_start).days + 1
+        except ValueError:
+            month_start = date.today().replace(day=1)
+            last_day = calendar.monthrange(date.today().year, date.today().month)[1]
+            month_end = date.today().replace(day=last_day)
+            total_days_in_month = last_day
+    else:
+        month_start = date.today().replace(day=1)
+        last_day = calendar.monthrange(date.today().year, date.today().month)[1]
+        month_end = date.today().replace(day=last_day)
+        total_days_in_month = last_day
 
     # -----------------------------
     # FETCH VEHICLES
@@ -1469,8 +1446,8 @@ def ref_no_pending_report_view(request):
         form = DmrForm()
 
     customer_id = request.POST.get('dmr_customer')
-    selected_month = request.POST.get('month')
-    selected_year = request.POST.get('year')
+    from_date = request.POST.get('from_date')
+    to_date = request.POST.get('to_date')
     from_loc_id = request.POST.get('from_location')
     to_loc_id = request.POST.get('to_location')
     vehicle_search = request.POST.get('vehicle_search', '').strip()
@@ -1501,24 +1478,14 @@ def ref_no_pending_report_view(request):
 
     if customer_id:
         trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
-    if selected_month and selected_month != '0':
+    if from_date and to_date:
         trips = trips.filter(
-            Q(tr_loading_time__month=selected_month) |
-            Q(tr_departeddate__month=selected_month) |
-            Q(tr_departeddate_pickup__month=selected_month) |
-            Q(tr_reporteddate__month=selected_month) |
-            Q(tr_unloading_time__month=selected_month) |
-            Q(tr_created_at__month=selected_month)
-        )
-
-    if selected_year and selected_year != '0':
-        trips = trips.filter(
-            Q(tr_loading_time__year=selected_year) |
-            Q(tr_departeddate__year=selected_year) |
-            Q(tr_departeddate_pickup__year=selected_year) |
-            Q(tr_reporteddate__year=selected_year) |
-            Q(tr_unloading_time__year=selected_year) |
-            Q(tr_created_at__year=selected_year)
+            Q(tr_loading_time__date__gte=from_date, tr_loading_time__date__lte=to_date) |
+            Q(tr_departeddate__date__gte=from_date, tr_departeddate__date__lte=to_date) |
+            Q(tr_departeddate_pickup__date__gte=from_date, tr_departeddate_pickup__date__lte=to_date) |
+            Q(tr_reporteddate__date__gte=from_date, tr_reporteddate__date__lte=to_date) |
+            Q(tr_unloading_time__date__gte=from_date, tr_unloading_time__date__lte=to_date) |
+            Q(tr_created_at__date__gte=from_date, tr_created_at__date__lte=to_date)
         )
     if from_loc_id:
         trips = trips.filter(tr_departedlocation_id=from_loc_id)
@@ -1545,19 +1512,7 @@ def ref_no_pending_report_view(request):
             trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
             trip.tr_dock_out_time, trip.tr_created_at
         ]
-        target_month = int(selected_month) if selected_month and selected_month != '0' else None
-        target_year = int(selected_year) if selected_year and selected_year != '0' else None
-
-        trip_date = None
-        for d in dates:
-            if d:
-                month_match = (not target_month or d.month == target_month)
-                year_match = (not target_year or d.year == target_year)
-                if month_match and year_match:
-                    trip_date = d
-                    break
-        if not trip_date:
-            trip_date = next((d for d in dates if d), None)
+        trip_date = next((d for d in dates if d), None)
         display_date = trip_date.strftime("%d-%m-%Y") if trip_date else ""
 
         # Calculate Total Selling (sum of charges) - Respecting checkboxes
@@ -1609,8 +1564,8 @@ def ref_no_pending_report_view(request):
         'data_rows': data_rows,
         'page_obj': page_obj,
         'customer_id': customer_id,
-        'selected_month': selected_month,
-        'selected_year': selected_year,
+        'from_date': from_date,
+        'to_date': to_date,
         'from_location': from_loc_id,
         'to_location': to_loc_id,
         'vehicle_search': vehicle_search,
@@ -2931,8 +2886,8 @@ def whatsapp_delivery_status_report_view(request):
         form = DmrForm(request.POST)
         customer_id = request.POST.get('dmr_customer')
         dept_id = request.POST.get('customer_department')
-        selected_month = request.POST.get('month')
-        selected_year = request.POST.get('year')
+        from_date = request.POST.get('from_date')
+        to_date = request.POST.get('to_date')
         from_loc_id = request.POST.get('from_location')
         to_loc_id = request.POST.get('to_location')
         branch_id = request.POST.get('branch')
@@ -2942,8 +2897,8 @@ def whatsapp_delivery_status_report_view(request):
         form = DmrForm()
         customer_id = None
         dept_id = None
-        selected_month = '0'
-        selected_year = str(datetime.now().year)
+        from_date = ''
+        to_date = ''
         from_loc_id = None
         to_loc_id = None
         branch_id = None
@@ -2976,24 +2931,14 @@ def whatsapp_delivery_status_report_view(request):
     if dept_id:
         trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
 
-    if selected_month and selected_month != '0':
+    if from_date and to_date:
         trips = trips.filter(
-            Q(tr_loading_time__month=selected_month) |
-            Q(tr_departeddate__month=selected_month) |
-            Q(tr_departeddate_pickup__month=selected_month) |
-            Q(tr_reporteddate__month=selected_month) |
-            Q(tr_unloading_time__month=selected_month) |
-            Q(tr_created_at__month=selected_month)
-        )
-
-    if selected_year and selected_year != '0':
-        trips = trips.filter(
-            Q(tr_loading_time__year=selected_year) |
-            Q(tr_departeddate__year=selected_year) |
-            Q(tr_departeddate_pickup__year=selected_year) |
-            Q(tr_reporteddate__year=selected_year) |
-            Q(tr_unloading_time__year=selected_year) |
-            Q(tr_created_at__year=selected_year)
+            Q(tr_loading_time__date__gte=from_date, tr_loading_time__date__lte=to_date) |
+            Q(tr_departeddate__date__gte=from_date, tr_departeddate__date__lte=to_date) |
+            Q(tr_departeddate_pickup__date__gte=from_date, tr_departeddate_pickup__date__lte=to_date) |
+            Q(tr_reporteddate__date__gte=from_date, tr_reporteddate__date__lte=to_date) |
+            Q(tr_unloading_time__date__gte=from_date, tr_unloading_time__date__lte=to_date) |
+            Q(tr_created_at__date__gte=from_date, tr_created_at__date__lte=to_date)
         )
 
     if from_loc_id:
@@ -3055,19 +3000,7 @@ def whatsapp_delivery_status_report_view(request):
             trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
             trip.tr_dock_out_time, trip.tr_created_at
         ]
-        target_month = int(selected_month) if selected_month and selected_month != '0' else None
-        target_year = int(selected_year) if selected_year and selected_year != '0' else None
-
-        trip_date = None
-        for d in dates:
-            if d:
-                month_match = (not target_month or d.month == target_month)
-                year_match = (not target_year or d.year == target_year)
-                if month_match and year_match:
-                    trip_date = d
-                    break
-        if not trip_date:
-            trip_date = next((d for d in dates if d), None)
+        trip_date = next((d for d in dates if d), None)
 
         consignment_date = (
             trip.tr_consignmentnumber.co_consignmentdate.strftime("%d-%m-%Y")
@@ -3103,8 +3036,8 @@ def whatsapp_delivery_status_report_view(request):
         'data_rows': data_rows,
         'customer_id': int(customer_id) if customer_id else None,
         'dept_id': int(dept_id) if dept_id else None,
-        'selected_month': selected_month,
-        'selected_year': selected_year,
+        'from_date': from_date,
+        'to_date': to_date,
         'selected_branch': int(branch_id) if branch_id else None,
         'selected_source': int(vehicle_source_id) if vehicle_source_id else None,
         'vehicle_search': vehicle_search,
@@ -3179,24 +3112,14 @@ def daily_trip_count_report_view(request):
             Q(tr_created_at__date__lte=to_date)
         )
 
-    if selected_month and selected_month != '0':
+    if from_date and to_date:
         trips = trips.filter(
-            Q(tr_loading_time__month=selected_month) |
-            Q(tr_departeddate__month=selected_month) |
-            Q(tr_departeddate_pickup__month=selected_month) |
-            Q(tr_reporteddate__month=selected_month) |
-            Q(tr_unloading_time__month=selected_month) |
-            Q(tr_created_at__month=selected_month)
-        )
-
-    if selected_year and selected_year != '0':
-        trips = trips.filter(
-            Q(tr_loading_time__year=selected_year) |
-            Q(tr_departeddate__year=selected_year) |
-            Q(tr_departeddate_pickup__year=selected_year) |
-            Q(tr_reporteddate__year=selected_year) |
-            Q(tr_unloading_time__year=selected_year) |
-            Q(tr_created_at__year=selected_year)
+            Q(tr_loading_time__date__gte=from_date, tr_loading_time__date__lte=to_date) |
+            Q(tr_departeddate__date__gte=from_date, tr_departeddate__date__lte=to_date) |
+            Q(tr_departeddate_pickup__date__gte=from_date, tr_departeddate_pickup__date__lte=to_date) |
+            Q(tr_reporteddate__date__gte=from_date, tr_reporteddate__date__lte=to_date) |
+            Q(tr_unloading_time__date__gte=from_date, tr_unloading_time__date__lte=to_date) |
+            Q(tr_created_at__date__gte=from_date, tr_created_at__date__lte=to_date)
         )
 
     if from_loc_id:
@@ -3325,8 +3248,8 @@ def daily_trip_count_report_view(request):
         'headers': DAILY_TRIP_COUNT_HEADERS,
         'data_rows': page_obj,
         'page_obj': page_obj,
-        'selected_month': selected_month,
-        'selected_year': selected_year,
+        'from_date': from_date,
+        'to_date': to_date,
         'from_date': from_date,
         'to_date': to_date,
         'vehicle_filter': vehicle_filter,
@@ -3973,14 +3896,14 @@ def halting_report_view(request):
 
     if request.method == "POST":
         form = DmrForm(request.POST)
-        selected_month = request.POST.get('month', '0')
-        selected_year = request.POST.get('year', str(datetime.now().year))
+        from_date = request.POST.get('from_date', '')
+        to_date = request.POST.get('to_date', '')
         branch_id = request.POST.get('branch')
         vehicle_source_id = request.POST.get('vehicle_source')
     else:
         form = DmrForm()
-        selected_month = '0'
-        selected_year = str(datetime.now().year)
+        from_date = ''
+        to_date = ''
         branch_id = None
         vehicle_source_id = None
 
@@ -3989,8 +3912,8 @@ def halting_report_view(request):
         'form': form,
         'headers': HALTING_REPORT_HEADERS,
         'data_rows': [],  # AJAX populated
-        'selected_month': selected_month,
-        'selected_year': selected_year,
+        'from_date': from_date,
+        'to_date': to_date,
         'selected_branch': int(branch_id) if branch_id else None,
         'selected_source': int(vehicle_source_id) if vehicle_source_id else None,
         'all_branches': [
@@ -4011,13 +3934,12 @@ def halting_report_ajax_view(request):
     length = int(request.GET.get('length', 10))
 
     customer_id = request.GET.get('customer')
-    selected_month = request.GET.get('month')
-    selected_year = request.GET.get('year')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
     branch_id = request.GET.get('branch')
     vehicle_source_id = request.GET.get('vehicle_source')
 
-    trips = get_filtered_trips(branch_id, None, vehicle_source_id, None, None, selected_year, customer_id=customer_id,
-                               selected_month=selected_month)
+    trips = get_filtered_trips(branch_id, None, vehicle_source_id, from_date, to_date, None, customer_id=customer_id)
     trips = trips.filter(tr_category_id=1)  # Business trips only
     records_total = trips.count()
 
@@ -4290,6 +4212,8 @@ def insurance_renewal_report_view(request):
     vehicle_search = request.POST.get('vehicle_search', '').strip()
     branch_search = request.POST.get('branch_search', '').strip()
     company_search = request.POST.get('company_search', '').strip()
+    from_date = request.POST.get('from_date', '').strip()
+    to_date = request.POST.get('to_date', '').strip()
 
     # -------------------------
     # BASE QUERY (normalize vehicle no)
@@ -4317,6 +4241,9 @@ def insurance_renewal_report_view(request):
 
     if company_search:
         insurance_records = insurance_records.filter(ins_name__icontains=company_search)
+
+    if from_date and to_date:
+        insurance_records = insurance_records.filter(ins_expiry_date__range=[from_date, to_date])
 
     import re
     def normalize_veh(v):
@@ -4408,6 +4335,8 @@ def insurance_renewal_report_view(request):
         'vehicle_search': vehicle_search,
         'branch_search': int(branch_search) if branch_search else None,
         'company_search': company_search,
+        'from_date': from_date,
+        'to_date': to_date,
         'all_vehicles': vehicles,
         'all_branches': Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name'),
         'all_companies': Insurance_Info.objects.filter(ins_status_id=1).values_list('ins_name',
@@ -4735,8 +4664,8 @@ def diesel_vs_revenue_report_view(request):
         'headers': DIESEL_VS_REVENUE_HEADERS,
         'data_rows': processed_rows,
         'vehicle_search': vehicle_search,
-        'selected_month': selected_month,
-        'selected_year': selected_year,
+        'from_date': from_date,
+        'to_date': to_date,
         'all_vehicles': all_vehicles,
     }
     return render(request, "asset_mgt_app/diesel_vs_revenue_report.html", context)
@@ -4774,24 +4703,14 @@ def own_vs_market_sales_report_view(request):
         trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
     if dept_id:
         trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
-    if selected_month and selected_month != '0':
+    if from_date and to_date:
         trips = trips.filter(
-            Q(tr_loading_time__month=selected_month) |
-            Q(tr_departeddate__month=selected_month) |
-            Q(tr_departeddate_pickup__month=selected_month) |
-            Q(tr_reporteddate__month=selected_month) |
-            Q(tr_unloading_time__month=selected_month) |
-            Q(tr_created_at__month=selected_month)
-        )
-
-    if selected_year and selected_year != '0':
-        trips = trips.filter(
-            Q(tr_loading_time__year=selected_year) |
-            Q(tr_departeddate__year=selected_year) |
-            Q(tr_departeddate_pickup__year=selected_year) |
-            Q(tr_reporteddate__year=selected_year) |
-            Q(tr_unloading_time__year=selected_year) |
-            Q(tr_created_at__year=selected_year)
+            Q(tr_loading_time__date__gte=from_date, tr_loading_time__date__lte=to_date) |
+            Q(tr_departeddate__date__gte=from_date, tr_departeddate__date__lte=to_date) |
+            Q(tr_departeddate_pickup__date__gte=from_date, tr_departeddate_pickup__date__lte=to_date) |
+            Q(tr_reporteddate__date__gte=from_date, tr_reporteddate__date__lte=to_date) |
+            Q(tr_unloading_time__date__gte=from_date, tr_unloading_time__date__lte=to_date) |
+            Q(tr_created_at__date__gte=from_date, tr_created_at__date__lte=to_date)
         )
 
     # Prefetch Vehicle Allotment for Market Buy Rate
@@ -4945,8 +4864,8 @@ def own_vs_market_sales_report_view(request):
         'headers': OWN_VS_MARKET_SALES_HEADERS,
         'data_rows': page_obj.object_list,
         'page_obj': page_obj,
-        'selected_month': selected_month,
-        'selected_year': selected_year,
+        'from_date': from_date,
+        'to_date': to_date,
         'customer_id': customer_id,
         'dept_id': dept_id,
     }
@@ -6511,30 +6430,21 @@ def time_analysis_report_view(request):
     if request.method == "POST":
         form = DmrForm(request.POST)
         customer_id = request.POST.get('dmr_customer')
-        selected_month = request.POST.get('month')
-        selected_year = request.POST.get('year')
+        from_date = request.POST.get('from_date')
+        to_date = request.POST.get('to_date')
         branch_id = request.POST.get('branch')
         vehicle_search = request.POST.get('vehicle_search', '').strip()
     else:
         form = DmrForm()
         customer_id = None
-        # Default to current month and year for better performance
-        today = timezone.localtime(timezone.now())
-        selected_month = today.month
-        selected_year = today.year
+        from_date = None
+        to_date = None
         branch_id = ''
         vehicle_search = ''
 
-    # Initialize form with defaults if it's a GET request
-    if request.method == "GET":
-        form.fields['month'].initial = selected_month
-        form.fields['year'].initial = selected_year
 
-    # Ensure they are strings for the string-based comparisons below if needed,
-    # but the filter logic works with both.
-    # Actually, request.POST.get returns strings, so we normalize to strings for logic.
-    selected_month = str(selected_month)
-    selected_year = str(selected_year)
+
+
 
     trips = TripdetailInfo.objects.filter(tr_category_id=1).select_related(
         'tr_enquirynumber',
@@ -6715,8 +6625,8 @@ def time_analysis_report_view(request):
         'headers': TIME_ANALYSIS_HEADERS,
         'data_rows': data_rows,
         'customer_id': int(customer_id) if customer_id else None,
-        'selected_month': selected_month,
-        'selected_year': selected_year,
+        'from_date': from_date,
+        'to_date': to_date,
         'branch_id': branch_id,
         'vehicle_search': vehicle_search,
         'all_vehicles': all_vehicles,

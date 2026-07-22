@@ -65,6 +65,24 @@
 	.vehicle-allotment-modern .modal-vehicle-check {
 		accent-color: var(--accent-blue);
 	}
+
+	/* ── Frozen field style when status = Vehicle Replaced ── */
+	.vehicle-allotment-modern .form-control.va-field-frozen,
+	.vehicle-allotment-modern .custom-select.va-field-frozen,
+	.vehicle-allotment-modern input.va-field-frozen,
+	.vehicle-allotment-modern select.va-field-frozen {
+		background: #e9ecef !important;
+		border: 1.5px dashed #adb5bd !important;
+		color: #6c757d !important;
+		pointer-events: none !important;
+		cursor: not-allowed !important;
+		opacity: 0.85 !important;
+	}
+	.vehicle-allotment-modern input[type="checkbox"].va-field-frozen {
+		pointer-events: none !important;
+		opacity: 0.5 !important;
+		cursor: not-allowed !important;
+	}
 </style>
 <div id="top-alert" class="alert alert-warning w-50" role="alert" style="display: none;"></div>
 <form method="POST" action="" id="vehicle_allotment" data-vehicle_source-url="{% url 'load_vehicle_source' %}">
@@ -439,13 +457,58 @@ function setDateFieldValue(selector, value) {
 				.prop('disabled', true);
 		}
 
-		// Ensure Driver Fields are enabled even if status is Replaced
-		$('#va_drivername, #va_drivernumber, #va_driver_lic, #va_driver_lic_expiry')
-			.removeClass('disable_a_href')
-			.prop('readonly', false)
-			.prop('disabled', false)
-			.css('pointer-events', 'auto');
+		// ── Freeze all fields when status is "Vehicle Replaced" ──
+		{% if va.va_status.replacement_status == "Vehicle Replaced" %}
+		freezeFieldsForVehicleReplaced();
+		{% endif %}
 	});
+
+	function freezeFieldsForVehicleReplaced() {
+		// ── Fields to freeze: Vehicle Details + Vendor & Driver + Commercial & Status (except va_status) ──
+		var fieldsToFreeze = [
+			// Vehicle Details
+			'#va_vehicletype', '#chk_requested',
+			'#va_vehicletype_placed', '#chk_placed',
+			'#va_vehiclesource', '#va_vehiclenumber', '#va_vehiclenumber_mkt',
+			// Vendor & Driver
+			'#va_vendor', '#va_drivername',
+			'#va_drivernumber', '#va_driver_lic', '#va_driver_lic_expiry',
+			// Commercial & Status (excluding va_status)
+			'#va_standardbuy', '#va_specialbuy', '#va_sale', '#va_profit_percentage'
+		];
+
+		// 500ms delay — ensures this runs after AJAX callbacks (loadAvailableVehicleNumbers, etc.)
+		setTimeout(function () {
+			$(fieldsToFreeze.join(', ')).each(function () {
+				var isSelect = (this.tagName === 'SELECT');
+				var isCheckbox = (this.type === 'checkbox');
+
+				$(this)
+					.prop('disabled', true)
+					.prop('readonly', true)
+					.attr('style',
+						'background-color: #e9ecef !important; ' +
+						'background: #e9ecef !important; ' +
+						'border: 1.5px dashed #adb5bd !important; ' +
+						'color: #6c757d !important; ' +
+						'pointer-events: none !important; ' +
+						'cursor: not-allowed !important; ' +
+						'opacity: 0.85 !important; ' +
+						// Force non-native rendering on selects so background-color is respected in Chrome
+						(isSelect ? '-webkit-appearance: none !important; appearance: none !important; ' : '') +
+						(isCheckbox ? 'opacity: 0.4 !important; ' : '')
+					);
+			});
+
+			// Keep the status dropdown fully interactive — clear any frozen styles
+			$('#va_status')
+				.prop('disabled', false)
+				.prop('readonly', false)
+				.removeAttr('style')
+				.css({'-webkit-appearance': '', 'appearance': ''});
+
+		}, 500);
+	}
 </script>
 <script>
 	function market_vehicle_enable_disable()
@@ -453,7 +516,9 @@ function setDateFieldValue(selector, value) {
 		var vehicle_source = document.getElementById("va_vehiclesource").value;
 		if (vehicle_source == 3)
 		{
-			 $('#va_vehiclenumber').closest('.input-group').hide();
+			// Hide regular Vehicle Number, show Market Vehicle Number
+			$('#va_vehiclenumber').closest('.form-group-modern').hide();
+			$('#va_vehiclenumber_mkt').closest('.form-group-modern').show();
 			// ✅ MARKET fields enable
 			$('#va_vehiclenumber_mkt').removeClass('disable_a_href').prop('disabled', false);
 			$('#va_vendor').removeClass('disable_a_href').prop('disabled', false);
@@ -464,7 +529,9 @@ function setDateFieldValue(selector, value) {
 		}
 		else
 		{
-			 $('#va_vehiclenumber').closest('.input-group').show();
+			// Show regular Vehicle Number, hide Market Vehicle Number
+			$('#va_vehiclenumber').closest('.form-group-modern').show();
+			$('#va_vehiclenumber_mkt').closest('.form-group-modern').hide();
 			// ✅ Own/Attached
 			$('#va_vehiclenumber_mkt').addClass('disable_a_href').prop('disabled', true);
 			$('#va_vendor').addClass('disable_a_href').prop('disabled', true);
@@ -760,19 +827,22 @@ document.addEventListener("DOMContentLoaded", function() {
    });
    $("#modal_va_vendor").select2({
        width: '100%',
-       dropdownParent: $('#vendorModal') // Required for Select2 inside modals
+       dropdownParent: $('#replaceVehicleModal') // Fixed: was incorrectly pointing to #vendorModal
    });
 </script>
 <script>
 </script>
 <script>
 	$("#va_vehicletype_placed").on("change", function() {
-    loadRouteBuyRates();
-});
+        if ($('#chk_placed').is(':checked')) {
+            loadVendorSaleRate('chk_placed', false);
+        }
+        loadVendorBuyRate();
+    });
 </script>
 <script>
 	$(document).ready(function () {
-		loadRouteBuyRates();
+		// Initialize rates if needed, but usually triggered by checkbox change
 	});
 </script>
 <script>
@@ -784,7 +854,10 @@ document.addEventListener("DOMContentLoaded", function() {
 			url: "{% url 'get_vendor_by_vehicle' %}",
 			data: { vehicle_id: vehicleId },
 			success: function (data) {
-				if (!data.vendor_id) return;
+				if (!data.vendor_id) {
+					$("#va_vendor").val("").trigger('change.select2');
+					return;
+				}
 				const vendorDropdown = $("#va_vendor");
 				//  ADD OPTION IF MISSING
 				if (vendorDropdown.find(`option[value='${data.vendor_id}']`).length === 0) {
@@ -969,7 +1042,7 @@ $("#va_vehiclesource").on("change", function () {
                                 <select name="va_vehicletype_placed" id="modal_va_vehicletype_placed" class="form-control" required>
                                     <option value="">--Select Type--</option>
                                     {% for t in all_vehicletypes %}
-                                        <option value="{{ t.id }}" {% if va and t.id == va.va_vehicletype_placed_id %}selected{% endif %}>{{ t.vt_vehicletype }}</option>
+                                        <option value="{{ t.id }}">{{ t.vt_vehicletype }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -998,7 +1071,7 @@ $("#va_vehiclesource").on("change", function () {
                                 <select name="va_vendor" id="modal_va_vendor" class="form-control">
                                     <option value="">--Select Vendor--</option>
                                     {% for v in all_vendors %}
-                                        <option value="{{ v.id }}" {% if va and v.id == va.va_vendor_id %}selected{% endif %}>{{ v.vend_name }}</option>
+                                        <option value="{{ v.id }}">{{ v.vend_name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -1051,25 +1124,25 @@ $("#va_vehiclesource").on("change", function () {
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label>Standard Buy</label>
-                                <input type="number" name="va_standardbuy" id="modal_va_standardbuy" class="form-control" readonly value="{{ va.va_standardbuy }}">
+                                <input type="number" name="va_standardbuy" id="modal_va_standardbuy" class="form-control" readonly>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label>Special Buy</label>
-                                <input type="number" name="va_specialbuy" id="modal_va_specialbuy" class="form-control" value="{{ va.va_specialbuy }}">
+                                <input type="number" name="va_specialbuy" id="modal_va_specialbuy" class="form-control">
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label>Sell</label>
-                                <input type="number" name="va_sale" id="modal_va_sale" class="form-control" value="{{ va.va_sale }}">
+                                <input type="number" name="va_sale" id="modal_va_sale" class="form-control">
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label>Profit %</label>
-                                <input type="text" name="va_profit_percentage" id="modal_va_profit_percentage" class="form-control" readonly value="{{ va.va_profit_percentage }}">
+                                <input type="text" name="va_profit_percentage" id="modal_va_profit_percentage" class="form-control" readonly>
                             </div>
                         </div>
                     </div>
@@ -1220,15 +1293,13 @@ $("#va_vehiclesource").on("change", function () {
     });
 
     // ---- Replacement Modal Rate Loading ----
-    function loadModalRates() {
+    function loadModalSaleRate() {
         var vehicleRequested = $('#modal_va_vehicletype').val();
         var vehiclePlaced = $('#modal_va_vehicletype_placed').val();
         var checkboxId = $('#modal_chk_requested').is(':checked') ? 'chk_requested' : 'chk_placed';
         var selectedType = $('#modal_chk_requested').is(':checked') ? vehicleRequested : vehiclePlaced;
-        var vendorId = $('#modal_va_vendor').val();
 
         if (selectedType) {
-            // Fetch Sale Rate
             $.ajax({
                 url: '{% url "get_vendor_sale_rate" %}',
                 data: {
@@ -1238,43 +1309,60 @@ $("#va_vehiclesource").on("change", function () {
                     vehicle_placed: vehiclePlaced
                 },
                 success: function(data) {
-                    if (data.sale_rate) {
-                        $('#modal_va_sale').val(data.sale_rate);
-                        calculateModalProfit();
+                    const saleRate = data.sale_rate;
+                    if (!saleRate || saleRate === "0") {
+                        alert("Rate not assigned for this customer");
+                        $('#modal_va_sale').val('');
+                    } else {
+                        $('#modal_va_sale').val(saleRate);
                     }
+                    calculateModalProfit();
                 }
             });
-
-            // Fetch Buy Rates
-            if (vendorId) {
-                $.ajax({
-                    url: '{% url "get_vendor_buy_rate" %}',
-                    data: {
-                        vendor_id: vendorId,
-                        vehicle_id: selectedType
-                    },
-                    success: function(data) {
-                        $("#modal_va_standardbuy").val(data.standard_buy);
-                        $("#modal_va_specialbuy").val(data.special_buy);
-                        calculateModalProfit();
-                    }
-                });
-            }
         }
     }
 
-    $("#modal_va_vehicletype, #modal_va_vehicletype_placed, #modal_va_vendor, .modal-vehicle-check").on("change", loadModalRates);
+    function loadModalBuyRate() {
+        var vehicleRequested = $('#modal_va_vehicletype').val();
+        var vehiclePlaced = $('#modal_va_vehicletype_placed').val();
+        var selectedType = $('#modal_chk_requested').is(':checked') ? vehicleRequested : vehiclePlaced;
+        var vendorId = $('#modal_va_vendor').val();
+
+        if (selectedType && vendorId) {
+            $.ajax({
+                url: '{% url "get_vendor_buy_rate" %}',
+                data: {
+                    vendor_id: vendorId,
+                    vehicle_id: selectedType
+                },
+                success: function(data) {
+                    $("#modal_va_standardbuy").val(data.standard_buy);
+                    $("#modal_va_specialbuy").val(data.special_buy);
+                    calculateModalProfit();
+                }
+            });
+        }
+    }
+
+    $("#modal_va_vehicletype, #modal_va_vehicletype_placed, .modal-vehicle-check").on("change", function() {
+        loadModalSaleRate();
+        loadModalBuyRate();
+    });
+    
+    $("#modal_va_vendor").on("change", function() {
+        loadModalBuyRate();
+    });
 
     $("#modal_va_vehiclesource").on("change", function() {
         var source = $(this).val();
         if (source == "3") { // Market
             $("#modal_vendor_star").show();
-            $("#modal_va_vendor").prop('required', true).prop('disabled', false);
+            $("#modal_va_vendor").prop('required', true).prop('disabled', false).trigger('change.select2');
             $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
             $("#modal_va_sale").prop('disabled', false).removeClass('disable_a_href');
         } else {
             $("#modal_vendor_star").hide();
-            $("#modal_va_vendor").val("").prop('required', false).prop('disabled', true);
+            $("#modal_va_vendor").val("").prop('required', false).prop('disabled', true).trigger('change');
             $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
             $("#modal_va_sale").prop('disabled', true).addClass('disable_a_href');
         }
@@ -1306,7 +1394,9 @@ $("#va_vehiclesource").on("change", function () {
                 setDateFieldValue("#modal_va_driver_lic_expiry", d.driver_license_exp_date);
                 
                 if (d.vendor_id && d.vendor_id[0]) {
-                    $("#modal_va_vendor").val(d.vendor_id[0]).trigger('change');
+                    $("#modal_va_vendor").val(d.vendor_id[0]).trigger('change.select2');
+                } else {
+                    $("#modal_va_vendor").val("").trigger('change.select2');
                 }
             }
         });
@@ -1358,6 +1448,12 @@ $("#va_vehiclesource").on("change", function () {
         if (!reason) { alert("Please select a reason."); return; }
         if (!type) { alert("Please select a vehicle type."); return; }
         if (!source) { alert("Please select a vehicle source."); return; }
+        
+        var sell_val = parseFloat($("#modal_va_sale").val());
+        if (isNaN(sell_val) || sell_val <= 0) {
+            alert("Please ensure a valid Sell value is provided before submitting.");
+            return;
+        }
 
         var form = $(this);
         form.find(":disabled").prop("disabled", false);

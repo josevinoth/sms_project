@@ -743,11 +743,15 @@ def load_driver_details(request):
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license', flat=True))
     driver_license_exp_date = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license_exp_date', flat=True))
+    vendor_id = list(
+        VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_vendor_id', flat=True))
+        
     data = {
         'driver_name': driver_name,
         'driver_number': driver_number,
         'driver_license': driver_license,
         'driver_license_exp_date': driver_license_exp_date,
+        'vendor_id': vendor_id,
     }
     return HttpResponse(json.dumps(data))
 
