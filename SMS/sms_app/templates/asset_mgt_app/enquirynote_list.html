@@ -638,16 +638,26 @@
                                         if (log.action.includes('DELETE')) {
                                             oldDataHtml += '<div><strong>' + key + ':</strong> ' + value + '</div>';
                                             newDataHtml += '<div><strong>' + key + ':</strong> <span class="text-danger"><em>Deleted</em></span></div>';
+                                        } else if (log.action.includes('CREATE')) {
+                                            // Don't clutter UI with a huge list for creation
                                         } else {
                                             oldDataHtml += '<div><strong>' + key + ':</strong> <span class="text-muted">-</span></div>';
                                             newDataHtml += '<div><strong>' + key + ':</strong> ' + value + '</div>';
                                         }
                                     }
                                 });
+                                // Add a single row for CREATE actions
+                                if (log.action.includes('CREATE')) {
+                                    oldDataHtml = '<div><span class="text-muted">-</span></div>';
+                                    newDataHtml = '<div><span class="text-success font-weight-bold"><i class="fas fa-magic"></i> Record Created</span></div>';
+                                }
                             } else {
                                 if (log.action.includes('DELETE')) {
                                     oldDataHtml += '<pre class="bg-light p-2 rounded text-wrap" style="max-height:100px; overflow-y:auto; font-size:0.75rem; border: 1px solid #e2e8f0; word-break: break-all;">' + String(log.changed_data) + '</pre>';
                                     newDataHtml += '<span class="text-danger"><em>Deleted</em></span>';
+                                } else if (log.action.includes('CREATE')) {
+                                    oldDataHtml += '<span class="text-muted">-</span>';
+                                    newDataHtml += '<span class="text-success font-weight-bold"><i class="fas fa-magic"></i> Record Created</span>';
                                 } else {
                                     oldDataHtml += '<span class="text-muted">-</span>';
                                     newDataHtml += '<pre class="bg-light p-2 rounded text-wrap" style="max-height:100px; overflow-y:auto; font-size:0.75rem; border: 1px solid #e2e8f0; word-break: break-all;">' + String(log.changed_data) + '</pre>';

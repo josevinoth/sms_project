@@ -18,6 +18,7 @@ from django.contrib import messages
 from django.db.models import Q
 
 from django.http import JsonResponse
+from django.urls import reverse
 from .invoice_documents_view import sync_closure_files_to_invoice
 from ..sub_models.haltingcharges_mod import Haltingcharges
 from ..models import EnquirynoteInfo
@@ -34,7 +35,7 @@ def tripclosure_enquiry(request, enquiry_id, trip_num):
     # If no trip is associated, store enquiry ID in session and redirect to insert
     if trip_num == 'none' or trip_num == '':
         request.session['ses_enqiury_id'] = enquiry_id
-        return redirect('tripclosure_insert')  # Define this URL in urls.py
+        return redirect(f"{reverse('tripclosure_insert')}?enq_id={enquiry_id}")  # Define this URL in urls.py
     else:
         trip_detail = TripdetailInfo.objects.filter(tr_tripnumber=trip_num, tr_enquirynumber_id=enquiry_id).first()
         if not trip_detail:
@@ -103,6 +104,19 @@ def tripclosure_nav(request, tripclosure_id=0):
 
 @login_required(login_url='login_page')
 def tripclosure_add(request, tripclosure_id=0):
+    enq_id_param = request.GET.get('enq_id')
+    if enq_id_param:
+        enquiry_num_id = int(enq_id_param)
+        request.session['enquiry_num_id'] = enquiry_num_id
+        request.session['ses_enqiury_id'] = enquiry_num_id
+        try:
+            enquiry = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
+            request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
+        except ObjectDoesNotExist:
+            pass
+    else:
+        enquiry_num_id = request.session.get('ses_enqiury_id')
+
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role

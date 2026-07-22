@@ -23,19 +23,9 @@ def sanitize_value(v):
 def get_model_data(instance):
     try:
         data = model_to_dict(instance)
-        # Sanitize data and resolve Foreign Keys to their string representations
-        for field in instance._meta.fields:
-            name = field.name
-            if name in data:
-                val = data[name]
-                if field.is_relation and val is not None:
-                    try:
-                        related_obj = getattr(instance, name)
-                        if related_obj:
-                            val = str(related_obj)
-                    except Exception:
-                        pass
-                data[name] = sanitize_value(val)
+        # Sanitize data but DO NOT resolve foreign keys to strings yet to save DB queries
+        for k, v in data.items():
+            data[k] = sanitize_value(v)
         return data
     except Exception:
         return {}
@@ -47,12 +37,26 @@ def should_audit(instance):
         return False
     return True
 
+def get_fk_string(instance, field_name, fk_id):
+    if not fk_id:
+        return None
+    try:
+        field = instance._meta.get_field(field_name)
+        if field.is_relation:
+            related_model = field.related_model
+            obj = related_model.objects.get(pk=fk_id)
+            return str(obj)
+    except Exception:
+        pass
+    return fk_id
+
 @receiver(pre_save)
 def audit_pre_save(sender, instance, **kwargs):
     if not should_audit(instance):
         return
     if instance.pk:
         try:
+            # We fetch the old instance without select_related to keep it fast
             old_instance = sender.objects.get(pk=instance.pk)
             instance._old_state = get_model_data(old_instance)
         except sender.DoesNotExist:
@@ -73,21 +77,25 @@ def audit_post_save(sender, instance, created, **kwargs):
         changed_data = {}
         for k, v in new_state.items():
             old_v = old_state.get(k)
-            # Normalize empty strings and Nones to avoid false diffs
             if old_v in [None, ''] and v in [None, '']:
                 continue
+            
             if old_v != v:
-                changed_data[k] = {"from": old_v, "to": v}
+                # Resolve string representations ONLY for fields that actually changed
+                display_old = get_fk_string(instance, k, old_v) if old_v else old_v
+                display_new = get_fk_string(instance, k, v) if v else v
+                changed_data[k] = {"from": display_old, "to": display_new}
         
         if not changed_data:
             return
     else:
+        # For CREATE, we just dump the raw IDs to save DB performance 
         changed_data = {k: v for k, v in new_state.items() if v not in [None, '']}
 
     try:
         changed_data_json = json.loads(json.dumps(changed_data, cls=DjangoJSONEncoder))
     except Exception:
-        changed_data_json = changed_data # Fallback, though should rarely happen now
+        changed_data_json = changed_data
 
     SystemAuditLog.objects.create(
         module_name=instance._meta.app_label.upper(),

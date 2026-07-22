@@ -10,6 +10,7 @@ from xhtml2pdf import pisa
 
 from ..forms import ConsignmentdetailaddForm,ConsignmentgoodsaddForm
 from ..models import VehiclemasterInfo,User_extInfo,Location_info,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo, MyUser, DeletionLog, TripdetailInfo, OwnershipInfo, VehicletypeInfo, Trip_category_info
+from django.urls import reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
@@ -30,7 +31,7 @@ def consignmentdetail_enquiry(request, enquiry_id, consignment_number):
     request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
 
     if consignment_number == 'none' or consignment_number == '':
-        return redirect('consignmentdetail_insert')
+        return redirect(f"{reverse('consignmentdetail_insert')}?enq_id={enquiry.id}")
     else:
         return redirect('consignmentdetail_update', consignmentdetail_id=consignment_number)
 
@@ -68,8 +69,21 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
     user_branch_id = Location_info.objects.get(loc_name=user_branch).id
     enquiry_num = request.session.get('ses_enqiury_num')
-    # Prioritize 'enquiry_num_id' over the misspelled session key
-    enquiry_num_id = request.session.get('enquiry_num_id') or request.session.get('ses_enqiury_id')
+    
+    enq_id_param = request.GET.get('enq_id')
+    if enq_id_param:
+        enquiry_num_id = int(enq_id_param)
+        request.session['enquiry_num_id'] = enquiry_num_id
+        request.session['ses_enqiury_id'] = enquiry_num_id
+        try:
+            enquiry = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
+            request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
+            enquiry_num = enquiry.en_enquirynumber
+        except ObjectDoesNotExist:
+            pass
+    else:
+        # Prioritize 'enquiry_num_id' over the misspelled session key
+        enquiry_num_id = request.session.get('enquiry_num_id') or request.session.get('ses_enqiury_id')
 
     print("Enquiry Number:", enquiry_num)
     print("Enquiry ID:", enquiry_num_id)
