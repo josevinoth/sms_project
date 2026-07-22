@@ -12,6 +12,7 @@ from ..forms import VehicleallotmentForm
 from ..models import Enquirynotevehicle, TripdetailInfo, OwnershipInfo, User_extInfo, ConsignmentdetailInfo, \
     VehiclemasterInfo, EnquirynoteInfo, Vehicle_allotmentInfo, VendorratemasterInfo1, RtratemasterInfo, VehicletypeInfo, DeletionLog
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.http import HttpResponse, JsonResponse
 from .send_department_email import send_department_email
 from .general_utils import get_branch_code, get_session_branch_id
@@ -735,14 +736,28 @@ def load_vehicle_number(request):
 @login_required(login_url='login_page')
 def load_driver_details(request):
     vehicle_number = request.GET.get('vehicle_number')
+    
+    if not vehicle_number:
+        data = {
+            'driver_name': [],
+            'driver_number': [],
+            'driver_license': [],
+            'driver_license_exp_date': [],
+        }
+        return HttpResponse(json.dumps(data))
+        
     driver_name = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydrivername', flat=True))
     driver_number = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydrivermob', flat=True))
     driver_license = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license', flat=True))
+    
+    # Use string conversion to avoid json serialization issues with dates
     driver_license_exp_date = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license_exp_date', flat=True))
+    driver_license_exp_date = [str(d) if d else '' for d in driver_license_exp_date]
+
     data = {
         'driver_name': driver_name,
         'driver_number': driver_number,
@@ -840,7 +855,11 @@ def get_vendor_buy_rate(request):
         vr1_vendor_id=vendor_id,
         vr1_fromlocation=enquiry.en_fromlocaion,
         vr1_tolocation=enquiry.en_tolocation,
-        vr1_vehicletype=vehicle_id  # This is likely a ForeignKey ID
+        vr1_vehicletype=vehicle_id,  # This is likely a ForeignKey ID
+        vr1_touchpoint=enquiry.en_touchpoint,
+        vr1_touchpoint2=enquiry.en_touchpoint2,
+        vr1_touchpoint3=enquiry.en_touchpoint3,
+        vr1_touchpoint4=enquiry.en_touchpoint4
     ).first()
 
     buy_rate = str(rate.vr1_rate) if rate else "0"
@@ -881,7 +900,11 @@ def get_vendor_sale_rate(request):
         ro_customer=enquiry.en_customername,
         ro_fromlocation=enquiry.en_fromlocaion,
         ro_tolocation=enquiry.en_tolocation,
-        ro_vehicletype=vehicle_id  # ForeignKey to vehicle type
+        ro_vehicletype=vehicle_id,  # ForeignKey to vehicle type
+        ro_touchpoint=enquiry.en_touchpoint,
+        ro_touchpoint2=enquiry.en_touchpoint2,
+        ro_touchpoint3=enquiry.en_touchpoint3,
+        ro_touchpoint4=enquiry.en_touchpoint4
     ).first()
 
     sale_rate = str(rate.ro_rate) if rate else "0"
@@ -1045,7 +1068,11 @@ def get_vendor_buy_rate(request):
         vr1_vendor_id=vendor_id,
         vr1_fromlocation=enquiry.en_fromlocaion,
         vr1_tolocation=enquiry.en_tolocation,
-        vr1_vehicletype_id=vehicle_type_id
+        vr1_vehicletype_id=vehicle_type_id,
+        vr1_touchpoint=enquiry.en_touchpoint,
+        vr1_touchpoint2=enquiry.en_touchpoint2,
+        vr1_touchpoint3=enquiry.en_touchpoint3,
+        vr1_touchpoint4=enquiry.en_touchpoint4
     ).first()
 
     if not rate_obj:

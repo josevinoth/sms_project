@@ -71,8 +71,10 @@ def rtratemaster_list(request):
     
     # Filter if search query exists
     if search_query:
+        # Clean up currency symbols and commas if pasted from UI
+        clean_query = search_query.replace('₹', '').replace(',', '')
         # Split search terms for multi-word search (e.g. "COMPANY NAME")
-        search_terms = search_query.split()
+        search_terms = clean_query.split()
         for term in search_terms:
             rtratemaster_qs = rtratemaster_qs.filter(
                 Q(ro_fromlocation__place_name__icontains=term) |
@@ -80,7 +82,8 @@ def rtratemaster_list(request):
                 Q(ro_vehicletype__vt_vehicletype__icontains=term) |
                 Q(ro_customer__cu_name__icontains=term) |
                 Q(ro_customerdepartment__ct_customerdepartment__icontains=term) |
-                Q(ro_vehiclecategory__vc_vehiclecategory__icontains=term)
+                Q(ro_vehiclecategory__vc_vehiclecategory__icontains=term) |
+                Q(ro_rate__icontains=term)
             )
     
     # Pagination
