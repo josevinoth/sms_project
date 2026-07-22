@@ -274,17 +274,32 @@ $(document).ready(function () {
             "BVM Transport Team"
         );
 
-        // Get values directly from dropdowns
+        // Get values directly from main filter form
         const customerId = $("#id_dmr_customer").val();
         const departmentId = $("#id_customer_department").val();
+        const month = $("#id_month").val();
+        const year = $("#id_year").val();
+        const fromLoc = $("#id_from_location").val();
+        const toLoc = $("#id_to_location").val();
 
         console.log("customerId =", customerId);
         console.log("departmentId =", departmentId);
 
         if (!customerId) {
-            alert("Please select customer");
+            alert("Please select customer in the main filter before emailing.");
             return;
         }
+
+        // Transfer values to the modal's hidden inputs
+        $("#sendDmrEmailModal input[name='customer_id']").val(customerId);
+        $("#sendDmrEmailModal input[name='customer_department']").val(departmentId);
+        $("#sendDmrEmailModal input[name='month']").val(month);
+        $("#sendDmrEmailModal input[name='year']").val(year);
+        $("#sendDmrEmailModal input[name='from_location']").val(fromLoc);
+        $("#sendDmrEmailModal input[name='to_location']").val(toLoc);
+
+        // Update the visual disabled dropdown in the modal
+        $("#dmr_customer").val(customerId);
 
         $.ajax({
             url: "{% url 'get_dmr_email_details' %}",
