@@ -32,7 +32,7 @@
     </div>
 </div>
 
-<form method="POST" action="{% url 'time_analysis_report' %}" class="row g-3 align-items-end mb-4">
+<form class="row g-3 align-items-end mb-4">
     {% csrf_token %}
 
     <!-- Customer Filter -->
@@ -92,13 +92,6 @@
                 </tr>
             </thead>
             <tbody>
-                {% for row in data_rows %}
-                <tr>
-                    {% for cell in row %}
-                    <td class="text-nowrap">{{ cell }}</td>
-                    {% endfor %}
-                </tr>
-                {% endfor %}
             </tbody>
         </table>
     </div>
@@ -107,6 +100,19 @@
 <script>
     $(document).ready(function () {
         const table = $('#time_analysis_report_table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "{% url 'time_analysis_report_ajax' %}",
+                type: "GET",
+                data: function (d) {
+                    d.customer = $('[name="dmr_customer"]').val() || '';
+                    d.from_date = $('[name="from_date"]').val() || '';
+                    d.to_date = $('[name="to_date"]').val() || '';
+                    d.branch = $('[name="branch"]').val() || '';
+                    d.vehicle_search = $('#vehicle_search').val() || '';
+                }
+            },
             scrollX: true,
             autoWidth: false,
             dom: "<'row'<'col-sm-12 col-md-6 d-flex align-items-center gap-2'lB><'col-sm-12 col-md-6'f>>" +
@@ -248,3 +254,9 @@
 </script>
 
 {% endblock content %}
+        $('form').on('submit', function(e) {
+            e.preventDefault();
+            table.ajax.reload();
+        });
+
+        
