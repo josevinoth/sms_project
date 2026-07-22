@@ -1760,137 +1760,41 @@ def ref_no_pending_report_ajax_view(request):
 
 def ref_no_pending_report_view(request):
     first_name = request.session.get('first_name')
+    from ..models import VehiclemasterInfo
     if request.method == "POST":
         form = DmrForm(request.POST)
+        customer_id = request.POST.get('dmr_customer')
+        from_date = request.POST.get('from_date')
+        to_date = request.POST.get('to_date')
+        from_loc_id = request.POST.get('from_location')
+        to_loc_id = request.POST.get('to_location')
+        vehicle_search = request.POST.get('vehicle_search', '').strip()
     else:
         form = DmrForm()
-
-    customer_id = request.POST.get('dmr_customer')
-    from_date = request.POST.get('from_date')
-    to_date = request.POST.get('to_date')
-    from_loc_id = request.POST.get('from_location')
-    to_loc_id = request.POST.get('to_location')
-    vehicle_search = request.POST.get('vehicle_search', '').strip()
-
-    # Filter trips where customer reference is missing OR pending in BOTH Trip and Consignment
-    trips = (
-        TripdetailInfo.objects
-        .annotate(
-            ref_clean=Trim('tr_customerref'),
-            cons_ref_clean=Trim('tr_consignmentnumber__co_cusrefnum')
-        )
-        .filter(
-            (Q(ref_clean__isnull=True) | Q(ref_clean__exact='') | Q(ref_clean='0')) &
-            (Q(cons_ref_clean__isnull=True) | Q(cons_ref_clean__exact='') | Q(cons_ref_clean='0')),
-            tr_category_id=1
-        )
-        .select_related(
-            'tr_enquirynumber',
-            'tr_enquirynumber__en_customername',
-            'tr_enquirynumber__en_customerdepartment',
-            'tr_consignmentnumber',
-            'tr_vehicletype',
-            'tr_vehiclesource',
-            'tr_departedlocation',
-            'tr_reportedlocation'
-        )
-    )
-
-    if customer_id:
-        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
-    if from_date and to_date:
-        trips = trips.filter(
-            Q(tr_loading_time__date__gte=from_date, tr_loading_time__date__lte=to_date) |
-            Q(tr_departeddate__date__gte=from_date, tr_departeddate__date__lte=to_date) |
-            Q(tr_departeddate_pickup__date__gte=from_date, tr_departeddate_pickup__date__lte=to_date) |
-            Q(tr_reporteddate__date__gte=from_date, tr_reporteddate__date__lte=to_date) |
-            Q(tr_unloading_time__date__gte=from_date, tr_unloading_time__date__lte=to_date) |
-            Q(tr_created_at__date__gte=from_date, tr_created_at__date__lte=to_date)
-        )
-    if from_loc_id:
-        trips = trips.filter(tr_departedlocation_id=from_loc_id)
-    if to_loc_id:
-        trips = trips.filter(tr_reportedlocation_id=to_loc_id)
-    if vehicle_search:
-        trips = trips.filter(tr_vehiclenumber__icontains=vehicle_search)
-
-    trips = trips.order_by('-tr_created_at')
-
-
-    data_rows = []
-    for idx, trip in enumerate(trips, start=1):
-        cons_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
-        cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper()
-        branch = "MAA" if cust_name.endswith("MAA") else ("BLR" if cust_name.endswith("BLR") else "")
-        # Filter-aware date selection
-        dates = [
-            trip.tr_loading_time, trip.tr_departeddate, trip.tr_departeddate_pickup,
-            trip.tr_departeddate_delivery, trip.tr_reporteddate, trip.tr_reporteddate_pickup,
-            trip.tr_reporteddate_delivery, trip.tr_unloading_time, trip.tr_dock_in_time,
-            trip.tr_dock_out_time, trip.tr_created_at
-        ]
-        trip_date = next((d for d in dates if d), None)
-        display_date = trip_date.strftime("%d-%m-%Y") if trip_date else ""
-
-        # Calculate Total Selling (sum of charges) - Respecting checkboxes
-        total_selling = (safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0) + \
-                        (safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0) + \
-                        (safe_num(trip.tc_supervisorcost) if trip.tc_supervisorcost_check else 0) + \
-                        (safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0) + \
-                        (safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0) + \
-                        (safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0) + \
-                        (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + \
-                        (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0) + \
-                        (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0) + \
-                        (safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0) + \
-                        (safe_num(trip.tc_rtocost) if trip.tc_rtocost_check else 0) + \
-                        (safe_num(trip.tc_betacost) if trip.tc_betacost_check else 0)
-
-        row = [
-            idx,
-            display_date,
-            branch,
-            safe_str(trip.tr_enquirynumber.en_customername),
-            cons_no,
-            safe_str(trip.tr_tripnumber),
-            safe_str(trip.tr_enquirynumber.en_customerdepartment),
-            _fmt_dt(trip.tr_departeddate),
-            _fmt_dt(trip.tr_reporteddate),
-            safe_str(trip.tr_departedlocation),
-            safe_str(trip.tr_reportedlocation),
-            safe_str(trip.tr_vehiclenumber),
-            safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype),
-            safe_str(trip.tr_vehiclesource),
-            safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0,  # Trip Charges
-            safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0,  # Toll charges
-            safe_num(trip.tc_supervisorcost) if trip.tc_supervisorcost_check else 0,  # AAI charges
-            safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0,  # Loading charges
-            safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0,  # Unloading Charges
-            safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0,  # Weighment charges
-            (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (
-                safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0),  # Halting Charges
-            safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0,  # Handling Charges
-            total_selling  # Selling (Total)
-        ]
-        data_rows.append(row)
+        customer_id = None
+        from_date = None
+        to_date = None
+        from_loc_id = None
+        to_loc_id = None
+        vehicle_search = ''
 
     context = {
         'first_name': first_name,
         'form': form,
         'headers': REF_NO_PENDING_HEADERS,
-        'data_rows': data_rows,
-        'customer_id': customer_id,
+        'data_rows': [],
+        'customer_id': int(customer_id) if customer_id else None,
         'from_date': from_date,
         'to_date': to_date,
-        'from_location': from_loc_id,
-        'to_location': to_loc_id,
+        'from_location': int(from_loc_id) if from_loc_id else None,
+        'to_location': int(to_loc_id) if to_loc_id else None,
         'vehicle_search': vehicle_search,
-        'all_vehicles': VehiclemasterInfo.objects.filter(vm_ownership_id__in=[1, 2, 3]).order_by(
-            'vm_registrationnumber'),
+        'all_vehicles': VehiclemasterInfo.objects.filter(vm_ownership_id__in=[1, 2, 3]).order_by('vm_registrationnumber'),
     }
     return render(request, "asset_mgt_app/ref_no_pending_report.html", context)
 
 
+@login_required(login_url='login_page')
 @login_required(login_url='login_page')
 def drivers_advance_report_view(request):
     first_name = request.session.get('first_name')

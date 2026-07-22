@@ -237,6 +237,12 @@
             order: [[1, 'asc']]
         });
 
+
+        $('form').on('submit', function(e) {
+            e.preventDefault();
+            $('#time_analysis_report_table').DataTable().ajax.reload();
+        });
+
         $(window).on('resize', function () {
             $('#time_analysis_report_table').DataTable().columns.adjust();
         });
@@ -254,9 +260,3 @@
 </script>
 
 {% endblock content %}
-        $('form').on('submit', function(e) {
-            e.preventDefault();
-            table.ajax.reload();
-        });
-
-        

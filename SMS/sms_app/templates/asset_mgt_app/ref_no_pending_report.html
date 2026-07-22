@@ -204,6 +204,12 @@ $(document).ready(function () {
     });
 
 });
+
+    $('form').on('submit', function(e) {
+        e.preventDefault();
+        $('#ref_no_pending_report_table').DataTable().ajax.reload();
+    });
+
 </script>
 
 {% endblock content %}
