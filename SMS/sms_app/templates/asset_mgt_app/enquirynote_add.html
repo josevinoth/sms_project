@@ -294,12 +294,22 @@
         cache: true
     };
 
-    $("#en_fromlocaion").select2({ width: '100%', ajax: placesAjaxConfig });
-    $("#en_touchpoint").select2({ width: '100%', ajax: placesAjaxConfig });
-    $("#en_touchpoint1").select2({ width: '100%', ajax: placesAjaxConfig });
-    $("#en_touchpoint2").select2({ width: '100%', ajax: placesAjaxConfig });
-    $("#en_touchpoint3").select2({ width: '100%', ajax: placesAjaxConfig });
-    $("#en_touchpoint4").select2({ width: '100%', ajax: placesAjaxConfig });
-    $("#en_tolocation").select2({ width: '100%', ajax: placesAjaxConfig });
+    // Django renders the empty choice as '--Select--'. We must clear it for allowClear to work.
+    $('#en_fromlocaion, #en_touchpoint, #en_touchpoint1, #en_touchpoint2, #en_touchpoint3, #en_touchpoint4, #en_tolocation').find('option[value=""]').text('');
+
+    var select2Config = {
+        width: '100%',
+        ajax: placesAjaxConfig,
+        allowClear: true,
+        placeholder: '--Select--'
+    };
+
+    $("#en_fromlocaion").select2(select2Config);
+    $("#en_touchpoint").select2(select2Config);
+    $("#en_touchpoint1").select2(select2Config);
+    $("#en_touchpoint2").select2(select2Config);
+    $("#en_touchpoint3").select2(select2Config);
+    $("#en_touchpoint4").select2(select2Config);
+    $("#en_tolocation").select2(select2Config);
 </script>
 {% endblock extra_js %}
