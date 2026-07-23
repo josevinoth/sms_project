@@ -1110,6 +1110,7 @@ urlpatterns = [
     path('whatsapp_delivery_status_report/', views.whatsapp_delivery_status_report_view, name='whatsapp_delivery_status_report'),
     path('whatsapp_delivery_status_report_ajax/', views.whatsapp_delivery_status_report_ajax_view, name='whatsapp_delivery_status_report_ajax'),
     path('daily_trip_count_report/', views.daily_trip_count_report_view, name='daily_trip_count_report'),
+    path('daily_trip_count_report_ajax/', views.daily_trip_count_report_ajax_view, name='daily_trip_count_report_ajax'),
     path('own_vehicle_pl_report/', views.own_vehicle_pl_report_view, name='own_vehicle_pl_report'),
     path('location_pl_report/', views.location_pl_report_view, name='location_pl_report'),
     path('claim_pending_report/', views.claim_pending_report_view, name='claim_pending_report'),

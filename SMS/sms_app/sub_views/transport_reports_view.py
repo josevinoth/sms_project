@@ -3282,46 +3282,48 @@ def whatsapp_delivery_status_report_ajax_view(request):
 
 def daily_trip_count_report_view(request):
     first_name = request.session.get('first_name')
+    from ..models import OwnershipInfo, Location_info, VehiclemasterInfo
 
-    if request.method == "POST":
-        form = DmrForm(request.POST)
+    if request.method == "POST" or request.method == "GET":
+        form = DmrForm(request.GET if request.method == "GET" else request.POST)
     else:
         form = DmrForm()
+        
+    all_vehicles = VehiclemasterInfo.objects.filter(
+        vm_ownership_id__in=[1, 2]
+    ).order_by('vm_registrationnumber')
 
-    customer_id = request.POST.get('dmr_customer')
-    dept_id = request.POST.get('customer_department')
-    selected_month = request.POST.get('month', '0')
-    selected_year = request.POST.get('year', '0')
-    from_loc_id = request.POST.get('from_location')
-    to_loc_id = request.POST.get('to_location')
-    branch_id = request.POST.get('branch')
-    vehicle_source_id = request.POST.get('vehicle_source')
-    vehicle_filter = request.POST.get('vehicle_number')
-    from_date = request.POST.get('from_date')
-    to_date = request.POST.get('to_date')
+    return render(request, "asset_mgt_app/daily_trip_count_report.html", {
+        'first_name': first_name,
+        'form': form,
+        'headers': DAILY_TRIP_COUNT_HEADERS,
+        'all_vehicles': all_vehicles,
+        'all_branches': Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name'),
+        'vehicle_sources': OwnershipInfo.objects.filter(id__in=[1, 2]),
+    })
+
+from django.http import JsonResponse
+from datetime import datetime
+
+@login_required(login_url='login_page')
+def daily_trip_count_report_ajax_view(request):
+    from ..models import TripdetailInfo
+    from django.db.models import Q
+    
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '')
+
+    branch_id = request.GET.get('branch')
+    vehicle_source_id = request.GET.get('vehicle_source')
+    vehicle_filter = request.GET.get('vehicle_number')
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
 
     trips = TripdetailInfo.objects.filter(
         tr_vehiclesource_id__in=[1, 2],
-    ).select_related(
-        'tr_enquirynumber',
-        'tr_enquirynumber__en_customername',
-        'tr_enquirynumber__en_customerdepartment',
-        'tr_vehicletype',
-        'tr_departedlocation',
-        'tr_reportedlocation',
-        'tr_vehiclesource',
-        'tr_category',
-        'tr_consignmentnumber'
     )
-
-    # ------------------------------------------------
-    # FILTERS
-    # ------------------------------------------------
-    if customer_id:
-        trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
-
-    if dept_id:
-        trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
 
     if from_date:
         trips = trips.filter(
@@ -3343,22 +3345,6 @@ def daily_trip_count_report_view(request):
             Q(tr_created_at__date__lte=to_date)
         )
 
-    if from_date and to_date:
-        trips = trips.filter(
-            Q(tr_loading_time__date__gte=from_date, tr_loading_time__date__lte=to_date) |
-            Q(tr_departeddate__date__gte=from_date, tr_departeddate__date__lte=to_date) |
-            Q(tr_departeddate_pickup__date__gte=from_date, tr_departeddate_pickup__date__lte=to_date) |
-            Q(tr_reporteddate__date__gte=from_date, tr_reporteddate__date__lte=to_date) |
-            Q(tr_unloading_time__date__gte=from_date, tr_unloading_time__date__lte=to_date) |
-            Q(tr_created_at__date__gte=from_date, tr_created_at__date__lte=to_date)
-        )
-
-    if from_loc_id:
-        trips = trips.filter(tr_departedlocation_id=from_loc_id)
-
-    if to_loc_id:
-        trips = trips.filter(tr_reportedlocation_id=to_loc_id)
-
     if vehicle_filter:
         trips = trips.filter(tr_vehiclenumber__icontains=vehicle_filter)
 
@@ -3378,23 +3364,40 @@ def daily_trip_count_report_view(request):
 
     if vehicle_source_id:
         trips = trips.filter(tr_vehiclesource_id=vehicle_source_id)
+        
+    if search_value:
+        trips = trips.filter(tr_vehiclenumber__icontains=search_value)
 
-    trips = trips.order_by('-tr_created_at')
+    trips = trips.order_by('-tr_created_at').values(
+        'tr_loading_time', 
+        'tr_enquirynumber__en_created_at', 
+        'tr_departeddate', 
+        'tr_created_at', 
+        'tr_vehiclenumber', 
+        'tr_enquirynumber__en_customername__cu_name', 
+        'tr_vehicletype_placed__vt_vehicletype', 
+        'tr_vehicletype__vt_vehicletype', 
+        'tr_vehiclesource__ow_ownership', 
+        'tr_category_id'
+    )
 
-    # ------------------------------------------------
-    # AGGREGATION
-    # ------------------------------------------------
+    def safe_str(val):
+        return str(val) if val else ""
+
+    def safe_num(val):
+        try:
+            return float(val) if val else 0.0
+        except:
+            return 0.0
+
     aggregated_data = {}
 
     for trip in trips:
-
-        # Determine the "Operational Day" for this trip count
-        # Priority: Actual Loading -> Enquiry Date (Intended Day) -> Actual Departure -> Creation
         full_date = (
-                trip.tr_loading_time or
-                (trip.tr_enquirynumber.en_created_at if trip.tr_enquirynumber else None) or
-                trip.tr_departeddate or
-                trip.tr_created_at
+                trip['tr_loading_time'] or
+                trip['tr_enquirynumber__en_created_at'] or
+                trip['tr_departeddate'] or
+                trip['tr_created_at']
         )
 
         if not full_date:
@@ -3402,9 +3405,9 @@ def daily_trip_count_report_view(request):
         trip_date = full_date.date() if hasattr(full_date, 'date') else full_date
 
         date_str = trip_date.strftime("%d-%m-%Y")
-        vehicle_no = safe_str(trip.tr_vehiclenumber)
+        vehicle_no = safe_str(trip['tr_vehiclenumber'])
 
-        cust_name = safe_str(trip.tr_enquirynumber.en_customername).upper().strip()
+        cust_name = safe_str(trip['tr_enquirynumber__en_customername__cu_name']).upper().strip()
 
         branch_name = (
             "Chennai" if cust_name.endswith("MAA")
@@ -3419,27 +3422,14 @@ def daily_trip_count_report_view(request):
                 'branch': branch_name,
                 'date': date_str,
                 'vehicle_no': vehicle_no,
-                'vehicle_type': safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype),
-                'ownership': safe_str(trip.tr_vehiclesource),
+                'vehicle_type': safe_str(trip['tr_vehicletype_placed__vt_vehicletype'] or trip['tr_vehicletype__vt_vehicletype']),
+                'ownership': safe_str(trip['tr_vehiclesource__ow_ownership']),
                 'active_trips': 0,
-                'empty_trips': 0,
-                'km_business': 0.0,
-                'km_empty': 0.0
             }
 
-        # KM calculation
-        km_run = safe_num(trip.tr_reportedkm) - safe_num(trip.tr_departedkm)
-
-        if trip.tr_category_id == 1:
+        if trip['tr_category_id'] == 1:
             aggregated_data[key]['active_trips'] += 1
-            aggregated_data[key]['km_business'] += km_run
-        elif trip.tr_category_id in [2, 3]:
-            aggregated_data[key]['empty_trips'] += 1
-            aggregated_data[key]['km_empty'] += km_run
 
-    # ------------------------------------------------
-    # BUILD TABLE
-    # ------------------------------------------------
     data_rows = []
 
     sorted_keys = sorted(
@@ -3447,10 +3437,16 @@ def daily_trip_count_report_view(request):
         key=lambda x: datetime.strptime(x[0], "%d-%m-%Y"),
         reverse=True
     )
+    
+    records_total = len(sorted_keys)
+    
+    if length != -1:
+        paginated_keys = sorted_keys[start:start + length]
+    else:
+        paginated_keys = sorted_keys[start:]
 
-    for idx, key in enumerate(sorted_keys, start=1):
+    for idx, key in enumerate(paginated_keys, start=start + 1):
         item = aggregated_data[key]
-
         row = [
             idx,
             item['branch'],
@@ -3460,32 +3456,13 @@ def daily_trip_count_report_view(request):
             item['active_trips'],
             item['ownership']
         ]
-
         data_rows.append(row)
 
-    all_vehicles = VehiclemasterInfo.objects.filter(
-        vm_ownership_id__in=[1, 2]
-    ).order_by('vm_registrationnumber')
-
-    # Pagination for groups (dates)
-    paginator = Paginator(data_rows, 50)
-
-    from ..models import OwnershipInfo, Location_info
-    return render(request, "asset_mgt_app/daily_trip_count_report.html", {
-        'first_name': first_name,
-        'form': form,
-        'headers': DAILY_TRIP_COUNT_HEADERS,
-        'data_rows': page_obj,
-        'from_date': from_date,
-        'to_date': to_date,
-        'from_date': from_date,
-        'to_date': to_date,
-        'vehicle_filter': vehicle_filter,
-        'selected_branch': int(branch_id) if branch_id else None,
-        'selected_source': int(vehicle_source_id) if vehicle_source_id else None,
-        'all_vehicles': all_vehicles,
-        'all_branches': Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name'),
-        'vehicle_sources': OwnershipInfo.objects.filter(id__in=[1, 2]),
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': records_total,
+        'recordsFiltered': records_total,
+        'data': data_rows,
     })
 
 
@@ -4038,6 +4015,8 @@ def claim_pending_report_view(request):
 
     # Pagination
     paginator = Paginator(claims, 50)
+    page_number = request.GET.get('page') or request.POST.get('page')
+    page_obj = paginator.get_page(page_number)
 
     # Fetch related Trips for the current page
     cnote_ids = [c.tcc_cnote_id for c in page_obj if c.tcc_cnote_id]
