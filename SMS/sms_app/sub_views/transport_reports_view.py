@@ -691,7 +691,7 @@ VENDOR_PL_ATTACHED_HEADERS = [
 
 DAILY_TRIP_COUNT_HEADERS = [
     "S.No", "Branch", "Date", "Vehicle No", "Vehicle Type",
-    "Active Trips For the Day", "OWN/Market/Attached"
+    "Active Trips For the Day", "OWN/Attached"
 ]
 
 MAINTENANCE_REPORT_HEADERS = [
@@ -3410,9 +3410,14 @@ def daily_trip_count_report_ajax_view(request):
 
         if not full_date:
             continue
-        trip_date = full_date.date() if hasattr(full_date, 'date') else full_date
-
-        date_str = timezone.localtime(trip_date).strftime("%d-%m-%Y")
+            
+        try:
+            loc_date = timezone.localtime(full_date)
+        except Exception:
+            loc_date = full_date
+            
+        trip_date = loc_date.date() if hasattr(loc_date, 'date') else loc_date
+        date_str = trip_date.strftime("%d-%m-%Y")
         vehicle_no = safe_str(trip['tr_vehiclenumber'])
 
         cust_name = safe_str(trip['tr_enquirynumber__en_customername__cu_name']).upper().strip()
