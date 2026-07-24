@@ -4045,7 +4045,7 @@ def claim_pending_report_view(request):
         trip = trip_map.get(claim.tcc_cnote_id)
 
         trip_code = "N/A"
-        trip_date = claim.tcc_timezone.localtime(trip_date).strftime("%d-%m-%Y") if claim.tcc_trip_date else ""
+        trip_date = claim.tcc_trip_date.strftime("%d-%m-%Y") if claim.tcc_trip_date else ""
         truck_no = safe_str(claim.tcc_veh_no)
         veh_type = safe_str(claim.tcc_veh_type)
         loc_from = safe_str(claim.tcc_from)
