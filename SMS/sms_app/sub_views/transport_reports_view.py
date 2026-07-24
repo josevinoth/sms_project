@@ -1147,7 +1147,7 @@ def trip_cancellation_report_ajax_view(request):
             trip.tr_dock_out_time, trip.tr_created_at
         ]
         trip_date = next((d for d in dates if d), None)
-        display_date = trip_date.strftime("%d-%m-%Y") if trip_date else ""
+        display_date = timezone.localtime(trip_date).strftime("%d-%m-%Y") if trip_date else ""
         trip_category = str(trip.tr_category) if trip.tr_category else ""
         
         rate_sheet_charge = 0
@@ -1167,7 +1167,13 @@ def trip_cancellation_report_ajax_view(request):
             pass
             
         def _fmt(dt):
-            return dt.strftime("%d-%m-%Y %H:%M") if dt else ""
+            if not dt: return ""
+            from django.utils import timezone
+            try:
+                dt = timezone.localtime(dt)
+            except ValueError:
+                pass
+            return dt.strftime("%d-%m-%Y %H:%M")
 
         data_rows.append([
             idx,
@@ -1293,7 +1299,7 @@ def trip_cancellation_report_view(request):
             trip.tr_dock_out_time, trip.tr_created_at
         ]
         trip_date = next((d for d in dates if d), None)
-        display_date = trip_date.strftime("%d-%m-%Y") if trip_date else ""
+        display_date = timezone.localtime(trip_date).strftime("%d-%m-%Y") if trip_date else ""
 
         trip_category = str(trip.tr_category) if trip.tr_category else ""
 
@@ -1671,7 +1677,13 @@ def ref_no_pending_report_ajax_view(request):
     # Usually it's at the top of the file.
     # We will just write a small helper inside.
     def _fmt(dt):
-        return dt.strftime("%d-%m-%Y %H:%M") if dt else ""
+        if not dt: return ""
+        from django.utils import timezone
+        try:
+            dt = timezone.localtime(dt)
+        except ValueError:
+            pass
+        return dt.strftime("%d-%m-%Y %H:%M")
         
     for idx, trip in enumerate(page_trips, start=start + 1):
         cons_no = safe_str(trip.tr_consignmentnumber.co_consignmentnumber) if trip.tr_consignmentnumber else ""
@@ -1685,7 +1697,7 @@ def ref_no_pending_report_ajax_view(request):
             trip.tr_dock_out_time, trip.tr_created_at
         ]
         trip_date = next((d for d in dates if d), None)
-        display_date = trip_date.strftime("%d-%m-%Y") if trip_date else ""
+        display_date = timezone.localtime(trip_date).strftime("%d-%m-%Y") if trip_date else ""
 
         from ..sub_models.charge_master_mod import ChargeMasterInfo
         trip_charge = 0
@@ -1965,8 +1977,6 @@ def invoice_pending_report_ajax_view(request):
     all_invoiced_ids = set(invoiced_trip_ids) | set(trips_from_cons) | set(trips_from_goods)
 
     # -------------------------
-    # Base queryset
-    # -------------------------
     trips = TripdetailInfo.objects.filter(
         tr_category_id=1
     ).filter(
@@ -2144,14 +2154,12 @@ def invoice_pending_report_ajax_view(request):
             branch_name = 'BLR'
 
         # Date selection logic (strictly using tr_departeddate_pickup as the planning date)
-        display_date = trip.tr_departeddate_pickup.strftime("%d-%m-%Y") if trip.tr_departeddate_pickup else ""
+        display_date = timezone.localtime(trip.tr_departeddate_pickup).strftime("%d-%m-%Y") if trip.tr_departeddate_pickup else ""
 
         if trip.id in all_invoiced_ids:
             trip_status_display = "Invoice Completed"
-        elif inv_status != "-":
-            trip_status_display = inv_status
         else:
-            trip_status_display = safe_str(trip.tc_financestatus) if trip.tc_financestatus else ""
+            trip_status_display = safe_str(trip.tc_financestatus) if trip.tc_financestatus else "-"
 
         data.append([
             idx,
@@ -3250,7 +3258,7 @@ def whatsapp_delivery_status_report_ajax_view(request):
         consignment_date = (
             trip.tr_consignmentnumber.co_consignmentdate.strftime("%d-%m-%Y")
             if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_consignmentdate
-            else (trip_date.strftime("%d-%m-%Y") if trip_date else "")
+            else (timezone.localtime(trip_date).strftime("%d-%m-%Y") if trip_date else "")
         )
 
         row = [
@@ -3265,8 +3273,8 @@ def whatsapp_delivery_status_report_ajax_view(request):
             safe_str(trip.tr_departedlocation),
             safe_str(trip.tr_reportedlocation),
             safe_str(trip.tr_vehiclenumber),
-            trip.tr_departeddate.strftime("%d-%m-%Y") if trip.tr_departeddate else "",
-            trip.tr_reporteddate.strftime("%d-%m-%Y") if trip.tr_reporteddate else "",
+            timezone.localtime(trip.tr_departeddate).strftime("%d-%m-%Y") if trip.tr_departeddate else "",
+            timezone.localtime(trip.tr_reporteddate).strftime("%d-%m-%Y") if trip.tr_reporteddate else "",
             safe_str(trip.tr_drivername),
             "",  # Whatsapp Delivered time
             "",  # Delivered Status
@@ -3404,7 +3412,7 @@ def daily_trip_count_report_ajax_view(request):
             continue
         trip_date = full_date.date() if hasattr(full_date, 'date') else full_date
 
-        date_str = trip_date.strftime("%d-%m-%Y")
+        date_str = timezone.localtime(trip_date).strftime("%d-%m-%Y")
         vehicle_no = safe_str(trip['tr_vehiclenumber'])
 
         cust_name = safe_str(trip['tr_enquirynumber__en_customername__cu_name']).upper().strip()
@@ -3622,7 +3630,7 @@ def own_vehicle_pl_report_view(request):
                     break
         if not trip_date:
             trip_date = next((d for d in dates if d), None)
-        date_val = trip_date.strftime("%d-%m-%Y") if trip_date else ""
+        date_val = timezone.localtime(trip_date).strftime("%d-%m-%Y") if trip_date else ""
 
         # -------- SELLING (Now respecting Bill to Customer Checkboxes) --------
         # Prioritize Trip Settlement fields (tc_...) if they are non-zero/checked,
@@ -4032,7 +4040,7 @@ def claim_pending_report_view(request):
         trip = trip_map.get(claim.tcc_cnote_id)
 
         trip_code = "N/A"
-        trip_date = claim.tcc_trip_date.strftime("%d-%m-%Y") if claim.tcc_trip_date else ""
+        trip_date = claim.tcc_timezone.localtime(trip_date).strftime("%d-%m-%Y") if claim.tcc_trip_date else ""
         truck_no = safe_str(claim.tcc_veh_no)
         veh_type = safe_str(claim.tcc_veh_type)
         loc_from = safe_str(claim.tcc_from)
@@ -4939,7 +4947,7 @@ def own_vs_market_sales_report_view(request):
             continue
         trip_date = full_date.date()
 
-        date_str = trip_date.strftime("%d-%m-%Y")
+        date_str = timezone.localtime(trip_date).strftime("%d-%m-%Y")
 
         cust_name = safe_str(trip.tr_enquirynumber.en_customername).strip().upper()
         branch = "Chennai" if cust_name.endswith("MAA") else ("Bangalore" if cust_name.endswith("BLR") else "")
@@ -7159,7 +7167,7 @@ def vendor_bills_pending_mkt_att_report_view(request):
             if allotment_vendor_id != str(vendor_param) and vm_vendor_id != str(vendor_param):
                 continue
 
-        trip_date = trip.tr_departeddate.strftime('%Y-%m-%d') if trip.tr_departeddate else ""
+        trip_date = timezone.localtime(trip.tr_departeddate).strftime('%Y-%m-%d') if trip.tr_departeddate else ""
         cnote = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else ""
         from_loc = str(trip.tr_departedlocation) if trip.tr_departedlocation else (
             str(trip.tr_enquirynumber.en_fromlocaion) if trip.tr_enquirynumber and trip.tr_enquirynumber.en_fromlocaion else "")

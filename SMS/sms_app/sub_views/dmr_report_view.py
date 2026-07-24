@@ -1,3 +1,4 @@
+from django.utils import timezone
 import calendar
 from datetime import datetime, date
 from django.contrib import messages
@@ -451,6 +452,17 @@ ADDITIONAL_CUSTOMERS = [
 
 
 # Helper to normalize for matching
+def _safe_fmt(dt, fmt):
+    if not dt: return ""
+    from django.utils import timezone
+    from datetime import datetime
+    try:
+        if isinstance(dt, datetime):
+            dt = timezone.localtime(dt)
+    except Exception:
+        pass
+    return _safe_fmt(dt, fmt)
+
 def _norm(s):
     return (s or "").lower().replace(" ", "").replace("-", "")
 
@@ -610,51 +622,51 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
             if hh in ("pickup date", "pickup point in date", "in date", "airport/bvm gate in date"):
                 # Strict: For specific "IN" labels
                 val = trip.tr_departeddate_pickup or trip.tr_loading_time
-                row.append(val.strftime("%d-%m-%Y") if val else "");
+                row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
                 continue
             if hh in ("loading date",):
                 # Broader fallback for generic "loading date"
                 val = trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_departeddate or trip.tr_created_at
-                row.append(val.strftime("%d-%m-%Y") if val else "");
+                row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
                 continue
             if hh in ("pickup point in time", "in time", "airport/bvm gate in time"):
                 # Strict: For specific "IN" labels
                 val = trip.tr_departeddate_pickup or trip.tr_loading_time
-                row.append(val.strftime("%H:%M") if val else "");
+                row.append(_safe_fmt(val, "%H:%M") if val else "");
                 continue
             if hh in ("loading time", "veh reported time @ loading point",
                       "vehicle reported date &time at loading point"):
                 # Broader fallback for generic "loading time"
                 val = trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_departeddate
                 if hh == "vehicle reported date &time at loading point":
-                    row.append(val.strftime("%d-%m-%Y %H:%M") if val else "");
+                    row.append(_safe_fmt(val, "%d-%m-%Y %H:%M") if val else "");
                     continue
-                row.append(val.strftime("%H:%M") if val else "");
+                row.append(_safe_fmt(val, "%H:%M") if val else "");
                 continue
 
             # 3. Pickup Point (Departure from Shipper - OUT) OR Generic Trip Date
             if hh in ("pickup point out date", "out date", "ofd date"):
                 # Strict: For specific "OUT" labels
                 val = trip.tr_departeddate or trip.tr_dock_in_time
-                row.append(val.strftime("%d-%m-%Y") if val else "");
+                row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
                 continue
             if hh in ("trip date", "indent date", "date"):
                 # Broader fallback for generic "date" / "trip date"
                 val = trip.tr_departeddate or trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_created_at
-                row.append(val.strftime("%d-%m-%Y") if val else "");
+                row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
                 continue
             if hh in ("pickup point out time", "out time"):
                 # Strict: For specific "OUT" labels
                 val = trip.tr_departeddate or trip.tr_dock_in_time
-                row.append(val.strftime("%H:%M") if val else "");
+                row.append(_safe_fmt(val, "%H:%M") if val else "");
                 continue
             if hh in ("starting time", "vehicle started date &time at loading point"):
                 # Broader fallback for generic "starting time"
                 val = trip.tr_departeddate or trip.tr_loading_time or trip.tr_departeddate_pickup
                 if hh == "vehicle started date &time at loading point":
-                    row.append(val.strftime("%d-%m-%Y %H:%M") if val else "");
+                    row.append(_safe_fmt(val, "%d-%m-%Y %H:%M") if val else "");
                     continue
-                row.append(val.strftime("%H:%M") if val else "");
+                row.append(_safe_fmt(val, "%H:%M") if val else "");
                 continue
 
             # 4. Unloading Point (Arrival at Destination - IN)
@@ -665,43 +677,43 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 # tr_departeddate_delivery labels: "Dock-In Time" (Unloading Section)
                 val = trip.tr_reporteddate or trip.tr_departeddate_delivery
                 if hh == "vehicle reported date &time at unloading point":
-                    row.append(val.strftime("%d-%m-%Y %H:%M") if val else "");
+                    row.append(_safe_fmt(val, "%d-%m-%Y %H:%M") if val else "");
                     continue
                 if "time" in hh:
-                    row.append(val.strftime("%H:%M") if val else "");
+                    row.append(_safe_fmt(val, "%H:%M") if val else "");
                     continue
-                row.append(val.strftime("%d-%m-%Y") if val else "");
+                row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
                 continue
 
             if hh in ("unloading point in time", "in time @ unloading point", "gate in time", "cfs reached time",
                       "closing time"):
                 val = trip.tr_reporteddate or trip.tr_departeddate_delivery
-                row.append(val.strftime("%H:%M") if val else "");
+                row.append(_safe_fmt(val, "%H:%M") if val else "");
                 continue
 
             # 5. Unloading Point (Departure from Destination - OUT) OR Generic Delivery Date
             if hh in ("unloading point out date", "dlv out date", "released date", "vehicle released date"):
                 # Strict: For specific "OUT" labels
                 val = trip.tr_reporteddate_pickup or trip.tr_unloading_time
-                row.append(val.strftime("%d-%m-%Y") if val else "");
+                row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
                 continue
             if hh in ("delivery date",):
                 # Broader fallback for generic "delivery date"
                 val = trip.tr_unloading_time or trip.tr_reporteddate_pickup or trip.tr_reporteddate or trip.tr_departeddate_delivery
-                row.append(val.strftime("%d-%m-%Y") if val else "");
+                row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
                 continue
             if hh in ("dlv out time", "unloading point out time", "released time", "vehicle released time"):
                 # Strict: For specific "OUT" labels
                 val = trip.tr_reporteddate_pickup or trip.tr_unloading_time
-                row.append(val.strftime("%H:%M") if val else "");
+                row.append(_safe_fmt(val, "%H:%M") if val else "");
                 continue
             if hh in ("unloading time", "vehicle started date &time at unloading point"):
                 # Broader fallback for generic "unloading time"
                 val = trip.tr_unloading_time or trip.tr_reporteddate_pickup or trip.tr_reporteddate
                 if hh == "vehicle started date &time at unloading point":
-                    row.append(val.strftime("%d-%m-%Y %H:%M") if val else "");
+                    row.append(_safe_fmt(val, "%d-%m-%Y %H:%M") if val else "");
                     continue
-                row.append(val.strftime("%H:%M") if val else "");
+                row.append(_safe_fmt(val, "%H:%M") if val else "");
                 continue
 
             if hh == "bvm in":
@@ -709,7 +721,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 v = trip.tr_reporteddate_pickup or trip.tr_reporteddate
                 if not v: row.append(""); continue
                 fmt = "%d-%m-%Y" if "date" in hh else "%H:%M" if "time" in hh else "%d-%m-%Y %H:%M"
-                row.append(v.strftime(fmt));
+                row.append(_safe_fmt(v, fmt));
                 continue
 
             if "consignment note" in hh or "cnote" in hh:
@@ -771,16 +783,16 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 continue
             if hh == "planning received date":
                 en_date = getattr(trip.tr_enquirynumber, "en_created_at", None)
-                row.append(en_date.strftime("%d-%m-%Y") if en_date else "");
+                row.append(_safe_fmt(en_date, "%d-%m-%Y") if en_date else "");
                 continue
             if hh == "planning received time":
                 en_date = getattr(trip.tr_enquirynumber, "en_created_at", None)
-                row.append(en_date.strftime("%H:%M") if en_date else "");
+                row.append(_safe_fmt(en_date, "%H:%M") if en_date else "");
                 continue
 
             if hh == "month":
                 dt = trip.tr_loading_time or trip.tr_departeddate or trip.tr_created_at
-                row.append(dt.strftime("%B") if dt else "");
+                row.append(_safe_fmt(dt, "%B") if dt else "");
                 continue
 
             if hh == "requestor":
@@ -807,7 +819,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
             if hh in ("vehicle placed time", "placement & vehicle placed date", "vehicle placed date"):
                 fmt = "%d-%m-%Y" if "date" in hh else "%H:%M"
                 v = trip.tr_loading_time or (va.va_created_at if va else None)
-                row.append(v.strftime(fmt) if v else "");
+                row.append(_safe_fmt(v, fmt) if v else "");
                 continue
             if "hawb" in hh or "hbl" in hh:
                 row.append(safe_str(cons_goods.cg_hawbno) if cons_goods else "");
@@ -868,8 +880,8 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 row.append(safe_num(trip.tc_handlingcost));
                 continue
             if hh == "bvm in":
-                row.append(trip.tr_reporteddate.strftime("%d-%m-%Y") if "date" in hh else trip.tr_reporteddate.strftime(
-                    "%H:%M") if "time" in hh else trip.tr_reporteddate.strftime(
+                row.append(timezone.localtime(trip.tr_reporteddate).strftime("%d-%m-%Y") if "date" in hh else timezone.localtime(trip.tr_reporteddate).strftime(
+                    "%H:%M") if "time" in hh else timezone.localtime(trip.tr_reporteddate).strftime(
                     "%d-%m-%Y %H:%M") if trip.tr_reporteddate else "");
                 continue
             if hh == "update status":
@@ -922,17 +934,17 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
             # --- UNLOADING ---
             if hh in ("unloading point in date", "gate in date", "reached plant", "reached cfs", "reached",
                       "cfs reached date"):
-                row.append(trip.tr_reporteddate.strftime("%d-%m-%Y") if trip.tr_reporteddate else "");
+                row.append(timezone.localtime(trip.tr_reporteddate).strftime("%d-%m-%Y") if trip.tr_reporteddate else "");
                 continue
             if hh in ("unloading point in time", "in time @ unloading point", "gate in time", "cfs reached time"):
-                row.append(trip.tr_reporteddate.strftime("%H:%M") if trip.tr_reporteddate else "");
+                row.append(timezone.localtime(trip.tr_reporteddate).strftime("%H:%M") if trip.tr_reporteddate else "");
                 continue
             if hh in ("unloading point out date", "dlv out date", "delivery date"):
-                row.append(trip.tr_unloading_time.strftime("%d-%m-%Y") if trip.tr_unloading_time else "");
+                row.append(timezone.localtime(trip.tr_unloading_time).strftime("%d-%m-%Y") if trip.tr_unloading_time else "");
                 continue
             if hh in ("dlv out time", "unloading time", "unloading time", "unloading point out time") or (
                     hh == "unloading time" and "time" in hh):
-                row.append(trip.tr_unloading_time.strftime("%H:%M") if trip.tr_unloading_time else "");
+                row.append(timezone.localtime(trip.tr_unloading_time).strftime("%H:%M") if trip.tr_unloading_time else "");
                 continue
 
             # --- CHARGES ---

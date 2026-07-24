@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -164,7 +165,7 @@ def get_maintenance_records_by_vehicle(request):
             "job_card_no": r.mi_job_card_no or f"JC-{r.id}",
             "service_type": r.mi_service_type,
             "estimated_amount": str(r.mi_estimated_amount),
-            "created_at": r.mi_created_at.strftime('%Y-%m-%d'),
+            "created_at": timezone.localtime(r.mi_created_at).strftime('%Y-%m-%d'),
             "status": str(r.mi_approval_status) if r.mi_approval_status else "N/A"
         })
     
@@ -233,7 +234,7 @@ def maintenance_bill_export_tally(request):
         
         service_type = maintenance.mi_service_type or "service"
         month_str_narration = bill.mnb_bill_date.strftime('%b%y') if bill.mnb_bill_date else ""
-        rec_date_str = bill.mnb_created_at.strftime('%d-%b-%y') if bill.mnb_created_at else ""
+        rec_date_str = timezone.localtime(bill.mnb_created_at).strftime('%d-%b-%y') if bill.mnb_created_at else ""
         narration = f"being {service_type} done for the month of {month_str_narration} (Bill received on -{rec_date_str})"
         
         job_no = "NA(J)"

@@ -20,6 +20,7 @@ from .general_utils import get_branch_code, get_session_branch_id
 from ..sub_models.vendor_info_mod import Vendor_info
 from ..sub_models.emailmaster_mod import Emailmaster
 from ..sub_models.emailtype_mod import Email_type
+from ..sub_models.trans_invoice_mod import TransInvoiceInfo
 
 
 # ===== HELPER: Get recipients from Emailmaster =====
@@ -479,6 +480,7 @@ def vehicle_allotment_list(request):
     trip_data = TripdetailInfo.objects.filter(
         tr_enquirynumber_id__in=enquiry_ids
     ).values_list(
+        'id',
         'tr_enquirynumber',
         'tr_consignmentnumber__co_consignmentnumber',
         'tr_tripnumber',
@@ -486,6 +488,15 @@ def vehicle_allotment_list(request):
         'tc_financestatus',
         'tr_category__category',
         'tr_vehiclenumber'
+    )
+
+    # Find which trips already have a completed invoice
+    all_page_trip_ids = [row[0] for row in trip_data]
+    invoiced_trip_ids = set(
+        TransInvoiceInfo.objects.filter(
+            ti_trip_id__in=all_page_trip_ids,
+            is_woh=True
+        ).values_list('ti_trip_id', flat=True)
     )
 
     # -----------------------------
@@ -523,7 +534,7 @@ def vehicle_allotment_list(request):
     # BUILD TRIP DICT
     # -----------------------------
     trip_dict = {}
-    for enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num in trip_data:
+    for trip_id, enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num in trip_data:
         cat_lower = trip_category.strip().lower() if trip_category else ""
         if cat_lower in ["business", "bussiness"]:
             display_text = trip_cons if trip_cons else "No Consignment"
@@ -531,9 +542,10 @@ def vehicle_allotment_list(request):
             display_text = trip_category if trip_category else "No Category"
 
         display_veh_num = trip_veh_num if trip_veh_num else (trip_num or "No Trip")
+        is_invoiced = trip_id in invoiced_trip_ids
 
         trip_dict.setdefault(enq_id, []).append(
-            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, display_veh_num)
+            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, display_veh_num, is_invoiced)
         )
 
     # -----------------------------
