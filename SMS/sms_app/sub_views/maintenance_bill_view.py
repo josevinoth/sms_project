@@ -114,7 +114,17 @@ def fetch_maintenance_bill_details(request):
             
         tds_type = ""
         pan = ""
-        if maintenance.mi_technician:
+        vendor_name = ""
+        if maintenance.mi_vendor:
+            vendor_name = maintenance.mi_vendor.vend_name or ""
+            if maintenance.mi_vendor.vend_pan:
+                pan = maintenance.mi_vendor.vend_pan.strip().upper()
+                if len(pan) >= 4 and pan[3] in ('C', 'F'):
+                    tds_type = 'Company'
+                else:
+                    tds_type = 'Non company'
+        elif maintenance.mi_technician:
+            vendor_name = maintenance.mi_technician
             from ..sub_models.vendor_info_mod import Vendor_info
             vendor = Vendor_info.objects.filter(vend_name__iexact=maintenance.mi_technician).first()
             if vendor and vendor.vend_pan:
@@ -129,7 +139,7 @@ def fetch_maintenance_bill_details(request):
             "vehicle_type": maintenance.mi_vehicle.vm_vehicletype.vt_vehicletype if maintenance.mi_vehicle.vm_vehicletype else "N/A",
             "service_type": maintenance.mi_service_type,
             "estimated_amount": float(maintenance.mi_estimated_amount) if maintenance.mi_estimated_amount else 0,
-            "vendor_name": maintenance.mi_technician if maintenance.mi_technician else "N/A",
+            "vendor_name": vendor_name if vendor_name else "N/A",
             "technician": maintenance.mi_technician,
             "advance": advance_val,
             "tds_type": tds_type,
@@ -215,7 +225,7 @@ def maintenance_bill_export_tally(request):
         voucher_number = bill.get_voucher_number
         bill_date = bill.mnb_bill_date.strftime("%d-%m-%Y") if bill.mnb_bill_date else ""
         ref_no = bill.mnb_bill_no or ""
-        vendor_name = maintenance.mi_technician or ""
+        vendor_name = maintenance.mi_vendor.vend_name if maintenance.mi_vendor else (maintenance.mi_technician or "")
         total_amt = float(bill.mnb_amount_payable or bill.mnb_total_amount or 0)
         expense_amt = float(bill.mnb_bill_amount_taxable or 0)
         expense_ledger = bill.mnb_expenses_type or "Vehicle Maintenance"

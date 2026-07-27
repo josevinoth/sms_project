@@ -691,7 +691,7 @@ VENDOR_PL_ATTACHED_HEADERS = [
 
 DAILY_TRIP_COUNT_HEADERS = [
     "S.No", "Branch", "Date", "Vehicle No", "Vehicle Type",
-    "Active Trips For the Day", "OWN/Attached"
+    "Active Trips For the Day", "OWN/   Attached"
 ]
 
 MAINTENANCE_REPORT_HEADERS = [
@@ -1640,12 +1640,8 @@ def ref_no_pending_report_ajax_view(request):
         trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
     if from_date and to_date:
         trips = trips.filter(
-            Q(tr_loading_time__date__gte=from_date, tr_loading_time__date__lte=to_date) |
-            Q(tr_departeddate__date__gte=from_date, tr_departeddate__date__lte=to_date) |
-            Q(tr_departeddate_pickup__date__gte=from_date, tr_departeddate_pickup__date__lte=to_date) |
-            Q(tr_reporteddate__date__gte=from_date, tr_reporteddate__date__lte=to_date) |
-            Q(tr_unloading_time__date__gte=from_date, tr_unloading_time__date__lte=to_date) |
-            Q(tr_created_at__date__gte=from_date, tr_created_at__date__lte=to_date)
+            tr_departeddate_pickup__date__gte=from_date,
+            tr_departeddate_pickup__date__lte=to_date
         )
     if from_loc_id:
         trips = trips.filter(tr_departedlocation_id=from_loc_id)
@@ -2584,6 +2580,8 @@ def vendor_p_l_mkt_report_ajax_view(request):
             trip.tr_reporteddate, trip.tr_reporteddate_pickup, trip.tr_reporteddate_delivery,
             trip.tr_unloading_time, trip.tr_dock_in_time, trip.tr_dock_out_time, trip.tr_created_at
         ] if d), None)))()
+        if date_val and timezone.is_aware(date_val):
+            date_val = timezone.localtime(date_val)
         date_str = date_val.strftime("%d-%m-%Y") if date_val else ""
 
         row = [
@@ -3016,6 +3014,8 @@ def vendor_p_l_attached_report_ajax_view(request):
             trip.tr_reporteddate, trip.tr_reporteddate_pickup, trip.tr_reporteddate_delivery,
             trip.tr_unloading_time, trip.tr_dock_in_time, trip.tr_dock_out_time, trip.tr_created_at
         ] if d), None)))()
+        if date_val and timezone.is_aware(date_val):
+            date_val = timezone.localtime(date_val)
         date_str = date_val.strftime("%d-%m-%Y") if date_val else ""
 
         b_no = bill_no_map.get(trip.id)
@@ -4301,7 +4301,7 @@ def maintenance_report_view(request):
         mi_vehicle__vm_ownership_id__in=[1],
         bills_v1__isnull=False
     ).select_related(
-        'mi_vehicle', 'mi_vehicle__vm_vehicletype', 'mi_vehicle__vm_vehiclemanufacturer', 'mi_vehicle__vm_vendor'
+        'mi_vehicle', 'mi_vehicle__vm_vehicletype', 'mi_vehicle__vm_vehiclemanufacturer', 'mi_vehicle__vm_vendor', 'mi_vendor'
     ).prefetch_related('bills_v1').distinct().order_by('mi_vehicle__vm_registrationnumber', '-mi_created_at')
 
     # Filters
@@ -4385,7 +4385,7 @@ def maintenance_report_view(request):
             rec.mi_total_km_run,  # KM
             safe_num(rec.mi_estimated_amount),  # PO Amount
             safe_num(actual_amount),  # Actual Amount
-            safe_str(rec.mi_technician),  # Vendor Name logic
+            safe_str(rec.mi_vendor.vend_name if rec.mi_vendor else rec.mi_technician),  # Vendor Name logic
             safe_str(rec.mi_job_card_no),  # JC No
             bill_nos  # Bill No
         ]
@@ -4629,10 +4629,10 @@ def diesel_vs_revenue_report_ajax_view(request):
     to_date = request.GET.get('to_date', '')
     branch_id = request.GET.get('branch', '')
     
-    # Base Query for Trips (Own vehicles only & Business trips only)
+    # Base Query for Trips (Own vehicles only & strictly Business trips)
     trips = TripdetailInfo.objects.filter(
         tr_vehiclesource_id=1,
-        tr_category__category__icontains='business'
+        tr_category__category='Business'
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
@@ -4660,12 +4660,7 @@ def diesel_vs_revenue_report_ajax_view(request):
     q_date = Q()
     if from_date and to_date:
         q_date = (
-            Q(tr_loading_time__date__gte=from_date, tr_loading_time__date__lte=to_date) |
-            Q(tr_departeddate__date__gte=from_date, tr_departeddate__date__lte=to_date) |
-            Q(tr_departeddate_pickup__date__gte=from_date, tr_departeddate_pickup__date__lte=to_date) |
-            Q(tr_reporteddate__date__gte=from_date, tr_reporteddate__date__lte=to_date) |
-            Q(tr_unloading_time__date__gte=from_date, tr_unloading_time__date__lte=to_date) |
-            Q(tr_created_at__date__gte=from_date, tr_created_at__date__lte=to_date)
+            Q(tr_departeddate_pickup__date__gte=from_date, tr_departeddate_pickup__date__lte=to_date)
         )
     if q_date:
         trips = trips.filter(q_date)
@@ -4681,7 +4676,24 @@ def diesel_vs_revenue_report_ajax_view(request):
     records_total = trips.count()
     records_filtered = records_total
     
-    trip_ids = list(trips.order_by('-tr_loading_time', '-tr_created_at').values_list('id', flat=True))
+    order_col_idx = request.GET.get('order[0][column]')
+    order_dir = request.GET.get('order[0][dir]', 'asc')
+
+    order_map = {
+        '2': 'tr_departeddate_pickup',
+        '3': 'tr_consignmentnumber__co_consignmentnumber',
+        '4': 'tr_vehiclenumber',
+        '5': 'tr_vehicletype__vt_vehicletype',
+        '7': 'tr_enquirynumber__en_customername__cu_name',
+    }
+
+    if order_col_idx in order_map:
+        order_field = order_map[order_col_idx]
+        if order_dir == 'desc':
+            order_field = f'-{order_field}'
+        trip_ids = list(trips.order_by(order_field, '-id').values_list('id', flat=True))
+    else:
+        trip_ids = list(trips.order_by('-tr_loading_time', '-tr_created_at').values_list('id', flat=True))
     
     if length == -1:
         page_trip_ids = trip_ids[start:]
@@ -4692,7 +4704,8 @@ def diesel_vs_revenue_report_ajax_view(request):
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_consignmentnumber',
-        'tr_vehicletype'
+        'tr_vehicletype',
+        'tc_financestatus'
     ).order_by('-tr_loading_time', '-tr_created_at')
     
     # We also need to calculate vehicle fuel. However, fuel depends on the date range, not just the page.
@@ -4765,8 +4778,10 @@ def diesel_vs_revenue_report_ajax_view(request):
             ("Bangalore" if "BLR" in cust_name or (
                     trip.tr_consignmentnumber and "BLR" in str(trip.tr_consignmentnumber)) else "")
 
-        dates = [trip.tr_loading_time, trip.tr_departeddate, trip.tr_created_at]
-        display_date = next((d for d in dates if d), None)
+        from django.utils import timezone
+        display_date = trip.tr_departeddate_pickup
+        if display_date and timezone.is_aware(display_date):
+            display_date = timezone.localtime(display_date)
         trip_date_str = display_date.strftime("%d-%m-%Y") if display_date else ""
 
         inv = invoice_map.get(trip.id)
@@ -4806,6 +4821,13 @@ def diesel_vs_revenue_report_ajax_view(request):
         revenue = rev_trip + rev_toll + rev_aai + rev_loading + rev_unloading + \
                   rev_weighment + rev_halting + rev_handling + rev_parking + \
                   rev_rto + rev_batta + rev_cancellation
+
+        if not inv:
+            if not trip.tc_financestatus or trip.tc_financestatus.status not in [
+                'Trip Closed', 'Ready for Invoice', 'Trip Settled', 'Finanace Approved',
+                'Awaiting Trip Settlement', 'Cancellation with Billing', 'Cancellation without Billing'
+            ]:
+                revenue = 0.0
 
         reported_km_val = trip.tr_reportedkm_delivery if trip.tr_reportedkm_delivery else trip.tr_reportedkm
         trip_km = max(0, safe_num(reported_km_val) - safe_num(trip.tr_departedkm))
@@ -5339,9 +5361,9 @@ def pod_pending_report_ajax_view(request):
 
     # Apply Custom Filters
     if from_date:
-        trips = trips.filter(tr_departeddate__date__gte=from_date)
+        trips = trips.filter(tr_departeddate_pickup__date__gte=from_date)
     if to_date:
-        trips = trips.filter(tr_departeddate__date__lte=to_date)
+        trips = trips.filter(tr_departeddate_pickup__date__lte=to_date)
 
     if branch_id:
         try:
@@ -6882,6 +6904,13 @@ def mileage_report_view(request):
         except (ValueError, Location_info.DoesNotExist):
             pass
 
+    # Save the base own vehicles for the dropdown
+    all_own_vehicles = vehicles
+
+    vehicle_id = request.POST.get('vehicle_id')
+    if vehicle_id:
+        vehicles = vehicles.filter(id=vehicle_id)
+
     data_rows = []
     idx = 1
     for vehicle in vehicles:
@@ -6941,9 +6970,11 @@ def mileage_report_view(request):
         'headers': headers,
         'data_rows': data_rows,
         'branch_id': int(branch_id) if branch_id else None,
+        'vehicle_id': int(vehicle_id) if vehicle_id else None,
         'from_date': from_date,
         'to_date': to_date,
         'all_branches': Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name'),
+        'all_vehicles': all_own_vehicles,
     })
 
 
@@ -6968,15 +6999,17 @@ def vendor_bills_pending_maintenance_report_view(request):
 
     all_branches = Branch.objects.all().order_by('branch')
 
-    # Get distinct vendor names (technicians) that are already present in pending bills
-    all_vendors = MaintenanceInfo.objects.filter(mi_technician__isnull=False).exclude(
-        mi_technician__exact='').values_list('mi_technician', flat=True).distinct().order_by('mi_technician')
+    # Get distinct vendor names that are already present in pending bills
+    vendors_from_tech = list(MaintenanceInfo.objects.filter(mi_technician__isnull=False).exclude(
+        mi_technician__exact='').values_list('mi_technician', flat=True).distinct())
+    vendors_from_fk = list(MaintenanceInfo.objects.filter(mi_vendor__isnull=False).values_list('mi_vendor__vend_name', flat=True).distinct())
+    all_vendors = sorted(list(set(vendors_from_tech + vendors_from_fk)))
 
     # Base query: Finance Approved (3) but have no associated bill
     maintenance_records = MaintenanceInfo.objects.filter(
         mi_approval_status_id=3,
         bills_v1__isnull=True
-    ).select_related('mi_vehicle', 'mi_vehicle__vm_vehicletype').order_by('-mi_est_delivery', '-mi_created_at')
+    ).select_related('mi_vehicle', 'mi_vehicle__vm_vehicletype', 'mi_vendor').order_by('-mi_est_delivery', '-mi_created_at')
 
     # Apply Filters
     if branch_id:
@@ -6986,7 +7019,10 @@ def vendor_bills_pending_maintenance_report_view(request):
     if to_date:
         maintenance_records = maintenance_records.filter(mi_created_at__date__lte=to_date)
     if vendor_name:
-        maintenance_records = maintenance_records.filter(mi_technician__icontains=vendor_name)
+        from django.db.models import Q
+        maintenance_records = maintenance_records.filter(
+            Q(mi_vendor__vend_name__icontains=vendor_name) | Q(mi_technician__icontains=vendor_name)
+        )
 
     data_rows = []
 
@@ -7002,7 +7038,7 @@ def vendor_bills_pending_maintenance_report_view(request):
             'veh_type': veh_type,
             'service_type': record.mi_service_type,
             'est_delivery': record.mi_est_delivery,
-            'vendor_name': record.mi_technician
+            'vendor_name': record.mi_vendor.vend_name if record.mi_vendor else record.mi_technician
         })
 
     return render(request, "asset_mgt_app/vendor_bills_pending_maintenance_report.html", {

@@ -303,13 +303,19 @@ textarea.form-control-modern {
     border-color: #334155;
 }
 
-.form-control-modern:disabled, .form-control-modern[readonly] {
-    background-color: var(--bg-page) !important; 
-    color: var(--text-muted) !important;
-    cursor: not-allowed;
-    border-style: dashed; 
-    border-color: var(--border-light) !important;
-    opacity: 0.8 !important;
+input.form-control-modern:disabled, 
+input.form-control-modern[readonly],
+select.form-control-modern:disabled, 
+select.form-control-modern[readonly],
+textarea.form-control-modern:disabled, 
+textarea.form-control-modern[readonly],
+.form-control-modern.disable_a_href,
+select.form-control-modern.disable_a_href {
+    background-color: #EBEBE4 !important; 
+    color: var(--text-main) !important;
+    cursor: not-allowed !important;
+    border: 1.5px dashed #94a3b8 !important; 
+    opacity: 1 !important;
 }
 
 .modern-readonly {
@@ -910,14 +916,16 @@ a.btn-modern + a.btn-modern {
 }
 
 
+input.disable_a_href,
+select.disable_a_href,
+textarea.disable_a_href,
 .disable_a_href { 
-    pointer-events: none; 
-    background-color: var(--bg-page) !important; 
-    opacity: 0.8 !important;
-    color: var(--text-muted) !important;
+    pointer-events: none !important; 
+    background-color: #EBEBE4 !important; 
+    opacity: 1 !important;
+    color: var(--text-main) !important;
     font-weight: 700 !important;
-    border-style: dashed !important;
-    border-color: var(--border-light) !important;
+    border: 1.5px dashed #94a3b8 !important;
 }
 
 /* Select2 High Contrast */
@@ -946,6 +954,49 @@ a.btn-modern + a.btn-modern {
 .select2-container--default.select2-container--focus .select2-selection--single .select2-selection__rendered,
 .select2-container--default.select2-container--open .select2-selection--single .select2-selection__rendered {
     color: var(--input-focus-text) !important; /* Themed — was hardcoded #1e293b */
+}
+/* Make sure containers are relative so absolute clear button stays inside */
+.select2-container--default .select2-selection--single,
+.select2-container--bootstrap4 .select2-selection--single {
+    position: relative !important;
+}
+
+/* Select2 Clear Button (x) styling */
+.select2-container--default .select2-selection--single .select2-selection__clear,
+.select2-container--bootstrap4 .select2-selection--single .select2-selection__clear {
+    position: absolute !important;
+    right: 25px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+    font-size: 1.5rem !important;
+    color: #ef4444 !important; /* distinct red color */
+    background: transparent !important;
+    font-weight: bold !important;
+    transition: all 0.2s ease;
+    z-index: 99 !important;
+    height: auto !important;
+    line-height: 1 !important;
+    width: auto !important;
+    padding: 0 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__clear:hover,
+.select2-container--bootstrap4 .select2-selection--single .select2-selection__clear:hover {
+    color: #dc2626 !important; /* darker red on hover */
+    background: transparent !important;
+}
+
+/* Select2 Disabled State (Frozen Color) */
+.select2-container--default.select2-container--disabled .select2-selection--single {
+    background-color: #EBEBE4 !important;
+    border: 1.5px dashed #94a3b8 !important;
+    cursor: not-allowed !important;
+    opacity: 1 !important;
+}
+
+.select2-container--default.select2-container--disabled .select2-selection--single .select2-selection__rendered {
+    color: var(--text-main) !important;
 }
 
 
@@ -1699,4 +1750,98 @@ body, .modern-card, .form-section, .form-control-modern, .modern-table td, .tabl
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-muted);
+}
+
+/* ── Modern Message / Alert Styling ── */
+.message {
+    margin: 15px 0 20px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.message a.alert-success,
+.message a.alert-info,
+.message a.alert-danger,
+.message a.alert-warning {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 1.4rem;
+    font-weight: 800;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    text-decoration: none !important;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+/* Treat Info and Success as the requested White/Black Info style */
+.message a.alert-success,
+.message a.alert-info {
+    background-color: #ffffff !important; 
+    color: #000000 !important; 
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+}
+
+.message a.alert-success::before,
+.message a.alert-info::before {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    content: "\f05a"; /* fa-info-circle */
+    margin-right: 8px;
+    font-size: 1.5rem;
+    color: #000000;
+}
+
+[data-theme="dark"] .message a.alert-success,
+[data-theme="dark"] .message a.alert-info {
+    background-color: var(--bg-card) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--border-light) !important;
+}
+
+[data-theme="dark"] .message a.alert-success::before,
+[data-theme="dark"] .message a.alert-info::before {
+    color: #ffffff;
+}
+
+/* Error Message */
+.message a.alert-danger {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fca5a5 !important;
+}
+
+[data-theme="dark"] .message a.alert-danger {
+    background-color: rgba(153, 27, 27, 0.2) !important;
+    color: #f87171 !important;
+    border: 1px solid rgba(248, 113, 113, 0.3) !important;
+}
+
+/* Warning Message */
+.message a.alert-warning {
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+    border: 1px solid #fcd34d !important;
+}
+
+[data-theme="dark"] .message a.alert-warning {
+    background-color: rgba(146, 64, 14, 0.2) !important;
+    color: #fbbf24 !important;
+    border: 1px solid rgba(251, 191, 36, 0.3) !important;
+}
+
+/* Global Layout Fix for "container-fluid row" 
+   Prevents horizontal scrollbar when these two classes are combined */
+.container-fluid.row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+    width: 100% !important;
 }

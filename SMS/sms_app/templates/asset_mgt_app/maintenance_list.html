@@ -43,7 +43,7 @@
                     <th>Total KM Run</th>
                     <th>Service Type</th>
                     <th>Driver</th>
-                    <th>Technician</th>
+                    <th>Vendor</th>
                     <th>Est. Delivery</th>
                     <th>Work Area</th>
                     <th>Complaint</th>
@@ -71,7 +71,7 @@
                     <td>{{ m.mi_total_km_run }}</td>
                     <td>{{ m.mi_service_type }}</td>
                     <td>{{ m.mi_driver_name }}</td>
-                    <td>{{ m.mi_technician }}</td>
+                    <td>{{ m.mi_vendor.vend_name|default:m.mi_technician }}</td>
                     <td>{{ m.mi_est_delivery|date:"d-m-Y H:i" }}</td>
                     <td>{{ m.mi_work_area }}</td>
                     <td>{{ m.mi_complaint.complaint_type }}</td>
