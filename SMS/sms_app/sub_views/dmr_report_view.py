@@ -461,7 +461,10 @@ def _safe_fmt(dt, fmt):
             dt = timezone.localtime(dt)
     except Exception:
         pass
-    return _safe_fmt(dt, fmt)
+    try:
+        return dt.strftime(fmt)
+    except Exception:
+        return str(dt)
 
 def _norm(s):
     return (s or "").lower().replace(" ", "").replace("-", "")
