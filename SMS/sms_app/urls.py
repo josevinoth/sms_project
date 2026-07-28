@@ -6,6 +6,7 @@ from .sub_views.pk_purchaseorder_view import pk_create_batch_job, pk_get_po_item
 from .sub_views.tms_dashboard_view import tms_dashboard, get_tms_dashboard_data
 
 urlpatterns = [
+    path('', views.login_page, name='sms_app_root'),
     path('pk_create_batch_job/', pk_create_batch_job, name='pk_create_batch_job'),
     path('pk_get_po_items_for_job/', pk_get_po_items_for_job, name='pk_get_po_items_for_job'),
     path('print_pdf', views.print_pdf, name='print_pdf'),  # Print PDF
@@ -214,6 +215,7 @@ urlpatterns = [
     path('wh_job_list', views.wh_job_list, name='wh_job_list'),  # wh Job list
     path('wh_job_delete/<int:gatein_id>/', views.wh_job_delete, name='wh_job_delete'),  # wh Job list
     path('enquirynote_list/', views.enquirynote_list, name='enquirynote_list'),  # List enquirynote,
+    path('search_vehicle_numbers/', views.search_vehicle_numbers, name='search_vehicle_numbers'),  # Search vehicle numbers API
     path('enquirynote_insert', views.enquirynote_add, name='enquirynote_insert'),  # Add enquirynote
     path('enquirynote_update/<int:enquirynote_id>/', views.enquirynote_add, name='enquirynote_update'),  # Update enquirynote
     path('enquirynote_delete/<int:enquirynote_id>/', views.enquirynote_delete, name='enquirynote_delete'),  # Delete enquirynote

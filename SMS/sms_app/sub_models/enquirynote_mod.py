@@ -17,7 +17,7 @@ class EnquirynoteInfo(models.Model):
     en_tripdetails = models.CharField(max_length=1000, null=True,blank=True)
     en_vehicle_allotment = models.CharField(max_length=1000, null=True,blank=True)
     en_tripclosure = models.CharField(max_length=1000, null=True,blank=True)
-    en_pickupdatetime = models.DateTimeField(default=timezone.now, null=True, blank=True)
+    en_pickupdatetime = models.DateTimeField(null=True, blank=True)  # No default — user must enter manually
     en_business_type = models.ForeignKey(Tr_businesstype_Info, on_delete=models.CASCADE, default=1,null=True,blank=True)
     en_movement_type = models.ForeignKey(MovementtypeInfo, on_delete=models.CASCADE, default=1,null=True,blank=True)
     en_trip_type = models.ForeignKey(Tr_triptype_Info, on_delete=models.CASCADE, null=False, blank=False)

@@ -176,13 +176,18 @@
         <form method="get" action="{% url 'enquirynote_list' %}">
             <h5 class="mb-3 text-main font-weight-bold" style="font-size: 1.1rem;"><i class="fas fa-filter text-info mr-2"></i> Filter & Search Records</h5>
             <div class="row align-items-end">
-                <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+                <div class="col-md-2 col-sm-6 mb-3 mb-md-0">
                     <label class="form-label-modern small mb-1">Enquiry Number</label>
                     <input type="text" class="form-control form-control-modern" placeholder="Enquiry No" name="enquiry_number" value="{{ enquiry_number }}">
                 </div>
-                <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+                <div class="col-md-2 col-sm-6 mb-3 mb-md-0">
                     <label class="form-label-modern small mb-1">Consignment Number</label>
                     <input type="text" class="form-control form-control-modern" placeholder="Consignment No" name="consignment_number" value="{{ consignment_number }}">
+                </div>
+                <div class="col-md-2 col-sm-6 mb-3 mb-md-0 position-relative">
+                    <label class="form-label-modern small mb-1">Vehicle Number</label>
+                    <input type="text" class="form-control form-control-modern" id="vehicle_number_filter" placeholder="Vehicle No" name="vehicle_number" value="{{ vehicle_number }}" autocomplete="off">
+                    <div id="vehicle_dropdown" class="dropdown-menu shadow-lg w-100" style="display:none; max-height: 250px; overflow-y: auto; position: absolute; z-index: 1050; top: 100%; left: 0;"></div>
                 </div>
                 <div class="col-md-2 col-sm-6 mb-3 mb-md-0">
                     <label class="form-label-modern small mb-1">From Date</label>
@@ -580,8 +585,49 @@
             info: false,         // remove "showing 1 of 50"
             scrollX: true,
             order: [[0, 'desc']],
-            dom: 'lBfrtip',
+            dom: "<'d-flex align-items-center justify-content-between mb-2'Bf>rtip",
             buttons: ['copy', 'csv', 'excel', 'print']
+        });
+
+        // Auto-complete dropdown for Vehicle Number filter (trigger after typing >= 2 characters)
+        var $vInput = $('#vehicle_number_filter');
+        var $vDropdown = $('#vehicle_dropdown');
+
+        $vInput.on('keyup input', function () {
+            var term = $(this).val().trim();
+            if (term.length >= 2) {
+                $.ajax({
+                    url: "/SMS/search_vehicle_numbers/",
+                    type: "GET",
+                    data: { term: term },
+                    success: function (data) {
+                        $vDropdown.empty();
+                        if (data.results && data.results.length > 0) {
+                            $.each(data.results, function (i, vehNo) {
+                                $vDropdown.append('<a class="dropdown-item vehicle-item" href="#" style="font-size:0.9rem; padding: 6px 12px;">' + vehNo + '</a>');
+                            });
+                            $vDropdown.show();
+                        } else {
+                            $vDropdown.append('<div class="dropdown-item text-muted disabled" style="font-size:0.9rem;">No vehicle found</div>');
+                            $vDropdown.show();
+                        }
+                    }
+                });
+            } else {
+                $vDropdown.hide().empty();
+            }
+        });
+
+        $(document).on('click', '.vehicle-item', function (e) {
+            e.preventDefault();
+            $vInput.val($(this).text());
+            $vDropdown.hide().empty();
+        });
+
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('#vehicle_number_filter, #vehicle_dropdown').length) {
+                $vDropdown.hide();
+            }
         });
 
         // Apply column search
