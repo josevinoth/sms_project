@@ -125,7 +125,9 @@
                     <th>Updated On</th>
                     <th class="text-center">Summary</th>
                     <th class="text-center">Edit</th>
+                    {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Super User' %}
                     <th class="text-center">Delete</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -197,6 +199,7 @@
                             <i class="far fa-edit"></i>
                         </a>
                     </td>
+                    {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Super User' %}
                     <td class="text-center">
                         <form method="POST" action="{% url 'attached_bill_delete' bill.id %}" style="display:inline;"
                             onsubmit="return confirm('Are you sure you want to delete this record?');">
@@ -206,6 +209,7 @@
                             </button>
                         </form>
                     </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
                 {% endif %}
@@ -240,7 +244,7 @@
                 </table>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" onclick="exportTableToExcel('summaryTable', 'Bill_Summary')">
+                <button type="button" class="btn btn-success" id="exportExcelBtn">
                     <i class="fas fa-file-excel"></i> Excel
                 </button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -278,6 +282,7 @@
             var billId = $(this).data('id');
             var tbody = $('#summaryTableBody');
             tbody.html('<tr><td colspan="3" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>');
+            $('#billSummaryModal').data('bill-id', billId);
             $('#billSummaryModal').modal('show');
 
             $.ajax({
@@ -294,11 +299,11 @@
                         [4,  'NO. OF WORKING DAYS',           d.working_days],
                         [5,  'NO. OF LEAVE',                  d.leave_days],
                         [6,  'CONTRACT AMOUNT',               d.contract_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [8,  'LEAVE PER DAY',                 d.leave_per_day.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [9,  'LEAVE AMT',                     d.leave_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [10, 'EXTRA KM',                      d.extra_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [11, 'EXTRA KM AMT',                  d.extra_km_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [11.5, 'TOLL COST',                   d.toll_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [7,  'LEAVE PER DAY',                 d.leave_per_day.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [8,  'LEAVE AMT',                     d.leave_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [9,  'EXTRA KM',                      d.extra_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [10, 'EXTRA KM AMT',                  d.extra_km_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [11, 'TOLL COST',                   d.toll_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
                         [12, 'ACTUAL AMT',                    d.actual_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
                         [13, 'TOTAL TRIPS',                   d.total_trips + ' TRIPS'],
                         [14, 'TRIP INDEX',                    d.trip_index],
@@ -329,37 +334,12 @@
         });
     });
 
-    function exportTableToExcel(tableID, filename = ''){
-        var tableSelect = document.getElementById(tableID);
-        var clonedTable = tableSelect.cloneNode(true);
-        
-        var inputs = tableSelect.querySelectorAll('input');
-        var clonedInputs = clonedTable.querySelectorAll('input');
-        for (var i = 0; i < inputs.length; i++) {
-            if (inputs[i].type === 'checkbox') {
-                clonedInputs[i].parentNode.innerText = inputs[i].checked ? 'Yes' : 'No';
-            } else {
-                clonedInputs[i].parentNode.innerText = inputs[i].value;
-            }
+    $('#exportExcelBtn').on('click', function() {
+        var billId = $('#billSummaryModal').data('bill-id');
+        if (billId) {
+            window.location.href = '/SMS/attached_bill_summary_excel/' + billId + '/';
         }
-        
-        var tableHTML = clonedTable.outerHTML;
-        var dataType = 'application/vnd.ms-excel';
-        var filename = filename ? filename + '.xls' : 'excel_data.xls';
-        
-        var downloadLink = document.createElement("a");
-        document.body.appendChild(downloadLink);
-        
-        if (navigator.msSaveOrOpenBlob) {
-            var blob = new Blob(['\ufeff', tableHTML], { type: dataType });
-            navigator.msSaveOrOpenBlob(blob, filename);
-        } else {
-            downloadLink.href = 'data:' + dataType + ';charset=utf-8,' + encodeURIComponent('\ufeff' + tableHTML);
-            downloadLink.download = filename;
-            downloadLink.click();
-        }
-        document.body.removeChild(downloadLink);
-    }
+    });
 </script>
 
 <style>

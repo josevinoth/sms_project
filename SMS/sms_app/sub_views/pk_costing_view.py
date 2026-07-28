@@ -126,7 +126,7 @@ def costing_add(request, costing_id=0):
                 ct_assessment_num=na_assessment_num_id, 
                 ct_customer_po=ses_customer_po_id,
                 ct_job_no=current_job_no_val
-            ),
+            ).order_by('-id'),
             'excess_costing_list': PkcostingInfo.objects.all(),
             'total_cft_display': request.session.get('ct_total_cft_display', 0),
             'job_no_list': job_no_list_qs,
@@ -149,6 +149,15 @@ def costing_add(request, costing_id=0):
             )
         if form.is_valid():
             print('Form is valid')
+            
+            # --- BACKEND OVERRIDE FOR TOTAL COST ---
+            # To ensure the total cost is always correctly calculated regardless of JS calculation errors
+            costing_temp = form.save(commit=False)
+            unit_cost = float(costing_temp.ct_total_cost or 0)
+            qty = float(costing_temp.ct_na_quantity or 0)
+            form.instance.ct_totalbox_cost = round(unit_cost * qty, 2)
+            # ---------------------------------------
+            
             # Be defensive: ct_cost_type may be missing or empty (e.g. placeholder). Default to 0.
             cost_type_raw = request.POST.get('ct_cost_type') or '0'
             try:
@@ -308,7 +317,7 @@ def costing_add(request, costing_id=0):
                     ct_assessment_num=na_assessment_num_id,
                     ct_customer_po=ses_customer_po_id,
                     ct_job_no=current_job_no_val
-                ),
+                ).order_by('-id'),
                 'excess_costing_list': PkcostingInfo.objects.all(),
                 'total_cft_display': request.session.get('ct_total_cft_display', 0),
                 'job_no_list': job_no_list_qs,
@@ -372,7 +381,7 @@ def update_reduced_dimensions(stock_purchase_num,last_id):
 @login_required(login_url='login_page')
 def costing_list(request):
     first_name = request.session.get('first_name')
-    context = {'costing_list' : PkcostingInfo.objects.all(),
+    context = {'costing_list' : PkcostingInfo.objects.all().order_by('-id'),
                            'excess_costing_list': PkcostingInfo.objects.filter(ct_stock_status=4),
 'first_name': first_name}
     return render(request,"asset_mgt_app/pk_costing_list.html",context)
@@ -638,32 +647,37 @@ def pk_store_po_dimension_id(request):
     try:
         b = POdimension.objects.get(id=ct_requirement_id)
     except (POdimension.DoesNotExist, ValueError):
-        return JsonResponse({'error': 'Not found'}, status=200)
+        # Fallback if ct_requirement_id is the Nadimension ID instead of POdimension ID
+        b = POdimension.objects.filter(pod_nad_id=ct_requirement_id, pod_po_num=ct_customer_po).order_by('-id').first()
+        if not b:
+            return JsonResponse({'error': 'Not found'}, status=200)
 
-    # Prioritize job-specific data if job_no is provided
+    # pod_quantity for costing calculation always comes from POdimension (quantity given when creating job number)
+    # This ensures cost calculations use the job-level quantity, NOT the NA assessment quantity
     pod_quantity = b.pod_quantity
     pod_item_id = ""
     pod_itemdescription_id = ""
-    
+
+    # na_qty_display: from Nadimension (Need Assessment quantity) — used for display in the costing list
+    na_qty_display = b.pod_nad.nad_quantity if b.pod_nad else 0
+
     if job_no:
-        # Robust multi-layered search
-        # 1. Try by requirement link
+        # Fetch existing costing record to pre-fill item/itemdescription for convenience when editing
+        # IMPORTANT: pod_quantity is NOT overridden here — costing always uses POdimension quantity
         costing_record = PkcostingInfo.objects.filter(ct_job_no=job_no, ct_requirement=b.pod_nad).first()
-        
-        # 2. Try by dimension link
+
         if not costing_record:
             costing_record = PkcostingInfo.objects.filter(ct_job_no=job_no, ct_po_dimension=b).first()
-            
-        # 3. Fallback: Try by assessment and item name/uom match
+
         if not costing_record:
             costing_record = PkcostingInfo.objects.filter(
-                ct_job_no=job_no, 
+                ct_job_no=job_no,
                 ct_assessment_num=b.pod_assess_num,
                 ct_uom=b.pod_uom
             ).first()
-            
+
         if costing_record:
-            pod_quantity = costing_record.ct_quantity_req
+            # Only pre-fill item/itemdescription — keep pod_quantity from POdimension
             if costing_record.ct_item:
                 pod_item_id = str(costing_record.ct_item.id)
             if costing_record.ct_itemdescription:
@@ -690,7 +704,8 @@ def pk_store_po_dimension_id(request):
         'pod_length': pod_length,
         'pod_width': pod_width,
         'pod_height': pod_height,
-        'pod_quantity': str(pod_quantity),
+        'pod_quantity': str(pod_quantity),        # Job creation quantity (POdimension) — used for costing calc
+        'na_qty_display': str(na_qty_display),    # Need Assessment quantity — for display in list
         'pod_item_id': pod_item_id,
         'pod_itemdescription_id': pod_itemdescription_id,
         'pod_nad_id': pod_nad_id,

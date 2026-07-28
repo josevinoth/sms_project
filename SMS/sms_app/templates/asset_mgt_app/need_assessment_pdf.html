@@ -30,7 +30,7 @@
         .bold { font-weight: bold; }
         .title { font-size: 13pt; font-weight: bold; text-align: center; border: none; }
         .small-text { font-size: 6pt; }
-        
+
         /* 12-column grid widths (approximate for A4) */
         .col-1 { width: 8.33%; }
         .col-2 { width: 16.66%; }
@@ -84,7 +84,13 @@
         <!-- Info Section -->
         <tr>
             <td colspan="3" class="bg-gray">CUSTOMER NAME:</td>
-            <td colspan="5">{{ need_assessment.na_customer_name }}</td>
+            <td colspan="5">
+                {% if need_assessment.na_customer_name and need_assessment.na_customer_name.id != 210 %}
+                    {{ need_assessment.na_customer_name }}
+                {% elif need_assessment.na_customer_new_name %}
+                    {{ need_assessment.na_customer_new_name }}
+                {% endif %}
+            </td>
             <td colspan="2" class="bg-gray">DATE:</td>
             <td colspan="2">{{ need_assessment.na_date|date:"d/m/Y" }}</td>
         </tr>
@@ -123,153 +129,223 @@
 
         <!-- Dimension Table Header -->
         <tr>
-            <td colspan="2" rowspan="5" class="bg-gray text-center" style="font-size: 9pt;">
-                DIMENSION<br>
-                <span class="small-text" style="font-weight: normal;">To page</span>
-            </td>
+            <td colspan="2" class="bg-gray text-center" style="font-size: 8pt;">ITEM NO.</td>
             <td colspan="2" class="bg-gray text-center">LENGTH</td>
             <td colspan="2" class="bg-gray text-center">WIDTH</td>
             <td colspan="2" class="bg-gray text-center">HEIGHT</td>
             <td colspan="2" class="bg-gray text-center">DIM IN</td>
             <td colspan="2" class="bg-gray text-center">JOB WIGHT</td>
         </tr>
-        <!-- Row 1: MM / KG -->
+        {% for dim in dimensions %}
         <tr>
-            <td colspan="2" class="text-center">{% if dimensions.0 %}{{ dimensions.0.nad_length }}{% endif %}</td>
-            <td colspan="2" class="text-center">{% if dimensions.0 %}{{ dimensions.0.nad_width }}{% endif %}</td>
-            <td colspan="2" class="text-center">{% if dimensions.0 %}{{ dimensions.0.nad_height }}{% endif %}</td>
-            <td colspan="2" class="bg-gray text-center">MM</td>
-            <td colspan="2" class="text-center">{% if dimensions.0 %}{{ dimensions.0.nad_job_weight }} KG{% endif %}</td>
+            <td colspan="2" class="text-center" style="font-size: 6pt;">{{ dim.nad_item }}</td>
+            <td colspan="2" class="text-center">{{ dim.nad_length }}</td>
+            <td colspan="2" class="text-center">{{ dim.nad_width }}</td>
+            <td colspan="2" class="text-center">{{ dim.nad_height }}</td>
+            <td colspan="2" class="bg-gray text-center">{% if dim.nad_uom %}{{ dim.nad_uom }}{% else %}MM{% endif %}</td>
+            <td colspan="2" class="text-center">{{ dim.nad_job_weight }} KG</td>
         </tr>
-        <!-- Row 2: CM / TON -->
+        {% empty %}
         <tr>
-            <td colspan="2"></td><td colspan="2"></td><td colspan="2"></td>
-            <td colspan="2" class="bg-gray text-center">CM</td>
-            <td colspan="2" class="text-center">TON</td>
+            <td colspan="2"></td><td colspan="2"></td><td colspan="2"></td><td colspan="2"></td><td colspan="2"></td><td colspan="2"></td>
         </tr>
-        <!-- Row 3: INCHES -->
-        <tr>
-            <td colspan="2"></td><td colspan="2"></td><td colspan="2"></td>
-            <td colspan="2" class="bg-gray text-center">INCHES</td>
-            <td colspan="2"></td>
-        </tr>
-        <!-- Row 4: FT -->
-        <tr>
-            <td colspan="2"></td><td colspan="2"></td><td colspan="2"></td>
-            <td colspan="2" class="bg-gray text-center">FT</td>
-            <td colspan="2"></td>
-        </tr>
+        {% endfor %}
 
         <!-- Type of Work -->
         <tr>
             <td colspan="3" class="bg-gray text-center">TYPE OF WORK:</td>
-            <td colspan="3" class="small-text">PACKING: {% if need_assessment.na_type_of_work.type_of_work == 'PACKING' %}<b>YES</b>{% else %}NO{% endif %}</td>
-            <td colspan="3" class="small-text">SUPPLY: {% if need_assessment.na_type_of_work.type_of_work == 'SUPPLY' %}<b>YES</b>{% else %}NO{% endif %}</td>
-            <td colspan="3" class="small-text">PROJECT BASIS: {% if need_assessment.na_type_of_work.type_of_work == 'PROJECT BASIS' %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="3" class="small-text">PACKING: {% if need_assessment.na_type_of_work and 'PACKING' in need_assessment.na_type_of_work.type_of_work.upper %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="3" class="small-text">SUPPLY: {% if need_assessment.na_type_of_work and 'SUPPLY' in need_assessment.na_type_of_work.type_of_work.upper %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="3" class="small-text">PROJECT BASIS: {% if need_assessment.na_type_of_work and 'PROJECT BASIS' in need_assessment.na_type_of_work.type_of_work.upper %}<b>YES</b>{% else %}NO{% endif %}</td>
         </tr>
         <tr>
             <td colspan="3"></td>
-            <td colspan="3" class="small-text">TRADING: {% if need_assessment.na_type_of_work.type_of_work == 'TRADING' %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="3" class="small-text">TRADING: {% if need_assessment.na_type_of_work and 'TRADING' in need_assessment.na_type_of_work.type_of_work.upper %}<b>YES</b>{% else %}NO{% endif %}</td>
             <td colspan="6" class="small-text">OTHERS: {{ need_assessment.na_others_type_pack }}</td>
         </tr>
 
         <!-- Type of Packing -->
         <tr>
             <td colspan="3" rowspan="2" class="bg-gray text-center">TYPE OF PACKING:</td>
-            <td colspan="3" class="small-text">SOFT /AIRW.: {% if 'SOFT' in need_assessment.na_type_of_pack1.pack_requirement %}<b>YES</b>{% else %}NO{% endif %}</td>
-            <td colspan="3" class="small-text">SEAWORTHY: {% if 'SEAWORTHY' in need_assessment.na_type_of_pack1.pack_requirement %}<b>YES</b>{% else %}NO{% endif %}</td>
-            <td colspan="3" class="small-text">THERMO.: {% if 'THERMO' in need_assessment.na_type_of_pack1.pack_requirement %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="3" class="small-text">SOFT /AIRW.: {% if need_assessment.na_type_of_pack1 and 'SOFT' in need_assessment.na_type_of_pack1.pack_requirement.upper %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="3" class="small-text">SEAWORTHY: {% if need_assessment.na_type_of_pack1 and 'SEAWORTHY' in need_assessment.na_type_of_pack1.pack_requirement.upper %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="3" class="small-text">THERMO.: {% if need_assessment.na_type_of_pack1 and 'THERMO' in need_assessment.na_type_of_pack1.pack_requirement.upper %}<b>YES</b>{% else %}NO{% endif %}</td>
         </tr>
         <tr>
-            <td colspan="3" class="small-text">TARP. WRAP.: NO</td>
-            <td colspan="3" class="small-text">LASHING: NO</td>
+            <td colspan="3" class="small-text">TARP. WRAP.: {% if need_assessment.na_type_of_pack1 and 'TARP' in need_assessment.na_type_of_pack1.pack_requirement.upper %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="3" class="small-text">LASHING: {% if need_assessment.na_type_of_pack1 and 'LASH' in need_assessment.na_type_of_pack1.pack_requirement.upper %}<b>YES</b>{% else %}NO{% endif %}</td>
             <td colspan="3" class="small-text">OTHERS: NO</td>
         </tr>
 
         <!-- Requirements & Material Spec -->
+        {% with first_dim_req=dimensions.0.nad_type_of_req.type_of_req.upper %}
+        {% with pt=dimensions.0.nad_plywood_thickness %}
         <tr>
             <td colspan="4" class="bg-gray text-center">TYPE OF REQUIREMENTS</td>
             <td colspan="8" class="bg-gray text-center">MATERIAL SPECIFICATION</td>
         </tr>
         <tr>
-            <td colspan="3">FULL PLYWOOD BOX</td><td class="text-center">NO</td>
+            <td colspan="3">FULL PLYWOOD BOX</td>
+            <td class="text-center">{% if 'FULL PLYWOOD BOX' in first_dim_req %}<b>YES</b>{% else %}NO{% endif %}</td>
             <td colspan="4" class="bg-gray">PLANKS THICKNESS:</td><td colspan="4"></td>
         </tr>
         <tr>
-            <td colspan="3">PLYWOOD BOX</td><td class="text-center">YES</td>
+            <td colspan="3">PLYWOOD BOX</td>
+            <td class="text-center">{% if 'PLYWOOD BOX' in first_dim_req and not 'FULL' in first_dim_req %}<b>YES</b>{% else %}NO{% endif %}</td>
             <td colspan="8" class="bg-gray text-center">PLYWOOD THICKNESS</td>
         </tr>
         <tr>
-            <td colspan="3">WOODEN BOX</td><td class="text-center">NO</td>
-            <td colspan="2" class="text-center">6MM</td><td colspan="2" class="text-center">8MM</td><td colspan="2" class="text-center">10MM</td><td colspan="2" class="text-center">12MM / 15MM</td>
+            <td colspan="3">WOODEN BOX</td>
+            <td class="text-center">{% if 'WOODEN BOX' in first_dim_req %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="2" class="text-center">{% if pt == 6 %}<b>6MM</b>{% endif %}</td>
+            <td colspan="2" class="text-center">{% if pt == 8 %}<b>8MM</b>{% endif %}</td>
+            <td colspan="2" class="text-center">{% if pt == 10 %}<b>10MM</b>{% endif %}</td>
+            <td colspan="2" class="text-center">{% if pt == 12 or pt == 15 %}<b>12MM / 15MM</b>{% endif %}</td>
         </tr>
         <tr>
-            <td colspan="3">WOODEN CRATE</td><td class="text-center">NO</td>
-            <td colspan="2" class="text-center">18MM</td><td colspan="2" class="text-center">20MM</td><td colspan="2" class="text-center">25MM</td><td colspan="2"></td>
+            <td colspan="3">WOODEN CRATE</td>
+            <td class="text-center">{% if 'WOODEN CRATE' in first_dim_req %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="2" class="text-center">{% if pt == 18 %}<b>18MM</b>{% endif %}</td>
+            <td colspan="2" class="text-center">{% if pt == 20 %}<b>20MM</b>{% endif %}</td>
+            <td colspan="2" class="text-center">{% if pt == 25 %}<b>25MM</b>{% endif %}</td>
+            <td colspan="2"></td>
         </tr>
         <tr>
-            <td colspan="3">WOODEN PALLET</td><td class="text-center">NO</td>
+            <td colspan="3">WOODEN PALLET</td>
+            <td class="text-center">{% if 'WOODEN PALL' in first_dim_req %}<b>YES</b>{% else %}NO{% endif %}</td>
             <td colspan="8" class="bg-gray"></td>
         </tr>
         <tr>
-            <td colspan="3">PLYWOOD PALLET</td><td class="text-center">NO</td>
+            <td colspan="3">PLYWOOD PALLET</td>
+            <td class="text-center">{% if 'PLYWOOD PALL' in first_dim_req %}<b>YES</b>{% else %}NO{% endif %}</td>
             <td colspan="8" class="bg-gray text-center">TYPE OF PLYWOOD</td>
         </tr>
         <tr>
-            <td colspan="3">PLASTIC PALLET</td><td class="text-center">NO</td>
-            <td colspan="4">HARDWOOD PLY</td><td colspan="4" class="text-center">NO</td>
+            <td colspan="3">PLASTIC PALLET</td>
+            <td class="text-center">{% if 'PLASTIC PALL' in first_dim_req %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="4">HARDWOOD PLY</td>
+            <td colspan="4" class="text-center">
+                {% if ply_type_list %}
+                    {% for pt_item in ply_type_list %}
+                        {% if 'HARDWOOD' in pt_item.type_of_plywood.upper %}
+                            {% with dim_wood_types=dimensions.0.nad_wood_type.all %}
+                                {% for wt in dim_wood_types %}{% if wt.id == pt_item.id %}<b>YES</b>{% endif %}{% endfor %}
+                            {% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </td>
         </tr>
         <tr>
-            <td colspan="3">SKID</td><td class="text-center">NO</td>
-            <td colspan="4">SEMIHARDWOOD PLY</td><td colspan="4" class="text-center">NO</td>
+            <td colspan="3">SKID</td>
+            <td class="text-center">{% if 'SKID' in first_dim_req %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="4">SEMIHARDWOOD PLY</td>
+            <td colspan="4" class="text-center">
+                {% if ply_type_list %}
+                    {% for pt_item in ply_type_list %}
+                        {% if 'SEMIHARDWOOD' in pt_item.type_of_plywood.upper %}
+                            {% with dim_wood_types=dimensions.0.nad_wood_type.all %}
+                                {% for wt in dim_wood_types %}{% if wt.id == pt_item.id %}<b>YES</b>{% endif %}{% endfor %}
+                            {% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </td>
         </tr>
         <tr>
-            <td colspan="3">HEAVY DUTY PALLET</td><td class="text-center">NO</td>
-            <td colspan="4">RUBBER WOOD PLY</td><td colspan="4" class="text-center">YES</td>
+            <td colspan="3">HEAVY DUTY PALLET</td>
+            <td class="text-center">{% if 'HEAVY DUTY PALL' in first_dim_req %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="4">RUBBER WOOD PLY</td>
+            <td colspan="4" class="text-center">
+                {% if ply_type_list %}
+                    {% for pt_item in ply_type_list %}
+                        {% if 'RUBBER' in pt_item.type_of_plywood.upper %}
+                            {% with dim_wood_types=dimensions.0.nad_wood_type.all %}
+                                {% for wt in dim_wood_types %}{% if wt.id == pt_item.id %}<b>YES</b>{% endif %}{% endfor %}
+                            {% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </td>
         </tr>
 
         <!-- Wood Treated & Unloading -->
         <tr>
             <td colspan="4" class="bg-gray text-center">WOOD TREATED REQUIREMENTS</td>
-            <td colspan="4">WHITE FACE PLY</td><td colspan="4" class="text-center">NO</td>
+            <td colspan="4">WHITE FACE PLY</td>
+            <td colspan="4" class="text-center">
+                {% if ply_type_list %}
+                    {% for pt_item in ply_type_list %}
+                        {% if 'WHITE' in pt_item.type_of_plywood.upper %}
+                            {% with dim_wood_types=dimensions.0.nad_wood_type.all %}
+                                {% for wt in dim_wood_types %}{% if wt.id == pt_item.id %}<b>YES</b>{% endif %}{% endfor %}
+                            {% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </td>
         </tr>
         <tr>
-            <td colspan="3">FUMIGATION</td><td class="text-center">YES</td>
-            <td colspan="4">BWR PLY</td><td colspan="4" class="text-center">NO</td>
+            <td colspan="3">FUMIGATION</td>
+            <td class="text-center">{% if need_assessment.na_wood_treatment_req and 'FUMIG' in need_assessment.na_wood_treatment_req.wood_treatment_req.upper %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="4">BWR PLY</td>
+            <td colspan="4" class="text-center">
+                {% if ply_type_list %}
+                    {% for pt_item in ply_type_list %}
+                        {% if 'BWR' in pt_item.type_of_plywood.upper %}
+                            {% with dim_wood_types=dimensions.0.nad_wood_type.all %}
+                                {% for wt in dim_wood_types %}{% if wt.id == pt_item.id %}<b>YES</b>{% endif %}{% endfor %}
+                            {% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </td>
         </tr>
         <tr>
-            <td colspan="3">HT</td><td class="text-center">NO</td>
+            <td colspan="3">HT</td>
+            <td class="text-center">{% if need_assessment.na_wood_treatment_req and 'HT' in need_assessment.na_wood_treatment_req.wood_treatment_req.upper %}<b>YES</b>{% else %}NO{% endif %}</td>
             <td colspan="8" class="bg-gray text-center">TYPE OF WOOD</td>
         </tr>
         <tr>
             <td colspan="2" class="bg-gray text-center">UNLOADING</td>
-            <td colspan="2">BVM</td>
-            <td colspan="2">PINE</td><td colspan="2">KD PINE</td><td colspan="4">COUNTRY / RUBBER</td>
+            <td colspan="2">{% if need_assessment.na_unloading and 'BVM' in need_assessment.na_unloading.bvm_customer.upper %}<b>BVM</b>{% endif %}{% if need_assessment.na_unloading and 'CUSTOMER' in need_assessment.na_unloading.bvm_customer.upper %}<b>CUSTOMER</b>{% endif %}</td>
+            
+            <td colspan="2">PINE {% if dimensions.0 %}{% for wd in dimensions.0.nad_wood_description.all %}{% if 'PINE' in wd.pk_wood_description.upper and not 'KD' in wd.pk_wood_description.upper %}<b>(YES)</b>{% endif %}{% endfor %}{% endif %}</td>
+            <td colspan="2">KD PINE {% if dimensions.0 %}{% for wd in dimensions.0.nad_wood_description.all %}{% if 'KD' in wd.pk_wood_description.upper or 'KILN' in wd.pk_wood_description.upper %}<b>(YES)</b>{% endif %}{% endfor %}{% endif %}</td>
+            <td colspan="4">COUNTRY / RUBBER {% if dimensions.0 %}{% for wd in dimensions.0.nad_wood_description.all %}{% if 'COUNTRY' in wd.pk_wood_description.upper or 'RUBBER' in wd.pk_wood_description.upper %}<b>(YES)</b>{% endif %}{% endfor %}{% endif %}</td>
         </tr>
         <tr>
             <td colspan="4"></td>
-            <td colspan="2">REUSED PINE</td><td colspan="2">SILVER</td><td colspan="4"></td>
+            <td colspan="2">REUSED PINE {% if dimensions.0 %}{% for wd in dimensions.0.nad_wood_description.all %}{% if 'REUSE' in wd.pk_wood_description.upper %}<b>(YES)</b>{% endif %}{% endfor %}{% endif %}</td>
+            <td colspan="2">SILVER {% if dimensions.0 %}{% for wd in dimensions.0.nad_wood_description.all %}{% if 'SILVER' in wd.pk_wood_description.upper %}<b>(YES)</b>{% endif %}{% endfor %}{% endif %}</td>
+            <td colspan="4"></td>
         </tr>
+        {% endwith %}
+        {% endwith %}
 
         <!-- Wood Norms -->
         <tr>
             <td colspan="12" class="bg-gray text-center">WOOD NORMS(QUALITY)</td>
         </tr>
         <tr>
-            <td colspan="2" class="bg-gray">AIR CRACK</td><td colspan="2">YES</td>
-            <td colspan="2" class="bg-gray">NOTCHES</td><td colspan="6">YES</td>
+            <td colspan="2" class="bg-gray">AIR CRACK</td>
+            <td colspan="2">{% if 'AIR' in need_assessment.wood_norms_str %}<b>YES</b>{% endif %}</td>
+            <td colspan="2" class="bg-gray">NOTCHES</td>
+            <td colspan="6">{% if 'NOTCH' in need_assessment.wood_norms_str %}<b>YES</b>{% endif %}</td>
         </tr>
         <tr>
             <td colspan="2"></td><td colspan="2">0 TO 6"</td>
             <td colspan="2"></td><td colspan="6">0 TO 2"</td>
         </tr>
         <tr>
-            <td colspan="2" class="bg-gray">FUNGUS</td><td colspan="2">NO</td>
-            <td colspan="2" class="bg-gray">TOLERANCE</td><td colspan="6">YES (3MM)</td>
+            <td colspan="2" class="bg-gray">FUNGUS</td>
+            <td colspan="2">{% if 'FUNG' in need_assessment.wood_norms_str %}<b>YES</b>{% endif %}</td>
+            <td colspan="2" class="bg-gray">TOLERANCE</td>
+            <td colspan="6">{% if 'TOLERANCE' in need_assessment.wood_norms_str %}YES (3MM){% endif %}</td>
         </tr>
         <tr>
             <td colspan="2" class="bg-gray">VEHICLE</td><td colspan="2">BVM</td>
-            <td colspan="8" class="small-text">VEHICLE TYPE: {{ need_assessment.na_vehicle_type }}</td>
+            <td colspan="8" class="small-text">VEHICLE TYPE: {{ need_assessment.na_vehicle_type|default:"" }}</td>
         </tr>
 
         <!-- Type of Access -->
@@ -277,12 +353,16 @@
             <td colspan="12" class="bg-gray text-center">TYPE OF ACCESS</td>
         </tr>
         <tr>
-            <td colspan="3">JOB LIFTING</td><td colspan="3" class="text-center">NO</td>
-            <td colspan="3">BASE LIFTING</td><td colspan="3" class="text-center">YES</td>
+            <td colspan="3">JOB LIFTING</td>
+            <td colspan="3" class="text-center">{% if 'JOB' in need_assessment.access_types_str %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="3">BASE LIFTING</td>
+            <td colspan="3" class="text-center">{% if 'BASE' in need_assessment.access_types_str %}<b>YES</b>{% else %}NO{% endif %}</td>
         </tr>
         <tr>
-            <td colspan="3">FOUR WAY</td><td colspan="3" class="text-center">NO</td>
-            <td colspan="3">TWO WAY</td><td colspan="3" class="text-center">YES</td>
+            <td colspan="3">FOUR WAY</td>
+            <td colspan="3" class="text-center">{% if 'FOUR' in need_assessment.access_types_str %}<b>YES</b>{% else %}NO{% endif %}</td>
+            <td colspan="3">TWO WAY</td>
+            <td colspan="3" class="text-center">{% if 'TWO' in need_assessment.access_types_str %}<b>YES</b>{% else %}NO{% endif %}</td>
         </tr>
         <tr>
             <td colspan="3" class="bg-gray">REMARKS</td>

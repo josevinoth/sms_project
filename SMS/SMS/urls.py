@@ -22,6 +22,7 @@ from django.urls import path,include
 urlpatterns = [
     path('SMS/admin/', admin.site.urls),
     path('SMS/',include('sms_app.urls')),
+    path('audit/', include('audit.urls')),
      # path('accounts/', include('django.contrib.auth.urls')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -226,6 +226,9 @@
                     <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Updated On"></th>
                     <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Updated By"></th>
                     <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Status"></th>
+                    {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Superuser' or request.user.is_superuser %}
+                    <th></th>
+                    {% endif %}
                     <th></th>
                 </tr>
                 <tr>
@@ -245,6 +248,9 @@
                     <th>Updated On</th>
                     <th>Updated By</th>
                     <th>Status</th>
+                    {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Superuser' or request.user.is_superuser %}
+                    <th class="text-center">History</th>
+                    {% endif %}
                     <th class="text-center">Delete</th>
                 </tr>
                 </thead>
@@ -394,6 +400,18 @@
                         <span class="badge badge-secondary px-3 py-2 text-white" style="font-size: 0.8rem;"><i class="fas fa-info-circle mr-1"></i> {{ data.enquiry.en_status }}</span>
                         {% endif %}
                     </td>
+                    {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Superuser' or request.user.is_superuser %}
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-info view-history-btn mb-1 d-block mx-auto text-white" 
+                                style="border-radius: 8px; padding: 6px 12px; font-weight: bold; font-size: 0.8rem; background-color: #0ea5e9; border: none;"
+                                data-module="sms_app" 
+                                data-model="EnquirynoteInfo" 
+                                data-id="{{ data.enquiry.id }}" 
+                                title="View History">
+                            <i class="fas fa-history"></i> History
+                        </button>
+                    </td>
+                    {% endif %}
                     <!-- Edit moved to 3rd column -->
                     <td class="text-center">
                         <form id="delete-form-{{ data.enquiry.id }}" action="{% url 'enquirynote_delete' data.enquiry.id %}" method="post" style="margin: 0;">
@@ -516,6 +534,42 @@
     </div>
 </div>
 
+<!-- History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1" role="dialog" aria-labelledby="historyModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content" style="border-radius: 20px; border: 1px solid var(--border-light); overflow: hidden; box-shadow: 0 15px 50px var(--shadow-main);">
+      <div class="modal-header" style="background: var(--primary-glow); color: white; padding: 1.2rem 1.8rem; border-bottom: none;">
+        <h5 class="modal-title font-weight-bold" id="historyModalLabel" style="font-size: 1.25rem;"><i class="fas fa-history mr-2"></i> Record History</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="font-size: 1.5rem; opacity: 0.8;">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body p-4">
+        <div id="history-loading" style="display:none;" class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><br>Loading history...</div>
+        <div class="table-responsive">
+            <table class="table modern-table" id="history-table" style="display:none; width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Old Data</th>
+                        <th>New Data</th>
+                    </tr>
+                </thead>
+                <tbody id="history-tbody">
+                </tbody>
+            </table>
+        </div>
+        <div id="history-empty" style="display:none;" class="text-center text-muted py-4">
+            <i class="fas fa-box-open fa-2x mb-2 text-secondary"></i><br>
+            No history found for this record.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock content %}
 
 {% block extra_js %}
@@ -538,6 +592,99 @@
 
         $('#enquirynote_list thead input').on('click', function (e) {
             e.stopPropagation();
+        });
+
+        // History functionality
+        $('.view-history-btn').on('click', function() {
+            var module = $(this).data('module');
+            var model = $(this).data('model');
+            var recordId = $(this).data('id');
+            
+            $('#history-tbody').empty();
+            $('#history-table').hide();
+            $('#history-empty').hide();
+            $('#history-loading').show();
+            $('#historyModal').modal('show');
+
+            $.ajax({
+                url: '/audit/api/history/',
+                type: 'GET',
+                data: {
+                    module: module,
+                    model: model,
+                    id: recordId
+                },
+                success: function(response) {
+                    $('#history-loading').hide();
+                    if (response.history && response.history.length > 0) {
+                        var rows = '';
+                        response.history.forEach(function(log) {
+                            var changedDataStr = JSON.stringify(log.changed_data, null, 2);
+                            var actionClass = 'badge-secondary';
+                            if(log.action.includes('CREATE')) actionClass = 'badge-success';
+                            if(log.action.includes('UPDATE')) actionClass = 'badge-info';
+                            if(log.action.includes('DELETE')) actionClass = 'badge-danger';
+                            
+                            var oldDataHtml = '<div style="font-size: 0.85rem;">';
+                            var newDataHtml = '<div style="font-size: 0.85rem;">';
+                            if (typeof log.changed_data === 'object' && log.changed_data !== null) {
+                                $.each(log.changed_data, function(key, value) {
+                                    if (value !== null && typeof value === 'object' && 'from' in value && 'to' in value) {
+                                        var fromVal = (value.from === null || value.from === '') ? '<em class="text-muted">Empty</em>' : value.from;
+                                        var toVal = (value.to === null || value.to === '') ? '<em class="text-muted">Empty</em>' : value.to;
+                                        oldDataHtml += '<div><strong>' + key + ':</strong> <span class="text-danger">' + fromVal + '</span></div>';
+                                        newDataHtml += '<div><strong>' + key + ':</strong> <span class="text-success">' + toVal + '</span></div>';
+                                    } else {
+                                        if (log.action.includes('DELETE')) {
+                                            oldDataHtml += '<div><strong>' + key + ':</strong> ' + value + '</div>';
+                                            newDataHtml += '<div><strong>' + key + ':</strong> <span class="text-danger"><em>Deleted</em></span></div>';
+                                        } else if (log.action.includes('CREATE')) {
+                                            // Don't clutter UI with a huge list for creation
+                                        } else {
+                                            oldDataHtml += '<div><strong>' + key + ':</strong> <span class="text-muted">-</span></div>';
+                                            newDataHtml += '<div><strong>' + key + ':</strong> ' + value + '</div>';
+                                        }
+                                    }
+                                });
+                                // Add a single row for CREATE actions
+                                if (log.action.includes('CREATE')) {
+                                    oldDataHtml = '<div><span class="text-muted">-</span></div>';
+                                    newDataHtml = '<div><span class="text-success font-weight-bold"><i class="fas fa-magic"></i> Record Created</span></div>';
+                                }
+                            } else {
+                                if (log.action.includes('DELETE')) {
+                                    oldDataHtml += '<pre class="bg-light p-2 rounded text-wrap" style="max-height:100px; overflow-y:auto; font-size:0.75rem; border: 1px solid #e2e8f0; word-break: break-all;">' + String(log.changed_data) + '</pre>';
+                                    newDataHtml += '<span class="text-danger"><em>Deleted</em></span>';
+                                } else if (log.action.includes('CREATE')) {
+                                    oldDataHtml += '<span class="text-muted">-</span>';
+                                    newDataHtml += '<span class="text-success font-weight-bold"><i class="fas fa-magic"></i> Record Created</span>';
+                                } else {
+                                    oldDataHtml += '<span class="text-muted">-</span>';
+                                    newDataHtml += '<pre class="bg-light p-2 rounded text-wrap" style="max-height:100px; overflow-y:auto; font-size:0.75rem; border: 1px solid #e2e8f0; word-break: break-all;">' + String(log.changed_data) + '</pre>';
+                                }
+                            }
+                            oldDataHtml += '</div>';
+                            newDataHtml += '</div>';
+
+                            rows += '<tr>' +
+                                '<td><span class="small font-weight-bold">' + log.timestamp + '</span></td>' +
+                                '<td><span class="badge badge-light border">' + log.changed_by + '</span></td>' +
+                                '<td><span class="badge ' + actionClass + ' px-2 py-1">' + log.action + '</span></td>' +
+                                '<td class="bg-light">' + oldDataHtml + '</td>' +
+                                '<td>' + newDataHtml + '</td>' +
+                                '</tr>';
+                        });
+                        $('#history-tbody').html(rows);
+                        $('#history-table').show();
+                    } else {
+                        $('#history-empty').show();
+                    }
+                },
+                error: function() {
+                    $('#history-loading').hide();
+                    $('#history-empty').text("Error loading history.").show();
+                }
+            });
         });
     });
 

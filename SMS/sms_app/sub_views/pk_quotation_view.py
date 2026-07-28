@@ -53,7 +53,6 @@ def pk_quotation_add(request, quotation_id=0):
             # form = PkquotationForm(initial=initial_data)
             form = PkquotationForm
             # Calculate total_cft_display dynamically for the assessment
-            from django.db.models import Sum, F
             aggregate_cft = PkquotationInfo.objects.filter(
                 pkqt_assessment_num=na_assessment_num_id,
                 pkqt_cost_type=8,
@@ -80,7 +79,6 @@ def pk_quotation_add(request, quotation_id=0):
             form = PkquotationForm(instance=quotation)
             
             # Calculate total_cft_display dynamically for the assessment
-            from django.db.models import Sum, F
             aggregate_cft = PkquotationInfo.objects.filter(
                 pkqt_assessment_num=na_assessment_num_id,
                 pkqt_cost_type=8,
@@ -245,7 +243,7 @@ def pk_quotation_add(request, quotation_id=0):
 @login_required(login_url='login_page')
 def pk_quotation_list(request):
     first_name = request.session.get('first_name')
-    context = {'pk_quotaiton_list' : PkquotationInfo.objects.all(),'first_name': first_name}
+    context = {'pk_quotaiton_list' : PkquotationInfo.objects.all().order_by('-id'),'first_name': first_name}
     return render(request,"asset_mgt_app/pk_quotation_list.html",context)
 
 #Delete quotation

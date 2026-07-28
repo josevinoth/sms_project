@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -68,6 +69,10 @@ def maintenance_bill_edit(request, id):
 
 @login_required(login_url='login_page')
 def maintenance_bill_delete(request, id):
+    if request.session.get('ses_role') not in ['Admin', 'Super User']:
+        messages.error(request, "You do not have permission to delete this record.")
+        return redirect('maintenance_bill_list')
+
     bill = get_object_or_404(MaintenanceBillInfo, id=id)
     bill.delete()
     messages.success(request, "Maintenance Bill deleted successfully.")
@@ -109,7 +114,17 @@ def fetch_maintenance_bill_details(request):
             
         tds_type = ""
         pan = ""
-        if maintenance.mi_technician:
+        vendor_name = ""
+        if maintenance.mi_vendor:
+            vendor_name = maintenance.mi_vendor.vend_name or ""
+            if maintenance.mi_vendor.vend_pan:
+                pan = maintenance.mi_vendor.vend_pan.strip().upper()
+                if len(pan) >= 4 and pan[3] in ('C', 'F'):
+                    tds_type = 'Company'
+                else:
+                    tds_type = 'Non company'
+        elif maintenance.mi_technician:
+            vendor_name = maintenance.mi_technician
             from ..sub_models.vendor_info_mod import Vendor_info
             vendor = Vendor_info.objects.filter(vend_name__iexact=maintenance.mi_technician).first()
             if vendor and vendor.vend_pan:
@@ -124,7 +139,7 @@ def fetch_maintenance_bill_details(request):
             "vehicle_type": maintenance.mi_vehicle.vm_vehicletype.vt_vehicletype if maintenance.mi_vehicle.vm_vehicletype else "N/A",
             "service_type": maintenance.mi_service_type,
             "estimated_amount": float(maintenance.mi_estimated_amount) if maintenance.mi_estimated_amount else 0,
-            "vendor_name": maintenance.mi_technician if maintenance.mi_technician else "N/A",
+            "vendor_name": vendor_name if vendor_name else "N/A",
             "technician": maintenance.mi_technician,
             "advance": advance_val,
             "tds_type": tds_type,
@@ -160,7 +175,7 @@ def get_maintenance_records_by_vehicle(request):
             "job_card_no": r.mi_job_card_no or f"JC-{r.id}",
             "service_type": r.mi_service_type,
             "estimated_amount": str(r.mi_estimated_amount),
-            "created_at": r.mi_created_at.strftime('%Y-%m-%d'),
+            "created_at": timezone.localtime(r.mi_created_at).strftime('%Y-%m-%d'),
             "status": str(r.mi_approval_status) if r.mi_approval_status else "N/A"
         })
     
@@ -210,7 +225,7 @@ def maintenance_bill_export_tally(request):
         voucher_number = bill.get_voucher_number
         bill_date = bill.mnb_bill_date.strftime("%d-%m-%Y") if bill.mnb_bill_date else ""
         ref_no = bill.mnb_bill_no or ""
-        vendor_name = maintenance.mi_technician or ""
+        vendor_name = maintenance.mi_vendor.vend_name if maintenance.mi_vendor else (maintenance.mi_technician or "")
         total_amt = float(bill.mnb_amount_payable or bill.mnb_total_amount or 0)
         expense_amt = float(bill.mnb_bill_amount_taxable or 0)
         expense_ledger = bill.mnb_expenses_type or "Vehicle Maintenance"
@@ -229,7 +244,7 @@ def maintenance_bill_export_tally(request):
         
         service_type = maintenance.mi_service_type or "service"
         month_str_narration = bill.mnb_bill_date.strftime('%b%y') if bill.mnb_bill_date else ""
-        rec_date_str = bill.mnb_created_at.strftime('%d-%b-%y') if bill.mnb_created_at else ""
+        rec_date_str = timezone.localtime(bill.mnb_created_at).strftime('%d-%b-%y') if bill.mnb_created_at else ""
         narration = f"being {service_type} done for the month of {month_str_narration} (Bill received on -{rec_date_str})"
         
         job_no = "NA(J)"

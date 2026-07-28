@@ -37,7 +37,7 @@
     </div>
 </div>
 
-<form method="POST" action="{% url 'diesel_vs_revenue_report' %}" class="row g-3 align-items-end mb-4">
+<form class="row g-3 align-items-end mb-4">
     {% csrf_token %}
 
     <!-- Branch Filter -->
@@ -59,14 +59,14 @@
         </select>
     </div>
 
-    <!-- Month & Year -->
+    <!-- From & To Date -->
     <div class="col-md-2">
-        <label class="form-label fw-bold">Month</label>
-        {% render_field form.month class="form-control" %}
+        <label class="form-label fw-bold">From Date</label>
+        {% render_field form.from_date class="form-control" %}
     </div>
     <div class="col-md-2">
-        <label class="form-label fw-bold">Year</label>
-        {% render_field form.year class="form-control" %}
+        <label class="form-label fw-bold">To Date</label>
+        {% render_field form.to_date class="form-control" %}
     </div>
 
     <div class="col-md-3">
@@ -91,13 +91,6 @@
                 </tr>
             </thead>
             <tbody>
-                {% for row in data_rows %}
-                <tr>
-                    {% for cell in row %}
-                    <td class="{% if forloop.counter >= 9 %}text-right{% endif %}">{{ cell }}</td>
-                    {% endfor %}
-                </tr>
-                {% endfor %}
             </tbody>
         </table>
     </div>
@@ -108,6 +101,18 @@
     $(document).ready(function () {
 
         const table = $('#diesel_vs_revenue_report_table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "{% url 'diesel_vs_revenue_report_ajax' %}",
+                type: "GET",
+                data: function (d) {
+                    d.branch = $('[name="branch"]').val() || '';
+                    d.vehicle_search = $('#vehicle_search').val() || '';
+                    d.from_date = $('[name="from_date"]').val() || '';
+                    d.to_date = $('[name="to_date"]').val() || '';
+                }
+            },
             scrollX: true,
             autoWidth: false,
             columnDefs: [
@@ -202,6 +207,12 @@
                 }
             ],
             order: [[0, 'asc']]
+        });
+
+        
+        $('form').on('submit', function(e) {
+            e.preventDefault();
+            table.ajax.reload();
         });
 
         // Handle window resize to adjust columns

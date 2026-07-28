@@ -7,13 +7,13 @@
     <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
         <h2 class="mb-0 text-white"><i class="fas fa-route mr-2"></i> Add/Update Trip Detail</h2>
         <div class="trip-header-actions">
-            <a href="{% url 'tripdetail_insert' %}" class="btn-modern btn-cancel trip-header-action py-2 px-4 mr-2">
+            <a href="{% url 'tripdetail_insert' %}" class="btn-modern btn-submit py-2 px-4 mr-2">
                 <i class="fas fa-plus"></i> ADD
             </a>
-            <a href="{% url 'trip_highvalue_add' %}" id="checklist-btn" class="btn-modern btn-cancel trip-header-action py-2 px-4 mr-2 disable_a_href">
+            <a href="{% url 'trip_highvalue_add' %}" id="checklist-btn" class="btn-modern btn-submit py-2 px-4 mr-2 disable_a_href">
                 Goods High Value Checklist
             </a>
-            <a href="{% url 'tripdetail_list' %}" class="btn-modern btn-cancel trip-header-action py-2 px-4">
+            <a href="{% url 'tripdetail_list' %}" class="btn-modern btn-submit py-2 px-4">
                 <i class="fas fa-arrow-left"></i> BACK TO LIST
             </a>
         </div>
@@ -308,7 +308,7 @@
 
                 <!-- Messages -->
                 {% if messages %}
-                <div class="col-12 text-center mb-3" style="font-size: 1.2rem;">
+                <div class="col-12 text-center mb-3" style="font-size: 1.5rem;">
                     {% for message in messages %}
                     <span class="{% if 'alert-success' in message.tags %}text-success{% elif 'alert-danger' in message.tags %}text-danger font-weight-bold{% elif 'alert-warning' in message.tags %}text-warning font-weight-bold{% else %}text-info{% endif %}">
                         {{ message }}
@@ -460,6 +460,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	var tripApprovalApproved = "{{ trip_approvallist|yesno:'true,false' }}" === "true";
 	var isHighValueGoods = "{{ trip_instance.tr_high_value_id }}" === "1";
+	var tripIdGlobal = "{{ trip_instance.id|default:'' }}";
+	var isNewTripGlobal = !tripIdGlobal;
 
 	function trip_type() {
 		var categoryValue = document.getElementById('tr_category').value;
@@ -482,40 +484,51 @@ document.addEventListener("DOMContentLoaded", function () {
 			if (!finalOrActiveTripStatuses.includes(tripStatus.value)) {
 				tripStatus.value = "1";  // Set default status for new trips only
 			}
-} else if (categoryValue === "1") {
-    if (isHighValueGoods) {
-        if (checklistApprovalStatus === 1 && tripApprovalApproved) {
-            tripStatus.disabled = false;
-            tripStatus.classList.remove("select-disabled-style");
-        } else {
-            tripStatus.disabled = true;
-            tripStatus.classList.add("select-disabled-style");
-            // ✅ Only reset if new trip or already at Awaiting status
-            if (tripStatus.value === "8" || tripStatus.value === "") {
-                tripStatus.selectedIndex = 0;
-            }
-        }
-    } else {
-        if (tripApprovalApproved) {
-            tripStatus.disabled = false;
-            tripStatus.classList.remove("select-disabled-style");
-        } else {
-            tripStatus.disabled = true;
-            tripStatus.classList.add("select-disabled-style");
-            // ✅ Only reset if new trip or already at Awaiting status
-            if (tripStatus.value === "8" || tripStatus.value === "") {
-                tripStatus.selectedIndex = 0;
-            }
-        }
-    }
-} else {
-    tripStatus.disabled = true;
-    tripStatus.classList.add("select-disabled-style");
-    // ✅ Only reset if new trip or already at Awaiting status
-    if (tripStatus.value === "8" || tripStatus.value === "") {
-        tripStatus.selectedIndex = 0;
-    }
-}
+		} else if (categoryValue === "1") {
+			if (isHighValueGoods) {
+				if (checklistApprovalStatus === 1) {
+					tripStatus.disabled = false;
+					tripStatus.classList.remove("select-disabled-style");
+				} else {
+					tripStatus.disabled = true;
+					tripStatus.classList.add("select-disabled-style");
+					// ✅ Only reset if new trip or already at Awaiting status
+					if (isNewTripGlobal || tripStatus.value === "8" || tripStatus.value === "") {
+						tripStatus.value = "8";
+					}
+				}
+			} else {
+				tripStatus.disabled = false;
+				tripStatus.classList.remove("select-disabled-style");
+			}
+		} else {
+			tripStatus.disabled = true;
+			tripStatus.classList.add("select-disabled-style");
+			// ✅ Only reset if new trip or already at Awaiting status
+			if (isNewTripGlobal || tripStatus.value === "8" || tripStatus.value === "") {
+				tripStatus.value = "8";
+			}
+		}
+
+		// ----------------------
+		// 1.5️⃣ Hide specific statuses based on approval
+		// ----------------------
+		$('#tc_financestatus option').each(function() {
+			var optText = $(this).text().trim().toLowerCase();
+			if (optText === 'trip started' || optText === 'trip closed') {
+				// Hide if Category is 1 and trip is not approved
+				if (categoryValue === "1" && !tripApprovalApproved) {
+					$(this).hide();
+					$(this).prop('disabled', true);
+					if (tripStatus.value === $(this).val()) {
+						tripStatus.value = "8";
+					}
+				} else {
+					$(this).show();
+					$(this).prop('disabled', false);
+				}
+			}
+		});
 		// ----------------------
 		// 2️⃣ POD Attachment Logic
 		// ----------------------
@@ -790,10 +803,15 @@ document.addEventListener("DOMContentLoaded", function () {
 		// We use broad logic here: if not Category 2/3, allow unlocking next stage
 		var cat = $("#tr_category").val();
 		var hasReportedDate = $("#tr_reporteddate").val() !== "";
+		var status = $("#tc_financestatus").val();
 
 		if (cat !== "2" && cat !== "3") {
-			$("#tr_reporteddate").prop("required", true);
-			if (g_unloadingSent || hasReportedDate) {
+			if (status == "2") {
+				$("#tr_reporteddate").prop("required", true);
+			} else {
+				$("#tr_reporteddate").removeAttr("required");
+			}
+			if (g_unloadingSent) {
 				enableUnloadingStage2();
 			}
 		} else {
@@ -896,7 +914,10 @@ document.addEventListener("DOMContentLoaded", function () {
 			// ✅ Backend now handles automatic Email Alerts for 1, 2, 3, 4.
 			// No need to show modal automatically on status change.
 
-			if (status == "1") enableUnloadingStage1();
+			if (status == "1") {
+				enableLoadingFields();
+				enableUnloadingStage1();
+			}
 			validateStatusRestriction();
 		});
 
@@ -942,17 +963,18 @@ document.addEventListener("DOMContentLoaded", function () {
 		// ---- 6. Initialization Logic ----
 		function initializeWorkflow() {
 			let status = $("#tc_financestatus").val();
+			let reportedDate = $("#tr_departeddate_pickup").val();
 
 			lockLoadingFieldsInitially();
 			lockUnloadingFields();
 
-			if (g_loadingSent || g_pickupDateSaved) {
+			if ((status !== "8" && status !== "") || (reportedDate && reportedDate.trim() !== "")) {
 				enableLoadingFields();
 			}
 			// Broad logic for Normal workflow
 			var cat = $("#tr_category").val();
 			if (cat !== "2" && cat !== "3") {
-				if (status == "1" || status == "2" || g_tripStartedSent) {
+				if (g_tripStartedSent || status == "2" || status == "1") {
 					enableUnloadingStage1();
 				}
 			} else {
@@ -982,6 +1004,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		var trip_status = document.getElementById("tc_financestatus").value;
 		var trip_category = document.getElementById("tr_category").value;
 		var isNewTrip = !("{{ trip_instance.id|default:'' }}");
+		var isCancelled = ("{{ trip_instance.tc_cancellation_check|yesno:'true,false' }}" === "true") || (parseFloat("{{ trip_instance.tc_cancellation|default:'0' }}") > 0);
 
 		if (trip_status == 1) {
 			if (trip_category !== "2" && trip_category !== "3") {
@@ -996,7 +1019,9 @@ document.addEventListener("DOMContentLoaded", function () {
 				$("#tr_departedkm, #tr_loading_time").removeAttr("required");
 			}
 		} else if (trip_status == 2) {
-			if (trip_category !== "2" && trip_category !== "3") {
+			if (isCancelled) {
+				$("#tr_unloading_time, #tr_reportedlocation, #tr_reportedkm, #tr_reporteddate").removeAttr("required");
+			} else if (trip_category !== "2" && trip_category !== "3") {
 				$("#tr_unloading_time, #tr_reportedlocation, #tr_reportedkm, #tr_reporteddate").attr("required", "required");
 			} else {
 				$("#tr_reportedlocation, #tr_reportedkm, #tr_reporteddate").attr("required", "required");
@@ -1123,4 +1148,20 @@ document.addEventListener("DOMContentLoaded", function () {
 		calculateUtilizedKM();
 	});
 </script>
+{% if is_invoiced and user_role == 'User' %}
+<script>
+	$(document).ready(function() {
+		// Disable all form fields
+		$('#tripdetail_add :input').prop('disabled', true);
+		// Specifically target select2 elements if any
+		$('#tripdetail_add select').prop('disabled', true).trigger('change.select2');
+		
+		// Hide save/submit buttons, but allow navigation buttons like 'BACK TO LIST'
+		$('.btn-submit:contains("ADD"), .btn-submit:contains("SAVE"), button[type="submit"]').addClass('disable_a_href').prop('disabled', true).hide();
+		
+		// Optional: Add a notice for the user
+		$('.modern-header').after('<div class="alert alert-info mt-3"><i class="fas fa-info-circle mr-2"></i> This trip has an associated invoice. The details are read-only.</div>');
+	});
+</script>
+{% endif %}
 {% endblock %}

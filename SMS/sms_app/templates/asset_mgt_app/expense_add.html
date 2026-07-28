@@ -144,6 +144,12 @@
 									</div>
 									{% render_field expense_form.exp_due_date id="exp_due_date" type="date" class="form-control " id="bill_per_day_wh_charges" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Credit Ledger</span>
+									</div>
+									{% render_field expense_form.exp_credit_ledger id="exp_credit_ledger" class="form-control" %}
+								</div>
 <!--								<div class="input-group input-group-sm mb-3">-->
 <!--									<div class="input-group-prepend">-->
 <!--										<span class="input-group-text">Paid Date</span>-->

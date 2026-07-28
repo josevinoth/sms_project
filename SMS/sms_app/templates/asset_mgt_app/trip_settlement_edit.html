@@ -120,9 +120,9 @@
                         </div>
 
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
+                            <label class="form-label-modern small mb-0 w-50 d-flex align-items-center" style="line-height:1; font-size: 0.8rem;">
                                 Toll
-                                <button type="button" class="btn btn-outline-info btn-sm ml-1 p-0 px-1" style="font-size:0.65rem;" onclick="showTollTxnDialog(true)">View</button>
+                                <button type="button" class="ml-1 p-0 text-primary" style="font-size:1rem; border: none; background: transparent; outline: none; cursor: pointer;" onclick="showTollTxnDialog(true)" title="View Toll Details"><i class="fas fa-eye"></i></button>
                             </label>
                             <div class="d-flex align-items-center w-50">
                                 {% render_field tripclosure_form.tc_tollcost class="form-control form-control-modern form-control-sm py-1" id="tc_tollcost" style="height:28px;" %}
@@ -171,16 +171,18 @@
                         </div>
 
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Halting</label>
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Halting per day</label>
                             <div class="d-flex align-items-center w-50">
                                 {% render_field tripclosure_form.tc_haltingcost class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
                                 {% render_field tripclosure_form.tc_haltingcost_check id="tc_haltingcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
 
-                        <div class="form-group-modern mb-2">
-                            <label class="form-label-modern small mb-1">No of Halting Days</label>
-                            {% render_field tripclosure_form.tc_no_of_days_halting class="form-control form-control-modern form-control-sm" %}
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">No of Halting Days</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_no_of_days_halting class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
+                            </div>
                         </div>
 
                         <div class="d-flex align-items-center justify-content-between mb-2">

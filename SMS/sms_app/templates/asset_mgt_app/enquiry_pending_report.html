@@ -19,6 +19,13 @@
     <div class="col-2"></div>
 </div>
 
+<div class="row mb-3 px-3">
+    <div class="col-12">
+        <a href="{% url 'transport_reports' %}" class="btn btn-primary shadow-sm">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
 <form id="enquiry_filter_form" method="POST" action="{% url 'enquiry_pending_report' %}" class="row g-3 align-items-end px-3">
     {% csrf_token %}
 
@@ -56,21 +63,19 @@
         <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
     </div>
 
-    <div class="col-md-2">
-        <button type="button" id="btn-filter" class="btn btn-primary mt-3">Filter</button>
-        <a href="{{ request.path }}" class="btn btn-secondary mt-3">Clear</a>
+    <div class="col-md-2 d-flex gap-2">
+        <button type="button" id="btn-filter" class="btn btn-primary flex-grow-1 shadow-sm">
+            <i class="fas fa-filter"></i> Filter
+        </button>
+        <a href="{{ request.path }}" class="btn btn-secondary shadow-sm">
+            <i class="fas fa-sync"></i> Clear
+        </a>
     </div>
 </form>
 <br>
 <br>
 
-<div class="row px-3">
-    <div class="col-auto">
-        <a href="{% url 'transport_reports' %}" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-</div>
+
 
 <br>
 
@@ -183,7 +188,7 @@
         // Trigger filter on click
         $('#btn-filter').on('click', function (e) {
             e.preventDefault();
-            table.draw();
+            table.ajax.reload();
         });
     });
 </script>

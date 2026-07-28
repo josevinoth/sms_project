@@ -62,7 +62,7 @@ def openingstock_add(request,openingstock_id=0):
 @login_required(login_url='login_page')
 def openingstock_list(request):
     first_name = request.session.get('first_name')
-    context = {'openingstock_list' : PkopeningstockInfo.objects.all(),'first_name': first_name}
+    context = {'openingstock_list' : PkopeningstockInfo.objects.all().order_by('-id'),'first_name': first_name}
     return render(request,"asset_mgt_app/pk_openingstock_list.html",context)
 
 #Delete openingstock

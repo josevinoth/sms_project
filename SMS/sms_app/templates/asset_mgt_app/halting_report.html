@@ -27,16 +27,16 @@
         {% render_field form.dmr_customer class="form-control" id="customerSelect" %}
     </div>
 
-    <!-- Month -->
+    <!-- From Date -->
     <div class="col-md-2">
-        <label class="form-label fw-bold">Month</label>
-        {% render_field form.month class="form-control" value=selected_month id="monthSelect" %}
+        <label class="form-label fw-bold">From Date</label>
+        {% render_field form.from_date class="form-control" id="fromDateSelect" %}
     </div>
 
-    <!-- Year -->
+    <!-- To Date -->
     <div class="col-md-2">
-        <label class="form-label fw-bold">Year</label>
-        {% render_field form.year class="form-control" value=selected_year id="yearSelect" %}
+        <label class="form-label fw-bold">To Date</label>
+        {% render_field form.to_date class="form-control" id="toDateSelect" %}
     </div>
 
     <!-- Branch -->
@@ -116,8 +116,8 @@
                 "type": "GET",
                 "data": function (d) {
                     d.customer = $('#customerSelect').val();
-                    d.month = $('#monthSelect').val();
-                    d.year = $('#yearSelect').val();
+                    d.from_date = $('#fromDateSelect').val();
+                    d.to_date = $('#toDateSelect').val();
                     d.branch = $('#branchSelect').val();
                     d.vehicle_source = $('#vehicleSourceSelect').val();
                 }

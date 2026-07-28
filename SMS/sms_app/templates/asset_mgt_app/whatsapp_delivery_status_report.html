@@ -46,10 +46,9 @@
     <div class="col-2"></div>
 </div>
 
-<form method="POST" action="{% url 'whatsapp_delivery_status_report' %}"
-    class="row g-3 align-items-end justify-content-center" id="report-filter-form">
+<form class="row g-3 align-items-end" id="report-filter-form">
     {% csrf_token %}
-    <input type="hidden" name="select_all" value="{{ select_all }}">
+    
 
     <!-- Branch -->
     <div class="col-md-2">
@@ -99,16 +98,16 @@
         {% render_field form.customer_department class="form-control select2" value=dept_id %}
     </div>
 
-    <!-- Month -->
-    <div class="col-md-1">
-        <label class="form-label fw-bold">Month</label>
-        {% render_field form.month class="form-control" value=selected_month %}
+    <!-- From Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">From Date</label>
+        {% render_field form.from_date class="form-control" %}
     </div>
 
-    <!-- Year -->
-    <div class="col-md-1">
-        <label class="form-label fw-bold">Year</label>
-        {% render_field form.year class="form-control" value=selected_year %}
+    <!-- To Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">To Date</label>
+        {% render_field form.to_date class="form-control" %}
     </div>
 
     <div class="col-md-auto">
@@ -125,11 +124,7 @@
         <a href="{% url 'transport_reports' %}" class="btn btn-primary">
             <i class="fas fa-arrow-left"></i> Back
         </a>
-        {% if select_all != 'true' %}
-        <a href="{% url 'whatsapp_delivery_status_report' %}?select_all=true" class="btn btn-warning ml-2">
-            <i class="fas fa-check-double"></i> Show More (2,000)
-        </a>
-        {% endif %}
+
     </div>
 </div>
 
@@ -145,13 +140,6 @@
             </tr>
         </thead>
         <tbody>
-            {% for row in data_rows %}
-            <tr>
-                {% for cell in row %}
-                <td>{{ cell }}</td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
         </tbody>
     </table>
 </div>
@@ -188,7 +176,22 @@
         });
 
         // Initialize DataTable
-        $jq('#whatsapp_report_table').DataTable({
+        var table = $jq('#whatsapp_report_table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "{% url 'whatsapp_delivery_status_report_ajax' %}",
+                type: "GET",
+                data: function (d) {
+                    d.customer = $jq('[name="dmr_customer"]').val() || '';
+                    d.customer_department = $jq('[name="customer_department"]').val() || '';
+                    d.from_date = $jq('[name="from_date"]').val() || '';
+                    d.to_date = $jq('[name="to_date"]').val() || '';
+                    d.branch = $jq('[name="branch"]').val() || '';
+                    d.vehicle_source = $jq('[name="vehicle_source"]').val() || '';
+                    d.vehicle_search = $jq('[name="vehicle_search"]').val() || '';
+                }
+            },
             scrollX: true,
             autoWidth: false,
             dom: "<'row'<'col-sm-12 col-md-6'lB><'col-sm-12 col-md-6'f>>" +
@@ -271,6 +274,12 @@
                 }
             ],
             order: [[0, 'asc']]
+        });
+
+        
+        $jq('#report-filter-form').on('submit', function(e) {
+            e.preventDefault();
+            table.ajax.reload();
         });
 
         // Handle window resize to adjust columns

@@ -33,7 +33,40 @@
     <!-- Custom CSS -->
     {% load static %}
     <link rel="stylesheet" href="{% static 'all.css' %}?v=20260435">
-    <script src="{% static 'common-chart-config.js' %}"></script>
+    <script src="{% static 'common-chart-config.js' %}"></script>    <style>
+        /* Force Select2 Clear Button Visibility (Bypass Cache & Bootstrap4) */
+        .select2-container--default .select2-selection--single,
+        .select2-container--bootstrap4 .select2-selection--single {
+            position: relative !important;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__clear,
+        .select2-container--bootstrap4 .select2-selection--single .select2-selection__clear {
+            position: absolute !important;
+            right: 25px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            margin: 0 !important;
+            font-size: 1.5rem !important;
+            color: #ef4444 !important; /* distinct red color */
+            background: transparent !important;
+            font-weight: bold !important;
+            transition: all 0.2s ease;
+            z-index: 99 !important;
+            height: auto !important;
+            line-height: 1 !important;
+            width: auto !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__clear:hover,
+        .select2-container--bootstrap4 .select2-selection--single .select2-selection__clear:hover {
+            color: #dc2626 !important; /* darker red on hover */
+            background: transparent !important;
+        }
+    </style>
 </head>
 
 <body style="background-color: whitesmoke;">

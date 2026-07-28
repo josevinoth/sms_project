@@ -266,3 +266,4 @@ from .sub_models.prime_enquiry_vehicle_mod import PrimeEnquiryVehicle
 from .sub_models.prime_enquirynote_mod import PrimeEnquirynoteInfo
 from .sub_models.prime_vehicle_allotment_mod import PrimeVehicleAllotmentInfo
 from .sub_models.prime_trip_mod import PrimeTripInfo
+from .sub_models.credit_ledger_mod import CreditLedgerInfo

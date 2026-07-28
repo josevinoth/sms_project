@@ -70,15 +70,18 @@ def vendorratemaster_list(request):
 
     # Filter if search query exists
     if search_query:
+        # Clean up currency symbols and commas if pasted from UI
+        clean_query = search_query.replace('₹', '').replace(',', '')
         # Split search terms for multi-word search (e.g. "MANJUNATHA TRANSPORT")
-        search_terms = search_query.split()
+        search_terms = clean_query.split()
         for term in search_terms:
             vendorratemaster_qs = vendorratemaster_qs.filter(
                 Q(vr1_fromlocation__place_name__icontains=term) |
                 Q(vr1_tolocation__place_name__icontains=term) |
                 Q(vr1_vehicletype__vt_vehicletype__icontains=term) |
                 Q(vr1_vendor__vend_name__icontains=term) |
-                Q(vr1_vehiclecategory__vc_vehiclecategory__icontains=term)
+                Q(vr1_vehiclecategory__vc_vehiclecategory__icontains=term) |
+                Q(vr1_rate__icontains=term)
             )
 
     # Pagination

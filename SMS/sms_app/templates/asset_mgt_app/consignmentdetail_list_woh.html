@@ -54,9 +54,10 @@
                 </a>
             </td>
             <td>
-                <form action="{% url 'consignmentdetail_delete' consignmentdetailinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                <form id="delete-form-co-{{ consignmentdetailinfo.id }}" action="{% url 'consignmentdetail_delete' consignmentdetailinfo.id %}" method="post" style="margin: 0;">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
+                    <input type="hidden" name="deletion_reason" id="reason-co-{{ consignmentdetailinfo.id }}">
+                    <button type="button" class="btn btn-danger" onclick="confirmCODeletion('{{ consignmentdetailinfo.id }}', '{{ consignmentdetailinfo.co_consignmentnumber }}')">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </form>
@@ -70,6 +71,16 @@
     $(document).ready(function() {
     $('#consignmentdetail_list').DataTable();
 });
+
+    function confirmCODeletion(id, identifier) {
+        let reason = prompt("⚠️ Warning: You are about to delete consignment " + identifier + ".\n\nPlease provide a reason for this deletion:");
+        if (reason !== null && reason.trim() !== "") {
+            document.getElementById("reason-co-" + id).value = reason;
+            document.getElementById("delete-form-co-" + id).submit();
+        } else if (reason !== null) {
+            alert("Deletion cancelled. A reason is required to delete records.");
+        }
+    }
 </script>
 
 {% endblock content %}

@@ -324,8 +324,18 @@
         var from_date = $('#id_ab_from_date').val();
         var to_date = $('#id_ab_to_date').val();
 
-        if (vendor_id || vehicle_id) {
+        if (vehicle_id) {
             var tbody = $('#tripsTableBody');
+
+            // Don't fetch trips until BOTH dates are filled — otherwise backend
+            // returns all trips for the vehicle (no date filter) and km is wrong.
+            if (!from_date || !to_date) {
+                tbody.empty().append('<tr><td colspan="12" class="text-center text-muted">Please select both From Date and To Date to load trips</td></tr>');
+                $('#id_ab_total_km_run').val(0);
+                calculateAmounts();
+                return;
+            }
+
             tbody.empty().append('<tr><td colspan="12" class="text-center">Loading trips... <i class="fas fa-spinner fa-spin"></i></td></tr>');
 
             $.ajax({
@@ -342,14 +352,32 @@
                     if (vehicle_id) {
                         $('#id_ab_vehicle_type').val(data.vehicle_type);
                         if (!isInitialLoad) {
-                            $('#id_ab_buy_cost').val(data.buy_cost);
-                            $('#id_ab_agreed_km').val(data.agreed_km);
+                            var monthly_buy_cost = parseFloat(data.buy_cost) || 0;
+                            var monthly_agreed_km = parseFloat(data.agreed_km) || 0;
+                            var prorated_buy_cost = monthly_buy_cost;
+                            var prorated_agreed_km = monthly_agreed_km;
+                            
+                            if (from_date && to_date) {
+                                var sDt = new Date(from_date);
+                                var eDt = new Date(to_date);
+                                
+                                if (!isNaN(sDt.getTime()) && !isNaN(eDt.getTime())) {
+                                    var dDays = Math.ceil(Math.abs(eDt - sDt) / (1000 * 60 * 60 * 24)) + 1;
+                                    var dInMonth = new Date(sDt.getFullYear(), sDt.getMonth() + 1, 0).getDate(); // Days in month of From Date
+                                    
+                                    prorated_buy_cost = (monthly_buy_cost / dInMonth) * dDays;
+                                    prorated_agreed_km = (monthly_agreed_km / dInMonth) * dDays;
+                                }
+                            }
+                            
+                            $('#id_ab_buy_cost').val(prorated_buy_cost.toFixed(2));
+                            $('#id_ab_agreed_km').val(prorated_agreed_km.toFixed(2));
                         }
                         extraKmRate = data.extra_km_rate || 0;
                     }
-                    // Always set Total KM Run from backend vehicle-log sum
-                    // (same calculation as Vehicle Log Report — sum of Used KM per trip)
-                    if (data.total_km_run !== undefined && data.total_km_run > 0) {
+                    // Always update Total KM Run from backend — even if 0 — so
+                    // changing to a shorter date range properly clears the stale value.
+                    if (data.total_km_run !== undefined) {
                         $('#id_ab_total_km_run').val(data.total_km_run);
                     }
                     // Auto-fill leave days
@@ -405,6 +433,15 @@
                     tbody.empty().append('<tr><td colspan="12" class="text-center text-danger">Error loading data. Please try again.</td></tr>');
                 }
             });
+        } else {
+            // Clear the form and table if no vehicle is selected
+            $('#tripsTableBody').empty().append('<tr><td colspan="12" class="text-center text-muted">Please select a vehicle to load trips</td></tr>');
+            $('#id_ab_vehicle_type').val('');
+            $('#id_ab_buy_cost').val('0');
+            $('#id_ab_agreed_km').val('0');
+            $('#id_ab_total_km_run').val('0');
+            $('#id_ab_leave_days').val('0');
+            calculateAmounts();
         }
     });
 
@@ -664,24 +701,18 @@
             }
         }
         
-        var tableHTML = clonedTable.outerHTML;
-        var dataType = 'application/vnd.ms-excel';
-        var filename = filename ? filename + '.xls' : 'excel_data.xls';
+        // Remove hidden columns/elements so they don't appear in Excel
+        var hiddenElements = clonedTable.querySelectorAll('.d-none');
+        hiddenElements.forEach(function(el) {
+            el.remove();
+        });
         
-        var downloadLink = document.createElement("a");
-        document.body.appendChild(downloadLink);
-        
-        if (navigator.msSaveOrOpenBlob) {
-            var blob = new Blob(['\ufeff', tableHTML], { type: dataType });
-            navigator.msSaveOrOpenBlob(blob, filename);
-        } else {
-            downloadLink.href = 'data:' + dataType + ';charset=utf-8,' + encodeURIComponent('\ufeff' + tableHTML);
-            downloadLink.download = filename;
-            downloadLink.click();
-        }
-        document.body.removeChild(downloadLink);
+        // Generate Excel book
+        var wb = XLSX.utils.table_to_book(clonedTable, {sheet:"Sheet1", raw:true});
+        XLSX.writeFile(wb, (filename ? filename : 'excel_data') + '.xlsx');
     }
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
     .input-group-text {

@@ -112,7 +112,7 @@
             <td width="25%"><b>Complaint</b></td>
             <td><b>Description</b></td>
             <td width="20%"><b>Last Serviced Date</b></td>
-            <td width="20%"><b>Technician</b></td>
+            <td width="20%"><b>Vendor</b></td>
         </tr>
         <tr>
             <td align="center">1</td>
@@ -125,7 +125,7 @@
                 -
                 {% endif %}
             </td>
-            <td>{{ maintenance.mi_technician|default:"-" }}</td>
+            <td>{{ maintenance.mi_vendor.vend_name|default:maintenance.mi_technician|default:"-" }}</td>
         </tr>
         <tr>
             <td colspan="4">

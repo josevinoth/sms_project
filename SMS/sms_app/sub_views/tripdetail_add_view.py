@@ -12,7 +12,7 @@ from django.utils import timezone
 from .send_department_email import send_department_email
 from ..forms import TripclosurefilesForm, TripdetailaddForm
 from ..models import Vehicle_allotmentInfo, ConsignmentdetailInfo, Tripstatusinfo, Trip_closure_files_Info, \
-    EnquirynoteInfo, TripdetailInfo, VehiclemasterInfo, TripHighvalueInfo, Emailmaster, Email_type
+    EnquirynoteInfo, TripdetailInfo, VehiclemasterInfo, TripHighvalueInfo, Emailmaster, Email_type, User_extInfo, TransInvoiceInfo, DeletionLog
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
@@ -40,7 +40,7 @@ def tripdetail_enquiry(request, enquiry_id, trip_num):
     # If no trip is associated, store enquiry ID in session and redirect to insert
     if trip_num == 'none' or trip_num == '':
         request.session['enquiry_num_id'] = enquiry_id
-        return redirect('tripdetail_insert')  # Define this URL in urls.py
+        return redirect(f"{reverse('tripdetail_insert')}?enq_id={enquiry_id}")
     else:
         trip = TripdetailInfo.objects.filter(
             tr_enquirynumber=enquiry,
@@ -50,7 +50,7 @@ def tripdetail_enquiry(request, enquiry_id, trip_num):
             request.session['enquiry_num_id'] = enquiry_id
             messages.warning(request,
                              "Trip number was not found for this enquiry. Please create or select the trip again.")
-            return redirect('tripdetail_insert')
+            return redirect(f"{reverse('tripdetail_insert')}?enq_id={enquiry_id}")
 
         trip_id = trip.id
         print('trip_id:', trip_id)
@@ -68,7 +68,7 @@ def tripdetail_nav(request, tripdetail_id=0):
     enquiry_num_id = tripdetail_id
     request.session['enquiry_num_id'] = enquiry_num_id
     tripdetail_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id)
-    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8])
+    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8])
     consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
     context = {
         'first_name': first_name,
@@ -88,9 +88,18 @@ def tripdetail_add(request, tripdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
 
-    # ✅ Get enquiry_num_id safely from URL or session
-    # Prioritize 'enquiry_num_id' (integer) over 'ses_enqiury_id' (string)
-    enquiry_num_id = request.GET.get('enquiry_num_id') or request.session.get('enquiry_num_id')
+    enq_id_param = request.GET.get('enq_id') or request.GET.get('enquiry_num_id')
+    if enq_id_param:
+        enquiry_num_id = int(enq_id_param)
+        request.session['enquiry_num_id'] = enquiry_num_id
+        request.session['ses_enqiury_id'] = enquiry_num_id
+        try:
+            enquiry = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
+            request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
+        except ObjectDoesNotExist:
+            pass
+    else:
+        enquiry_num_id = request.session.get('enquiry_num_id')
 
     # Fallback to string-based session key if needed (though we should avoid this)
     if not enquiry_num_id:
@@ -189,7 +198,7 @@ def tripdetail_add(request, tripdetail_id=0):
             trip_list = TripdetailInfo.objects.select_related(
                 'tr_approval', 'tr_approval__ta_approval_status'
             ).filter(tr_enquirynumber=enquiry_num_id)
-            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8, 10, 11])
+            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8, 10, 11])
 
             # ✅ Exclude already-used consignments for this enquiry
             used_consignments = TripdetailInfo.objects.filter(
@@ -213,7 +222,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 'status_list': status_list,
                 'consignment_list': consignment_list,
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
-                'status_selected': 8,
+                'status_selected': 1 if initial_data.get('tr_category') in [2, 3] else 8,
                 'location_locked': location_locked,
             }
 
@@ -280,20 +289,18 @@ def tripdetail_add(request, tripdetail_id=0):
                     if status_selected in [4, 5, 6, 7, 9]:
                         status_selected = 2
 
-                # ✅ Auto-progress status based on filled data
-                # Only auto-progress if still at "Awaiting Approval" (8)
-                if status_selected == 8:
+                # Auto-progress logic for Open/Started trips
+                if status_selected == 1:
                     if trip_instance.tr_reporteddate_pickup:
                         status_selected = 2  # Trip Closed
-                    elif trip_instance.tr_departeddate:
-                        status_selected = 1  # Trip Started
-                    elif trip_instance.tr_departeddate_pickup:
-                        status_selected = 8  # Still Awaiting
 
                 print('status_selected (auto)', status_selected)
             except ObjectDoesNotExist:
                 status_selected = None
-            allowed_statuses = [1, 2, 3, 8, 10, 11]
+            if status_selected == 8:
+                allowed_statuses = [8, 10, 11]
+            else:
+                allowed_statuses = [1, 2, 8, 10, 11]
             if status_selected and status_selected not in allowed_statuses:
                 allowed_statuses.append(status_selected)
 
@@ -325,9 +332,16 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip_instance.tr_approval and trip_instance.tr_approval.ta_approval_status_id == 1
             )
 
+            # Check user role and invoice status
+            user_ext = User_extInfo.objects.filter(user_id=user_id).first()
+            user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
+            is_invoiced = TransInvoiceInfo.objects.filter(ti_trip=trip_instance).exists()
+
             context = {
                 'first_name': first_name,
                 'user_id': user_id,
+                'user_role': user_role,
+                'is_invoiced': is_invoiced,
                 'trip_det_form': trip_det_form,
                 'tripclosurefiles_form': tripclosurefiles_form,
                 'enquiry_num_id': enquiry_num_id,
@@ -354,7 +368,7 @@ def tripdetail_add(request, tripdetail_id=0):
             enquiry_num = enquiry_num_id
             cosnignment_number = request.POST.get('tr_consignmentnumber')
             vehicle_number = request.POST.get('tr_vehiclenumber')
-            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8, 10, 11])
+            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8, 10, 11])
             consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
             trip_det_form.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(id=enquiry_num_id)
             trip_det_form.fields['tr_consignmentnumber'].queryset = consignment_list
@@ -481,13 +495,7 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 trip.save()
 
-                # ✅ Auto-advance status if data filled but status still "Awaiting Approval"
-                if trip.tc_financestatus_id == 8:
-                    if trip.tr_departeddate:
-                        trip.tc_financestatus_id = 1
-                        trip.tr_operational_status_id = 1
-                        trip.save(update_fields=['tc_financestatus', 'tr_operational_status'])
-                        messages.info(request, "Trip status automatically updated to 'Trip Started'.")
+                # Removed auto-advance logic to strictly require trip approval
 
                 # ✅ AUTOMATED EMAIL TRIGGERS
                 def trigger_alert(alert_func, label):
@@ -499,21 +507,14 @@ def tripdetail_add(request, tripdetail_id=0):
                         recipients = get_auto_recipients(trip)
 
                         if not recipients:
-                            # ✅ FIX: Even if no email recipients found, still mark the flag as True
-                            # so the workflow (dock in/out field unlocking) can progress.
-                            messages.warning(request,
-                                             f"Alert Skipped: {label} - No email ID found for this customer in the email master.")
-                            # Mark the appropriate flag so fields unlock properly
-                            flag_map = {
-                                "Loading Reported": "tr_loading_report_mail_sent",
-                                "Trip Started": "tr_trip_started_mail_sent",
-                                "Unloading Reported": "tr_unloading_report_mail_sent",
-                                "Trip Closed": "tr_trip_closed_mail_sent",
-                            }
-                            flag_field = flag_map.get(label)
-                            if flag_field and not getattr(trip, flag_field, True):
-                                setattr(trip, flag_field, True)
-                                trip.save(update_fields=[flag_field])
+                            if label == "Trip Started":
+                                messages.error(request, "This customer don't have mail please add mail to start the trip.")
+                                # Revert to Trip Open so unloading details stay frozen
+                                trip.tc_financestatus_id = 8
+                                trip.save(update_fields=['tc_financestatus'])
+                            else:
+                                display_label = "starting trip" if label == "Loading Reported" else label
+                                messages.error(request, f"This customer don't have mail please add mail for {display_label}.")
                             return
 
                         response = alert_func(request)
@@ -588,7 +589,7 @@ def tripdetail_add(request, tripdetail_id=0):
                         print(f"Error in {field}: {error}")
                         messages.error(request, f"{field_label}: {error}")
                 messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
-                status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8, 10, 11])
+                status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8, 10, 11])
                 consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
                 trip_det_form.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(id=enquiry_num_id)
                 trip_det_form.fields['tr_consignmentnumber'].queryset = consignment_list
@@ -675,21 +676,14 @@ def tripdetail_add(request, tripdetail_id=0):
                         recipients = get_auto_recipients(trip)
 
                         if not recipients:
-                            # ✅ FIX: Even if no email recipients found, still mark the flag as True
-                            # so the workflow (dock in/out field unlocking) can progress.
-                            messages.warning(request,
-                                             f"Alert Skipped: {label} - No email ID found for this customer in the email master.")
-                            # Mark the appropriate flag so fields unlock properly
-                            flag_map = {
-                                "Loading Reported": "tr_loading_report_mail_sent",
-                                "Trip Started": "tr_trip_started_mail_sent",
-                                "Unloading Reported": "tr_unloading_report_mail_sent",
-                                "Trip Closed": "tr_trip_closed_mail_sent",
-                            }
-                            flag_field = flag_map.get(label)
-                            if flag_field and not getattr(trip, flag_field, True):
-                                setattr(trip, flag_field, True)
-                                trip.save(update_fields=[flag_field])
+                            if label == "Trip Started":
+                                messages.error(request, "This customer don't have mail please add mail to start the trip.")
+                                # Revert to Trip Open so unloading details stay frozen
+                                trip.tc_financestatus_id = 8
+                                trip.save(update_fields=['tc_financestatus'])
+                            else:
+                                display_label = "starting trip" if label == "Loading Reported" else label
+                                messages.error(request, f"This customer don't have mail please add mail for {display_label}.")
                             return
 
                         response = alert_func(request)
@@ -774,7 +768,7 @@ def tripdetail_list(request):
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
 
-    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 3, 8])
+    status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8])
 
     context = {
         'first_name': first_name,
@@ -914,8 +908,20 @@ def tripdetail_list_ajax(request):
 @login_required(login_url='login_page')
 def tripdetail_delete(request, tripdetail_id):
     tripdetail = TripdetailInfo.objects.get(pk=tripdetail_id)
-    enquiry_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_enquirynumber
-    trip_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_tripnumber
+    enquiry_num = tripdetail.tr_enquirynumber
+    trip_num = tripdetail.tr_tripnumber
+    
+    reason = request.POST.get('deletion_reason', 'No reason provided')
+    identifier = trip_num
+    
+    DeletionLog.objects.create(
+        dl_model_name='TripdetailInfo',
+        dl_record_id=tripdetail_id,
+        dl_record_identifier=identifier,
+        dl_deleted_by=request.user,
+        dl_reason=reason
+    )
+    
     tripdetail.delete()
     try:
         tripdetail_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num).values_list('tr_tripnumber',
@@ -929,8 +935,7 @@ def tripdetail_delete(request, tripdetail_id):
     for i in trip_closure_files:
         trip_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=i)
         trip_files.delete()
-    # return redirect('/SMS/tripdetail_list')
-    return redirect(request.META['HTTP_REFERER'])
+    return redirect(request.META.get('HTTP_REFERER', '/SMS/tripdetail_list'))
 
 
 @login_required(login_url='login_page')

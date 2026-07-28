@@ -327,6 +327,10 @@ def market_bill_edit(request, id):
 # ==================================================
 @login_required(login_url='login_page')
 def market_bill_delete(request, id):
+    if request.session.get('ses_role') not in ['Admin', 'Super User']:
+        messages.error(request, "You do not have permission to delete this record.")
+        return redirect('market_bill_list')
+
     record = get_object_or_404(MarketBillInfo, id=id)
 
     if request.method == "POST":

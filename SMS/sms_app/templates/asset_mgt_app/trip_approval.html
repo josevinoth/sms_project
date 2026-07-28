@@ -11,7 +11,7 @@
     </div>
 </div>
 
-<div class="container-fluid row">
+<div class="row mb-2">
     <div class="col-md-1">
         <a href="{% url 'home_page' %}" class="btn btn-primary">
             <i class="fas fa-arrow-left"></i> Back
@@ -19,6 +19,7 @@
     </div>
 </div>
 <hr>
+<div class="table-responsive">
 <table id="trip_approval_table" class="table table-bordered table-sm">
     <thead class="thead-dark">
         <tr>
@@ -140,6 +141,7 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 <script>
     $(document).ready(function () {
         $('#trip_approval_table').DataTable({

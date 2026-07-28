@@ -3,8 +3,12 @@ from ..models import MyUser
 from ..sub_models.vendor_info_mod import Vendor_info
 from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
 
+import re
+
 def attached_bill_directory_path(instance, filename):
-    return 'attached_bills/{0}/{1}'.format(instance.ab_bill_no, filename)
+    # Sanitize the bill number to remove slashes, backslashes, and other invalid path characters
+    safe_bill_no = re.sub(r'[^a-zA-Z0-9_\-]', '_', str(instance.ab_bill_no)).strip('_')
+    return 'attached_bills/{0}/{1}'.format(safe_bill_no, filename)
 
 
 class AttachedBillInfo(models.Model):

@@ -43,3 +43,11 @@ class PkneedassessmentInfo(models.Model):
 
     def __str__(self):
         return str(self.na_assessment_num) if self.na_assessment_num else "N/A"
+
+    @property
+    def access_types_str(self):
+        return " ".join([str(a.type_of_access).upper() for a in self.na_type_of_access.all()]) if self.pk else ""
+
+    @property
+    def wood_norms_str(self):
+        return " ".join([str(n.wood_norms).upper() for n in self.na_wood_norms.all()]) if self.pk else ""

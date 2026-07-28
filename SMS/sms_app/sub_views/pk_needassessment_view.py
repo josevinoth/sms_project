@@ -64,7 +64,11 @@ def get_tracker_flags(na_id):
     else:
         flags['acceptance_done'] = False
 
-    # 6. Gate Pass / DC
+    # 6. Invoice
+    from ..sub_models.pk_invoice_mod import PkInvoice
+    flags['invoice_done'] = PkInvoice.objects.filter(inv_assessment_num=na_id).exists()
+
+    # 7. Gate Pass / DC
     from ..models import PackingGateReturn
     flags['gate_pass_done'] = PackingGateReturn.objects.filter(gp_assessment_num=na_id).exists()
 

@@ -18,3 +18,4 @@ class ExpenseExtinfo(models.Model):
     exp_ext_customer_new_name = models.CharField(blank=True, null=True, max_length=500)
     exp_ext_vehicle_source = models.ForeignKey(OwnershipInfo, on_delete=models.CASCADE, blank=True, null=True)
     exp_ext_vehicle_number = models.ForeignKey(VehiclemasterInfo, on_delete=models.CASCADE, blank=True, null=True)
+    exp_ext_credit_ledger = models.ForeignKey('CreditLedgerInfo', on_delete=models.SET_NULL, blank=True, null=True)

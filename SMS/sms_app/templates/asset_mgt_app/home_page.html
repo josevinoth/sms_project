@@ -202,7 +202,7 @@
                         <a href="{% url 'stockpurchases_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock List</a>
                         <a href="{% url 'stock_description_add' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Description</a>
                         <a href="{% url 'part_code_add' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Part Code</a>
-                        <a href="{% url 'stock_maintenance_list' %}"><i class="fa fa-arrow-right"aria-hidden="true"></i> Stock Maintenance</a>
+<!--                        <a href="{% url 'stock_maintenance_list' %}"><i class="fa fa-arrow-right"aria-hidden="true"></i> Stock Maintenance</a>-->
                         <a href="{% url 'pk_stock_vendor_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Purchase</a>
                         <a href="{% url 'pk_retrival_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Retrival <span class="badge bg-danger p-2 blink">{{ count_retrival }}</span></a>
                         <a href="{% url 'pk_acceptance_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Acceptance <span class="badge bg-danger p-2 blink">{{ count_acceptance }}</span></a>
@@ -211,6 +211,7 @@
                         <a href="{% url 'pk_excess_stock_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Excess Stock <span class="badge bg-danger p-2 blink">{{ excess_count }}</span></a>
                         <a href="{% url 'pk_return_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Return <span class="badge bg-danger p-2 blink">{{ count_return }}</span>
                         </a>
+                        <a href="{% url 'pk_invoice_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Invoice </a>
                         <a href="{% url 'packing_gate_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> GatePass </a>
                         <a href="{% url 'packing_delivery_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Delivery Challan</a>
                         <a href="{% url 'pk_tool_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Tools Master</a>
@@ -281,6 +282,7 @@
 
                         <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> TMS Misc</button>
                         <div class="content">
+                            <a href="{% url 'email_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Email Master </a>
                             <a href="{% url 'location_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Location Master </a>
                             <a href="{% url 'charge_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Charge Master </a>
                             <a id="fastag" href="{% url 'trans_fastag' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Fastag</a>

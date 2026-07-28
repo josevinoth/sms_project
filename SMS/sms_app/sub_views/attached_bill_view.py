@@ -152,6 +152,10 @@ def attached_bill_edit(request, id):
 # ==================================================
 @login_required(login_url='login_page')
 def attached_bill_delete(request, id):
+    if request.session.get('ses_role') not in ['Admin', 'Super User']:
+        messages.error(request, "You do not have permission to delete this record.")
+        return redirect('attached_bill_list')
+
     record = get_object_or_404(AttachedBillInfo, id=id)
     if request.method == "POST":
         record.delete()
@@ -221,14 +225,12 @@ def get_attached_vehicle_details(request):
             filters &= Q(tr_vehiclenumber__in=vehicle_reg_nos)
         
         if f_dt_obj and t_dt_obj:
-            # Use IST-aware datetime boundaries to avoid UTC offset issues on server
-            # expanded_start = day before from_date, expanded_end = day after to_date
-            expanded_start = f_dt_obj - timedelta(days=1)
-            expanded_end = t_dt_obj + timedelta(days=1)
-            # Convert to timezone-aware datetimes (start of day in IST = 00:00 IST, end = 23:59:59 IST)
-            ist_start = dj_timezone.make_aware(dt_datetime(expanded_start.year, expanded_start.month, expanded_start.day, 0, 0, 0))
-            ist_end = dj_timezone.make_aware(dt_datetime(expanded_end.year, expanded_end.month, expanded_end.day, 23, 59, 59))
-            filters &= Q(tr_departeddate__gte=ist_start, tr_departeddate__lte=ist_end)
+            from_date_str = f_dt_obj.isoformat()  # YYYY-MM-DD
+            to_date_str   = t_dt_obj.isoformat()
+            filters &= (
+            Q(tr_departeddate__date__gte=from_date_str) &
+            Q(tr_departeddate__date__lte=to_date_str)
+        )
 
         if filters:
             bill_id = request.GET.get('bill_id')
@@ -240,15 +242,12 @@ def get_attached_vehicle_details(request):
             for b_trips in billed_trips_query.values_list('ab_selected_trips', flat=True):
                 if b_trips:
                     already_billed.extend([t.strip() for t in b_trips.split(',') if t.strip()])
-            
-            if already_billed:
-                filters &= ~Q(tr_tripnumber__in=already_billed)
 
-            # Compute Total KM Run using the exact same filters as the bill table
-            # so that it perfectly matches the sum of the trips and avoids the "KM Difference Adjustment"
+            # ── Compute Total KM BEFORE excluding already-billed trips ──────────────
+            # This ensures Total KM always matches the Vehicle Log Report (all trips
+            # for the vehicle in the period, regardless of billing status).
             all_period_trips = TripdetailInfo.objects.filter(filters).filter(
-                tr_category_id__in=[1, 2, 3],
-                tr_vehiclesource_id__in=[1, 2]
+                tr_category_id__in=[1, 2, 3]  # Regular + Empty + Business Empty
             )
             total_km_run_sum = 0
             for t in all_period_trips:
@@ -258,7 +257,15 @@ def get_attached_vehicle_details(request):
                     diff = c_km - s_km
                     if 0 < diff < 15000:
                         total_km_run_sum += diff
+            # ────────────────────────────────────────────────────────────────────────
 
+            # NOW apply already_billed exclusion so the trip TABLE only shows
+            # trips that are not yet billed in another bill.
+            if already_billed:
+                filters &= ~Q(tr_tripnumber__in=already_billed)
+
+            # Trips table stays category 1 only — this list is what gets billed per-trip,
+            # Empty/Business Empty trips aren't individually billable line items.
             trips = TripdetailInfo.objects.filter(filters).filter(tr_category_id=1).order_by('tr_departeddate')
             trip_dates = set()
 
@@ -306,7 +313,7 @@ def get_attached_vehicle_details(request):
 
             # Total KM = sum of Used KM for ALL period trips (matches Vehicle Log Report)
             data['total_km_run'] = total_km_run_sum
-
+            data['debug_version'] = 'v2-allcats-fix'
             if f_dt_obj and t_dt_obj:
                 # Build the full set of leave dates first
                 leave_dates_set = set()
@@ -664,7 +671,9 @@ def attached_bill_summary(request, id):
             if 0 < diff < 15000:
                 trip_km_run += diff
         if t.tr_departeddate:
-            summary_billed_trip_dates.add(t.tr_departeddate.date())
+            d = t.tr_departeddate.date()
+            if d.weekday() != 6:  # Exclude Sundays (0=Monday, 6=Sunday)
+                summary_billed_trip_dates.add(d)
 
     # Use saved total_km_run
     display_total_km = total_km_saved
@@ -750,3 +759,101 @@ def get_vehicles_by_vendor(request):
         })
     
     return JsonResponse({'vehicles': veh_list})
+
+
+@login_required(login_url='login_page')
+def attached_bill_summary_excel(request, id):
+    import json
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    response = attached_bill_summary(request, id)
+    if response.status_code != 200:
+        return response
+    
+    data = json.loads(response.content)
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Bill Summary"
+
+    # Header
+    ws.merge_cells('A1:C1')
+    header_cell = ws['A1']
+    header_cell.value = "BILL SUMMARY - " + data.get('title', '')
+    header_cell.font = Font(bold=True, color="FFFFFF")
+    header_cell.fill = PatternFill("solid", fgColor="1E293B")
+    header_cell.alignment = Alignment(horizontal="center")
+
+    # Column headers
+    headers = ["#", "Description", "Value"]
+    ws.append(headers)
+    for col in ['A', 'B', 'C']:
+        ws[col + '2'].font = Font(bold=True)
+        ws[col + '2'].fill = PatternFill("solid", fgColor="E2E3E5")
+
+    def format_num(val):
+        try:
+            return f"{float(val):,.2f}"
+        except:
+            return str(val)
+
+    rows = [
+        [1,  'VEHICLE NO',                    data.get('vehicle_no', '')],
+        [2,  'VEHICLE TYPE',                  data.get('vehicle_type', '')],
+        [3,  'NO. OF DAYS IN THE MONTH',      data.get('days_in_month', 0)],
+        [4,  'NO. OF WORKING DAYS',           data.get('working_days', 0)],
+        [5,  'NO. OF LEAVE',                  data.get('leave_days', 0)],
+        [6,  'CONTRACT AMOUNT',               format_num(data.get('contract_amount', 0))],
+        [7,  'LEAVE PER DAY',                 format_num(data.get('leave_per_day', 0))],
+        [8,  'LEAVE AMT',                     format_num(data.get('leave_amount', 0))],
+        [9,  'EXTRA KM',                      format_num(data.get('extra_km', 0))],
+        [10, 'EXTRA KM AMT',                  format_num(data.get('extra_km_amount', 0))],
+        [11, 'TOLL COST',                     format_num(data.get('toll_cost', 0))],
+        [12, 'ACTUAL AMT',                    format_num(data.get('actual_amount', 0))],
+        [13, 'TOTAL TRIPS',                   str(data.get('total_trips', 0)) + ' TRIPS'],
+        [14, 'TRIP INDEX',                    data.get('trip_index', '')],
+        [15, 'TOTAL KM',                      f"{data.get('total_km', 0)} KM / {data.get('agreed_km', 0)} KM"],
+        [16, 'EMPTY KM',                      format_num(data.get('empty_km', 0))],
+        [17, 'EMPTY KM BUY COST',             format_num(data.get('empty_km_buy_cost', 0))],
+        [18, 'BUSINESS EMPTY KM',             format_num(data.get('business_empty_km', 0))],
+        [19, 'BUSINESS EMPTY KM BUY COST',    format_num(data.get('business_empty_km_buy_cost', 0))],
+        [20, 'SELLING',                       format_num(data.get('selling', 0))],
+        [21, 'BUYING',                        format_num(data.get('buying', 0))],
+        [22, 'PROFIT',                        format_num(data.get('profit', 0))],
+        [23, 'SELLING %',                     f"{data.get('sell_pct', 0)}%"],
+        [24, 'BUYING %',                      f"{data.get('buy_pct', 0)}%"],
+    ]
+
+    for row_data in rows:
+        ws.append(row_data)
+
+    # Style Profit row (row 22 maps to data row 24 in Excel since 1 for header + 1 for col names = 2)
+    for col in ['A', 'B', 'C']:
+        cell = ws[col + '24']
+        cell.fill = PatternFill("solid", fgColor="D4EDDA")
+        cell.font = Font(bold=True)
+    
+    for i, row in enumerate(rows, start=3):
+        ws['A' + str(i)].font = Font(bold=True)
+        ws['A' + str(i)].alignment = Alignment(horizontal="center")
+        ws['B' + str(i)].font = Font(bold=True)
+        ws['C' + str(i)].alignment = Alignment(horizontal="left")
+
+    thin_border = Border(
+        left=Side(style='thin'), 
+        right=Side(style='thin'), 
+        top=Side(style='thin'), 
+        bottom=Side(style='thin')
+    )
+    for row in ws.iter_rows():
+        for cell in row:
+            cell.border = thin_border
+
+    ws.column_dimensions['B'].width = 30
+    ws.column_dimensions['C'].width = 25
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="Bill_Summary_{data.get("title", "")}.xlsx"'
+    wb.save(response)
+    return response
+

@@ -31,12 +31,19 @@
     <div class="col-2"></div>
 </div>
 
+<div class="row mb-3 px-3">
+    <div class="col-12">
+        <a href="{% url 'transport_reports' %}" class="btn btn-primary shadow-sm">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
 <form method="POST" action="{% url 'insurance_renewal_report' %}" class="row g-3 align-items-end mb-4"
     id="report-filter-form">
     {% csrf_token %}
 
     <!-- Column 1: Branch -->
-    <div class="col-md-3">
+    <div class="col-md-2">
         <label class="form-label fw-bold">Branch</label>
         <select name="branch_search" class="form-control select2">
             <option value="">Select Branch</option>
@@ -49,7 +56,7 @@
     </div>
 
     <!-- Column 2: Company Name -->
-    <div class="col-md-3">
+    <div class="col-md-2">
         <label class="form-label fw-bold">Company Name</label>
         <select name="company_search" class="form-control select2">
             <option value="">Select Company</option>
@@ -62,7 +69,7 @@
     </div>
 
     <!-- Column 3: Vehicle No -->
-    <div class="col-md-3">
+    <div class="col-md-2">
         <label class="form-label fw-bold">Vehicle No</label>
         <select name="vehicle_search" id="vehicle_search" class="form-control select2">
             <option value="">Search Vehicle No</option>
@@ -74,22 +81,28 @@
         </select>
     </div>
 
+    <!-- From Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">From Date</label>
+        <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
+    </div>
+
+    <!-- To Date -->
+    <div class="col-md-2">
+        <label class="form-label fw-bold">To Date</label>
+        <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
+    </div>
+
     <!-- Column 4: Buttons -->
-    <div class="col-md-3">
-        <button type="submit" class="btn btn-primary">Filter</button>
-        <a href="{% url 'insurance_renewal_report' %}" class="btn btn-secondary">
-            <i class="fas fa-redo"></i> Clear
+    <div class="col-md-2 d-flex gap-2 align-items-end">
+        <button type="submit" class="btn btn-primary flex-grow-1 shadow-sm"><i class="fas fa-filter"></i> Filter</button>
+        <a href="{% url 'insurance_renewal_report' %}" class="btn btn-secondary shadow-sm">
+            <i class="fas fa-sync"></i> Clear
         </a>
     </div>
 </form>
 
-<div class="row mb-3">
-    <div class="col-auto">
-        <a href="{% url 'transport_reports' %}" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-</div>
+
 
 <div class="container-fluid shadow-box-table mt-4 pt-0">
     <table id="insurance_renewal_report_table" class="table table-striped table-bordered text-nowrap mt-0">

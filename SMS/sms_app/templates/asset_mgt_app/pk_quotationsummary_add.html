@@ -286,59 +286,33 @@
         <table id="quotation_list" class="table modern-table text-center">
             <thead class="thead-dark">
                 <tr>
-                    <th>Created On</th>
-                    <th>Stock Purchase Number</th>
-                    <th>Assessment Number</th>
-                    <th>Customer Name</th>
                     <th>Job Type</th>
-                    <th>Cost Type</th>
-                    <th>Stock Type</th>
-                    <th>Stock Description</th>
-                    <th>Item Name</th>
-                    <th>Item Description</th>
-                    <th>Width (in)</th>
-                    <th>Height (in)</th>
-                    <th>Length (ft)</th>
-                    <th>Quantity</th>
-                    <th>Diameter</th>
-                    <th>UOM</th>
-                    <th>Total CFT</th>
-                    <th>Rate/QTY (CFT)</th>
-                    <th>Days</th>
-                    <th>Job Type Quantity</th>
+                    <th>Wood Cost</th>
+                    <th>Consumables</th>
+                    <th>Engineer Cost</th>
+                    <th>Labour Cost</th>
+                    <th>Crane Cost</th>
+                    <th>HT Cost</th>
+                    <th>Transport</th>
                     <th>Unit Cost</th>
-                    <th>Total Cost</th>
-                    <th>Updated at</th>
-                    <th>Updated By</th>
                 </tr>
             </thead>
             <tbody>
-                {% for quotationinfo in quotation_list %}
+                {% for job in aggregated_jobs %}
                 <tr>
-                    <td> {{quotationinfo.pkqt_created_at}}</td>
-                    <td> {{quotationinfo.pkqt_stock_purchase_number}}</td>
-                    <td> {{quotationinfo.pkqt_assessment_num}}</td>
-                    <td> {{quotationinfo.pkqt_customer_name}}</td>
-                    <td> {{quotationinfo.pkqt_requirement}}</td>
-                    <td> {{quotationinfo.pkqt_cost_type}}</td>
-                    <td> {{quotationinfo.pkqt_stock_type}}</td>
-                    <td> {{quotationinfo.pkqt_stock_description}}</td>
-                    <td> {{quotationinfo.pkqt_item}}</td>
-                    <td> {{quotationinfo.pkqt_itemdescription}}</td>
-                    <td> {{quotationinfo.pkqt_width_req}}</td>
-                    <td> {{quotationinfo.pkqt_height_req}}</td>
-                    <td> {{quotationinfo.pkqt_length_req}}</td>
-                    <td> {{quotationinfo.pkqt_quantity_req}}</td>
-                    <td> {{quotationinfo.pkqt_size}}</td>
-                    <td> {{quotationinfo.pkqt_uom}}</td>
-                    <td> {{quotationinfo.pkqt_sqrt_req}}</td>
-                    <td> {{quotationinfo.pkqt_rate}}</td>
-                    <td> {{quotationinfo.pkqt_days}}</td>
-                    <td> {{quotationinfo.pkqt_na_quantity}}</td>
-                    <td> {{quotationinfo.pkqt_total_cost}}</td>
-                    <td> {{quotationinfo.pkqt_totalbox_cost}}</td>
-                    <td> {{quotationinfo.pkqt_updated_at}}</td>
-                    <td> {{quotationinfo.pkqt_updated_by}}</td>
+                    <td>{{ job.job_type }}</td>
+                    <td>₹{{ job.wood_cost }}</td>
+                    <td>₹{{ job.consumables }}</td>
+                    <td>₹{{ job.engineer_cost }}</td>
+                    <td>₹{{ job.labour_cost }}</td>
+                    <td>₹{{ job.crane_cost }}</td>
+                    <td>₹{{ job.ht_cost }}</td>
+                    <td>₹{{ job.transport_cost }}</td>
+                    <td><strong class="text-primary">₹{{ job.unit_cost }}</strong></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9">No job costs found for this quotation.</td>
                 </tr>
                 {% endfor %}
             </tbody>

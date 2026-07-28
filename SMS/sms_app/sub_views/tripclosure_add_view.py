@@ -11,13 +11,15 @@ from django.core.files.base import ContentFile
 
 from ..forms import TripclosurefilesForm, TripclosureaddForm
 from ..models import RtratemasterInfo, User_extInfo, Trip_closure_files_Info, EnquirynoteInfo, TripdetailInfo, \
-    Tripstatusinfo, Vehicle_allotmentInfo
+    Tripstatusinfo, Vehicle_allotmentInfo, DeletionLog
 from ..sub_models.ownership_mod import OwnershipInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Q
 
 from django.http import JsonResponse
+from django.urls import reverse
+from .invoice_documents_view import sync_closure_files_to_invoice
 from ..sub_models.haltingcharges_mod import Haltingcharges
 from ..models import EnquirynoteInfo
 
@@ -33,7 +35,7 @@ def tripclosure_enquiry(request, enquiry_id, trip_num):
     # If no trip is associated, store enquiry ID in session and redirect to insert
     if trip_num == 'none' or trip_num == '':
         request.session['ses_enqiury_id'] = enquiry_id
-        return redirect('tripclosure_insert')  # Define this URL in urls.py
+        return redirect(f"{reverse('tripclosure_insert')}?enq_id={enquiry_id}")  # Define this URL in urls.py
     else:
         trip_detail = TripdetailInfo.objects.filter(tr_tripnumber=trip_num, tr_enquirynumber_id=enquiry_id).first()
         if not trip_detail:
@@ -102,6 +104,19 @@ def tripclosure_nav(request, tripclosure_id=0):
 
 @login_required(login_url='login_page')
 def tripclosure_add(request, tripclosure_id=0):
+    enq_id_param = request.GET.get('enq_id')
+    if enq_id_param:
+        enquiry_num_id = int(enq_id_param)
+        request.session['enquiry_num_id'] = enquiry_num_id
+        request.session['ses_enqiury_id'] = enquiry_num_id
+        try:
+            enquiry = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
+            request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
+        except ObjectDoesNotExist:
+            pass
+    else:
+        enquiry_num_id = request.session.get('ses_enqiury_id')
+
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = User_extInfo.objects.get(user=user_id).emp_role
@@ -111,6 +126,10 @@ def tripclosure_add(request, tripclosure_id=0):
             enquiry_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_enquirynumber
             print("I am inside Get add Tripclosure")
             tripclosure_form = TripclosureaddForm()
+            # Restrict dropdown to "Awaiting Trip Settlement" (ID 4) and set default
+            tripclosure_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id=4)
+            tripclosure_form.fields['tc_financestatus'].empty_label = None
+            tripclosure_form.fields['tc_financestatus'].initial = Tripstatusinfo.objects.filter(id=4).first()
             tripclosurefiles_form = TripclosurefilesForm()
             status_list = list(Tripstatusinfo.objects.filter(id__in=[4, 5, 6, 7]))
             context = {
@@ -138,6 +157,12 @@ def tripclosure_add(request, tripclosure_id=0):
 
             consignment_num = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_consignmentdetails
             tripclosure_form = TripclosureaddForm(instance=tripclosure)
+            
+            # Restrict dropdown to "Awaiting Trip Settlement" (ID 4) and set default
+            tripclosure_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id=4)
+            tripclosure_form.fields['tc_financestatus'].empty_label = None
+            if not tripclosure.tc_financestatus:
+                tripclosure_form.fields['tc_financestatus'].initial = Tripstatusinfo.objects.filter(id=4).first()
 
             # Populate Customer Name and Trip Date
             if tripclosure.tr_enquirynumber:
@@ -191,7 +216,11 @@ def tripclosure_add(request, tripclosure_id=0):
                 Q(va_vehiclenumber__vm_registrationnumber=trip.tr_vehiclenumber) |
                 Q(va_vehiclenumber_mkt=trip.tr_vehiclenumber)
             ).first()
-            va_sale = allotment.va_sale if allotment else 0
+            va_sale = allotment.va_sale if (allotment and allotment.va_sale is not None) else 0.0
+
+            # Pre-populate Trip Charges from va_sale if currently zero
+            if not trip.tc_tripcost or trip.tc_tripcost == 0.0:
+                tripclosure_form.initial['tc_tripcost'] = va_sale
 
             is_business_empty_and_cancelled = False
             if trip.tr_category_id == 3 and trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_status_id == 8:
@@ -254,6 +283,10 @@ def tripclosure_add(request, tripclosure_id=0):
                         except (FileNotFoundError, ValueError) as e:
                             print(f"Error copying td_pod: {e}")
                 files_obj.save()
+                
+                if trip_detail:
+                    sync_closure_files_to_invoice(request, trip_detail, files_obj)
+                    
                 print("Trip Closure files Form Saved")
                 messages.success(request, 'Record Updated Successfully')
             else:
@@ -318,6 +351,10 @@ def tripclosure_add(request, tripclosure_id=0):
                         except (FileNotFoundError, ValueError) as e:
                             print(f"Error copying td_pod: {e}")
                 files_obj.save()
+                
+                if trip_detail:
+                    sync_closure_files_to_invoice(request, trip_detail, files_obj)
+                    
                 print("Trip Closure files Form Saved")
                 messages.success(request, 'Record Updated Successfully')
             else:
@@ -463,9 +500,20 @@ def tripclosure_list_ajax(request):
 @login_required(login_url='login_page')
 def tripclosure_delete(request, tripclosure_id):
     tripclosure = TripdetailInfo.objects.get(pk=tripclosure_id)
+    
+    reason = request.POST.get('deletion_reason', 'No reason provided')
+    identifier = tripclosure.tr_tripnumber
+    
+    DeletionLog.objects.create(
+        dl_model_name='Tripclosure (TripdetailInfo)',
+        dl_record_id=tripclosure_id,
+        dl_record_identifier=identifier,
+        dl_deleted_by=request.user,
+        dl_reason=reason
+    )
+    
     tripclosure.delete()
-    return redirect(request.META['HTTP_REFERER'])
-    # return redirect('/SMS/tripclosure_list')
+    return redirect(request.META.get('HTTP_REFERER', '/SMS/tripclosure_list'))
 
 
 @login_required(login_url='login_page')
@@ -526,6 +574,12 @@ def get_fastag_toll_cost_ajax(request):
         vehicle_num = trip.tr_vehiclenumber
         from_date = trip.tr_departeddate
         to_date = trip.tr_reporteddate
+
+        if not from_date or not to_date:
+            if trip.tc_financestatus_id in [10, 11] or trip.tc_cancellation_check or (trip.tc_cancellation and trip.tc_cancellation > 0):
+                return JsonResponse({"success": True, "total_amount": 0.0, "txn_list": []})
+            result["error"] = "Trip departed date or reported date is missing."
+            return JsonResponse(result)
 
         total_amount, txn_list = calculate_toll(vehicle_num, from_date, to_date)
 
@@ -597,7 +651,7 @@ def calculate_toll(vehicle_num, from_date, to_date):
 
             print(f"resCode={res_code}, Message={res_msg}, Transactions={len(txn_list)}")
 
-            if res_code == "SUCCESS" and isinstance(txn_list, list):
+            if res_code in ["SUCCESS", "0"] and isinstance(txn_list, list):
                 for idx, txn in enumerate(txn_list):
                     try:
                         amount = float(txn.get("txnAmt", 0))

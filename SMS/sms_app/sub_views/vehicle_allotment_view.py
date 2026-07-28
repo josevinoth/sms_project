@@ -10,8 +10,9 @@ from django.db import transaction
 from django.db.models import Sum, Q, Count
 from ..forms import VehicleallotmentForm
 from ..models import Enquirynotevehicle, TripdetailInfo, OwnershipInfo, User_extInfo, ConsignmentdetailInfo, \
-    VehiclemasterInfo, EnquirynoteInfo, Vehicle_allotmentInfo, VendorratemasterInfo1, RtratemasterInfo, VehicletypeInfo
+    VehiclemasterInfo, EnquirynoteInfo, Vehicle_allotmentInfo, VendorratemasterInfo1, RtratemasterInfo, VehicletypeInfo, DeletionLog
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.http import HttpResponse, JsonResponse
 from .send_department_email import send_department_email
 from .general_utils import get_branch_code, get_session_branch_id
@@ -19,6 +20,7 @@ from .general_utils import get_branch_code, get_session_branch_id
 from ..sub_models.vendor_info_mod import Vendor_info
 from ..sub_models.emailmaster_mod import Emailmaster
 from ..sub_models.emailtype_mod import Email_type
+from ..sub_models.trans_invoice_mod import TransInvoiceInfo
 
 
 # ===== HELPER: Get recipients from Emailmaster =====
@@ -478,6 +480,7 @@ def vehicle_allotment_list(request):
     trip_data = TripdetailInfo.objects.filter(
         tr_enquirynumber_id__in=enquiry_ids
     ).values_list(
+        'id',
         'tr_enquirynumber',
         'tr_consignmentnumber__co_consignmentnumber',
         'tr_tripnumber',
@@ -485,6 +488,15 @@ def vehicle_allotment_list(request):
         'tc_financestatus',
         'tr_category__category',
         'tr_vehiclenumber'
+    )
+
+    # Find which trips already have a completed invoice
+    all_page_trip_ids = [row[0] for row in trip_data]
+    invoiced_trip_ids = set(
+        TransInvoiceInfo.objects.filter(
+            ti_trip_id__in=all_page_trip_ids,
+            is_woh=True
+        ).values_list('ti_trip_id', flat=True)
     )
 
     # -----------------------------
@@ -522,7 +534,7 @@ def vehicle_allotment_list(request):
     # BUILD TRIP DICT
     # -----------------------------
     trip_dict = {}
-    for enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num in trip_data:
+    for trip_id, enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num in trip_data:
         cat_lower = trip_category.strip().lower() if trip_category else ""
         if cat_lower in ["business", "bussiness"]:
             display_text = trip_cons if trip_cons else "No Consignment"
@@ -530,9 +542,10 @@ def vehicle_allotment_list(request):
             display_text = trip_category if trip_category else "No Category"
 
         display_veh_num = trip_veh_num if trip_veh_num else (trip_num or "No Trip")
+        is_invoiced = trip_id in invoiced_trip_ids
 
         trip_dict.setdefault(enq_id, []).append(
-            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, display_veh_num)
+            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, display_veh_num, is_invoiced)
         )
 
     # -----------------------------
@@ -599,20 +612,21 @@ def vehicle_allotment_list(request):
 @login_required(login_url='login_page')
 def vehicle_allotment_delete(request, vehicle_allotment_id):
     vehicle_allotment = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
-    enquiry_num = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id).va_enquirynumber
-    enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
+    enquiry_num = vehicle_allotment.va_enquirynumber
+    
+    reason = request.POST.get('deletion_reason', 'No reason provided')
+    identifier = vehicle_allotment.va_vehiclenumber.vm_registrationnumber if vehicle_allotment.va_vehiclenumber else (vehicle_allotment.va_vehiclenumber_mkt or str(vehicle_allotment_id))
+    
+    DeletionLog.objects.create(
+        dl_model_name='Vehicle_allotmentInfo',
+        dl_record_id=vehicle_allotment_id,
+        dl_record_identifier=identifier,
+        dl_deleted_by=request.user,
+        dl_reason=reason
+    )
+    
     vehicle_allotment.delete()
-    # vehicle_allotment_list = list(Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry_num_id).values_list('va_vehiclenumber',flat=True))
-    # vehicle_numbers = []
-    # for i in vehicle_allotment_list:
-    #     vehicle_numbers.append(str(VehiclemasterInfo.objects.get(id=i).vm_registrationnumber))
-    # try:
-    #     EnquirynoteInfo.objects.filter(id=enquiry_num_id).update(en_vehicle_allotment=vehicle_numbers)
-    # except ObjectDoesNotExist:
-    #     EnquirynoteInfo.objects.filter(id=enquiry_num_id).update(en_vehicle_allotment=vehicle_numbers)
-
-    # return redirect('/SMS/vehicle_allotment_list')
-    return redirect(request.META['HTTP_REFERER'])
+    return redirect(request.META.get('HTTP_REFERER', '/SMS/vehicle_allotment_list'))
 
 
 @login_required(login_url='login_page')
@@ -734,19 +748,37 @@ def load_vehicle_number(request):
 @login_required(login_url='login_page')
 def load_driver_details(request):
     vehicle_number = request.GET.get('vehicle_number')
+
+    if not vehicle_number:
+        data = {
+            'driver_name': [],
+            'driver_number': [],
+            'driver_license': [],
+            'driver_license_exp_date': [],
+        }
+        return HttpResponse(json.dumps(data))
+
     driver_name = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydrivername', flat=True))
     driver_number = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydrivermob', flat=True))
     driver_license = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license', flat=True))
+
+    # Use string conversion to avoid json serialization issues with dates
     driver_license_exp_date = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license_exp_date', flat=True))
+    vendor_id = list(
+        VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_vendor_id', flat=True))
+
+    driver_license_exp_date = [str(d) if d else '' for d in driver_license_exp_date]
+
     data = {
         'driver_name': driver_name,
         'driver_number': driver_number,
         'driver_license': driver_license,
         'driver_license_exp_date': driver_license_exp_date,
+        'vendor_id': vendor_id,
     }
     return HttpResponse(json.dumps(data))
 
@@ -839,7 +871,11 @@ def get_vendor_buy_rate(request):
         vr1_vendor_id=vendor_id,
         vr1_fromlocation=enquiry.en_fromlocaion,
         vr1_tolocation=enquiry.en_tolocation,
-        vr1_vehicletype=vehicle_id  # This is likely a ForeignKey ID
+        vr1_vehicletype=vehicle_id,  # This is likely a ForeignKey ID
+        vr1_touchpoint=enquiry.en_touchpoint,
+        vr1_touchpoint2=enquiry.en_touchpoint2,
+        vr1_touchpoint3=enquiry.en_touchpoint3,
+        vr1_touchpoint4=enquiry.en_touchpoint4
     ).first()
 
     buy_rate = str(rate.vr1_rate) if rate else "0"
@@ -880,7 +916,11 @@ def get_vendor_sale_rate(request):
         ro_customer=enquiry.en_customername,
         ro_fromlocation=enquiry.en_fromlocaion,
         ro_tolocation=enquiry.en_tolocation,
-        ro_vehicletype=vehicle_id  # ForeignKey to vehicle type
+        ro_vehicletype=vehicle_id,  # ForeignKey to vehicle type
+        ro_touchpoint=enquiry.en_touchpoint,
+        ro_touchpoint2=enquiry.en_touchpoint2,
+        ro_touchpoint3=enquiry.en_touchpoint3,
+        ro_touchpoint4=enquiry.en_touchpoint4
     ).first()
 
     sale_rate = str(rate.ro_rate) if rate else "0"
@@ -1044,7 +1084,11 @@ def get_vendor_buy_rate(request):
         vr1_vendor_id=vendor_id,
         vr1_fromlocation=enquiry.en_fromlocaion,
         vr1_tolocation=enquiry.en_tolocation,
-        vr1_vehicletype_id=vehicle_type_id
+        vr1_vehicletype_id=vehicle_type_id,
+        vr1_touchpoint=enquiry.en_touchpoint,
+        vr1_touchpoint2=enquiry.en_touchpoint2,
+        vr1_touchpoint3=enquiry.en_touchpoint3,
+        vr1_touchpoint4=enquiry.en_touchpoint4
     ).first()
 
     if not rate_obj:

@@ -5,16 +5,17 @@
 	{% csrf_token %}
     
     <div class="form-section p-3 mb-4" style="background: var(--bg-section); border: 1.5px solid var(--border-light); border-radius: 14px;">
-        <div class="row align-items-center">
-            <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+        <div class="row align-items-end">
+            <div class="col-md col-sm-6 mb-2 mb-md-0">
                 <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Enquiry Number</label>
+                <input type="text" id="display_env_enquirynumber" class="form-control form-control-modern disable_a_href modern-readonly" style="height: 45px; padding: 0.5rem 1rem;" readonly>
                 {% render_field enquiryvechicle_form.env_enquirynumber id="env_enquirynumber" class="form-control form-control-modern disable_a_href modern-readonly" style="height: 45px; padding: 0.5rem 1rem;" %}
             </div>
-            <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+            <div class="col-md col-sm-6 mb-2 mb-md-0">
                 <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Vehicle Type</label>
                 {% render_field enquiryvechicle_form.env_vehicletype id="env_vehicletype" class="form-control form-control-modern disable_a_href" style="height: 45px; padding: 0.5rem 1rem;" %}
             </div>
-            <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+            <div class="col-md col-sm-6 mb-2 mb-md-0">
                 <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Vehicle Category</label>
                 {% render_field enquiryvechicle_form.env_vehiclecategory id="env_vehiclecategory" class="form-control form-control-modern disable_a_href" style="height: 45px; padding: 0.5rem 1rem;" %}
             </div>
@@ -23,9 +24,8 @@
                 {% render_field enquiryvechicle_form.env_quantity id="env_quantity" class="form-control form-control-modern disable_a_href" placeholder="Quantity" style="height: 45px; padding: 0.5rem 1rem;" %}
             </div>
             {% render_field enquiryvechicle_form.env_updated_by id="env_updated_by" hidden="True" class="form-control" %}
-            <div class="col-md-1 col-sm-12 text-md-right text-center mt-3 mt-md-0">
-                <label class="form-label-modern small mb-1 d-none d-md-block" style="visibility: hidden;">Save</label>
-                <button type="submit" class="btn-modern btn-submit py-2 px-3 w-100" style="font-size: 0.9rem; height: 45px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+            <div class="col-md-auto col-sm-12 text-md-right text-center mt-3 mt-md-0">
+                <button type="submit" class="btn-modern btn-submit py-2 px-4 w-100" style="font-size: 0.9rem; height: 45px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                     <i class="fas fa-save"></i> Save
                 </button>
             </div>

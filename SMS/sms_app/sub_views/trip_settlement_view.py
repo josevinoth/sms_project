@@ -6,6 +6,7 @@ from ..forms import TripSettlementForm,TripclosurefilesForm
 from ..sub_models.trip_status_mod import Tripstatusinfo
 from django.core.paginator import Paginator
 from django.db.models import Q, Exists, OuterRef
+from .invoice_documents_view import sync_closure_files_to_invoice
 
 @login_required
 def trip_settlement_view(request):
@@ -238,7 +239,7 @@ def trip_settlement_edit(request, trip_id):
         form = TripSettlementForm(request.POST, request.FILES, instance=trip)
         files_form = TripclosurefilesForm(request.POST, request.FILES, instance=files_instance)
 
-        form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7, 10])
+        form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7])
 
         # List of fields that SHOULD be editable during settlement
         editable_fields = [
@@ -276,6 +277,9 @@ def trip_settlement_edit(request, trip_id):
             files_obj.tcf_tripnumber = trip.tr_tripnumber
             files_obj.save()
 
+            if trip:
+                sync_closure_files_to_invoice(request, trip, files_obj)
+
             messages.success(request, "Trip settlement updated.")
             return redirect('trip_settlement_view')
 
@@ -290,7 +294,7 @@ def trip_settlement_edit(request, trip_id):
 
         files_form = TripclosurefilesForm(instance=files_instance)
 
-        form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7, 10])
+        form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7])
 
         # List of fields that SHOULD be editable during settlement
         editable_fields = [

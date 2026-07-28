@@ -315,7 +315,7 @@
                                 <th>Item Number (Job Type)</th>
                                 <th>PO Number</th>
                                 <th class="text-right">PO Value (₹)</th>
-                                <th class="text-right">Total Cost (₹)</th>
+                                <th class="text-right">Unit Cost (₹)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -341,45 +341,36 @@
 
 
     <!-- Nested Workflows (Retrieval & Acceptance) -->
-    {% if retrival_list %}
+    
+    {% if indent_summary_list %}
     <div class="mt-2">
         <div class="table-container-modern" style="border-top: 5px solid var(--primary-glow);">
-            <div class="form-section-title text-primary"><i class="fas fa-truck-loading"></i> Pending Stock Retrieval</div>
+            <div class="form-section-title text-primary"><i class="fas fa-list-alt"></i> Indent Summary / BOM</div>
             <div class="table-responsive">
                 <table class="table modern-table">
                     <thead>
-                        <tr><th>Item</th><th>Description</th><th>Quantity</th><th>Status</th><th class="text-center">Action</th></tr>
-                    </thead>
-                    <tbody>
-                        {% for item in retrival_list %}
-                        <tr class="modern-tr">
-                            <td>{{ item.ct_item }}</td><td>{{ item.ct_itemdescription }}</td><td>{{ item.ct_quantity }}</td>
-                            <td><span class="badge badge-primary">{{ item.ct_stock_status }}</span></td>
-                            <td class="text-center"><a href="{% url 'pk_retrival_update' item.id %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; text-decoration: none;">Retrieve</a></td>
+                        <tr>
+                            <th>Part Code</th>
+                            <th>Description</th>
+                            <th>UOM</th>
+                            <th>Total Qty</th>
+                            <th>Status</th>
                         </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    {% if acceptance_list %}
-    <div class="mt-2">
-        <div class="table-container-modern" style="border-top: 5px solid var(--accent-orange);">
-            <div class="form-section-title text-warning"><i class="fas fa-user-check"></i> Pending Stock Acceptance</div>
-            <div class="table-responsive">
-                <table class="table modern-table">
-                    <thead>
-                        <tr><th>Item</th><th>Description</th><th>Quantity</th><th>Status</th><th class="text-center">Action</th></tr>
                     </thead>
                     <tbody>
-                        {% for item in acceptance_list %}
+                        {% for item in indent_summary_list %}
                         <tr class="modern-tr">
-                            <td>{{ item.ct_item }}</td><td>{{ item.ct_itemdescription }}</td><td>{{ item.ct_quantity }}</td>
-                            <td><span class="badge badge-warning">{{ item.ct_stock_status }}</span></td>
-                            <td class="text-center"><a href="{% url 'pk_acceptance_update' item.id %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; background: var(--accent-orange); text-decoration: none;">Accept</a></td>
+                            <td class="font-weight-bold">{{ item.ct_part_code }}</td>
+                            <td>{{ item.ct_part_code_name }}</td>
+                            <td>{{ item.ct_uom }}</td>
+                            <td class="font-weight-bold text-success">{{ item.total_quantity_req }}</td>
+                            <td>
+                                {% if item.status_id == 1 %}
+                                <span class="badge badge-primary">{{ item.ct_stock_status }}</span>
+                                {% else %}
+                                <span class="badge badge-info">{{ item.ct_stock_status }}</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -551,4 +542,4 @@
         });
     });
 </script>
-{% endblock %}
+{% endblock %}

@@ -221,7 +221,8 @@ def enquirynote_list(request):
         'tc_financestatus__status',
         'tc_financestatus',
         'tr_category__category',
-        'tr_vehiclenumber'
+        'tr_vehiclenumber',
+        'tc_cancellation_check'
     )
 
     # Find which trips already have a completed invoice
@@ -277,13 +278,15 @@ def enquirynote_list(request):
 
     # Trip dict
     trip_dict = {}
-    for trip_id, enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num in trip_data:
+    for trip_id, enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num, tc_cancellation_check in trip_data:
         # Check category safely
         cat_lower = trip_category.strip().lower() if trip_category else ""
 
         # If category is "Business", show consignment number; otherwise show category name
         # Added "bussiness" to handle potential typos in the database
-        if cat_lower in ["business", "bussiness"]:
+        if tc_cancellation_check or trip_status_id in [10, 11]:
+            display_text = "Cancelled Trip"
+        elif cat_lower in ["business", "bussiness"]:
             display_text = trip_cons if trip_cons else "No Consignment"
         else:
             display_text = trip_category if trip_category else "No Category"
