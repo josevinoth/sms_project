@@ -134,8 +134,9 @@
                         </div>
 
                         <div class="form-group-modern">
-                            <label class="form-label-modern">Pick-Up Date & Time</label>
-                            {% render_field form.en_pickupdatetime id="en_pickupdatetime" type="Datetime-local" class="form-control form-control-modern" %}
+                            <label class="form-label-modern">requested Pick-Up Date & Time <span style="color:#e74c3c;font-weight:700;">*</span></label>
+                            {% render_field form.en_pickupdatetime id="en_pickupdatetime" type="Datetime-local" class="form-control form-control-modern" required="required" %}
+                            <small id="pickup_datetime_error" style="color:#e74c3c;display:none;">Please select requested Pick-Up Date & Time.</small>
                         </div>
 
                         <div class="form-group-modern">
@@ -204,14 +205,37 @@
 <script>
     function validateAndSubmit() {
         var tripType = document.getElementById('en_trip_type').value;
+        var pickupDatetime = document.getElementById('en_pickupdatetime').value;
+        var hasError = false;
+
         if (!tripType || tripType === '' || tripType === 'None') {
             document.getElementById('trip_type_error').style.display = 'block';
             document.getElementById('en_trip_type').style.border = '2px solid #e74c3c';
-            document.getElementById('en_trip_type').scrollIntoView({behavior: 'smooth', block: 'center'});
+            if (!hasError) {
+                document.getElementById('en_trip_type').scrollIntoView({behavior: 'smooth', block: 'center'});
+                hasError = true;
+            }
+        } else {
+            document.getElementById('trip_type_error').style.display = 'none';
+            document.getElementById('en_trip_type').style.border = '';
+        }
+
+        if (!pickupDatetime || pickupDatetime === '') {
+            document.getElementById('pickup_datetime_error').style.display = 'block';
+            document.getElementById('en_pickupdatetime').style.border = '2px solid #e74c3c';
+            if (!hasError) {
+                document.getElementById('en_pickupdatetime').scrollIntoView({behavior: 'smooth', block: 'center'});
+                hasError = true;
+            }
+        } else {
+            document.getElementById('pickup_datetime_error').style.display = 'none';
+            document.getElementById('en_pickupdatetime').style.border = '';
+        }
+
+        if (hasError) {
             return false;
         }
-        document.getElementById('trip_type_error').style.display = 'none';
-        document.getElementById('en_trip_type').style.border = '';
+
         document.getElementById('enquiry_note').submit();
     }
 
@@ -220,6 +244,24 @@
         $('#en_trip_type').on('change', function() {
             if ($(this).val()) {
                 document.getElementById('trip_type_error').style.display = 'none';
+                this.style.border = '';
+            }
+        });
+        $('#en_pickupdatetime').on('keydown keypress', function(e) {
+            // Prevent manual typing (allow Tab: 9, Esc: 27)
+            if (e.which !== 9 && e.which !== 27) {
+                e.preventDefault();
+                if (typeof this.showPicker === 'function') {
+                    try { this.showPicker(); } catch(err) {}
+                }
+            }
+        }).on('click focus', function() {
+            if (typeof this.showPicker === 'function') {
+                try { this.showPicker(); } catch(err) {}
+            }
+        }).on('change input', function() {
+            if ($(this).val()) {
+                document.getElementById('pickup_datetime_error').style.display = 'none';
                 this.style.border = '';
             }
         });

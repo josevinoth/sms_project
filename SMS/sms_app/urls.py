@@ -214,6 +214,7 @@ urlpatterns = [
     path('wh_job_list', views.wh_job_list, name='wh_job_list'),  # wh Job list
     path('wh_job_delete/<int:gatein_id>/', views.wh_job_delete, name='wh_job_delete'),  # wh Job list
     path('enquirynote_list/', views.enquirynote_list, name='enquirynote_list'),  # List enquirynote,
+    path('search_vehicle_numbers/', views.search_vehicle_numbers, name='search_vehicle_numbers'),  # Search vehicle numbers API
     path('enquirynote_insert', views.enquirynote_add, name='enquirynote_insert'),  # Add enquirynote
     path('enquirynote_update/<int:enquirynote_id>/', views.enquirynote_add, name='enquirynote_update'),  # Update enquirynote
     path('enquirynote_delete/<int:enquirynote_id>/', views.enquirynote_delete, name='enquirynote_delete'),  # Delete enquirynote

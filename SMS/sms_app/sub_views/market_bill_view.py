@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.db.models import Q
 from django.contrib import messages
+from django.utils import timezone
 
 from ..sub_forms.market_bill_form import MarketBillForm
 from ..sub_models.market_bill_mod import MarketBillInfo
@@ -53,7 +54,8 @@ def market_bill_add(request):
                     Vehicle_allotmentInfo.objects.filter(
                         Q(va_enquirynumber=trip_obj.tr_enquirynumber),
                         Q(va_vehiclenumber__vm_registrationnumber__iexact=trip_obj.tr_vehiclenumber) | 
-                        Q(va_vehiclenumber_mkt__iexact=trip_obj.tr_vehiclenumber)
+                        Q(va_vehiclenumber_mkt__iexact=trip_obj.tr_vehiclenumber) |
+                        Q(va_vendor=obj.mb_vendor)
                     ).update(va_specialbuy=float(t_cost) if t_cost else 0.0)
 
             messages.success(request, "Market Bill saved successfully.")
@@ -169,7 +171,8 @@ def market_bill_edit(request, id):
                     Vehicle_allotmentInfo.objects.filter(
                         Q(va_enquirynumber=trip_obj.tr_enquirynumber),
                         Q(va_vehiclenumber__vm_registrationnumber__iexact=trip_obj.tr_vehiclenumber) | 
-                        Q(va_vehiclenumber_mkt__iexact=trip_obj.tr_vehiclenumber)
+                        Q(va_vehiclenumber_mkt__iexact=trip_obj.tr_vehiclenumber) |
+                        Q(va_vendor=obj.mb_vendor)
                     ).update(va_specialbuy=float(t_cost) if t_cost else 0.0)
 
             messages.success(request, "Market Bill updated successfully.")
@@ -204,9 +207,9 @@ def market_bill_edit(request, id):
 
             trip_date = ''
             if trip.tr_departeddate:
-                trip_date = trip.tr_departeddate.strftime('%d-%m-%Y')
+                trip_date = timezone.localtime(trip.tr_departeddate).strftime('%d-%m-%Y')
             elif trip.tr_created_at:
-                trip_date = trip.tr_created_at.strftime('%d-%m-%Y')
+                trip_date = timezone.localtime(trip.tr_created_at).strftime('%d-%m-%Y')
 
             # Fetch vehicle type
             # Robust fetch for vehicle type
@@ -372,17 +375,44 @@ def get_trips_by_vendor(request):
     ).values_list('vm_registrationnumber', flat=True)
 
     # Option 2: Get enquiries and vehicles allotted to this vendor
-    allotted_enquiries = Vehicle_allotmentInfo.objects.filter(
+    vendor_allotments = Vehicle_allotmentInfo.objects.filter(
         va_vendor_id=vendor_id,
         va_vehiclesource_id=market_ownership_id
-    ).select_related('va_vehiclenumber')
+    ).select_related('va_vehiclenumber', 'va_enquirynumber')
 
     allotment_filters = Q()
     has_allotments = False
-    for allotment in allotted_enquiries:
-        reg_no = allotment.va_vehiclenumber.vm_registrationnumber if allotment.va_vehiclenumber else allotment.va_vehiclenumber_mkt
-        if reg_no:
-            allotment_filters |= Q(tr_enquirynumber_id=allotment.va_enquirynumber_id, tr_vehiclenumber__iexact=reg_no)
+    for allotment in vendor_allotments:
+        enq_id = allotment.va_enquirynumber_id
+
+        # Check if there are other market vendors assigned to this enquiry
+        all_enq_market_vas = Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber_id=enq_id,
+            va_vehiclesource_id=market_ownership_id
+        )
+        vendor_ids_for_enq = set(all_enq_market_vas.values_list('va_vendor_id', flat=True))
+        other_vendors = [v for v in vendor_ids_for_enq if v is not None and v != int(vendor_id)]
+
+        if not other_vendors:
+            # Only this vendor is assigned to this enquiry for market trips! Match by enquiry ID directly
+            allotment_filters |= Q(tr_enquirynumber_id=enq_id)
+            has_allotments = True
+        else:
+            # Multiple vendors assigned to this enquiry: match any vehicle numbers for this vendor (including replacement chain)
+            veh_numbers = set()
+            for v_item in all_enq_market_vas.filter(va_vendor_id=vendor_id):
+                reg = v_item.va_vehiclenumber.vm_registrationnumber if v_item.va_vehiclenumber else v_item.va_vehiclenumber_mkt
+                if reg:
+                    veh_numbers.add(reg.strip())
+                curr = v_item
+                while curr.va_replaced_allotment:
+                    curr = curr.va_replaced_allotment
+                    r = curr.va_vehiclenumber.vm_registrationnumber if curr.va_vehiclenumber else curr.va_vehiclenumber_mkt
+                    if r:
+                        veh_numbers.add(r.strip())
+
+            for vn in veh_numbers:
+                allotment_filters |= Q(tr_enquirynumber_id=enq_id, tr_vehiclenumber__iexact=vn)
             has_allotments = True
             # Fallback if vehicle was replaced: match by enquiry ID only (so any vehicle on the trip is accepted)
             if allotment.va_status_id == 2:
@@ -406,7 +436,12 @@ def get_trips_by_vendor(request):
     # Filter trips for ANY vehicle or allotment of this vendor that are not billed
     # Show trips in 'Trip Settled' (ID 7), 'Ready for Invoice' (ID 9), or 'Invoice Completed' financial status
     # Plus double check that the trip record itself is marked as 'Market' source
+    master_filter = Q(tr_vehiclenumber__in=list(vendor_master_vehicles)) if vendor_master_vehicles else Q(pk__in=[])
     trips = TripdetailInfo.objects.filter(
+        (master_filter | allotment_filters),
+        # Use timezone-aware datetime strings to prevent RuntimeWarning
+        Q(tr_departeddate__gte='2026-05-01T00:00:00+05:30') | Q(tr_departeddate__isnull=True, tr_created_at__gte='2026-05-01T00:00:00+05:30'),
+        tc_financestatus_id__in=eligible_status_ids,
         (Q(tr_vehiclenumber__in=list(vendor_master_vehicles)) | allotment_filters),
         Q(tr_departeddate__gte='2026-05-01') | Q(tr_departeddate__isnull=True, tr_created_at__gte='2026-05-01 00:00:00'),
         (Q(tc_financestatus_id__in=eligible_status_ids) | Q(id__in=invoiced_trip_ids_from_db)),
@@ -431,9 +466,9 @@ def get_trips_by_vendor(request):
         # Get trip date
         trip_date = ''
         if trip.tr_departeddate:
-            trip_date = trip.tr_departeddate.strftime('%d-%m-%Y')
+            trip_date = timezone.localtime(trip.tr_departeddate).strftime('%d-%m-%Y')
         elif trip.tr_created_at:
-            trip_date = trip.tr_created_at.strftime('%d-%m-%Y')
+            trip_date = timezone.localtime(trip.tr_created_at).strftime('%d-%m-%Y')
 
         # --- Cost Logic ---
         # Fetch standard and special costs from allotment

@@ -143,6 +143,7 @@ def enquirynote_list(request):
 
     enquiry_number = request.GET.get('enquiry_number', '')
     consignment_number = request.GET.get('consignment_number', '')
+    vehicle_number = request.GET.get('vehicle_number', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     select_all = request.GET.get('select_all', '')
@@ -162,6 +163,14 @@ def enquirynote_list(request):
     if consignment_number:
         enquirynote_queryset = enquirynote_queryset.filter(
             consignmentdetailinfo__co_consignmentnumber__icontains=consignment_number
+        ).distinct()
+
+    # Filter by vehicle number
+    if vehicle_number:
+        enquirynote_queryset = enquirynote_queryset.filter(
+            Q(vehicle_allotmentinfo__va_vehiclenumber__vm_registrationnumber__icontains=vehicle_number) |
+            Q(vehicle_allotmentinfo__va_vehiclenumber_mkt__icontains=vehicle_number) |
+            Q(tripdetailinfo__tr_vehiclenumber__icontains=vehicle_number)
         ).distinct()
 
     # Date filters
@@ -192,8 +201,8 @@ def enquirynote_list(request):
     if select_all == "true":
         # Load records with a sensible limit (1000 max for performance) when "Show All" is clicked
         page_obj = list(enquirynote_queryset[:1000])
-    elif date_from or date_to or enquiry_number or consignment_number:
-        # Load records with a larger limit (10000 max) when specific filters/search terms are applied
+    elif date_from or date_to or enquiry_number or consignment_number or vehicle_number:
+        # Load records with a larger limit (5000 max) when specific filters/search terms are applied
         page_obj = list(enquirynote_queryset[:5000])
     else:
         # Normal pagination
@@ -242,38 +251,52 @@ def enquirynote_list(request):
     # Pre-build consignment count dict for limit checking
     consignment_count_dict = {enq_id: len(cons_list) for enq_id, cons_list in consignment_dict.items()}
 
-    # Identify which allotment IDs are "replaced" (i.e., someone else points to them)
-    replaced_ids = set()
+    # Identify allotment replacement statuses
+    vehicle_replaced_ids = set()
+    driver_replaced_ids = set()
+    va_status_map = {row[4]: row[3] for row in vehicle_data}  # va_id -> status_id
+
     for enq_id, reg_num, mkt_num, status_id, va_id, replaced_va_id in vehicle_data:
-        if replaced_va_id:
-            replaced_ids.add(replaced_va_id)
+        if status_id == 2 or (replaced_va_id and va_status_map.get(replaced_va_id) == 2):
+            vehicle_replaced_ids.add(replaced_va_id if replaced_va_id else va_id)
+        if status_id == 3 or (replaced_va_id and va_status_map.get(replaced_va_id) == 3):
+            driver_replaced_ids.add(replaced_va_id if replaced_va_id else va_id)
 
     # Vehicle dict
     vehicle_dict = {}
     for enq_id, reg_num, mkt_num, status_id, va_id, replaced_va_id in vehicle_data:
         v_num = reg_num if reg_num else mkt_num
         if v_num:
-            # ONLY show (replaced) if this record's ID is in replaced_ids
-            if va_id in replaced_ids:
+            if va_id in vehicle_replaced_ids or status_id == 2:
                 display_num = f"{v_num} (replaced)"
+            elif va_id in driver_replaced_ids or status_id == 3:
+                display_num = f"{v_num} (driver replaced)"
             else:
                 display_num = v_num
 
             if enq_id not in vehicle_dict:
                 vehicle_dict[enq_id] = []
 
-            # Check if this raw_number already exists to avoid duplicates
-            if not any(v['number'] == v_num for v in vehicle_dict[enq_id]):
+            # Deduplicate by raw vehicle number so driver replacements for the same vehicle do not create duplicate badges
+            existing_entry = next((v for v in vehicle_dict[enq_id] if v['raw_num'] == v_num), None)
+            if not existing_entry:
                 vehicle_dict[enq_id].append({
                     'id': va_id,
-                    'number': display_num
+                    'number': display_num,
+                    'raw_num': v_num
                 })
+            else:
+                # Priority: (replaced) > (driver replaced) > plain
+                if "(replaced)" in display_num or ("(driver replaced)" in display_num and "(replaced)" not in existing_entry['number']):
+                    existing_entry['number'] = display_num
+                    existing_entry['id'] = va_id
         else:
             if enq_id not in vehicle_dict:
                 vehicle_dict[enq_id] = []
             vehicle_dict[enq_id].append({
                 'id': va_id,
-                'number': "None"
+                'number': "None",
+                'raw_num': ""
             })
 
     # Trip dict
@@ -441,11 +464,46 @@ def enquirynote_list(request):
         'enquiry_data': enquiry_data,
         'enquiry_number': enquiry_number,
         'consignment_number': consignment_number,
+        'vehicle_number': vehicle_number,
         'date_from': date_from,
         'date_to': date_to,
         'vehicle_summary': vehicle_summary,
     }
     return render(request, "asset_mgt_app/enquirynote_list.html", context)
+
+
+@login_required(login_url='login_page')
+def search_vehicle_numbers(request):
+    term = request.GET.get('term', '').strip()
+    if len(term) < 2:
+        return JsonResponse({'results': []})
+
+    # Search in VehiclemasterInfo, Vehicle_allotmentInfo market vehicles, and TripdetailInfo
+    vm_regs = list(VehiclemasterInfo.objects.filter(
+        vm_registrationnumber__icontains=term
+    ).values_list('vm_registrationnumber', flat=True).distinct()[:200])
+
+    mkt_regs = list(Vehicle_allotmentInfo.objects.filter(
+        va_vehiclenumber_mkt__icontains=term
+    ).values_list('va_vehiclenumber_mkt', flat=True).distinct()[:200])
+
+    trip_regs = list(TripdetailInfo.objects.filter(
+        tr_vehiclenumber__icontains=term
+    ).values_list('tr_vehiclenumber', flat=True).distinct()[:200])
+
+    combined = []
+    seen = set()
+
+    for r in (vm_regs + mkt_regs + trip_regs):
+        if r and r.strip():
+            clean_r = r.strip()
+            if clean_r.upper() not in seen:
+                seen.add(clean_r.upper())
+                combined.append(clean_r)
+                if len(combined) >= 200:
+                    break
+
+    return JsonResponse({'results': combined})
 
 
 # Connect to consignemnt Note
@@ -539,6 +597,30 @@ def enquirynote_delete(request, enquirynote_id):
             dl_reason=f"Cascaded delete from Enquiry {enquiry_num}. Reason: {reason}"
         )
         consignment_note.delete()
+
+    # Cascade delete Enquirynotevehicle
+    env_list = Enquirynotevehicle.objects.filter(env_enquirynumber=enquirynote_id)
+    for env in env_list:
+        DeletionLog.objects.create(
+            dl_model_name='Enquirynotevehicle',
+            dl_record_id=env.id,
+            dl_record_identifier=str(env.id),
+            dl_deleted_by=request.user,
+            dl_reason=f"Cascaded delete from Enquiry {enquiry_num}. Reason: {reason}"
+        )
+        env.delete()
+
+    # Cascade delete Vehicle_allotmentInfo
+    va_list = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquirynote_id)
+    for va in va_list:
+        DeletionLog.objects.create(
+            dl_model_name='Vehicle_allotmentInfo',
+            dl_record_id=va.id,
+            dl_record_identifier=str(va.id),
+            dl_deleted_by=request.user,
+            dl_reason=f"Cascaded delete from Enquiry {enquiry_num}. Reason: {reason}"
+        )
+        va.delete()
 
     for j in tripdetails_list:
         tripdetails_note = TripdetailInfo.objects.get(tr_tripnumber=j)

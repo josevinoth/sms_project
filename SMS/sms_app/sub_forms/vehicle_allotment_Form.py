@@ -9,12 +9,27 @@ class VehicleallotmentForm(forms.ModelForm):
         fields = '__all__'
     def __init__(self, *args, **kwargs):
         super(VehicleallotmentForm,self).__init__(*args, **kwargs)
-        self.fields['va_vehiclesource'].empty_label = "--Select--"
-        self.fields['va_vehicletype_placed'].empty_label = "--Select--"
-        self.fields['va_vehicletype'].empty_label = "--Select--"
-        self.fields['va_vehiclenumber'].empty_label = "--Select--"
-        self.fields['va_vendor'].empty_label = "--Select--"
-        self.fields['va_status'].empty_label = "--Select--"
+        if 'va_vehiclesource' in self.fields:
+            self.fields['va_vehiclesource'].empty_label = "--Select--"
+        if 'va_vehicletype_placed' in self.fields:
+            self.fields['va_vehicletype_placed'].empty_label = "--Select--"
+        if 'va_vehicletype' in self.fields:
+            self.fields['va_vehicletype'].empty_label = "--Select--"
+        if 'va_vehiclenumber' in self.fields:
+            self.fields['va_vehiclenumber'].empty_label = "--Select--"
+        if 'va_vendor' in self.fields:
+            self.fields['va_vendor'].empty_label = "--Select--"
+        if 'va_status' in self.fields:
+            self.fields['va_status'].empty_label = "--Select--"
+        if 'va_updated_by' in self.fields:
+            self.fields['va_updated_by'].required = False
+        if 'va_created_by' in self.fields:
+            self.fields['va_created_by'].required = False
+        if 'va_enquirynumber' in self.fields:
+            self.fields['va_enquirynumber'].required = False
+        if 'va_driver_lic_expiry' in self.fields:
+            self.fields['va_driver_lic_expiry'].widget.attrs['readonly'] = 'readonly'
+            self.fields['va_driver_lic_expiry'].widget.attrs['style'] = 'pointer-events: none;'
 
     #  BUSINESS RULE VALIDATION
     def clean(self):

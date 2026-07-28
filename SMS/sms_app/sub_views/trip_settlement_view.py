@@ -11,7 +11,8 @@ from .invoice_documents_view import sync_closure_files_to_invoice
 @login_required
 def trip_settlement_view(request):
     veh_no = request.GET.get('veh_no', '').strip()
-    date_from = request.GET.get('date_from', '').strip() or '2026-05-01'
+    # Use timezone-aware datetime strings to prevent RuntimeWarning
+    date_from = request.GET.get('date_from', '').strip() or '2026-05-01T00:00:00+05:30'
     date_to = request.GET.get('date_to', '').strip()
 
     return render(request, "asset_mgt_app/trip_settlement.html", {
@@ -30,7 +31,8 @@ def trip_settlement_list_ajax_view(request):
         length = int(request.GET.get('length', 10))
         
         veh_no = request.GET.get('veh_no', '').strip()
-        date_from = request.GET.get('date_from', '').strip() or '2026-05-01'
+        # Use timezone-aware datetime strings to prevent RuntimeWarning
+        date_from = request.GET.get('date_from', '').strip() or '2026-05-01T00:00:00+05:30'
         date_to = request.GET.get('date_to', '').strip()
         search_value = request.GET.get('search[value]', '').strip()
 

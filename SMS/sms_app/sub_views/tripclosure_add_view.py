@@ -315,7 +315,14 @@ def tripclosure_add(request, tripclosure_id=0):
                             tripclousre_status.append(Tripstatusinfo.objects.get(id=i).status)
                         except Tripstatusinfo.DoesNotExist:
                             tripclousre_status.append('Unknown')
-                EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_tripclosure=tripclousre_status)
+                # Update closure status and touch parent enquiry timestamp
+                from django.utils import timezone
+                en_user = request.user if (request.user and request.user.is_authenticated) else None
+                EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(
+                    en_tripclosure=tripclousre_status,
+                    en_updatedon=timezone.now(),
+                    en_updated_by=en_user
+                )
             else:
                 print("Trip Closure Main Form not Saved")
                 print("FORM ERRORS:", tripclosure_form.errors)
