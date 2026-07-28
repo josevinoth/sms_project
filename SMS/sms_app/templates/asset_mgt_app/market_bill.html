@@ -219,6 +219,18 @@
             <!-- Hidden field for selected trips -->
             {% render_field form.mb_selected_trips %}
 
+            <!-- ══ Form Footer Actions ══ -->
+            <div class="row mt-4 mb-4">
+                <div class="col-12 d-flex justify-content-between align-items-center">
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-check mr-1"></i> Submit
+                    </button>
+                    <a href="{% url 'market_bill_list' %}" class="btn btn-cancel">
+                        <i class="fas fa-times mr-1"></i> Cancel
+                    </a>
+                </div>
+            </div>
+
             <!-- ── Column 3: Trips List ── -->
             <div class="form-section mt-4">
                 <div class="form-section-title">
@@ -376,18 +388,6 @@
                     </table>
                 </div>
 
-            </div>
-
-            <!-- ══ Form Footer Actions ══ -->
-            <div class="row mt-4 mb-4">
-                <div class="col-12 d-flex justify-content-between align-items-center">
-                    <button type="submit" class="btn btn-submit">
-                        <i class="fas fa-check mr-1"></i> Submit
-                    </button>
-                    <a href="{% url 'market_bill_list' %}" class="btn btn-cancel">
-                        <i class="fas fa-times mr-1"></i> Cancel
-                    </a>
-                </div>
             </div>
 
             <!-- ================= SYSTEM MESSAGES ================= -->

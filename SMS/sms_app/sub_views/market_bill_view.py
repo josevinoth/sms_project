@@ -184,9 +184,14 @@ def market_bill_edit(request, id):
     # Fetch selected trips data for the edit page table
     selected_trips_data = []
     if record.mb_selected_trips:
-        trip_ids = [int(tid) for tid in record.mb_selected_trips.split(',') if tid.strip()]        # Include trips in 'Trip Settled' (id=7) or 'Ready for Invoice' (id=9) financial status
+        trip_ids = [int(tid) for tid in record.mb_selected_trips.split(',') if tid.strip()]
+        # Include trips in 'Trip Settled' (id=7), 'Ready for Invoice' (id=9), or 'Invoice Completed' financial status
         eligible_status_ids = [7, 9]
-        selected_trips = TripdetailInfo.objects.filter(id__in=trip_ids, tc_financestatus_id__in=eligible_status_ids).select_related('tr_enquirynumber', 'tr_consignmentnumber')
+        from ..sub_models.trans_invoice_mod import TransInvoiceInfo
+        invoiced_trip_ids = set(TransInvoiceInfo.objects.filter(ti_trip_id__isnull=False).values_list('ti_trip_id', flat=True))
+        selected_trips = TripdetailInfo.objects.filter(
+            Q(id__in=trip_ids) & (Q(tc_financestatus_id__in=eligible_status_ids) | Q(id__in=invoiced_trip_ids))
+        ).select_related('tr_enquirynumber', 'tr_consignmentnumber')
 
         for trip in selected_trips:
             from_location = ''
@@ -354,8 +359,10 @@ def get_trips_by_vendor(request):
     if not vendor_id:
         return JsonResponse({'trips': []})
 
-    # Include trips in 'Trip Settled' (id=7) or 'Ready for Invoice' (id=9) financial status
+    # Include trips in 'Trip Settled' (id=7), 'Ready for Invoice' (id=9), or 'Invoice Completed' financial status
     eligible_status_ids = [7, 9]
+    from ..sub_models.trans_invoice_mod import TransInvoiceInfo
+    invoiced_trip_ids_from_db = set(TransInvoiceInfo.objects.filter(ti_trip_id__isnull=False).values_list('ti_trip_id', flat=True))
     market_ownership_id = 3
 
     # Option 1: Get vehicles from master (if any are assigned to this vendor)
@@ -397,12 +404,12 @@ def get_trips_by_vendor(request):
             billed_trip_ids.update([tid.strip() for tid in bill.mb_selected_trips.split(',') if tid.strip()])
 
     # Filter trips for ANY vehicle or allotment of this vendor that are not billed
-    # Show trips in 'Trip Settled' (ID 7) or 'Ready for Invoice' (ID 9) financial status
+    # Show trips in 'Trip Settled' (ID 7), 'Ready for Invoice' (ID 9), or 'Invoice Completed' financial status
     # Plus double check that the trip record itself is marked as 'Market' source
     trips = TripdetailInfo.objects.filter(
         (Q(tr_vehiclenumber__in=list(vendor_master_vehicles)) | allotment_filters),
         Q(tr_departeddate__gte='2026-05-01') | Q(tr_departeddate__isnull=True, tr_created_at__gte='2026-05-01 00:00:00'),
-        tc_financestatus_id__in=eligible_status_ids,
+        (Q(tc_financestatus_id__in=eligible_status_ids) | Q(id__in=invoiced_trip_ids_from_db)),
         tr_vehiclesource_id=market_ownership_id
     )
     # Exclude already billed trip ids (if any)
