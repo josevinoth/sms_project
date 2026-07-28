@@ -1974,7 +1974,8 @@ def invoice_pending_report_ajax_view(request):
 
     # -------------------------
     trips = TripdetailInfo.objects.filter(
-        tr_category_id=1
+        tr_category_id=1,
+        tr_departeddate_pickup__date__gte='2026-06-01'
     ).filter(
         Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') |
         Q(tr_consignmentnumber__co_consignmentnumber__icontains='BLR')
