@@ -611,6 +611,7 @@ def vehicle_allotment_list(request):
 
     # Filters from HTML
     enquiry_number = request.GET.get('enquiry_number', '')
+    vehicle_number = request.GET.get('vehicle_number', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     select_all = request.GET.get('select_all', '')
@@ -637,6 +638,13 @@ def vehicle_allotment_list(request):
             en_enquirynumber__icontains=enquiry_number
         )
 
+    if vehicle_number:
+        enquirynote_queryset = enquirynote_queryset.filter(
+            Q(vehicle_allotmentinfo__va_vehiclenumber__vm_registrationnumber__icontains=vehicle_number) |
+            Q(vehicle_allotmentinfo__va_vehiclenumber_mkt__icontains=vehicle_number) |
+            Q(tripdetailinfo__tr_vehiclenumber__icontains=vehicle_number)
+        ).distinct()
+
     if date_from:
         enquirynote_queryset = enquirynote_queryset.filter(
             en_created_at__date__gte=date_from
@@ -648,10 +656,10 @@ def vehicle_allotment_list(request):
         )
 
     # -----------------------------
-    # SELECT ALL – Capped at 1000
+    # SELECT ALL / FILTERED – No limit
     # -----------------------------
-    if select_all == "true":
-        page_obj = list(enquirynote_queryset.order_by('-en_created_at', '-id')[:1000])
+    if select_all == "true" or enquiry_number or vehicle_number or date_from or date_to:
+        page_obj = list(enquirynote_queryset.order_by('-en_created_at', '-id'))
     else:
         paginator = Paginator(enquirynote_queryset.order_by('-en_created_at', '-id'), 50)
         page_number = request.GET.get('page')
@@ -802,6 +810,7 @@ def vehicle_allotment_list(request):
             'role': user_role,
             'enquiry_data': enquiry_data,
             'enquiry_number': enquiry_number,
+            'vehicle_number': vehicle_number,
             'date_from': date_from,
             'date_to': date_to,
         }
