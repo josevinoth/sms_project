@@ -650,6 +650,13 @@ def tripdetail_add(request, tripdetail_id=0):
                         pass  # keep the advanced status
                     else:
                         trip.tc_financestatus_id = manual_status_id
+                
+                # Fallback: Sync operational status if missing or if manual_status_id was disabled in UI
+                if not trip.tr_operational_status_id and trip.tc_financestatus_id:
+                    trip.tr_operational_status_id = trip.tc_financestatus_id
+                # Special case: Awaiting Trip Approval (8) should always be synced
+                elif trip.tc_financestatus_id == 8 and trip.tr_operational_status_id != 8:
+                    trip.tr_operational_status_id = 8
 
                 pod_data = request.POST.get("pod_signature_data", None)
                 if pod_data:

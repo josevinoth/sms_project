@@ -318,6 +318,24 @@ select.form-control-modern.disable_a_href {
     opacity: 1 !important;
 }
 
+/* Dark Mode Overrides for Disabled/Readonly Inputs */
+[data-theme="dark"] input.form-control-modern:disabled, 
+[data-theme="dark"] input.form-control-modern[readonly],
+[data-theme="dark"] select.form-control-modern:disabled, 
+[data-theme="dark"] select.form-control-modern[readonly],
+[data-theme="dark"] textarea.form-control-modern:disabled, 
+[data-theme="dark"] textarea.form-control-modern[readonly],
+[data-theme="dark"] .form-control-modern.disable_a_href,
+[data-theme="dark"] select.form-control-modern.disable_a_href,
+[data-theme="dark"] .trip-detail-modern input:disabled,
+[data-theme="dark"] .trip-detail-modern select:disabled,
+[data-theme="dark"] .trip-detail-modern textarea:disabled,
+[data-theme="dark"] .trip-detail-modern [readonly] {
+    background-color: rgba(255, 255, 255, 0.08) !important; 
+    color: #cbd5e1 !important; /* Light grayish-blue for readability */
+    border: 1.5px dashed rgba(255, 255, 255, 0.3) !important;
+}
+
 .modern-readonly {
     background-color: var(--bg-section) !important;
     border-color: var(--border-light) !important;
