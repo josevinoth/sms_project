@@ -441,11 +441,9 @@ def get_trips_by_vendor(request):
         (master_filter | allotment_filters),
         # Use timezone-aware datetime strings to prevent RuntimeWarning
         Q(tr_departeddate__gte='2026-05-01T00:00:00+05:30') | Q(tr_departeddate__isnull=True, tr_created_at__gte='2026-05-01T00:00:00+05:30'),
-        tc_financestatus_id__in=eligible_status_ids,
-        (Q(tr_vehiclenumber__in=list(vendor_master_vehicles)) | allotment_filters),
-        Q(tr_departeddate__gte='2026-05-01') | Q(tr_departeddate__isnull=True, tr_created_at__gte='2026-05-01 00:00:00'),
-        (Q(tc_financestatus_id__in=eligible_status_ids) | Q(id__in=invoiced_trip_ids_from_db)),
         tr_vehiclesource_id=market_ownership_id
+    ).filter(
+        Q(tc_financestatus_id__in=eligible_status_ids) | Q(id__in=invoiced_trip_ids_from_db)
     )
     # Exclude already billed trip ids (if any)
     if billed_trip_ids:
