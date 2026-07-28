@@ -124,7 +124,7 @@
                     <td><span class="badge badge-info">{{ bill.mnb_maintenance.mi_vehicle.vm_registrationnumber }}</span>
                     </td>
                     <td>{{ bill.mnb_maintenance.mi_job_card_no }}</td>
-                    <td>{{ bill.mnb_maintenance.mi_technician|default:"N/A" }}</td>
+                    <td>{{ bill.mnb_maintenance.mi_vendor.vend_name|default:bill.mnb_maintenance.mi_technician|default:"N/A" }}</td>
                     <td>{{ bill.mnb_bill_amount_taxable }}</td>
                     <td>{{ bill.mnb_gst_amount }} ({{ bill.mnb_gst_percentage }}%)</td>
                     <td>{{ bill.mnb_tds_amount }} ({{ bill.mnb_tds_percentage }}%)</td>

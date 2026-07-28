@@ -21,6 +21,7 @@ import re
 from ..sub_models.vendor_info_mod import Vendor_info
 from ..sub_models.emailmaster_mod import Emailmaster
 from ..sub_models.emailtype_mod import Email_type
+from ..sub_models.trans_invoice_mod import TransInvoiceInfo
 
 
 VEHICLE_NUMBER_REGEX = re.compile(r'^[A-Za-z]{2}[0-9]{2}[A-Za-z]{0,2}[0-9]{4}$')
@@ -679,6 +680,7 @@ def vehicle_allotment_list(request):
     trip_data = TripdetailInfo.objects.filter(
         tr_enquirynumber_id__in=enquiry_ids
     ).values_list(
+        'id',
         'tr_enquirynumber',
         'tr_consignmentnumber__co_consignmentnumber',
         'tr_tripnumber',
@@ -686,6 +688,15 @@ def vehicle_allotment_list(request):
         'tc_financestatus',
         'tr_category__category',
         'tr_vehiclenumber'
+    )
+
+    # Find which trips already have a completed invoice
+    all_page_trip_ids = [row[0] for row in trip_data]
+    invoiced_trip_ids = set(
+        TransInvoiceInfo.objects.filter(
+            ti_trip_id__in=all_page_trip_ids,
+            is_woh=True
+        ).values_list('ti_trip_id', flat=True)
     )
 
     # -----------------------------
@@ -723,7 +734,7 @@ def vehicle_allotment_list(request):
     # BUILD TRIP DICT
     # -----------------------------
     trip_dict = {}
-    for enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num in trip_data:
+    for trip_id, enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num in trip_data:
         cat_lower = trip_category.strip().lower() if trip_category else ""
         if cat_lower in ["business", "bussiness"]:
             display_text = trip_cons if trip_cons else "No Consignment"
@@ -731,9 +742,10 @@ def vehicle_allotment_list(request):
             display_text = trip_category if trip_category else "No Category"
 
         display_veh_num = trip_veh_num if trip_veh_num else (trip_num or "No Trip")
+        is_invoiced = trip_id in invoiced_trip_ids
 
         trip_dict.setdefault(enq_id, []).append(
-            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, display_veh_num)
+            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, display_veh_num, is_invoiced)
         )
 
     # -----------------------------
@@ -958,7 +970,7 @@ def load_vehicle_number(request):
 @login_required(login_url='login_page')
 def load_driver_details(request):
     vehicle_number = request.GET.get('vehicle_number')
-    
+
     if not vehicle_number:
         data = {
             'driver_name': [],
@@ -967,17 +979,20 @@ def load_driver_details(request):
             'driver_license_exp_date': [],
         }
         return HttpResponse(json.dumps(data))
-        
+
     driver_name = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydrivername', flat=True))
     driver_number = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydrivermob', flat=True))
     driver_license = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license', flat=True))
-    
+
     # Use string conversion to avoid json serialization issues with dates
     driver_license_exp_date = list(
         VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_primarydriver_license_exp_date', flat=True))
+    vendor_id = list(
+        VehiclemasterInfo.objects.filter(pk=vehicle_number).values_list('vm_vendor_id', flat=True))
+
     driver_license_exp_date = [str(d) if d else '' for d in driver_license_exp_date]
 
     data = {
@@ -985,6 +1000,7 @@ def load_driver_details(request):
         'driver_number': driver_number,
         'driver_license': driver_license,
         'driver_license_exp_date': driver_license_exp_date,
+        'vendor_id': vendor_id,
     }
     return HttpResponse(json.dumps(data))
 

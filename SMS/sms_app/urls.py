@@ -6,7 +6,6 @@ from .sub_views.pk_purchaseorder_view import pk_create_batch_job, pk_get_po_item
 from .sub_views.tms_dashboard_view import tms_dashboard, get_tms_dashboard_data
 
 urlpatterns = [
-    path('', views.login_page, name='sms_app_root'),
     path('pk_create_batch_job/', pk_create_batch_job, name='pk_create_batch_job'),
     path('pk_get_po_items_for_job/', pk_get_po_items_for_job, name='pk_get_po_items_for_job'),
     path('print_pdf', views.print_pdf, name='print_pdf'),  # Print PDF
@@ -598,6 +597,31 @@ urlpatterns = [
     path('enquirynotevehicle_cancel/', views.enquirynotevehicle_cancel, name='enquirynotevehicle_cancel'),
     # Cancel enquirynotevehicle
 
+    # ---- Prime Business Type – Vehicle Details ----
+    path('prime_enquiry_vehicle_list/', views.prime_enquiry_vehicle_list, name='prime_enquiry_vehicle_list'),
+    # List prime enquiry vehicles
+    path('prime_enquiry_list/', views.prime_enquiry_booking_list, name='prime_enquiry_list'),
+    path('prime_enquiry_insert/', views.prime_enquiry_vehicle_add, name='prime_enquiry_insert'),
+    path('prime_enquiry_vehicle_update/<int:pev_id>', views.prime_enquiry_vehicle_add,
+         name='prime_enquiry_vehicle_update'),  # update prime enquiry vehicle
+    path('prime_enquiry_vehicle_delete/<int:pev_id>', views.prime_enquiry_vehicle_delete,
+         name='prime_enquiry_vehicle_delete'),  # delete prime enquiry vehicle
+    path('prime_enquiry_vehicle_cancel/', views.prime_enquiry_vehicle_cancel,
+         name='prime_enquiry_vehicle_cancel'),  # cancel prime enquiry vehicle
+    path('prime_enquiry_update/<int:enquiry_num_id>/', views.prime_enquiry_vehicle_add,
+         name='prime_enquiry_update', kwargs={}),  # Prime enquiry update redirect target
+    path('prime_trip_add/<int:allotment_id>/', views.prime_trip_add, name='prime_trip_add'),
+    path('prime_trip_list/', views.prime_trip_list, name='prime_trip_list'),
+    path('prime_vehicle_allotment_insert/<int:pev_id>/', views.prime_vehicle_allotment_add,
+         name='prime_vehicle_allotment_insert'),
+    path('prime_vehicle_allotment_update/<int:vehicle_allotment_id>/', views.prime_vehicle_allotment_add,
+         name='prime_vehicle_allotment_update'),
+    path('prime_vehicle_allotment_list/', views.prime_vehicle_allotment_list,
+         name='prime_vehicle_allotment_list'),
+    path('prime_vehicle_simplified_replace/', views.prime_vehicle_simplified_replace,
+         name='prime_vehicle_simplified_replace'),
+    path('prime_vehicle_revert_replace/', views.prime_vehicle_revert_replace,
+         name='prime_vehicle_revert_replace'),
 
     path('consignmentgoods_list/', views.consignmentgoods_list, name='consignmentgoods_list'),  # List consignmentgoods
     path('consignmentgoods_insert/', views.consignmentgoods_add, name='consignmentgoods_insert'),
@@ -795,6 +819,7 @@ urlpatterns = [
     path('pod_pending_report/', views.pod_pending_report_view, name='pod_pending_report'),
     path('pod_pending_report_ajax/', views.pod_pending_report_ajax_view, name='pod_pending_report_ajax'),
     path('time_analysis_report/', views.time_analysis_report_view, name='time_analysis_report'),
+    path('time_analysis_report_ajax/', views.time_analysis_report_ajax_view, name='time_analysis_report_ajax'),
     path('dispatch_gatepass_pdf_download/<int:dispatch_id>', views.dispatch_gatepass_pdf_download,
          name='dispatch_gatepass_pdf_download'),
     path('sales_reports/', views.sales_reports, name='sales_reports'),
@@ -1076,6 +1101,7 @@ urlpatterns = [
     path('ajax/filter-trips-by-date/', views.filter_trips_by_date, name='filter_trips_by_date'),
     path('insurance_renewal_report/', views.insurance_renewal_report_view, name='insurance_renewal_report'),
     path('diesel_vs_revenue_report/', views.diesel_vs_revenue_report_view, name='diesel_vs_revenue_report'),
+    path('diesel_vs_revenue_report_ajax/', views.diesel_vs_revenue_report_ajax_view, name='diesel_vs_revenue_report_ajax'),
     path('own_v_mkt_sales/', views.own_vs_market_sales_report_view, name='own_v_mkt_sales'),
     path('maintenance_report/', views.maintenance_report_view, name='maintenance_report'),
     path('stock_maintenance_list/', views.stock_maintenance_list, name='stock_maintenance_list'),
@@ -1096,7 +1122,9 @@ urlpatterns = [
     path('customerwise_pl_report_ajax/', views.customerwise_pl_report_ajax_view, name='customerwise_pl_report_ajax'),
     path('mileage_report/', views.mileage_report_view, name='mileage_report'),
     path('trip_cancellation_report/', views.trip_cancellation_report_view, name='trip_cancellation_report'),
+    path('trip_cancellation_report_ajax/', views.trip_cancellation_report_ajax_view, name='trip_cancellation_report_ajax'),
     path('ref_no_pending_report/', views.ref_no_pending_report_view, name='ref_no_pending_report'),
+    path('ref_no_pending_report_ajax/', views.ref_no_pending_report_ajax_view, name='ref_no_pending_report_ajax'),
     path('vehicle_utilization_report/', views.vehicle_utilization_report_view, name='vehicle_utilization_report'),
     path('drivers_advance_report/', views.drivers_advance_report_view, name='drivers_advance_report'),
     path('invoice_pending_report/', views.invoice_pending_report_view, name='invoice_pending_report'),
@@ -1105,8 +1133,10 @@ urlpatterns = [
     path('vendor_p_l_attached_report/', views.vendor_p_l_attached_report_view, name='vendor_p_l_attached_report'),
     path('ajax/vendor_p_l_mkt_report/', views.vendor_p_l_mkt_report_ajax_view, name='vendor_p_l_mkt_report_ajax'),
     path('ajax/vendor_p_l_attached_report/', views.vendor_p_l_attached_report_ajax_view, name='vendor_p_l_attached_report_ajax'),
-    path('whatsapp_delivery_status_report/', views.whatsapp_delivery_status_report_view,name='whatsapp_delivery_status_report'),
+    path('whatsapp_delivery_status_report/', views.whatsapp_delivery_status_report_view, name='whatsapp_delivery_status_report'),
+    path('whatsapp_delivery_status_report_ajax/', views.whatsapp_delivery_status_report_ajax_view, name='whatsapp_delivery_status_report_ajax'),
     path('daily_trip_count_report/', views.daily_trip_count_report_view, name='daily_trip_count_report'),
+    path('daily_trip_count_report_ajax/', views.daily_trip_count_report_ajax_view, name='daily_trip_count_report_ajax'),
     path('own_vehicle_pl_report/', views.own_vehicle_pl_report_view, name='own_vehicle_pl_report'),
     path('location_pl_report/', views.location_pl_report_view, name='location_pl_report'),
     path('claim_pending_report/', views.claim_pending_report_view, name='claim_pending_report'),

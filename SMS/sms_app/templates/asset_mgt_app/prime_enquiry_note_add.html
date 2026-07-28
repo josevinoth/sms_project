@@ -1,0 +1,391 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<style>
+    .form-section {
+        border: 1px solid transparent !important;
+    }
+    .form-section:hover,
+    .form-section:focus-within {
+        border-color: var(--accent-emerald) !important;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h4 class="m-0 text-white" style="font-size: 1.4rem; font-weight: 700; letter-spacing: 0.5px;">
+            <i class="fas fa-star" style="color:#ffd700;"></i>
+            Prime Business &ndash; Booking Note
+        </h4>
+        <a href="{% url 'prime_enquiry_list' %}" class="btn-modern btn-cancel py-2 px-4"
+           style="font-size: 0.9rem; text-decoration: none; border-radius: 10px;
+                  border: 1px solid var(--border-light); display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <!-- ===================== ENQUIRY INFO ===================== -->
+    <form method="POST" id="prime_enquiry_form" novalidate>
+        {% csrf_token %}
+        
+        <!-- Hidden fields for required data to pass validation without wiping them -->
+        <div style="display: none;">
+            {% render_field form.pen_assignedto %}
+            {% render_field form.pen_status %}
+            {% render_field form.pen_trip_type %}
+            {% render_field form.pen_fromlocaion %}
+            {% render_field form.pen_tolocation %}
+            {% render_field form.pen_updated_by id="pen_updated_by" %}
+        </div>
+
+        <div class="modern-card mb-4" style="padding: 1.5rem !important;">
+        <div class="row row-compact">
+            
+            <!-- Column 1: Customer Info -->
+            <div class="col-12 col-md-3 col-compact">
+                <div class="form-section h-100">
+                    <div class="form-section-title"><i class="fas fa-user-tag"></i> Customer Info</div>
+
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Booking Number</label>
+                        {% render_field form.pen_enquirynumber id="pen_enquirynumber" class="form-control form-control-modern" readonly="True" placeholder="" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Customer</label>
+                        {% render_field form.pen_customername id="pen_customername" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Customer Department</label>
+                        {% render_field form.pen_customerdepartment id="pen_customerdepartment" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2: Request Info -->
+            <div class="col-12 col-md-3 col-compact">
+                <div class="form-section h-100">
+                    <div class="form-section-title"><i class="fas fa-clipboard-list"></i> Request Info</div>
+
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Business Type</label>
+                        {% render_field form.pen_business_type id="pen_business_type" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">No. of vehicles Requested</label>
+                        {% render_field form.pen_no_of_vehicles id="pen_no_of_vehicles" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern" style="display: none;">
+                        <label class="form-label-modern">Vehicle type</label>
+                        <!-- Rendering as a standard dropdown as requested -->
+                        <select id="pen_vehicletype_select" name="pen_vehicledetails" class="form-control form-control-modern">
+                            <option value="">--Select Vehicle Type--</option>
+                            {% for vtype in vehicle_type_list %}
+                                <option value="{{ vtype.vt_vehicletype }}" {% if form.instance.pen_vehicledetails == vtype.vt_vehicletype %}selected{% endif %}>{{ vtype.vt_vehicletype }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 3: Agreed Rates -->
+            <div class="col-12 col-md-3 col-compact">
+                <div class="form-section h-100">
+                    <div class="form-section-title"><i class="fas fa-handshake"></i> Agreed Rates</div>
+
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Agreed Km</label>
+                        {% render_field form.pen_agreed_km id="pen_agreed_km" class="form-control form-control-modern" placeholder="e.g. 100" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Agreed Extra Km Charge</label>
+                        {% render_field form.pen_extra_km_charge id="pen_extra_km_charge" class="form-control form-control-modern" placeholder="Rate per extra KM" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Agreed Extra Hours Charge</label>
+                        {% render_field form.pen_extra_hours_charge id="pen_extra_hours_charge" class="form-control form-control-modern" placeholder="Rate per extra Hour" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 4: Date & Status -->
+            <div class="col-12 col-md-3 col-compact">
+                <div class="form-section h-100">
+                    <div class="form-section-title"><i class="fas fa-calendar-alt"></i> Date &amp; Status</div>
+
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">From Date and Time</label>
+                        {% render_field form.pen_pickupdatetime id="pen_pickupdatetime" type="Datetime-local" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">To Date and Time</label>
+                        {% render_field form.pen_todatetime id="pen_todatetime" type="datetime-local" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Status</label>
+                        {% render_field form.pen_status id="pen_status" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- end row-compact -->
+
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-between align-items-center mt-4 px-2">
+            <button type="submit" name="save_enquiry" class="btn-modern btn-submit px-5">
+                <i class="fas fa-check mr-2"></i> Submit Booking
+            </button>
+            <a href="{% url 'prime_enquiry_list' %}" class="btn-modern btn-cancel px-5" style="text-decoration: none;">
+                <i class="fas fa-times mr-2"></i> Cancel
+            </a>
+        </div>
+
+    </div> <!-- end modern-card -->
+    </form>
+    <!-- ===================== END ENQUIRY INFO ===================== -->
+
+    <!-- ===================== VEHICLE DETAILS SECTION ===================== -->
+    <div class="modern-card mt-4 p-0" style="overflow: hidden; border-radius: 20px;">
+
+        <!-- Collapsible Header -->
+        <div class="modern-header px-4 py-3 d-flex justify-content-between align-items-center"
+             id="headingPrimeVehicle"
+             style="margin-bottom: 0; border-radius: 0;">
+            <span class="text-white"
+                  style="cursor: pointer; font-size: 1.25rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;"
+                  data-toggle="collapse" data-target="#collapsePrimeVehicle"
+                  aria-expanded="true" aria-controls="collapsePrimeVehicle">
+                <i class="fas fa-star" style="color:#ffd700;"></i>
+                Prime Vehicle Details
+                <i class="fas fa-angle-down" style="font-size: 0.95rem;"></i>
+            </span>
+            <a href="{% if enquiry_num_id %}{% url 'prime_enquiry_update' enquiry_num_id %}{% else %}#{% endif %}"
+               class="btn-modern btn-submit py-2 px-4"
+               style="font-size: 0.9rem; text-decoration: none; border-radius: 10px;
+                      background: var(--btn-primary);
+                      box-shadow: 0 4px 15px var(--accent-orange-glow);">
+                <i class="fas fa-plus"></i> Add Vehicle Details
+            </a>
+        </div>
+
+        <div id="collapsePrimeVehicle" class="collapse show" aria-labelledby="headingPrimeVehicle">
+            <div class="p-4" style="background: var(--bg-card); color: var(--text-main);">
+
+                <!-- ---- Inline Vehicle Add Form ---- -->
+                <form method="POST" action="" id="prime_vehicle_add_form">
+                    {% csrf_token %}
+                    <div class="form-section p-3 mb-4"
+                         style="background: var(--bg-section); border: none; border-radius: 14px;">
+                        <div class="row align-items-end">
+
+                            <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+                                <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Booking Number</label>
+                                {% render_field prime_vehicle_form.pev_enquirynumber id="pev_enquirynumber" class="form-control form-control-modern modern-readonly" style="height:45px;padding:0.5rem 1rem;" %}
+                            </div>
+
+                            <div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+                                <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Vehicle Type</label>
+                                {% render_field prime_vehicle_form.pev_vehicletype id="pev_vehicletype" class="form-control form-control-modern" style="height:45px;padding:0.5rem 1rem;" %}
+                            </div>
+
+                            <div class="col-md-2 col-sm-6 mb-2 mb-md-0">
+                                <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Vehicle Category</label>
+                                {% render_field prime_vehicle_form.pev_vehiclecategory id="pev_vehiclecategory" class="form-control form-control-modern" style="height:45px;padding:0.5rem 1rem;" %}
+                            </div>
+
+                            <div class="col-md-2 col-sm-6 mb-2 mb-md-0">
+                                <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Quantity</label>
+                                {% render_field prime_vehicle_form.pev_quantity id="pev_quantity" class="form-control form-control-modern" placeholder="Qty" style="height:45px;padding:0.5rem 1rem;" %}
+                            </div>
+
+                            {% render_field prime_vehicle_form.pev_updated_by id="pev_updated_by" hidden="True" class="form-control" %}
+
+                            <div class="col-md-2 col-sm-12 text-md-right text-center mt-3 mt-md-0">
+                                <label class="form-label-modern small mb-1 d-none d-md-block" style="visibility:hidden;">Save</label>
+                                <button type="submit" class="btn-modern btn-submit py-2 px-3 w-100"
+                                        style="font-size:0.9rem;height:45px;border-radius:10px;
+                                               display:inline-flex;align-items:center;justify-content:center;gap:6px;
+                                               background: var(--btn-primary);
+                                               box-shadow: 0 4px 15px var(--accent-orange-glow);">
+                                    <i class="fas fa-save"></i> Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages -->
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            {% for message in messages %}
+                            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
+                                <i class="fas fa-info-circle"></i> {{ message }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </form>
+                <!-- ---- End Vehicle Add Form ---- -->
+
+                <!-- ---- Vehicle Table ---- -->
+                <div class="table-container-modern p-0 border-0 shadow-none">
+                    <div class="table-responsive">
+                        <table id="prime_vehicle_list" class="table modern-table text-center" style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width: 50px; border-radius: 10px 0 0 10px;">ID<i class="fas fa-sort ml-1"></i></th>
+                                    <th class="text-left" style="min-width: 130px;">CREATED ON<i class="fas fa-sort ml-1"></i></th>
+                                    <th class="text-left" style="min-width: 150px; font-weight: 700; color: var(--text-muted);">BOOKING NUMBER</th>
+                                    <th class="text-left" style="min-width: 150px;">VEHICLE TYPE<i class="fas fa-sort ml-1"></i></th>
+                                    <th>Vehicle Category</th>
+                                    <th>Quantity</th>
+                                    <th>Updated At</th>
+                                    <th>Updated By</th>
+                                    <th class="text-center">Actions</th>
+                                    <th class="text-center">Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for pev in prime_vehicle_list %}
+                            <tr>
+                                <td class="font-weight-bold">{{ pev.id }}</td>
+                                <td>
+                                    {{ pev.pev_created_at|date:"d-m-Y" }}<br>
+                                    <span class="small text-muted font-weight-bold">{{ pev.pev_created_at|date:"h:i A" }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-light p-2 border font-weight-bold" style="font-size:0.85rem;">
+                                        {{ pev.pev_enquirynumber }}
+                                    </span>
+                                </td>
+                                <td>{{ pev.pev_vehicletype }}</td>
+                                <td>{{ pev.pev_vehiclecategory }}</td>
+                                <td>
+                                    <span class="badge badge-warning px-3 py-1 font-weight-bold pev-qty-val"
+                                          data-pev-id="{{ pev.id }}"
+                                          style="font-size:0.85rem;background-color: var(--accent-orange); color: var(--text-white);">
+                                        {{ pev.pev_quantity }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {{ pev.pev_updated_at|date:"d-m-Y" }}<br>
+                                    <span class="small text-muted font-weight-bold">{{ pev.pev_updated_at|date:"h:i A" }}</span>
+                                </td>
+                                <td>{{ pev.pev_updated_by }}</td>
+                                <td class="text-center">
+                                        {% if pev.get_allotment %}
+                                        <a class="btn-modern btn-submit py-1 px-3 mb-1 w-100"
+                                           href="{% url 'prime_vehicle_allotment_update' pev.get_allotment.id %}"
+                                           style="font-size:0.8rem;text-decoration:none;border-radius:8px;
+                                                  background: {% if pev.is_allotment_complete %}var(--accent-blue){% else %}var(--accent-emerald){% endif %};">
+                                            Allot Vehicle
+                                        </a>
+                                        {% else %}
+                                        <a class="btn-modern btn-submit py-1 px-3 mb-1 w-100"
+                                           href="{% url 'prime_vehicle_allotment_insert' pev.id %}"
+                                           style="font-size:0.8rem;text-decoration:none;border-radius:8px;
+                                                  background: var(--accent-emerald);">
+                                            Allot Vehicle
+                                        </a>
+                                        {% endif %}
+                                        <div class="d-flex w-100 mt-1" style="gap: 5px;">
+                                            <a class="btn-modern btn-submit py-1 px-3 flex-fill"
+                                               href="{% url 'prime_enquiry_vehicle_update' pev.id %}"
+                                               style="font-size:0.8rem;text-decoration:none;border-radius:8px;
+                                                      background: var(--btn-primary);">
+                                                <i class="far fa-edit"></i>
+                                            </a>
+                                        </div>
+                                </td>
+                                <td class="text-center">
+                                    <form action="{% url 'prime_enquiry_vehicle_delete' pev.id %}"
+                                          method="post"
+                                          onsubmit="return confirm('Are you sure you want to delete this record?');"
+                                          style="margin:0;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                style="border-radius:8px;padding:6px 12px;">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- ---- End Vehicle Table ---- -->
+
+            </div>
+        </div>
+    </div>
+    <!-- ===================== END VEHICLE DETAILS ===================== -->
+
+</div>
+
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function () {
+
+    // ---- DataTable ----
+    $('#prime_vehicle_list').DataTable({
+        order: [[0, 'desc']],
+        dom: 'Bfrtip',
+        buttons: ['copy', 'csv', 'excel', 'print']
+    });
+
+    // ---- Pre-fill the hidden Enquiry Number on the vehicle form ----
+    var pevEnq = document.getElementById('pev_enquirynumber');
+    if (pevEnq && (pevEnq.value === '' || pevEnq.value === '0')) {
+        pevEnq.value = '{{ enquiry_num_id }}';
+    }
+
+    // ---- Pre-fill updated_by ----
+    var pevUpdBy = document.getElementById('pev_updated_by');
+    if (pevUpdBy) {
+        pevUpdBy.value = '{{ user_id }}';
+    }
+    
+    var enUpdBy = document.getElementById('pen_updated_by');
+    if (enUpdBy) {
+        enUpdBy.value = '{{ user_id }}';
+    }
+
+    // ---- Enable enquiry number on submit and validate quantity limits ----
+    $('#prime_vehicle_add_form').on('submit', function (e) {
+        var reqQty = parseInt($('#pen_no_of_vehicles').val()) || 0;
+        var newQty = parseInt($('#pev_quantity').val()) || 0;
+        
+        // Sum existing vehicle detail quantities (excluding the one being edited, if any)
+        var editingPevId = "{{ prime_vehicle_form.instance.id|default:'' }}";
+        var existingQty = 0;
+        $('.pev-qty-val').each(function () {
+            var rowPevId = $(this).data('pev-id');
+            if (editingPevId && String(rowPevId) === String(editingPevId)) {
+                return; // Skip current record being edited
+            }
+            existingQty += parseInt($(this).text().trim()) || 0;
+        });
+        
+        if (existingQty + newQty > reqQty) {
+            e.preventDefault();
+            alert("Total vehicle details quantity (" + (existingQty + newQty) + ") cannot exceed the number of vehicles requested (" + reqQty + ") on the Booking Note.");
+            return false;
+        }
+        
+        $('#pev_enquirynumber').prop('disabled', false);
+    });
+
+    // ---- Default Business Type to Prime ----
+    var $businessTypeSelect = $('#pen_business_type');
+    if ($businessTypeSelect.length) {
+        $businessTypeSelect.find('option').filter(function() {
+            return $(this).text().trim().toLowerCase() === 'prime';
+        }).prop('selected', true);
+    }
+});
+</script>
+{% endblock extra_js %}

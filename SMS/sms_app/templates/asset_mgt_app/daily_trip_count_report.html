@@ -27,7 +27,14 @@
     <div class="col-2"></div>
 </div>
 
-<form method="POST" action="{% url 'daily_trip_count_report' %}" class="row g-3 align-items-end justify-content-center">
+<div class="row mb-3 px-3">
+    <div class="col-12">
+        <a href="{% url 'transport_reports' %}" class="btn btn-primary shadow-sm">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+<form method="GET" action="{% url 'daily_trip_count_report' %}" id="filterForm" class="row g-3 align-items-end justify-content-center">
     {% csrf_token %}
 
     <!-- Branch -->
@@ -54,7 +61,7 @@
         </select>
     </div>
 
-    <div class="col-md-3">
+    <div class="col-md-2">
         <label class="form-label fw-bold">Vehicle Number</label>
         <select name="vehicle_number" id="vehicle_number" class="form-control select2">
             <option value="">Search Vehicle No</option>
@@ -78,22 +85,14 @@
     </div>
 
     <!-- Filter -->
-    <div class="col-md-auto">
-        <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filter</button>
-        <a href="{{ request.path }}" class="btn btn-secondary ">Clear</a>
+    <div class="col-md-2 d-flex gap-2">
+        <button type="submit" id="filterBtn" class="btn btn-primary flex-grow-1 shadow-sm"><i class="fas fa-filter"></i> Filter</button>
+        <button type="button" id="clearBtn" class="btn btn-secondary shadow-sm"><i class="fas fa-sync"></i> Clear</button>
     </div>
 </form>
 
 
-<div class="row">
-    <div class="col-auto">
-        <a href="{% url 'transport_reports' %}" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-</div>
 
-<br>
 
 <div class="shadow-box-table">
     <table id="vendor_p_l_report_table" class="table table-striped table-bordered display nowrap" style="width:100%">
@@ -106,14 +105,7 @@
             </tr>
         </thead>
         <tbody>
-            <!-- DYNAMIC ROWS -->
-            {% for row in data_rows %}
-            <tr>
-                {% for cell in row %}
-                <td>{{ cell }}</td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
+            <!-- DataTables AJAX will populate this -->
         </tbody>
     </table>
 </div>
@@ -144,24 +136,117 @@
 </style>
 <script>
     $(document).ready(function () {
-        const table = $('#vendor_p_l_report_table').DataTable({
+        var table = $('#vendor_p_l_report_table').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": {
+                "url": "{% url 'daily_trip_count_report_ajax' %}",
+                "type": "GET",
+                "data": function (d) {
+                    var formData = $('#filterForm').serializeArray();
+                    $.each(formData, function (i, obj) {
+                        d[obj.name] = obj.value;
+                    });
+                }
+            },
+            "columns": [
+                { "data": 0 },
+                { "data": 1 },
+                { "data": 2 },
+                { "data": 3 },
+                { "data": 4 },
+                { "data": 5 },
+                { "data": 6 }
+            ],
             scrollX: true,
             autoWidth: false,
             dom: "<'row'<'col-sm-12 col-md-6'lB><'col-sm-12 col-md-6'f>>" +
                  "<'row'<'col-sm-12'tr>>" +
                  "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-            lengthMenu: [
-                [10, 25, 50, 100, -1],
-                [10, 25, 50, 100, "All"]
-            ],
-            pageLength: 10,
             buttons: [
                 { extend: 'copy', className: 'btn btn-info btn-sm' },
                 { extend: 'csv', className: 'btn btn-info btn-sm' },
-                { extend: 'excelHtml5', className: 'btn btn-info btn-sm', title: 'Daily Trip Count Report' },
-                { extend: 'print', className: 'btn btn-info btn-sm', title: 'Daily Trip Count Report' }
+                { 
+                    extend: 'excelHtml5', 
+                    className: 'btn btn-info btn-sm', 
+                    title: 'Daily Trip Count Report',
+                    customize: function (xlsx) {
+                        let sheet = xlsx.xl.worksheets['sheet1.xml'];
+                        let styles = xlsx.xl['styles.xml'];
+                        let fills = $('fills', styles);
+                        let fonts = $('fonts', styles);
+                        let cellXfs = $('cellXfs', styles);
+
+                        fonts.append(`
+                        <font>
+                            <sz val="11"/>
+                            <color rgb="FFFFFFFF"/>
+                            <name val="Calibri"/>
+                            <b/>
+                        </font>
+                        `);
+                        let fontId = fonts.children().length - 1;
+
+                        fills.append(`
+                        <fill>
+                            <patternFill patternType="solid">
+                                <fgColor rgb="FF0A3278"/>
+                                <bgColor indexed="64"/>
+                            </patternFill>
+                        </fill>
+                        `);
+                        let fillId = fills.children().length - 1;
+
+                        // Header style (blue background, white text)
+                        cellXfs.append(`
+                        <xf xfId="0" fontId="${fontId}" fillId="${fillId}" borderId="0" applyFont="1" applyFill="1"/>
+                        `);
+                        let headerStyleId = cellXfs.children().length - 1;
+
+                        // Center alignment style
+                        cellXfs.append(`
+                        <xf xfId="0" fontId="0" fillId="0" borderId="0" applyFont="1" applyFill="1" applyAlignment="1">
+                            <alignment horizontal="center"/>
+                        </xf>
+                        `);
+                        let centerStyleId = cellXfs.children().length - 1;
+
+                        // Apply header style to row 2 (index 1)
+                        $('row:eq(1) c', sheet).attr('s', headerStyleId);
+
+                        // Apply center style to column F (Active Trips For the Day) in data rows
+                        $('row', sheet).each(function (index) {
+                            if (index > 1) { // Skip title (0) and header (1)
+                                $(this).find('c[r^="F"]').attr('s', centerStyleId);
+                            }
+                        });
+                    }
+                },
+                { 
+                    extend: 'print', 
+                    className: 'btn btn-info btn-sm', 
+                    title: 'Daily Trip Count Report',
+                    customize: function (win) {
+                        $(win.document.body).find('thead th')
+                            .css('background-color', '#0A3278')
+                            .css('color', 'white')
+                            .css('font-weight', 'bold');
+                    }
+                }
             ],
-            order: [[0, 'asc']]
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            pageLength: 10,
+            "order": [[2, 'desc']]
+        });
+
+        $('#filterForm').on('submit', function (e) {
+            e.preventDefault();
+            table.ajax.reload();
+        });
+        
+        $('#clearBtn').on('click', function(e) {
+            e.preventDefault();
+            window.location.href = "{% url 'daily_trip_count_report' %}";
         });
     });
 </script>

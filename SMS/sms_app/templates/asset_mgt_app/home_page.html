@@ -16,8 +16,56 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <!-- extras JS (flatpickr + export) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
-<link rel="stylesheet" href="{% static 'home_page.css' %}?v=20260501" />
+<link rel="stylesheet" href="{% static 'home_page.css' %}?v=20260727-01" />
 <style>
+    html, body {
+        background-color: #09102b !important;
+        color: #e2e8f0;
+        overflow-x: hidden;
+    }
+    body > .container-fluid,
+    .container-fluid {
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    @media screen and (min-width: 992px) {
+        .row > .col-12.col-md-2 {
+            flex: 0 0 0px !important;
+            max-width: 0px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 0 !important;
+        }
+        #main-content {
+            flex: 0 0 calc(100% - var(--sidebar-collapsed-width, 88px)) !important;
+            max-width: calc(100% - var(--sidebar-collapsed-width, 88px)) !important;
+            margin-left: var(--sidebar-collapsed-width, 88px) !important;
+            padding: 0.4rem 0.75rem 0.4rem 0.4rem !important;
+            width: calc(100% - var(--sidebar-collapsed-width, 88px)) !important;
+            transition: margin-left 0.22s ease, flex 0.22s ease, max-width 0.22s ease, width 0.22s ease !important;
+        }
+        body.sidenav-expanded #main-content,
+        .row:has(.sidenav:hover) #main-content,
+        .container-fluid:has(.sidenav:hover) #main-content {
+            flex: 0 0 calc(100% - var(--sidebar-expanded-width, 410px)) !important;
+            max-width: calc(100% - var(--sidebar-expanded-width, 410px)) !important;
+            margin-left: var(--sidebar-expanded-width, 410px) !important;
+            width: calc(100% - var(--sidebar-expanded-width, 410px)) !important;
+        }
+    }
+    @media screen and (max-width: 991px) {
+        #main-content {
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            padding: 0.5rem !important;
+            width: 100% !important;
+        }
+    }
     .nav-category-header {
         padding: 7.5px 15px 3px 15px; /* Reduced by 25% */
         font-size: 10px;
@@ -257,6 +305,13 @@
                             <a href="{% url 'fleet_management_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Fleet Management System</a>
                             <a href="{% url 'trans_customer_claims_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Claims</a>
                         </div>
+                    </div>
+                    <hr class="hr_style">
+                    <button id="express_prime" type="button" class="collapsible "><i class="fas fa-shipping-fast"></i> Express(Prime)</button>
+                    <div class="content">
+                        <a href="{% url 'prime_enquiry_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Booking note</a>
+                        <a href="{% url 'prime_vehicle_allotment_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle allotment</a>
+                        <a href="{% url 'prime_trip_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Trip detail</a>
                     </div>
                     <hr class="hr_style">
                     <button id="warehouse" type="button" class="collapsible "><i class="fas fa-industry"></i> Ware-House Management System (WMS)</button>
@@ -682,6 +737,7 @@
             enableElement('warehouse');
             enableElement('transport');
             enableElement('packing');
+            enableElement('express_prime');
         } else { // User view based on role, business solution, and department
             disableElement('employee_management_system');
             disableElement('administration');
@@ -692,6 +748,7 @@
             disableElement('finance');
             disableElement('packing'); // Disable packing for BVM Storage Solutions
             disableElement('transport'); // Disable transport for BVM Storage Solutions
+            disableElement('express_prime');
             disableElement('warehouse');
              if (user_id==57|| user_id==140|| user_id==142|| user_id==143)
             {
@@ -742,6 +799,7 @@
             else if (parseInt(bussiness_solution_id) === 2)
             {
                 enableElement('transport'); // Enable transport for BVM Trans Solutions
+                enableElement('express_prime');
             }
         }
         if (user_id==1 ||user_id==2 || user_id==57 || user_id==68 || user_id==86 || user_id==93|| user_id==142|| user_id==143|| user_id==158)
@@ -770,6 +828,7 @@
             disableElement('supports');
             
             enableElement('transport');
+            enableElement('express_prime');
         }
     });
 </script>
@@ -804,6 +863,14 @@
             alert("Failed to load TMS Dashboard");
           }
         });
+      });
+
+      $(document).on('mouseenter', '.sidenav', function() {
+        $('body').addClass('sidenav-expanded');
+        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 230);
+      }).on('mouseleave', '.sidenav', function() {
+        $('body').removeClass('sidenav-expanded');
+        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 230);
       });
     });
 </script>

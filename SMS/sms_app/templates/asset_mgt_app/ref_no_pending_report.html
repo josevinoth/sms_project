@@ -29,16 +29,16 @@
     </div>
 
 
-    <!-- Month -->
+    <!-- From Date -->
     <div class="col-md-2">
-        <label class="form-label fw-bold">Month</label>
-        {% render_field form.month class="form-control" value=selected_month %}
+        <label class="form-label fw-bold">From Date</label>
+        {% render_field form.from_date class="form-control" %}
     </div>
 
-    <!-- Year -->
+    <!-- To Date -->
     <div class="col-md-2">
-        <label class="form-label fw-bold">Year</label>
-        {% render_field form.year class="form-control" value=selected_year %}
+        <label class="form-label fw-bold">To Date</label>
+        {% render_field form.to_date class="form-control" %}
     </div>
     <!-- From Location -->
     <div class="col-md-2">
@@ -81,14 +81,6 @@
             </tr>
         </thead>
         <tbody>
-            <!-- DYNAMIC ROWS -->
-            {% for row in data_rows %}
-            <tr>
-                {% for cell in row %}
-                <td>{{ cell }}</td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
         </tbody>
     </table>
 
@@ -99,6 +91,19 @@
 $(document).ready(function () {
 
     $('#ref_no_pending_report_table').DataTable({
+        serverSide: true,
+        processing: true,
+        ajax: {
+            url: "{% url 'ref_no_pending_report_ajax' %}",
+            type: "GET",
+            data: function (d) {
+                d.customer = $('[name="dmr_customer"]').val() || '';
+                d.from_date = $('[name="from_date"]').val() || '';
+                d.to_date = $('[name="to_date"]').val() || '';
+                d.from_location = $('[name="from_location"]').val() || '';
+                d.to_location = $('[name="to_location"]').val() || '';
+            }
+        },
         scrollX: true,
         dom: 'lBfrtip',
 
@@ -199,6 +204,12 @@ $(document).ready(function () {
     });
 
 });
+
+    $('form').on('submit', function(e) {
+        e.preventDefault();
+        $('#ref_no_pending_report_table').DataTable().ajax.reload();
+    });
+
 </script>
 
 {% endblock content %}

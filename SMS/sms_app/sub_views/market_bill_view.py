@@ -236,6 +236,10 @@ def market_bill_edit(request, id):
                 Q(va_enquirynumber=trip.tr_enquirynumber),
                 Q(va_vehiclenumber__vm_registrationnumber__iexact=trip.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip.tr_vehiclenumber)
             ).first()
+            if not allotment:
+                allotment = Vehicle_allotmentInfo.objects.filter(
+                    va_enquirynumber=trip.tr_enquirynumber
+                ).order_by('-id').first()
             if allotment:
                 standard_cost = float(allotment.va_standardbuy or 0)
                 special_cost = float(allotment.va_specialbuy or 0)
@@ -403,6 +407,9 @@ def get_trips_by_vendor(request):
             for vn in veh_numbers:
                 allotment_filters |= Q(tr_enquirynumber_id=enq_id, tr_vehiclenumber__iexact=vn)
             has_allotments = True
+            # Fallback if vehicle was replaced: match by enquiry ID only (so any vehicle on the trip is accepted)
+            if allotment.va_status_id == 2:
+                allotment_filters |= Q(tr_enquirynumber_id=allotment.va_enquirynumber_id)
 
     if not has_allotments:
         allotment_filters = Q(pk__in=[])
@@ -461,6 +468,10 @@ def get_trips_by_vendor(request):
             Q(va_enquirynumber=trip.tr_enquirynumber),
             Q(va_vehiclenumber__vm_registrationnumber__iexact=trip.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip.tr_vehiclenumber)
         ).first()
+        if not allotment:
+            allotment = Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber=trip.tr_enquirynumber
+            ).order_by('-id').first()
         if allotment:
             standard_cost = float(allotment.va_standardbuy or 0)
             special_cost = float(allotment.va_specialbuy or 0)
@@ -736,6 +747,10 @@ def market_bill_export_tally(request):
                 Q(va_enquirynumber=trip.tr_enquirynumber),
                 Q(va_vehiclenumber__vm_registrationnumber__iexact=trip.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip.tr_vehiclenumber)
             ).first()
+            if not allotment:
+                allotment = Vehicle_allotmentInfo.objects.filter(
+                    va_enquirynumber=trip.tr_enquirynumber
+                ).order_by('-id').first()
             if allotment and allotment.va_specialbuy:
                 transport_cost = float(allotment.va_specialbuy)
                 

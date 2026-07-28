@@ -1,3 +1,4 @@
+from django.utils import timezone
 import calendar
 from datetime import datetime, date
 from django.contrib import messages
@@ -16,7 +17,6 @@ from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 from ..sub_models.customer_mod import CustomerInfo
 from ..sub_models.customerdepartment_mod import CustomerdepartmentInfo
 from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
-
 
 # -------------------------------------------------------------------------
 # CONSTANTS & TEMPLATES (Consolidated)
@@ -309,8 +309,8 @@ CUSTOMER_DMR_TEMPLATES = {
     },
     "CEVA": {
         "Air Import": DMR_TEMPLATES["CEVA Air Import"],
-        "Air Export": DMR_TEMPLATES["CEVA Export"], # Note: Original code mapped Air Export to "CEVA Export".
-        "Sea Import": DMR_TEMPLATES["CEVA Air Import"], # Note: Original code mapped Sea Import to "CEVA Air Import".
+        "Air Export": DMR_TEMPLATES["CEVA Export"],  # Note: Original code mapped Air Export to "CEVA Export".
+        "Sea Import": DMR_TEMPLATES["CEVA Air Import"],  # Note: Original code mapped Sea Import to "CEVA Air Import".
         "Sea Export": DMR_TEMPLATES["CEVA Export"],
     },
     "DHL BLR": {
@@ -450,9 +450,25 @@ ADDITIONAL_CUSTOMERS = [
     "EXECUTIVE(T)MAA", "DUKANE(T)MAA", "RIKUN(T)MAA", "Udhaya Kumar D"
 ]
 
+
 # Helper to normalize for matching
+def _safe_fmt(dt, fmt):
+    if not dt: return ""
+    from django.utils import timezone
+    from datetime import datetime
+    try:
+        if isinstance(dt, datetime):
+            dt = timezone.localtime(dt)
+    except Exception:
+        pass
+    try:
+        return dt.strftime(fmt)
+    except Exception:
+        return str(dt)
+
 def _norm(s):
     return (s or "").lower().replace(" ", "").replace("-", "")
+
 
 # INITIALIZE DYNAMIC MAPPINGS ON IMPORT
 for cust_str in ADDITIONAL_CUSTOMERS:
@@ -523,7 +539,7 @@ def get_dmr_headers(customer_name, dept_name, from_loc_id, to_loc_id):
         "EIPL", "TVS", "FORD", "CEVA", "DHL", "DSV", "APMT", "UPS", "FEDEX", "GEODIS"
     ]
     is_specified = any(_norm(sc) in cust_value for sc in SPECIFIED_CUSTOMERS)
-    
+
     headers = DEFAULT_HEADERS
     template_key = None
 
@@ -563,25 +579,34 @@ def get_dmr_headers(customer_name, dept_name, from_loc_id, to_loc_id):
 
     return headers, template_key
 
+
 def safe(value):
     if value is None: return ""
     return str(value)
 
+
 def safe_str(v):
     return "" if v is None else str(v)
 
+
 def safe_num(v):
-    try: return float(v) if v not in ("", None, "None") else 0
-    except: return 0
+    try:
+        return float(v) if v not in ("", None, "None") else 0
+    except:
+        return 0
+
 
 def get_dmr_rows(trips, headers, template_key, customer_name):
     rows = []
     # Fetch all ConsignmentgoodsInfo and Vehicle_allotmentInfo for the current page in bulk
     trip_cons_nums = [t.tr_consignmentnumber_id for t in trips if t.tr_consignmentnumber_id]
     trip_enq_nums = [t.tr_enquirynumber_id for t in trips]
-    
-    goods_map = {g.cg_consignmentnumber_id: g for g in ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber_id__in=trip_cons_nums)}
-    va_map = {v.va_enquirynumber_id: v for v in Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=trip_enq_nums).select_related('va_vendor', 'va_driver')}
+
+    goods_map = {g.cg_consignmentnumber_id: g for g in
+                 ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber_id__in=trip_cons_nums)}
+    va_map = {v.va_enquirynumber_id: v for v in
+              Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=trip_enq_nums).select_related('va_vendor',
+                                                                                                         'va_driver')}
     cons_detail_map = {c.id: c for c in ConsignmentdetailInfo.objects.filter(id__in=trip_cons_nums)}
 
     for idx, trip in enumerate(trips, start=1):
@@ -593,123 +618,164 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
         for h in headers:
             hh = " ".join(h.strip().lower().split())
             if hh in ("s.no", "sr. no.", "so no", "se.no"):
-                row.append(idx); continue
-            
-            
+                row.append(idx);
+                continue
+
             # 2. Pickup Point (Arrival at Shipper - IN) OR Generic Pickup/Loading Date
             if hh in ("pickup date", "pickup point in date", "in date", "airport/bvm gate in date"):
                 # Strict: For specific "IN" labels
                 val = trip.tr_departeddate_pickup or trip.tr_loading_time
-                row.append(val.strftime("%d-%m-%Y") if val else ""); continue
+                row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
+                continue
             if hh in ("loading date",):
                 # Broader fallback for generic "loading date"
                 val = trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_departeddate or trip.tr_created_at
-                row.append(val.strftime("%d-%m-%Y") if val else ""); continue
+                row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
+                continue
             if hh in ("pickup point in time", "in time", "airport/bvm gate in time"):
                 # Strict: For specific "IN" labels
                 val = trip.tr_departeddate_pickup or trip.tr_loading_time
-                row.append(val.strftime("%H:%M") if val else ""); continue
-            if hh in ("loading time", "veh reported time @ loading point", "vehicle reported date &time at loading point"):
+                row.append(_safe_fmt(val, "%H:%M") if val else "");
+                continue
+            if hh in ("loading time", "veh reported time @ loading point",
+                      "vehicle reported date &time at loading point"):
                 # Broader fallback for generic "loading time"
                 val = trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_departeddate
                 if hh == "vehicle reported date &time at loading point":
-                    row.append(val.strftime("%d-%m-%Y %H:%M") if val else ""); continue
-                row.append(val.strftime("%H:%M") if val else ""); continue
+                    row.append(_safe_fmt(val, "%d-%m-%Y %H:%M") if val else "");
+                    continue
+                row.append(_safe_fmt(val, "%H:%M") if val else "");
+                continue
 
             # 3. Pickup Point (Departure from Shipper - OUT) OR Generic Trip Date
             if hh in ("pickup point out date", "out date", "ofd date"):
                 # Strict: For specific "OUT" labels
                 val = trip.tr_departeddate or trip.tr_dock_in_time
-                row.append(val.strftime("%d-%m-%Y") if val else ""); continue
+                row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
+                continue
             if hh in ("trip date", "indent date", "date"):
                 # Broader fallback for generic "date" / "trip date"
                 val = trip.tr_departeddate or trip.tr_loading_time or trip.tr_departeddate_pickup or trip.tr_created_at
-                row.append(val.strftime("%d-%m-%Y") if val else ""); continue
+                row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
+                continue
             if hh in ("pickup point out time", "out time"):
                 # Strict: For specific "OUT" labels
                 val = trip.tr_departeddate or trip.tr_dock_in_time
-                row.append(val.strftime("%H:%M") if val else ""); continue
+                row.append(_safe_fmt(val, "%H:%M") if val else "");
+                continue
             if hh in ("starting time", "vehicle started date &time at loading point"):
                 # Broader fallback for generic "starting time"
                 val = trip.tr_departeddate or trip.tr_loading_time or trip.tr_departeddate_pickup
                 if hh == "vehicle started date &time at loading point":
-                     row.append(val.strftime("%d-%m-%Y %H:%M") if val else ""); continue
-                row.append(val.strftime("%H:%M") if val else ""); continue
+                    row.append(_safe_fmt(val, "%d-%m-%Y %H:%M") if val else "");
+                    continue
+                row.append(_safe_fmt(val, "%H:%M") if val else "");
+                continue
 
             # 4. Unloading Point (Arrival at Destination - IN)
-            if hh in ("unloading point in date", "gate in date", "reached plant", "reached cfs", "reached", "cfs reached date", "closing place", "closing time", "vehicle reported date &time at unloading point"):
+            if hh in ("unloading point in date", "gate in date", "reached plant", "reached cfs", "reached",
+                      "cfs reached date", "closing place", "closing time",
+                      "vehicle reported date &time at unloading point"):
                 # tr_reporteddate labels: "Vehicle Reported Date & Time" (Unloading Section)
                 # tr_departeddate_delivery labels: "Dock-In Time" (Unloading Section)
                 val = trip.tr_reporteddate or trip.tr_departeddate_delivery
                 if hh == "vehicle reported date &time at unloading point":
-                    row.append(val.strftime("%d-%m-%Y %H:%M") if val else ""); continue
+                    row.append(_safe_fmt(val, "%d-%m-%Y %H:%M") if val else "");
+                    continue
                 if "time" in hh:
-                    row.append(val.strftime("%H:%M") if val else ""); continue
-                row.append(val.strftime("%d-%m-%Y") if val else ""); continue
-            
-            if hh in ("unloading point in time", "in time @ unloading point", "gate in time", "cfs reached time", "closing time"):
+                    row.append(_safe_fmt(val, "%H:%M") if val else "");
+                    continue
+                row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
+                continue
+
+            if hh in ("unloading point in time", "in time @ unloading point", "gate in time", "cfs reached time",
+                      "closing time"):
                 val = trip.tr_reporteddate or trip.tr_departeddate_delivery
-                row.append(val.strftime("%H:%M") if val else ""); continue
+                row.append(_safe_fmt(val, "%H:%M") if val else "");
+                continue
 
             # 5. Unloading Point (Departure from Destination - OUT) OR Generic Delivery Date
             if hh in ("unloading point out date", "dlv out date", "released date", "vehicle released date"):
                 # Strict: For specific "OUT" labels
                 val = trip.tr_reporteddate_pickup or trip.tr_unloading_time
-                row.append(val.strftime("%d-%m-%Y") if val else ""); continue
+                row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
+                continue
             if hh in ("delivery date",):
                 # Broader fallback for generic "delivery date"
                 val = trip.tr_unloading_time or trip.tr_reporteddate_pickup or trip.tr_reporteddate or trip.tr_departeddate_delivery
-                row.append(val.strftime("%d-%m-%Y") if val else ""); continue
+                row.append(_safe_fmt(val, "%d-%m-%Y") if val else "");
+                continue
             if hh in ("dlv out time", "unloading point out time", "released time", "vehicle released time"):
                 # Strict: For specific "OUT" labels
                 val = trip.tr_reporteddate_pickup or trip.tr_unloading_time
-                row.append(val.strftime("%H:%M") if val else ""); continue
+                row.append(_safe_fmt(val, "%H:%M") if val else "");
+                continue
             if hh in ("unloading time", "vehicle started date &time at unloading point"):
                 # Broader fallback for generic "unloading time"
                 val = trip.tr_unloading_time or trip.tr_reporteddate_pickup or trip.tr_reporteddate
                 if hh == "vehicle started date &time at unloading point":
-                    row.append(val.strftime("%d-%m-%Y %H:%M") if val else ""); continue
-                row.append(val.strftime("%H:%M") if val else ""); continue
+                    row.append(_safe_fmt(val, "%d-%m-%Y %H:%M") if val else "");
+                    continue
+                row.append(_safe_fmt(val, "%H:%M") if val else "");
+                continue
 
             if hh == "bvm in":
                 # Special handler for 'BVM IN' which refers to arrival at hub/warehouse
                 v = trip.tr_reporteddate_pickup or trip.tr_reporteddate
                 if not v: row.append(""); continue
                 fmt = "%d-%m-%Y" if "date" in hh else "%H:%M" if "time" in hh else "%d-%m-%Y %H:%M"
-                row.append(v.strftime(fmt)); continue
+                row.append(_safe_fmt(v, fmt));
+                continue
 
             if "consignment note" in hh or "cnote" in hh:
-                row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else ""); continue
+                row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else "");
+                continue
             if hh == "trip sheet no":
-                row.append(safe_str(trip.tr_tripnumber)); continue
+                row.append(safe_str(trip.tr_tripnumber));
+                continue
             if hh == "customer name":
-                row.append(safe_str(trip.tr_enquirynumber.en_customername)); continue
+                row.append(safe_str(trip.tr_enquirynumber.en_customername));
+                continue
             if hh == "customer dept":
-                row.append(safe_str(trip.tr_enquirynumber.en_customerdepartment)); continue
+                row.append(safe_str(trip.tr_enquirynumber.en_customerdepartment));
+                continue
             if hh == "user name":
-                row.append(safe_str(trip.tr_enquirynumber.en_assignedto)); continue
+                row.append(safe_str(trip.tr_enquirynumber.en_assignedto));
+                continue
             if hh == "transport bill to":
-                row.append(safe_str(trip.tr_enquirynumber.en_customername)); continue
+                row.append(safe_str(trip.tr_enquirynumber.en_customername));
+                continue
             if hh in ("tripcost", "trip cost", "trip charges"):
-                row.append(safe_num(trip.tc_tripcost)); continue
+                row.append(safe_num(trip.tc_tripcost));
+                continue
             if hh in ("job no", "bvm job no", "bvm job number", "ceva job no", "bvm job"):
-                row.append(safe_str(trip.tr_tripnumber)); continue
-            if "department name" in hh or hh in ("dept", "department", "air air import &air air export & ocean air export & dom", "division"):
-                row.append(safe_str(trip.tr_enquirynumber.en_customerdepartment)); continue
+                row.append(safe_str(trip.tr_tripnumber));
+                continue
+            if "department name" in hh or hh in ("dept", "department",
+                                                 "air air import &air air export & ocean air export & dom", "division"):
+                row.append(safe_str(trip.tr_enquirynumber.en_customerdepartment));
+                continue
 
             if hh in ("veh reported km @ loading point", "starting km"):
-                row.append(safe_str(trip.tr_reportedkm_pickup)); continue
+                row.append(safe_str(trip.tr_reportedkm_pickup));
+                continue
             if hh in ("veh reported km @ unloading point", "closing km"):
                 val = trip.tr_reportedkm_delivery if trip.tr_category_id == 1 else trip.tr_reportedkm
-                row.append(safe_str(val)); continue
+                row.append(safe_str(val));
+                continue
             if hh in ("used km", "used kms"):
-                diff = ((trip.tr_reportedkm or 0) - (trip.tr_reportedkm_pickup or 0)) if trip.tr_category_id in (2, 3) else ((trip.tr_reportedkm_delivery or 0) - (trip.tr_reportedkm_pickup or 0))
-                row.append(safe_num(diff)); continue
+                diff = ((trip.tr_reportedkm or 0) - (trip.tr_reportedkm_pickup or 0)) if trip.tr_category_id in (2,
+                                                                                                                 3) else (
+                            (trip.tr_reportedkm_delivery or 0) - (trip.tr_reportedkm_pickup or 0))
+                row.append(safe_num(diff));
+                continue
 
             if hh in ("from", "origin", "starting place", "pickup location", "orgin"):
-                row.append(safe_str(trip.tr_departedlocation)); continue
+                row.append(safe_str(trip.tr_departedlocation));
+                continue
             if hh in ("unloading point", "unloading point", "unloading  point"):
-                row.append(safe_str(trip.tr_reportedlocation)); continue
+                row.append(safe_str(trip.tr_reportedlocation));
+                continue
             if hh in ("delivery location", "to", "destination", "delivery place", "delivery point", "closing place"):
                 if cons_goods and getattr(cons_goods, "cg_deliverylocation", None):
                     row.append(safe(cons_goods.cg_deliverylocation))
@@ -720,151 +786,225 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 continue
             if hh == "planning received date":
                 en_date = getattr(trip.tr_enquirynumber, "en_created_at", None)
-                row.append(en_date.strftime("%d-%m-%Y") if en_date else ""); continue
+                row.append(_safe_fmt(en_date, "%d-%m-%Y") if en_date else "");
+                continue
             if hh == "planning received time":
                 en_date = getattr(trip.tr_enquirynumber, "en_created_at", None)
-                row.append(en_date.strftime("%H:%M") if en_date else ""); continue
+                row.append(_safe_fmt(en_date, "%H:%M") if en_date else "");
+                continue
 
             if hh == "month":
                 dt = trip.tr_loading_time or trip.tr_departeddate or trip.tr_created_at
-                row.append(dt.strftime("%B") if dt else ""); continue
+                row.append(_safe_fmt(dt, "%B") if dt else "");
+                continue
 
             if hh == "requestor":
-                row.append(safe_str(trip.tr_enquirynumber.en_assignedto)); continue
+                row.append(safe_str(trip.tr_enquirynumber.en_assignedto));
+                continue
 
             # --- SHIPPER / CONSIGNEE ---
             if "shipper seal #" in hh or hh == "seal no" or hh == "seal no":
                 val = (cons_detail.co_seal_number or cons_detail.co_smart_lock_number) if cons_detail else ""
-                row.append(safe_str(val)); continue
+                row.append(safe_str(val));
+                continue
             if "shipper" in hh or hh == "consignor":
-                row.append(safe_str(cons_goods.cg_consigner) if cons_goods else ""); continue
+                row.append(safe_str(cons_goods.cg_consigner) if cons_goods else "");
+                continue
             if "llr no" in hh or "lr no" in hh or hh == "bvm lr no":
-                row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else ""); continue
+                row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else "");
+                continue
             if "consignee" in hh:
-                row.append(safe_str(cons_goods.cg_consignee) if cons_goods else ""); continue
+                row.append(safe_str(cons_goods.cg_consignee) if cons_goods else "");
+                continue
             if "cs name" in hh or hh == "cutomer service":
-                row.append(safe_str(trip.tr_enquirynumber.en_assignedto)); continue
+                row.append(safe_str(trip.tr_enquirynumber.en_assignedto));
+                continue
             if hh in ("vehicle placed time", "placement & vehicle placed date", "vehicle placed date"):
-                 fmt = "%d-%m-%Y" if "date" in hh else "%H:%M"
-                 v = trip.tr_loading_time or (va.va_created_at if va else None)
-                 row.append(v.strftime(fmt) if v else ""); continue
+                fmt = "%d-%m-%Y" if "date" in hh else "%H:%M"
+                v = trip.tr_loading_time or (va.va_created_at if va else None)
+                row.append(_safe_fmt(v, fmt) if v else "");
+                continue
             if "hawb" in hh or "hbl" in hh:
-                row.append(safe_str(cons_goods.cg_hawbno) if cons_goods else ""); continue
+                row.append(safe_str(cons_goods.cg_hawbno) if cons_goods else "");
+                continue
             if "boe" in hh or "ewaybill" in hh or hh == "e-way bill":
-                row.append(safe_str(cons_goods.cg_ebillno) if cons_goods else ""); continue
+                row.append(safe_str(cons_goods.cg_ebillno) if cons_goods else "");
+                continue
             if "reference" in hh or hh == "hbl no/reference no":
-                row.append(safe_str(cons_detail.co_cusrefnum if cons_detail else "")); continue
-            if "truck no" in hh or "veh no" in hh or hh in ("vehicle no.", "vehicle no", "vehicle number", "veh.no", "veh no"):
-                row.append(safe_str(trip.tr_vehiclenumber)); continue
-            if "truck type" in hh or "veh type" in hh or hh in ("container size", "vehicle type", "vehiile size", "vehicle type"):
-                row.append(safe_str(trip.tr_vehicletype)); continue
+                row.append(safe_str(cons_detail.co_cusrefnum if cons_detail else ""));
+                continue
+            if "truck no" in hh or "veh no" in hh or hh in ("vehicle no.", "vehicle no", "vehicle number", "veh.no",
+                                                            "veh no"):
+                row.append(safe_str(trip.tr_vehiclenumber));
+                continue
+            if "truck type" in hh or "veh type" in hh or hh in ("container size", "vehicle type", "vehiile size",
+                                                                "vehicle type"):
+                row.append(safe_str(trip.tr_vehicletype));
+                continue
             if hh in ("booking no", "po #;", "bvm invoice"):
-                row.append(safe_str(trip.tr_customerref or (cons_detail.co_cusrefnum if cons_detail else ""))); continue
+                row.append(safe_str(trip.tr_customerref or (cons_detail.co_cusrefnum if cons_detail else "")));
+                continue
 
             # --- UPS / FEDEX / GEODIS BLR SPECIFIC ---
             if hh == "pcs":
-                row.append(safe_str(cons_goods.cg_qty) if cons_goods else ""); continue
+                row.append(safe_str(cons_goods.cg_qty) if cons_goods else "");
+                continue
             if hh == "weight":
-                row.append(safe_str(cons_goods.cg_weight) if cons_goods else ""); continue
+                row.append(safe_str(cons_goods.cg_weight) if cons_goods else "");
+                continue
             if hh == "invoice no":
-                row.append(safe_str(cons_detail.co_cusrefnum) if cons_detail else ""); continue
+                row.append(safe_str(cons_detail.co_cusrefnum) if cons_detail else "");
+                continue
             if hh == "mawb":
-                row.append(safe_str(cons_goods.cg_mawbno) if cons_goods else ""); continue
+                row.append(safe_str(cons_goods.cg_mawbno) if cons_goods else "");
+                continue
             if hh == "vehile size":
-                row.append(safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype)); continue
+                row.append(safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype));
+                continue
             if hh == "toll pass":
-                row.append(safe_num(trip.tc_tollcost)); continue
+                row.append(safe_num(trip.tc_tollcost));
+                continue
             if hh == "aai charges":
-                row.append(safe_num(trip.tc_supervisorcost)); continue
+                row.append(safe_num(trip.tc_supervisorcost));
+                continue
             if hh == "supervisor charges":
-                row.append(safe_num(trip.tc_supervisorcost)); continue
+                row.append(safe_num(trip.tc_supervisorcost));
+                continue
             if hh == "unloading charges":
-                row.append(safe_num(trip.tc_unloadingcost)); continue
+                row.append(safe_num(trip.tc_unloadingcost));
+                continue
             if hh == "loading charges":
-                row.append(safe_num(trip.tc_loadingcost)); continue
+                row.append(safe_num(trip.tc_loadingcost));
+                continue
             if hh == "halting charge":
-                row.append(safe_num(trip.tc_haltingcost)); continue
+                row.append(safe_num(trip.tc_haltingcost));
+                continue
             if hh == "handling charges":
-                row.append(safe_num(trip.tc_handlingcost)); continue
+                row.append(safe_num(trip.tc_handlingcost));
+                continue
             if hh == "bvm in":
-                row.append(trip.tr_reporteddate.strftime("%d-%m-%Y") if "date" in hh else trip.tr_reporteddate.strftime("%H:%M") if "time" in hh else trip.tr_reporteddate.strftime("%d-%m-%Y %H:%M") if trip.tr_reporteddate else ""); continue
+                row.append(timezone.localtime(trip.tr_reporteddate).strftime("%d-%m-%Y") if "date" in hh else timezone.localtime(trip.tr_reporteddate).strftime(
+                    "%H:%M") if "time" in hh else timezone.localtime(trip.tr_reporteddate).strftime(
+                    "%d-%m-%Y %H:%M") if trip.tr_reporteddate else "");
+                continue
             if hh == "update status":
-                row.append(safe_str(trip.tc_financestatus)); continue
+                row.append(safe_str(trip.tc_financestatus));
+                continue
 
             if hh == "detention days":
-                row.append(safe_num(trip.tc_no_of_days_halting)); continue
+                row.append(safe_num(trip.tc_no_of_days_halting));
+                continue
 
             # --- GENERIC FIELDS ---
             if "vendor" in hh or "transporter" in hh:
                 vendor = safe_str(va.va_vendor) if (va and trip.tr_vehiclesource_id in (2, 3)) else "OWN VEHICLE"
-                row.append(vendor); continue
+                row.append(vendor);
+                continue
             if "driver name" in hh:
-                val = trip.tr_drivername or (va.va_drivername if va else "") or (va.va_driver.dm_name if va and va.va_driver else "")
-                row.append(safe_str(val)); continue
+                val = trip.tr_drivername or (va.va_drivername if va else "") or (
+                    va.va_driver.dm_name if va and va.va_driver else "")
+                row.append(safe_str(val));
+                continue
             if "driver mobile" in hh or "driver number" in hh or hh == "driver no." or hh == "driver namber":
-                val = trip.tr_drivernumber or (va.va_drivernumber if va else "") or (va.va_driver.dm_drivernumber if va and va.va_driver else "")
-                row.append(safe_str(val)); continue
+                val = trip.tr_drivernumber or (va.va_drivernumber if va else "") or (
+                    va.va_driver.dm_drivernumber if va and va.va_driver else "")
+                row.append(safe_str(val));
+                continue
             if "driver dl" in hh:
-                val = trip.tr_driver_lic or (va.va_driver_lic if va else "") or (va.va_driver.dm_driver_lic if va and va.va_driver else "")
-                row.append(safe_str(val)); continue
+                val = trip.tr_driver_lic or (va.va_driver_lic if va else "") or (
+                    va.va_driver.dm_driver_lic if va and va.va_driver else "")
+                row.append(safe_str(val));
+                continue
             if hh in ("trip number", "bvm job", "bvm job no", "bvm job number"):
-                row.append(safe_str(trip.tr_tripnumber)); continue
+                row.append(safe_str(trip.tr_tripnumber));
+                continue
             if "no of pieces" in hh or hh in ("pcs", "no pkg", "pkgs", "sum of pieces", "no.of pkgs"):
-                qty = cons_goods.cg_loaded_qty if cons_goods and cons_goods.cg_loaded_qty else (cons_goods.cg_qty if cons_goods else "")
-                row.append(safe_str(qty)); continue
-            if "actual weight" in hh or "invoice weight" in hh or "gross weight" in hh or "cargo weight" in hh or hh in ("weight", "g weight", "actual weight (kgs)"):
-                row.append(safe_str(cons_goods.cg_weight) if cons_goods else ""); continue
+                qty = cons_goods.cg_loaded_qty if cons_goods and cons_goods.cg_loaded_qty else (
+                    cons_goods.cg_qty if cons_goods else "")
+                row.append(safe_str(qty));
+                continue
+            if "actual weight" in hh or "invoice weight" in hh or "gross weight" in hh or "cargo weight" in hh or hh in (
+                    "weight", "g weight", "actual weight (kgs)"):
+                row.append(safe_str(cons_goods.cg_weight) if cons_goods else "");
+                continue
             if "chargeable weight" in hh:
-                row.append(""); continue
+                row.append("");
+                continue
             if "cbm" in hh or "volume" in hh:
-                row.append(""); continue
+                row.append("");
+                continue
 
             # --- UNLOADING ---
-            if hh in ("unloading point in date", "gate in date", "reached plant", "reached cfs", "reached", "cfs reached date"):
-                row.append(trip.tr_reporteddate.strftime("%d-%m-%Y") if trip.tr_reporteddate else ""); continue
+            if hh in ("unloading point in date", "gate in date", "reached plant", "reached cfs", "reached",
+                      "cfs reached date"):
+                row.append(timezone.localtime(trip.tr_reporteddate).strftime("%d-%m-%Y") if trip.tr_reporteddate else "");
+                continue
             if hh in ("unloading point in time", "in time @ unloading point", "gate in time", "cfs reached time"):
-                row.append(trip.tr_reporteddate.strftime("%H:%M") if trip.tr_reporteddate else ""); continue
+                row.append(timezone.localtime(trip.tr_reporteddate).strftime("%H:%M") if trip.tr_reporteddate else "");
+                continue
             if hh in ("unloading point out date", "dlv out date", "delivery date"):
-                row.append(trip.tr_unloading_time.strftime("%d-%m-%Y") if trip.tr_unloading_time else ""); continue
-            if hh in ("dlv out time", "unloading time", "unloading time", "unloading point out time") or (hh == "unloading time" and "time" in hh):
-                row.append(trip.tr_unloading_time.strftime("%H:%M") if trip.tr_unloading_time else ""); continue
+                row.append(timezone.localtime(trip.tr_unloading_time).strftime("%d-%m-%Y") if trip.tr_unloading_time else "");
+                continue
+            if hh in ("dlv out time", "unloading time", "unloading time", "unloading point out time") or (
+                    hh == "unloading time" and "time" in hh):
+                row.append(timezone.localtime(trip.tr_unloading_time).strftime("%H:%M") if trip.tr_unloading_time else "");
+                continue
 
             # --- CHARGES ---
             if "no of days halting" in hh:
-                row.append(safe_num(trip.tc_no_of_days_halting)); continue
+                row.append(safe_num(trip.tc_no_of_days_halting));
+                continue
             if "additional charges" in hh or hh == "handling/additional charges":
-                row.append(safe_num(trip.tc_handlingcost)); continue
+                row.append(safe_num(trip.tc_handlingcost));
+                continue
             if "cancellation charges" in hh or "cancelling charges" in hh:
-                row.append(safe_num(trip.tc_cancellation)); continue
+                row.append(safe_num(trip.tc_cancellation));
+                continue
             if "halting charges" in hh:
-                row.append(safe_num(trip.tc_haltingcost)); continue
+                row.append(safe_num(trip.tc_haltingcost));
+                continue
             if hh == "charges":
-                row.append(safe_num(trip.tc_tripcost)); continue
+                row.append(safe_num(trip.tc_tripcost));
+                continue
             if "weightment charges" in hh or hh == "weighment pass":
-                row.append(safe_num(trip.tc_weighmentcost)); continue
+                row.append(safe_num(trip.tc_weighmentcost));
+                continue
             if hh == "parking charges":
-                row.append(safe_num(trip.tc_parkingcost)); continue
+                row.append(safe_num(trip.tc_parkingcost));
+                continue
             if hh == "unloading charges":
-                row.append(safe_num(trip.tc_unloadingcost)); continue
+                row.append(safe_num(trip.tc_unloadingcost));
+                continue
             if "parking / unloading charges" in hh or "unloading charges and parking charges" in hh:
-                row.append(safe_num(trip.tc_parkingcost) + safe_num(trip.tc_unloadingcost)); continue
+                row.append(safe_num(trip.tc_parkingcost) + safe_num(trip.tc_unloadingcost));
+                continue
             if "unloading charges & lashing charges" in hh:
-                row.append(safe_num(trip.tc_unloadingcost)); continue
+                row.append(safe_num(trip.tc_unloadingcost));
+                continue
             if "total charges" in hh or hh == "total cost":
-                row.append(safe_num(trip.tc_tripcost) + safe_num(trip.tc_parkingcost) + safe_num(trip.tc_unloadingcost) + safe_num(trip.tc_loadingcost) + safe_num(trip.tc_weighmentcost) + safe_num(trip.tc_handlingcost) + safe_num(trip.tc_supervisorcost) + safe_num(trip.tc_haltingcost) + safe_num(trip.tc_tollcost)); continue
+                row.append(safe_num(trip.tc_tripcost) + safe_num(trip.tc_parkingcost) + safe_num(
+                    trip.tc_unloadingcost) + safe_num(trip.tc_loadingcost) + safe_num(trip.tc_weighmentcost) + safe_num(
+                    trip.tc_handlingcost) + safe_num(trip.tc_supervisorcost) + safe_num(trip.tc_haltingcost) + safe_num(
+                    trip.tc_tollcost));
+                continue
 
             # --- REMARKS & STATUS ---
             if hh in ("remarks", "remark", "comments", "pod remarks", "return box"):
-                row.append(safe_str(cons_detail.co_remarks) if cons_detail else safe_str(trip.tr_remarks)); continue
+                row.append(safe_str(cons_detail.co_remarks) if cons_detail else safe_str(trip.tr_remarks));
+                continue
             if hh in ("delivery status", "update status", "pod status", "pod"):
                 status_val = str(trip.tc_financestatus.status if trip.tc_financestatus else "PENDING")
-                row.append(status_val); continue
+                row.append(status_val);
+                continue
             if hh == "c note":
-                row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else ""); continue
+                row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else "");
+                continue
             if hh == "aai s.no.":
-                row.append(""); continue
+                row.append("");
+                continue
             if hh == "delay&ontime":
-                row.append(""); continue # No direct field, could calculate later if needed
+                row.append("");
+                continue  # No direct field, could calculate later if needed
 
             row.append("")
         rows.append(row)
@@ -915,7 +1055,7 @@ def trip_report(request):
     # BASE QUERY
     # -------------------------
     trips = TripdetailInfo.objects.filter(tr_category_id=1).select_related(
-        'tr_enquirynumber', 
+        'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
         'tr_enquirynumber__en_fromlocaion',
@@ -961,8 +1101,9 @@ def trip_report(request):
     # ATTACH CONSIGNER + REF NO (ONLY for paginated objects)
     # -------------------------
     page_cons_nums = [t.tr_consignmentnumber_id for t in page_obj if t.tr_consignmentnumber_id]
-    goods_map = {g.cg_consignmentnumber_id: g for g in ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber_id__in=page_cons_nums)}
-    
+    goods_map = {g.cg_consignmentnumber_id: g for g in
+                 ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber_id__in=page_cons_nums)}
+
     for trip in page_obj:
         cg = goods_map.get(trip.tr_consignmentnumber_id)
         trip.consigner_name = str(cg.cg_consigner) if cg and cg.cg_consigner else ""
@@ -977,19 +1118,27 @@ def trip_report(request):
     cust_name = ""
     dept_name = ""
     if customer_id:
-        try: cust_name = CustomerInfo.objects.get(id=customer_id).cu_name
-        except: pass
+        try:
+            cust_name = CustomerInfo.objects.get(id=customer_id).cu_name
+        except:
+            pass
     if dept_id:
-        try: dept_name = CustomerdepartmentInfo.objects.get(id=dept_id).ct_customerdepartment  # FIXED
-        except: pass
+        try:
+            dept_name = CustomerdepartmentInfo.objects.get(id=dept_id).ct_customerdepartment  # FIXED
+        except:
+            pass
 
     # Fallback to trip data if filter names missing
     if not cust_name and page_obj:
-        try: cust_name = str(page_obj[0].tr_enquirynumber.en_customername)
-        except: pass
+        try:
+            cust_name = str(page_obj[0].tr_enquirynumber.en_customername)
+        except:
+            pass
     if not dept_name and page_obj:
-        try: dept_name = str(page_obj[0].tr_enquirynumber.en_customerdepartment)
-        except: pass
+        try:
+            dept_name = str(page_obj[0].tr_enquirynumber.en_customerdepartment)
+        except:
+            pass
 
     headers, template_key = get_dmr_headers(cust_name, dept_name, from_loc, to_loc)
     data_rows = get_dmr_rows(page_obj, headers, template_key, cust_name)
@@ -1041,11 +1190,13 @@ def trip_send_email(request):
     qs = TripdetailInfo.objects.filter(
         tr_enquirynumber__en_customername_id=customer_id,
         tr_category_id=1
-    ).order_by('tr_departeddate') # Date sort
+    ).order_by('tr_departeddate')  # Date sort
 
     if dept_id:
-        try: qs = qs.filter(tr_enquirynumber__en_customerdepartment_id=int(dept_id))
-        except: qs = qs.filter(tr_enquirynumber__en_customerdepartment__icontains=str(dept_id))
+        try:
+            qs = qs.filter(tr_enquirynumber__en_customerdepartment_id=int(dept_id))
+        except:
+            qs = qs.filter(tr_enquirynumber__en_customerdepartment__icontains=str(dept_id))
 
     if month and year:
         try:
@@ -1080,7 +1231,8 @@ def trip_send_email(request):
     # Styles
     header_font = Font(bold=True)
     yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
-    border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+    border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
+                    bottom=Side(style='thin'))
     center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
     ws.append(headers)
@@ -1101,7 +1253,8 @@ def trip_send_email(request):
         for cell in col:
             try:
                 if cell.value: max_len = max(max_len, len(str(cell.value)))
-            except: pass
+            except:
+                pass
         ws.column_dimensions[col[0].column_letter].width = max_len + 2
 
     excel_file = BytesIO()
@@ -1112,16 +1265,20 @@ def trip_send_email(request):
     subject = subject or f"{customer_obj.cu_name} - {template_key or 'DMR'} Report"
     message = message_body.replace("\n", "<br>")
 
-    send_department_email(
-        department='itadmin',
-        subject=subject,
-        message=message,
-        recipient_list=recipient_list,
-        attachment=excel_file,
-        attachment_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        file_name=f"{customer_obj.cu_name}_DMR_Report.xlsx"
-    )
-    messages.success(request, "DMR Report sent successfully.")
+    try:
+        send_department_email(
+            department='itadmin',
+            subject=subject,
+            message=message,
+            recipient_list=recipient_list,
+            attachment=excel_file,
+            attachment_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            file_name=f"{customer_obj.cu_name}_DMR_Report.xlsx"
+        )
+        messages.success(request, "DMR Report sent successfully.")
+    except Exception as e:
+        messages.error(request, f"Failed to send email. Please check server configuration. Error: {str(e)}")
+
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
@@ -1193,7 +1350,8 @@ def trip_report_ajax(request):
 
     if selected_month and selected_year:
         try:
-            sm = int(selected_month); sy = int(selected_year)
+            sm = int(selected_month);
+            sy = int(selected_year)
             if 1 <= sm <= 12:
                 first_day = date(sy, sm, 1)
                 last_day = date(sy, sm, calendar.monthrange(sy, sm)[1])

@@ -159,10 +159,25 @@
                         </div>
 
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Halting</label>
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Halting per day</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_haltingcost class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_haltingcost id="tc_haltingcost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
                                 {% render_field tripclosure_form.tc_haltingcost_check id="tc_haltingcost_check" class="ml-2" style="width:16px; height:16px;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">No of Halting Days</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_no_of_days_halting id="tc_no_of_days_halting" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Total Halting</label>
+                            <div class="d-flex align-items-center w-50">
+                                <input type="text" name="tc_total_halting_cost" id="tc_total_halting_cost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" readonly value="{{ trip.tc_total_halting_cost|default:'0.00' }}">
+                                {% render_field tripclosure_form.tc_total_halting_cost_check id="tc_total_halting_cost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
 
@@ -330,6 +345,15 @@
 	const IS_EDIT = true;
 </script>
 <script>
+	function calcTotalHalting() {
+        let halting = parseFloat($("#tc_haltingcost").val()) || 0;
+        let days = parseFloat($("#tc_no_of_days_halting").val()) || 0;
+
+        let total = halting * days;
+
+        $("#tc_total_halting_cost").val(total.toFixed(2));
+    }
+
 	$(document).ready(function () {
 		document.getElementById("tr_updated_by").value = '{{ user_id }}';
 		var tr_enquirynumber_val = document.getElementById("tr_enquirynumber").value;
@@ -340,6 +364,13 @@
 		{% if invoice_doc and invoice_doc.id_status %}
 			document.getElementById("id_status").value = '{{ invoice_doc.id_status.id }}';
 		{% endif %}
+
+        // Calculate when user types in days OR when halting cost changes
+        $("#tc_no_of_days_halting").on("input", calcTotalHalting);
+        $("#tc_haltingcost").on("input", calcTotalHalting);
+
+        // Also calculate once on load
+        calcTotalHalting();
 	});
 </script>
 {% endblock content %}
