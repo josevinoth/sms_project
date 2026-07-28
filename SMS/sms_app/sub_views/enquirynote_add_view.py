@@ -478,23 +478,28 @@ def search_vehicle_numbers(request):
     if len(term) < 2:
         return JsonResponse({'results': []})
 
-    # Search in VehiclemasterInfo, Vehicle_allotmentInfo market vehicles, and TripdetailInfo
-    vm_regs = list(VehiclemasterInfo.objects.filter(
-        vm_registrationnumber__icontains=term
-    ).values_list('vm_registrationnumber', flat=True).distinct()[:200])
+    cutoff_date = '2026-06-01'
+
+    # Search in Vehicle_allotmentInfo (own & market vehicles) and TripdetailInfo after May 1, 2026
+    own_regs = list(Vehicle_allotmentInfo.objects.filter(
+        Q(va_created_at__date__gte=cutoff_date) | Q(va_enquirynumber__en_created_at__date__gte=cutoff_date),
+        va_vehiclenumber__vm_registrationnumber__icontains=term
+    ).values_list('va_vehiclenumber__vm_registrationnumber', flat=True).distinct()[:200])
 
     mkt_regs = list(Vehicle_allotmentInfo.objects.filter(
+        Q(va_created_at__date__gte=cutoff_date) | Q(va_enquirynumber__en_created_at__date__gte=cutoff_date),
         va_vehiclenumber_mkt__icontains=term
     ).values_list('va_vehiclenumber_mkt', flat=True).distinct()[:200])
 
     trip_regs = list(TripdetailInfo.objects.filter(
+        Q(tr_created_at__date__gte=cutoff_date) | Q(tr_enquirynumber__en_created_at__date__gte=cutoff_date),
         tr_vehiclenumber__icontains=term
     ).values_list('tr_vehiclenumber', flat=True).distinct()[:200])
 
     combined = []
     seen = set()
 
-    for r in (vm_regs + mkt_regs + trip_regs):
+    for r in (own_regs + mkt_regs + trip_regs):
         if r and r.strip():
             clean_r = r.strip()
             if clean_r.upper() not in seen:
