@@ -86,18 +86,22 @@ def tripdetail_nav(request, tripdetail_id=0):
 @login_required(login_url='login_page')
 def tripdetail_add(request, tripdetail_id=0):
     first_name = request.session.get('first_name')
-    user_id = request.session.get('ses_userID')
+    user_id = request.session.get('ses_userID') or (request.user.id if request.user.is_authenticated else '')
 
     enq_id_param = request.GET.get('enq_id') or request.GET.get('enquiry_num_id')
     if enq_id_param:
-        enquiry_num_id = int(enq_id_param)
-        request.session['enquiry_num_id'] = enquiry_num_id
-        request.session['ses_enqiury_id'] = enquiry_num_id
         try:
-            enquiry = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
-            request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
-        except ObjectDoesNotExist:
-            pass
+            enquiry_num_id = int(enq_id_param)
+        except (ValueError, TypeError):
+            enquiry_num_id = None
+        if enquiry_num_id:
+            request.session['enquiry_num_id'] = enquiry_num_id
+            request.session['ses_enqiury_id'] = enquiry_num_id
+            try:
+                enquiry = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
+                request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
+            except ObjectDoesNotExist:
+                pass
     else:
         enquiry_num_id = request.session.get('enquiry_num_id')
 
@@ -270,6 +274,12 @@ def tripdetail_add(request, tripdetail_id=0):
 
                         if needs_save:
                             tripdetail.save()
+                            from django.utils import timezone
+                            en_user = request.user if (request.user and request.user.is_authenticated) else None
+                            EnquirynoteInfo.objects.filter(id=tripdetail.tr_enquirynumber_id).update(
+                                en_updatedon=timezone.now(),
+                                en_updated_by=en_user
+                            )
 
             request.session['ses_tripdetail_id'] = tripdetail_id
 
@@ -362,12 +372,26 @@ def tripdetail_add(request, tripdetail_id=0):
     else:
         if tripdetail_id == 0:
             print("I am inside post add tripdetails")
-            trip_det_form = TripdetailaddForm(request.POST, request.FILES)
-            vehicle_allotment_id = request.POST.get('vehicle_allotment_id')
-            tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES)
+            post_data = request.POST.copy()
+            fk_fields = [
+                'tr_enquirynumber', 'tr_consignmentnumber', 'tr_vehiclesource', 
+                'tr_vehicletype', 'tr_vehicletype_placed', 'tr_departedlocation', 
+                'tr_reportedlocation', 'tc_financestatus', 'tr_updated_by', 'tr_category'
+            ]
+            for fk in fk_fields:
+                val = post_data.get(fk)
+                if val is not None and val != '' and not str(val).isdigit():
+                    if fk == 'tr_updated_by' and request.user.is_authenticated:
+                        post_data['tr_updated_by'] = str(request.user.id)
+                    else:
+                        post_data.pop(fk, None)
+
+            trip_det_form = TripdetailaddForm(post_data, request.FILES)
+            vehicle_allotment_id = post_data.get('vehicle_allotment_id')
+            tripclosurefiles_form = TripclosurefilesForm(post_data, request.FILES)
             enquiry_num = enquiry_num_id
-            cosnignment_number = request.POST.get('tr_consignmentnumber')
-            vehicle_number = request.POST.get('tr_vehiclenumber')
+            cosnignment_number = post_data.get('tr_consignmentnumber')
+            vehicle_number = post_data.get('tr_vehiclenumber')
             status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8, 10, 11])
             consignment_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
             trip_det_form.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(id=enquiry_num_id)
@@ -477,11 +501,16 @@ def tripdetail_add(request, tripdetail_id=0):
                 manual_status_id = request.POST.get('tc_financestatus')
                 if manual_status_id:
                     trip.tc_financestatus_id = int(manual_status_id)
+                    trip.tr_operational_status_id = int(manual_status_id)  # Keep both fields in sync
                 else:
                     if trip.tr_category_id in [2, 3]:
-                        if status_open: trip.tc_financestatus_id = status_open.id
+                        if status_open:
+                            trip.tc_financestatus_id = status_open.id
+                            trip.tr_operational_status_id = status_open.id  # Keep both fields in sync
                     else:
-                        if status_pending: trip.tc_financestatus_id = status_pending.id
+                        if status_pending:
+                            trip.tc_financestatus_id = status_pending.id
+                            trip.tr_operational_status_id = status_pending.id  # Keep both fields in sync
 
                 if vehicle_allotment_id:
                     trip.tr_driver_master_id = va.va_driver_master_id
@@ -494,6 +523,12 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip.td_pod = data
 
                 trip.save()
+                from django.utils import timezone
+                en_user = request.user if (request.user and request.user.is_authenticated) else None
+                EnquirynoteInfo.objects.filter(id=trip.tr_enquirynumber_id).update(
+                    en_updatedon=timezone.now(),
+                    en_updated_by=en_user
+                )
 
                 # Removed auto-advance logic to strictly require trip approval
 
@@ -509,9 +544,11 @@ def tripdetail_add(request, tripdetail_id=0):
                         if not recipients:
                             if label == "Trip Started":
                                 messages.error(request, "This customer don't have mail please add mail to start the trip.")
-                                # Revert to Trip Open so unloading details stay frozen
+                                # Revert to Awaiting Trip Approval so unloading details stay frozen
+                                # Keep BOTH status fields in sync to avoid vehicle showing as busy
                                 trip.tc_financestatus_id = 8
-                                trip.save(update_fields=['tc_financestatus'])
+                                trip.tr_operational_status_id = 8
+                                trip.save(update_fields=['tc_financestatus', 'tr_operational_status'])
                             else:
                                 display_label = "starting trip" if label == "Loading Reported" else label
                                 messages.error(request, f"This customer don't have mail please add mail for {display_label}.")
@@ -609,13 +646,44 @@ def tripdetail_add(request, tripdetail_id=0):
             print("I am inside post edit tripdetails")
             trip_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_tripnumber
             tripdetail = TripdetailInfo.objects.get(pk=tripdetail_id)
-            trip_det_form = TripdetailaddForm(request.POST, request.FILES, instance=tripdetail)
+
+            post_data = request.POST.copy()
+            fk_fields = [
+                'tr_enquirynumber', 'tr_consignmentnumber', 'tr_vehiclesource', 
+                'tr_vehicletype', 'tr_vehicletype_placed', 'tr_departedlocation', 
+                'tr_reportedlocation', 'tc_financestatus', 'tr_updated_by', 'tr_category'
+            ]
+            for fk in fk_fields:
+                val = post_data.get(fk)
+                if val is not None and val != '' and not str(val).isdigit():
+                    if fk == 'tr_updated_by' and request.user.is_authenticated:
+                        post_data['tr_updated_by'] = str(request.user.id)
+                    else:
+                        post_data.pop(fk, None)
+
+            trip_det_form = TripdetailaddForm(post_data, request.FILES, instance=tripdetail)
             tripclosure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
-            tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES, instance=tripclosure_files)
+            tripclosurefiles_form = TripclosurefilesForm(post_data, request.FILES, instance=tripclosure_files)
             enquiry_num = tripdetail.tr_enquirynumber.id
 
             if trip_det_form.is_valid():
                 trip = trip_det_form.save(commit=False)
+
+                # ✅ PROTECT already-saved fields from being wiped by disabled HTML inputs.
+                # Disabled fields are not submitted in POST, so Django sees them as blank/None
+                # and would overwrite the DB value. We restore from the DB instance instead.
+                protected_fields = [
+                    'tr_reportedkm', 'tr_reporteddate', 'tr_unloading_time',
+                    'tr_reporteddate_pickup', 'tr_reportedkm_delivery',
+                    'tr_departeddate_delivery', 'tr_reportedkm_pickup',
+                    'tr_departeddate', 'tr_departedkm',
+                    'tr_loading_time', 'tr_dock_in_time', 'tr_dock_out_time',
+                ]
+                for field in protected_fields:
+                    new_val = getattr(trip, field, None)
+                    old_val = getattr(tripdetail, field, None)
+                    if not new_val and old_val:
+                        setattr(trip, field, old_val)
 
                 # ✅ Synchronize KM fields for reports
                 # tr_departedkm is the 'canonical' Starting KM used in reports.
@@ -666,6 +734,12 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip.td_pod = data
 
                 trip.save()
+                from django.utils import timezone
+                en_user = request.user if (request.user and request.user.is_authenticated) else None
+                EnquirynoteInfo.objects.filter(id=trip.tr_enquirynumber_id).update(
+                    en_updatedon=timezone.now(),
+                    en_updated_by=en_user
+                )
                 if tripclosurefiles_form.is_valid():
                     tripclosurefiles_form.save()
                 else:
@@ -937,11 +1011,9 @@ def tripdetail_delete(request, tripdetail_id):
     except ObjectDoesNotExist:
         tripdetail_list = []
         EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(en_tripdetails=list(tripdetail_list))
-    trip_closure_files = list(
-        Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).values_list('tcf_tripnumber', flat=True))
-    for i in trip_closure_files:
-        trip_files = Trip_closure_files_Info.objects.get(tcf_tripnumber=i)
-        trip_files.delete()
+    trip_closure_files = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num)
+    for trip_file in trip_closure_files:
+        trip_file.delete()
     return redirect(request.META.get('HTTP_REFERER', '/SMS/tripdetail_list'))
 
 

@@ -157,6 +157,20 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             vehicle_type = request.POST.get('vehicle_type_field')
             if consignmentdetail_id == 0:
                 consignment_detail = con_det_form.save(commit=False)
+                
+                # Enforce Consignment Limit based on requested vehicle quantity
+                from django.db.models import Sum
+                from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
+                
+                enq_id = consignment_detail.co_enquirynumber.id
+                vehicle_limit_agg = Enquirynotevehicle.objects.filter(env_enquirynumber=enq_id).aggregate(total_allowed=Sum('env_quantity'))
+                total_allowed = vehicle_limit_agg.get('total_allowed') or 0
+                current_count = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enq_id).count()
+                
+                if total_allowed > 0 and current_count >= total_allowed:
+                    messages.error(request, f"Cannot add more consignments. The limit of {total_allowed} consignments has been reached for this enquiry.")
+                    return redirect('enquirynote_list')
+
                 # Determine branch name using centralized utility
                 branch_id = get_session_branch_id(request)
                 
@@ -211,6 +225,14 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                             tc_cancellation_check=(status_id == 9),
                             tr_updated_by=request.user
                         )
+
+                # Touch parent enquiry timestamp
+                from django.utils import timezone
+                en_user = request.user if (request.user and request.user.is_authenticated) else None
+                EnquirynoteInfo.objects.filter(id=consignment_detail.co_enquirynumber_id).update(
+                    en_updatedon=timezone.now(),
+                    en_updated_by=en_user
+                )
 
                 return redirect(f'/SMS/consignmentdetail_update/{consignment_detail.id}')
             else:
@@ -267,6 +289,14 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                     consignmentdetail_list.sort()
                     EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(
                         en_consignmentdetails=consignmentdetail_list)
+
+                    # Touch parent enquiry timestamp
+                    from django.utils import timezone
+                    en_user = request.user if (request.user and request.user.is_authenticated) else None
+                    EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num).update(
+                        en_updatedon=timezone.now(),
+                        en_updated_by=en_user
+                    )
 
                     messages.success(request, 'Record Updated Successfully')
 

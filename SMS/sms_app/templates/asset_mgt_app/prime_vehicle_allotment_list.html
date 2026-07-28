@@ -1,0 +1,532 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block content %}
+
+<style>
+    /* Custom style overrides for List components */
+    .filter-input-modern {
+        background: var(--input-bg) !important;
+        border: 1.5px solid var(--input-border) !important;
+        border-radius: 8px !important;
+        padding: 5px 10px !important;
+        font-size: 0.85rem !important;
+        color: var(--text-main) !important;
+        height: auto !important;
+        transition: all 0.3s;
+    }
+    .filter-input-modern:focus {
+        background: var(--input-focus-bg) !important;
+        border-color: var(--accent-blue) !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        outline: none !important;
+        color: var(--text-main) !important;
+    }
+    .badge-info {
+        background-color: #0ea5e9 !important;
+        color: #ffffff !important;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-truck-loading mr-2"></i> Prime Vehicle Allotment List</h2>
+        <div class="d-flex gap-2 align-items-center">
+        </div>
+    </div>
+
+    <!-- Search/Filter Card -->
+    <div class="modern-card p-3 mb-4">
+        <form method="GET" action="{% url 'prime_vehicle_allotment_list' %}">
+            <div class="row align-items-end g-3">
+                <div class="col-md-3">
+                    <label class="form-label-modern text-muted small mb-1">Enquiry Number</label>
+                    <input type="text" name="enquiry_number" class="form-control filter-input-modern" placeholder="Search Enquiry..." value="{{ request.GET.enquiry_number }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-modern text-muted small mb-1">Date From</label>
+                    <input type="date" name="date_from" class="form-control filter-input-modern" value="{{ request.GET.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-modern text-muted small mb-1">Date To</label>
+                    <input type="date" name="date_to" class="form-control filter-input-modern" value="{{ request.GET.date_to }}">
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn-modern btn-submit flex-grow-1"><i class="fas fa-search"></i> Search</button>
+                    <a href="{% url 'prime_vehicle_allotment_list' %}" class="btn-modern btn-cancel d-flex align-items-center justify-content-center" style="width: 40px; text-decoration: none;"><i class="fas fa-sync-alt"></i></a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Data Table Card -->
+    <div class="modern-card legacy-form-card mb-3">
+        <div class="card-body p-0">
+            <div class="p-3">
+                <table id="prime_va_list_full" class="table modern-table text-center" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th class="font-weight-bold">Created On</th>
+                            <th class="font-weight-bold text-center">Edit</th>
+                            <th class="font-weight-bold">Customer Name</th>
+                            <th class="font-weight-bold">Enquiry Number</th>
+                            <th class="font-weight-bold">Job Number</th>
+                            <th class="font-weight-bold">Vehicles Allotted</th>
+                            <th class="font-weight-bold">Updated On</th>
+                            <th class="font-weight-bold">Updated By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for va in vehicle_allotment_list %}
+                    <tr>
+                        <td>
+                            {{ va.pva_created_at|date:"d-m-Y" }}<br>
+                            <span class="small text-muted">{{ va.pva_created_at|date:"h:i A" }}</span>
+                        </td>
+                        <td>
+                            <a class="btn-modern btn-highlight-cyan px-3 py-1" href="{% url 'prime_vehicle_allotment_update' va.id %}" title="Edit" style="font-size: 0.85rem;">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        </td>
+                        <td class="font-weight-bold" style="color: var(--text-dark);">
+                            {{ va.pva_enquirynumber.pen_customername.cu_name|default:"-" }}
+                        </td>
+                        <td>
+                            <span class="badge p-2" style="background: var(--bg-light); border: 1px solid var(--border-light); color: var(--text-main);">
+                                {{ va.pva_enquirynumber.pen_enquirynumber|default:"-" }}
+                            </span>
+                        </td>
+                        <td>{{ va.pva_prime_job_number|default:"-" }}</td>
+                        <td>
+                            <a href="#" class="vehicle-badge-link" 
+                               data-allotment-id="{{ va.id }}" 
+                               data-vehiclenumber="{{ va.pva_vehiclenumber.vm_registrationnumber|default:va.pva_vehiclenumber_mkt|default:'' }}"
+                               data-drivername="{{ va.pva_drivername|default:'' }}"
+                               data-is-replaced="{% if va.pva_replacement_reason and va.pva_replacement_reason != 'None' %}true{% else %}false{% endif %}"
+                               style="text-decoration: none;">
+                                 {% if 'Vehicle:' in va.pva_replacement_reason %}
+                                     <span class="badge p-2 text-white" style="background: var(--accent-pink) !important; color: white !important;"><i class="fas fa-truck"></i> {{ va.pva_vehiclenumber.vm_registrationnumber|default:va.pva_vehiclenumber_mkt|default:"-" }}</span>
+                                 {% elif 'Driver:' in va.pva_replacement_reason %}
+                                     <span class="badge p-2 text-white" style="background: var(--accent-orange) !important; color: white !important;"><i class="fas fa-truck"></i> {{ va.pva_vehiclenumber.vm_registrationnumber|default:va.pva_vehiclenumber_mkt|default:"-" }}</span>
+                                 {% elif 'Both:' in va.pva_replacement_reason %}
+                                     <span class="badge p-2 text-white" style="background: var(--accent-purple) !important; color: white !important;"><i class="fas fa-truck"></i> {{ va.pva_vehiclenumber.vm_registrationnumber|default:va.pva_vehiclenumber_mkt|default:"-" }}</span>
+                                 {% else %}
+                                     {% if va.pva_vehiclesource.id == 3 %}
+                                         <span class="badge p-2 text-white" style="background: var(--accent-orange) !important; color: white !important;"><i class="fas fa-truck"></i> {{ va.pva_vehiclenumber_mkt|default:"-" }}</span>
+                                     {% else %}
+                                         <span class="badge p-2 text-white" style="background: var(--accent-blue) !important; color: white !important;"><i class="fas fa-truck"></i> {{ va.pva_vehiclenumber.vm_registrationnumber|default:va.pva_vehiclenumber_mkt|default:"-" }}</span>
+                                     {% endif %}
+                                 {% endif %}
+                            </a>
+                        </td>
+                        <td>
+                            {{ va.pva_updated_at|date:"d-m-Y h:i A"|default:"-" }}
+                        </td>
+                        <td>
+                            {{ va.pva_updated_by.first_name|default:va.pva_updated_by.username|default:"-" }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Replacement Modal -->
+<div class="modal fade" id="replaceModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content" style="border-radius: 14px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+      <div class="modal-header" style="background: var(--primary-glow); color: white; border-radius: 14px 14px 0 0;">
+        <h5 class="modal-title"><i class="fas fa-exchange-alt mr-2"></i> Replacement Options</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center p-4">
+        <p class="mb-4" style="color: var(--text-main);">What would you like to replace for this allotment?</p>
+        <div class="d-flex justify-content-center flex-wrap" style="gap: 15px;">
+            <a href="#" id="btnReplaceVehicle" class="btn-modern btn-submit py-2 px-4" style="text-decoration: none; border-radius: 10px; background: var(--accent-pink);">
+                <i class="fas fa-truck mr-1"></i> Replace Vehicle
+            </a>
+            <a href="#" id="btnReplaceDriver" class="btn-modern btn-submit py-2 px-4" style="text-decoration: none; border-radius: 10px; background: var(--accent-orange);">
+                <i class="fas fa-user mr-1"></i> Replace Driver
+            </a>
+            <a href="#" id="btnReplaceBoth" class="btn-modern btn-submit py-2 px-4" style="text-decoration: none; border-radius: 10px; background: var(--accent-purple);">
+                <i class="fas fa-exchange-alt mr-1"></i> Replace Both
+            </a>
+        </div>
+        <div class="mt-3" id="revertReplaceContainer" style="display: none;">
+            <a href="#" id="btnRevertReplace" class="btn-modern btn-cancel py-2 px-4" style="text-decoration: none; border-radius: 10px; background: #ef4444 !important; color: white !important; border: none !important;">
+                <i class="fas fa-undo mr-1"></i> Revert Replacement
+            </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Replace Vehicle Simplified Modal -->
+<div class="modal fade" id="replaceVehicleModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content" style="border-radius: 14px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+      <form id="simplifiedReplaceVehicleForm">
+          <div class="modal-header" style="background: var(--accent-pink); color: white; border-radius: 14px 14px 0 0;">
+            <h5 class="modal-title"><i class="fas fa-truck mr-2"></i> Replace Vehicle</h5>
+            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body p-4">
+              <input type="hidden" name="allotment_id" id="replaceVehicleAllotmentId">
+              <input type="hidden" name="replace_type" value="vehicle">
+              
+              <div class="alert alert-info" style="border-radius: 10px;">
+                  <strong>Vehicle:</strong> <span id="rv_vehicle_number"></span><br>
+                  <strong>Driver:</strong> <span id="rv_driver_name"></span>
+              </div>
+              
+              <div class="form-group mt-3">
+                  <label class="font-weight-bold" style="color: var(--text-main);">New Vehicle Number <span class="text-danger">*</span></label>
+                  <select name="new_vehicle_number" class="form-control select2-modal" style="width:100%; border-radius: 8px; border: 1px solid var(--border-light);" required>
+                      <option value="">--Select Vehicle--</option>
+                      {% for v in vehicles_data %}
+                          <option value="{{ v.vm_registrationnumber }}">{{ v.vm_registrationnumber }}</option>
+                      {% endfor %}
+                  </select>
+              </div>
+ 
+              <div class="form-group mt-3">
+                  <label class="font-weight-bold" style="color: var(--text-main);">Reason for Replacement <span class="text-danger">*</span></label>
+                  <input type="text" name="reason" class="form-control" style="border-radius: 8px; border: 1px solid var(--border-light);" required placeholder="Enter replacement reason...">
+              </div>
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid var(--border-light);">
+              <button type="button" class="btn btn-secondary" style="border-radius: 8px;" data-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn text-white" style="background: var(--accent-emerald); border-radius: 8px;">Submit Replacement</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+ 
+<!-- Replace Driver Simplified Modal -->
+<div class="modal fade" id="replaceDriverModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content" style="border-radius: 14px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+      <form id="simplifiedReplaceDriverForm">
+          <div class="modal-header" style="background: var(--accent-orange); color: white; border-radius: 14px 14px 0 0;">
+            <h5 class="modal-title"><i class="fas fa-user mr-2"></i> Replace Driver</h5>
+            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body p-4">
+              <input type="hidden" name="allotment_id" id="replaceDriverAllotmentId">
+              <input type="hidden" name="replace_type" value="driver">
+              
+              <div class="alert alert-info" style="border-radius: 10px;">
+                  <strong>Vehicle:</strong> <span id="rd_vehicle_number"></span><br>
+                  <strong>Driver:</strong> <span id="rd_driver_name"></span>
+              </div>
+              
+              <div class="row mt-3">
+                  <div class="col-md-6 form-group">
+                      <label class="font-weight-bold" style="color: var(--text-main);">New Driver Name <span class="text-danger">*</span></label>
+                      <input type="text" name="new_driver_name" id="rd_new_driver_name" class="form-control" style="border-radius: 8px; border: 1px solid var(--border-light);" required autocomplete="off" placeholder="Type to search...">
+                  </div>
+                  <div class="col-md-6 form-group">
+                      <label class="font-weight-bold" style="color: var(--text-main);">New Driver Number</label>
+                      <input type="text" name="new_driver_number" id="rd_new_driver_number" class="form-control" style="border-radius: 8px; border: 1px solid var(--border-light);" readonly>
+                  </div>
+              </div>
+              
+              <div class="row">
+                  <div class="col-md-6 form-group">
+                      <label class="font-weight-bold" style="color: var(--text-main);">Driver License</label>
+                      <input type="text" name="new_driver_lic" id="rd_new_driver_lic" class="form-control" style="border-radius: 8px; border: 1px solid var(--border-light);" readonly>
+                  </div>
+                  <div class="col-md-6 form-group">
+                      <label class="font-weight-bold" style="color: var(--text-main);">License Expiry</label>
+                      <input type="date" name="new_driver_lic_expiry" id="rd_new_driver_lic_expiry" class="form-control" style="border-radius: 8px; border: 1px solid var(--border-light);" readonly>
+                  </div>
+              </div>
+ 
+              <div class="form-group mt-3">
+                  <label class="font-weight-bold" style="color: var(--text-main);">Reason for Replacement <span class="text-danger">*</span></label>
+                  <input type="text" name="reason" class="form-control" style="border-radius: 8px; border: 1px solid var(--border-light);" required placeholder="Enter replacement reason...">
+              </div>
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid var(--border-light);">
+              <button type="button" class="btn btn-secondary" style="border-radius: 8px;" data-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn text-white" style="background: var(--accent-orange); border-radius: 8px;">Submit Replacement</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+ 
+<!-- Replace Both Simplified Modal -->
+<div class="modal fade" id="replaceBothModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content" style="border-radius: 14px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+      <form id="simplifiedReplaceBothForm">
+          <div class="modal-header" style="background: var(--accent-purple); color: white; border-radius: 14px 14px 0 0;">
+            <h5 class="modal-title"><i class="fas fa-exchange-alt mr-2"></i> Replace Vehicle & Driver</h5>
+            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body p-4">
+              <input type="hidden" name="allotment_id" id="replaceBothAllotmentId">
+              <input type="hidden" name="replace_type" value="both">
+              
+              <div class="alert alert-info" style="border-radius: 10px;">
+                  <strong>Vehicle:</strong> <span id="rb_vehicle_number"></span><br>
+                  <strong>Driver:</strong> <span id="rb_driver_name"></span>
+              </div>
+              
+              <div class="row mt-3">
+                  <div class="col-md-12 form-group">
+                      <label class="font-weight-bold" style="color: var(--text-main);">New Vehicle Number <span class="text-danger">*</span></label>
+                      <select name="new_vehicle_number" class="form-control select2-modal-both" style="width:100%; border-radius: 8px; border: 1px solid var(--border-light);" required>
+                          <option value="">--Select Vehicle--</option>
+                          {% for v in vehicles_data %}
+                              <option value="{{ v.vm_registrationnumber }}">{{ v.vm_registrationnumber }}</option>
+                          {% endfor %}
+                      </select>
+                  </div>
+              </div>
+ 
+              <div class="row mt-3">
+                  <div class="col-md-6 form-group">
+                      <label class="font-weight-bold" style="color: var(--text-main);">New Driver Name <span class="text-danger">*</span></label>
+                      <input type="text" name="new_driver_name" id="rb_new_driver_name" class="form-control" style="border-radius: 8px; border: 1px solid var(--border-light);" required autocomplete="off" placeholder="Type to search...">
+                  </div>
+                  <div class="col-md-6 form-group">
+                      <label class="font-weight-bold" style="color: var(--text-main);">New Driver Number</label>
+                      <input type="text" name="new_driver_number" id="rb_new_driver_number" class="form-control" style="border-radius: 8px; border: 1px solid var(--border-light);" readonly>
+                  </div>
+              </div>
+              
+              <div class="row">
+                  <div class="col-md-6 form-group">
+                      <label class="font-weight-bold" style="color: var(--text-main);">Driver License</label>
+                      <input type="text" name="new_driver_lic" id="rb_new_driver_lic" class="form-control" style="border-radius: 8px; border: 1px solid var(--border-light);" readonly>
+                  </div>
+                  <div class="col-md-6 form-group">
+                      <label class="font-weight-bold" style="color: var(--text-main);">License Expiry</label>
+                      <input type="date" name="new_driver_lic_expiry" id="rb_new_driver_lic_expiry" class="form-control" style="border-radius: 8px; border: 1px solid var(--border-light);" readonly>
+                  </div>
+              </div>
+ 
+              <div class="form-group mt-3">
+                  <label class="font-weight-bold" style="color: var(--text-main);">Reason for Replacement <span class="text-danger">*</span></label>
+                  <input type="text" name="reason" class="form-control" style="border-radius: 8px; border: 1px solid var(--border-light);" required placeholder="Enter replacement reason...">
+              </div>
+          </div>
+          <div class="modal-footer" style="border-top: 1px solid var(--border-light);">
+              <button type="button" class="btn btn-secondary" style="border-radius: 8px;" data-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn text-white" style="background: var(--accent-blue); border-radius: 8px;">Submit Replacement</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 in modal
+        $('.select2-modal').select2({
+            dropdownParent: $('#replaceVehicleModal')
+        });
+        $('.select2-modal-both').select2({
+            dropdownParent: $('#replaceBothModal')
+        });
+
+        // Driver Autocomplete
+        $("#rd_new_driver_name").autocomplete({
+            source: function (request, response) {
+                $.ajax({
+                    url: "{% url 'driver_autocomplete' %}",
+                    data: { term: request.term },
+                    success: function (data) {
+                        response($.map(data, function (item) {
+                            return {
+                                label: item.name + " (" + item.number + ")",
+                                value: item.name,
+                                number: item.number,
+                                lic: item.lic,
+                                expiry: item.expiry
+                            };
+                        }));
+                    }
+                });
+            },
+            minLength: 2,
+            select: function (event, ui) {
+                $("#rd_new_driver_name").val(ui.item.value);
+                $("#rd_new_driver_number").val(ui.item.number || "");
+                $("#rd_new_driver_lic").val(ui.item.lic || "");
+                if (ui.item.expiry) {
+                    // Assuming expiry is returned in YYYY-MM-DD or parseable string
+                    var date = new Date(ui.item.expiry);
+                    if (!isNaN(date.getTime())) {
+                        var formattedDate = date.toISOString().split('T')[0];
+                        $("#rd_new_driver_lic_expiry").val(formattedDate);
+                    }
+                }
+                return false;
+            },
+            appendTo: "#replaceDriverModal"
+        });
+
+        // Driver Autocomplete for Both Modal
+        $("#rb_new_driver_name").autocomplete({
+            source: function (request, response) {
+                $.ajax({
+                    url: "{% url 'driver_autocomplete' %}",
+                    data: { term: request.term },
+                    success: function (data) {
+                        response($.map(data, function (item) {
+                            return {
+                                label: item.name + " (" + item.number + ")",
+                                value: item.name,
+                                number: item.number,
+                                lic: item.lic,
+                                expiry: item.expiry
+                            };
+                        }));
+                    }
+                });
+            },
+            minLength: 2,
+            select: function (event, ui) {
+                $("#rb_new_driver_name").val(ui.item.value);
+                $("#rb_new_driver_number").val(ui.item.number || "");
+                $("#rb_new_driver_lic").val(ui.item.lic || "");
+                if (ui.item.expiry) {
+                    var date = new Date(ui.item.expiry);
+                    if (!isNaN(date.getTime())) {
+                        var formattedDate = date.toISOString().split('T')[0];
+                        $("#rb_new_driver_lic_expiry").val(formattedDate);
+                    }
+                }
+                return false;
+            },
+            appendTo: "#replaceBothModal"
+        });
+
+        var primeVaTableFull = $('#prime_va_list_full').DataTable({
+            order: [0, 'desc'],
+            dom: 'lfrtip',
+            language: {
+                emptyTable: 'No prime vehicle allotments found.'
+            }
+        });
+
+        // Trigger Replacement Modal
+        $('.vehicle-badge-link').on('click', function(e) {
+            e.preventDefault();
+            var vId = $(this).data('allotment-id');
+            var vNum = $(this).data('vehiclenumber');
+            var dName = $(this).data('drivername');
+            var isReplaced = $(this).data('is-replaced');
+            
+            // Set data on the choice buttons
+            $('#btnReplaceVehicle').data('id', vId).data('vnum', vNum).data('dname', dName);
+            $('#btnReplaceDriver').data('id', vId).data('vnum', vNum).data('dname', dName);
+            $('#btnReplaceBoth').data('id', vId).data('vnum', vNum).data('dname', dName);
+            
+            if (isReplaced === true || isReplaced === 'true') {
+                $('#revertReplaceContainer').show();
+                $('#btnRevertReplace').data('id', vId);
+            } else {
+                $('#revertReplaceContainer').hide();
+            }
+            
+            $('#replaceModal').modal('show');
+        });
+
+        // Handle Revert Replace Choice
+        $('#btnRevertReplace').on('click', function(e) {
+            e.preventDefault();
+            var allotmentId = $(this).data('id');
+            if(confirm("Are you sure you want to revert this replacement to the original allotted vehicle and driver?")) {
+                $.ajax({
+                    url: "{% url 'prime_vehicle_revert_replace' %}",
+                    type: "POST",
+                    data: {
+                        'allotment_id': allotmentId,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if(response.success) {
+                            location.reload();
+                        } else {
+                            alert("Error: " + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert("An error occurred: " + error);
+                    }
+                });
+            }
+        });
+
+        // Handle Replace Vehicle Choice
+        $('#btnReplaceVehicle').on('click', function(e) {
+            e.preventDefault();
+            $('#replaceModal').modal('hide');
+            $('#replaceVehicleAllotmentId').val($(this).data('id'));
+            $('#rv_vehicle_number').text($(this).data('vnum') || '-');
+            $('#rv_driver_name').text($(this).data('dname') || '-');
+            $('#replaceVehicleModal').modal('show');
+        });
+
+        // Handle Replace Driver Choice
+        $('#btnReplaceDriver').on('click', function(e) {
+            e.preventDefault();
+            $('#replaceModal').modal('hide');
+            $('#replaceDriverAllotmentId').val($(this).data('id'));
+            $('#rd_vehicle_number').text($(this).data('vnum') || '-');
+            $('#rd_driver_name').text($(this).data('dname') || '-');
+            $('#replaceDriverModal').modal('show');
+        });
+
+        // Handle Replace Both Choice
+        $('#btnReplaceBoth').on('click', function(e) {
+            e.preventDefault();
+            $('#replaceModal').modal('hide');
+            $('#replaceBothAllotmentId').val($(this).data('id'));
+            $('#rb_vehicle_number').text($(this).data('vnum') || '-');
+            $('#rb_driver_name').text($(this).data('dname') || '-');
+            $('#replaceBothModal').modal('show');
+        });
+
+        // Handle Simplified Forms Submission
+        $('#simplifiedReplaceVehicleForm, #simplifiedReplaceDriverForm, #simplifiedReplaceBothForm').on('submit', function(e) {
+            e.preventDefault();
+            var form = $(this);
+            $.ajax({
+                url: "{% url 'prime_vehicle_simplified_replace' %}",
+                type: 'POST',
+                data: form.serialize() + "&csrfmiddlewaretoken={{ csrf_token }}",
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert("Error: " + response.message);
+                    }
+                },
+                error: function() {
+                    alert("An error occurred connecting to the server.");
+                }
+            });
+        });
+    });
+</script>
+{% endblock content %}

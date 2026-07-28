@@ -1,253 +1,267 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
+
 <style>
-    /* Fix Select2 alignment in Bootstrap 4 input-group */
-    .input-group > .select2-container--default {
-        flex: 1 1 auto;
-        width: 1% !important;
+    /* Scope compact rules for table elements only, keeping general forms as standard modern style */
+    .market-bill-modern {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
     }
-    .input-group > .select2-container .select2-selection--single {
-        height: calc(1.5em + .5rem + 2px); /* Matches form-control-sm height */
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-        border-color: #ced4da;
-        display: flex;
-        align-items: center;
+
+    .market-bill-modern .form-card-compact {
+        padding: 0.75rem 1rem !important;
     }
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: normal;
-        padding-left: 8px;
+
+    .market-bill-modern .form-section {
+        padding: 0.85rem 1rem !important;
+        border-radius: 12px !important;
     }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 100%;
+
+    .market-bill-modern .form-section-title {
+        margin-bottom: 0.55rem !important;
+        font-size: 0.78rem !important;
+    }
+
+    .market-bill-modern .form-group-modern {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .market-bill-modern .form-label-modern {
+        margin-bottom: 0.22rem !important;
+        font-size: 0.72rem !important;
+    }
+
+    /* Table cells specific inputs to keep them clean and compact */
+    #tripsTable td input[type="number"] {
+        height: 34px !important;
+        padding: 4px 8px !important;
+        font-size: 0.825rem !important;
+        font-weight: 700 !important;
+        border-radius: 8px !important;
+        background-color: var(--input-bg) !important;
+        border: 1.5px solid var(--input-border) !important;
+        color: var(--text-main) !important;
+        transition: all 0.3s ease;
+    }
+
+    #tripsTable td input[type="number"]:focus {
+        background-color: var(--input-focus-bg) !important;
+        border-color: var(--accent-orange) !important;
+        color: var(--input-focus-text) !important;
+    }
+
+    #tripsTable td input[type="number"][readonly] {
+        background-color: var(--bg-page) !important;
+        border-style: dashed !important;
+        border-color: var(--border-light) !important;
+        color: var(--text-muted) !important;
+        cursor: not-allowed;
+    }
+
+    /* Soft warnings for rows where standard cost differs from special cost */
+    #tripsTable tbody tr.text-danger td {
+        background-color: rgba(239, 68, 68, 0.08) !important;
+        color: #ef4444 !important;
+    }
+
+    #tripsTable tbody tr.text-danger:hover td {
+        background-color: rgba(239, 68, 68, 0.12) !important;
+    }
+
+    /* Ensure inline display: none is respected despite global styles from modern_css.css */
+    .market-bill-modern [style*="display: none"],
+    .market-bill-modern [style*="display:none"] {
+        display: none !important;
     }
 </style>
 
-<form id="marketBillForm" method="POST" enctype="multipart/form-data"
-    data-is-edit="{% if record.id %}true{% else %}false{% endif %}">
-    {% csrf_token %}
+<div class="container-fluid py-4 market-bill-modern">
 
-    <div class="container-fluid">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+            <i class="fas fa-file-invoice-dollar mr-2"></i> Market Bill
+        </h3>
+        <div>
+            <a href="{% url 'market_bill_list' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
 
-        <!-- ================= FIRST BOX: FORM FIELDS ================= -->
-        <div class="card text-white bg-info mb-3">
+    <!-- ══ Main Card ══ -->
+    <div class="modern-card" style="border-top:none;">
+        <form id="marketBillForm" method="POST" enctype="multipart/form-data"
+            data-is-edit="{% if record.id %}true{% else %}false{% endif %}">
+            {% csrf_token %}
 
-            <!-- ================= HEADER ================= -->
-            <div class="card-header d-flex justify-content-center align-items-center"
-                style="background-color: #17a2b8;">
-                <h5 class="mb-0">Market Bill</h5>
-            </div>
-
-            <!-- ================= BODY ================= -->
-            <div class="card-body bg-light text-dark pt-3 pb-3">
-
-                <!-- ================= ROW 1 : FORM FIELDS ================= -->
-                <div class="row mb-1">
-
-                    <!-- ========== COLUMN 1 ========== -->
-                    <div class="col-12 col-md-6">
-
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Vendor</span>
-                            </div>
-                            {% render_field form.mb_vendor class="form-control" %}
+            <div class="row">
+                
+                <!-- ── Column 1: Bill Details ── -->
+                <div class="col-12 col-lg-6">
+                    <div class="form-section h-100">
+                        <div class="form-section-title">
+                            <i class="fas fa-file-invoice"></i> Bill Details
                         </div>
 
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Bill No</span>
-                            </div>
-                            {% render_field form.mb_bill_no class="form-control" %}
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vendor</label>
+                            {% render_field form.mb_vendor class="form-control form-control-modern" %}
                         </div>
 
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Voucher No</span>
-                            </div>
-                            {% render_field form.mb_voucher_no class="form-control" %}
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Bill No</label>
+                            {% render_field form.mb_bill_no class="form-control form-control-modern" %}
                         </div>
 
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Bill Date <span class="text-danger">*</span></span>
-                            </div>
-                            {% render_field form.mb_bill_date class="form-control" required="required" %}
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Voucher No</label>
+                            {% render_field form.mb_voucher_no class="form-control form-control-modern" %}
                         </div>
 
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">TDS Type</span>
-                            </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Bill Date <span class="text-danger">*</span></label>
+                            {% render_field form.mb_bill_date class="form-control form-control-modern" required="required" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">TDS Type</label>
                             <!-- Hidden input carries the value on form submit -->
                             <input type="hidden" name="mb_tds_type" id="mb_tds_type_hidden"
                                    value="{{ form.mb_tds_type.value|default:'' }}">
                             <!-- Read-only display — filled automatically from vendor PAN -->
-                            <input type="text" id="mb_tds_type_display" class="form-control"
+                            <input type="text" id="mb_tds_type_display" class="form-control form-control-modern"
                                    readonly
-                                   value="{{ form.mb_tds_type.value|default:'' }}"
-                                   style="background-color:#e9ecef; cursor:default;">
+                                   value="{{ form.mb_tds_type.value|default:'' }}">
                         </div>
-
-                    </div>
-
-                    <!-- ========== COLUMN 2 ========== -->
-                    <div class="col-12 col-md-6">
-
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Trip Cost</span>
-                            </div>
-                            {% render_field form.mb_trip_cost class="form-control" %}
-                        </div>
-
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Loading Cost</span>
-                            </div>
-                            {% render_field form.mb_loading_cost class="form-control" %}
-                        </div>
-
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Unloading Cost</span>
-                            </div>
-                            {% render_field form.mb_unloading_cost class="form-control" %}
-                        </div>
-
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Parking Cost</span>
-                            </div>
-                            {% render_field form.mb_parking_cost class="form-control" %}
-                        </div>
-
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Halting Cost</span>
-                            </div>
-                            {% render_field form.mb_halting_cost class="form-control" %}
-                        </div>
-
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend" style="display:none;">
-                                <span class="input-group-text">Halting Days</span>
-                            </div>
-                            {% render_field form.mb_halting_days class="form-control" style="display:none;" %}
-                        </div>
-
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Total Cost</span>
-                            </div>
-                            {% render_field form.mb_total_cost class="form-control" %}
-                        </div>
-
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">TDS %</span>
-                            </div>
-                            {% render_field form.mb_tds_percent class="form-control" %}
-                        </div>
-
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">TDS Amount</span>
-                            </div>
-                            {% render_field form.mb_tds_amount class="form-control" %}
-                        </div>
-
-                        <div class="input-group input-group-sm mb-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Payable Amount</span>
-                            </div>
-                            {% render_field form.mb_payable_amount class="form-control" %}
-                        </div>
-
                     </div>
                 </div>
 
-                <div style="display: none;">
-                    <!-- Redundant single mail attachment field removed in favor of row-specific ones -->
-                </div>
+                <!-- ── Column 2: Cost Breakdown & Taxes ── -->
+                <div class="col-12 col-lg-6">
+                    <div class="form-section h-100">
+                        <div class="form-section-title">
+                            <i class="fas fa-calculator"></i> Cost Breakdown & Taxes
+                        </div>
 
-                <!-- Hidden field for selected trips -->
-                {% render_field form.mb_selected_trips %}
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Trip Cost</label>
+                                    {% render_field form.mb_trip_cost class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Loading Cost</label>
+                                    {% render_field form.mb_loading_cost class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Unloading Cost</label>
+                                    {% render_field form.mb_unloading_cost class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Parking Cost</label>
+                                    {% render_field form.mb_parking_cost class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Halting Cost</label>
+                                    {% render_field form.mb_halting_cost class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Total Cost</label>
+                                    {% render_field form.mb_total_cost class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                        </div>
 
-                <!-- ================= SAVE BUTTON ================= -->
-                <div class="row">
-                    <div class="col-12 d-flex justify-content-between">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-check"></i> Submit
-                        </button>
-                        <a href="{% url 'market_bill_list' %}" class="btn btn-danger">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                    </div>
-                </div>
+                        <!-- Hidden Halting Days -->
+                        <div style="display:none;">
+                            {% render_field form.mb_halting_days class="form-control form-control-modern" %}
+                        </div>
 
-                <!-- ================= MESSAGES ================= -->
-                <div class="row mt-2">
-                    <div class="col-12">
-                        <div class="message text-center">
-                            {% for message in messages %}
-                            <a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
-                            {% endfor %}
+                        <hr style="border-color: var(--border-light); margin: 12px 0;">
+
+                        <div class="row">
+                            <div class="col-4">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">TDS %</label>
+                                    {% render_field form.mb_tds_percent class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-8">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">TDS Amount</label>
+                                    {% render_field form.mb_tds_amount class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Highlighted Net Payable Box -->
+                        <div class="form-group-modern mt-3" style="background: rgba(16, 185, 129, 0.08); border: 2px dashed rgba(16, 185, 129, 0.25); border-radius: 14px; padding: 0.8rem 1.1rem;">
+                            <label class="form-label-modern" style="color: var(--accent-emerald);">Payable Amount (Net)</label>
+                            {% render_field form.mb_payable_amount class="form-control form-control-modern" style="font-size: 1.1rem; font-weight: 800; border-color: rgba(16, 185, 129, 0.3) !important;" %}
                         </div>
                     </div>
                 </div>
 
             </div>
-        </div>
 
-        <!-- ================= SECOND BOX: TRIPS LIST ================= -->
-        <div class="card text-white bg-info mb-3">
+            <!-- Hidden field for selected trips -->
+            {% render_field form.mb_selected_trips %}
 
-            <!-- ================= HEADER ================= -->
-            <div class="card-header d-flex justify-content-between align-items-center"
-                style="background-color: #17a2b8;">
-                <h5 class="mb-0">Market Bill Trips</h5>
-            </div>
+            <!-- ── Column 3: Trips List ── -->
+            <div class="form-section mt-4">
+                <div class="form-section-title">
+                    <i class="fas fa-truck-loading"></i> Market Bill Trips
+                </div>
 
-            <!-- ================= BODY ================= -->
-            <div class="card-body bg-light text-dark pt-3 pb-3">
-
-                <!-- ================= FILTERS AND ACTIONS ================= -->
-                <div class="row mb-3 align-items-center">
-
-                    <!-- Add/Remove Buttons -->
-                    <div class="col-12 col-md-4 mb-2 mb-md-0">
-                        <button type="button" id="addSelectedBtn" class="btn btn-primary mr-3">
-                            <i class="fas fa-plus"></i> Add
+                <!-- Control row -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap mb-4" style="gap: 16px;">
+                    
+                    <div class="d-flex align-items-center" style="gap: 14px;">
+                        <button type="button" id="addSelectedBtn" class="btn btn-submit">
+                            <i class="fas fa-plus mr-1"></i> Add
                         </button>
-                        <button type="button" id="removeSelectedBtn" class="btn btn-danger" style="display: none;">
-                            <i class="fas fa-trash"></i> Remove
+                        <button type="button" id="removeSelectedBtn" class="btn btn-cancel text-danger border-danger" style="display: none;">
+                            <i class="fas fa-trash mr-1"></i> Remove
                         </button>
                     </div>
 
                     <!-- Date Filter -->
                     {% if not record.id %}
-                    <div class="col-12 col-md-8">
-                        <div class="d-flex align-items-center justify-content-end flex-wrap">
-                            <label class="mb-0 fw-bold mr-2">From</label>
-                            <input type="date" id="tripFromDate" class="form-control mr-3" style="max-width: 150px;">
-                            <label class="mb-0 fw-bold mr-2">to</label>
-                            <input type="date" id="tripToDate" class="form-control mr-3" style="max-width: 150px;">
-                            <button type="button" id="clearTripDateRange" class="btn btn-secondary ml-2">
-                                Clear
-                            </button>
+                    <div class="d-flex align-items-center flex-wrap" style="gap: 16px;">
+                        <div class="d-flex align-items-center" style="gap: 8px;">
+                            <label class="mb-0 form-label-modern" style="font-size: 0.72rem;">From</label>
+                            <input type="date" id="tripFromDate" class="form-control form-control-modern" style="height: 38px; width: 140px; padding: 6px 10px;">
                         </div>
+                        <div class="d-flex align-items-center" style="gap: 8px;">
+                            <label class="mb-0 form-label-modern" style="font-size: 0.72rem;">to</label>
+                            <input type="date" id="tripToDate" class="form-control form-control-modern" style="height: 38px; width: 140px; padding: 6px 10px;">
+                        </div>
+                        <button type="button" id="clearTripDateRange" class="btn btn-cancel" style="height: 38px; min-width: auto; padding: 0 16px;">
+                            Clear
+                        </button>
                     </div>
                     {% endif %}
+
                 </div>
 
-                <!-- ================= TRIPS TABLE ================= -->
-                <div class="table-responsive shadow-box-table p-3">
-                    <table class="table table-striped table-bordered" id="tripsTable">
-                        <thead class="thead-dark">
+                <!-- Table Container -->
+                <div class="table-container-modern p-1">
+                    <table class="table modern-table" id="tripsTable">
+                        <thead>
                             <tr>
-                                <th><input type="checkbox" id="selectAllTrips"></th>
+                                <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllTrips"></th>
                                 <th>Cnote</th>
                                 <th>Vehicle No</th>
                                 <th>Veh Type</th>
@@ -255,14 +269,14 @@
                                 <th>From</th>
                                 <th>To</th>
                                 <th>Trip Date</th>
-                                <th>Trip Cost</th>
-                                <th>Loading Cost</th>
-                                <th>Unloading Cost</th>
-                                <th>Parking Cost</th>
-                                <th>Halting Days</th>
-                                <th>Halting Cost</th>
-                                <th>Total Cost</th>
-                                <th>Mail Attach</th>
+                                <th style="width: 110px;">Trip Cost</th>
+                                <th style="width: 90px;">Loading Cost</th>
+                                <th style="width: 90px;">Unloading Cost</th>
+                                <th style="width: 90px;">Parking Cost</th>
+                                <th style="width: 80px;">Halting Days</th>
+                                <th style="width: 110px;">Halting Cost</th>
+                                <th style="width: 110px;">Total Cost</th>
+                                <th style="width: 100px; text-align: center;">Mail Attach</th>
                             </tr>
                         </thead>
                         <tbody id="tripsTableBody">
@@ -270,9 +284,9 @@
                             <!-- EDIT Mode: Pre-populate with saved trips -->
                             {% if selected_trips_data %}
                             {% for trip in selected_trips_data %}
-                            <tr
-                                class="added-row {% if trip.special_cost != trip.standard_cost %}text-danger{% endif %}">
-                                <td><input type="checkbox" class="trip-checkbox" data-id="{{ trip.id }}"
+                            <tr class="added-row {% if trip.special_cost != trip.standard_cost %}text-danger{% endif %}">
+                                <td style="text-align: center;">
+                                    <input type="checkbox" class="trip-checkbox" data-id="{{ trip.id }}"
                                         data-standard="{{ trip.standard_cost }}" data-special="{{ trip.special_cost }}"
                                         data-loading="{{ trip.loading_cost }}"
                                         data-unloading="{{ trip.unloading_cost }}"
@@ -290,53 +304,53 @@
                                 <td>{{ trip.trip_date|default:"" }}</td>
                                 <td class="trip-cost-cell">
                                     <input type="number" name="trip_cost_{{ trip.id }}"
-                                        class="form-control form-control-sm trip-cost-input"
+                                        class="form-control trip-cost-input"
                                         value="{{ trip.special_cost|default:0 }}" min="0" step="0.01"
                                         readonly="readonly"
-                                        style="width: 100px; background-color:#e9ecef; cursor:default;">
+                                        style="width: 100px;">
                                 </td>
                                 <td>
                                     <input type="number" name="loading_cost_{{ trip.id }}"
-                                        class="form-control form-control-sm loading-cost-input"
+                                        class="form-control loading-cost-input"
                                         value="{{ trip.loading_cost|default:0 }}" min="0" step="0.01"
                                         style="width: 80px;">
                                 </td>
                                 <td>
                                     <input type="number" name="unloading_cost_{{ trip.id }}"
-                                        class="form-control form-control-sm unloading-cost-input"
+                                        class="form-control unloading-cost-input"
                                         value="{{ trip.unloading_cost|default:0 }}" min="0" step="0.01"
                                         style="width: 80px;">
                                 </td>
                                 <td>
                                     <input type="number" name="parking_cost_{{ trip.id }}"
-                                        class="form-control form-control-sm parking-cost-input"
+                                        class="form-control parking-cost-input"
                                         value="{{ trip.parking_cost|default:0 }}" min="0" step="0.01"
                                         style="width: 80px;">
                                 </td>
                                 <td>
                                     <input type="number" name="halting_days_{{ trip.id }}"
-                                        class="form-control form-control-sm halting-days-input"
+                                        class="form-control halting-days-input"
                                         value="{{ trip.halting_days }}" min="0" style="width: 70px;">
                                 </td>
                                 <td>
                                     <input type="number" name="halting_cost_{{ trip.id }}"
-                                        class="form-control form-control-sm halting-cost-input"
+                                        class="form-control halting-cost-input"
                                         value="{{ trip.halting_cost|default:0 }}" min="0" step="0.01"
                                         style="width: 100px;">
                                 </td>
                                 <td class="row-total-cost-cell">0.00</td>
                                 <td class="text-center">
                                     {% if trip.special_cost != trip.standard_cost %}
-                                    <div class="d-flex flex-column align-items-center">
+                                    <div class="d-flex flex-column align-items-center justify-content-center" style="gap: 4px;">
                                         {% if trip.mail_attachment_url %}
                                         <a href="{{ trip.mail_attachment_url }}" target="_blank"
-                                            class="btn btn-sm btn-info mb-1" title="View Mail">
-                                            <i class="fas fa-envelope-open-text"></i>
+                                            class="btn btn-sm btn-info" title="View Mail" style="padding: 2px 6px;">
+                                            <i class="fas fa-envelope-open-text" style="font-size: 0.8rem;"></i>
                                         </a>
                                         {% endif %}
-                                        <button type="button" class="btn btn-sm btn-warning mb-1 trigger-mail-upload"
-                                            data-trip-id="{{ trip.id }}" title="Upload Mail Attachment">
-                                            <i class="fas fa-envelope"></i>
+                                        <button type="button" class="btn btn-sm btn-warning trigger-mail-upload"
+                                            data-trip-id="{{ trip.id }}" title="Upload Mail Attachment" style="padding: 2px 6px;">
+                                            <i class="fas fa-envelope" style="font-size: 0.8rem;"></i>
                                         </button>
                                         <span class="selected-filename text-muted small"
                                             style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
@@ -363,10 +377,35 @@
                 </div>
 
             </div>
-        </div>
 
+            <!-- ══ Form Footer Actions ══ -->
+            <div class="row mt-4 mb-4">
+                <div class="col-12 d-flex justify-content-between align-items-center">
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-check mr-1"></i> Submit
+                    </button>
+                    <a href="{% url 'market_bill_list' %}" class="btn btn-cancel">
+                        <i class="fas fa-times mr-1"></i> Cancel
+                    </a>
+                </div>
+            </div>
+
+            <!-- ================= SYSTEM MESSAGES ================= -->
+            {% if messages %}
+            <div class="row mt-2">
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        {% for message in messages %}
+                        <div {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </form>
     </div>
-</form>
+</div>
 
 <!-- ================= JAVASCRIPT ================= -->
 <script>
@@ -621,7 +660,7 @@
                 availableTrips.forEach(trip => {
                     const row = document.createElement("tr");
                     row.innerHTML = `
-                    <td><input type="checkbox" class="trip-checkbox" 
+                    <td style="text-align: center;"><input type="checkbox" class="trip-checkbox" 
                         data-id="${trip.id}" 
                         data-standard="${trip.standard_cost}" 
                         data-special="${trip.special_cost}" 
@@ -639,41 +678,41 @@
                     <td>${trip.to_location}</td>
                     <td>${trip.trip_date}</td>
                     <td class="trip-cost-cell">
-                        <input type="number" name="trip_cost_${trip.id}" class="form-control form-control-sm trip-cost-input" 
-                            value="${trip.special_cost.toFixed(2)}" min="0" step="0.01" readonly="readonly" style="width: 100px; background-color:#e9ecef; cursor:default;">
+                        <input type="number" name="trip_cost_${trip.id}" class="form-control trip-cost-input" 
+                            value="${trip.special_cost.toFixed(2)}" min="0" step="0.01" readonly="readonly" style="width: 100px;">
                     </td>
                     <td>
-                        <input type="number" name="loading_cost_${trip.id}" class="form-control form-control-sm loading-cost-input" 
+                        <input type="number" name="loading_cost_${trip.id}" class="form-control loading-cost-input" 
                             value="${trip.loading_cost.toFixed(2)}" min="0" step="0.01" style="width: 80px;">
                     </td>
                     <td>
-                        <input type="number" name="unloading_cost_${trip.id}" class="form-control form-control-sm unloading-cost-input" 
+                        <input type="number" name="unloading_cost_${trip.id}" class="form-control unloading-cost-input" 
                             value="${trip.unloading_cost.toFixed(2)}" min="0" step="0.01" style="width: 80px;">
                     </td>
                     <td>
-                        <input type="number" name="parking_cost_${trip.id}" class="form-control form-control-sm parking-cost-input" 
+                        <input type="number" name="parking_cost_${trip.id}" class="form-control parking-cost-input" 
                             value="${trip.parking_cost.toFixed(2)}" min="0" step="0.01" style="width: 80px;">
                     </td>
                     <td>
-                        <input type="number" name="halting_days_${trip.id}" class="form-control form-control-sm halting-days-input" 
+                        <input type="number" name="halting_days_${trip.id}" class="form-control halting-days-input" 
                             value="${trip.halting_days}" min="0" style="width: 70px;">
                     </td>
                     <td>
-                        <input type="number" name="halting_cost_${trip.id}" class="form-control form-control-sm halting-cost-input" 
+                        <input type="number" name="halting_cost_${trip.id}" class="form-control halting-cost-input" 
                             value="${trip.halting_cost.toFixed(2)}" min="0" step="0.01" style="width: 100px;">
                     </td>
                     <td class="row-total-cost-cell">${(trip.special_cost + trip.loading_cost + trip.unloading_cost + trip.parking_cost + trip.halting_cost).toFixed(2)}</td>
                     <td class="text-center">
                         ${trip.special_cost !== trip.standard_cost ? `
-                            <div class="d-flex flex-column align-items-center">
+                            <div class="d-flex flex-column align-items-center justify-content-center" style="gap: 4px;">
                                 ${trip.mail_attachment_url ? `
-                                    <a href="${trip.mail_attachment_url}" target="_blank" class="btn btn-sm btn-info mb-1" title="View Mail">
-                                        <i class="fas fa-envelope-open-text"></i>
+                                    <a href="${trip.mail_attachment_url}" target="_blank" class="btn btn-sm btn-info" title="View Mail" style="padding: 2px 6px;">
+                                        <i class="fas fa-envelope-open-text" style="font-size: 0.8rem;"></i>
                                     </a>
                                 ` : ''}
-                                <button type="button" class="btn btn-sm btn-warning mb-1 trigger-mail-upload" 
-                                    data-trip-id="${trip.id}" title="Upload Mail Attachment">
-                                    <i class="fas fa-envelope"></i>
+                                <button type="button" class="btn btn-sm btn-warning trigger-mail-upload" 
+                                    data-trip-id="${trip.id}" title="Upload Mail Attachment" style="padding: 2px 6px;">
+                                    <i class="fas fa-envelope" style="font-size: 0.8rem;"></i>
                                 </button>
                                 <span class="selected-filename text-muted small" style="max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
                             </div>
@@ -934,8 +973,6 @@
             form.submit();
         }
     });
-
-    // Update filename display if needed (though form submits immediately)
 </script>
 
 {% endblock %}

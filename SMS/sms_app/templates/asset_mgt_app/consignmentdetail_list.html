@@ -183,7 +183,7 @@
                 {
                     targets: 29,
                     render: function (data, type, row) {
-                        return '<form action="/SMS/consignmentdetail_delete/' + data + '/" method="post" onsubmit="return confirm(\'Are you sure?\');" style="display:inline;"><input type="hidden" name="csrfmiddlewaretoken" value="' + getCookie('csrftoken') + '"><button type="submit" class="btn-modern btn-cancel py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;"><i class="fas fa-trash-alt"></i></button></form>';
+                        return '<form action="/SMS/consignmentdetail_delete/' + data + '/" method="post" onsubmit="let r = prompt(\'⚠️ Warning: You are about to delete this consignment.\\n\\nPlease provide a reason for this deletion:\'); if(r && r.trim() !== \'\'){ this.insertAdjacentHTML(\'beforeend\', \'<input type=\\\'hidden\\\' name=\\\'deletion_reason\\\' value=\\\'\' + r.replace(/\'/g, \'&apos;\') + \'\\\'>\'); return true; } else { alert(\'Deletion cancelled. A reason is required to delete records.\'); return false; }" style="display:inline;"><input type="hidden" name="csrfmiddlewaretoken" value="' + getCookie('csrftoken') + '"><button type="submit" class="btn-modern btn-cancel py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;"><i class="fas fa-trash-alt"></i></button></form>';
                     }
                 }
             ],

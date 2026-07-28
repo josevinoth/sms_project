@@ -1,0 +1,162 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block content %}
+
+<style>
+    .filter-input-modern {
+        background: var(--input-bg) !important;
+        border: 1.5px solid var(--input-border) !important;
+        border-radius: 8px !important;
+        padding: 5px 10px !important;
+        font-size: 0.85rem !important;
+        color: var(--text-main) !important;
+        height: auto !important;
+        transition: all 0.3s;
+    }
+    .filter-input-modern:focus {
+        background: var(--input-focus-bg) !important;
+        border-color: var(--accent-blue) !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        outline: none !important;
+        color: var(--text-main) !important;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white">
+            <i class="fas fa-star mr-2" style="color: var(--accent-orange);"></i> Prime Booking Notes
+        </h2>
+        <a href="{% url 'prime_enquiry_insert' %}" class="btn-modern btn-submit py-2 px-4"
+           style="font-size: 0.9rem; text-decoration: none; border-radius: 10px;
+                  background: var(--accent-emerald);
+                  box-shadow: 0 4px 15px rgba(20, 184, 166, 0.35); display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-plus"></i> Add New Booking
+        </a>
+    </div>
+
+    <!-- Search/Filter Card -->
+    <div class="modern-card p-3 mb-4">
+        <form method="GET" action="{% url 'prime_enquiry_list' %}">
+            <div class="row align-items-end g-3">
+                <div class="col-md-3">
+                    <label class="form-label-modern text-muted small mb-1">Enquiry / Booking Number</label>
+                    <input type="text" name="enquiry_number" class="form-control filter-input-modern"
+                           placeholder="Search..." value="{{ request.GET.enquiry_number }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-modern text-muted small mb-1">Date From</label>
+                    <input type="date" name="date_from" class="form-control filter-input-modern"
+                           value="{{ request.GET.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-modern text-muted small mb-1">Date To</label>
+                    <input type="date" name="date_to" class="form-control filter-input-modern"
+                           value="{{ request.GET.date_to }}">
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn-modern btn-submit flex-grow-1">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a href="{% url 'prime_enquiry_list' %}"
+                       class="btn-modern btn-cancel d-flex align-items-center justify-content-center"
+                       style="width:40px; text-decoration:none;">
+                        <i class="fas fa-sync-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Table Card -->
+    <div class="modern-card legacy-form-card mb-3">
+        <div class="card-body p-0">
+            <div class="p-3" style="overflow-x: auto;">
+                <table id="prime_booking_list_tbl" class="table modern-table text-center" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th class="font-weight-bold">ID</th>
+                            <th class="font-weight-bold">Created On</th>
+                            <th class="font-weight-bold">Schedule</th>
+                            <th class="font-weight-bold">Booking Number</th>
+                            <th class="font-weight-bold">Customer Name</th>
+                            <th class="font-weight-bold">Vehicles Allotted</th>
+                            <th class="font-weight-bold">Status</th>
+                            <th class="font-weight-bold">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for enq in enquiry_list %}
+                    <tr>
+                        <td class="font-weight-bold">{{ enq.id }}</td>
+                        <td>
+                            {{ enq.pen_created_at|date:"d-m-Y" }}<br>
+                            <span class="small text-muted">{{ enq.pen_created_at|date:"h:i A" }}</span>
+                        </td>
+                        <td>
+                            <div class="small">
+                                <strong>From:</strong> {{ enq.pen_pickupdatetime|date:"d-m-Y h:i A"|default:"-" }}<br>
+                                <strong>To:</strong> {{ enq.pen_todatetime|date:"d-m-Y h:i A"|default:"-" }}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge p-2" style="background: var(--bg-light); border: 1px solid var(--border-light); color: var(--text-main); font-size: 0.85rem;">
+                                {{ enq.pen_enquirynumber|default:"(not generated yet)" }}
+                            </span>
+                        </td>
+                        <td class="font-weight-bold">{{ enq.pen_customername.cu_name|default:"-" }}</td>
+                        <td>
+                            {% for va in enq.primevehicleallotmentinfo_set.all %}
+                                {% if 'Vehicle:' in va.pva_replacement_reason %}
+                                    <a href="{% url 'prime_trip_add' va.id %}" class="badge p-2 mb-1 text-white" style="display:inline-block; background: var(--accent-pink);"><i class="fas fa-truck"></i> {{ va.pva_vehiclenumber.vm_registrationnumber|default:va.pva_vehiclenumber_mkt|default:"-" }}</a>
+                                {% elif 'Driver:' in va.pva_replacement_reason %}
+                                    <a href="{% url 'prime_trip_add' va.id %}" class="badge p-2 mb-1 text-white" style="display:inline-block; background: var(--accent-orange);"><i class="fas fa-truck"></i> {{ va.pva_vehiclenumber.vm_registrationnumber|default:va.pva_vehiclenumber_mkt|default:"-" }}</a>
+                                {% elif 'Both:' in va.pva_replacement_reason %}
+                                    <a href="{% url 'prime_trip_add' va.id %}" class="badge p-2 mb-1 text-white" style="display:inline-block; background: var(--accent-purple);"><i class="fas fa-truck"></i> {{ va.pva_vehiclenumber.vm_registrationnumber|default:va.pva_vehiclenumber_mkt|default:"-" }}</a>
+                                {% else %}
+                                    {% if va.pva_vehiclesource.id == 3 %}
+                                        <a href="{% url 'prime_trip_add' va.id %}" class="badge p-2 mb-1 text-white" style="display:inline-block; background: var(--accent-orange);"><i class="fas fa-truck"></i> {{ va.pva_vehiclenumber_mkt|default:"-" }}</a>
+                                    {% else %}
+                                        <a href="{% url 'prime_trip_add' va.id %}" class="badge p-2 mb-1 text-white" style="display:inline-block; background: var(--accent-blue);"><i class="fas fa-truck"></i> {{ va.pva_vehiclenumber.vm_registrationnumber|default:va.pva_vehiclenumber_mkt|default:"-" }}</a>
+                                    {% endif %}
+                                {% endif %}
+                            {% empty %}
+                                -
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if enq.pen_status %}
+                                <span class="badge badge-info p-1 px-2">{{ enq.pen_status }}</span>
+                            {% else %}
+                                <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'prime_enquiry_update' enq.id %}"
+                               class="btn-modern btn-highlight-cyan px-3 py-1"
+                               style="font-size:0.85rem; text-decoration:none;">
+                                <i class="fas fa-edit"></i> Open
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#prime_booking_list_tbl').DataTable({
+            order: [[0, 'desc']],
+            dom: 'Bfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+    });
+</script>
+
+{% endblock content %}

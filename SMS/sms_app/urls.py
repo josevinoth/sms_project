@@ -214,6 +214,7 @@ urlpatterns = [
     path('wh_job_list', views.wh_job_list, name='wh_job_list'),  # wh Job list
     path('wh_job_delete/<int:gatein_id>/', views.wh_job_delete, name='wh_job_delete'),  # wh Job list
     path('enquirynote_list/', views.enquirynote_list, name='enquirynote_list'),  # List enquirynote,
+    path('search_vehicle_numbers/', views.search_vehicle_numbers, name='search_vehicle_numbers'),  # Search vehicle numbers API
     path('enquirynote_insert', views.enquirynote_add, name='enquirynote_insert'),  # Add enquirynote
     path('enquirynote_update/<int:enquirynote_id>/', views.enquirynote_add, name='enquirynote_update'),  # Update enquirynote
     path('enquirynote_delete/<int:enquirynote_id>/', views.enquirynote_delete, name='enquirynote_delete'),  # Delete enquirynote
@@ -596,6 +597,31 @@ urlpatterns = [
     path('enquirynotevehicle_cancel/', views.enquirynotevehicle_cancel, name='enquirynotevehicle_cancel'),
     # Cancel enquirynotevehicle
 
+    # ---- Prime Business Type – Vehicle Details ----
+    path('prime_enquiry_vehicle_list/', views.prime_enquiry_vehicle_list, name='prime_enquiry_vehicle_list'),
+    # List prime enquiry vehicles
+    path('prime_enquiry_list/', views.prime_enquiry_booking_list, name='prime_enquiry_list'),
+    path('prime_enquiry_insert/', views.prime_enquiry_vehicle_add, name='prime_enquiry_insert'),
+    path('prime_enquiry_vehicle_update/<int:pev_id>', views.prime_enquiry_vehicle_add,
+         name='prime_enquiry_vehicle_update'),  # update prime enquiry vehicle
+    path('prime_enquiry_vehicle_delete/<int:pev_id>', views.prime_enquiry_vehicle_delete,
+         name='prime_enquiry_vehicle_delete'),  # delete prime enquiry vehicle
+    path('prime_enquiry_vehicle_cancel/', views.prime_enquiry_vehicle_cancel,
+         name='prime_enquiry_vehicle_cancel'),  # cancel prime enquiry vehicle
+    path('prime_enquiry_update/<int:enquiry_num_id>/', views.prime_enquiry_vehicle_add,
+         name='prime_enquiry_update', kwargs={}),  # Prime enquiry update redirect target
+    path('prime_trip_add/<int:allotment_id>/', views.prime_trip_add, name='prime_trip_add'),
+    path('prime_trip_list/', views.prime_trip_list, name='prime_trip_list'),
+    path('prime_vehicle_allotment_insert/<int:pev_id>/', views.prime_vehicle_allotment_add,
+         name='prime_vehicle_allotment_insert'),
+    path('prime_vehicle_allotment_update/<int:vehicle_allotment_id>/', views.prime_vehicle_allotment_add,
+         name='prime_vehicle_allotment_update'),
+    path('prime_vehicle_allotment_list/', views.prime_vehicle_allotment_list,
+         name='prime_vehicle_allotment_list'),
+    path('prime_vehicle_simplified_replace/', views.prime_vehicle_simplified_replace,
+         name='prime_vehicle_simplified_replace'),
+    path('prime_vehicle_revert_replace/', views.prime_vehicle_revert_replace,
+         name='prime_vehicle_revert_replace'),
 
     path('consignmentgoods_list/', views.consignmentgoods_list, name='consignmentgoods_list'),  # List consignmentgoods
     path('consignmentgoods_insert/', views.consignmentgoods_add, name='consignmentgoods_insert'),

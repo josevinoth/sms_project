@@ -6,6 +6,8 @@
     --accent-emerald: #14b8a6;
     --accent-blue: #3b82f6;
     --accent-orange: #f59e0b;
+    --accent-purple: #a855f7;
+    --accent-pink: #ec4899;
     --accent-orange-glow: rgba(245, 158, 11, 0.4);
     --btn-primary: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     --btn-primary-hover: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
@@ -303,18 +305,18 @@ textarea.form-control-modern {
     border-color: #334155;
 }
 
-input.form-control-modern:disabled, 
+input.form-control-modern:disabled,
 input.form-control-modern[readonly],
-select.form-control-modern:disabled, 
+select.form-control-modern:disabled,
 select.form-control-modern[readonly],
-textarea.form-control-modern:disabled, 
+textarea.form-control-modern:disabled,
 textarea.form-control-modern[readonly],
 .form-control-modern.disable_a_href,
 select.form-control-modern.disable_a_href {
-    background-color: #EBEBE4 !important; 
+    background-color: #EBEBE4 !important;
     color: var(--text-main) !important;
     cursor: not-allowed !important;
-    border: 1.5px dashed #94a3b8 !important; 
+    border: 1.5px dashed #94a3b8 !important;
     opacity: 1 !important;
 }
 
@@ -448,6 +450,22 @@ a.btn-modern + a.btn-modern {
     transform: translateY(-3px);
     box-shadow: none !important;
     color: white !important;
+}
+
+/* Inline Add/Action Buttons next to input/select fields */
+.btn-inline-add,
+.consignment-goods-modern .btn-inline-add {
+    min-width: auto !important;
+    width: auto !important;
+    height: 39px !important;
+    min-height: 39px !important;
+    padding: 0.3rem 0.65rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    flex: 0 0 auto !important;
+    border-radius: 8px !important;
+    white-space: nowrap !important;
 }
 
 /* Premium Flatpickr Dark Theme */
@@ -937,9 +955,9 @@ a.btn-modern + a.btn-modern {
 input.disable_a_href,
 select.disable_a_href,
 textarea.disable_a_href,
-.disable_a_href { 
-    pointer-events: none !important; 
-    background-color: #EBEBE4 !important; 
+.disable_a_href {
+    pointer-events: none !important;
+    background-color: #EBEBE4 !important;
     opacity: 1 !important;
     color: var(--text-main) !important;
     font-weight: 700 !important;
@@ -1799,8 +1817,8 @@ body, .modern-card, .form-section, .form-control-modern, .modern-table td, .tabl
 /* Treat Info and Success as the requested White/Black Info style */
 .message a.alert-success,
 .message a.alert-info {
-    background-color: #ffffff !important; 
-    color: #000000 !important; 
+    background-color: #ffffff !important;
+    color: #000000 !important;
     border: 1px solid #e5e7eb !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
@@ -1854,7 +1872,7 @@ body, .modern-card, .form-section, .form-control-modern, .modern-table td, .tabl
     border: 1px solid rgba(251, 191, 36, 0.3) !important;
 }
 
-/* Global Layout Fix for "container-fluid row" 
+/* Global Layout Fix for "container-fluid row"
    Prevents horizontal scrollbar when these two classes are combined */
 .container-fluid.row {
     margin-left: 0 !important;
@@ -1862,4 +1880,10 @@ body, .modern-card, .form-section, .form-control-modern, .modern-table td, .tabl
     padding-left: 15px !important;
     padding-right: 15px !important;
     width: 100% !important;
+}
+
+/* Override Bootstrap badge-info globally to use sky-blue instead of dark teal */
+.badge-info {
+    background-color: #0ea5e9 !important;
+    color: #ffffff !important;
 }

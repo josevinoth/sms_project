@@ -1,91 +1,111 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% block content %}
 
-<!-- ================= HEADER ================= -->
-<div class="container-fluid py-3">
-    <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-4 rounded text-center shadow-box" style="background-color: #F2542D;">
-            <h3 class="mb-0 text-white p-2">Market Bill List</h3>
+<style>
+    .market-bill-list-modern {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+
+    .market-bill-list-modern .form-section {
+        padding: 0.85rem 1rem !important;
+        border-radius: 12px !important;
+    }
+
+    .market-bill-list-modern .form-group-modern {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .market-bill-list-modern .form-label-modern {
+        margin-bottom: 0.22rem !important;
+        font-size: 0.72rem !important;
+    }
+
+    /* Small table action buttons overrides */
+    .market-bill-list-modern .btn-sm {
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 4px 10px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+        min-width: auto !important;
+    }
+</style>
+
+<div class="container-fluid py-4 market-bill-list-modern">
+
+    <!-- ══ Centralized Page Header ══ -->
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+            <i class="fas fa-list mr-2"></i> Market Bill List
+        </h3>
+        <div class="d-flex" style="gap: 12px;">
+            <a href="{% url 'home_page' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <a href="{% url 'market_bill_add' %}" class="btn btn-submit" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                <i class="fas fa-plus"></i> Add New
+            </a>
         </div>
     </div>
-</div>
 
-<!-- ================= ACTION BAR ================= -->
-<div class="container-fluid row mb-3">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg shadow-sm">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
+    <!-- ══ Date Filter Form Section ══ -->
+    <div class="form-section mb-4">
+        <form method="GET" action="{% url 'market_bill_list' %}">
+            <!-- Section Header -->
+            <div class="form-section-title mb-3">
+                <i class="fas fa-filter text-primary"></i> Bill Date Filter
+            </div>
+            
+            <!-- Controls Row -->
+            <div class="d-flex flex-wrap align-items-end" style="gap: 15px;">
+                <div class="form-group-modern mb-0" style="flex: 1 1 150px;">
+                    <label class="form-label-modern">From Date</label>
+                    <input type="date" name="from_date" class="form-control form-control-modern" value="{{ from_date }}">
+                </div>
 
-    <div class="col-md-1">
-        <a href="{% url 'market_bill_add' %}" class="btn btn-success btn-block btn-lg shadow-sm">
-            <i class="fas fa-plus"></i> Add
-        </a>
-    </div>
-</div>
+                <div class="form-group-modern mb-0" style="flex: 1 1 150px;">
+                    <label class="form-label-modern">To Date</label>
+                    <input type="date" name="to_date" class="form-control form-control-modern" value="{{ to_date }}">
+                </div>
 
-<hr>
-
-<!-- ================= DATE FILTER ================= -->
-<div class="container-fluid mb-3">
-    <form method="GET" action="{% url 'market_bill_list' %}" class="form-inline">
-        <div class="card shadow-sm">
-            <div class="card-body py-2">
-                <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
-                    <label class="font-weight-bold mb-0">Bill Date Filter:</label>
-
-                    <div class="d-flex align-items-center">
-                        <label class="mb-0 mr-2">From</label>
-                        <input type="date" name="from_date" class="form-control form-control-sm"
-                            value="{{ from_date }}" style="max-width: 160px;">
-                    </div>
-
-                    <div class="d-flex align-items-center">
-                        <label class="mb-0 mr-2">To</label>
-                        <input type="date" name="to_date" class="form-control form-control-sm"
-                            value="{{ to_date }}" style="max-width: 160px;">
-                    </div>
-
-                    <button type="submit" class="btn btn-info btn-sm">
-                        <i class="fas fa-filter"></i> Filter
+                <div class="d-flex align-items-center flex-wrap" style="gap: 10px; flex: 0 0 auto;">
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-filter mr-1"></i> Filter
                     </button>
-                    <a href="{% url 'market_bill_list' %}" class="btn btn-secondary btn-sm">
-                        <i class="fas fa-times"></i> Clear
+                    <a href="{% url 'market_bill_list' %}" class="btn btn-cancel d-inline-flex align-items-center justify-content-center" style="text-decoration:none;">
+                        <i class="fas fa-times mr-1"></i> Clear
                     </a>
-
-                    <button type="submit" formaction="{% url 'market_bill_export_tally' %}" class="btn btn-warning btn-sm shadow-sm ml-3 text-dark font-weight-bold">
-                        <i class="fas fa-file-excel"></i> Export Tally
+                    <button type="submit" formaction="{% url 'market_bill_export_tally' %}" class="btn btn-submit" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-file-excel mr-1"></i> Export Tally
                     </button>
+                </div>
 
-                    {% if from_date or to_date %}
-                    <span class="badge badge-success ml-2">
+                {% if from_date or to_date %}
+                <div class="ml-2 mb-1">
+                    <span class="badge badge-success" style="font-size: 0.85rem; padding: 6px 12px; border-radius: 8px;">
                         Filter Active: {{ from_date|default:"..." }} to {{ to_date|default:"..." }}
                     </span>
-                    {% endif %}
                 </div>
+                {% endif %}
             </div>
-        </div>
-    </form>
-</div>
+        </form>
+    </div>
 
-
-<div class="container-fluid">
-    <div class="table-responsive shadow-box-table p-3 bg-white rounded">
-        <div class="row">
-            <div class="col-1"></div>
-            <div class="col-10">
+    <!-- ══ Table Container ══ -->
+    <div class="table-container-modern p-4">
+        <div class="row mb-2">
+            <div class="col-12">
                 <div class="message text-center">
                     {% for message in messages %}
                     <a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
                     {% endfor %}
                 </div>
             </div>
-            <div class="col-1"></div>
         </div>
 
-        <table class="table table-striped table-bordered table-sm" id="marketBillTable">
-            <thead class="thead-dark">
+        <table class="table modern-table w-100" id="marketBillTable">
+            <thead>
                 <tr>
                     <th>S.No</th>
                     <th>Bill No</th>
@@ -93,8 +113,6 @@
                     <th>Bill Date</th>
                     <th>Vendor</th>
                     <th>Branch</th>
-                    <!--<th>Vehicle Number</th>
-                    <th>Vehicle Type</th>-->
                     <th>Trip Cost</th>
                     <th>Loading Cost</th>
                     <th>Unloading Cost</th>
@@ -126,8 +144,6 @@
                     <td>{{ bill.mb_bill_date|date:"d-m-Y" }}</td>
                     <td>{{ bill.mb_vendor }}</td>
                     <td></td> <!-- Placeholder for Branch -->
-                    <!--<td>{{ bill.mb_vehicle_number }}</td>
-                    <td>{{ bill.mb_vehicle_type|default:"" }}</td>-->
                     <td>{{ bill.mb_trip_cost|floatformat:2 }}</td>
                     <td>{{ bill.mb_loading_cost|floatformat:2 }}</td>
                     <td>{{ bill.mb_unloading_cost|floatformat:2 }}</td>
@@ -158,12 +174,12 @@
                     <td>{{ bill.mb_updated_at|date:"d-m-Y H:i" }}</td>
                     <td class="text-center">
                         {% if bill.mb_attachment %}
-                        <div class="btn-group shadow-sm">
-                            <a href="{{ bill.mb_attachment.url }}" target="_blank" class="btn btn-outline-info btn-sm"
+                        <div class="d-inline-flex" style="gap: 6px;">
+                            <a href="{{ bill.mb_attachment.url }}" target="_blank" class="btn btn-outline-info btn-sm btn-icon-only"
                                 title="View Attachment">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <button type="button" class="btn btn-info btn-sm upload-btn" data-id="{{ bill.id }}"
+                            <button type="button" class="btn btn-info btn-sm upload-btn btn-icon-only" data-id="{{ bill.id }}"
                                 data-bill="{{ bill.mb_bill_no }}" title="Re-upload">
                                 <i class="fas fa-upload"></i>
                             </button>
@@ -176,7 +192,7 @@
                         {% endif %}
                     </td>
                     <td class="text-center">
-                        <a href="{% url 'market_bill_edit' bill.id %}" class="btn btn-primary shadow-sm btn-sm">
+                        <a href="{% url 'market_bill_edit' bill.id %}" class="btn btn-submit btn-sm btn-icon-only">
                             <i class="far fa-edit"></i>
                         </a>
                     </td>
@@ -185,7 +201,7 @@
                         <form method="POST" action="{% url 'market_bill_delete' bill.id %}" style="display:inline;"
                             onsubmit="return confirm('Are you sure you want to delete this record?');">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-danger shadow-sm btn-sm">
+                            <button type="submit" class="btn btn-cancel btn-sm btn-icon-only text-danger border-danger" style="background: var(--bg-card);">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>
@@ -197,31 +213,34 @@
             </tbody>
         </table>
     </div>
+
 </div>
 
-<!-- ================= UPLOAD MODAL ================= -->
+<!-- ══ Upload Attachment Modal ══ -->
 <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content" style="border-radius: 16px; overflow: hidden; border: 1px solid var(--border-light); background: var(--bg-card); color: var(--text-main);">
             <form id="uploadForm" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
-                <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title" id="uploadModalLabel">Upload Bill Attachment</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <div class="modal-header" style="background: var(--primary-glow); border-bottom: none; padding: 1.25rem 1.5rem;">
+                    <h5 class="modal-title text-white" id="uploadModalLabel" style="font-weight: 700; font-family: 'Outfit';">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i> Upload Bill Attachment
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.8; outline: none; border: none; background: transparent;">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                    <p>Bill No: <strong id="modalBillNo"></strong></p>
-                    <div class="mb-3">
-                        <label for="mb_attachment" class="form-label">Select File (Image or Document)</label>
-                        <input type="file" class="form-control" name="mb_attachment" id="mb_attachment" required>
+                <div class="modal-body" style="padding: 1.5rem;">
+                    <p style="font-size: 1rem; font-weight: 600;">Bill No: <span id="modalBillNo" style="color: var(--accent-emerald);"></span></p>
+                    <div class="form-group-modern mb-0">
+                        <label for="mb_attachment" class="form-label-modern">Select File (Image or Document)</label>
+                        <input type="file" class="form-control-file" name="mb_attachment" id="mb_attachment" required>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-info shadow-sm">
-                        <i class="fas fa-cloud-upload-alt"></i> Upload
+                <div class="modal-footer" style="border-top: none; padding: 1rem 1.5rem;">
+                    <button type="button" class="btn btn-cancel" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-submit">
+                        Upload
                     </button>
                 </div>
             </form>
@@ -249,7 +268,7 @@
             ],
             pageLength: 10,
             lengthMenu: [5, 10, 25, 50],
-            order: [[14, 'desc']] // Sort by Created On by default
+            order: [[16, 'desc']] // Sort by Created On (index 16) by default
         });
 
         // Handle Upload Button Click with Event Delegation

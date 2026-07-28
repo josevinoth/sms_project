@@ -1,0 +1,208 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load static %}
+{% block content %}
+<style>
+    /* Custom style overrides for List components */
+    .filter-input-modern {
+        background: var(--input-bg) !important;
+        border: 1.5px solid var(--input-border) !important;
+        border-radius: 8px !important;
+        padding: 5px 10px !important;
+        font-size: 0.85rem !important;
+        color: var(--text-main) !important;
+        height: auto !important;
+        transition: all 0.3s;
+    }
+    .filter-input-modern:focus {
+        background: var(--input-focus-bg) !important;
+        border-color: var(--accent-blue) !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+        outline: none !important;
+        color: var(--text-main) !important;
+    }
+    .badge-info {
+        background-color: #0ea5e9 !important;
+        color: #ffffff !important;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-white"><i class="fas fa-list mr-2"></i> Prime Trip List</h2>
+    </div>
+
+    <!-- Search/Filter Card -->
+    <div class="modern-card p-3 mb-4">
+        <form method="GET" action="{% url 'prime_trip_list' %}">
+            <div class="row align-items-end g-3">
+                <div class="col-md-3">
+                    <label class="form-label-modern text-muted small mb-1">Trip Number</label>
+                    <input type="text" name="trip_number" class="form-control filter-input-modern" placeholder="Search Trip..." value="{{ request.GET.trip_number }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-modern text-muted small mb-1">Date From</label>
+                    <input type="date" name="date_from" class="form-control filter-input-modern" value="{{ request.GET.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-modern text-muted small mb-1">Date To</label>
+                    <input type="date" name="date_to" class="form-control filter-input-modern" value="{{ request.GET.date_to }}">
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn-modern btn-submit flex-grow-1" style="border: none;"><i class="fas fa-search"></i> Search</button>
+                    <a href="{% url 'prime_trip_list' %}" class="btn-modern btn-cancel d-flex align-items-center justify-content-center" style="width: 40px; text-decoration: none; border: 1px solid var(--border-light);"><i class="fas fa-sync-alt"></i></a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Daily Usage List -->
+    <div id="dailyUsageAccordion">
+        {% for summary in daily_summaries %}
+        <div class="modern-card p-3 mb-3" style="border: 1px solid var(--border-light); transition: all 0.3s; border-radius: 16px;">
+            <!-- Summary Header Row -->
+            <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap: 15px;">
+                <!-- Date & Vehicle -->
+                <div class="d-flex align-items-center" style="gap: 15px;">
+                    <div style="background: var(--bg-page); padding: 8px 12px; border-radius: 8px; text-align: center; min-width: 95px; border: 1px solid var(--border-light);">
+                        <span class="small text-muted font-weight-bold" style="text-transform: uppercase; display: block; font-size: 0.7rem; letter-spacing: 1px;">{{ summary.date|date:"D" }}</span>
+                        <h5 class="m-0 font-weight-bold" style="color: var(--text-main); font-size: 1.05rem;">{{ summary.date|date:"d-m-Y" }}</h5>
+                    </div>
+                    <div class="d-flex flex-column align-items-start" style="gap: 6px;">
+                        {% for v in summary.vehicles %}
+                        <span class="badge px-3 py-2" style="{{ v.style }} font-weight: 800; font-size: 0.95rem; border-radius: 8px;">
+                            <i class="fas fa-truck mr-1"></i> {{ v.no }}
+                        </span>
+                        {% endfor %}
+                        <div class="small text-muted mt-1">
+                            Job No: {{ summary.allotment.pva_prime_job_number|default:"-" }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Distance stats -->
+                <div class="text-center">
+                    <span class="small text-muted d-block mb-1 font-weight-bold" style="text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Distance Run</span>
+                    <h5 class="m-0 font-weight-bold" style="color: var(--text-main);">
+                        {{ summary.distance_run|floatformat:1 }} KM
+                    </h5>
+                    {% if summary.range_label %}
+                        <span class="small text-muted" style="font-size: 0.75rem;">{{ summary.range_label }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- Active Hours -->
+                <div class="text-center">
+                    <span class="small text-muted d-block mb-1 font-weight-bold" style="text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Active Hours (9AM - 9PM)</span>
+                    {% if summary.active_hours %}
+                        <span class="badge px-3 py-2" style="font-size:0.85rem; border-radius: 8px; font-weight: 700; background: {% if summary.is_outside_window %}var(--accent-orange){% else %}var(--accent-blue){% endif %}; color: white;">
+                            <i class="far fa-clock mr-1"></i> {{ summary.active_hours }}
+                        </span>
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </div>
+
+                <!-- Monthly progress -->
+                <div style="min-width: 170px;">
+                    <span class="small text-muted d-block mb-1 font-weight-bold text-center" style="text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px;">Monthly Cumulative</span>
+                    <div class="d-flex flex-column align-items-center">
+                        <span class="small font-weight-bold mb-1" style="color: var(--text-main);">
+                            {{ summary.cumulative_km|floatformat:0 }} / {% if summary.agreed_km %}{{ summary.agreed_km|floatformat:0 }}{% else %}—{% endif %} KM
+                        </span>
+                        {% if summary.agreed_km > 0 %}
+                            {% widthratio summary.cumulative_km summary.agreed_km 100 as pct %}
+                            <div class="progress w-100" style="height: 6px; border-radius: 3px; background-color: var(--border-light);">
+                                <div class="progress-bar {% if summary.cumulative_km > summary.agreed_km %}bg-danger{% else %}bg-warning{% endif %}" role="progressbar" style="width: {{ pct }}%;" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        {% else %}
+                            <div class="progress w-100" style="height: 6px; border-radius: 3px; background-color: var(--border-light);">
+                                <div class="progress-bar bg-secondary" role="progressbar" style="width: 0%;"></div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Trips count & Toggle -->
+                <div class="d-flex align-items-center" style="gap: 12px;">
+                    <div class="text-right">
+                        <span class="badge badge-pill badge-secondary px-3 py-1 font-weight-bold" style="font-size: 0.9rem;">
+                            {{ summary.trips_count }} Trip{% if summary.trips_count > 1 %}s{% endif %}
+                        </span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary py-2 px-3" type="button" data-toggle="collapse" data-target="#details-{{ forloop.counter }}" aria-expanded="false" aria-controls="details-{{ forloop.counter }}" style="border-radius: 8px; font-weight: 700; border: 1.5px solid var(--accent-blue); color: var(--accent-blue); background: transparent;">
+                        <i class="fas fa-eye mr-1"></i> View Details
+                    </button>
+                </div>
+            </div>
+
+            <!-- Collapsible Detail Section -->
+            <div id="details-{{ forloop.counter }}" class="collapse mt-3 pt-3" style="border-top: 1px dashed var(--border-light);">
+                <h6 class="font-weight-bold mb-3" style="color: var(--text-main);"><i class="fas fa-route mr-1 text-warning"></i> Daily Trip Logs</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered bg-white text-center mb-0" style="border-radius: 8px; overflow: hidden; border-color: var(--border-light);">
+                        <thead class="thead-dark" style="background: var(--btn-secondary); color: white;">
+                            <tr>
+                                <th style="border: none; padding: 10px; font-size: 0.85rem;">Trip No</th>
+                                <th style="border: none; padding: 10px; font-size: 0.85rem;">Vehicle</th>
+                                <th style="border: none; padding: 10px; font-size: 0.85rem;">Type</th>
+                                <th style="border: none; padding: 10px; font-size: 0.85rem;">Status</th>
+                                <th style="border: none; padding: 10px; font-size: 0.85rem;">From Location</th>
+                                <th style="border: none; padding: 10px; font-size: 0.85rem;">To Location</th>
+                                <th style="border: none; padding: 10px; font-size: 0.85rem;">From Time</th>
+                                <th style="border: none; padding: 10px; font-size: 0.85rem;">To Time</th>
+                                <th style="border: none; padding: 10px; font-size: 0.85rem;">Distance</th>
+                                <th style="border: none; padding: 10px; font-size: 0.85rem;">C-Note No</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in summary.trips %}
+                            <tr>
+                                <td class="font-weight-bold align-middle">{{ t.pt_prime_trip_no }}</td>
+                                <td class="align-middle">
+                                    <span class="badge px-2 py-1" style="{{ t.active_badge_style }} font-weight: 700; font-size: 0.8rem; border-radius: 6px;">
+                                        {{ t.active_vehicle_no }}
+                                    </span>
+                                </td>
+                                <td class="align-middle">
+                                    {% if t.pt_empty_shipment == 'Empty' %}
+                                        <span class="badge badge-warning px-2 py-1">Empty</span>
+                                    {% else %}
+                                        <span class="badge badge-success px-2 py-1">Shipment</span>
+                                    {% endif %}
+                                </td>
+                                <td class="align-middle">
+                                    {% if t.status == 'Trip Closed' %}
+                                        <span class="badge px-2 py-1 text-white" style="background: var(--accent-emerald); font-weight: 700; font-size: 0.8rem; border-radius: 6px;">Trip Closed</span>
+                                    {% else %}
+                                        <span class="badge px-2 py-1 text-white" style="background: var(--accent-blue); font-weight: 700; font-size: 0.8rem; border-radius: 6px;">Trip Started</span>
+                                    {% endif %}
+                                </td>
+                                <td class="align-middle">{{ t.pt_from_place|default:"-" }}</td>
+                                <td class="align-middle">{{ t.pt_to_place|default:"-" }}</td>
+                                <td class="align-middle">{{ t.pt_from_time|time:"h:i A"|default:"-" }}</td>
+                                <td class="align-middle">{{ t.pt_to_time|time:"h:i A"|default:"-" }}</td>
+                                <td class="align-middle font-weight-bold">
+                                    {% if t.trip_distance is not None %}
+                                        {{ t.trip_distance|floatformat:1 }} KM
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td class="align-middle"><span class="badge badge-light border">{{ t.pt_cnote_number|default:"-" }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="modern-card p-5 text-center" style="border: 1px solid var(--border-light); border-radius: 16px;">
+            <i class="fas fa-route fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No trips recorded for the selected criteria.</h5>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
