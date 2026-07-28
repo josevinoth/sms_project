@@ -45,15 +45,20 @@
         <form method="get" action="{% url 'vehicle_allotment_list' %}">
             <h5 class="mb-3 text-main font-weight-bold" style="font-size: 1.1rem;"><i class="fas fa-filter text-info mr-2"></i> Filter & Search Records</h5>
             <div class="row align-items-end">
-                <div class="col-md-4 col-sm-6 mb-3 mb-md-0">
+                <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
                     <label class="form-label-modern small mb-1">Enquiry Number</label>
                     <input type="text" class="form-control form-control-modern" placeholder="Enquiry No" name="enquiry_number" value="{{ enquiry_number }}">
                 </div>
-                <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+                <div class="col-md-3 col-sm-6 mb-3 mb-md-0 position-relative">
+                    <label class="form-label-modern small mb-1">Vehicle Number</label>
+                    <input type="text" class="form-control form-control-modern" id="vehicle_number_filter" placeholder="Vehicle No" name="vehicle_number" value="{{ vehicle_number }}" autocomplete="off">
+                    <div id="vehicle_dropdown" class="dropdown-menu shadow-lg w-100" style="display:none; max-height: 250px; overflow-y: auto; position: absolute; z-index: 1050; top: 100%; left: 0;"></div>
+                </div>
+                <div class="col-md-2 col-sm-6 mb-3 mb-md-0">
                     <label class="form-label-modern small mb-1">From Date</label>
                     <input type="date" class="form-control form-control-modern" name="date_from" value="{{ date_from }}">
                 </div>
-                <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+                <div class="col-md-2 col-sm-6 mb-3 mb-md-0">
                     <label class="form-label-modern small mb-1">To Date</label>
                     <input type="date" class="form-control form-control-modern" name="date_to" value="{{ date_to }}">
                 </div>
@@ -61,6 +66,9 @@
                     <button class="btn-modern btn-submit py-2 px-3 w-100" type="submit" style="font-size: 0.95rem; height: 52px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
                         <i class="fa fa-search"></i> Search
                     </button>
+                    <a href="{% url 'vehicle_allotment_list' %}" class="btn-modern btn-cancel py-2 px-3 w-100 text-center ml-2" style="font-size: 0.95rem; height: 52px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--border-light); text-decoration: none;">
+                        <i class="fa fa-times-circle"></i> Clear
+                    </a>
                 </div>
             </div>
         </form>
@@ -225,15 +233,15 @@
     </div>
     <ul class="pagination pagination-sm m-0">
         {% if page_obj.has_previous %}
-        <li class="page-item"><a class="page-link" href="?page=1{% if enquiry_number %}&enquiry_number={{ enquiry_number }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">&laquo; First</a></li>
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if enquiry_number %}&enquiry_number={{ enquiry_number }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Previous</a></li>
+        <li class="page-item"><a class="page-link" href="?page=1{% if enquiry_number %}&enquiry_number={{ enquiry_number }}{% endif %}{% if vehicle_number %}&vehicle_number={{ vehicle_number }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">&laquo; First</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if enquiry_number %}&enquiry_number={{ enquiry_number }}{% endif %}{% if vehicle_number %}&vehicle_number={{ vehicle_number }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Previous</a></li>
         {% endif %}
 
         <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
 
         {% if page_obj.has_next %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if enquiry_number %}&enquiry_number={{ enquiry_number }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Next</a></li>
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if enquiry_number %}&enquiry_number={{ enquiry_number }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Last &raquo;</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if enquiry_number %}&enquiry_number={{ enquiry_number }}{% endif %}{% if vehicle_number %}&vehicle_number={{ vehicle_number }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Next</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if enquiry_number %}&enquiry_number={{ enquiry_number }}{% endif %}{% if vehicle_number %}&vehicle_number={{ vehicle_number }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Last &raquo;</a></li>
         {% endif %}
     </ul>
 </div>
@@ -242,14 +250,54 @@
 <script>
     $(document).ready(function() {
         var table = $('#enquirynote_list').DataTable({
-    paging: false,       // disable DataTables pagination
-    info: false,         // remove "showing 1 of 50"
-    scrollX: true,
-    order: [[0, 'desc']],
-    dom: 'lBfrtip',
-    buttons: ['copy', 'csv', 'excel', 'print']
-});
+            paging: false,       // disable DataTables pagination
+            info: false,         // remove "showing 1 of 50"
+            scrollX: true,
+            order: [[0, 'desc']],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
 
+        // Auto-complete dropdown for Vehicle Number filter (trigger after typing >= 2 characters)
+        var $vInput = $('#vehicle_number_filter');
+        var $vDropdown = $('#vehicle_dropdown');
+
+        $vInput.on('keyup input', function () {
+            var term = $(this).val().trim();
+            if (term.length >= 2) {
+                $.ajax({
+                    url: "/SMS/search_vehicle_numbers/",
+                    type: "GET",
+                    data: { term: term },
+                    success: function (data) {
+                        $vDropdown.empty();
+                        if (data.results && data.results.length > 0) {
+                            $.each(data.results, function (i, vehNo) {
+                                $vDropdown.append('<a class="dropdown-item vehicle-item" href="#" style="font-size:0.9rem; padding: 6px 12px;">' + vehNo + '</a>');
+                            });
+                            $vDropdown.show();
+                        } else {
+                            $vDropdown.append('<div class="dropdown-item text-muted disabled" style="font-size:0.9rem;">No vehicle found</div>');
+                            $vDropdown.show();
+                        }
+                    }
+                });
+            } else {
+                $vDropdown.hide().empty();
+            }
+        });
+
+        $(document).on('click', '.vehicle-item', function (e) {
+            e.preventDefault();
+            $vInput.val($(this).text());
+            $vDropdown.hide().empty();
+        });
+
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('#vehicle_number_filter, #vehicle_dropdown').length) {
+                $vDropdown.hide();
+            }
+        });
 
         // Apply column search
         $('.filter-input').on('keyup change', function () {
