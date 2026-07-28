@@ -604,6 +604,8 @@ urlpatterns = [
          name='prime_enquiry_vehicle_cancel'),  # cancel prime enquiry vehicle
     path('prime_enquiry_update/<int:enquiry_num_id>/', views.prime_enquiry_vehicle_add,
          name='prime_enquiry_update', kwargs={}),  # Prime enquiry update redirect target
+    path('prime_trip_add/<int:allotment_id>/', views.prime_trip_add, name='prime_trip_add'),
+    path('prime_trip_list/', views.prime_trip_list, name='prime_trip_list'),
     path('prime_vehicle_allotment_insert/<int:pev_id>/', views.prime_vehicle_allotment_add,
          name='prime_vehicle_allotment_insert'),
     path('prime_vehicle_allotment_update/<int:vehicle_allotment_id>/', views.prime_vehicle_allotment_add,
@@ -612,6 +614,8 @@ urlpatterns = [
          name='prime_vehicle_allotment_list'),
     path('prime_vehicle_simplified_replace/', views.prime_vehicle_simplified_replace,
          name='prime_vehicle_simplified_replace'),
+    path('prime_vehicle_revert_replace/', views.prime_vehicle_revert_replace,
+         name='prime_vehicle_revert_replace'),
 
     path('consignmentgoods_list/', views.consignmentgoods_list, name='consignmentgoods_list'),  # List consignmentgoods
     path('consignmentgoods_insert/', views.consignmentgoods_add, name='consignmentgoods_insert'),

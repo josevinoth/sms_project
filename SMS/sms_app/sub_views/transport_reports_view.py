@@ -6992,6 +6992,7 @@ def vendor_bills_pending_mkt_att_report_view(request):
     ).select_related('va_vendor', 'va_vehiclenumber')
 
     allotment_map = {}
+    enquiry_allotment_map = {}
     for a in allotments:
         veh_no = (a.va_vehiclenumber.vm_registrationnumber if a.va_vehiclenumber else (
                 a.va_vehiclenumber_mkt or "")).lower().strip()
@@ -6999,6 +7000,8 @@ def vendor_bills_pending_mkt_att_report_view(request):
         # Store first matched allotment for enquiry+vehicle pair
         if key not in allotment_map:
             allotment_map[key] = a
+        if a.va_enquirynumber_id not in enquiry_allotment_map or a.id > enquiry_allotment_map[a.va_enquirynumber_id].id:
+            enquiry_allotment_map[a.va_enquirynumber_id] = a
 
     # Fallback vendor map from VehiclemasterInfo.vm_vendor (used for attached vehicles)
     all_veh_nos = [t.tr_vehiclenumber for t in trips if t.tr_vehiclenumber]
@@ -7016,6 +7019,8 @@ def vendor_bills_pending_mkt_att_report_view(request):
         veh_no_lower = (trip.tr_vehiclenumber or "").lower().strip()
         key = (trip.tr_enquirynumber_id, veh_no_lower)
         allotment = allotment_map.get(key)
+        if not allotment:
+            allotment = enquiry_allotment_map.get(trip.tr_enquirynumber_id)
 
         vendor_name = ""
         buy_cost = 0.0

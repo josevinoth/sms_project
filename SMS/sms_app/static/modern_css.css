@@ -6,6 +6,8 @@
     --accent-emerald: #14b8a6;
     --accent-blue: #3b82f6;
     --accent-orange: #f59e0b;
+    --accent-purple: #a855f7;
+    --accent-pink: #ec4899;
     --accent-orange-glow: rgba(245, 158, 11, 0.4);
     --btn-primary: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     --btn-primary-hover: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
@@ -424,6 +426,22 @@ a.btn-modern + a.btn-modern {
     transform: translateY(-3px);
     box-shadow: none !important;
     color: white !important;
+}
+
+/* Inline Add/Action Buttons next to input/select fields */
+.btn-inline-add,
+.consignment-goods-modern .btn-inline-add {
+    min-width: auto !important;
+    width: auto !important;
+    height: 39px !important;
+    min-height: 39px !important;
+    padding: 0.3rem 0.65rem !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    flex: 0 0 auto !important;
+    border-radius: 8px !important;
+    white-space: nowrap !important;
 }
 
 /* Premium Flatpickr Dark Theme */
@@ -1699,4 +1717,10 @@ body, .modern-card, .form-section, .form-control-modern, .modern-table td, .tabl
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-muted);
+}
+
+/* Override Bootstrap badge-info globally to use sky-blue instead of dark teal */
+.badge-info {
+    background-color: #0ea5e9 !important;
+    color: #ffffff !important;
 }

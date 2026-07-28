@@ -1,0 +1,313 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load static %}
+{% block content %}
+<style>
+    .form-section {
+        border: 1px solid transparent !important;
+        background: var(--bg-section) !important;
+        border-radius: 10px;
+        padding: 1.2rem;
+    }
+    .form-section:hover,
+    .form-section:focus-within {
+        border-color: var(--accent-emerald) !important;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        
+        <div class="d-flex align-items-center">
+            <h4 class="m-0 text-white" style="font-size: 1.4rem; font-weight: 700; letter-spacing: 0.5px;">
+                <i class="fas fa-truck-loading" style="color:#ffd700;"></i>
+                Prime Business &ndash; Add Trip
+            </h4>
+            
+            <!-- Toggle Switch in Header -->
+            <div class="d-flex" style="background: rgba(255,255,255,0.2); border-radius: 30px; padding: 4px; width: 250px; margin-left: 20px; {% if trip %}pointer-events: none; opacity: 0.85;{% endif %}">
+                <div class="flex-grow-1 text-center trip-type-btn active" data-val="Shipment" 
+                     style="padding: 6px 12px; border-radius: 25px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.3s;">
+                    <i class="fas fa-box"></i> Shipment
+                </div>
+                <div class="flex-grow-1 text-center trip-type-btn" data-val="Empty" 
+                     style="padding: 6px 12px; border-radius: 25px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.3s; color: rgba(255,255,255,0.7);">
+                    <i class="fas fa-box-open"></i> Empty
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <a href="{% url 'prime_enquiry_list' %}" class="btn-modern btn-cancel py-2 px-4"
+               style="font-size: 0.9rem; text-decoration: none; border-radius: 10px;
+                      border: 1px solid var(--border-light); display: inline-flex; align-items: center; gap: 8px; background: var(--bg-card); color: var(--accent-blue);">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    {% if messages %}
+    <div class="row mb-3">
+        <div class="col-12 text-center">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-2 px-4 d-inline-block shadow-sm" style="border-radius: 10px;">
+                <i class="fas fa-info-circle mr-2"></i> {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+
+
+    <form method="POST" action="{% url 'prime_trip_add' allotment.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="pt_empty_shipment" id="id_pt_empty_shipment" value="{{ trip.pt_empty_shipment|default:'Shipment' }}">
+
+        <div class="modern-card mb-4" style="padding: 1.5rem !important;">
+            <div class="row row-compact g-3">
+                
+                <!-- Column 1: Trip Info -->
+                <div class="col-12 col-md-4 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-info-circle"></i> Trip Info</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Prime Trip No</label>
+                            <input type="text" class="form-control form-control-modern" name="pt_prime_trip_no" value="{{ expected_trip_no }}" readonly>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vehicle No</label>
+                            <input type="text" class="form-control form-control-modern" value="{{ allotment.pva_vehiclenumber.vm_registrationnumber|default:allotment.pva_vehiclenumber_mkt|default:'-' }}" readonly>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Enquiry No</label>
+                            <input type="text" class="form-control form-control-modern" value="{{ enquiry.pen_enquirynumber|default:'-' }}" readonly>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Trip Status</label>
+                            <input type="text" id="trip-status-field" class="form-control form-control-modern" value="Trip Started" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: From Route details -->
+                <div class="col-12 col-md-4 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-map-marker-alt"></i> From Route Details</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">From Place</label>
+                            <select class="form-control form-control-modern select2" name="pt_from_place" style="width: 100%;" {% if trip %}disabled{% endif %}>
+                                <option value="">--Select From Place--</option>
+                                {% for place in places %}
+                                    <option value="{{ place.place_name }}" {% if trip %}{% if trip.pt_from_place == place.place_name %}selected{% endif %}{% else %}{% if last_reported_place and place.place_name == last_reported_place %}selected{% endif %}{% endif %}>{{ place.place_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">From Date</label>
+                            <input type="date" class="form-control form-control-modern" name="pt_from_date" value="{% if trip %}{{ trip.pt_from_date|date:'Y-m-d' }}{% endif %}" {% if trip %}readonly{% endif %}>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">From Time</label>
+                            <input type="time" class="form-control form-control-modern" name="pt_from_time" value="{% if trip %}{{ trip.pt_from_time|time:'H:i' }}{% endif %}" {% if trip %}readonly{% endif %}>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">From Km</label>
+                            <input type="number" class="form-control form-control-modern" name="pt_from_km" value="{% if trip %}{{ trip.pt_from_km }}{% else %}{{ last_reported_km|default:'' }}{% endif %}" placeholder="Starting Km" {% if trip %}readonly{% endif %}>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: To Route Details -->
+                <div class="col-12 col-md-4 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-flag-checkered"></i> To Route Details</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">To Place</label>
+                            <select class="form-control form-control-modern select2" name="pt_to_place" style="width: 100%;" {% if not trip or trip.pt_to_place or trip.pt_to_km %}disabled{% endif %}>
+                                <option value="">--Select To Place--</option>
+                                {% for place in places %}
+                                    <option value="{{ place.place_name }}" {% if trip and trip.pt_to_place == place.place_name %}selected{% endif %}>{{ place.place_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">To Date</label>
+                            <input type="date" class="form-control form-control-modern" name="pt_to_date" value="{% if trip and trip.pt_to_date %}{{ trip.pt_to_date|date:'Y-m-d' }}{% endif %}" {% if not trip or trip.pt_to_place or trip.pt_to_km %}readonly{% endif %}>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">To Time</label>
+                            <input type="time" class="form-control form-control-modern" name="pt_to_time" value="{% if trip and trip.pt_to_time %}{{ trip.pt_to_time|time:'H:i' }}{% endif %}" {% if not trip or trip.pt_to_place or trip.pt_to_km %}readonly{% endif %}>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">To Km</label>
+                            <input type="number" class="form-control form-control-modern" name="pt_to_km" value="{% if trip and trip.pt_to_km %}{{ trip.pt_to_km }}{% endif %}" placeholder="Ending Km" {% if not trip or trip.pt_to_place or trip.pt_to_km %}readonly{% endif %}>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!-- Consignment Details Section (Full Width, Conditional) -->
+        <div class="modern-card mb-4 shipment-field" style="padding: 1.5rem !important;">
+            <div class="form-section-title"><i class="fas fa-file-invoice"></i> Consignment Details</div>
+            <div class="row row-compact g-3">
+                <div class="col-md-3 form-group-modern">
+                    <label class="form-label-modern">C-Note No</label>
+                    <input type="text" class="form-control form-control-modern" name="pt_cnote_number" value="{{ expected_cnote_no }}" readonly>
+                </div>
+                <div class="col-md-3 form-group-modern">
+                    <label class="form-label-modern">C-Note Date</label>
+                    <input type="date" class="form-control form-control-modern" name="pt_cnote_date" value="{% if trip and trip.pt_cnote_date %}{{ trip.pt_cnote_date|date:'Y-m-d' }}{% endif %}" {% if trip %}readonly{% endif %}>
+                </div>
+                <div class="col-md-3 form-group-modern">
+                    <label class="form-label-modern">Consigner</label>
+                    <input type="text" class="form-control form-control-modern" name="pt_consigner" value="{% if trip %}{{ trip.pt_consigner|default:'' }}{% endif %}" placeholder="Enter Consigner" {% if trip %}readonly{% endif %}>
+                </div>
+                <div class="col-md-3 form-group-modern">
+                    <label class="form-label-modern">Consignee</label>
+                    <input type="text" class="form-control form-control-modern" name="pt_consignee" value="{% if trip %}{{ trip.pt_consignee|default:'' }}{% endif %}" placeholder="Enter Consignee" {% if trip %}readonly{% endif %}>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipment Info Section (Full Width, Conditional) -->
+        <div class="modern-card mb-4 shipment-field" style="padding: 1.5rem !important;">
+            <div class="form-section-title"><i class="fas fa-boxes"></i> Shipment Info</div>
+            <div class="row row-compact g-3">
+                <div class="col-md-3 form-group-modern">
+                    <label class="form-label-modern">Shipment Weight</label>
+                    <input type="number" step="0.01" class="form-control form-control-modern" name="pt_shipment_weight" value="{% if trip and trip.pt_shipment_weight %}{{ trip.pt_shipment_weight }}{% endif %}" placeholder="Weight" {% if trip %}readonly{% endif %}>
+                </div>
+                <div class="col-md-3 form-group-modern">
+                    <label class="form-label-modern">No of Pcs</label>
+                    <input type="number" class="form-control form-control-modern" name="pt_no_of_pcs" value="{% if trip and trip.pt_no_of_pcs %}{{ trip.pt_no_of_pcs }}{% endif %}" placeholder="Quantity" {% if trip %}readonly{% endif %}>
+                </div>
+                <div class="col-md-3 form-group-modern">
+                    <label class="form-label-modern">Shipment Value (INR)</label>
+                    <input type="number" step="0.01" class="form-control form-control-modern" name="pt_shipment_value_inr" value="{% if trip and trip.pt_shipment_value_inr %}{{ trip.pt_shipment_value_inr }}{% endif %}" placeholder="Value in ₹" {% if trip %}readonly{% endif %}>
+                </div>
+                <div class="col-md-3 form-group-modern">
+                    <label class="form-label-modern">Customer Ref Name</label>
+                    <input type="text" class="form-control form-control-modern" name="pt_customer_ref_name" value="{% if trip %}{{ trip.pt_customer_ref_name|default:'' }}{% endif %}" placeholder="Reference Name" {% if trip %}readonly{% endif %}>
+                </div>
+                
+                <div class="col-md-4 form-group-modern mt-3">
+                    <label class="form-label-modern">Customer Ref No</label>
+                    <input type="text" class="form-control form-control-modern" name="pt_customer_ref_no" value="{% if trip %}{{ trip.pt_customer_ref_no|default:'' }}{% endif %}" placeholder="Reference Number" {% if trip %}readonly{% endif %}>
+                </div>
+                <div class="col-md-4 form-group-modern mt-3">
+                    <label class="form-label-modern">EWB No</label>
+                    <input type="text" class="form-control form-control-modern" name="pt_ewb_no" value="{% if trip %}{{ trip.pt_ewb_no|default:'' }}{% endif %}" placeholder="E-Way Bill Number" {% if trip %}readonly{% endif %}>
+                </div>
+                <div class="col-md-4 form-group-modern mt-3">
+                    <label class="form-label-modern">EWB Validity Date</label>
+                    <input type="date" class="form-control form-control-modern" name="pt_ewb_validity_date" value="{% if trip and trip.pt_ewb_validity_date %}{{ trip.pt_ewb_validity_date|date:'Y-m-d' }}{% endif %}" {% if trip %}readonly{% endif %}>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-3 mb-5">
+            <div>
+                {% if trip and trip.pt_to_place and trip.pt_to_km %}
+                    <button type="button" class="btn-modern py-2 px-4 shadow-sm" style="border-radius: 8px; background: var(--border-light); color: var(--text-muted); cursor: not-allowed; border: none;" disabled>
+                        <i class="fas fa-lock mr-2"></i> TRIP COMPLETED
+                    </button>
+                {% else %}
+                    <button type="submit" class="btn-modern btn-submit py-2 px-4 shadow-sm" style="border-radius: 8px;">
+                        <i class="fas fa-check mr-2"></i> SUBMIT TRIP
+                    </button>
+                {% endif %}
+            </div>
+            <div>
+                <a href="{% url 'prime_trip_list' %}" class="btn-modern py-2 px-4" style="background: var(--bg-card); border: 1px solid var(--border-light); color: var(--text-main); text-decoration: none; border-radius: 8px;">
+                    <i class="fas fa-times mr-2"></i> CANCEL
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    $(document).ready(function() {
+        
+        // Handle Pill Click
+        $('.trip-type-btn').click(function() {
+            // Remove active style from all
+            $('.trip-type-btn').removeClass('active').css({
+                'background': 'transparent',
+                'color': '#64748b',
+                'box-shadow': 'none'
+            });
+            
+            // Add active style to clicked
+            var val = $(this).data('val');
+            
+            if (val === 'Shipment') {
+                $(this).addClass('active').css({
+                    'background': 'white',
+                    'color': '#059669', // Emerald Green
+                    'box-shadow': '0 2px 5px rgba(0,0,0,0.05)'
+                });
+            } else {
+                $(this).addClass('active').css({
+                    'background': 'white',
+                    'color': '#ea580c', // Orange
+                    'box-shadow': '0 2px 5px rgba(0,0,0,0.05)'
+                });
+            }
+            
+            // Update hidden input
+            $('#id_pt_empty_shipment').val(val).trigger('change');
+        });
+        
+        // Initialize the active pill on load
+        var initialVal = $('#id_pt_empty_shipment').val();
+        $('.trip-type-btn[data-val="' + initialVal + '"]').click();
+        
+        function toggleShipmentFields() {
+            var selectedType = $('#id_pt_empty_shipment').val();
+            if (selectedType === 'Empty') {
+                $('.shipment-field').hide();
+                $('.shipment-column').hide();
+                // Clear the values if empty is selected
+                $('.shipment-field input').val('');
+            } else {
+                $('.shipment-field').show();
+                $('.shipment-column').show();
+            }
+        }
+
+        // Run on dropdown change (triggered by pill click)
+        $('#id_pt_empty_shipment').change(function() {
+            toggleShipmentFields();
+        });
+
+        // Dynamic trip status field updater
+        function updateTripStatus() {
+            let toPlace = $('select[name="pt_to_place"]').val();
+            let toDate = $('input[name="pt_to_date"]').val();
+            let toTime = $('input[name="pt_to_time"]').val();
+            let toKm = $('input[name="pt_to_km"]').val();
+
+            if (toPlace || toDate || toTime || toKm) {
+                $('#trip-status-field').val('Trip Closed');
+            } else {
+                $('#trip-status-field').val('Trip Started');
+            }
+        }
+
+        // Listen for changes in To details
+        $('select[name="pt_to_place"], input[name="pt_to_date"], input[name="pt_to_time"], input[name="pt_to_km"]').on('change input', function() {
+            updateTripStatus();
+        });
+
+        // Initialize status badge
+        updateTripStatus();
+    });
+</script>
+{% endblock %}

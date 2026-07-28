@@ -149,3 +149,6 @@ from .sub_forms.charge_master_form import ChargeMasterForm
 from .sub_forms.sale_enquiry_form import SaleEnquiryForm
 from .sub_forms.invoice_document_form import InvoiceDocumentForm
 from .sub_forms.stock_description_form import StockdescriptionForm
+from .sub_forms.prime_enquiry_vehicle_form import PrimeEnquiryVehicleForm
+from .sub_forms.prime_enquirynote_form import PrimeEnquirynoteaddForm
+from .sub_forms.prime_vehicle_allotment_form import PrimeVehicleAllotmentForm

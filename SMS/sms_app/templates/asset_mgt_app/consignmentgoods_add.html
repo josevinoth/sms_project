@@ -41,6 +41,21 @@
 		border-radius: 8px !important;
 	}
 
+	.consignment-goods-modern .btn-inline-add,
+	.btn-inline-add {
+		min-width: auto !important;
+		width: auto !important;
+		min-height: 39px !important;
+		height: 39px !important;
+		padding: 0.3rem 0.65rem !important;
+		font-size: 0.75rem !important;
+		font-weight: 700 !important;
+		letter-spacing: 0.5px !important;
+		flex: 0 0 auto !important;
+		border-radius: 8px !important;
+		white-space: nowrap !important;
+	}
+
 	.consignment-goods-list-modern {
 		background: var(--bg-card) !important;
 	}
@@ -198,7 +213,7 @@
 										<div style="flex:1;">
 											{% render_field form.cg_consigner class="form-control form-control-modern" id="cg_consigner" %}
 										</div>
-										<button type="button" class="btn-modern btn-submit" style="min-width:auto; padding:0.4rem 0.8rem; border-radius:10px; font-size:0.85rem;" data-toggle="modal" data-target="#addConsignerModal">Add</button>
+										<button type="button" class="btn-modern btn-submit btn-inline-add" data-toggle="modal" data-target="#addConsignerModal">+ Add</button>
 									</div>
 								</div>
 
@@ -208,7 +223,7 @@
 										<div style="flex:1;">
 											{% render_field form.cg_consignee class="form-control form-control-modern" id="cg_consignee" %}
 										</div>
-										<button type="button" class="btn-modern btn-submit" style="min-width:auto; padding:0.4rem 0.8rem; border-radius:10px; font-size:0.85rem;" data-toggle="modal" data-target="#addConsigneeModal">Add</button>
+										<button type="button" class="btn-modern btn-submit btn-inline-add" data-toggle="modal" data-target="#addConsigneeModal">+ Add</button>
 									</div>
 								</div>
 
@@ -247,7 +262,7 @@
 										<div style="flex:1;">
 											{% render_field form.cg_description class="form-control form-control-modern" id="cg_description" %}
 										</div>
-										<button type="button" class="btn-modern btn-submit" style="min-width:auto; padding:0.4rem 0.8rem; border-radius:10px; font-size:0.85rem;" data-toggle="modal" data-target="#addDescriptionModal">Add</button>
+										<button type="button" class="btn-modern btn-submit btn-inline-add" data-toggle="modal" data-target="#addDescriptionModal">+ Add</button>
 									</div>
 								</div>
 
