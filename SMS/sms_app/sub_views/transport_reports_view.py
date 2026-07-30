@@ -2317,21 +2317,27 @@ def vendor_p_l_mkt_report_ajax_view(request):
         'tr_vehiclesource',
         'tr_departedlocation',
         'tr_reportedlocation'
+    ).annotate(
+        resolved_date=Coalesce(
+            'tr_departeddate_pickup',
+            'tr_departeddate',
+            'tr_loading_time',
+            'tr_reporteddate',
+            'tr_reporteddate_pickup',
+            'tr_reporteddate_delivery',
+            'tr_unloading_time',
+            'tr_dock_in_time',
+            'tr_dock_out_time',
+            'tr_created_at'
+        )
     )
 
-    if date_from:
-        trips = trips.filter(
-            Q(tr_departeddate_pickup__date__gte=date_from) |
-            Q(tr_departeddate__date__gte=date_from) |
-            Q(tr_loading_time__date__gte=date_from)
-        )
-
-    if date_to:
-        trips = trips.filter(
-            Q(tr_departeddate_pickup__date__lte=date_to) |
-            Q(tr_departeddate__date__lte=date_to) |
-            Q(tr_loading_time__date__lte=date_to)
-        )
+    if date_from and date_to:
+        trips = trips.filter(resolved_date__date__range=[date_from, date_to])
+    elif date_from:
+        trips = trips.filter(resolved_date__date__gte=date_from)
+    elif date_to:
+        trips = trips.filter(resolved_date__date__lte=date_to)
 
     if from_loc_id:
         trips = trips.filter(tr_departedlocation_id=from_loc_id)
@@ -2575,11 +2581,7 @@ def vendor_p_l_mkt_report_ajax_view(request):
         profit_pct_selling = (profit / total_selling * 100) if total_selling > 0 else 0
         profit_pct_buying = (profit / total_buying * 100) if total_buying > 0 else 0
 
-        date_val = (lambda: (next((d for d in [
-            trip.tr_departeddate_pickup, trip.tr_departeddate, trip.tr_loading_time,
-            trip.tr_reporteddate, trip.tr_reporteddate_pickup, trip.tr_reporteddate_delivery,
-            trip.tr_unloading_time, trip.tr_dock_in_time, trip.tr_dock_out_time, trip.tr_created_at
-        ] if d), None)))()
+        date_val = trip.resolved_date
         if date_val and timezone.is_aware(date_val):
             date_val = timezone.localtime(date_val)
         date_str = date_val.strftime("%d-%m-%Y") if date_val else ""
@@ -2756,21 +2758,27 @@ def vendor_p_l_attached_report_ajax_view(request):
         'tr_vehiclesource',
         'tr_departedlocation',
         'tr_reportedlocation'
+    ).annotate(
+        resolved_date=Coalesce(
+            'tr_departeddate_pickup',
+            'tr_departeddate',
+            'tr_loading_time',
+            'tr_reporteddate',
+            'tr_reporteddate_pickup',
+            'tr_reporteddate_delivery',
+            'tr_unloading_time',
+            'tr_dock_in_time',
+            'tr_dock_out_time',
+            'tr_created_at'
+        )
     )
 
-    if date_from:
-        trips = trips.filter(
-            Q(tr_departeddate_pickup__date__gte=date_from) |
-            Q(tr_departeddate__date__gte=date_from) |
-            Q(tr_loading_time__date__gte=date_from)
-        )
-
-    if date_to:
-        trips = trips.filter(
-            Q(tr_departeddate_pickup__date__lte=date_to) |
-            Q(tr_departeddate__date__lte=date_to) |
-            Q(tr_loading_time__date__lte=date_to)
-        )
+    if date_from and date_to:
+        trips = trips.filter(resolved_date__date__range=[date_from, date_to])
+    elif date_from:
+        trips = trips.filter(resolved_date__date__gte=date_from)
+    elif date_to:
+        trips = trips.filter(resolved_date__date__lte=date_to)
 
     if from_loc_id:
         trips = trips.filter(tr_departedlocation_id=from_loc_id)
@@ -3009,11 +3017,7 @@ def vendor_p_l_attached_report_ajax_view(request):
         profit_pct_selling = (profit / total_selling * 100) if total_selling > 0 else 0
         profit_pct_buying = (profit / total_buying * 100) if total_buying > 0 else 0
 
-        date_val = (lambda: (next((d for d in [
-            trip.tr_departeddate_pickup, trip.tr_departeddate, trip.tr_loading_time,
-            trip.tr_reporteddate, trip.tr_reporteddate_pickup, trip.tr_reporteddate_delivery,
-            trip.tr_unloading_time, trip.tr_dock_in_time, trip.tr_dock_out_time, trip.tr_created_at
-        ] if d), None)))()
+        date_val = trip.resolved_date
         if date_val and timezone.is_aware(date_val):
             date_val = timezone.localtime(date_val)
         date_str = date_val.strftime("%d-%m-%Y") if date_val else ""
@@ -3331,27 +3335,21 @@ def daily_trip_count_report_ajax_view(request):
 
     trips = TripdetailInfo.objects.filter(
         tr_vehiclesource_id__in=[1, 2],
+    ).annotate(
+        resolved_date=Coalesce(
+            'tr_loading_time',
+            'tr_enquirynumber__en_created_at',
+            'tr_departeddate',
+            'tr_created_at'
+        )
     )
 
-    if from_date:
-        trips = trips.filter(
-            Q(tr_loading_time__date__gte=from_date) |
-            Q(tr_departeddate__date__gte=from_date) |
-            Q(tr_departeddate_pickup__date__gte=from_date) |
-            Q(tr_reporteddate__date__gte=from_date) |
-            Q(tr_unloading_time__date__gte=from_date) |
-            Q(tr_created_at__date__gte=from_date)
-        )
-
-    if to_date:
-        trips = trips.filter(
-            Q(tr_loading_time__date__lte=to_date) |
-            Q(tr_departeddate__date__lte=to_date) |
-            Q(tr_departeddate_pickup__date__lte=to_date) |
-            Q(tr_reporteddate__date__lte=to_date) |
-            Q(tr_unloading_time__date__lte=to_date) |
-            Q(tr_created_at__date__lte=to_date)
-        )
+    if from_date and to_date:
+        trips = trips.filter(resolved_date__date__range=[from_date, to_date])
+    elif from_date:
+        trips = trips.filter(resolved_date__date__gte=from_date)
+    elif to_date:
+        trips = trips.filter(resolved_date__date__lte=to_date)
 
     if vehicle_filter:
         trips = trips.filter(tr_vehiclenumber__icontains=vehicle_filter)
@@ -3377,10 +3375,7 @@ def daily_trip_count_report_ajax_view(request):
         trips = trips.filter(tr_vehiclenumber__icontains=search_value)
 
     trips = trips.order_by('-tr_created_at').values(
-        'tr_loading_time', 
-        'tr_enquirynumber__en_created_at', 
-        'tr_departeddate', 
-        'tr_created_at', 
+        'resolved_date', 
         'tr_vehiclenumber', 
         'tr_enquirynumber__en_customername__cu_name', 
         'tr_vehicletype_placed__vt_vehicletype', 
@@ -3401,12 +3396,7 @@ def daily_trip_count_report_ajax_view(request):
     aggregated_data = {}
 
     for trip in trips:
-        full_date = (
-                trip['tr_loading_time'] or
-                trip['tr_enquirynumber__en_created_at'] or
-                trip['tr_departeddate'] or
-                trip['tr_created_at']
-        )
+        full_date = trip['resolved_date']
 
         if not full_date:
             continue
