@@ -1974,7 +1974,8 @@ def invoice_pending_report_ajax_view(request):
 
     # -------------------------
     trips = TripdetailInfo.objects.filter(
-        tr_category_id=1
+        tr_category_id=1,
+        tr_departeddate_pickup__date__gte='2026-06-01'
     ).filter(
         Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') |
         Q(tr_consignmentnumber__co_consignmentnumber__icontains='BLR')
@@ -2055,8 +2056,8 @@ def invoice_pending_report_ajax_view(request):
 
     if trip_status_id:
         try:
-            ts_id = int(trip_status_id)
-            trips = trips.filter(tc_financestatus_id=ts_id)
+            ts_ids = [int(ts.strip()) for ts in trip_status_id.split(',')]
+            trips = trips.filter(tc_financestatus_id__in=ts_ids)
         except (ValueError, TypeError):
             pass
 

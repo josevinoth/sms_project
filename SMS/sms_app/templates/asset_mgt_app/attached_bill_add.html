@@ -1,203 +1,193 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 
 {% block content %}
+
+<style>
+    /* Compact styling for this page only */
+    #attachedBillForm .form-group-modern {
+        margin-bottom: 0.8rem; 
+    }
+    #attachedBillForm .form-control-modern {
+        border-radius: 8px;
+        padding: 0.5rem 0.8rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        height: 38px;
+    }
+    #attachedBillForm .form-label-modern {
+        margin-bottom: 0.15rem;
+    }
+</style>
 
 <form id="attachedBillForm" method="POST">
     {% csrf_token %}
 
     <div class="container-fluid">
-        <div class="card text-white bg-info mb-3" style="max-width:100%;">
-
-            <!-- ================= HEADER ================= -->
-            <div class="card-header d-flex justify-content-center align-items-center">
-                <h3 class="mb-0 text-center" style="font-size: 26px; font-weight: 600;">
-                    Attached Bill
-                </h3>
-            </div>
+        <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+            <i class="fas fa-file-invoice-dollar mr-2"></i> Attached Bill
+        </h3>
+        <div>
+            <a href="{% url 'attached_bill_list' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+    
+    <div class="modern-card" style="border-top:none; padding: 1rem !important;">
 
             <!-- ================= BODY ================= -->
-            <div class="card-body bg-light text-dark">
+            <div>
 
                 <div class="row">
                     <!-- ========== COLUMN 1 ========== -->
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-4">
+                        <div class="form-section h-100">
+                            <div class="form-section-title"><i class="fas fa-file-invoice"></i> BILL DETAILS</div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Vendor Name</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Vendor Name</label>
+                                {% render_field form.ab_vendor class="form-control form-control-modern" %}
                             </div>
-                            {% render_field form.ab_vendor class="form-control form-control-sm" %}
-
-                        </div>
 
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Vehicle No</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Vehicle No</label>
+                                {% render_field form.ab_vehicle_number class="form-control form-control-modern" %}
                             </div>
-                            {% render_field form.ab_vehicle_number class="form-control form-control-sm" %}
-
-                        </div>
 
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Vehicle Type</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Vehicle Type</label>
+                                {% render_field form.ab_vehicle_type class="form-control form-control-modern disable_a_href" readonly="readonly" %}
                             </div>
-                            {% render_field form.ab_vehicle_type class="form-control disable_a_href" readonly="readonly" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Bill no <span class="text-danger ml-1">*</span></span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Bill no  <span class="text-danger">*</span></label>
+                                {% render_field form.ab_bill_no class="form-control form-control-modern" placeholder="Enter Bill No" required="required" %}
                             </div>
-                            {% render_field form.ab_bill_no class="form-control" placeholder="Enter Bill No" required="required" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Voucher No</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Voucher No</label>
+                                {% render_field form.ab_voucher_no class="form-control form-control-modern" placeholder="Enter Voucher No" %}
                             </div>
-                            {% render_field form.ab_voucher_no class="form-control" placeholder="Enter Voucher No" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Bill Date</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Bill Date</label>
+                                {% render_field form.ab_bill_date class="form-control form-control-modern" type="date" %}
                             </div>
-                            {% render_field form.ab_bill_date class="form-control" type="date" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">From Date</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">From Date</label>
+                                {% render_field form.ab_from_date class="form-control form-control-modern" type="date" %}
                             </div>
-                            {% render_field form.ab_from_date class="form-control" type="date" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">To Date</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">To Date</label>
+                                {% render_field form.ab_to_date class="form-control form-control-modern" type="date" %}
                             </div>
-                            {% render_field form.ab_to_date class="form-control" type="date" %}
-                        </div>
 
                     </div>
-
+                    </div>
                     <!-- ========== COLUMN 2 ========== -->
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-4">
+                        <div class="form-section h-100">
+                            <div class="form-section-title"><i class="fas fa-calculator"></i> COST BREAKDOWN</div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Buy Cost</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Buy Cost</label>
+                                {% render_field form.ab_buy_cost class="form-control form-control-modern" %}
                             </div>
-                            {% render_field form.ab_buy_cost class="form-control" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Toll Cost</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Toll Cost</label>
+                                {% render_field form.ab_toll_cost class="form-control form-control-modern" %}
                             </div>
-                            {% render_field form.ab_toll_cost class="form-control" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">No.of Leave Days </span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">No.of Leave Days</label>
+                                {% render_field form.ab_leave_days class="form-control form-control-modern" %}
                             </div>
-                            {% render_field form.ab_leave_days class="form-control" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text text-primary">Leave amount</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Leave amount</label>
+                                {% render_field form.ab_leave_amount class="form-control form-control-modern disable_a_href" readonly="readonly" %}
                             </div>
-                            {% render_field form.ab_leave_amount class="form-control disable_a_href" readonly="readonly" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Agreed Km</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Agreed Km</label>
+                                {% render_field form.ab_agreed_km class="form-control form-control-modern" %}
                             </div>
-                            {% render_field form.ab_agreed_km class="form-control" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text text-primary">Total km run</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Total km run</label>
+                                {% render_field form.ab_total_km_run class="form-control form-control-modern" %}
                             </div>
-                            {% render_field form.ab_total_km_run class="form-control" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text text-primary">Extra Km run</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Extra Km run</label>
+                                {% render_field form.ab_extra_km_run class="form-control form-control-modern disable_a_href" readonly="readonly" %}
                             </div>
-                            {% render_field form.ab_extra_km_run class="form-control disable_a_href" readonly="readonly" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Extra km amount</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Extra km amount</label>
+                                {% render_field form.ab_extra_km_amount class="form-control form-control-modern" %}
                             </div>
-                            {% render_field form.ab_extra_km_amount class="form-control" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text font-weight-bold bg-success text-white">Bill Amount</span>
+                    </div>
+                    </div>
+                    <!-- ========== COLUMN 3 ========== -->
+                    <div class="col-12 col-md-4">
+                        <div class="form-section h-100">
+                            <div class="form-section-title"><i class="fas fa-coins"></i> BILLING & TAXES</div>
+
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Bill Amount</label>
+                                {% render_field form.ab_bill_amount class="form-control form-control-modern font-weight-bold text-success" %}
                             </div>
-                            {% render_field form.ab_bill_amount class="form-control font-weight-bold text-success" %}
-                        </div>
 
                         <!-- TDS Fields: Percent, Amount, Payable (Total) -->
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">TDS Type</span>
-                            </div>
-                            <!-- Hidden input carries the value on form submit -->
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">TDS Type</label>
+                                <!-- Hidden input carries the value on form submit -->
                             <input type="hidden" name="ab_tds_type" id="ab_tds_type_hidden"
                                    value="{{ form.ab_tds_type.value|default:'' }}">
                             <!-- Read-only display — filled automatically from vendor PAN -->
-                            <input type="text" id="ab_tds_type_display" class="form-control"
+                            <input type="text" id="ab_tds_type_display" class="form-control form-control-modern"
                                    readonly
                                    value="{{ form.ab_tds_type.value|default:'' }}"
                                    style="background-color:#e9ecef; cursor:default;">
-                        </div>
-
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">TDS %</span>
                             </div>
-                            {% render_field form.ab_tds_percent class="form-control" type="number" step="0.01" min="0" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">TDS Amount</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">TDS %</label>
+                                {% render_field form.ab_tds_percent class="form-control form-control-modern" type="number" step="0.01" min="0" %}
                             </div>
-                            {% render_field form.ab_tds_amount class="form-control disable_a_href" readonly="readonly" %}
-                        </div>
 
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text font-weight-bold bg-primary text-white">Total Amount</span>
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">TDS Amount</label>
+                                {% render_field form.ab_tds_amount class="form-control form-control-modern disable_a_href" readonly="readonly" %}
                             </div>
-                            {% render_field form.ab_payable_amount class="form-control font-weight-bold text-primary" readonly="readonly" %}
-                        </div>
+
+                        <div class="form-group-modern">
+                                <label class="form-label-modern">Total Amount</label>
+                                {% render_field form.ab_payable_amount class="form-control form-control-modern font-weight-bold text-primary" readonly="readonly" %}
+                            </div>
                     </div>
                 </div>
 
                 <!-- Hidden field for selected trips -->
                 {% render_field form.ab_selected_trips %}
 
+                </div>
+                    </div>
                 <!-- ================= ACTION BUTTONS ================= -->
                 <div class="action-row">
-                    <button type="submit" class="btn btn-success">
+                    <button type="submit" class="btn-modern btn-highlight">
                         <i class="fas fa-check"></i> Submit
                     </button>
-                    <a href="{% url 'attached_bill_list' %}" class="btn btn-danger">
+                    <a href="{% url 'attached_bill_list' %}" class="btn-modern btn-cancel">
                         <i class="fas fa-times"></i> Cancel
                     </a>
                 </div>
@@ -206,26 +196,25 @@
         </div>
 
         <!-- ================= TRIP LIST TABLE ================= -->
-        <div class="card text-white bg-info mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center"
-                style="background-color: #17a2b8;">
-                <h5 class="mb-0">Attached Bill Trips</h5>
+        <div class="modern-card mt-4" style="padding: 1rem !important;">
+            <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 text-white">Attached Bill Trips</h5>
                 <div>
-                    <button type="button" class="btn btn-success btn-sm font-weight-bold text-white mr-2" onclick="exportTableToExcel('tripsTable', 'Attached_Bill_Trips')">
+                    <button type="button" class="btn-modern btn-highlight py-1 px-3 font-weight-bold text-white mr-2" onclick="exportTableToExcel('tripsTable', 'Attached_Bill_Trips')">
                         <i class="fas fa-file-excel"></i> Excel
                     </button>
-                    <button type="button" class="btn btn-warning btn-sm font-weight-bold text-dark" id="addTripsToForm">
+                    <button type="button" class="btn-modern py-1 px-3 font-weight-bold text-dark" id="addTripsToForm">
                         <i class="fas fa-plus"></i> ADD
                     </button>
                 </div>
             </div>
-            <div class="card-body bg-light text-dark pt-3 pb-3">
+            <div>
 
                 <!-- ===== SUMMARY: Table Buy Cost + Extra KM Amount ===== -->
                 <div class="d-flex align-items-center mb-3 px-1">
                     <div class="input-group input-group-sm" style="max-width: 420px;">
                         <div class="input-group-prepend">
-                            <span class="input-group-text font-weight-bold" style="width:260px; background-color:#17a2b8; color:#fff; border-color:#17a2b8;">
+                            <span class="input-group-text font-weight-bold" style="width:260px; background-color:var(--primary-deep); color:#fff; border-color:var(--primary-deep);">
                                 Total Buy Cost (Bill Amt - ExtraKM - Toll)
                             </span>
                         </div>

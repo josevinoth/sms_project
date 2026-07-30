@@ -22,9 +22,10 @@ def trip_approval_view(request):
         'tr_consignmentnumber',
         'tr_approval',
         'tr_approval__ta_approval_status'
-    ).filter( Q(tr_category=1),
+    ).filter(
+        Q(tr_category=1),
         Q(tr_departeddate__isnull=False),
-        Q(tr_approval__ta_approval_status__id=3) | Q(tr_approval__isnull=True)
+        Q(tc_financestatus_id=8) | Q(tr_approval__ta_approval_status__id=3) | Q(tr_approval__ta_approval_status__isnull=True)
     )
 
     return render(request, "asset_mgt_app/trip_approval.html", {

@@ -66,10 +66,7 @@
 		accent-color: var(--accent-blue);
 	}
 </style>
-<div class="px-3">
-	<div id="top-alert" class="alert alert-warning w-50 mb-2" role="alert" style="display: none;"></div>
-	<div id="license-alert" class="alert alert-warning w-50 mb-2" role="alert" style="display: none;"></div>
-</div>
+<div id="top-alert" class="alert alert-warning w-50" role="alert" style="display: none;"></div>
 <form method="POST" action="" id="vehicle_allotment" data-vehicle_source-url="{% url 'load_vehicle_source' %}">
 	{% csrf_token %}
 	<div class="container-fluid mt-2 vehicle-allotment-modern">
@@ -77,13 +74,23 @@
 					<div class="modern-header mb-0">
 						<div class="d-flex align-items-center justify-content-between flex-wrap">
 							<h2 class="mb-0 text-white"><i class="fas fa-truck-loading mr-2"></i> Add Vehicle Allotment</h2>
-							<div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
-							<a href="{% url 'vehicle_allotment_insert' enquiry_num_id %}" class="btn-modern btn-highlight-cyan m-0">
+							<div class="d-flex align-items-center flex-wrap">
+							<a href="{% url 'vehicle_allotment_insert' enquiry_num_id %}" class="btn-modern btn-highlight-cyan">
 								<i class="fas fa-plus"></i> Add
 							</a>
 							{% if va %}
+								{% if va.va_status_id == 2 %}
+								<button type="button" class="btn-modern btn-cancel" data-toggle="modal" data-target="#replaceVehicleModal">
+									<i class="fas fa-sync"></i> Replace Vehicle
+								</button>
+								{% endif %}
+								{% if va.va_status_id == 3 %}
+								<button type="button" class="btn-modern btn-cancel" data-toggle="modal" data-target="#replaceDriverModal">
+									<i class="fas fa-user-edit"></i> Replace Driver
+								</button>
+								{% endif %}
 							<a href="{% url 'tripdetail_insert' %}?vehicle_allotment_id={{ va.id }}&enquiry_num_id={{ enquiry_num_id }}"
-								class="btn-modern btn-submit m-0 {% if va.va_status.replacement_status != 'Vehicle Assigned' and va.va_status.replacement_status != 'Vehicle Replaced' %}disable_a_href{% endif %}">
+								class="btn-modern btn-submit {% if va.va_status.replacement_status != 'Vehicle Assigned' and va.va_status.replacement_status != 'Vehicle Replaced' %}disable_a_href{% endif %}">
 								<i class="fas fa-truck-loading"></i> Business Empty / Empty Trip
 							</a>
 							{% endif %}
@@ -122,19 +129,7 @@
 
 							<div class="col-12 col-md-6 col-xl-3 col-compact">
 								<div class="form-section h-100">
-									<div class="form-section-title d-flex align-items-center justify-content-between">
-										<span><i class="fas fa-truck"></i> Vehicle Details</span>
-									</div>
-									{% if va %}
-									<div class="d-flex align-items-center flex-row flex-nowrap mb-2" style="gap: 6px;">
-										<button type="button" class="btn btn-warning font-weight-bold flex-fill text-center shadow-sm" data-toggle="modal" data-target="#replaceVehicleModal" style="padding: 3px 6px !important; border-radius:6px; font-size: 0.72rem; white-space: nowrap; background-color: #f39c12; border-color: #e67e22; color: #fff;">
-											<i class="fas fa-sync mr-1"></i> Replace Vehicle
-										</button>
-										<button type="button" class="btn btn-warning font-weight-bold flex-fill text-center shadow-sm" data-toggle="modal" data-target="#replaceDriverModal" style="padding: 3px 6px !important; border-radius:6px; font-size: 0.72rem; white-space: nowrap; background-color: #f39c12; border-color: #e67e22; color: #fff;">
-											<i class="fas fa-user-edit mr-1"></i> Replace Driver
-										</button>
-									</div>
-									{% endif %}
+									<div class="form-section-title"><i class="fas fa-truck"></i> Vehicle Details</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Vehicle Type Requested <span class="ml-2 text-muted">Qty: <span id="vehicle_quantity_display">0</span></span></label>
 										<div class="row no-gutters">
@@ -148,10 +143,10 @@
 										</div>
 									</div>
 									<div class="form-group-modern">
-										<div class="row">
-											<div class="col-10">
-												<label class="form-label-modern">Vehicle Type Placed</label>
-												{% render_field vehicle_allotment_form.va_vehicletype_placed id="va_vehicletype_placed" class="form-control form-control-modern" %}
+										<label class="form-label-modern">Vehicle Type Placed</label>
+										<div class="row no-gutters">
+											<div class="col-10 pr-1">
+												{% render_field vehicle_allotment_form.va_vehicletype_placed id="va_vehicletype_placed" class="form-control form-control-modern" onchange="loadAvailableVehicleNumbers()" %}
 											</div>
 											<div class="col-2 vehicle-check-wrap">
 												<input type="checkbox" id="chk_placed" name="va_vehicletype_selection_placed" class="vehicle-check" style="width:22px; height:22px; cursor:pointer;" {% if va.va_vehicletype_selection_placed %}checked{% endif %}>
@@ -161,31 +156,15 @@
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Vehicle Source</label>
-										{% if va %}
-										{% render_field vehicle_allotment_form.va_vehiclesource id="va_vehiclesource" onchange="market_vehicle_enable_disable()" class="form-control form-control-modern" disabled="disabled" %}
-										<input type="hidden" name="va_vehiclesource" value="{{ va.va_vehiclesource_id }}">
-										{% else %}
 										{% render_field vehicle_allotment_form.va_vehiclesource id="va_vehiclesource" onchange="market_vehicle_enable_disable()" class="form-control form-control-modern" %}
-										{% endif %}
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Vehicle Number</label>
-										{% if va %}
-										{% render_field vehicle_allotment_form.va_vehiclenumber id="va_vehiclenumber" class="form-control form-control-modern" disabled="disabled" %}
-										{% if va.va_vehiclenumber_id %}
-										<input type="hidden" name="va_vehiclenumber" value="{{ va.va_vehiclenumber_id }}">
-										{% endif %}
-										{% else %}
 										{% render_field vehicle_allotment_form.va_vehiclenumber id="va_vehiclenumber" class="form-control form-control-modern" %}
-										{% endif %}
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Vehicle Number (Market)</label>
-										{% if va %}
-										{% render_field vehicle_allotment_form.va_vehiclenumber_mkt id="va_vehiclenumber_mkt" class="form-control form-control-modern market-input" maxlength="10" pattern="^[A-Za-z]{2}[0-9]{2}[A-Za-z]{0,2}[0-9]{4}$" title="Vehicle number format must be e.g. TN22AB4916 (2 letters, 2 digits, optional 1-2 letters, 4 digits)" placeholder="e.g. TN22AB4916" readonly="readonly" %}
-										{% else %}
-										{% render_field vehicle_allotment_form.va_vehiclenumber_mkt id="va_vehiclenumber_mkt" class="form-control form-control-modern market-input" maxlength="10" pattern="^[A-Za-z]{2}[0-9]{2}[A-Za-z]{0,2}[0-9]{4}$" title="Vehicle number format must be e.g. TN22AB4916 (2 letters, 2 digits, optional 1-2 letters, 4 digits)" placeholder="e.g. TN22AB4916" %}
-										{% endif %}
+										{% render_field vehicle_allotment_form.va_vehiclenumber_mkt id="va_vehiclenumber_mkt" class="form-control form-control-modern market-input" maxlength="10" pattern="[A-Z0-9]{7,10}" title="Enter exactly 10 uppercase letters or digits" %}
 									</div>
 								</div>
 							</div>
@@ -195,51 +174,24 @@
 									<div class="form-section-title"><i class="fas fa-id-card"></i> Vendor & Driver</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Vendor Name <span id="vendor_required_star" style="color:red; display:none">*</span></label>
-										{% if va %}
-										{% render_field vehicle_allotment_form.va_vendor class="form-control form-control-modern" id="va_vendor" onchange="loadVendorBuyRate()" data-selected=vehicle_allotment_form.va_vendor.value disabled="disabled" %}
-										{% if va.va_vendor_id %}
-										<input type="hidden" name="va_vendor" value="{{ va.va_vendor_id }}">
-										{% endif %}
-										{% else %}
 										{% render_field vehicle_allotment_form.va_vendor class="form-control form-control-modern" id="va_vendor" onchange="loadVendorBuyRate()" data-selected=vehicle_allotment_form.va_vendor.value %}
-										{% endif %}
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Driver Name <span id="driver_required_star" style="color:red; display:none">*</span></label>
-										{% if va %}
-										{% render_field vehicle_allotment_form.va_drivername id="va_drivername" class="form-control form-control-modern disable_a_href" readonly="readonly" disabled="disabled" %}
-										<input type="hidden" name="va_drivername" value="{{ va.va_drivername|default:'' }}">
-										{% else %}
 										{% render_field vehicle_allotment_form.va_drivername id="va_drivername" class="form-control form-control-modern" %}
-										{% endif %}
 									</div>
 									<input type="hidden" id="va_driver_master_id" name="va_driver_master_id">
 									<div class="form-group-modern">
 										<label class="form-label-modern">Driver Number</label>
-										{% if va %}
-										{% render_field vehicle_allotment_form.va_drivernumber id="va_drivernumber" pattern="\d{10}" maxlength="10" minlength="10" class="form-control form-control-modern disable_a_href" title="Driver Number must be exactly 10 digits" readonly="readonly" disabled="disabled" %}
-										<input type="hidden" name="va_drivernumber" value="{{ va.va_drivernumber|default:'' }}">
-										{% else %}
-										{% render_field vehicle_allotment_form.va_drivernumber id="va_drivernumber" pattern="\d{10}" maxlength="10" minlength="10" class="form-control form-control-modern" title="Driver Number must be exactly 10 digits" %}
-										{% endif %}
+										{% render_field vehicle_allotment_form.va_drivernumber id="va_drivernumber" pattern="\d{10}" maxlength="10" minlength="10" class+="form-control form-control-modern" title="Driver Number must be exactly 10 digits" %}
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Driver License</label>
-										{% if va %}
-										{% render_field vehicle_allotment_form.va_driver_lic id="va_driver_lic" class="form-control form-control-modern disable_a_href" readonly="readonly" disabled="disabled" %}
-										<input type="hidden" name="va_driver_lic" value="{{ va.va_driver_lic|default:'' }}">
-										{% else %}
 										{% render_field vehicle_allotment_form.va_driver_lic id="va_driver_lic" class="form-control form-control-modern" %}
-										{% endif %}
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">License Expiry</label>
-										{% if va %}
-										{% render_field vehicle_allotment_form.va_driver_lic_expiry id="va_driver_lic_expiry" type="Date" class="form-control form-control-modern disable_a_href" readonly="readonly" disabled="disabled" style="pointer-events: none;" onkeydown="return false;" %}
-										<input type="hidden" name="va_driver_lic_expiry" value="{{ va.va_driver_lic_expiry|default:'' }}">
-										{% else %}
-										{% render_field vehicle_allotment_form.va_driver_lic_expiry id="va_driver_lic_expiry" type="Date" class="form-control form-control-modern" readonly="readonly" style="pointer-events: none;" onkeydown="return false;" %}
-										{% endif %}
+										{% render_field vehicle_allotment_form.va_driver_lic_expiry id="va_driver_lic_expiry" type="Date" class="form-control form-control-modern" %}
 									</div>
 								</div>
 							</div>
@@ -381,7 +333,7 @@ function setDateFieldValue(selector, value) {
 	$(document).ready(function () {
 		document.getElementById("va_updated_by").value = '{{user_id}}';
 		document.getElementById("va_enquirynumber").value = '{{enquiry_num_id}}';
-		
+
 		var vehicle_type = document.getElementById("va_vehicletype").value;
 		if (vehicle_type == "") {
 			document.getElementById("va_vehicletype").value = '{{vehicle_type_requested}}';
@@ -535,17 +487,16 @@ function setDateFieldValue(selector, value) {
 				data: {
 					vehicletype_placed: placed,
 					vehicletype_source: source,
-					enquiry_id: "{{ enquiry_num_id }}",
-					current_vehicle_id: currentVehicleId
+					enquiry_id: "{{ enquiry_num_id }}"
 				},
 				success: function(data) {
 					const dropdown = $("#va_vehiclenumber");
 					dropdown.empty();
 					dropdown.append(`<option value="">--Select--</option>`);
-					
+
 					const numbers = data.vehicle_number_list;
 					const ids = data.vehicle_number_list_id;
-					
+
 					for (let i = 0; i < numbers.length; i++) {
 						const isSelected = (currentVehicleId && currentVehicleId == ids[i]) ? 'selected' : '';
 						dropdown.append(`<option value="${ids[i]}" ${isSelected}>${numbers[i]}</option>`);
@@ -611,7 +562,7 @@ function loadVendorBuyRate(isAutoLoad=false) {
             loadVendorSaleRate(checkboxId, false);
             loadVendorBuyRate(); // Load Buy Rate too
         } else {
-            $('#va_sale').val(''); 
+            $('#va_sale').val('');
             $('#va_standardbuy').val('');
             $('#va_specialbuy').val('');
             calculateProfit();
@@ -674,60 +625,23 @@ function loadVendorSaleRate(checkboxId, isAutoLoad=false) {
         {% endfor %}
     };
     document.addEventListener("DOMContentLoaded", () => {
-        const vehicleSelect = document.getElementById("va_vehiclenumber");
-        const alertBox = document.getElementById("top-alert");
-        const licAlertBox = document.getElementById("license-alert");
-        const licExpiryInput = document.getElementById("va_driver_lic_expiry");
-
-        function checkLicenseExpiry() {
-            if (!licAlertBox || !licExpiryInput) return;
-            const expVal = licExpiryInput.value ? licExpiryInput.value.trim() : "";
-            if (!expVal) {
-                licAlertBox.style.display = "none";
-                return;
-            }
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const expDate = new Date(expVal);
-            expDate.setHours(0, 0, 0, 0);
-
-            const diffTime = expDate.getTime() - today.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            if (diffDays < 0) {
-                licAlertBox.style.display = "block";
-                licAlertBox.className = "alert alert-danger w-50 mb-2";
-                licAlertBox.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i> <strong>Driver License Expired:</strong> Driver license expired on ${expVal}!`;
-            } else if (diffDays <= 10) {
-                licAlertBox.style.display = "block";
-                licAlertBox.className = "alert alert-warning w-50 mb-2";
-                licAlertBox.innerHTML = `<i class="fas fa-exclamation-circle mr-2"></i> <strong>Driver License Expiry Alert:</strong> License is expiring in ${diffDays} day(s) (${expVal})!`;
-            } else {
-                licAlertBox.style.display = "none";
-            }
-        }
-
-        if (licExpiryInput) {
-            licExpiryInput.addEventListener("change", checkLicenseExpiry);
-            licExpiryInput.addEventListener("input", checkLicenseExpiry);
-            checkLicenseExpiry();
-        }
-
-        vehicleSelect.addEventListener("change", () => {
-            const id = vehicleSelect.value;
-            const expiry = vehiclePolicyData[id] || "";
-            if (!expiry || expiry === "Not set") {
-                alertBox.style.display = "none";
-                return;
-            }
-            alertBox.style.display = "block";
-            const expired = new Date(expiry) < new Date();
-            alertBox.textContent = expired
-                ? `Vehicle policy expired on ${expiry}`
-                : `Policy expiry date: ${expiry}`;
-            alertBox.className = expired ? "alert alert-danger w-50 mb-2" : "alert alert-info w-50 mb-2";
-        });
-    });
+  const vehicleSelect = document.getElementById("va_vehiclenumber");
+  const alertBox = document.getElementById("top-alert");
+  vehicleSelect.addEventListener("change", () => {
+    const id = vehicleSelect.value;
+    const expiry = vehiclePolicyData[id] || "";
+    if (!expiry || expiry === "Not set") {
+      alertBox.style.display = "none";
+      return;
+    }
+    alertBox.style.display = "block";
+    const expired = new Date(expiry) < new Date();
+    alertBox.textContent = expired
+      ? `Vehicle policy expired on ${expiry}`
+      : `Policy expiry date: ${expiry}`;
+			alertBox.className = expired ? "alert alert-danger w-50" : "alert alert-info w-50";
+		});
+	});
 </script>
 <script>
 	function calculateProfit() {
@@ -818,7 +732,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 return false;
             }
         }
-        
+
         // Enable disabled fields so they are submitted
         $(this).find(":disabled").prop("disabled", false);
     });
@@ -846,7 +760,7 @@ document.addEventListener("DOMContentLoaded", function() {
    });
    $("#modal_va_vendor").select2({
        width: '100%',
-       dropdownParent: $('#replaceVehicleModal') // Required for Select2 inside modals
+       dropdownParent: $('#vendorModal') // Required for Select2 inside modals
    });
 </script>
 <script>
@@ -887,46 +801,44 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 <script>
 $(function () {
-    {% if not va %}
     $("#va_drivername").autocomplete({
-        minLength: 2,
-        source: function (request, response) {
-            $.ajax({
-                url: "{% url 'driver_autocomplete' %}",
-                data: { term: request.term },
-                success: function (data) {
-                    response($.map(data, function (item) {
-                        return {
-                            label: item.name,
-                            value: item.name,
-                            id: item.id,
-                            number: item.number,
-                            lic: item.lic,
-                            expiry: item.expiry
-                        };
-                    }));
-                }
-            });
-        },
-        select: function (event, ui) {
-            $("#va_drivername").val(ui.item.value);
-            $("#va_driver_master_id").val(ui.item.id);
-            $("#va_drivernumber").val(ui.item.number || "");
-            $("#va_driver_lic").val(ui.item.lic || "");
-            setDateFieldValue("#va_driver_lic_expiry", ui.item.expiry);
-        },
-        change: function (event, ui) {
-            if (!ui.item) {
-                $("#va_driver_master_id").val("");
-                $("#va_drivernumber").val("");
-                $("#va_driver_lic").val("");
-                setDateFieldValue("#va_driver_lic_expiry", "");
+    minLength: 2,
+    source: function (request, response) {
+        $.ajax({
+            url: "{% url 'driver_autocomplete' %}",
+            data: { term: request.term },
+            success: function (data) {
+                response($.map(data, function (item) {
+                    return {
+                        label: item.name,
+                        value: item.name,
+                        id: item.id,                 //  DRIVER ID
+                        number: item.number,
+                        lic: item.lic,
+                        expiry: item.expiry
+                    };
+                }));
             }
+        });
+    },
+    select: function (event, ui) {
+        // ✅ Save BOTH
+        $("#va_drivername").val(ui.item.value);
+        $("#va_driver_master_id").val(ui.item.id);
+        $("#va_drivernumber").val(ui.item.number || "");
+        $("#va_driver_lic").val(ui.item.lic || "");
+        setDateFieldValue("#va_driver_lic_expiry", ui.item.expiry);
+    },
+    change: function (event, ui) {
+        // ❌ Manual typing → clear ID
+        if (!ui.item) {
+            $("#va_driver_master_id").val("");
+            $("#va_drivernumber").val("");
+            $("#va_driver_lic").val("");
+            setDateFieldValue("#va_driver_lic_expiry", "");
         }
-    });
-    {% else %}
-    $("#va_drivername, #va_drivernumber, #va_driver_lic, #va_driver_lic_expiry").prop("disabled", true).addClass("disable_a_href");
-    {% endif %}
+    }
+});
 });
 </script>
 <script>
@@ -957,43 +869,21 @@ $(document).ready(function () {
 </script>
 <script>
     const form = document.getElementById("vehicle_allotment");
-    if (form) {
-        form.addEventListener("submit", function (e) {
-            const vehicleSource = parseInt(document.getElementById("va_vehiclesource").value);
-            const driverName = document.getElementById("va_drivername").value.trim();
-            const driverLicExpiry = document.getElementById("va_driver_lic_expiry").value ? document.getElementById("va_driver_lic_expiry").value.trim() : "";
-            
-            // OWN (1) or ATTACHED (2)
-            if (vehicleSource === 1 || vehicleSource === 2) {
-                if (driverName === "") {
-                    e.preventDefault();
-                    alert("Driver Name is mandatory for OWN and ATTACHED vehicles.");
-                    document.getElementById("va_drivername").focus();
-                    return false;
-                }
-                if (driverLicExpiry === "") {
-                    e.preventDefault();
-                    alert("Driver License Expiry Date is mandatory for OWN and ATTACHED vehicles.");
-                    document.getElementById("va_driver_lic_expiry").focus();
-                    return false;
-                }
+    form.addEventListener("submit", function (e) {
+        const vehicleSource = parseInt(document.getElementById("va_vehiclesource").value);
+        const driverName = document.getElementById("va_drivername").value.trim();
+        const driverId = document.getElementById("va_driver_master_id").value.trim();
+        // OWN (1) or ATTACHED (2)
+        if (vehicleSource === 1 || vehicleSource === 2) {
+            if (driverName === "" || driverId === "") {
+                e.preventDefault();
+                alert("Driver Name is mandatory for OWN and ATTACHED vehicles.");
+                document.getElementById("va_drivername").focus();
+                return false;
             }
-
-            // Check if Driver License is expired for ALL vehicles
-            if (driverLicExpiry !== "") {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const expDate = new Date(driverLicExpiry);
-                expDate.setHours(0, 0, 0, 0);
-                if (expDate < today) {
-                    e.preventDefault();
-                    alert("🚫 Cannot submit form: Driver license expired on " + driverLicExpiry + "!\nPlease assign a driver with a valid license.");
-                    document.getElementById("va_driver_lic_expiry").focus();
-                    return false;
-                }
-            }
-        });
-    }
+        }
+    });
+});
 </script>
 <script>
 $("#va_vehiclesource").on("change", function () {
@@ -1045,7 +935,7 @@ $("#va_vehiclesource").on("change", function () {
                     <div class="alert alert-info">
                         <strong>Current Vehicle:</strong> {{ va.va_vehiclenumber|default:va.va_vehiclenumber_mkt }}
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Reason for Replacement <span style="color:red">*</span></label>
                         <select name="reason" class="form-control" required>
@@ -1108,7 +998,7 @@ $("#va_vehiclesource").on("change", function () {
                                 <select name="va_vendor" id="modal_va_vendor" class="form-control">
                                     <option value="">--Select Vendor--</option>
                                     {% for v in all_vendors %}
-                                        <option value="{{ v.id }}">{{ v.vend_name }}</option>
+                                        <option value="{{ v.id }}" {% if va and v.id == va.va_vendor_id %}selected{% endif %}>{{ v.vend_name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -1125,7 +1015,7 @@ $("#va_vehiclesource").on("change", function () {
                             </div>
                             <div class="form-group" id="modal_market_div" style="display:none;">
                                 <label>New Market Vehicle Number</label>
-                                <input type="text" name="va_vehiclenumber_mkt" id="modal_va_vehiclenumber_mkt" class="form-control" maxlength="10" pattern="^[A-Za-z]{2}[0-9]{2}[A-Za-z]{0,2}[0-9]{4}$" title="Vehicle number format must be e.g. TN22AB4916 (2 letters, 2 digits, optional 1-2 letters, 4 digits)" placeholder="e.g. TN22AB4916">
+                                <input type="text" name="va_vehiclenumber_mkt" id="modal_va_vehiclenumber_mkt" class="form-control">
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -1152,7 +1042,7 @@ $("#va_vehiclesource").on("change", function () {
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label> License Expiry</label>
-                                <input type="date" name="va_driver_lic_expiry" id="modal_va_driver_lic_expiry" class="form-control" readonly="readonly" style="pointer-events: none;" onkeydown="return false;">
+                                <input type="date" name="va_driver_lic_expiry" id="modal_va_driver_lic_expiry" class="form-control">
                             </div>
                         </div>
                     </div>
@@ -1210,7 +1100,7 @@ $("#va_vehiclesource").on("change", function () {
                         <strong>Vehicle:</strong> {{ va.va_vehiclenumber|default:va.va_vehiclenumber_mkt }}<br>
                         <strong>Current Driver:</strong> {{ va.va_drivername }}
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Reason for Replacement <span style="color:red">*</span></label>
                         <select name="reason" class="form-control" required>
@@ -1247,7 +1137,7 @@ $("#va_vehiclesource").on("change", function () {
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>License Expiry</label>
-                                <input type="date" name="va_driver_lic_expiry" id="modal_driver_only_lic_expiry" class="form-control" readonly="readonly" style="pointer-events: none;" onkeydown="return false;">
+                                <input type="date" name="va_driver_lic_expiry" id="modal_driver_only_lic_expiry" class="form-control">
                             </div>
                         </div>
                     </div>
@@ -1267,9 +1157,9 @@ $("#va_vehiclesource").on("change", function () {
     function loadModalVehicleNumbers() {
         var source = $("#modal_va_vehiclesource").val();
         var type_placed = $("#modal_va_vehicletype_placed").val();
-        
+
         if (!source || !type_placed) return;
-        
+
         if (source == "3") {
             $("#modal_own_attached_div").hide();
             $("#modal_market_div").show();
@@ -1280,7 +1170,7 @@ $("#va_vehiclesource").on("change", function () {
         } else {
             $("#modal_own_attached_div").show();
             $("#modal_market_div").hide();
-            
+
             $.ajax({
                 url: '{% url "load_vehicle_number" %}',
                 data: {
@@ -1290,7 +1180,7 @@ $("#va_vehiclesource").on("change", function () {
                 success: function (data) {
                     var vehicle_number = data.vehicle_number_list || [];
                     var vehicle_number_id = data.vehicle_number_list_id || [];
-                    
+
                     if (typeof data === 'string') {
                         var parsed = JSON.parse(data);
                         vehicle_number = parsed.vehicle_number_list;
@@ -1325,41 +1215,7 @@ $("#va_vehiclesource").on("change", function () {
     }
     $("#modal_va_specialbuy, #modal_va_sale").on("input", calculateModalProfit);
 
-    function loadModalVendorOptions(selectedVendorId = null) {
-        $.ajax({
-            url: "{% url 'vendor_filter' %}",
-            data: {
-                enquiry_num: "{{ enquiry_num_id }}"
-            },
-            success: function(response) {
-                const dropdown = $('#modal_va_vendor');
-                dropdown.empty();
-                dropdown.append('<option value="">--Select Vendor--</option>');
-                if (response.vendor_filter && response.vendor_filter.length > 0) {
-                    response.vendor_filter.forEach(function(vendor) {
-                        const isSelected = (selectedVendorId && selectedVendorId == vendor.id) ? 'selected' : '';
-                        dropdown.append(`<option value="${vendor.id}" ${isSelected}>${vendor.name}</option>`);
-                    });
-                }
-                dropdown.trigger('change.select2');
-            }
-        });
-    }
-
-    $('#replaceVehicleModal').on('show.bs.modal', function () {
-        $("#modal_va_vehiclesource").val("");
-        $("#modal_chk_requested").prop("checked", false);
-        $("#modal_chk_placed").prop("checked", false);
-        loadModalVendorOptions();
-        $("#modal_va_vendor").val("").prop('disabled', false).removeClass('disable_a_href').trigger('change.select2');
-        $("#modal_va_vehiclenumber").empty().append("<option value=''>--Select--</option>");
-        $("#modal_va_vehiclenumber_mkt").val("");
-        $("#modal_own_attached_div").show();
-        $("#modal_market_div").hide();
-        $("#modal_va_drivername").val("");
-        $("#modal_va_drivernumber").val("");
-        $("#modal_va_driver_lic").val("");
-        setDateFieldValue("#modal_va_driver_lic_expiry", "");
+    $('#replaceVehicleModal').on('shown.bs.modal', function () {
         calculateModalProfit();
     });
 
@@ -1394,111 +1250,66 @@ $("#va_vehiclesource").on("change", function () {
                 $.ajax({
                     url: '{% url "get_vendor_buy_rate" %}',
                     data: {
-                        enquiry_id: "{{ enquiry_num_id }}",
                         vendor_id: vendorId,
                         vehicle_id: selectedType
                     },
                     success: function(data) {
-                        $("#modal_va_standardbuy").val(data.standard_buy || 0);
-                        $("#modal_va_specialbuy").val(data.special_buy || 0);
+                        $("#modal_va_standardbuy").val(data.standard_buy);
+                        $("#modal_va_specialbuy").val(data.special_buy);
                         calculateModalProfit();
                     }
                 });
-            } else {
-                $("#modal_va_standardbuy").val(0);
-                $("#modal_va_specialbuy").val(0);
-                calculateModalProfit();
             }
         }
     }
 
-    $(".modal-vehicle-check").on("change", function() {
-        if ($(this).is(":checked")) {
-            $(".modal-vehicle-check").not(this).prop("checked", false);
-        }
-        loadModalRates();
-    });
-
-    $("#modal_va_vehicletype, #modal_va_vehicletype_placed, #modal_va_vendor").on("change", loadModalRates);
+    $("#modal_va_vehicletype, #modal_va_vehicletype_placed, #modal_va_vendor, .modal-vehicle-check").on("change", loadModalRates);
 
     $("#modal_va_vehiclesource").on("change", function() {
         var source = $(this).val();
         if (source == "3") { // Market
             $("#modal_vendor_star").show();
-            $("#modal_va_vendor").prop('required', true).prop('disabled', false).removeClass('disable_a_href').trigger('change.select2');
+            $("#modal_va_vendor").prop('required', true).prop('disabled', false);
             $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
             $("#modal_va_sale").prop('disabled', false).removeClass('disable_a_href');
-        } else if (source == "2") { // Attached
-            $("#modal_vendor_star").show();
-            $("#modal_va_vendor").prop('required', false).prop('disabled', false).removeClass('disable_a_href').trigger('change.select2');
-            $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
-            $("#modal_va_sale").prop('disabled', true).addClass('disable_a_href');
-        } else { // Own
+        } else {
             $("#modal_vendor_star").hide();
-            $("#modal_va_vendor").val("").prop('required', false).prop('disabled', true).addClass('disable_a_href').trigger('change.select2');
+            $("#modal_va_vendor").val("").prop('required', false).prop('disabled', true);
             $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
             $("#modal_va_sale").prop('disabled', true).addClass('disable_a_href');
         }
     });
 
-    // Auto-populate Vendor Name & Driver Details when a Vehicle is selected in Modal
+    $("#modalReplaceForm, #replaceVehicleForm").on("submit", function() {
+        $(this).find(":disabled").prop("disabled", false);
+    });
+
+    // Mutual exclusivity for modal checkboxes
+    $(".modal-vehicle-check").on("change", function() {
+        $(".modal-vehicle-check").not(this).prop("checked", false);
+    });
+
     $("#modal_va_vehiclenumber").on("change", function () {
-        const vehicleSource = $("#modal_va_vehiclesource").val();
-        const vehicleId = $(this).val();
+        var vehicle_id = $(this).val();
+        if (!vehicle_id) return;
 
-        if (!vehicleId) {
-            $("#modal_va_vendor").val("").trigger('change.select2');
-            $("#modal_va_drivername").val("");
-            $("#modal_va_drivernumber").val("");
-            $("#modal_va_driver_lic").val("");
-            setDateFieldValue("#modal_va_driver_lic_expiry", "");
-            return;
-        }
-
-        // Fetch Vendor
-        if (vehicleSource == 2) {
-            $.ajax({
-                url: "{% url 'get_vendor_by_vehicle' %}",
-                data: { vehicle_id: vehicleId },
-                success: function (data) {
-                    const vendorDropdown = $("#modal_va_vendor");
-                    if (data && data.vendor_id) {
-                        if (vendorDropdown.find(`option[value='${data.vendor_id}']`).length === 0) {
-                            vendorDropdown.append(
-                                `<option value="${data.vendor_id}">${data.vendor_name}</option>`
-                            );
-                        }
-                        vendorDropdown.val(data.vendor_id).trigger('change.select2');
-                    } else {
-                        vendorDropdown.val("").trigger('change.select2');
-                    }
-                }
-            });
-        }
-
-        // Fetch Driver Details
         $.ajax({
             url: '{% url "load_driver_details" %}',
-            data: { 'vehicle_number': vehicleId },
+            data: { 'vehicle_number': vehicle_id },
             success: function (data) {
                 var d = data;
                 if (typeof data === 'string') d = JSON.parse(data);
-                
+
                 $("#modal_va_drivername").val(d.driver_name && d.driver_name[0] ? d.driver_name[0] : "");
                 $("#modal_va_drivernumber").val(d.driver_number && d.driver_number[0] ? d.driver_number[0] : "");
                 $("#modal_va_driver_lic").val(d.driver_license && d.driver_license[0] ? d.driver_license[0] : "");
                 setDateFieldValue("#modal_va_driver_lic_expiry", d.driver_license_exp_date);
+
+                if (d.vendor_id && d.vendor_id[0]) {
+                    $("#modal_va_vendor").val(d.vendor_id[0]).trigger('change');
+                }
             }
         });
-    });
-
-    $("#modalReplaceForm, #replaceVehicleForm").on("submit", function(e) {
-        if ($(".modal-vehicle-check:checked").length === 0) {
-            e.preventDefault();
-            alert("Please select a vehicle type rate checkbox (Requested or Placed) before saving.");
-            return false;
-        }
-        $(this).find(":disabled").prop("disabled", false);
     });
 
     // ---- Driver Name Autocomplete (using standard driver_autocomplete view) ----
@@ -1539,27 +1350,14 @@ $("#va_vehiclesource").on("change", function () {
 
     $("#replaceVehicleForm").on("submit", function (e) {
         e.preventDefault();
-        
+
         var reason = $(this).find('select[name="reason"]').val();
         var source = $("#modal_va_vehiclesource").val();
         var type = $("#modal_va_vehicletype_placed").val();
-        var mktVehNo = $("#modal_va_vehiclenumber_mkt").val() ? $("#modal_va_vehiclenumber_mkt").val().trim() : "";
-        var vehRegex = /^[A-Za-z]{2}[0-9]{2}[A-Za-z]{0,2}[0-9]{4}$/;
-        
+
         if (!reason) { alert("Please select a reason."); return; }
         if (!type) { alert("Please select a vehicle type."); return; }
         if (!source) { alert("Please select a vehicle source."); return; }
-
-        if (source == "3" || mktVehNo) {
-            if (!mktVehNo) {
-                alert("Please enter Market Vehicle Number.");
-                return;
-            }
-            if (!vehRegex.test(mktVehNo)) {
-                alert("Invalid Market Vehicle Number format '" + mktVehNo + "'.\nFormat must strictly follow e.g. TN22AB4916 (First 2 letters, next 2 digits, optional 1-2 letters, and final 4 digits).");
-                return;
-            }
-        }
 
         var form = $(this);
         form.find(":disabled").prop("disabled", false);
@@ -1569,9 +1367,6 @@ $("#va_vehiclesource").on("change", function () {
             data: form.serialize(),
             success: function (data) {
                 if (data.success) {
-                    if (data.ewaybill_alert && data.alert_msg) {
-                        alert(data.alert_msg);
-                    }
                     if (data.new_id) {
                         window.location.href = "/SMS/vehicle_allotment_update/" + data.new_id + "/";
                     } else {
@@ -1620,27 +1415,6 @@ $("#va_vehiclesource").on("change", function () {
     $("#replaceDriverForm").on("submit", function(e) {
         e.preventDefault();
         var form = $(this);
-        var sourceVal = "{{ va.va_vehiclesource_id|default:'' }}";
-        var licExpiryVal = $("#modal_driver_only_lic_expiry").val() ? $("#modal_driver_only_lic_expiry").val().trim() : "";
-        
-        if ((sourceVal === "1" || sourceVal === "2") && !licExpiryVal) {
-            alert("Driver License Expiry Date is mandatory for OWN and ATTACHED vehicles.");
-            $("#modal_driver_only_lic_expiry").focus();
-            return false;
-        }
-
-        if (licExpiryVal) {
-            var today = new Date();
-            today.setHours(0, 0, 0, 0);
-            var expDate = new Date(licExpiryVal);
-            expDate.setHours(0, 0, 0, 0);
-            if (expDate < today) {
-                alert("🚫 Cannot complete driver replacement: Selected driver license expired on " + licExpiryVal + "!\nPlease select a driver with a valid license.");
-                $("#modal_driver_only_lic_expiry").focus();
-                return false;
-            }
-        }
-
         $.ajax({
             type: form.attr('method'),
             url: form.attr('action'),

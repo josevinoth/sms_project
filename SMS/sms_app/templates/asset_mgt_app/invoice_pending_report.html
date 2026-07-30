@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- jQuery is loaded in base.html -->
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
@@ -72,8 +72,7 @@
     <!-- Trip Status -->
     <div class="col-md-2">
         <label class="form-label fw-bold">Trip Status</label>
-        <select name="trip_status" class="form-select form-control" id="filter_trip_status">
-            <option value="">-- All Statuses --</option>
+        <select name="trip_status" class="form-select form-control select2" id="filter_trip_status" multiple="multiple">
             {% for st in all_tripstatuses %}
             <option value="{{ st.id }}">{{ st.status }}</option>
             {% endfor %}
@@ -144,6 +143,11 @@
 
 <script>
     $(document).ready(function () {
+        $('#filter_trip_status').select2({
+            placeholder: "-- All Statuses --",
+            allowClear: true,
+            width: '100%'
+        });
 
         var table = $('#invoice_pending_report_table').DataTable({
             "processing": true,
@@ -161,7 +165,8 @@
                     d.from_location      = $('#filter_from_loc').val();
                     d.to_location        = $('#filter_to_loc').val();
                     d.vehicle_source     = $('#filter_vehicle_source').val();
-                    d.trip_status        = $('#filter_trip_status').val();
+                    var ts_val = $('#filter_trip_status').val();
+                    d.trip_status        = ts_val ? ts_val.join(',') : '';
                 }
             },
             "dom": 'lBfrtip',
