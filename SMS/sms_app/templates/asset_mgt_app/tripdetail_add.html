@@ -465,6 +465,25 @@ document.addEventListener("DOMContentLoaded", function () {
 	var tripIdGlobal = "{{ trip_instance.id|default:'' }}";
 	var isNewTripGlobal = !tripIdGlobal;
 
+	function updatePODVisibility() {
+		var categoryValue = document.getElementById('tr_category').value;
+		var categoryText = '';
+		try { categoryText = $('#tr_category option:selected').text().trim().toLowerCase(); } catch (e) { categoryText = ''; }
+		var tripStatus = document.getElementById('tc_financestatus').value;
+		
+		// Enable POD only during/after Unloading (Trip Closed = 2, Trip Settled = 3, Ready for Invoice = 4, Finance Approved = 7, etc)
+		var allowedStatuses = ["2", "3", "4", "7", "9"];
+		if (categoryValue == "1" && categoryText.indexOf('empty') === -1 && allowedStatuses.includes(tripStatus)) {
+			$('#tc_pod_attachment').prop('disabled', false).css('background-color', '#fff');
+			$('#tc_pod').prop('disabled', false).css('background-color', '#fff');
+			$('#pod-sign-btn').prop('disabled', false).removeClass('disable_a_href');
+		} else {
+			$('#tc_pod_attachment').prop('disabled', true).css('background-color', '#e8f5e9');
+			$('#tc_pod').prop('disabled', true).css('background-color', '#e8f5e9');
+			$('#pod-sign-btn').prop('disabled', true).addClass('disable_a_href');
+		}
+	}
+
 	function trip_type() {
 		var categoryValue = document.getElementById('tr_category').value;
 		// Fallback: detect by option text (in case the select uses labels or different IDs)
@@ -532,20 +551,10 @@ document.addEventListener("DOMContentLoaded", function () {
 			}
 		});
 		// ----------------------
+		// ----------------------
 		// 2️⃣ POD Attachment Logic
 		// ----------------------
-		// treat label 'empty' same as non-1 categories
-		if (categoryValue == 1 && categoryText.indexOf('empty') === -1) {
-			$('#tc_pod_attachment').prop('disabled', false).css('background-color', '#fff');
-			$('#tc_pod').prop('disabled', false).css('background-color', '#fff');
-			$('#pod-sign-btn').prop('disabled', false).removeClass('disable_a_href');
-		} else {
-			$('#tc_pod_attachment').prop('disabled', true).css('background-color', '#e8f5e9');
-			$('#tc_pod').prop('disabled', true).css('background-color', '#e8f5e9');
-			$('#tc_pod_attachment').val('');
-			$('#tc_pod').val('');
-			$('#pod-sign-btn').prop('disabled', true).addClass('disable_a_href');
-		}
+		updatePODVisibility();
 
 		// ----------------------
 		// 3️⃣ Loading & Unloading Time Visibility
@@ -849,26 +858,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 		// ---- Initialize POD fields based on category ----
 		function initializePODFields() {
-			let catVal = $("#tr_category").val();
-
-			// For new trips: enable POD fields by default (user will select category)
-			// For existing trips: enable/disable based on category
-			if (isNewTrip && !catVal) {
-				// New trip with no category selected yet - ENABLE POD fields
-				$('#tc_pod_attachment').prop('disabled', false).css('background-color', '#fff');
-				$('#tc_pod').prop('disabled', false).css('background-color', '#fff');
-				$('#pod-sign-btn').prop('disabled', false);
-			} else if (catVal == 1) {
-				// Category 1 (Normal trip) - ENABLE POD fields
-				$('#tc_pod_attachment').prop('disabled', false).css('background-color', '#fff');
-				$('#tc_pod').prop('disabled', false).css('background-color', '#fff');
-				$('#pod-sign-btn').prop('disabled', false);
-			} else {
-				// Other categories or no category on existing trip - DISABLE POD fields
-				$('#tc_pod_attachment').prop('disabled', true).css('background-color', '#e8f5e9');
-				$('#tc_pod').prop('disabled', true).css('background-color', '#e8f5e9');
-				$('#pod-sign-btn').prop('disabled', true);
-			}
+			updatePODVisibility();
 		}
 		initializePODFields();
 
@@ -913,6 +903,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 		$("#tc_financestatus").on("change", function () {
 			trip_status_update();
+			updatePODVisibility();
 			let status = $(this).val();
 			let tripId = "{{ trip_instance.id|default:'' }}";
 
