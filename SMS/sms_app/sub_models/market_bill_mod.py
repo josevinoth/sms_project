@@ -32,6 +32,7 @@ class MarketBillInfo(models.Model):
     mb_attachment = models.FileField(upload_to='MarketBillAttachments/', null=True, blank=True, verbose_name="Bill Attachment")
     mb_mail_attachment = models.FileField(upload_to='MarketMailAttachments/', null=True, blank=True, verbose_name="Mail Attachment")
     mb_trip_mail_attachments = models.JSONField(default=dict, blank=True, null=True)
+    mb_trip_details = models.JSONField(default=dict, blank=True, null=True, verbose_name="Trip Details")
     mb_selected_trips = models.TextField(blank=True, null=True)  # Stores comma-separated trip IDs or JSON
 
     class Meta:

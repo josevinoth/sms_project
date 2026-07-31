@@ -136,3 +136,38 @@ class MarketBillForm(forms.ModelForm):
     def clean_mb_total_cost(self):
         val = self.cleaned_data.get('mb_total_cost')
         return val if val is not None else 0.0
+
+    def clean(self):
+        cleaned_data = super().clean()
+        bill_no = cleaned_data.get('mb_bill_no')
+        selected_trips = cleaned_data.get('mb_selected_trips')
+
+        # 1. Unique check for mb_bill_no
+        if bill_no:
+            qs = MarketBillInfo.objects.filter(mb_bill_no__iexact=bill_no)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                self.add_error('mb_bill_no', 'A market bill with this Bill No already exists.')
+
+        # 2. Unique check for selected trips (ensure they are not in any other market bill)
+        if selected_trips:
+            # selected_trips is a comma-separated string, e.g., "18597,18598"
+            trip_ids = [tid.strip() for tid in selected_trips.split(',') if tid.strip()]
+            for tid in trip_ids:
+                # Find other bills containing this trip ID in their mb_selected_trips text
+                # We filter and then double-check the split array to prevent partial match issues
+                other_bills = MarketBillInfo.objects.filter(mb_selected_trips__icontains=tid)
+                if self.instance and self.instance.pk:
+                    other_bills = other_bills.exclude(pk=self.instance.pk)
+                
+                for bill in other_bills:
+                    bill_trip_ids = [t.strip() for t in (bill.mb_selected_trips or '').split(',') if t.strip()]
+                    if tid in bill_trip_ids:
+                        self.add_error(
+                            'mb_selected_trips',
+                            f"Trip ID {tid} has already been billed in Market Bill '{bill.mb_bill_no}'."
+                        )
+                        break
+
+        return cleaned_data
