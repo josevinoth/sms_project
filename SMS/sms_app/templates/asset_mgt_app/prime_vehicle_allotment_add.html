@@ -434,12 +434,18 @@ function setDateFieldValue(selector, value) {
 	function market_vehicle_enable_disable()
 	{
 		var vehicle_source = document.getElementById("pva_vehiclesource").value;
+		var isUpdateMode = "{% if va %}true{% else %}false{% endif %}";
 		if (vehicle_source == 3)
 		{
 			 $('#pva_vehiclenumber').closest('.input-group').hide();
-			// ✅ MARKET fields enable
-			$('#pva_vehiclenumber_mkt').removeClass('disable_a_href').prop('disabled', false);
-			$('#pva_vendor').removeClass('disable_a_href').prop('disabled', false);
+			// ✅ MARKET fields enable (keep vendor and vehicle number disabled in update mode)
+			if (isUpdateMode === "true") {
+				$('#pva_vehiclenumber_mkt').addClass('disable_a_href').prop('disabled', true);
+				$('#pva_vendor').addClass('disable_a_href').prop('disabled', true);
+			} else {
+				$('#pva_vehiclenumber_mkt').removeClass('disable_a_href').prop('disabled', false);
+				$('#pva_vendor').removeClass('disable_a_href').prop('disabled', false);
+			}
 			$('#pva_specialbuy').removeClass('disable_a_href').prop('disabled', false);
 			$('#pva_sale').removeClass('disable_a_href').prop('disabled', false);
 			$('#pva_standardbuy').addClass('disable_a_href'); //  Restore Green

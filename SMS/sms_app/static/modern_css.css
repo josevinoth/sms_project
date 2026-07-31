@@ -804,17 +804,25 @@ a.btn-modern + a.btn-modern {
 
 /* Modern Search Box */
 .dataTables_filter {
-    color: #ffffff !important;
+    color: var(--text-main) !important;
     font-weight: 700 !important;
+}
+
+[data-theme="dark"] .dataTables_filter {
+    color: #ffffff !important;
 }
 
 .dataTables_filter input {
     background: var(--input-bg) !important;
     border: 1.5px solid var(--input-border) !important;
     border-radius: 12px !important;
-    padding: 0.6rem 1.2rem !important;
-    width: 280px !important;
+    padding: 0.5rem 1rem !important;
+    width: 240px !important;
     transition: all 0.3s !important;
+    color: var(--text-main) !important;
+}
+
+[data-theme="dark"] .dataTables_filter input {
     color: #ffffff !important;
 }
 
