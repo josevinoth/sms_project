@@ -176,20 +176,16 @@
         });
 
     });
-</script>
-<script>
-    var $jq = jQuery.noConflict(true);
-
-    $jq(document).ready(function () {
-        $jq('#vehicle_number').select2({
+    $(document).ready(function () {
+        $('#vehicle_number').select2({
             width: '100%',
             theme: 'bootstrap4',
             placeholder: 'Search Vehicle...',
             allowClear: true
         });
 
-        const $vehicleSource = $jq('#vehicle_source');
-        const $vehicleNumber = $jq('#vehicle_number');
+        const $vehicleSource = $('#vehicle_source');
+        const $vehicleNumber = $('#vehicle_number');
         const allOptions = $vehicleNumber.find('option').clone();
 
         function filterVehicles() {
@@ -199,7 +195,7 @@
             $vehicleNumber.empty().append('<option value="">Search Vehicle...</option>');
             
             allOptions.each(function() {
-                const $opt = $jq(this);
+                const $opt = $(this);
                 if ($opt.val() === "") return;
                 
                 if (source === "" || $opt.data('source') == source) {

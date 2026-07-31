@@ -29,8 +29,9 @@ def market_bill_add(request):
             obj.mb_created_by = request.user
             obj.save()
 
-            # Save per-trip costs and halting data to TripdetailInfo
+            # Save per-trip costs and halting data to TripdetailInfo and mb_trip_details
             selected_trips = request.POST.get('mb_selected_trips', '')
+            trip_details_dict = {}
             if selected_trips:
                 trip_ids = [tid for tid in selected_trips.split(',') if tid.strip()]
                 for tid in trip_ids:
@@ -41,22 +42,45 @@ def market_bill_add(request):
                     h_cost = request.POST.get(f'halting_cost_{tid}', 0)
                     t_cost = request.POST.get(f'trip_cost_{tid}', 0)
 
+                    l_cost_val = float(l_cost) if l_cost else 0.0
+                    u_cost_val = float(u_cost) if u_cost else 0.0
+                    p_cost_val = float(p_cost) if p_cost else 0.0
+                    h_days_val = int(h_days) if h_days else 0
+                    h_cost_val = float(h_cost) if h_cost else 0.0
+                    t_cost_val = float(t_cost) if t_cost else 0.0
+
+                    trip_details_dict[str(tid)] = {
+                        'trip_cost': t_cost_val,
+                        'loading_cost': l_cost_val,
+                        'unloading_cost': u_cost_val,
+                        'parking_cost': p_cost_val,
+                        'halting_days': h_days_val,
+                        'halting_cost': h_cost_val,
+                    }
+
                     TripdetailInfo.objects.filter(id=tid).update(
-                        tc_loadingcost=float(l_cost) if l_cost else 0.0,
-                        tc_unloadingcost=float(u_cost) if u_cost else 0.0,
-                        tc_parkingcost=float(p_cost) if p_cost else 0.0,
-                        tc_no_of_days_halting=int(h_days) if h_days else 0,
-                        tc_haltingcost=float(h_cost) if h_cost else 0.0
+                        tc_loadingcost=l_cost_val,
+                        tc_unloadingcost=u_cost_val,
+                        tc_parkingcost=p_cost_val,
+                        tc_no_of_days_halting=h_days_val,
+                        tc_haltingcost=h_cost_val
                     )
 
                     # Update Buying Price in Allotment instead of Revenue in Trip
                     trip_obj = TripdetailInfo.objects.get(id=tid)
-                    Vehicle_allotmentInfo.objects.filter(
+                    allotment = Vehicle_allotmentInfo.objects.filter(
                         Q(va_enquirynumber=trip_obj.tr_enquirynumber),
-                        Q(va_vehiclenumber__vm_registrationnumber__iexact=trip_obj.tr_vehiclenumber) | 
-                        Q(va_vehiclenumber_mkt__iexact=trip_obj.tr_vehiclenumber) |
-                        Q(va_vendor=obj.mb_vendor)
-                    ).update(va_specialbuy=float(t_cost) if t_cost else 0.0)
+                        Q(va_vehiclenumber__vm_registrationnumber__iexact=trip_obj.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip_obj.tr_vehiclenumber)
+                    ).first()
+                    if not allotment:
+                        allotment = Vehicle_allotmentInfo.objects.filter(
+                            va_enquirynumber=trip_obj.tr_enquirynumber
+                        ).order_by('-id').first()
+                    if allotment:
+                        Vehicle_allotmentInfo.objects.filter(id=allotment.id).update(va_specialbuy=t_cost_val)
+
+            obj.mb_trip_details = trip_details_dict
+            obj.save()
 
             messages.success(request, "Market Bill saved successfully.")
             return redirect('market_bill_list')
@@ -146,8 +170,9 @@ def market_bill_edit(request, id):
             obj.mb_updated_by = request.user
             obj.save()
 
-            # Save per-trip costs and halting data to TripdetailInfo
+            # Save per-trip costs and halting data to TripdetailInfo and mb_trip_details
             selected_trips = request.POST.get('mb_selected_trips', '')
+            trip_details_dict = {}
             if selected_trips:
                 trip_ids = [tid for tid in selected_trips.split(',') if tid.strip()]
                 for tid in trip_ids:
@@ -158,22 +183,45 @@ def market_bill_edit(request, id):
                     h_cost = request.POST.get(f'halting_cost_{tid}', 0)
                     t_cost = request.POST.get(f'trip_cost_{tid}', 0)
 
+                    l_cost_val = float(l_cost) if l_cost else 0.0
+                    u_cost_val = float(u_cost) if u_cost else 0.0
+                    p_cost_val = float(p_cost) if p_cost else 0.0
+                    h_days_val = int(h_days) if h_days else 0
+                    h_cost_val = float(h_cost) if h_cost else 0.0
+                    t_cost_val = float(t_cost) if t_cost else 0.0
+
+                    trip_details_dict[str(tid)] = {
+                        'trip_cost': t_cost_val,
+                        'loading_cost': l_cost_val,
+                        'unloading_cost': u_cost_val,
+                        'parking_cost': p_cost_val,
+                        'halting_days': h_days_val,
+                        'halting_cost': h_cost_val,
+                    }
+
                     TripdetailInfo.objects.filter(id=tid).update(
-                        tc_loadingcost=float(l_cost) if l_cost else 0.0,
-                        tc_unloadingcost=float(u_cost) if u_cost else 0.0,
-                        tc_parkingcost=float(p_cost) if p_cost else 0.0,
-                        tc_no_of_days_halting=int(h_days) if h_days else 0,
-                        tc_haltingcost=float(h_cost) if h_cost else 0.0
+                        tc_loadingcost=l_cost_val,
+                        tc_unloadingcost=u_cost_val,
+                        tc_parkingcost=p_cost_val,
+                        tc_no_of_days_halting=h_days_val,
+                        tc_haltingcost=h_cost_val
                     )
 
                     # Update Buying Price in Allotment instead of Revenue in Trip
                     trip_obj = TripdetailInfo.objects.get(id=tid)
-                    Vehicle_allotmentInfo.objects.filter(
+                    allotment = Vehicle_allotmentInfo.objects.filter(
                         Q(va_enquirynumber=trip_obj.tr_enquirynumber),
-                        Q(va_vehiclenumber__vm_registrationnumber__iexact=trip_obj.tr_vehiclenumber) | 
-                        Q(va_vehiclenumber_mkt__iexact=trip_obj.tr_vehiclenumber) |
-                        Q(va_vendor=obj.mb_vendor)
-                    ).update(va_specialbuy=float(t_cost) if t_cost else 0.0)
+                        Q(va_vehiclenumber__vm_registrationnumber__iexact=trip_obj.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip_obj.tr_vehiclenumber)
+                    ).first()
+                    if not allotment:
+                        allotment = Vehicle_allotmentInfo.objects.filter(
+                            va_enquirynumber=trip_obj.tr_enquirynumber
+                        ).order_by('-id').first()
+                    if allotment:
+                        Vehicle_allotmentInfo.objects.filter(id=allotment.id).update(va_specialbuy=t_cost_val)
+
+            obj.mb_trip_details = trip_details_dict
+            obj.save()
 
             messages.success(request, "Market Bill updated successfully.")
             return redirect('market_bill_list')
@@ -234,40 +282,66 @@ def market_bill_edit(request, id):
             if trip.tr_enquirynumber and getattr(trip.tr_enquirynumber, 'en_customername', None):
                 customer_name = str(trip.tr_enquirynumber.en_customername)
 
-            # Fetch standard and special costs from allotment
-            standard_cost = 0
-            special_cost = 0
-            allotment = Vehicle_allotmentInfo.objects.filter(
-                Q(va_enquirynumber=trip.tr_enquirynumber),
-                Q(va_vehiclenumber__vm_registrationnumber__iexact=trip.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip.tr_vehiclenumber)
-            ).first()
-            if not allotment:
+            # Fetch standard and special costs from allotment or JSON
+            saved_detail = record.mb_trip_details.get(str(trip.id)) if record.mb_trip_details else None
+
+            if saved_detail:
+                special_cost = float(saved_detail.get('trip_cost', 0))
+                loading_cost = float(saved_detail.get('loading_cost', 0))
+                unloading_cost = float(saved_detail.get('unloading_cost', 0))
+                parking_cost = float(saved_detail.get('parking_cost', 0))
+                halting_days = int(saved_detail.get('halting_days', 0))
+                halting_cost = float(saved_detail.get('halting_cost', 0))
+                
+                # Fetch standard cost from allotment (or fallback to special_cost)
+                standard_cost = special_cost
                 allotment = Vehicle_allotmentInfo.objects.filter(
-                    va_enquirynumber=trip.tr_enquirynumber
-                ).order_by('-id').first()
-            if allotment:
-                standard_cost = float(allotment.va_standardbuy or 0)
-                special_cost = float(allotment.va_specialbuy or 0)
+                    Q(va_enquirynumber=trip.tr_enquirynumber),
+                    Q(va_vehiclenumber__vm_registrationnumber__iexact=trip.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip.tr_vehiclenumber)
+                ).first()
+                if allotment:
+                    standard_cost = float(allotment.va_standardbuy or special_cost)
+            else:
+                loading_cost = float(trip.tc_loadingcost or 0)
+                unloading_cost = float(trip.tc_unloadingcost or 0)
+                parking_cost = float(trip.tc_parkingcost or 0)
+                halting_days = int(trip.tc_no_of_days_halting or 0)
+                halting_cost = float(trip.tc_haltingcost or 0)
 
-                # Refinement: Only use vendor rate master as a FALLBACK when va_specialbuy is not set
-                if special_cost == 0 and trip.tr_consignmentnumber and allotment.va_vendor:
-                    cnote = trip.tr_consignmentnumber
-                    v_type_id = trip.tr_vehicletype_id or trip.tr_vehicletype_placed_id
-                    if v_type_id:
-                        # Use Cnote locations if available, otherwise fallback to Enquiry locations
-                        from_loc = cnote.co_fromlocaion or trip.tr_enquirynumber.en_fromlocaion
-                        to_loc = cnote.co_tolocation or trip.tr_enquirynumber.en_tolocation
+                # Fetch standard and special costs from allotment
+                standard_cost = 0
+                special_cost = 0
+                allotment = Vehicle_allotmentInfo.objects.filter(
+                    Q(va_enquirynumber=trip.tr_enquirynumber),
+                    Q(va_vehiclenumber__vm_registrationnumber__iexact=trip.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip.tr_vehiclenumber)
+                ).first()
+                if not allotment:
+                    allotment = Vehicle_allotmentInfo.objects.filter(
+                        va_enquirynumber=trip.tr_enquirynumber
+                    ).order_by('-id').first()
+                if allotment:
+                    standard_cost = float(allotment.va_standardbuy or 0)
+                    special_cost = float(allotment.va_specialbuy or 0)
 
-                        rate_obj = VendorratemasterInfo1.objects.filter(
-                            vr1_vendor=allotment.va_vendor,
-                            vr1_fromlocation=from_loc,
-                            vr1_tolocation=to_loc,
-                            vr1_vehicletype_id=v_type_id
-                        ).first()
-                        if rate_obj:
-                            special_cost = float(rate_obj.vr1_rate)
-                            if standard_cost == 0:
-                                standard_cost = special_cost
+                    # Refinement: Only use vendor rate master as a FALLBACK when va_specialbuy is not set
+                    if special_cost == 0 and trip.tr_consignmentnumber and allotment.va_vendor:
+                        cnote = trip.tr_consignmentnumber
+                        v_type_id = trip.tr_vehicletype_id or trip.tr_vehicletype_placed_id
+                        if v_type_id:
+                            # Use Cnote locations if available, otherwise fallback to Enquiry locations
+                            from_loc = cnote.co_fromlocaion or trip.tr_enquirynumber.en_fromlocaion
+                            to_loc = cnote.co_tolocation or trip.tr_enquirynumber.en_tolocation
+
+                            rate_obj = VendorratemasterInfo1.objects.filter(
+                                vr1_vendor=allotment.va_vendor,
+                                vr1_fromlocation=from_loc,
+                                vr1_tolocation=to_loc,
+                                vr1_vehicletype_id=v_type_id
+                            ).first()
+                            if rate_obj:
+                                special_cost = float(rate_obj.vr1_rate)
+                                if standard_cost == 0:
+                                    standard_cost = special_cost
 
             # Determine current halting rate from Master Data
             halting_rate = 0.0
@@ -285,8 +359,8 @@ def market_bill_edit(request, id):
             
             # Fallback if not in master: use current average ONLY if it seems valid
             if halting_rate == 0.0:
-                h_days = int(trip.tc_no_of_days_halting or 0)
-                h_cost = float(trip.tc_haltingcost or 0)
+                h_days = halting_days
+                h_cost = halting_cost
                 if h_days > 0:
                     halting_rate = h_cost / h_days
                 else:
@@ -310,11 +384,11 @@ def market_bill_edit(request, id):
                 'trip_date': trip_date,
                 'standard_cost': standard_cost,
                 'special_cost': special_cost,
-                'loading_cost': float(trip.tc_loadingcost or 0),
-                'unloading_cost': float(trip.tc_unloadingcost or 0),
-                'parking_cost': float(trip.tc_parkingcost or 0),
-                'halting_days': int(trip.tc_no_of_days_halting or 0),
-                'halting_cost': float(trip.tc_haltingcost or 0),
+                'loading_cost': loading_cost,
+                'unloading_cost': unloading_cost,
+                'parking_cost': parking_cost,
+                'halting_days': halting_days,
+                'halting_cost': halting_cost,
                 'halting_rate': float(halting_rate),
                 'mail_attachment_url': mail_attachment_url,
             })

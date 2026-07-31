@@ -644,7 +644,7 @@ def trans_invoice_list_woh(request, customer_id):
         .filter(
             tr_enquirynumber__en_customername_id=customer_id,
             tc_financestatus__in=Tripstatusinfo.objects.filter(
-                Q(id__in=[7, 9]) | Q(status__in=['Trip Settled', 'Ready for Invoice'])
+                Q(id=9) | Q(status='Ready for Invoice')
             )
         )
         .exclude(tr_consignmentnumber__co_consignmentnumber__isnull=True)
