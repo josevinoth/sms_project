@@ -45,8 +45,12 @@ def home_page(request):
     customer_rate_due_count = len(Customerattach.objects.filter(ca_contract_due_days__lte=30,ca_category_id=4,ca_status=1))
     DG_cargo_count = len(DGcargovalueInfo.objects.filter(DG_wh_approval_status__id=2))
     total_dues = customer_rate_due_count
-    approval_count = TripdetailInfo.objects.filter( Q(tr_category=1),
-        Q(tr_approval__isnull=True) | Q(tr_approval__ta_approval_status__id=3)
+    approval_count = TripdetailInfo.objects.filter(
+        Q(tr_category=1),
+        Q(tr_departeddate__isnull=False),
+        Q(tc_financestatus_id=8) | Q(tr_approval__ta_approval_status__id=3)
+    ).exclude(
+        tr_approval__ta_approval_status__id=1
     ).count()
     approval_count_wms1 = HighvalueInfo.objects.filter( ( Q(hc_commodity__id__gte=11, hc_commodity__id__lte=14) |
         Q(hc_value__gt=2500000) ) & Q(hc_approval_status__id=2)

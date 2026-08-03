@@ -25,12 +25,15 @@ def trip_approval_view(request):
     ).filter(
         Q(tr_category=1),
         Q(tr_departeddate__isnull=False),
-        Q(tc_financestatus_id=8) | Q(tr_approval__ta_approval_status__id=3) | Q(tr_approval__ta_approval_status__isnull=True)
+        Q(tc_financestatus_id=8) | Q(tr_approval__ta_approval_status__id=3)
+    ).exclude(
+        tr_approval__ta_approval_status__id=1
     )
 
     return render(request, "asset_mgt_app/trip_approval.html", {
         'trip_list': trip_list,
-        'status_list': approval_status_info.objects.all()
+        'status_list': approval_status_info.objects.all(),
+        'today': timezone.now().date()
     })
 
 @login_required

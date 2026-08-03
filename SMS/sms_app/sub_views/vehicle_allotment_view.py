@@ -370,9 +370,9 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 )
                 allotments_to_check = Vehicle_allotmentInfo.objects.filter(va_vehiclenumber_mkt__iexact=obj.va_vehiclenumber_mkt.strip())
 
-            # Filter active checks to only allotments/enquiries created on/after 2026-07-27
+            # Filter active checks to only allotments/enquiries created on/after 2026-08-01
             allotments_to_check = allotments_to_check.filter(
-                Q(va_created_at__date__gte='2026-07-27') | Q(va_enquirynumber__en_created_at__date__gte='2026-07-27')
+                Q(va_created_at__date__gte='2026-08-01') | Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
             )
 
             if duplicate_qs.exists():
@@ -383,7 +383,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
 
-            # 🚫 ACTIVE TRIP CHECK FOR THIS VEHICLE (Global - July 27, 2026 onwards)
+            # 🚫 ACTIVE TRIP CHECK FOR THIS VEHICLE (Global - August 1, 2026 onwards)
             is_busy = False
             busy_enquiry = ""
             closed_status_ids = [2, 3, 4, 5, 7, 9, 10, 11]
@@ -393,7 +393,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             if reg_no:
                 reg_no_clean = str(reg_no).strip()
                 other_trips = TripdetailInfo.objects.filter(
-                    Q(tr_created_at__date__gte='2026-07-27') | Q(tr_enquirynumber__en_created_at__date__gte='2026-07-27'),
+                    Q(tr_created_at__date__gte='2026-08-01') | Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01'),
                     tr_vehiclenumber__iexact=reg_no_clean
                 ).exclude(tr_enquirynumber_id=enquiry_id).select_related('tr_enquirynumber')
 
@@ -497,12 +497,12 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             elif vehicle_source == 3 and obj.va_vehiclenumber_mkt:
                 allotments_to_check = Vehicle_allotmentInfo.objects.filter(va_vehiclenumber_mkt__iexact=obj.va_vehiclenumber_mkt.strip())
 
-            # Filter active checks to only allotments/enquiries created on/after 2026-07-27
+            # Filter active checks to only allotments/enquiries created on/after 2026-08-01
             allotments_to_check = allotments_to_check.filter(
-                Q(va_created_at__date__gte='2026-07-27') | Q(va_enquirynumber__en_created_at__date__gte='2026-07-27')
+                Q(va_created_at__date__gte='2026-08-01') | Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
             )
 
-            # 🚫 ACTIVE TRIP CHECK FOR THIS VEHICLE (Global - July 27, 2026 onwards)
+            # 🚫 ACTIVE TRIP CHECK FOR THIS VEHICLE (Global - August 1, 2026 onwards)
             is_busy = False
             busy_enquiry = ""
             closed_status_ids = [2, 3, 4, 5, 7, 9, 10, 11]
@@ -512,7 +512,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             if reg_no:
                 reg_no_clean = str(reg_no).strip()
                 other_trips = TripdetailInfo.objects.filter(
-                    Q(tr_created_at__date__gte='2026-07-27') | Q(tr_enquirynumber__en_created_at__date__gte='2026-07-27'),
+                    Q(tr_created_at__date__gte='2026-08-01') | Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01'),
                     tr_vehiclenumber__iexact=reg_no_clean
                 ).exclude(tr_enquirynumber_id=obj.va_enquirynumber_id).select_related('tr_enquirynumber')
 

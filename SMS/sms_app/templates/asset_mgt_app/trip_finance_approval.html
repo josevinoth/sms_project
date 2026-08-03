@@ -1,90 +1,90 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% block content %}
 
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-4"></div>
-        <div class="col-4 rounded text-center bg-info">
-            <h3>Trip Finance Approval</h3>
-        </div>
-        <div class="col-4"></div>
-    </div>
-</div>
+<div class="container-fluid py-4">
 
-<div class="container-fluid row mb-2">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-</div>
-
-<hr>
-
-<table id="trip_finance_approval_table" class="table table-bordered table-sm">
-    <thead class="thead-dark">
-    <tr>
-        <th>Trip No</th>
-        <th>Enquiry</th>
-        <th>Consignment</th>
-        <th>Trip Cost</th>
-        <th>Parking</th>
-        <th>Toll</th>
-        <th>Handling</th>
-        <th>Weighment</th>
-<th>Total Amount</th>
-        <th>Approve</th>
-        <th>Edit</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    {% for trip in trip_list %}
-    <tr>
-        <td>{{ trip.tr_tripnumber }}</td>
-        <td>{{ trip.tr_enquirynumber }}</td>
-        <td>{{ trip.tr_consignmentnumber }}</td>
-
-        <td>{{ trip.tc_tripcost }}</td>
-        <td>{{ trip.tc_parkingcost }}</td>
-        <td>{{ trip.tc_tollcost }}</td>
-        <td>{{ trip.tc_handlingcost }}</td>
-        <td>{{ trip.tc_weighmentcost }}</td>
-
-<td><b>₹{{ trip.total_amount|floatformat:2 }}</b></td>
-
-        <!-- APPROVAL DROPDOWN -->
-        <td class="text-center">
-            <form method="post" action="{% url 'update_trip_finance_approval' trip.id %}" class="d-flex gap-1">
-                {% csrf_token %}
-                <select name="tc_financestatus" class="form-control form-control-sm" style="width:140px">
-                    {% for status in status_list %}
-                    <option value="{{ status.id }}"
-                        {% if trip.tc_financestatus.id == status.id %} selected {% endif %}>
-                        {{ status.status }}
-                    </option>
-                    {% endfor %}
-                </select>
-
-                <button type="submit" class="btn btn-sm btn-primary">Update</button>
-            </form>
-        </td>
-
-        <td>
-            <a class="btn btn-primary btn-sm" href="{% url 'trip_settlement_edit' trip.id %}">
-                <i class="far fa-edit"></i>
+    <!-- ══ Page Header ══ -->
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+            <i class="fas fa-money-check-alt mr-2"></i> Trip Finance Approval
+        </h3>
+        <div>
+            <a href="{% url 'home_page' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                <i class="fas fa-arrow-left"></i> Back
             </a>
-        </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
+        </div>
+    </div>
+
+    <!-- ══ Table Container ══ -->
+    <div class="table-container-modern p-4">
+        <table id="trip_finance_approval_table" class="table modern-table w-100">
+            <thead>
+            <tr>
+                <th>Trip No</th>
+                <th>Enquiry</th>
+                <th>Consignment</th>
+                <th>Trip Cost</th>
+                <th>Parking</th>
+                <th>Toll</th>
+                <th>Handling</th>
+                <th>Weighment</th>
+                <th>Total Amount</th>
+                <th class="text-center">Approve</th>
+                <th class="text-center">Edit</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {% for trip in trip_list %}
+            <tr>
+                <td class="font-weight-bold" style="color: var(--accent-blue);">{{ trip.tr_tripnumber }}</td>
+                <td>{{ trip.tr_enquirynumber }}</td>
+                <td>{{ trip.tr_consignmentnumber }}</td>
+
+                <td>{{ trip.tc_tripcost|floatformat:2 }}</td>
+                <td>{{ trip.tc_parkingcost|floatformat:2 }}</td>
+                <td>{{ trip.tc_tollcost|floatformat:2 }}</td>
+                <td>{{ trip.tc_handlingcost|floatformat:2 }}</td>
+                <td>{{ trip.tc_weighmentcost|floatformat:2 }}</td>
+
+                <td><span class="badge badge-success text-white" style="font-size:0.9rem; font-weight:700; padding:6px 10px; border-radius:8px;">₹{{ trip.total_amount|floatformat:2 }}</span></td>
+
+                <!-- APPROVAL DROPDOWN -->
+                <td class="text-center">
+                    <form method="post" action="{% url 'update_trip_finance_approval' trip.id %}" class="d-flex align-items-center justify-content-center" style="gap:6px;">
+                        {% csrf_token %}
+                        <select name="tc_financestatus" class="form-control form-control-sm form-control-modern" style="width:140px; border-radius:8px; height:34px; padding:2px 8px;">
+                            {% for status in status_list %}
+                            <option value="{{ status.id }}"
+                                {% if trip.tc_financestatus.id == status.id %} selected {% endif %}>
+                                {{ status.status }}
+                            </option>
+                            {% endfor %}
+                        </select>
+
+                        <button type="submit" class="btn btn-sm btn-submit" style="border-radius:8px; padding: 4px 12px; font-weight:600; height:34px; min-width:auto;">Update</button>
+                    </form>
+                </td>
+
+                <td class="text-center">
+                    <a class="btn btn-cancel btn-sm" style="border-radius:8px; padding: 4px 10px; height:34px; display:inline-flex; align-items:center; justify-content:center;" href="{% url 'trip_settlement_edit' trip.id %}" title="Edit">
+                        <i class="far fa-edit"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <script>
 $(document).ready(function() {
     $('#trip_finance_approval_table').DataTable({
         order: [0, 'desc'],
-        dom: 'lBfrtip',
+        dom: "<'row mb-3 align-items-center'<'col-sm-12 col-md-8 d-flex align-items-center flex-wrap'lB><'col-sm-12 col-md-4 text-right'f>>" +
+             "<'row'<'col-sm-12'tr>>" +
+             "<'row mt-3'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
         buttons: ['copy', 'csv', 'excel', 'print']
     });
 });
