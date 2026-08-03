@@ -303,9 +303,16 @@ def invoice_documents_list_ajax_view(request):
         if veh_no:
             trip_list = trip_list.filter(tr_vehiclenumber__icontains=veh_no)
         if date_from:
-            trip_list = trip_list.filter(tr_departeddate_pickup__gte=date_from)
+            trip_list = trip_list.filter(
+                Q(tr_departeddate_pickup__gte=date_from) |
+                Q(tr_departeddate__gte=date_from)
+            )
         if date_to:
-            trip_list = trip_list.filter(tr_departeddate_pickup__lte=f"{date_to} 23:59:59")
+            date_to_end = f"{date_to} 23:59:59"
+            trip_list = trip_list.filter(
+                Q(tr_departeddate_pickup__lte=date_to_end) |
+                Q(tr_departeddate__lte=date_to_end)
+            )
 
         # Count before search filter for recordsTotal
         records_total = trip_list.count()
