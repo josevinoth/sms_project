@@ -290,7 +290,7 @@ def invoice_documents_list_ajax_view(request):
             'tr_reportedlocation',
         ).filter(
             tc_financestatus_id__in=status_ids,
-            tr_category_id=1
+            tr_category_id__in=[1, 3]
         ).filter(
             Q(tr_enquirynumber__en_customername__cu_name__icontains='MAA') |
             Q(tr_enquirynumber__en_customername__cu_name__icontains='BLR')

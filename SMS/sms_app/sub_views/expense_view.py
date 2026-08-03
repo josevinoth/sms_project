@@ -12,13 +12,37 @@ from django.utils import timezone
 
 # Invoicecity
 @login_required(login_url='login_page')
-def expense_add(request, expense_id=0):
+def expense_add(request, expense_id=0, is_petty_cash=False, petty_cash_type=None):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
 
     if request.method == "GET":
         if expense_id == 0:
-            expense_form = ExpenseaddForm()
+            initial_data = {}
+            if is_petty_cash:
+                from ..models import Business_Sol_info, CreditLedgerInfo
+                
+                business_search = 'BVM Trans'
+                ledger_prefix = 'Trans Petty Cash'
+                
+                if petty_cash_type == 'wms':
+                    business_search = 'BVM Storage'
+                    ledger_prefix = 'WH Petty Cash'
+                elif petty_cash_type == 'pms':
+                    business_search = 'BVM Pack'
+                    ledger_prefix = 'Pack Petty Cash'
+                    
+                bvm_business = Business_Sol_info.objects.filter(bvm_business__icontains=business_search).first()
+                if bvm_business:
+                    initial_data['exp_business'] = bvm_business.id
+                
+                branch_id = get_session_branch_id(request)
+                branch_code = get_branch_code(branch_id)
+                ledger = CreditLedgerInfo.objects.filter(ledger_name__icontains=f'{ledger_prefix} - {branch_code}').first()
+                if ledger:
+                    initial_data['exp_credit_ledger'] = ledger.id
+            
+            expense_form = ExpenseaddForm(initial=initial_data)
             context = {
                 'expense_form': expense_form,
                 'first_name': first_name,

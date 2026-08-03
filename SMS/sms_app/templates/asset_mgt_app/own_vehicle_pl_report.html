@@ -119,13 +119,6 @@
                 </tr>
             </thead>
             <tbody>
-                {% for row in data_rows %}
-                <tr>
-                    {% for cell in row %}
-                    <td>{{ cell }}</td>
-                    {% endfor %}
-                </tr>
-                {% endfor %}
             </tbody>
         </table>
     </div>
@@ -144,27 +137,27 @@
       <div class="modal-body p-0">
         <table class="table table-bordered table-striped mb-0 text-left">
             <tbody>
-                <tr><th>Month</th><td>{{ summary_data.month }}</td></tr>
-                <tr><th>Vehicle No</th><td>{{ summary_data.vehicle_no }}</td></tr>
-                <tr><th>Vehicle Type</th><td>{{ summary_data.vehicle_type }}</td></tr>
-                <tr><th>No.of Days working</th><td>{{ summary_data.days_working }}</td></tr>
-                <tr><th>No.of Idle Days</th><td>{{ summary_data.idle_days|floatformat:0 }}</td></tr>
-                <tr><th>Total Trips</th><td>{{ summary_data.total_trips }}</td></tr>
-                <tr><th>Trip Index</th><td>{{ summary_data.trip_index }} trips</td></tr>
-                <tr><th>Total KM</th><td>{{ summary_data.total_km }}</td></tr>
-                <tr><th>Empty KM</th><td>{{ summary_data.empty_km }}</td></tr>
-                <tr><th>Business Empty KM</th><td>{{ summary_data.business_empty_km }}</td></tr>
-                <tr><th>Revenue</th><td>{{ summary_data.revenue }}</td></tr>
-                <tr><th>Operational Expenses</th><td>{{ summary_data.operational_expenses }}</td></tr>
-                <tr><th>Maintenance cost</th><td>{{ summary_data.maintenance_cost }}</td></tr>
-                <tr><th>Insurance</th><td>{{ summary_data.insurance }}</td></tr>
-                <tr><th>Road Tax</th><td>{{ summary_data.road_tax }}</td></tr>
-                <tr><th>Permit</th><td>{{ summary_data.permit }}</td></tr>
-                <tr><th>Empty KM Cost</th><td>{{ summary_data.empty_km_cost }}</td></tr>
-                <tr><th>Business Empty KM Cost</th><td>{{ summary_data.business_empty_km_cost }}</td></tr>
-                <tr><th>Total expenses</th><td>{{ summary_data.total_expenses }}</td></tr>
-                <tr><th>Profit</th><td>{{ summary_data.profit }}</td></tr>
-                <tr><th>Profit %</th><td>{{ summary_data.profit_pct }}%</td></tr>
+                <tr><th>Month</th><td id="sum_month">{{ summary_data.month }}</td></tr>
+                <tr><th>Vehicle No</th><td id="sum_vehicle_no">{{ summary_data.vehicle_no }}</td></tr>
+                <tr><th>Vehicle Type</th><td id="sum_vehicle_type">{{ summary_data.vehicle_type }}</td></tr>
+                <tr><th>No.of Days working</th><td id="sum_days_working">{{ summary_data.days_working }}</td></tr>
+                <tr><th>No.of Idle Days</th><td id="sum_idle_days">{{ summary_data.idle_days|floatformat:0 }}</td></tr>
+                <tr><th>Total Trips</th><td id="sum_total_trips">{{ summary_data.total_trips }}</td></tr>
+                <tr><th>Trip Index</th><td id="sum_trip_index">{{ summary_data.trip_index }} trips</td></tr>
+                <tr><th>Total KM</th><td id="sum_total_km">{{ summary_data.total_km }}</td></tr>
+                <tr><th>Empty KM</th><td id="sum_empty_km">{{ summary_data.empty_km }}</td></tr>
+                <tr><th>Business Empty KM</th><td id="sum_business_empty_km">{{ summary_data.business_empty_km }}</td></tr>
+                <tr><th>Revenue</th><td id="sum_revenue">{{ summary_data.revenue }}</td></tr>
+                <tr><th>Operational Expenses</th><td id="sum_operational_expenses">{{ summary_data.operational_expenses }}</td></tr>
+                <tr><th>Maintenance cost</th><td id="sum_maintenance_cost">{{ summary_data.maintenance_cost }}</td></tr>
+                <tr><th>Insurance</th><td id="sum_insurance">{{ summary_data.insurance }}</td></tr>
+                <tr><th>Road Tax</th><td id="sum_road_tax">{{ summary_data.road_tax }}</td></tr>
+                <tr><th>Permit</th><td id="sum_permit">{{ summary_data.permit }}</td></tr>
+                <tr><th>Empty KM Cost</th><td id="sum_empty_km_cost">{{ summary_data.empty_km_cost }}</td></tr>
+                <tr><th>Business Empty KM Cost</th><td id="sum_business_empty_km_cost">{{ summary_data.business_empty_km_cost }}</td></tr>
+                <tr><th>Total expenses</th><td id="sum_total_expenses">{{ summary_data.total_expenses }}</td></tr>
+                <tr><th>Profit</th><td id="sum_profit">{{ summary_data.profit }}</td></tr>
+                <tr><th>Profit %</th><td id="sum_profit_pct">{{ summary_data.profit_pct }}%</td></tr>
             </tbody>
         </table>
       </div>
@@ -176,8 +169,45 @@
 $(document).ready(function () {
 
     $('#own_vehicle_pl_report_table').DataTable({
+        processing: true,
+        ajax: {
+            url: window.location.href,
+            type: 'GET',
+            data: function (d) {
+                // Check if current URL already has query parameters, we append ajax=1
+                d.ajax = 1;
+            },
+            dataSrc: function (json) {
+                // Update summary modal
+                if (json.summary) {
+                    $('#sum_month').text(json.summary.month);
+                    $('#sum_vehicle_no').text(json.summary.vehicle_no);
+                    $('#sum_vehicle_type').text(json.summary.vehicle_type);
+                    $('#sum_days_working').text(json.summary.days_working);
+                    $('#sum_idle_days').text(json.summary.idle_days);
+                    $('#sum_total_trips').text(json.summary.total_trips);
+                    $('#sum_trip_index').text(json.summary.trip_index + ' trips');
+                    $('#sum_total_km').text(json.summary.total_km);
+                    $('#sum_empty_km').text(json.summary.empty_km);
+                    $('#sum_business_empty_km').text(json.summary.business_empty_km);
+                    $('#sum_revenue').text(json.summary.revenue);
+                    $('#sum_operational_expenses').text(json.summary.operational_expenses);
+                    $('#sum_maintenance_cost').text(json.summary.maintenance_cost);
+                    $('#sum_insurance').text(json.summary.insurance);
+                    $('#sum_road_tax').text(json.summary.road_tax);
+                    $('#sum_permit').text(json.summary.permit);
+                    $('#sum_empty_km_cost').text(json.summary.empty_km_cost);
+                    $('#sum_business_empty_km_cost').text(json.summary.business_empty_km_cost);
+                    $('#sum_total_expenses').text(json.summary.total_expenses);
+                    $('#sum_profit').text(json.summary.profit);
+                    $('#sum_profit_pct').text(json.summary.profit_pct + '%');
+                }
+                return json.data;
+            }
+        },
         scrollX: true,
         autoWidth: false,
+        deferRender: true,
         dom: "<'row'<'col-sm-12 col-md-6'lB><'col-sm-12 col-md-6'f>>" +
              "<'row'<'col-sm-12'tr>>" +
              "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",

@@ -169,7 +169,7 @@
                     <td>{{ bill.ab_extra_km_run|floatformat:2 }}</td>
                     <td>{{ bill.ab_toll_cost|floatformat:2 }}</td>
                     <td class="font-weight-bold text-primary">{{ bill.ab_total_buy_cost|floatformat:2 }}</td>
-                    <th class="text-info">{{ bill.ab_bill_amount|floatformat:2 }}</th>
+                    <td class="font-weight-bold text-info">{{ bill.ab_bill_amount|floatformat:2 }}</td>
                     <td class="text-center">{% if bill.ab_tds_percent %}{{ bill.ab_tds_percent|floatformat:2 }}%{% else %}0.00%{% endif %}</td>
                     <td class="text-right text-danger">{{ bill.ab_tds_amount|floatformat:2 }}</td>
                     <td class="font-weight-bold text-success">{{ bill.ab_payable_amount|floatformat:2 }}</td>
