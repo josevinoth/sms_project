@@ -821,6 +821,13 @@
 
     // Intercept form submission to include inputs from paged-out rows in the DataTable
     document.getElementById("marketBillForm").addEventListener("submit", function (e) {
+        // Disable submit button to prevent double-click submissions
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Saving...';
+        }
+
         if (tripsDataTable) {
             const form = this;
             tripsDataTable.$('input').each(function () {

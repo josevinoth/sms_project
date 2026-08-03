@@ -293,7 +293,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             except Vehicle_allotmentInfo.DoesNotExist:
                 enquiry_id = None
         else:
-            enquiry_id = request.session.get('ses_enquiry_id')
+            enquiry_id = request.POST.get('enquiry_num_id') or enquiry_id or request.session.get('ses_enquiry_id')
 
         if not enquiry_id:
             messages.error(request, "Enquiry ID missing. Please try again.")
@@ -370,6 +370,11 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 )
                 allotments_to_check = Vehicle_allotmentInfo.objects.filter(va_vehiclenumber_mkt__iexact=obj.va_vehiclenumber_mkt.strip())
 
+            # Filter active checks to only allotments/enquiries created on/after 2026-08-01
+            allotments_to_check = allotments_to_check.filter(
+                Q(va_created_at__date__gte='2026-08-01') | Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
+            )
+
             if duplicate_qs.exists():
                 messages.error(
                     request,
@@ -378,43 +383,32 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
 
-            # 🚫 ACTIVE TRIP / ALLOTMENT CHECK FOR THIS VEHICLE (Global)
+            # 🚫 ACTIVE TRIP CHECK FOR THIS VEHICLE (Global - August 1, 2026 onwards)
             is_busy = False
             busy_enquiry = ""
             closed_status_ids = [2, 3, 4, 5, 7, 9, 10, 11]
-            for va_check in allotments_to_check:
-                if va_check.va_enquirynumber_id == enquiry_id:
-                    continue
 
-                # If parent enquiry status is Completed/Cancelled/Closed, skip
-                enq_status_str = str(va_check.va_enquirynumber.en_status) if (va_check.va_enquirynumber and va_check.va_enquirynumber.en_status) else ""
-                if "Completed" in enq_status_str or "Cancel" in enq_status_str or "Closed" in enq_status_str:
-                    continue
+            reg_no = obj.va_vehiclenumber.vm_registrationnumber if (vehicle_source in [1, 2] and obj.va_vehiclenumber) else (obj.va_vehiclenumber_mkt if vehicle_source == 3 else None)
 
-                trips = TripdetailInfo.objects.filter(tr_enquirynumber=va_check.va_enquirynumber_id)
-                reg_no = va_check.va_vehiclenumber.vm_registrationnumber if va_check.va_vehiclenumber else va_check.va_vehiclenumber_mkt
-                if reg_no:
-                    v_trips = trips.filter(tr_vehiclenumber__iexact=reg_no)
-                    if v_trips.exists():
-                        trips = v_trips
+            if reg_no:
+                reg_no_clean = str(reg_no).strip()
+                other_trips = TripdetailInfo.objects.filter(
+                    Q(tr_created_at__date__gte='2026-08-01') | Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01'),
+                    tr_vehiclenumber__iexact=reg_no_clean
+                ).exclude(tr_enquirynumber_id=enquiry_id).select_related('tr_enquirynumber')
 
-                if trips.exists():
-                    has_active_trip = False
-                    for trip_item in trips:
-                        op_closed = (trip_item.tr_operational_status_id in closed_status_ids) if trip_item.tr_operational_status_id else False
-                        fin_closed = (trip_item.tc_financestatus_id in closed_status_ids) if trip_item.tc_financestatus_id else False
-                        if not (op_closed or fin_closed):
-                            has_active_trip = True
-                            break
-                    if has_active_trip:
+                for trip_item in other_trips:
+                    enq_status_str = str(trip_item.tr_enquirynumber.en_status) if (trip_item.tr_enquirynumber and trip_item.tr_enquirynumber.en_status) else ""
+                    if "Completed" in enq_status_str or "Cancel" in enq_status_str or "Closed" in enq_status_str:
+                        continue
+
+                    op_closed = (trip_item.tr_operational_status_id in closed_status_ids) if trip_item.tr_operational_status_id else False
+                    fin_closed = (trip_item.tc_financestatus_id in closed_status_ids) if trip_item.tc_financestatus_id else False
+                    if not (op_closed or fin_closed):
                         is_busy = True
-                        busy_enquiry = va_check.va_enquirynumber.en_enquirynumber if va_check.va_enquirynumber else str(va_check.va_enquirynumber_id)
+                        busy_enquiry = trip_item.tr_enquirynumber.en_enquirynumber if trip_item.tr_enquirynumber else str(trip_item.tr_enquirynumber_id)
                         break
-                else:
-                    is_busy = True
-                    busy_enquiry = va_check.va_enquirynumber.en_enquirynumber if va_check.va_enquirynumber else str(va_check.va_enquirynumber_id)
-                    break
-            
+
             if is_busy:
                 messages.error(
                     request,
@@ -503,43 +497,37 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             elif vehicle_source == 3 and obj.va_vehiclenumber_mkt:
                 allotments_to_check = Vehicle_allotmentInfo.objects.filter(va_vehiclenumber_mkt__iexact=obj.va_vehiclenumber_mkt.strip())
 
+            # Filter active checks to only allotments/enquiries created on/after 2026-08-01
+            allotments_to_check = allotments_to_check.filter(
+                Q(va_created_at__date__gte='2026-08-01') | Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
+            )
+
+            # 🚫 ACTIVE TRIP CHECK FOR THIS VEHICLE (Global - August 1, 2026 onwards)
             is_busy = False
             busy_enquiry = ""
-            current_enq_id = obj.va_enquirynumber_id
             closed_status_ids = [2, 3, 4, 5, 7, 9, 10, 11]
-            for va_check in allotments_to_check:
-                if va_check.va_enquirynumber_id == current_enq_id:
-                    continue
 
-                # If parent enquiry status is Completed/Cancelled/Closed, skip
-                enq_status_str = str(va_check.va_enquirynumber.en_status) if (va_check.va_enquirynumber and va_check.va_enquirynumber.en_status) else ""
-                if "Completed" in enq_status_str or "Cancel" in enq_status_str or "Closed" in enq_status_str:
-                    continue
+            reg_no = obj.va_vehiclenumber.vm_registrationnumber if (vehicle_source in [1, 2] and obj.va_vehiclenumber) else (obj.va_vehiclenumber_mkt if vehicle_source == 3 else None)
 
-                trips = TripdetailInfo.objects.filter(tr_enquirynumber=va_check.va_enquirynumber_id)
-                reg_no = va_check.va_vehiclenumber.vm_registrationnumber if va_check.va_vehiclenumber else va_check.va_vehiclenumber_mkt
-                if reg_no:
-                    v_trips = trips.filter(tr_vehiclenumber__iexact=reg_no)
-                    if v_trips.exists():
-                        trips = v_trips
+            if reg_no:
+                reg_no_clean = str(reg_no).strip()
+                other_trips = TripdetailInfo.objects.filter(
+                    Q(tr_created_at__date__gte='2026-08-01') | Q(tr_enquirynumber__en_created_at__date__gte='2026-08-01'),
+                    tr_vehiclenumber__iexact=reg_no_clean
+                ).exclude(tr_enquirynumber_id=obj.va_enquirynumber_id).select_related('tr_enquirynumber')
 
-                if trips.exists():
-                    has_active_trip = False
-                    for trip_item in trips:
-                        op_closed = (trip_item.tr_operational_status_id in closed_status_ids) if trip_item.tr_operational_status_id else False
-                        fin_closed = (trip_item.tc_financestatus_id in closed_status_ids) if trip_item.tc_financestatus_id else False
-                        if not (op_closed or fin_closed):
-                            has_active_trip = True
-                            break
-                    if has_active_trip:
+                for trip_item in other_trips:
+                    enq_status_str = str(trip_item.tr_enquirynumber.en_status) if (trip_item.tr_enquirynumber and trip_item.tr_enquirynumber.en_status) else ""
+                    if "Completed" in enq_status_str or "Cancel" in enq_status_str or "Closed" in enq_status_str:
+                        continue
+
+                    op_closed = (trip_item.tr_operational_status_id in closed_status_ids) if trip_item.tr_operational_status_id else False
+                    fin_closed = (trip_item.tc_financestatus_id in closed_status_ids) if trip_item.tc_financestatus_id else False
+                    if not (op_closed or fin_closed):
                         is_busy = True
-                        busy_enquiry = va_check.va_enquirynumber.en_enquirynumber if va_check.va_enquirynumber else str(va_check.va_enquirynumber_id)
+                        busy_enquiry = trip_item.tr_enquirynumber.en_enquirynumber if trip_item.tr_enquirynumber else str(trip_item.tr_enquirynumber_id)
                         break
-                else:
-                    is_busy = True
-                    busy_enquiry = va_check.va_enquirynumber.en_enquirynumber if va_check.va_enquirynumber else str(va_check.va_enquirynumber_id)
-                    break
-            
+
             if is_busy:
                 messages.error(
                     request,
@@ -932,8 +920,15 @@ def load_vehicle_number(request):
         Q(tr_operational_status_id__in=closed_status_ids) | Q(tc_financestatus_id__in=closed_status_ids)
     ).values_list('tr_enquirynumber_id', flat=True)
 
-    # 2) Busy allotments are those whose enquiry is NOT in free_enquiry_ids
-    busy_allotments_qs = Vehicle_allotmentInfo.objects.exclude(
+    # Cutoff date: only allotments created on/after 2026-08-01 are considered for busy status
+    from datetime import datetime
+    from django.utils.timezone import make_aware
+    cutoff_date = make_aware(datetime(2026, 8, 1))
+
+    # 2) Busy allotments are those created on/after cutoff date whose enquiry is NOT in free_enquiry_ids
+    busy_allotments_qs = Vehicle_allotmentInfo.objects.filter(
+        va_created_at__gte=cutoff_date
+    ).exclude(
         va_enquirynumber_id__in=free_enquiry_ids
     ).exclude(va_vehiclenumber__isnull=True)
 

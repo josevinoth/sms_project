@@ -805,14 +805,13 @@ nav > div a.nav-item.nav-link:focus
 /*Disable anchor*/
 .disable_a_href{
     pointer-events: none;
-    background:#CCFFCC !important;
-    color:#000000 !important;
+    background: var(--input-disabled-bg, #f1f5f9) !important;
+    color: var(--input-disabled-text, #475569) !important;
 }
 /*Disable anchor for select options*/
 .select-disabled-style {
-    background: #CCFFCC !important;
-    color: #000000 !important;
-
+    background: var(--input-disabled-bg, #f1f5f9) !important;
+    color: var(--input-disabled-text, #475569) !important;
 }
 
 /*Disable anchor*/

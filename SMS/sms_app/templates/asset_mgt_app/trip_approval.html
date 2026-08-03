@@ -1,155 +1,253 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% block content %}
 {% load currency_format %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>Trip Approval</h3>
+
+<style>
+    .trip-approval-modern .table-container-modern {
+        padding: 1.5rem 1.25rem !important;
+    }
+    .trip-approval-modern .modern-table thead tr:last-child th {
+        font-size: 0.82rem !important;
+        padding: 0.85rem 0.5rem !important;
+        letter-spacing: 0.3px !important;
+    }
+    .trip-approval-modern .modern-table tbody td {
+        font-size: 0.85rem !important;
+        padding: 0.75rem 0.5rem !important;
+        vertical-align: middle !important;
+    }
+    .doc-item-row {
+        padding: 2px 0;
+        border-bottom: 1px dashed #e2e8f0;
+    }
+    .doc-item-row:last-child {
+        border-bottom: none;
+    }
+</style>
+
+<div class="container-fluid py-3 trip-approval-modern">
+
+    <!-- ══ Page Header ══ -->
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 text-white" style="font-size:1.3rem; font-weight:700; letter-spacing:1px;">
+            <i class="fas fa-user-check mr-2"></i> Trip Approval
+        </h3>
+        <div>
+            <a href="{% url 'home_page' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.4rem 1rem; font-size:0.85rem; text-decoration:none;">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
         </div>
-        <div class="col-5"></div>
+    </div>
+
+    <!-- ══ Table Container ══ -->
+    <div class="table-container-modern p-3">
+        <table id="trip_approval_table" class="table modern-table w-100">
+            <thead>
+                <tr>
+                    <th>Trip No</th>
+                    <th>Customer</th>
+                    <th>From Location</th>
+                    <th>To Location</th>
+                    <th>Consignment No</th>
+                    <th>Ewaybill No</th>
+                    <th>Ewaybill Issue</th>
+                    <th>Ewaybill Validity</th>
+                    <th>Ewaybill Attachment</th>
+                    <th>Invoice No</th>
+                    <th>Invoice Attachment</th>
+                    <th class="text-center">Approval Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trip in trip_list %}
+                {% with consignments=trip.tr_consignmentnumber.cg_consignmentnumber.all %}
+                <tr>
+                    <td class="font-weight-bold" style="color: var(--accent-blue);">{{ trip.tr_tripnumber }}</td>
+                    <td>{{ trip.tr_enquirynumber.en_customername.cu_name }}</td>
+                    <td>{{ trip.tr_enquirynumber.en_fromlocaion.place_name }}</td>
+                    <td>{{ trip.tr_enquirynumber.en_tolocation.place_name }}</td>
+                    <td>{{ trip.tr_consignmentnumber.co_consignmentnumber|default:"-" }}</td>
+                    
+                    <!-- E-Waybill No -->
+                    <td>
+                        {% for c in consignments %}
+                        <div class="doc-item-row">{{ c.cg_ebillno|default:"-" }}</div>
+                        {% empty %}-{% endfor %}
+                    </td>
+
+                    <!-- Issue Date -->
+                    <td>
+                        {% for c in consignments %}
+                        <div class="doc-item-row">{{ c.cg_dateofissue|date:"d-m-Y"|default:"-" }}</div>
+                        {% empty %}-{% endfor %}
+                    </td>
+
+                    <!-- Validity Date -->
+                    <td>
+                        {% for c in consignments %}
+                        <div class="doc-item-row">
+                            {{ c.cg_dateofvalidity|date:"d-m-Y"|default:"-" }}
+                            {% if c.cg_dateofvalidity and c.cg_dateofvalidity < today %}
+                            <span class="badge badge-danger ml-1" style="font-size:0.65rem; padding:2px 4px;" title="E-Waybill Expired!">⚠️ EXPIRED</span>
+                            {% endif %}
+                        </div>
+                        {% empty %}-{% endfor %}
+                    </td>
+
+                    <!-- E-Waybill Attachments -->
+                    <td>
+                        {% for c in consignments %}
+                        <div class="doc-item-row">
+                            {% if c.cg_ewaybill_att %}
+                            <a href="{{ c.cg_ewaybill_att.url }}" target="_blank" class="btn btn-cancel btn-sm" style="border-radius:5px; padding:2px 8px; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px; text-decoration:none;">
+                                <i class="fas fa-download"></i> Download {% if consignments|length > 1 %}#{{ forloop.counter }}{% endif %}
+                            </a>
+                            {% else %}
+                            <span class="badge badge-secondary" style="font-size:0.72rem; padding:2px 6px; border-radius:5px;">No File</span>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <span class="badge badge-secondary" style="font-size:0.72rem; padding:2px 6px; border-radius:5px;">No File</span>
+                        {% endfor %}
+                    </td>
+
+                    <!-- Invoice No -->
+                    <td>
+                        {% for c in consignments %}
+                        <div class="doc-item-row">{{ c.cg_consignerinvoice|default:"-" }}</div>
+                        {% empty %}-{% endfor %}
+                    </td>
+
+                    <!-- Invoice Attachments -->
+                    <td>
+                        {% for c in consignments %}
+                        <div class="doc-item-row">
+                            {% if c.cg_invoice_att %}
+                            <a href="{{ c.cg_invoice_att.url }}" target="_blank" class="btn btn-cancel btn-sm" style="border-radius:5px; padding:2px 8px; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px; text-decoration:none;">
+                                <i class="fas fa-download"></i> Download {% if consignments|length > 1 %}#{{ forloop.counter }}{% endif %}
+                            </a>
+                            {% else %}
+                            <span class="badge badge-secondary" style="font-size:0.72rem; padding:2px 6px; border-radius:5px;">No File</span>
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        <span class="badge badge-secondary" style="font-size:0.72rem; padding:2px 6px; border-radius:5px;">No File</span>
+                        {% endfor %}
+                    </td>
+
+                    <!-- Single Approval Form -->
+                    <td class="text-center">
+                        {% with first_cons=consignments.first %}
+                        <form method="post" action="{% url 'update_trip_approval' trip.id %}"
+                            class="approval-form d-flex align-items-center justify-content-center" style="gap:5px;"
+                            data-c-type="{{ first_cons.cg_consignmenttype.consignment_type|default:'Normal' }}"
+                            data-trip-no="{{ trip.tr_tripnumber }}"
+                            data-customer="{{ trip.tr_enquirynumber.en_customername.cu_name }}">
+                            {% csrf_token %}
+                            <input type="hidden" name="ta_approval_status" value="1">
+
+                            {% if not consignments %}
+                            <button type="button" class="btn btn-sm btn-secondary" disabled style="border-radius:6px; padding: 5px 12px; font-weight:600; font-size:0.8rem;"
+                                title="No consignment details found">Approve</button>
+                            <small class="text-danger d-block ml-1" style="font-size: 0.68rem; line-height: 1; font-weight:600;">Missing<br>Attachment</small>
+                            {% else %}
+                            <button type="submit" class="btn btn-sm btn-success font-weight-bold" style="border-radius:6px; padding: 5px 14px; font-size:0.82rem; display:inline-flex; align-items:center; gap:5px;">
+                                <i class="fas fa-check-circle"></i> Approve
+                            </button>
+                            {% endif %}
+                        </form>
+                        {% endwith %}
+                    </td>
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
-<div class="row mb-2">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
+<!-- ══ Document Verification Checkpoint Modal ══ -->
+<div class="modal fade" id="documentVerificationModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width:440px;">
+        <div class="modal-content" style="border-radius:12px; overflow:hidden;">
+            <div class="modal-header text-white" style="background-color:#003366; padding:0.75rem 1.25rem;">
+                <h5 class="modal-title font-weight-bold" style="font-size:1.02rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-shield-alt"></i> Confirm Approval
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" style="opacity:0.9;">&times;</button>
+            </div>
+            <div class="modal-body p-3">
+                <p class="mb-2 text-dark font-weight-bold" style="font-size:0.9rem;">
+                    Approve trip <span id="modal_trip_no" class="text-primary"></span> (<span id="modal_customer"></span>)?
+                </p>
+
+                <div class="custom-control custom-checkbox p-2 pl-4 mt-2" style="background:#f8fafc; border-radius:8px; border:1px solid #cbd5e1;">
+                    <input type="checkbox" class="custom-control-input" id="chk_verify_document">
+                    <label class="custom-control-label font-weight-bold text-dark" for="chk_verify_document" style="font-size:0.88rem; cursor:pointer; user-select:none;">
+                        I have verified all documents
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between p-2 px-3" style="background:#f8fafc;">
+                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal" style="border-radius:6px; padding:5px 14px;">Cancel</button>
+                <button type="button" id="btn_confirm_approve" class="btn btn-success btn-sm font-weight-bold" disabled style="border-radius:6px; padding:5px 16px;">
+                    <i class="fas fa-check-circle mr-1"></i> Confirm & Approve
+                </button>
+            </div>
+        </div>
     </div>
 </div>
-<hr>
-<div class="table-responsive">
-<table id="trip_approval_table" class="table table-bordered table-sm">
-    <thead class="thead-dark">
-        <tr>
-            <th>Trip No</th>
-            <th>Customer</th>
-            <th>From Location</th>
-            <th>To Location</th>
-            <th>Consignment No</th>
-            <th>Ewaybill No</th>
-            <th>Ewaybill Issue</th>
-            <th>Ewaybill Validity</th>
-            <th>Ewaybill Attachment</th>
-            <th>Invoice No</th>
-            <th>Invoice Attachment</th>
-            <th>Approval</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for trip in trip_list %}
-        {% with consignments=trip.tr_consignmentnumber.cg_consignmentnumber.all %}
-        {% for consignment in consignments %}
-        <tr>
-            <td>{{ trip.tr_tripnumber }}</td>
-            <td>{{ trip.tr_enquirynumber.en_customername.cu_name }}</td>
-            <td>{{ trip.tr_enquirynumber.en_fromlocaion.place_name }}</td>
-            <td>{{ trip.tr_enquirynumber.en_tolocation.place_name }}</td>
-            <td>{{ trip.tr_consignmentnumber.co_consignmentnumber|default:"-" }}</td>
-            <td>{{ consignment.cg_ebillno|default:"-" }}</td>
-            <td>{{ consignment.cg_dateofissue|date:"d-m-Y"|default:"-" }}</td>
-            <td>{{ consignment.cg_dateofvalidity|date:"d-m-Y"|default:"-" }}</td>
-            <td>
-                {% if consignment.cg_ewaybill_att %}
-                <a href="{{ consignment.cg_ewaybill_att.url }}" target="_blank">Download</a>
-                {% else %}
-                No File
-                {% endif %}
-            </td>
-            <td>{{ consignment.cg_consignerinvoice|default:"-" }}</td>
-            <td>
-                {% if consignment.cg_invoice_att %}
-                <a href="{{ consignment.cg_invoice_att.url }}" target="_blank">Download</a>
-                {% else %}
-                No File
-                {% endif %}
-            </td>
-            <td class="text-center">
-                <form method="post" action="{% url 'update_trip_approval' trip.id %}"
-                    class="d-flex align-items-center gap-2">
-                    {% csrf_token %}
-                    <select name="ta_approval_status" class="form-control form-control-sm" style="width: 150px;"
-                        required>
-                        {% for status in status_list %}
-                        <option value="{{ status.id }}"
-                                {% if trip.tr_approval %}
-                                {% if trip.tr_approval.ta_approval_status.id == status.id %}
-                                selected
-                                {% endif %}
-                                {% else %}
-                                {% if status.id == 3 %}
-                                selected
-                                {% endif %}
-                                {% endif %}>
-                            {{ status }}
-                        </option>
-                        {% endfor %}
-                    </select>
 
-                    {% if not consignment.cg_ewaybill_att and not consignment.cg_invoice_att and not consignment.cg_otl_att and consignment.cg_consignmenttype.consignment_type == 'Normal' %}
-                    <button type="button" class="btn btn-sm btn-secondary ml-2" disabled
-                        title="Please upload at least one attachment (Ewaybill/Invoice/OTL) before approving">Update</button>
-                    <small class="text-danger d-block mt-1"
-                        style="font-size: 0.7rem; line-height: 1;">Missing<br>Attachment</small>
-                    {% else %}
-                    <button type="submit" class="btn btn-sm btn-primary ml-2">Update</button>
-                    {% endif %}
-                </form>
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td>{{ trip.tr_tripnumber }}</td>
-            <td>{{ trip.tr_enquirynumber.en_customername.cu_name }}</td>
-            <td>{{ trip.tr_enquirynumber.en_fromlocaion.place_name }}</td>
-            <td>{{ trip.tr_enquirynumber.en_tolocation.place_name }}</td>
-            <td>{{ trip.tr_consignmentnumber.co_consignmentnumber|default:"-" }}</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>No File</td>
-            <td>-</td>
-            <td>No File</td>
-            <td class="text-center">
-                <form method="post" action="{% url 'update_trip_approval' trip.id %}"
-                    class="d-flex align-items-center gap-2">
-                    {% csrf_token %}
-                    <select name="ta_approval_status" class="form-control form-control-sm" style="width: 150px;"
-                        required>
-                        {% for status in status_list %}
-                        <option value="{{ status.id }}"
-                                {% if trip.tr_approval and trip.tr_approval.ta_approval_status.id == status.id %}
-                                selected
-                                {% elif not trip.tr_approval and status.id == 3 %}
-                                selected
-                                {% endif %}>
-                            {{ status }}
-                        </option>
-                        {% endfor %}
-                    </select>
-
-                    <button type="button" class="btn btn-sm btn-secondary ml-2" disabled
-                        title="No consignment details found. Please add consignment data with an attachment first">Update</button>
-                    <small class="text-danger d-block mt-1"
-                        style="font-size: 0.7rem; line-height: 1;">Missing<br>Attachment</small>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-        {% endwith %}
-        {% endfor %}
-    </tbody>
-</table>
-</div>
 <script>
+    let activeApprovalForm = null;
+
     $(document).ready(function () {
         $('#trip_approval_table').DataTable({
             order: [0, 'desc'],
-            dom: 'lBfrtip',
+            dom: "<'row mb-3 align-items-center'<'col-sm-12 col-md-8 d-flex align-items-center flex-wrap'lB><'col-sm-12 col-md-4 text-right'f>>" +
+                 "<'row'<'col-sm-12'tr>>" +
+                 "<'row mt-3'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
             buttons: [
                 'copy', 'csv', 'excel', 'print'
             ]
+        });
+
+        // Intercept approval submission
+        $(document).on('submit', '.approval-form', function (e) {
+            const form = $(this);
+            const cType = form.data('c-type') || 'Normal';
+
+            // For Normal consignment type, intercept and open verification modal
+            if (cType === 'Normal') {
+                e.preventDefault();
+                activeApprovalForm = this;
+
+                // Populate modal text
+                $('#modal_trip_no').text(form.data('trip-no') || '-');
+                $('#modal_customer').text(form.data('customer') || '-');
+
+                // Reset verification checkbox
+                $('#chk_verify_document').prop('checked', false);
+                $('#btn_confirm_approve').prop('disabled', true);
+
+                // Show modal
+                $('#documentVerificationModal').modal('show');
+            }
+        });
+
+        // Toggle confirm button based on checkbox
+        $('#chk_verify_document').on('change', function () {
+            $('#btn_confirm_approve').prop('disabled', !this.checked);
+        });
+
+        // Submit form when Confirm & Approve is clicked
+        $('#btn_confirm_approve').on('click', function () {
+            if (activeApprovalForm) {
+                const formToSubmit = activeApprovalForm;
+                activeApprovalForm = null;
+                $('#documentVerificationModal').modal('hide');
+                formToSubmit.submit();
+            }
         });
     });
 </script>

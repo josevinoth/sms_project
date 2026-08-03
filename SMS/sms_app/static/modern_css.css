@@ -29,6 +29,11 @@
     --header-text: #ffffff;
     --shadow-main: rgba(0, 0, 0, 0.05);
 
+    /* Disabled inputs styling */
+    --input-disabled-bg: #f1f5f9;
+    --input-disabled-text: #475569;
+    --input-disabled-border: #cbd5e1;
+
     /* ── Universal Button Tokens (same for all buttons everywhere) ── */
     --btn-padding-y: 0.65rem;
     --btn-padding-x: 1.4rem;
@@ -73,6 +78,11 @@
     --accent-blue: #3b82f6;
     --btn-primary: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     --btn-primary-hover: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+
+    /* Disabled inputs styling */
+    --input-disabled-bg: #1e293b;
+    --input-disabled-text: #94a3b8;
+    --input-disabled-border: #334155;
 }
 
 /* Global Overrides for Legacy Bootstrap Classes in Dark Mode */
@@ -313,10 +323,10 @@ textarea.form-control-modern:disabled,
 textarea.form-control-modern[readonly],
 .form-control-modern.disable_a_href,
 select.form-control-modern.disable_a_href {
-    background-color: #EBEBE4 !important;
-    color: var(--text-main) !important;
+    background-color: var(--input-disabled-bg) !important;
+    color: var(--input-disabled-text) !important;
     cursor: not-allowed !important;
-    border: 1.5px dashed #94a3b8 !important;
+    border: 1.5px dashed var(--input-disabled-border) !important;
     opacity: 1 !important;
 }
 
@@ -822,17 +832,25 @@ a.btn-modern + a.btn-modern {
 
 /* Modern Search Box */
 .dataTables_filter {
-    color: #ffffff !important;
+    color: var(--text-main) !important;
     font-weight: 700 !important;
+}
+
+[data-theme="dark"] .dataTables_filter {
+    color: #ffffff !important;
 }
 
 .dataTables_filter input {
     background: var(--input-bg) !important;
     border: 1.5px solid var(--input-border) !important;
     border-radius: 12px !important;
-    padding: 0.6rem 1.2rem !important;
-    width: 280px !important;
+    padding: 0.5rem 1rem !important;
+    width: 240px !important;
     transition: all 0.3s !important;
+    color: var(--text-main) !important;
+}
+
+[data-theme="dark"] .dataTables_filter input {
     color: #ffffff !important;
 }
 
@@ -957,11 +975,11 @@ select.disable_a_href,
 textarea.disable_a_href,
 .disable_a_href {
     pointer-events: none !important;
-    background-color: #EBEBE4 !important;
+    background-color: var(--input-disabled-bg) !important;
     opacity: 1 !important;
-    color: var(--text-main) !important;
+    color: var(--input-disabled-text) !important;
     font-weight: 700 !important;
-    border: 1.5px dashed #94a3b8 !important;
+    border: 1.5px dashed var(--input-disabled-border) !important;
 }
 
 /* Select2 High Contrast */
@@ -1025,14 +1043,14 @@ textarea.disable_a_href,
 
 /* Select2 Disabled State (Frozen Color) */
 .select2-container--default.select2-container--disabled .select2-selection--single {
-    background-color: #EBEBE4 !important;
-    border: 1.5px dashed #94a3b8 !important;
+    background-color: var(--input-disabled-bg) !important;
+    border: 1.5px dashed var(--input-disabled-border) !important;
     cursor: not-allowed !important;
     opacity: 1 !important;
 }
 
 .select2-container--default.select2-container--disabled .select2-selection--single .select2-selection__rendered {
-    color: var(--text-main) !important;
+    color: var(--input-disabled-text) !important;
 }
 
 

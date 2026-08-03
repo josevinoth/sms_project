@@ -378,13 +378,13 @@
                     <td class="text-center">
                         {% if data.consignments %}
                             {% for c in data.consignments %}
-                            <button class="btn btn-sm btn-info mb-1 d-block mx-auto text-white" style="border-radius: 8px; padding: 6px 12px; background-color: #0ea5e9; border: none; font-weight: bold; font-size: 0.8rem;" onclick="openConsignmentPdf('{{ c.id }}')">
-                                <i class="far fa-file-pdf"></i> View
+                            <button class="btn btn-sm btn-info mb-1 d-block mx-auto text-white" style="border-radius: 8px; padding: 6px 12px; background-color: #0ea5e9; border: none; font-weight: bold; font-size: 0.8rem;" onclick="openConsignmentPdf('{{ c.id }}')" title="View Consignment">
+                                <i class="far fa-eye"></i>
                             </button>
                             {% endfor %}
                         {% else %}
-                            <button class="btn btn-sm btn-secondary mb-1 d-block mx-auto" style="border-radius: 8px; padding: 6px 12px; opacity: 0.5; font-weight: bold; font-size: 0.8rem;" disabled>
-                                <i class="far fa-file-pdf"></i> View
+                            <button class="btn btn-sm btn-secondary mb-1 d-block mx-auto" style="border-radius: 8px; padding: 6px 12px; opacity: 0.5; font-weight: bold; font-size: 0.8rem;" disabled title="View Consignment">
+                                <i class="far fa-eye"></i>
                             </button>
                         {% endif %}
                     </td>
@@ -412,8 +412,8 @@
                                 data-module="sms_app" 
                                 data-model="EnquirynoteInfo" 
                                 data-id="{{ data.enquiry.id }}" 
-                                title="View History">
-                            <i class="fas fa-history"></i> History
+                                title="History">
+                            <i class="fas fa-history"></i>
                         </button>
                     </td>
                     {% endif %}

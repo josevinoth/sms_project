@@ -150,6 +150,21 @@
 			width: 100%;
 		}
 	}
+
+	/* Opaque modal styling for light/dark mode */
+	.modal-content {
+		background: #ffffff !important;
+		color: var(--text-main) !important;
+	}
+
+	[data-theme="dark"] .modal-content {
+		background: #1e293b !important;
+	}
+
+	.modal-content .modal-title,
+	.modal-content .close {
+		color: var(--text-main) !important;
+	}
 </style>
 <div class="row consignment-goods-modern">
 	<div class="col">

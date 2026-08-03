@@ -107,33 +107,6 @@
                         </div>
 
                         <div class="form-group-modern">
-                            <label class="form-label-modern">Touch Point 1</label>
-                            {% render_field form.en_touchpoint id="en_touchpoint" class="form-control form-control-modern" %}
-                        </div>
-
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Touch Point 2</label>
-                            {% render_field form.en_touchpoint2 id="en_touchpoint2" class="form-control form-control-modern" %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Column 4: Destination & Status -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-map-marked-alt"></i> Destination & Status</div>
-
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Touch Point 3</label>
-                            {% render_field form.en_touchpoint3 id="en_touchpoint3" class="form-control form-control-modern" %}
-                        </div>
-
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Touch Point 4</label>
-                            {% render_field form.en_touchpoint4 id="en_touchpoint4" class="form-control form-control-modern" %}
-                        </div>
-
-                        <div class="form-group-modern">
                             <label class="form-label-modern">requested Pick-Up Date & Time <span style="color:#e74c3c;font-weight:700;">*</span></label>
                             {% render_field form.en_pickupdatetime id="en_pickupdatetime" type="Datetime-local" class="form-control form-control-modern" required="required" %}
                             <small id="pickup_datetime_error" style="color:#e74c3c;display:none;">Please select requested Pick-Up Date & Time.</small>
@@ -142,6 +115,57 @@
                         <div class="form-group-modern">
                             <label class="form-label-modern">Status</label>
                             {% render_field form.en_status class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 4: Touch Points -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-map-marked-alt"></i> Destination & Touch Points</div>
+
+                        <div class="form-group-modern" id="touchpoint_1_group" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label-modern mb-0">Touch Point 1</label>
+                                <button type="button" class="btn btn-link text-danger p-0 remove-tp-btn" data-tp="1" style="font-size: 0.8rem; text-decoration: none;" title="Remove Touch Point"><i class="fas fa-times-circle"></i></button>
+                            </div>
+                            {% render_field form.en_touchpoint id="en_touchpoint" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern" id="touchpoint_2_group" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label-modern mb-0">Touch Point 2</label>
+                                <button type="button" class="btn btn-link text-danger p-0 remove-tp-btn" data-tp="2" style="font-size: 0.8rem; text-decoration: none;" title="Remove Touch Point"><i class="fas fa-times-circle"></i></button>
+                            </div>
+                            {% render_field form.en_touchpoint2 id="en_touchpoint2" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern" id="touchpoint_3_group" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label-modern mb-0">Touch Point 3</label>
+                                <button type="button" class="btn btn-link text-danger p-0 remove-tp-btn" data-tp="3" style="font-size: 0.8rem; text-decoration: none;" title="Remove Touch Point"><i class="fas fa-times-circle"></i></button>
+                            </div>
+                            {% render_field form.en_touchpoint3 id="en_touchpoint3" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern" id="touchpoint_4_group" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label-modern mb-0">Touch Point 4</label>
+                                <button type="button" class="btn btn-link text-danger p-0 remove-tp-btn" data-tp="4" style="font-size: 0.8rem; text-decoration: none;" title="Remove Touch Point"><i class="fas fa-times-circle"></i></button>
+                            </div>
+                            {% render_field form.en_touchpoint4 id="en_touchpoint4" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="mt-2 mb-3" id="add_tp_btn_container">
+                            <button type="button" id="btn_add_touchpoint" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" style="border-radius: 8px; font-weight: 600; font-size: 0.82rem; padding: 5px 12px; transition: all 0.2s;">
+                                <i class="fas fa-plus-circle"></i> Add Touch Point
+                            </button>
+                        </div>
+
+                        <div id="tp_empty_placeholder" class="text-center py-4 px-3" style="border: 2px dashed rgba(148, 163, 184, 0.35); border-radius: 12px; background: rgba(248, 250, 252, 0.6); color: #64748b; margin-top: 10px;">
+                            <i class="fas fa-map-marker-alt mb-2" style="font-size: 1.8rem; color: #94a3b8;"></i>
+                            <p class="mb-1 font-weight-bold" style="font-size: 0.9rem; color: #475569;">No Touch Points Added</p>
+                            <small style="font-size: 0.8rem; color: #64748b;">Click <strong>"+ Add Touch Point"</strong> above if this route requires intermediate stops or waypoints.</small>
                         </div>
                     </div>
                 </div>
@@ -353,5 +377,68 @@
     $("#en_touchpoint3").select2(select2Config);
     $("#en_touchpoint4").select2(select2Config);
     $("#en_tolocation").select2(select2Config);
+
+    // Dynamic Touch Points management
+    function checkPlaceholderVisibility() {
+        var anyVisible = $('#touchpoint_1_group').is(':visible') ||
+                         $('#touchpoint_2_group').is(':visible') ||
+                         $('#touchpoint_3_group').is(':visible') ||
+                         $('#touchpoint_4_group').is(':visible');
+        if (anyVisible) {
+            $('#tp_empty_placeholder').hide();
+        } else {
+            $('#tp_empty_placeholder').show();
+        }
+    }
+
+    function updateAddTpBtn() {
+        if ($('#touchpoint_1_group').is(':visible') &&
+            $('#touchpoint_2_group').is(':visible') &&
+            $('#touchpoint_3_group').is(':visible') &&
+            $('#touchpoint_4_group').is(':visible')) {
+            $('#add_tp_btn_container').hide();
+        } else {
+            $('#add_tp_btn_container').show();
+        }
+        checkPlaceholderVisibility();
+    }
+
+    function initTouchPoints() {
+        var tp1Val = $('#en_touchpoint').val();
+        var tp2Val = $('#en_touchpoint2').val();
+        var tp3Val = $('#en_touchpoint3').val();
+        var tp4Val = $('#en_touchpoint4').val();
+
+        if (tp1Val) $('#touchpoint_1_group').show();
+        if (tp2Val) $('#touchpoint_2_group').show();
+        if (tp3Val) $('#touchpoint_3_group').show();
+        if (tp4Val) $('#touchpoint_4_group').show();
+
+        updateAddTpBtn();
+    }
+
+    initTouchPoints();
+
+    $('#btn_add_touchpoint').on('click', function () {
+        if (!$('#touchpoint_1_group').is(':visible')) {
+            $('#touchpoint_1_group').slideDown(200);
+        } else if (!$('#touchpoint_2_group').is(':visible')) {
+            $('#touchpoint_2_group').slideDown(200);
+        } else if (!$('#touchpoint_3_group').is(':visible')) {
+            $('#touchpoint_3_group').slideDown(200);
+        } else if (!$('#touchpoint_4_group').is(':visible')) {
+            $('#touchpoint_4_group').slideDown(200);
+        }
+        setTimeout(updateAddTpBtn, 220);
+    });
+
+    $(document).on('click', '.remove-tp-btn', function () {
+        var tpNum = $(this).data('tp');
+        var fieldId = tpNum === 1 ? '#en_touchpoint' : '#en_touchpoint' + tpNum;
+        $(fieldId).val(null).trigger('change');
+        $('#touchpoint_' + tpNum + '_group').slideUp(200, function () {
+            updateAddTpBtn();
+        });
+    });
 </script>
 {% endblock extra_js %}
