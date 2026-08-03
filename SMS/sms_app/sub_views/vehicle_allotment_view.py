@@ -293,7 +293,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             except Vehicle_allotmentInfo.DoesNotExist:
                 enquiry_id = None
         else:
-            enquiry_id = request.session.get('ses_enquiry_id')
+            enquiry_id = request.POST.get('enquiry_num_id') or enquiry_id or request.session.get('ses_enquiry_id')
 
         if not enquiry_id:
             messages.error(request, "Enquiry ID missing. Please try again.")
