@@ -220,6 +220,7 @@
                         <!--        <a href="{% url 'ouinspectreport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Outward Inspection Report</a>-->
                         <!--        <a href="{% url 'materialstock_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Material Stock</a>-->
                         <!--        <a href="{% url 'packingjobs_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Packing Jobs</a>-->
+                        <a href="{% url 'pms_petty_cash_insert' %}"><i class="fa fa-money-bill-alt" aria-hidden="true"></i> Petty Cash </a>
                     </div>
                     <hr class="hr_style">
                     <button id="sales" type="button" class="collapsible "><i class="fa fa-chart-line"></i> Sales Management System (SMS)</button>
@@ -275,6 +276,7 @@
                         <a href="{% url 'driver_list' %}"><i class="fa fa-user-cog" aria-hidden="true"></i> Driver Master </a>
                         <a href="{% url 'driver_settlement_list' %}"><i class="fa fa-user-shield" aria-hidden="true"></i> Driver settlement </a>
                         <a href="{% url 'driver_salary_list' %}"><i class="fa fa-money-bill-wave" aria-hidden="true"></i> Driver Salary </a>
+                        <a href="{% url 'petty_cash_insert' %}"><i class="fa fa-money-bill-alt" aria-hidden="true"></i> Petty Cash </a>
 
                         <!-- Reports -->
                         <div class="nav-category-header">Reports</div>
@@ -350,6 +352,7 @@
                             <a href="{% url 'currencytype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Currency Type</a>
                             <a href="{% url 'stocktype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Type</a>
                         </div>
+                        <a href="{% url 'wms_petty_cash_insert' %}"><i class="fa fa-money-bill-alt" aria-hidden="true"></i> Petty Cash </a>
                     </div>
                     <hr class="hr_style">
                     <button id="supports" type="button" class="collapsible d-flex align-items-center"><i class="fas fa-phone-alt p-2"></i> Supports<a href="{% url 'open_requirements_list' %}"><span class="badge bg-danger p-2 blink">{{ open_requirements }}</span></a>
