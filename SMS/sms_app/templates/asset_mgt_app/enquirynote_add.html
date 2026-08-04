@@ -60,12 +60,17 @@
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">Customer Department</label>
-                            {% render_field form.en_customerdepartment id="en_customerdepartment" class="form-control form-control-modern" %}
+                            {% render_field form.en_customerdepartment id="en_customerdepartment" class="form-control form-control-modern" onchange="fetchCustomerDetails()" %}
                         </div>
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">Requestor</label>
-                            {% render_field form.en_requestor id="en_requestor" class="form-control form-control-modern" %}
+                            <select name="en_requestor" id="en_requestor" class="form-control form-control-modern">
+                                <option value="">--Select--</option>
+                                {% if form.instance.en_requestor %}
+                                    <option value="{{ form.instance.en_requestor }}" selected>{{ form.instance.en_requestor }}</option>
+                                {% endif %}
+                            </select>
                         </div>
 
                         <div class="form-group-modern">
@@ -319,10 +324,15 @@
         } else {
             $('#vehicledetails').removeClass('disable_a_href');
         }
+
+        if ($("#en_customername").val()) {
+            fetchCustomerDetails("{{ form.instance.en_requestor|default:'' }}");
+        }
     });
 
-    function fetchCustomerDetails() {
+    function fetchCustomerDetails(savedRequestor = null) {
         var customerId = $("#en_customername").val();  // Get selected customer ID
+        var departmentId = $("#en_customerdepartment").val(); // Get selected department ID
         if (customerId == 210) {
             $('#en_customer_new_name').removeClass('disable_a_href');
         } else {
@@ -333,15 +343,34 @@
             $.ajax({
                 url: "{% url 'get_customer_details' %}",  // Django URL to fetch customer details
                 type: "GET",
-                data: { customer_id: customerId },
+                data: { 
+                    customer_id: customerId,
+                    department_id: departmentId 
+                },
                 success: function (response) {
                     $("#en_contactno").val(response.customer_contact);
                     $("#en_email").val(response.customer_email);
+
+                    // Update Requestor Dropdown
+                    var requestorSelect = $("#en_requestor");
+                    var currentValue = savedRequestor || requestorSelect.val() || "{{ form.instance.en_requestor|default:'' }}";
+                    requestorSelect.empty();
+                    requestorSelect.append('<option value="">--Select--</option>');
+                    if (response.users && response.users.length > 0) {
+                        response.users.forEach(function(user) {
+                            var selected = (user === currentValue) ? 'selected' : '';
+                            requestorSelect.append('<option value="' + user + '" ' + selected + '>' + user + '</option>');
+                        });
+                    } else if (currentValue) {
+                        requestorSelect.append('<option value="' + currentValue + '" selected>' + currentValue + '</option>');
+                    }
                 },
                 error: function (xhr, status, error) {
                     console.log("Error fetching customer details:", error);
                 }
             });
+        } else {
+            $("#en_requestor").empty().append('<option value="">--Select--</option>');
         }
     }
 </script>

@@ -647,13 +647,26 @@ def enquirynote_delete(request, enquirynote_id):
 @login_required(login_url='login_page')
 def get_customer_details(request):
     customer_id = request.GET.get('customer_id')
+    department_id = request.GET.get('department_id')
     try:
         customer = CustomerInfo.objects.get(id=customer_id)
+        
+        from ..sub_models.emailmaster_mod import Emailmaster
+        qs = Emailmaster.objects.filter(em_Customer_name_id=customer_id)
+        if department_id:
+            dept_qs = qs.filter(Q(em_customerdepartment_id=department_id) | Q(em_customerdepartment__isnull=True))
+            if dept_qs.exists():
+                qs = dept_qs
+
+        users = list(qs.exclude(em_user__isnull=True).exclude(em_user='')
+                     .values_list('em_user', flat=True).distinct())
+
         data = {
             'customer_contact': customer.cu_contactno,
             'customer_email': customer.cu_email,
             'customer_businessmodel_id': customer.cu_businessmodel.id if customer.cu_businessmodel else None,
             'customer_businessmodel_name': str(customer.cu_businessmodel) if customer.cu_businessmodel else "",
+            'users': users,
         }
         return JsonResponse(data)
     except CustomerInfo.DoesNotExist:
