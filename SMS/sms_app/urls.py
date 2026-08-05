@@ -223,6 +223,7 @@ urlpatterns = [
     path('consignmentdetail_list_ajax/', views.consignmentdetail_list_ajax, name='consignmentdetail_list_ajax'),  # AJAX data for consignmentdetail
     path('consignmentdetail_insert', views.consignmentdetail_add, name='consignmentdetail_insert'),  # Add consignmentdetail
     path('consignmentdetail_update/<int:consignmentdetail_id>/', views.consignmentdetail_add, name='consignmentdetail_update'),  # Update consignmentdetail
+    path('get_trip_info/<int:trip_id>/', views.get_trip_info, name='get_trip_info'),
     path('consignmentdetail_nav/<int:consignmentdetail_id>/', views.consignmentdetail_nav, name='consignmentdetail_nav'),  # Update consignmentdetail
     path('consignment_note_connect/<int:enquirynote_id>/', views.consignment_note_connect, name='consignment_note_connect'),  # Connect consignmentdetail
     path('consignmentdetail_delete/<int:consignmentdetail_id>/', views.consignmentdetail_delete, name='consignmentdetail_delete'),  # Delete consignmentdetail

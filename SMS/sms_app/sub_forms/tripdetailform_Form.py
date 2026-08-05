@@ -30,7 +30,8 @@ class TripdetailaddForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(TripdetailaddForm, self).__init__(*args, **kwargs)
-        self.fields['tr_consignmentnumber'].empty_label = "--Select--"
+        self.fields['tr_consignmentnumber'].required = False
+        self.fields['tr_consignmentnumber'].empty_label = "--None (Created After Dock-Out)--"
         self.fields['tr_vehiclesource'].empty_label = "--Select--"
         self.fields['tr_vehicletype_placed'].empty_label = "--Select--"
         self.fields['tr_vehicletype'].empty_label = "--Select--"
@@ -40,3 +41,34 @@ class TripdetailaddForm(forms.ModelForm):
         self.fields['tc_financestatus'].empty_label = "--Select--"
         self.fields['tr_category'].empty_label = "--Select--"
         self.fields['tr_high_value'].empty_label = "--Select--"
+        self.fields['tr_high_value'].initial = 2
+        self.fields['tr_high_value'].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        fields_in_order = [
+            ('tr_departeddate_pickup', 'Loading Vehicle Reported Date & Time'),
+            ('tr_loading_time', 'Loading Dock-In Time'),
+            ('tr_dock_out_time', 'Loading Dock-Out Time'),
+            ('tr_departeddate', 'Loading Vehicle Started Date & Time'),
+            ('tr_reporteddate', 'Unloading Vehicle Reported Date & Time'),
+            ('tr_departeddate_delivery', 'Unloading Dock-In Time'),
+            ('tr_unloading_time', 'Unloading Dock-Out Time'),
+            ('tr_reporteddate_pickup', 'Unloading Vehicle Started Date & Time')
+        ]
+
+        for i in range(1, len(fields_in_order)):
+            curr_field, curr_name = fields_in_order[i]
+            curr_val = cleaned_data.get(curr_field)
+            if not curr_val:
+                continue
+
+            for j in range(i - 1, -1, -1):
+                prev_field, prev_name = fields_in_order[j]
+                prev_val = cleaned_data.get(prev_field)
+                if prev_val and curr_val < prev_val:
+                    self.add_error(curr_field, f'{curr_name} cannot be earlier than {prev_name}.')
+                    break
+
+        return cleaned_data

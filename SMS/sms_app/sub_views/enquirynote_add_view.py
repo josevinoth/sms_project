@@ -336,6 +336,13 @@ def enquirynote_list(request):
     )
     vehicle_allotted_dict = {v['va_enquirynumber']: v['total_allotted'] for v in vehicle_allotted}
 
+    docked_out_enquiry_ids = set(
+        TripdetailInfo.objects.filter(
+            tr_enquirynumber_id__in=enquiry_ids,
+            tr_dock_out_time__isnull=False
+        ).values_list('tr_enquirynumber_id', flat=True)
+    )
+
     # Build final data
     enquiry_data = []
     for enquiry in page_obj:
@@ -362,6 +369,7 @@ def enquirynote_list(request):
             'vehicle_allotted': total_allotted,
             'limit_reached': limit_reached,
             'consignment_limit_reached': consignment_limit_reached,
+            'has_docked_out_trip': (enquiry.id in docked_out_enquiry_ids),
         })
 
     # -----------------------------

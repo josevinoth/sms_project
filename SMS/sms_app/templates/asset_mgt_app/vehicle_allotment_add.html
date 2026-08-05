@@ -476,6 +476,8 @@ function setDateFieldValue(selector, value) {
 			$('#vehicle_allotment_id,#vehicle_allotment_submit_id')
 				.removeClass('disable_a_href')
 				.prop('disabled', false);
+			// Auto load requested vehicles for this enquiry
+			vehicle_requested();
 		}
 		else if (window.location.href.includes("vehicle_allotment_update")) {
 			// Enable fields

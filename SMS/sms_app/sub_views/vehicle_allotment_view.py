@@ -351,6 +351,36 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                     referer = request.META.get('HTTP_REFERER')
                     return redirect(referer if referer else request.path)
 
+            # 🚫 VEHICLE TYPE & QUANTITY VALIDATION AGAINST ENQUIRY NOTE
+            requested_entries = Enquirynotevehicle.objects.filter(env_enquirynumber_id=enquiry_id)
+            if requested_entries.exists():
+                requested_vt_ids = list(requested_entries.values_list('env_vehicletype_id', flat=True))
+                if obj.va_vehicletype_id not in requested_vt_ids:
+                    requested_vt_names = ", ".join(list(requested_entries.values_list('env_vehicletype__vt_vehicletype', flat=True)))
+                    messages.error(
+                        request,
+                        f"🚫 Vehicle type '{obj.va_vehicletype}' was not requested in this Enquiry Note. Requested type(s): {requested_vt_names}."
+                    )
+                    referer = request.META.get('HTTP_REFERER')
+                    return redirect(referer if referer else request.path)
+
+                total_requested_for_type = requested_entries.filter(
+                    env_vehicletype_id=obj.va_vehicletype_id
+                ).aggregate(total=Sum('env_quantity'))['total'] or 0
+
+                already_allotted_count = Vehicle_allotmentInfo.objects.filter(
+                    va_enquirynumber_id=enquiry_id,
+                    va_vehicletype_id=obj.va_vehicletype_id
+                ).count()
+
+                if already_allotted_count >= total_requested_for_type:
+                    messages.error(
+                        request,
+                        f"🚫 Cannot allot vehicle: Total requested quantity of '{obj.va_vehicletype}' ({total_requested_for_type}) has already been allotted ({already_allotted_count} allotted)."
+                    )
+                    referer = request.META.get('HTTP_REFERER')
+                    return redirect(referer if referer else request.path)
+
             duplicate_qs = Vehicle_allotmentInfo.objects.filter(
                 va_enquirynumber_id=enquiry_id
             )
@@ -925,11 +955,16 @@ def load_vehicle_number(request):
     from django.utils.timezone import make_aware
     cutoff_date = make_aware(datetime(2026, 8, 1))
 
-    # 2) Busy allotments are those created on/after cutoff date whose enquiry is NOT in free_enquiry_ids
+    # 2) Busy allotments are active allotments created on/after cutoff date whose enquiry is NOT in free_enquiry_ids
+    # Exclude cancelled (4), replaced (2), completed (5) allotments and dead/cancelled enquiries (5, 8)
     busy_allotments_qs = Vehicle_allotmentInfo.objects.filter(
         va_created_at__gte=cutoff_date
     ).exclude(
         va_enquirynumber_id__in=free_enquiry_ids
+    ).exclude(
+        va_status_id__in=[2, 4, 5]
+    ).exclude(
+        va_enquirynumber__en_status_id__in=[5, 8]
     ).exclude(va_vehiclenumber__isnull=True)
 
     enquiry_veh_ids = set()

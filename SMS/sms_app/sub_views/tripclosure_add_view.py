@@ -579,14 +579,11 @@ def get_fastag_toll_cost_ajax(request):
         if not trip:
             raise TripdetailInfo.DoesNotExist
         vehicle_num = trip.tr_vehiclenumber
-        from_date = trip.tr_departeddate
-        to_date = trip.tr_reporteddate
+        from_date = trip.tr_departeddate or trip.tr_departeddate_pickup or trip.tr_created_at
+        to_date = trip.tr_reporteddate or trip.tr_departeddate_delivery or trip.tr_updated_at
 
         if not from_date or not to_date:
-            if trip.tc_financestatus_id in [10, 11] or trip.tc_cancellation_check or (trip.tc_cancellation and trip.tc_cancellation > 0):
-                return JsonResponse({"success": True, "total_amount": 0.0, "txn_list": []})
-            result["error"] = "Trip departed date or reported date is missing."
-            return JsonResponse(result)
+            return JsonResponse({"success": True, "total_amount": 0.0, "txn_list": []})
 
         total_amount, txn_list = calculate_toll(vehicle_num, from_date, to_date)
 
@@ -639,7 +636,7 @@ def calculate_toll(vehicle_num, from_date, to_date):
             "https://corptag.hdfc.bank.in/walletmware/api/wallet/txn/tollenquiry",
             json=payload,
             headers=headers,
-            timeout=20
+            timeout=3
         )
 
         print(f"🌐 FASTag API Response Status: {response.status_code}")
