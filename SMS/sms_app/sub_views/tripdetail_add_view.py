@@ -1543,6 +1543,11 @@ def get_auto_recipients(trip):
             (Q(em_emailtype_id=tid) | Q(em_emailtype__email_type__iexact='For alert'))
         )
 
+        if enquiry.en_requestor:
+            req_qs = email_qs.filter(em_user__iexact=enquiry.en_requestor)
+            if req_qs.exists():
+                email_qs = req_qs
+
         if department:
             dept_qs = email_qs.filter(em_customerdepartment_id=department.id)
             if dept_qs.exists():
@@ -1939,6 +1944,11 @@ def get_trip_email_recipients(request):
         tid = email_type_obj.id if email_type_obj else 2
 
         email_qs = Emailmaster.objects.filter(em_Customer_name=customer, em_emailtype_id=tid)
+
+        if enquiry.en_requestor:
+            req_qs = email_qs.filter(em_user__iexact=enquiry.en_requestor)
+            if req_qs.exists():
+                email_qs = req_qs
 
         if department:
             dept_qs = email_qs.filter(em_customerdepartment=department)

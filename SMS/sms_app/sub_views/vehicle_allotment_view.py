@@ -60,7 +60,7 @@ def is_license_expired(lic_expiry_val):
 
 
 # ===== HELPER: Get recipients from Emailmaster =====
-def get_va_auto_recipients(customer_id, department_id):
+def get_va_auto_recipients(customer_id, department_id, requestor=None):
     """
     Fetch email recipients from Emailmaster for vehicle allotment alerts.
     Uses Email Type 2 (For alert), matching by Customer + Department.
@@ -70,20 +70,24 @@ def get_va_auto_recipients(customer_id, department_id):
         return None
 
     try:
-        # Try matching Customer + Department first
-        email_entry = Emailmaster.objects.filter(
+        # Base query for this customer and alert type
+        email_qs = Emailmaster.objects.filter(
             Q(em_emailtype_id=2) | Q(em_emailtype__email_type__iexact='For alert'),
-            em_Customer_name_id=customer_id,
-            em_customerdepartment_id=department_id
-        ).first()
+            em_Customer_name_id=customer_id
+        )
+
+        # Filter by Requestor if provided and matches exist
+        if requestor:
+            req_qs = email_qs.filter(em_user__iexact=requestor)
+            if req_qs.exists():
+                email_qs = req_qs
+
+        # Try matching Customer + Department first
+        email_entry = email_qs.filter(em_customerdepartment_id=department_id).first()
 
         # Fallback to Customer-only match
         if not email_entry:
-            email_entry = Emailmaster.objects.filter(
-                Q(em_emailtype_id=2) | Q(em_emailtype__email_type__iexact='For alert'),
-                em_Customer_name_id=customer_id,
-                em_customerdepartment__isnull=True
-            ).first()
+            email_entry = email_qs.filter(em_customerdepartment__isnull=True).first()
 
         if email_entry:
             to_emails = [e.strip() for e in (email_entry.em_to_names or '').split(',') if e.strip()]
@@ -461,7 +465,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                     customer_id = enquiry.en_customername_id if enquiry.en_customername else None
                     department_id = enquiry.en_customerdepartment_id if enquiry.en_customerdepartment else None
 
-                    recipients = get_va_auto_recipients(customer_id, department_id)
+                    recipients = get_va_auto_recipients(customer_id, department_id, requestor=enquiry.en_requestor)
 
                     if recipients:
                         success, result = va_send_allotment_email(obj, enquiry, recipients)
@@ -471,7 +475,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                             messages.success(request,
                                              f"Vehicle Allotment Saved. Alert sent to: {', '.join(recipients)}")
                         else:
-                            messages.success(request, "Vehicle Allotment Saved. Email failed to send.")
+                            messages.error(request, f"Vehicle Allotment Saved. Email failed to send: {result}")
                     else:
                         messages.warning(request,
                                          "Vehicle Allotment Saved. No email ID found for this customer in the email master.")
@@ -587,7 +591,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                     customer_id = enquiry.en_customername_id if enquiry.en_customername else None
                     department_id = enquiry.en_customerdepartment_id if enquiry.en_customerdepartment else None
 
-                    recipients = get_va_auto_recipients(customer_id, department_id)
+                    recipients = get_va_auto_recipients(customer_id, department_id, requestor=enquiry.en_requestor)
 
                     if recipients:
                         success, result = va_send_allotment_email(obj, enquiry, recipients)
@@ -597,7 +601,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                             messages.success(request,
                                              f"Vehicle Allotment Updated. Alert sent to: {', '.join(recipients)}")
                         else:
-                            messages.success(request, "Vehicle Allotment Updated. Email failed to send.")
+                            messages.error(request, f"Vehicle Allotment Updated. Email failed to send: {result}")
                     else:
                         messages.warning(request,
                                          "Vehicle Allotment Updated. No email ID found for this customer in the email master.")

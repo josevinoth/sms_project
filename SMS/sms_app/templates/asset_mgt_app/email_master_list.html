@@ -40,6 +40,7 @@
                 <th>Customer</th>
                 <th>Department</th>
                 <th>Email Type</th>
+                <th>User</th>
                 <th>To Emails</th>
                 <th>CC Emails</th>
                 <th>Updated By</th>
@@ -55,6 +56,7 @@
                 <td>{{ item.em_Customer_name }}</td>
                 <td>{{ item.em_customerdepartment }}</td>
                 <td>{{ item.em_emailtype }}</td>
+                <td>{{ item.em_user|default:"" }}</td>
                 <td>{{ item.em_to_names|default:"" }}</td>
                 <td>{{ item.em_cc_names|default:"" }}</td>
                 <td>{{ item.em_updated_by|default:"" }}</td>
