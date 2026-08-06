@@ -153,9 +153,11 @@
                         <div class="form-group-modern">
                             <label class="form-label-modern">Vehicle Number</label>
                             <select id="co_vehicelnumber" name="co_vehicelnumber"
-                                    onfocus="vehicle_allotted()"
                                     class="form-control form-control-modern disable_a_href">
                                 <option value="">--Select--</option>
+                                {% if selected_vehicle_num %}
+                                <option value="{{ selected_vehicle_num }}" selected>{{ selected_vehicle_num }}</option>
+                                {% endif %}
                             </select>
                         </div>
 
@@ -468,16 +470,14 @@
             .then(data => {
                 if (data.success) {
                     if (data.enquiry_id) {
-                        $('#co_enquirynumber').val(data.enquiry_id).trigger('change');
+                        $('#co_enquirynumber').val(data.enquiry_id);
                     }
                     if (data.vehicle_num) {
                         var vSelect = $('#co_vehicelnumber');
                         if (vSelect.find("option[value='" + data.vehicle_num + "']").length == 0) {
                             vSelect.append(new Option(data.vehicle_num, data.vehicle_num, true, true));
-                        } else {
-                            vSelect.val(data.vehicle_num);
                         }
-                        vSelect.trigger('change');
+                        vSelect.val(data.vehicle_num).trigger('change');
                     }
                     if (data.vehicle_type) {
                         $('#co_vehicletype').val(data.vehicle_type);
@@ -497,6 +497,8 @@
         var initialTrip = $('#co_tripnumber').val();
         if (initialTrip) {
             onTripSelect(initialTrip);
+        } else {
+            vehicle_allotted();
         }
     });
 </script>

@@ -143,6 +143,14 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             if linked_trip:
                 selected_trip_id = linked_trip.id
 
+        selected_vehicle_num = None
+        if selected_trip_id:
+            trip_obj = TripdetailInfo.objects.filter(id=selected_trip_id).first()
+            if trip_obj and trip_obj.tr_vehiclenumber:
+                selected_vehicle_num = trip_obj.tr_vehiclenumber
+                if consignmentdetail_id == 0:
+                    con_det_form.initial['co_vehicelnumber'] = selected_vehicle_num
+
         eligible_trips = TripdetailInfo.objects.filter(
             tr_enquirynumber=enquiry_num_id,
             tr_category_id=1
@@ -170,6 +178,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             'existing_cancellation_charge': existing_cancellation_charge,
             'eligible_trips': eligible_trips,
             'selected_trip_id': selected_trip_id,
+            'selected_vehicle_num': selected_vehicle_num,
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 

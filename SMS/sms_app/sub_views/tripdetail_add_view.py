@@ -149,23 +149,21 @@ def tripdetail_add(request, tripdetail_id=0):
                 except Vehicle_allotmentInfo.DoesNotExist:
                     pass
 
-            # Fetch existing vehicle starting KM & reported date/time ONLY from Empty / Business Empty trip for THIS enquiry
+            # Fetch latest reported KM for this vehicle from its last completed trip
             search_vehicle_num = selected_vehicle_number
-            last_trip = None
-            if search_vehicle_num and enquiry_num_id:
-                last_trip = TripdetailInfo.objects.filter(
-                    tr_enquirynumber_id=enquiry_num_id,
-                    tr_vehiclenumber=search_vehicle_num,
-                    tr_category_id__in=[2, 3]  # Empty or Business Empty trip for this vehicle under THIS enquiry
-                ).filter(Q(tr_reporteddate__isnull=False) | Q(tr_reportedkm__isnull=False)).order_by('-tr_reporteddate', '-id').first()
+            last_trip_km = None
+            if search_vehicle_num:
+                last_trip_km = TripdetailInfo.objects.filter(
+                    tr_vehiclenumber=search_vehicle_num
+                ).filter(
+                    Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False)
+                ).order_by('-id').first()
 
-            if last_trip:
-                if last_trip.tr_reportedkm:
-                    initial_data['tr_reportedkm_pickup'] = last_trip.tr_reportedkm
-                    initial_data['tr_departedkm'] = last_trip.tr_reportedkm
-                if last_trip.tr_reporteddate:
-                    local_dt = timezone.localtime(last_trip.tr_reporteddate)
-                    initial_data['tr_departeddate_pickup'] = local_dt.strftime('%Y-%m-%dT%H:%M')
+            if last_trip_km:
+                latest_km = last_trip_km.tr_reportedkm or last_trip_km.tr_reportedkm_delivery
+                if latest_km:
+                    initial_data['tr_reportedkm_pickup'] = latest_km
+                    initial_data['tr_departedkm'] = latest_km
 
             trip_det_form = TripdetailaddForm(initial=initial_data)
             if vehicle_allotment_id and va.va_vehiclesource_id != 3:
