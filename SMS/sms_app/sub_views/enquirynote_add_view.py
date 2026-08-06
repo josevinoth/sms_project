@@ -336,12 +336,15 @@ def enquirynote_list(request):
     )
     vehicle_allotted_dict = {v['va_enquirynumber']: v['total_allotted'] for v in vehicle_allotted}
 
-    docked_out_enquiry_ids = set(
+    docked_out_trips = (
         TripdetailInfo.objects.filter(
             tr_enquirynumber_id__in=enquiry_ids,
             tr_dock_out_time__isnull=False
-        ).values_list('tr_enquirynumber_id', flat=True)
+        )
+        .values('tr_enquirynumber_id')
+        .annotate(total_docked_out=Count('id'))
     )
+    dock_out_count_dict = {d['tr_enquirynumber_id']: d['total_docked_out'] for d in docked_out_trips}
 
     # Build final data
     enquiry_data = []
@@ -360,6 +363,10 @@ def enquirynote_list(request):
         else:
             consignment_limit_reached = True
 
+        dock_out_count = dock_out_count_dict.get(enquiry.id, 0)
+        # Show "+ Add New" for Consignment ONLY if there are completed Dock-Out trips that don't have a consignment yet
+        can_add_consignment = (dock_out_count > consignment_count) and not consignment_limit_reached
+
         enquiry_data.append({
             'enquiry': enquiry,
             'consignments': consignments,
@@ -369,7 +376,7 @@ def enquirynote_list(request):
             'vehicle_allotted': total_allotted,
             'limit_reached': limit_reached,
             'consignment_limit_reached': consignment_limit_reached,
-            'has_docked_out_trip': (enquiry.id in docked_out_enquiry_ids),
+            'has_docked_out_trip': can_add_consignment,
         })
 
     # -----------------------------

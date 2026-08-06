@@ -149,21 +149,15 @@ def tripdetail_add(request, tripdetail_id=0):
                 except Vehicle_allotmentInfo.DoesNotExist:
                     pass
 
-            # Fetch existing vehicle starting KM & reported date/time from Empty trip or last trip
+            # Fetch existing vehicle starting KM & reported date/time ONLY from Empty / Business Empty trip for THIS enquiry
             search_vehicle_num = selected_vehicle_number
             last_trip = None
-            if search_vehicle_num:
-                if enquiry_num_id:
-                    last_trip = TripdetailInfo.objects.filter(
-                        tr_enquirynumber_id=enquiry_num_id,
-                        tr_vehiclenumber=search_vehicle_num,
-                        tr_category_id__in=[2, 3]  # Empty or Business Empty trip for this vehicle
-                    ).filter(Q(tr_reporteddate__isnull=False) | Q(tr_reportedkm__isnull=False)).order_by('-tr_reporteddate', '-id').first()
-
-                if not last_trip:
-                    last_trip = TripdetailInfo.objects.filter(
-                        tr_vehiclenumber=search_vehicle_num
-                    ).filter(Q(tr_reporteddate__isnull=False) | Q(tr_reportedkm__isnull=False)).order_by('-tr_reporteddate', '-id').first()
+            if search_vehicle_num and enquiry_num_id:
+                last_trip = TripdetailInfo.objects.filter(
+                    tr_enquirynumber_id=enquiry_num_id,
+                    tr_vehiclenumber=search_vehicle_num,
+                    tr_category_id__in=[2, 3]  # Empty or Business Empty trip for this vehicle under THIS enquiry
+                ).filter(Q(tr_reporteddate__isnull=False) | Q(tr_reportedkm__isnull=False)).order_by('-tr_reporteddate', '-id').first()
 
             if last_trip:
                 if last_trip.tr_reportedkm:
