@@ -47,6 +47,14 @@ class TripdetailaddForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
+        # Check trip category (2: Empty, 3: Business Empty)
+        category_obj = cleaned_data.get('tr_category')
+        is_empty_trip = False
+        if category_obj:
+            cat_name = str(category_obj).strip().lower()
+            if 'empty' in cat_name or category_obj.id in [2, 3]:
+                is_empty_trip = True
+
         fields_in_order = [
             ('tr_departeddate_pickup', 'Loading Vehicle Reported Date & Time'),
             ('tr_loading_time', 'Loading Dock-In Time'),
@@ -66,6 +74,11 @@ class TripdetailaddForm(forms.ModelForm):
 
             for j in range(i - 1, -1, -1):
                 prev_field, prev_name = fields_in_order[j]
+                
+                # Skip checking against 'tr_departeddate_pickup' for Empty / Business Empty trips
+                if is_empty_trip and prev_field == 'tr_departeddate_pickup':
+                    continue
+
                 prev_val = cleaned_data.get(prev_field)
                 if prev_val and curr_val < prev_val:
                     self.add_error(curr_field, f'{curr_name} cannot be earlier than {prev_name}.')
