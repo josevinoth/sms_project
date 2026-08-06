@@ -562,7 +562,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                         busy_enquiry = trip_item.tr_enquirynumber.en_enquirynumber if trip_item.tr_enquirynumber else str(trip_item.tr_enquirynumber_id)
                         break
 
-            if is_busy:
+            # For UPDATE mode of an already assigned vehicle allotment, allow updating commercial fields (Special Buy, Standard Buy, Sell, Remarks)
+            if is_busy and vehicle_allotment_id == 0:
                 messages.error(
                     request,
                     f"This vehicle is currently allotted to another active trip/enquiry ({busy_enquiry}) and the trip has not been closed."

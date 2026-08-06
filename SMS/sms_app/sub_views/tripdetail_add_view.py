@@ -222,6 +222,15 @@ def tripdetail_add(request, tripdetail_id=0):
                 va_status_id__in=[1, 2, 3]
             ).select_related('va_vehiclenumber', 'va_vehiclesource', 'va_vehicletype', 'va_vehicletype_placed')
 
+            # Find vehicles that have a cancelled trip for this enquiry so they cannot create another trip
+            cancelled_vehicles = set(
+                TripdetailInfo.objects.filter(
+                    tr_enquirynumber=enquiry_num_id
+                ).filter(
+                    Q(tc_cancellation_check=True) | Q(tc_financestatus_id__in=[10, 11]) | Q(tr_operational_status_id__in=[10, 11])
+                ).values_list('tr_vehiclenumber', flat=True)
+            )
+
             # Find vehicles that ALREADY have an active/existing Business trip for this enquiry
             # Category 1 = Business trip
             assigned_business_vehicles = set(
@@ -239,8 +248,10 @@ def tripdetail_add(request, tripdetail_id=0):
             allotted_vehicle_map = {}
             for va_item in allotted_vas:
                 reg_num = va_item.va_vehiclenumber_mkt if va_item.va_vehiclesource_id == 3 else (va_item.va_vehiclenumber.vm_registrationnumber if va_item.va_vehiclenumber else '')
-                # Exclude vehicle if it already has a Business trip assigned for this enquiry, unless it is the pre-selected vehicle
+                # Exclude vehicle if it was cancelled or already has an active Business trip
                 if reg_num and reg_num not in allotted_vehicle_map:
+                    if reg_num in cancelled_vehicles and reg_num != selected_vehicle_number:
+                        continue
                     if reg_num in assigned_business_vehicles and reg_num != selected_vehicle_number:
                         continue
 
