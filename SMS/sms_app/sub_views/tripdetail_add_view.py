@@ -230,11 +230,28 @@ def tripdetail_add(request, tripdetail_id=0):
                 va_status_id__in=[1, 2, 3]
             ).select_related('va_vehiclenumber', 'va_vehiclesource', 'va_vehicletype', 'va_vehicletype_placed')
 
+            # Find vehicles that ALREADY have an active/existing Business trip for this enquiry
+            # Category 1 = Business trip
+            assigned_business_vehicles = set(
+                TripdetailInfo.objects.filter(
+                    tr_enquirynumber=enquiry_num_id,
+                    tr_category_id=1
+                ).exclude(
+                    tc_cancellation_check=True
+                ).exclude(
+                    tc_financestatus_id__in=[10, 11]
+                ).values_list('tr_vehiclenumber', flat=True)
+            )
+
             allotted_vehicle_list = []
             allotted_vehicle_map = {}
             for va_item in allotted_vas:
                 reg_num = va_item.va_vehiclenumber_mkt if va_item.va_vehiclesource_id == 3 else (va_item.va_vehiclenumber.vm_registrationnumber if va_item.va_vehiclenumber else '')
+                # Exclude vehicle if it already has a Business trip assigned for this enquiry, unless it is the pre-selected vehicle
                 if reg_num and reg_num not in allotted_vehicle_map:
+                    if reg_num in assigned_business_vehicles and reg_num != selected_vehicle_number:
+                        continue
+
                     item_info = {
                         'reg_number': reg_num,
                         'is_mkt': va_item.va_vehiclesource_id == 3,
@@ -315,7 +332,6 @@ def tripdetail_add(request, tripdetail_id=0):
 
                         if needs_save:
                             tripdetail.save()
-                            from django.utils import timezone
                             en_user = request.user if (request.user and request.user.is_authenticated) else None
                             EnquirynoteInfo.objects.filter(id=tripdetail.tr_enquirynumber_id).update(
                                 en_updatedon=timezone.now(),
@@ -611,7 +627,6 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip.td_pod = data
 
                 trip.save()
-                from django.utils import timezone
                 en_user = request.user if (request.user and request.user.is_authenticated) else None
                 EnquirynoteInfo.objects.filter(id=trip.tr_enquirynumber_id).update(
                     en_updatedon=timezone.now(),
@@ -823,7 +838,6 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip.td_pod = data
 
                 trip.save()
-                from django.utils import timezone
                 en_user = request.user if (request.user and request.user.is_authenticated) else None
                 EnquirynoteInfo.objects.filter(id=trip.tr_enquirynumber_id).update(
                     en_updatedon=timezone.now(),
