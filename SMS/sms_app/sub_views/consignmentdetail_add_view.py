@@ -152,8 +152,9 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                     con_det_form.initial['co_vehicelnumber'] = selected_vehicle_num
 
         eligible_trips = TripdetailInfo.objects.filter(
-            tr_enquirynumber=enquiry_num_id,
-            tr_category_id=1
+            tr_enquirynumber=enquiry_num_id
+        ).filter(
+            Q(tr_category_id=1) | Q(tr_operational_status_id=10) | Q(tc_financestatus_id=10)
         ).filter(
             Q(tr_consignmentnumber_id=consignmentdetail_id) |
             Q(tr_consignmentnumber__isnull=True)
@@ -289,7 +290,21 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                     consignment_detail.co_vehicletype = vehicle_type
                     consignment_detail.save()
 
-                    # --- NEW LOGIC: Handle Cancellation without Trip ---
+                    # Link selected Trip to this consignment and inherit vehicle number (Works for Edit mode too)
+                    posted_trip_id = request.POST.get('co_tripnumber')
+                    if posted_trip_id:
+                        try:
+                            t_id = int(posted_trip_id)
+                            trip_obj = TripdetailInfo.objects.filter(id=t_id).first()
+                            if trip_obj:
+                                trip_obj.tr_consignmentnumber = consignment_detail
+                                trip_obj.save()
+
+                                if not consignment_detail.co_vehicelnumber and trip_obj.tr_vehiclenumber:
+                                    consignment_detail.co_vehicelnumber = trip_obj.tr_vehiclenumber
+                                    consignment_detail.save(update_fields=['co_vehicelnumber'])
+                        except (ValueError, TypeError):
+                            pass
                     status_id = int(request.POST.get('co_status') or 0)
                     if status_id in [9, 10]:
                         cancellation_charge = float(request.POST.get('consignment_cancellation_charge', '0.0'))

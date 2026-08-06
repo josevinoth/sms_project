@@ -338,8 +338,11 @@ def enquirynote_list(request):
 
     docked_out_trips = (
         TripdetailInfo.objects.filter(
-            tr_enquirynumber_id__in=enquiry_ids,
-            tr_dock_out_time__isnull=False
+            tr_enquirynumber_id__in=enquiry_ids
+        ).filter(
+            Q(tr_dock_out_time__isnull=False) |
+            Q(tr_operational_status_id=10) |
+            Q(tc_financestatus_id=10)
         )
         .values('tr_enquirynumber_id')
         .annotate(total_docked_out=Count('id'))
@@ -364,8 +367,8 @@ def enquirynote_list(request):
             consignment_limit_reached = True
 
         dock_out_count = dock_out_count_dict.get(enquiry.id, 0)
-        # Show "+ Add New" for Consignment ONLY if there are completed Dock-Out trips that don't have a consignment yet
-        can_add_consignment = (dock_out_count > consignment_count) and not consignment_limit_reached
+        # Show "+ Add New" for Consignment if there are completed Dock-Out or Cancelled-Billable trips without CNote
+        can_add_consignment = (dock_out_count > consignment_count)
 
         enquiry_data.append({
             'enquiry': enquiry,
