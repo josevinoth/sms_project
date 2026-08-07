@@ -169,7 +169,7 @@
                         </div>
 						<div class="form-group-modern mb-2 empty-field">
 							<label class="form-label-modern small mb-1">Vehicle Reported Date & Time</label>
-							{% render_field trip_det_form.tr_departeddate_pickup id="tr_departeddate_pickup" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+							{% render_field trip_det_form.tr_departeddate_pickup id="tr_departeddate_pickup" type="datetime-local" max="2099-12-31T23:59" class="form-control form-control-modern form-control-sm" %}
 						</div>
                         <div class="form-group-modern mb-2 empty-field">
                             <label class="form-label-modern small mb-1">Vehicle Reported KM</label>
@@ -177,18 +177,18 @@
                         </div>
 						<div class="form-group-modern mb-2 empty-field">
 							<label class="form-label-modern small mb-1">Dock-In Time</label>
-							{% render_field trip_det_form.tr_loading_time id="tr_loading_time" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+							{% render_field trip_det_form.tr_loading_time id="tr_loading_time" type="datetime-local" max="2099-12-31T23:59" class="form-control form-control-modern form-control-sm" %}
 						</div>
 						<div class="form-group-modern mb-2 empty-field">
 							<label class="form-label-modern small mb-1">Dock-Out Time</label>
-							{% render_field trip_det_form.tr_dock_out_time id="tr_dock_out_time" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+							{% render_field trip_det_form.tr_dock_out_time id="tr_dock_out_time" type="datetime-local" max="2099-12-31T23:59" class="form-control form-control-modern form-control-sm" %}
 						</div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Started Date & Time</label>
                             {% if not trip_instance.id or has_consignment_goods or trip_instance.tr_category_id == 2 or trip_instance.tr_category_id == 3 or 'empty' in trip_instance.tr_category.category|lower %}
-                                {% render_field trip_det_form.tr_departeddate id="tr_departeddate" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+                                {% render_field trip_det_form.tr_departeddate id="tr_departeddate" type="datetime-local" max="2099-12-31T23:59" class="form-control form-control-modern form-control-sm" %}
                             {% else %}
-                                {% render_field trip_det_form.tr_departeddate id="tr_departeddate" type="datetime-local" class="form-control form-control-modern form-control-sm" disabled="disabled" readonly="readonly" %}
+                                {% render_field trip_det_form.tr_departeddate id="tr_departeddate" type="datetime-local" max="2099-12-31T23:59" class="form-control form-control-modern form-control-sm" disabled="disabled" readonly="readonly" %}
                                 <small class="text-warning d-block mt-1 font-weight-bold" style="font-size:0.75rem;"><i class="fas fa-lock mr-1"></i> Requires Consignment Goods to unlock</small>
                             {% endif %}
                         </div>
@@ -214,7 +214,7 @@
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Reported Date & Time</label>
-                            {% render_field trip_det_form.tr_reporteddate id="tr_reporteddate" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+                            {% render_field trip_det_form.tr_reporteddate id="tr_reporteddate" type="datetime-local" max="2099-12-31T23:59" class="form-control form-control-modern form-control-sm" %}
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Reported KM</label>
@@ -222,15 +222,15 @@
                         </div>
 						<div class="form-group-modern mb-2 empty-field">
 							<label class="form-label-modern small mb-1">Dock-In Time</label>
-							{% render_field trip_det_form.tr_departeddate_delivery id="tr_departeddate_delivery" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+							{% render_field trip_det_form.tr_departeddate_delivery id="tr_departeddate_delivery" type="datetime-local" max="2099-12-31T23:59" class="form-control form-control-modern form-control-sm" %}
 						</div>
 						<div class="form-group-modern mb-2 empty-field">
 							<label class="form-label-modern small mb-1">Dock-Out Time</label>
-							{% render_field trip_det_form.tr_unloading_time id="tr_unloading_time" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+							{% render_field trip_det_form.tr_unloading_time id="tr_unloading_time" type="datetime-local" max="2099-12-31T23:59" class="form-control form-control-modern form-control-sm" %}
 						</div>
 						<div class="form-group-modern mb-2 empty-field">
 							<label class="form-label-modern small mb-1">Vehicle Started Date & Time</label>
-							{% render_field trip_det_form.tr_reporteddate_pickup id="tr_reporteddate_pickup" type="datetime-local" class="form-control form-control-modern form-control-sm" %}
+							{% render_field trip_det_form.tr_reporteddate_pickup id="tr_reporteddate_pickup" type="datetime-local" max="2099-12-31T23:59" class="form-control form-control-modern form-control-sm" %}
 						</div>
 						<div class="form-group-modern mb-2 empty-field">
 							<label class="form-label-modern small mb-1">Vehicle Started KM</label>
@@ -876,12 +876,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	}
 	function enableUnloadingStage1() {
 		$("#tr_reportedlocation, #tr_reporteddate, #tr_reportedkm").prop("disabled", false).removeClass('disable_a_href');
-
-		// Unlock Stage 2 (Unloading Dock-In, Dock-Out, Vehicle Started) ONLY IF Unloading Reported Date is saved in DB
-		if (g_unloadingReportedDateSaved || g_unloadingSent) {
-			enableUnloadingStage2();
-		}
-
+		enableUnloadingStage2();
 		validateStatusRestriction();
 	}
 	function enableUnloadingStage2() {
@@ -1217,19 +1212,6 @@ document.addEventListener("DOMContentLoaded", function () {
 			{ id: "tr_reporteddate_pickup",     name: "Unloading Vehicle Started Date & Time" }
 		];
 
-		// Dynamic min date constraints based on latest available previous date
-		var latestDtVal = null;
-		for (var k = 0; k < fieldsInOrder.length; k++) {
-			var fId = fieldsInOrder[k].id;
-			var fVal = $("#" + fId).val();
-			if (latestDtVal) {
-				$("#" + fId).attr("min", latestDtVal);
-			}
-			if (fVal) {
-				latestDtVal = fVal;
-			}
-		}
-
 		// Comprehensive check: compare each field against ALL preceding fields
 		for (var i = 1; i < fieldsInOrder.length; i++) {
 			var curr = fieldsInOrder[i];
@@ -1257,6 +1239,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
 		return isValid;
 	}
+
+	// Prevent year field from exceeding 4 digits when typed manually
+	$(document).on("input change blur", "input[type='datetime-local']", function() {
+		var val = $(this).val();
+		if (val) {
+			var parts = val.split("T");
+			var dateParts = parts[0].split("-");
+			if (dateParts[0] && dateParts[0].length > 4) {
+				dateParts[0] = dateParts[0].substring(0, 4);
+				var newVal = dateParts.join("-") + (parts[1] ? "T" + parts[1] : "");
+				$(this).val(newVal);
+			}
+		}
+	});
 
 	// Trigger on input change
 	$(document).on("change input", "#tr_departeddate_pickup, #tr_loading_time, #tr_dock_out_time, #tr_departeddate, #tr_reporteddate, #tr_departeddate_delivery, #tr_unloading_time, #tr_reporteddate_pickup", function() {
