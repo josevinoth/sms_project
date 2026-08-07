@@ -109,7 +109,7 @@ class HistoryAPIView(View):
             else:
                 mapped_data = log.changed_data
 
-            # Add context to action so user knows which sub-module was changed
+            # Add context to action so user knows which sub-module was changed along with its primary key identifier
             action_text = log.action
             if log.model_name != model_name:
                 friendly_name = log.model_name.replace('Info', '').replace('detail', ' Detail').replace('_', ' ').title()
@@ -117,7 +117,26 @@ class HistoryAPIView(View):
                     friendly_name = 'Enquiry Vehicle'
                 elif friendly_name == 'Vehicle Allotment':
                     friendly_name = 'Vehicle Allotment'
-                action_text = f"{log.action} - {friendly_name}"
+                
+                # Fetch record identifier if present in changed_data or DB record
+                identifier = ""
+                if isinstance(log.changed_data, dict):
+                    identifier = log.changed_data.get('tr_tripnumber') or log.changed_data.get('co_consignmentnumber') or log.changed_data.get('tr_vehiclenumber') or log.changed_data.get('co_vehicelnumber') or log.changed_data.get('va_vehiclenumber') or log.changed_data.get('va_vehiclenumber_mkt') or ""
+                
+                if not identifier and log.record_id:
+                    try:
+                        m_cls = apps.get_model('sms_app', log.model_name)
+                        if m_cls:
+                            r_obj = m_cls.objects.filter(id=log.record_id).first()
+                            if r_obj:
+                                identifier = getattr(r_obj, 'tr_tripnumber', None) or getattr(r_obj, 'co_consignmentnumber', None) or getattr(r_obj, 'tr_vehiclenumber', None) or getattr(r_obj, 'co_vehicelnumber', None) or getattr(r_obj, 'va_vehiclenumber', None) or getattr(r_obj, 'va_vehiclenumber_mkt', None) or ""
+                    except Exception:
+                        pass
+                
+                if identifier:
+                    action_text = f"{log.action} - {friendly_name} ({identifier})"
+                else:
+                    action_text = f"{log.action} - {friendly_name}"
                 
             data.append({
                 'action': action_text,

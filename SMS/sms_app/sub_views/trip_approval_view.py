@@ -128,11 +128,21 @@ def update_trip_approval(request, trip_id):
                         email_type=1
                     )
                     trip.tr_trip_started_mail_sent = True
-                    messages.info(request, "Automated 'Trip Started' email sent.")
+                    try:
+                        messages.info(request, "Automated 'Trip Started' email sent.")
+                    except Exception:
+                        pass
                 except Exception as e:
-                    messages.error(request, f"Error sending automated email: {str(e)}")
+                    print(f"Error sending automated email: {str(e)}")
+                    try:
+                        messages.error(request, f"Error sending automated email: {str(e)}")
+                    except Exception:
+                        pass
 
         trip.save()
 
-        messages.success(request, "Approval updated.")
+        try:
+            messages.success(request, "Approval updated.")
+        except Exception:
+            pass
     return redirect('trip_approval_view')

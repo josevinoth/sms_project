@@ -15,6 +15,19 @@ class TripclosureaddForm(forms.ModelForm):
         self.fields['tc_financestatus'].empty_label = "--Select--"
         self.fields['tr_iou'].empty_label = "--Select--"
         
+        # Optimize ForeignKey querysets so Django does not load thousands of records during field rendering
+        inst = kwargs.get('instance')
+        if inst:
+            if hasattr(inst, 'tr_enquirynumber_id') and inst.tr_enquirynumber_id:
+                from ..models import EnquirynoteInfo
+                self.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(pk=inst.tr_enquirynumber_id)
+            if hasattr(inst, 'tr_consignmentnumber_id') and inst.tr_consignmentnumber_id:
+                from ..models import ConsignmentdetailInfo
+                self.fields['tr_consignmentnumber'].queryset = ConsignmentdetailInfo.objects.filter(pk=inst.tr_consignmentnumber_id)
+            if hasattr(inst, 'tr_vehiclenumber_id') and inst.tr_vehiclenumber_id:
+                from ..models import VehiclemasterInfo
+                self.fields['tr_vehiclenumber'].queryset = VehiclemasterInfo.objects.filter(pk=inst.tr_vehiclenumber_id)
+
         # Default "Trip Charges" checkbox to True
         if 'tc_tripcost_check' in self.fields:
             self.fields['tc_tripcost_check'].initial = True

@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from .send_department_email import send_department_email
 from ..forms import TripclosurefilesForm, TripdetailaddForm
-from ..models import Vehicle_allotmentInfo, ConsignmentdetailInfo, Tripstatusinfo, Trip_closure_files_Info, \
+from ..models import Vehicle_allotmentInfo, ConsignmentdetailInfo, ConsignmentgoodsInfo, Tripstatusinfo, Trip_closure_files_Info, \
     EnquirynoteInfo, TripdetailInfo, VehiclemasterInfo, TripHighvalueInfo, Emailmaster, Email_type, User_extInfo, TransInvoiceInfo, DeletionLog
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
@@ -45,7 +45,7 @@ def tripdetail_enquiry(request, enquiry_id, trip_num):
         trip = TripdetailInfo.objects.filter(
             tr_enquirynumber=enquiry,
             tr_tripnumber=trip_num,
-        ).order_by('-id').first()
+        ).order_by('-tr_consignmentnumber_id', '-id').first()
         if not trip:
             request.session['enquiry_num_id'] = enquiry_id
             messages.warning(request,
@@ -127,15 +127,16 @@ def tripdetail_add(request, tripdetail_id=0):
             print("I am inside Get add tripdetails")
             vehicle_allotment_id = request.GET.get('vehicle_allotment_id')
 
-            initial_data = {}
+            selected_vehicle_number = None
+            initial_data = {'tr_high_value': 2}
             if vehicle_allotment_id:
                 try:
                     va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
-                    # ✅ Choose correct vehicle number based on vehicle source
-                    vehicle_number = va.va_vehiclenumber_mkt if va.va_vehiclesource_id == 3 else va.va_vehiclenumber
+                    # Choose correct vehicle registration string
+                    selected_vehicle_number = va.va_vehiclenumber_mkt if va.va_vehiclesource_id == 3 else (va.va_vehiclenumber.vm_registrationnumber if va.va_vehiclenumber else '')
 
-                    initial_data = {
-                        'tr_vehiclenumber': vehicle_number,
+                    initial_data.update({
+                        'tr_vehiclenumber': selected_vehicle_number,
                         'tr_drivername': va.va_drivername,
                         'tr_driver_master_id': va.va_driver_master_id,
                         'tr_vehicletype': va.va_vehicletype,
@@ -144,26 +145,25 @@ def tripdetail_add(request, tripdetail_id=0):
                         'tr_drivernumber': va.va_drivernumber,
                         'tr_driver_lic': va.va_driver_lic,
                         'tr_category': 1 if va.va_vehiclesource_id == 3 else 2,
-                    }
+                    })
                 except Vehicle_allotmentInfo.DoesNotExist:
                     pass
 
-            # NEW: Fetch existing vehicle starting KM from the last trip's closing KM
-            if vehicle_allotment_id and 'tr_vehiclenumber' in initial_data:
-                # Determine the vehicle number string for querying TripdetailInfo (which uses CharField for vehiclenumber)
-                v_obj = initial_data['tr_vehiclenumber']
-                # If it's an object (Foreign Key from allotment), get the registration number
-                if hasattr(v_obj, 'vm_registrationnumber'):
-                    search_vehicle_num = v_obj.vm_registrationnumber
-                else:
-                    search_vehicle_num = str(v_obj)  # Market vehicle or already a string
-
-                last_trip = TripdetailInfo.objects.filter(
+            # Fetch latest reported KM for this vehicle from its last completed trip
+            search_vehicle_num = selected_vehicle_number
+            last_trip_km = None
+            if search_vehicle_num:
+                last_trip_km = TripdetailInfo.objects.filter(
                     tr_vehiclenumber=search_vehicle_num
-                ).exclude(tr_reportedkm__isnull=True).exclude(tr_reportedkm=0).order_by('-tr_created_at').first()
+                ).filter(
+                    Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False)
+                ).order_by('-id').first()
 
-                if last_trip:
-                    initial_data['tr_reportedkm_pickup'] = last_trip.tr_reportedkm
+            if last_trip_km:
+                latest_km = last_trip_km.tr_reportedkm or last_trip_km.tr_reportedkm_delivery
+                if latest_km:
+                    initial_data['tr_reportedkm_pickup'] = latest_km
+                    initial_data['tr_departedkm'] = latest_km
 
             trip_det_form = TripdetailaddForm(initial=initial_data)
             if vehicle_allotment_id and va.va_vehiclesource_id != 3:
@@ -171,7 +171,7 @@ def tripdetail_add(request, tripdetail_id=0):
 
             # Ensure departed location matches the vehicle's last reported location
             location_locked = False
-            if vehicle_allotment_id and 'tr_vehiclenumber' in initial_data and va.va_vehiclesource_id != 3:
+            if vehicle_allotment_id and selected_vehicle_number and va.va_vehiclesource_id != 3:
                 last_trip_loc = TripdetailInfo.objects.filter(
                     tr_vehiclenumber=search_vehicle_num
                 ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
@@ -216,6 +216,63 @@ def tripdetail_add(request, tripdetail_id=0):
             trip_det_form.fields['tr_enquirynumber'].queryset = EnquirynoteInfo.objects.filter(id=enquiry_num_id)
             trip_det_form.fields['tr_consignmentnumber'].queryset = consignment_list
 
+            # Build allotted vehicle list for Enquiry
+            allotted_vas = Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber=enquiry_num_id,
+                va_status_id__in=[1, 2, 3]
+            ).select_related('va_vehiclenumber', 'va_vehiclesource', 'va_vehicletype', 'va_vehicletype_placed')
+
+            # Find vehicles that have a cancelled trip for this enquiry so they cannot create another trip
+            cancelled_vehicles = set(
+                TripdetailInfo.objects.filter(
+                    tr_enquirynumber=enquiry_num_id
+                ).filter(
+                    Q(tc_cancellation_check=True) | Q(tc_financestatus_id__in=[10, 11]) | Q(tr_operational_status_id__in=[10, 11])
+                ).values_list('tr_vehiclenumber', flat=True)
+            )
+
+            # Find vehicles that ALREADY have an active/existing Business trip for this enquiry
+            # Category 1 = Business trip
+            assigned_business_vehicles = set(
+                TripdetailInfo.objects.filter(
+                    tr_enquirynumber=enquiry_num_id,
+                    tr_category_id=1
+                ).exclude(
+                    tc_cancellation_check=True
+                ).exclude(
+                    tc_financestatus_id__in=[10, 11]
+                ).values_list('tr_vehiclenumber', flat=True)
+            )
+
+            allotted_vehicle_list = []
+            allotted_vehicle_map = {}
+            for va_item in allotted_vas:
+                reg_num = va_item.va_vehiclenumber_mkt if va_item.va_vehiclesource_id == 3 else (va_item.va_vehiclenumber.vm_registrationnumber if va_item.va_vehiclenumber else '')
+                # Exclude vehicle if it was cancelled or already has an active Business trip
+                if reg_num and reg_num not in allotted_vehicle_map:
+                    if reg_num in cancelled_vehicles and reg_num != selected_vehicle_number:
+                        continue
+                    if reg_num in assigned_business_vehicles and reg_num != selected_vehicle_number:
+                        continue
+
+                    item_info = {
+                        'reg_number': reg_num,
+                        'is_mkt': va_item.va_vehiclesource_id == 3,
+                        'vehiclesource_id': va_item.va_vehiclesource_id,
+                        'vehiclesource_name': str(va_item.va_vehiclesource) if va_item.va_vehiclesource else '',
+                        'vehicletype_id': va_item.va_vehicletype_id if va_item.va_vehicletype else None,
+                        'vehicletype_placed_id': va_item.va_vehicletype_placed_id if va_item.va_vehicletype_placed else None,
+                        'driver_name': va_item.va_drivername or '',
+                        'driver_number': va_item.va_drivernumber or '',
+                        'driver_lic': va_item.va_driver_lic or '',
+                        'driver_master_id': va_item.va_driver_master_id
+                    }
+                    allotted_vehicle_list.append(item_info)
+                    allotted_vehicle_map[reg_num] = item_info
+
+            import json
+            allotted_vehicle_map_json = json.dumps(allotted_vehicle_map)
+
             context = {
                 'first_name': first_name,
                 'user_id': user_id,
@@ -228,6 +285,10 @@ def tripdetail_add(request, tripdetail_id=0):
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
                 'status_selected': 1 if initial_data.get('tr_category') in [2, 3] else 8,
                 'location_locked': location_locked,
+                'allotted_vehicle_list': allotted_vehicle_list,
+                'allotted_vehicle_map_json': allotted_vehicle_map_json,
+                'selected_vehicle_number': selected_vehicle_number,
+                'vehicle_allotment_id': vehicle_allotment_id,
             }
 
         else:
@@ -274,7 +335,6 @@ def tripdetail_add(request, tripdetail_id=0):
 
                         if needs_save:
                             tripdetail.save()
-                            from django.utils import timezone
                             en_user = request.user if (request.user and request.user.is_authenticated) else None
                             EnquirynoteInfo.objects.filter(id=tripdetail.tr_enquirynumber_id).update(
                                 en_updatedon=timezone.now(),
@@ -339,13 +399,52 @@ def tripdetail_add(request, tripdetail_id=0):
             ).order_by('-id').first()
 
             trip_approvallist = (
-                    trip_instance.tr_approval and trip_instance.tr_approval.ta_approval_status_id == 1
+                trip_instance.tr_approval and trip_instance.tr_approval.ta_approval_status_id == 1
             )
 
             # Check user role and invoice status
             user_ext = User_extInfo.objects.filter(user_id=user_id).first()
             user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
             is_invoiced = TransInvoiceInfo.objects.filter(ti_trip=trip_instance).exists()
+
+            # Gating flags for workflow controls
+            has_dock_out = bool(trip_instance.tr_dock_out_time)
+            has_consignment = bool(trip_instance.tr_consignmentnumber)
+            has_consignment_goods = False
+            if trip_instance.tr_consignmentnumber:
+                has_consignment_goods = ConsignmentgoodsInfo.objects.filter(
+                    cg_consignmentnumber=trip_instance.tr_consignmentnumber_id
+                ).exists()
+            has_vehicle_started = bool(trip_instance.tr_departeddate)
+
+            # Build allotted vehicle list for Enquiry
+            allotted_vas = Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber=enquiry_num_id,
+                va_status_id__in=[1, 2, 3]
+            ).select_related('va_vehiclenumber', 'va_vehiclesource', 'va_vehicletype', 'va_vehicletype_placed')
+
+            allotted_vehicle_list = []
+            allotted_vehicle_map = {}
+            for va in allotted_vas:
+                reg_num = va.va_vehiclenumber_mkt if va.va_vehiclesource_id == 3 else (va.va_vehiclenumber.vm_registrationnumber if va.va_vehiclenumber else '')
+                if reg_num and reg_num not in allotted_vehicle_map:
+                    item_info = {
+                        'reg_number': reg_num,
+                        'is_mkt': va.va_vehiclesource_id == 3,
+                        'vehiclesource_id': va.va_vehiclesource_id,
+                        'vehiclesource_name': str(va.va_vehiclesource) if va.va_vehiclesource else '',
+                        'vehicletype_id': va.va_vehicletype_id if va.va_vehicletype else None,
+                        'vehicletype_placed_id': va.va_vehicletype_placed_id if va.va_vehicletype_placed else None,
+                        'driver_name': va.va_drivername or '',
+                        'driver_number': va.va_drivernumber or '',
+                        'driver_lic': va.va_driver_lic or '',
+                        'driver_master_id': va.va_driver_master_id
+                    }
+                    allotted_vehicle_list.append(item_info)
+                    allotted_vehicle_map[reg_num] = item_info
+
+            import json
+            allotted_vehicle_map_json = json.dumps(allotted_vehicle_map)
 
             context = {
                 'first_name': first_name,
@@ -365,6 +464,12 @@ def tripdetail_add(request, tripdetail_id=0):
                 'trip_approvallist': trip_approvallist,
                 'trip_instance': trip_instance,
                 'location_locked': False,
+                'has_dock_out': has_dock_out,
+                'has_consignment': has_consignment,
+                'has_consignment_goods': has_consignment_goods,
+                'has_vehicle_started': has_vehicle_started,
+                'allotted_vehicle_list': allotted_vehicle_list,
+                'allotted_vehicle_map_json': allotted_vehicle_map_json,
             }
 
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
@@ -373,6 +478,8 @@ def tripdetail_add(request, tripdetail_id=0):
         if tripdetail_id == 0:
             print("I am inside post add tripdetails")
             post_data = request.POST.copy()
+            if not post_data.get('tr_high_value'):
+                post_data['tr_high_value'] = '2'
             fk_fields = [
                 'tr_enquirynumber', 'tr_consignmentnumber', 'tr_vehiclesource', 
                 'tr_vehicletype', 'tr_vehicletype_placed', 'tr_departedlocation', 
@@ -523,7 +630,6 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip.td_pod = data
 
                 trip.save()
-                from django.utils import timezone
                 en_user = request.user if (request.user and request.user.is_authenticated) else None
                 EnquirynoteInfo.objects.filter(id=trip.tr_enquirynumber_id).update(
                     en_updatedon=timezone.now(),
@@ -584,8 +690,9 @@ def tripdetail_add(request, tripdetail_id=0):
                 is_open = status_open and trip.tc_financestatus_id == status_open.id
                 is_closed = status_closed and trip.tc_financestatus_id == status_closed.id
 
-                # ✅ Only send email alerts for trip category 1
-                if trip.tr_category_id == 1:
+                # ✅ Send email alerts ONLY for Business Trips (Category 1)
+                is_business_trip = (trip.tr_category_id == 1) or (trip.tr_category and trip.tr_category.category.strip().lower() == 'business')
+                if is_business_trip:
                     # 1. Loading Reported
                     if trip.tr_departedlocation and trip.tr_departeddate_pickup and not trip.tr_loading_report_mail_sent:
                         trigger_alert(trip_send_loading_report_mail, "Loading Reported")
@@ -734,7 +841,6 @@ def tripdetail_add(request, tripdetail_id=0):
                     trip.td_pod = data
 
                 trip.save()
-                from django.utils import timezone
                 en_user = request.user if (request.user and request.user.is_authenticated) else None
                 EnquirynoteInfo.objects.filter(id=trip.tr_enquirynumber_id).update(
                     en_updatedon=timezone.now(),
@@ -801,8 +907,9 @@ def tripdetail_add(request, tripdetail_id=0):
                 is_closed = (status_closed and trip.tc_financestatus_id == status_closed.id) or (
                         not status_closed and trip.tc_financestatus_id == 2)
 
-                # ✅ Only send email alerts for trip category 1
-                if trip.tr_category_id == 1:
+                # ✅ Send email alerts ONLY for Business Trips (Category 1)
+                is_business_trip = (trip.tr_category_id == 1) or (trip.tr_category and trip.tr_category.category.strip().lower() == 'business')
+                if is_business_trip:
                     # 1. Loading Reported
                     if trip.tr_departedlocation and trip.tr_departeddate_pickup and not trip.tr_loading_report_mail_sent:
                         trigger_alert(trip_send_loading_report_mail, "Loading Reported")
@@ -1397,18 +1504,36 @@ def get_customer_ref(request):
 @login_required(login_url='login_page')
 def get_last_reported_km(request):
     vehicle = request.GET.get("vehicle")
+    enquiry_id = request.GET.get("enquiry_id")
 
-    last_trip = (
-        TripdetailInfo.objects
-        .filter(tr_vehiclenumber=vehicle)
-        .exclude(tr_reportedkm__isnull=True)
-        .exclude(tr_reportedkm=0)
-        .order_by('-id')  # most recent trip globally
-        .first()
-    )
+    last_trip = None
+    if vehicle:
+        if enquiry_id:
+            last_trip = (
+                TripdetailInfo.objects
+                .filter(tr_enquirynumber_id=enquiry_id, tr_vehiclenumber=vehicle, tr_category_id__in=[2, 3])
+                .filter(Q(tr_reporteddate__isnull=False) | Q(tr_reportedkm__isnull=False))
+                .order_by('-tr_reporteddate', '-id')
+                .first()
+            )
+
+        if not last_trip:
+            last_trip = (
+                TripdetailInfo.objects
+                .filter(tr_vehiclenumber=vehicle)
+                .filter(Q(tr_reporteddate__isnull=False) | Q(tr_reportedkm__isnull=False))
+                .order_by('-tr_reporteddate', '-id')
+                .first()
+            )
+
+    reported_dt_str = None
+    if last_trip and last_trip.tr_reporteddate:
+        local_dt = timezone.localtime(last_trip.tr_reporteddate)
+        reported_dt_str = local_dt.strftime('%Y-%m-%dT%H:%M')
 
     return JsonResponse({
-        "reported_km": last_trip.tr_reportedkm if last_trip else None
+        "reported_km": last_trip.tr_reportedkm if last_trip else None,
+        "reported_date": reported_dt_str
     })
 
 

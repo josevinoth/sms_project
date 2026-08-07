@@ -476,6 +476,8 @@ function setDateFieldValue(selector, value) {
 			$('#vehicle_allotment_id,#vehicle_allotment_submit_id')
 				.removeClass('disable_a_href')
 				.prop('disabled', false);
+			// Auto load requested vehicles for this enquiry
+			vehicle_requested();
 		}
 		else if (window.location.href.includes("vehicle_allotment_update")) {
 			// Enable fields
@@ -850,6 +852,10 @@ document.addEventListener("DOMContentLoaded", function() {
    $("#modal_va_vendor").select2({
        width: '100%',
        dropdownParent: $('#replaceVehicleModal') // Required for Select2 inside modals
+   });
+   $("#modal_va_vehiclenumber").select2({
+       width: '100%',
+       dropdownParent: $('#replaceVehicleModal')
    });
 </script>
 <script>
@@ -1308,6 +1314,7 @@ $("#va_vehiclesource").on("change", function () {
                             $("#modal_va_vehiclenumber").append("<option value='" + vehicle_number_id[k] + "'>" + vehicle_number[k] + "</option>");
                         }
                     }
+                    $("#modal_va_vehiclenumber").trigger('change.select2');
                 }
             });
         }
@@ -1355,7 +1362,7 @@ $("#va_vehiclesource").on("change", function () {
         $("#modal_chk_placed").prop("checked", false);
         loadModalVendorOptions();
         $("#modal_va_vendor").val("").prop('disabled', false).removeClass('disable_a_href').trigger('change.select2');
-        $("#modal_va_vehiclenumber").empty().append("<option value=''>--Select--</option>");
+        $("#modal_va_vehiclenumber").empty().append("<option value=''>--Select--</option>").trigger('change.select2');
         $("#modal_va_vehiclenumber_mkt").val("");
         $("#modal_own_attached_div").show();
         $("#modal_market_div").hide();
