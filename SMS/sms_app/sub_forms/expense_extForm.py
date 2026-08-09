@@ -15,3 +15,4 @@ class ExpenseextaddForm(forms.ModelForm):
         self.fields['exp_ext_businessmodel'].empty_label = "--Select--"
         self.fields['exp_ext_vehicle_source'].empty_label = "--Select--"
         self.fields['exp_ext_vehicle_number'].empty_label = "--Select--"
+        self.fields['exp_ext_department'].widget.attrs.update({'class': 'form-control'})

@@ -267,3 +267,5 @@ from .sub_models.prime_enquirynote_mod import PrimeEnquirynoteInfo
 from .sub_models.prime_vehicle_allotment_mod import PrimeVehicleAllotmentInfo
 from .sub_models.prime_trip_mod import PrimeTripInfo
 from .sub_models.credit_ledger_mod import CreditLedgerInfo
+from .sub_models.tms_petty_cash_mod import TMSPettyCashInfo
+from .sub_models.tms_expense_type_mod import TMSExpenseTypeInfo

@@ -13,3 +13,5 @@ class IouForm(forms.ModelForm):
         self.fields['staff_name'].empty_label = "--Select--"
         self.fields['transaction_type'].empty_label = "--Select--"
         self.fields['business_type'].empty_label = "--Select--"
+        if 'iou_credit_ledger' in self.fields:
+            self.fields['iou_credit_ledger'].empty_label = "--Select--"

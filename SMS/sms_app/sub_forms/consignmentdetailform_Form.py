@@ -1,7 +1,7 @@
 from django import forms
 
 
-from ..models import ConsignmentdetailInfo
+from ..models import ConsignmentdetailInfo, StatusList
 
 class ConsignmentdetailaddForm(forms.ModelForm):
     co_cusrefnum_check = forms.BooleanField(required=False)
@@ -57,6 +57,7 @@ class ConsignmentdetailaddForm(forms.ModelForm):
         self.fields['co_tolocation'].queryset = self.fields['co_tolocation'].queryset.none()
         
         self.fields['co_status'].empty_label = "--Select--"
+        self.fields['co_status'].queryset = StatusList.all_objects.all()
         self.fields['co_cusrefnum'].empty_label = "--Select--"
         self.fields['co_gst_payable_by'].empty_label = "--Select--"
 

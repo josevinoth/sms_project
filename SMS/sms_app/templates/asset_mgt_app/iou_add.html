@@ -56,6 +56,12 @@
 									</div>
 									{% render_field form.amount id="amount" class="form-control" %}
 								</div>
+								<div class="input-group input-group-sm mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text">Credit Ledger</span>
+									</div>
+									{% render_field form.iou_credit_ledger id="iou_credit_ledger" class="form-control" %}
+								</div>
 								{% render_field form.iou_updated_by id="iou_updated_by" hidden="True" class="form-control" %}
 							</div>
 						</div>

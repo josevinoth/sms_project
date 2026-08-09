@@ -291,7 +291,9 @@ def tripdetail_add(request, tripdetail_id=0):
             ).filter(tr_enquirynumber=enquiry_num_id)
             trip_instance = TripdetailInfo.objects.get(pk=tripdetail_id)
             try:
-                if trip_instance.tr_operational_status:
+                if trip_instance.tc_financestatus and trip_instance.tc_financestatus.id in [10, 11]:
+                    status_selected = trip_instance.tc_financestatus.id
+                elif trip_instance.tr_operational_status:
                     status_selected = trip_instance.tr_operational_status.id
                 else:
                     status_selected = trip_instance.tc_financestatus.id if trip_instance.tc_financestatus else 8

@@ -201,6 +201,11 @@ function currentTableHeaders() {
 }
 
 $(document).ready(function () {
+    // Initialize select2 for filter form
+    $('#dmr_filter_form select').select2({
+        width: '100%'
+    });
+
     initTripTable();
 
     $('#dmr_filter_form').on('submit', function (e) {

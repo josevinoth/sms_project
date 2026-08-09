@@ -480,6 +480,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             obj.va_drivernumber = va.va_drivernumber
             obj.va_driver_lic = va.va_driver_lic
             obj.va_driver_lic_expiry = va.va_driver_lic_expiry
+            obj.va_driver_master_id = va.va_driver_master_id
             obj.va_created_at = va.va_created_at
 
             if request.user and request.user.is_authenticated:
@@ -1396,6 +1397,9 @@ def vehicle_allotment_replace(request, allotment_id):
                 new_driver_number = request.POST.get('va_drivernumber')
                 new_driver_lic = request.POST.get('va_driver_lic')
                 new_driver_lic_expiry = request.POST.get('va_driver_lic_expiry')
+                new_driver_master_id = request.POST.get('va_driver_master_id')
+                if not new_driver_master_id or not str(new_driver_master_id).strip():
+                    new_driver_master_id = None
                 new_vendor_id = request.POST.get('va_vendor')
                 reason = request.POST.get('reason', '')
 
@@ -1441,6 +1445,7 @@ def vehicle_allotment_replace(request, allotment_id):
                     va_drivernumber=new_driver_number,
                     va_driver_lic=new_driver_lic,
                     va_driver_lic_expiry=new_driver_lic_expiry,
+                    va_driver_master_id=new_driver_master_id,
                     va_status_id=1,  # Vehicle Assigned (new active allotment)
                     va_replaced_allotment=old_va,
                     va_replacement_reason=reason,
@@ -1470,6 +1475,7 @@ def vehicle_allotment_replace(request, allotment_id):
                 active_trip.tr_vehiclenumber = new_vehicle_num
                 active_trip.tr_drivername = new_va.va_drivername
                 active_trip.tr_drivernumber = new_va.va_drivernumber
+                active_trip.tr_driver_master_id = new_va.va_driver_master_id
                 current_remarks = active_trip.tr_remarks or ""
                 replacement_note = f"\n[AUTO-NOTE] Vehicle replaced from {old_vehicle_num} to {new_vehicle_num} on {timezone.now().strftime('%Y-%m-%d %H:%M')} due to: {reason}"
                 active_trip.tr_remarks = (current_remarks + replacement_note)[:250]
@@ -1541,6 +1547,9 @@ def vehicle_allotment_driver_replace(request, allotment_id):
                 new_driver_number = request.POST.get('va_drivernumber')
                 new_driver_lic = request.POST.get('va_driver_lic')
                 new_driver_lic_expiry = request.POST.get('va_driver_lic_expiry')
+                new_driver_master_id = request.POST.get('va_driver_master_id')
+                if not new_driver_master_id or not str(new_driver_master_id).strip():
+                    new_driver_master_id = None
                 reason = request.POST.get('reason', '')
 
                 if not reason or not new_driver_name:
@@ -1575,6 +1584,7 @@ def vehicle_allotment_driver_replace(request, allotment_id):
                     va_drivernumber=new_driver_number,
                     va_driver_lic=new_driver_lic,
                     va_driver_lic_expiry=new_driver_lic_expiry,
+                    va_driver_master_id=new_driver_master_id,
                     va_status_id=1,  # Vehicle Assigned (new active record)
                     va_replaced_allotment=old_va,
                     va_replacement_reason=reason,
@@ -1605,6 +1615,7 @@ def vehicle_allotment_driver_replace(request, allotment_id):
                     active_trip.tr_drivername = new_driver_name
                     active_trip.tr_drivernumber = new_driver_number
                     active_trip.tr_driver_lic = new_driver_lic
+                    active_trip.tr_driver_master_id = new_va.va_driver_master_id
                     active_trip.save()
 
                 return JsonResponse({'success': True, 'new_id': new_va.id})
