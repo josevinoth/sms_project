@@ -60,7 +60,7 @@ def is_license_expired(lic_expiry_val):
 
 
 # ===== HELPER: Get recipients from Emailmaster =====
-def get_va_auto_recipients(customer_id, department_id):
+def get_va_auto_recipients(customer_id, department_id, requestor=None):
     """
     Fetch email recipients from Emailmaster for vehicle allotment alerts.
     Uses Email Type 2 (For alert), matching by Customer + Department.
@@ -70,20 +70,24 @@ def get_va_auto_recipients(customer_id, department_id):
         return None
 
     try:
-        # Try matching Customer + Department first
-        email_entry = Emailmaster.objects.filter(
+        # Base query for this customer and alert type
+        email_qs = Emailmaster.objects.filter(
             Q(em_emailtype_id=2) | Q(em_emailtype__email_type__iexact='For alert'),
-            em_Customer_name_id=customer_id,
-            em_customerdepartment_id=department_id
-        ).first()
+            em_Customer_name_id=customer_id
+        )
+
+        # Filter by Requestor if provided and matches exist
+        if requestor:
+            req_qs = email_qs.filter(em_user__iexact=requestor)
+            if req_qs.exists():
+                email_qs = req_qs
+
+        # Try matching Customer + Department first
+        email_entry = email_qs.filter(em_customerdepartment_id=department_id).first()
 
         # Fallback to Customer-only match
         if not email_entry:
-            email_entry = Emailmaster.objects.filter(
-                Q(em_emailtype_id=2) | Q(em_emailtype__email_type__iexact='For alert'),
-                em_Customer_name_id=customer_id,
-                em_customerdepartment__isnull=True
-            ).first()
+            email_entry = email_qs.filter(em_customerdepartment__isnull=True).first()
 
         if email_entry:
             to_emails = [e.strip() for e in (email_entry.em_to_names or '').split(',') if e.strip()]
@@ -351,6 +355,36 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                     referer = request.META.get('HTTP_REFERER')
                     return redirect(referer if referer else request.path)
 
+            # 🚫 VEHICLE TYPE & QUANTITY VALIDATION AGAINST ENQUIRY NOTE
+            requested_entries = Enquirynotevehicle.objects.filter(env_enquirynumber_id=enquiry_id)
+            if requested_entries.exists():
+                requested_vt_ids = list(requested_entries.values_list('env_vehicletype_id', flat=True))
+                if obj.va_vehicletype_id not in requested_vt_ids:
+                    requested_vt_names = ", ".join(list(requested_entries.values_list('env_vehicletype__vt_vehicletype', flat=True)))
+                    messages.error(
+                        request,
+                        f"🚫 Vehicle type '{obj.va_vehicletype}' was not requested in this Enquiry Note. Requested type(s): {requested_vt_names}."
+                    )
+                    referer = request.META.get('HTTP_REFERER')
+                    return redirect(referer if referer else request.path)
+
+                total_requested_for_type = requested_entries.filter(
+                    env_vehicletype_id=obj.va_vehicletype_id
+                ).aggregate(total=Sum('env_quantity'))['total'] or 0
+
+                already_allotted_count = Vehicle_allotmentInfo.objects.filter(
+                    va_enquirynumber_id=enquiry_id,
+                    va_vehicletype_id=obj.va_vehicletype_id
+                ).count()
+
+                if already_allotted_count >= total_requested_for_type:
+                    messages.error(
+                        request,
+                        f"🚫 Cannot allot vehicle: Total requested quantity of '{obj.va_vehicletype}' ({total_requested_for_type}) has already been allotted ({already_allotted_count} allotted)."
+                    )
+                    referer = request.META.get('HTTP_REFERER')
+                    return redirect(referer if referer else request.path)
+
             duplicate_qs = Vehicle_allotmentInfo.objects.filter(
                 va_enquirynumber_id=enquiry_id
             )
@@ -431,7 +465,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                     customer_id = enquiry.en_customername_id if enquiry.en_customername else None
                     department_id = enquiry.en_customerdepartment_id if enquiry.en_customerdepartment else None
 
-                    recipients = get_va_auto_recipients(customer_id, department_id)
+                    recipients = get_va_auto_recipients(customer_id, department_id, requestor=enquiry.en_requestor)
 
                     if recipients:
                         success, result = va_send_allotment_email(obj, enquiry, recipients)
@@ -441,7 +475,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                             messages.success(request,
                                              f"Vehicle Allotment Saved. Alert sent to: {', '.join(recipients)}")
                         else:
-                            messages.success(request, "Vehicle Allotment Saved. Email failed to send.")
+                            messages.error(request, f"Vehicle Allotment Saved. Email failed to send: {result}")
                     else:
                         messages.warning(request,
                                          "Vehicle Allotment Saved. No email ID found for this customer in the email master.")
@@ -529,7 +563,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                         busy_enquiry = trip_item.tr_enquirynumber.en_enquirynumber if trip_item.tr_enquirynumber else str(trip_item.tr_enquirynumber_id)
                         break
 
-            if is_busy:
+            # For UPDATE mode of an already assigned vehicle allotment, allow updating commercial fields (Special Buy, Standard Buy, Sell, Remarks)
+            if is_busy and vehicle_allotment_id == 0:
                 messages.error(
                     request,
                     f"This vehicle is currently allotted to another active trip/enquiry ({busy_enquiry}) and the trip has not been closed."
@@ -558,7 +593,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                     customer_id = enquiry.en_customername_id if enquiry.en_customername else None
                     department_id = enquiry.en_customerdepartment_id if enquiry.en_customerdepartment else None
 
-                    recipients = get_va_auto_recipients(customer_id, department_id)
+                    recipients = get_va_auto_recipients(customer_id, department_id, requestor=enquiry.en_requestor)
 
                     if recipients:
                         success, result = va_send_allotment_email(obj, enquiry, recipients)
@@ -568,7 +603,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                             messages.success(request,
                                              f"Vehicle Allotment Updated. Alert sent to: {', '.join(recipients)}")
                         else:
-                            messages.success(request, "Vehicle Allotment Updated. Email failed to send.")
+                            messages.error(request, f"Vehicle Allotment Updated. Email failed to send: {result}")
                     else:
                         messages.warning(request,
                                          "Vehicle Allotment Updated. No email ID found for this customer in the email master.")
@@ -926,11 +961,16 @@ def load_vehicle_number(request):
     from django.utils.timezone import make_aware
     cutoff_date = make_aware(datetime(2026, 8, 1))
 
-    # 2) Busy allotments are those created on/after cutoff date whose enquiry is NOT in free_enquiry_ids
+    # 2) Busy allotments are active allotments created on/after cutoff date whose enquiry is NOT in free_enquiry_ids
+    # Exclude cancelled (4), replaced (2), completed (5) allotments and dead/cancelled enquiries (5, 8)
     busy_allotments_qs = Vehicle_allotmentInfo.objects.filter(
         va_created_at__gte=cutoff_date
     ).exclude(
         va_enquirynumber_id__in=free_enquiry_ids
+    ).exclude(
+        va_status_id__in=[2, 4, 5]
+    ).exclude(
+        va_enquirynumber__en_status_id__in=[5, 8]
     ).exclude(va_vehiclenumber__isnull=True)
 
     enquiry_veh_ids = set()

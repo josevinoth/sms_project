@@ -57,9 +57,12 @@ def audit_pre_save(sender, instance, **kwargs):
     if instance.pk:
         try:
             # We fetch the old instance without select_related to keep it fast
-            old_instance = sender.objects.get(pk=instance.pk)
-            instance._old_state = get_model_data(old_instance)
-        except sender.DoesNotExist:
+            old_instance = sender.objects.filter(pk=instance.pk).first()
+            if old_instance:
+                instance._old_state = get_model_data(old_instance)
+            else:
+                instance._old_state = {}
+        except Exception:
             instance._old_state = {}
     else:
         instance._old_state = {}

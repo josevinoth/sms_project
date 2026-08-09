@@ -25,9 +25,13 @@
 	.consignment-goods-modern select {
 		min-height: 39px !important;
 		height: 39px !important;
-		padding: 0.48rem 0.85rem !important;
+		padding: 0.48rem 0.65rem !important;
 		font-size: 0.82rem !important;
 		border-radius: 8px !important;
+		max-width: 100% !important;
+		min-width: 0 !important;
+		width: 100% !important;
+		box-sizing: border-box !important;
 	}
 
 	.consignment-goods-modern input[type="file"].form-control-modern {
@@ -43,14 +47,15 @@
 
 	.consignment-goods-modern .btn-inline-add,
 	.btn-inline-add {
-		min-width: auto !important;
+		min-width: 58px !important;
+		max-width: 68px !important;
 		width: auto !important;
 		min-height: 39px !important;
 		height: 39px !important;
-		padding: 0.3rem 0.65rem !important;
+		padding: 0.3rem 0.45rem !important;
 		font-size: 0.75rem !important;
 		font-weight: 700 !important;
-		letter-spacing: 0.5px !important;
+		letter-spacing: 0.3px !important;
 		flex: 0 0 auto !important;
 		border-radius: 8px !important;
 		white-space: nowrap !important;
@@ -176,7 +181,7 @@
 					<div class="row row-compact" id="consignment_goods_id">
 						
 						<!-- ── Column 1: Document Details ── -->
-						<div class="col-12 col-md-6 col-xl-3 col-compact">
+						<div class="col-12 col-md-6 col-lg-3 col-compact mb-3">
 							<div class="form-section h-100">
 								<div class="form-section-title">
 									<i class="fas fa-file-invoice"></i> Document Details
@@ -216,7 +221,7 @@
 						</div>
 
 						<!-- ── Column 2: Parties & Type ── -->
-						<div class="col-12 col-md-6 col-xl-3 col-compact">
+						<div class="col-12 col-md-6 col-lg-3 col-compact mb-3">
 							<div class="form-section h-100">
 								<div class="form-section-title">
 									<i class="fas fa-user-friends"></i> Parties & Type
@@ -224,9 +229,9 @@
 
 								<div class="form-group-modern">
 									<label class="form-label-modern">Consigner</label>
-									<div class="d-flex" style="gap:6px;">
-										<div style="flex:1;">
-											{% render_field form.cg_consigner class="form-control form-control-modern" id="cg_consigner" %}
+									<div class="d-flex align-items-center" style="gap:6px; width:100%;">
+										<div style="flex:1; min-width:0;">
+											{% render_field form.cg_consigner class="form-control form-control-modern w-100" id="cg_consigner" %}
 										</div>
 										<button type="button" class="btn-modern btn-submit btn-inline-add" data-toggle="modal" data-target="#addConsignerModal">+ Add</button>
 									</div>
@@ -234,9 +239,9 @@
 
 								<div class="form-group-modern">
 									<label class="form-label-modern">Consignee</label>
-									<div class="d-flex" style="gap:6px;">
-										<div style="flex:1;">
-											{% render_field form.cg_consignee class="form-control form-control-modern" id="cg_consignee" %}
+									<div class="d-flex align-items-center" style="gap:6px; width:100%;">
+										<div style="flex:1; min-width:0;">
+											{% render_field form.cg_consignee class="form-control form-control-modern w-100" id="cg_consignee" %}
 										</div>
 										<button type="button" class="btn-modern btn-submit btn-inline-add" data-toggle="modal" data-target="#addConsigneeModal">+ Add</button>
 									</div>
@@ -260,7 +265,7 @@
 						</div>
 
 						<!-- ── Column 3: E-Way Bill & Description ── -->
-						<div class="col-12 col-md-6 col-xl-3 col-compact">
+						<div class="col-12 col-md-6 col-lg-3 col-compact mb-3">
 							<div class="form-section h-100">
 								<div class="form-section-title">
 									<i class="fas fa-barcode"></i> E-Way & Description
@@ -273,9 +278,9 @@
 
 								<div class="form-group-modern">
 									<label class="form-label-modern">Description</label>
-									<div class="d-flex" style="gap:6px;">
-										<div style="flex:1;">
-											{% render_field form.cg_description class="form-control form-control-modern" id="cg_description" %}
+									<div class="d-flex align-items-center" style="gap:6px; width:100%;">
+										<div style="flex:1; min-width:0;">
+											{% render_field form.cg_description class="form-control form-control-modern w-100" id="cg_description" %}
 										</div>
 										<button type="button" class="btn-modern btn-submit btn-inline-add" data-toggle="modal" data-target="#addDescriptionModal">+ Add</button>
 									</div>
@@ -294,7 +299,7 @@
 						</div>
 
 						<!-- ── Column 4: Quantities & Weight ── -->
-						<div class="col-12 col-md-6 col-xl-3 col-compact">
+						<div class="col-12 col-md-6 col-lg-3 col-compact mb-3">
 							<div class="form-section h-100">
 								<div class="form-section-title">
 									<i class="fas fa-weight-hanging"></i> Quantities & Weight

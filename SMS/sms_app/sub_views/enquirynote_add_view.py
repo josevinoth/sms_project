@@ -336,6 +336,19 @@ def enquirynote_list(request):
     )
     vehicle_allotted_dict = {v['va_enquirynumber']: v['total_allotted'] for v in vehicle_allotted}
 
+    docked_out_trips = (
+        TripdetailInfo.objects.filter(
+            tr_enquirynumber_id__in=enquiry_ids
+        ).filter(
+            Q(tr_dock_out_time__isnull=False) |
+            Q(tr_operational_status_id=10) |
+            Q(tc_financestatus_id=10)
+        )
+        .values('tr_enquirynumber_id')
+        .annotate(total_docked_out=Count('id'))
+    )
+    dock_out_count_dict = {d['tr_enquirynumber_id']: d['total_docked_out'] for d in docked_out_trips}
+
     # Build final data
     enquiry_data = []
     for enquiry in page_obj:
@@ -353,6 +366,10 @@ def enquirynote_list(request):
         else:
             consignment_limit_reached = True
 
+        dock_out_count = dock_out_count_dict.get(enquiry.id, 0)
+        # Show "+ Add New" for Consignment if there are completed Dock-Out or Cancelled-Billable trips without CNote
+        can_add_consignment = (dock_out_count > consignment_count)
+
         enquiry_data.append({
             'enquiry': enquiry,
             'consignments': consignments,
@@ -362,6 +379,7 @@ def enquirynote_list(request):
             'vehicle_allotted': total_allotted,
             'limit_reached': limit_reached,
             'consignment_limit_reached': consignment_limit_reached,
+            'has_docked_out_trip': can_add_consignment,
         })
 
     # -----------------------------
@@ -647,13 +665,26 @@ def enquirynote_delete(request, enquirynote_id):
 @login_required(login_url='login_page')
 def get_customer_details(request):
     customer_id = request.GET.get('customer_id')
+    department_id = request.GET.get('department_id')
     try:
         customer = CustomerInfo.objects.get(id=customer_id)
+        
+        from ..sub_models.emailmaster_mod import Emailmaster
+        qs = Emailmaster.objects.filter(em_Customer_name_id=customer_id)
+        if department_id:
+            dept_qs = qs.filter(Q(em_customerdepartment_id=department_id) | Q(em_customerdepartment__isnull=True))
+            if dept_qs.exists():
+                qs = dept_qs
+
+        users = list(qs.exclude(em_user__isnull=True).exclude(em_user='')
+                     .values_list('em_user', flat=True).distinct())
+
         data = {
             'customer_contact': customer.cu_contactno,
             'customer_email': customer.cu_email,
             'customer_businessmodel_id': customer.cu_businessmodel.id if customer.cu_businessmodel else None,
             'customer_businessmodel_name': str(customer.cu_businessmodel) if customer.cu_businessmodel else "",
+            'users': users,
         }
         return JsonResponse(data)
     except CustomerInfo.DoesNotExist:

@@ -130,6 +130,36 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             if existing_dummy and existing_dummy.tc_cancellation:
                 existing_cancellation_charge = existing_dummy.tc_cancellation
 
+        selected_trip_id_param = request.GET.get('trip_id')
+        selected_trip_id = None
+        if selected_trip_id_param:
+            try:
+                selected_trip_id = int(selected_trip_id_param)
+            except (ValueError, TypeError):
+                pass
+
+        if not selected_trip_id and consignmentdetail_id != 0:
+            linked_trip = TripdetailInfo.objects.filter(tr_consignmentnumber_id=consignmentdetail_id).first()
+            if linked_trip:
+                selected_trip_id = linked_trip.id
+
+        selected_vehicle_num = None
+        if selected_trip_id:
+            trip_obj = TripdetailInfo.objects.filter(id=selected_trip_id).first()
+            if trip_obj and trip_obj.tr_vehiclenumber:
+                selected_vehicle_num = trip_obj.tr_vehiclenumber
+                if consignmentdetail_id == 0:
+                    con_det_form.initial['co_vehicelnumber'] = selected_vehicle_num
+
+        eligible_trips = TripdetailInfo.objects.filter(
+            tr_enquirynumber=enquiry_num_id
+        ).filter(
+            Q(tr_category_id=1) | Q(tr_operational_status_id=10) | Q(tc_financestatus_id=10)
+        ).filter(
+            Q(tr_consignmentnumber_id=consignmentdetail_id) |
+            Q(tr_consignmentnumber__isnull=True)
+        ).distinct()
+
         context = {
             'first_name': first_name,
             'user_id': user_id,
@@ -147,6 +177,9 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             'user_branch': user_branch,
             'has_invoice_or_ewaybill': has_invoice_or_ewaybill,  # ✅ Add this flag
             'existing_cancellation_charge': existing_cancellation_charge,
+            'eligible_trips': eligible_trips,
+            'selected_trip_id': selected_trip_id,
+            'selected_vehicle_num': selected_vehicle_num,
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 
@@ -175,7 +208,6 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                 branch_id = get_session_branch_id(request)
                 
                 # Robust fallback for Consignment: Try to derive branch from Enquiry number prefix
-                # (This helps if both session and user profile are ambiguous, which shouldn't happen but is extra safe)
                 if branch_id == 1 and consignment_detail.co_enquirynumber and consignment_detail.co_enquirynumber.en_enquirynumber:
                     en_num = consignment_detail.co_enquirynumber.en_enquirynumber
                     if "_MAA_" in en_num: branch_id = 2
@@ -184,8 +216,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                 
                 branch_code = get_branch_code(branch_id)
                 
-                # Generate consignment number with financial year and branch name
-                # Example format: 26-27_MAA_T_00001
+                # Generate consignment number
                 current_fy = get_financial_year()
                 prefix = f"{current_fy}_{branch_code}_T_"
                 consignment_detail.co_consignmentnumber = generate_next_number(ConsignmentdetailInfo, 'co_consignmentnumber', prefix, 5)
@@ -193,6 +224,22 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                 consignment_detail.co_vehicletype = vehicle_type
                 consignment_detail.co_createdby = request.user
                 consignment_detail.save()
+
+                # Link selected Trip to this consignment and inherit vehicle number
+                posted_trip_id = request.POST.get('co_tripnumber')
+                if posted_trip_id:
+                    try:
+                        t_id = int(posted_trip_id)
+                        trip_obj = TripdetailInfo.objects.filter(id=t_id).first()
+                        if trip_obj:
+                            trip_obj.tr_consignmentnumber = consignment_detail
+                            trip_obj.save()
+
+                            if not consignment_detail.co_vehicelnumber and trip_obj.tr_vehiclenumber:
+                                consignment_detail.co_vehicelnumber = trip_obj.tr_vehiclenumber
+                                consignment_detail.save(update_fields=['co_vehicelnumber'])
+                    except (ValueError, TypeError):
+                        pass
 
                 # --- NEW LOGIC: Handle Cancellation without Trip ---
                 status_id = int(request.POST.get('co_status') or 0)
@@ -243,7 +290,21 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                     consignment_detail.co_vehicletype = vehicle_type
                     consignment_detail.save()
 
-                    # --- NEW LOGIC: Handle Cancellation without Trip ---
+                    # Link selected Trip to this consignment and inherit vehicle number (Works for Edit mode too)
+                    posted_trip_id = request.POST.get('co_tripnumber')
+                    if posted_trip_id:
+                        try:
+                            t_id = int(posted_trip_id)
+                            trip_obj = TripdetailInfo.objects.filter(id=t_id).first()
+                            if trip_obj:
+                                trip_obj.tr_consignmentnumber = consignment_detail
+                                trip_obj.save()
+
+                                if not consignment_detail.co_vehicelnumber and trip_obj.tr_vehiclenumber:
+                                    consignment_detail.co_vehicelnumber = trip_obj.tr_vehiclenumber
+                                    consignment_detail.save(update_fields=['co_vehicelnumber'])
+                        except (ValueError, TypeError):
+                            pass
                     status_id = int(request.POST.get('co_status') or 0)
                     if status_id in [9, 10]:
                         cancellation_charge = float(request.POST.get('consignment_cancellation_charge', '0.0'))
@@ -755,4 +816,25 @@ def consignment_pdf_download(request):
     if pisa_status.err:
         return HttpResponse('Error generating PDF <pre>' + html + '</pre>')
 
-    return response
+@login_required(login_url='login_page')
+def get_trip_info(request, trip_id):
+    try:
+        trip = TripdetailInfo.objects.select_related('tr_enquirynumber', 'tr_enquirynumber__en_customername', 'tr_vehicletype').get(pk=trip_id)
+        enquiry = trip.tr_enquirynumber
+        customer_obj = enquiry.en_customername if enquiry else None
+
+        return JsonResponse({
+            'success': True,
+            'enquiry_id': enquiry.id if enquiry else None,
+            'enquiry_num': enquiry.en_enquirynumber if enquiry else '',
+            'vehicle_num': trip.tr_vehiclenumber or '',
+            'vehicle_type': trip.tr_vehicletype.vt_vehicletype if trip.tr_vehicletype else '',
+            'customer_id': customer_obj.id if customer_obj else None,
+            'customer_name': customer_obj.cu_name if customer_obj else '',
+            'customer_code': customer_obj.cu_customercode if customer_obj else '',
+            'from_loc_id': trip.tr_departedlocation_id if trip.tr_departedlocation else None,
+            'to_loc_id': trip.tr_reportedlocation_id if trip.tr_reportedlocation else None,
+        })
+    except TripdetailInfo.DoesNotExist:
+        return JsonResponse({'success': False, 'msg': 'Trip not found'})
+

@@ -257,6 +257,8 @@ def trip_settlement_edit(request, trip_id):
 
             trip_obj = form.save(commit=False)
             trip_obj.tr_updated_by = request.user
+            if trip_obj.tc_financestatus_id:
+                trip_obj.tr_operational_status_id = trip_obj.tc_financestatus_id
             trip_obj.save()
 
             files_obj = files_form.save(commit=False)

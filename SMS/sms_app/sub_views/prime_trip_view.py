@@ -17,8 +17,10 @@ def prime_trip_add(request, allotment_id):
     allotment = get_object_or_404(PrimeVehicleAllotmentInfo, pk=allotment_id)
     enquiry = allotment.pva_enquirynumber
 
-    # Check if a trip already exists for this allotment
-    trip = PrimeTripInfo.objects.filter(pt_allotment=allotment).first()
+    # Check if a trip already exists for this allotment (get the latest one)
+    trip = PrimeTripInfo.objects.filter(pt_allotment=allotment).order_by('-id').first()
+    if trip and (trip.pt_to_place or trip.pt_to_km or trip.pt_to_date):
+        trip = None
 
     if request.method == 'POST':
         try:

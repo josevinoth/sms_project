@@ -69,6 +69,10 @@ def update_trip_approval(request, trip_id):
                     department = enquiry.en_customerdepartment
                     
                     email_qs = Emailmaster.objects.filter(em_Customer_name=customer, em_emailtype_id=2)
+                    if enquiry.en_requestor:
+                        req_qs = email_qs.filter(em_user__iexact=enquiry.en_requestor)
+                        if req_qs.exists():
+                            email_qs = req_qs
                     if department:
                         email_qs = email_qs.filter(em_customerdepartment=department)
                     
@@ -124,11 +128,21 @@ def update_trip_approval(request, trip_id):
                         email_type=1
                     )
                     trip.tr_trip_started_mail_sent = True
-                    messages.info(request, "Automated 'Trip Started' email sent.")
+                    try:
+                        messages.info(request, "Automated 'Trip Started' email sent.")
+                    except Exception:
+                        pass
                 except Exception as e:
-                    messages.error(request, f"Error sending automated email: {str(e)}")
+                    print(f"Error sending automated email: {str(e)}")
+                    try:
+                        messages.error(request, f"Error sending automated email: {str(e)}")
+                    except Exception:
+                        pass
 
         trip.save()
 
-        messages.success(request, "Approval updated.")
+        try:
+            messages.success(request, "Approval updated.")
+        except Exception:
+            pass
     return redirect('trip_approval_view')

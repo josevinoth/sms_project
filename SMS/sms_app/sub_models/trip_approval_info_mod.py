@@ -10,4 +10,4 @@ class Trip_approval_info(models.Model):
         ordering = ["ta_approval_status"]
 
     def __str__(self):
-        return self.ta_approval_status
+        return str(self.ta_approval_status) if self.ta_approval_status else f"Approval #{self.id}"
