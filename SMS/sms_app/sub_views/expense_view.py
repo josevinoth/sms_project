@@ -43,6 +43,13 @@ def expense_add(request, expense_id=0, is_petty_cash=False, petty_cash_type=None
                     initial_data['exp_credit_ledger'] = ledger.id
             
             expense_form = ExpenseaddForm(initial=initial_data)
+            if is_petty_cash:
+                from ..models import User_extInfo, MyUser
+                bvm_business_id = initial_data.get('exp_business')
+                branch_id = get_session_branch_id(request)
+                if bvm_business_id and branch_id:
+                    user_ids = User_extInfo.objects.filter(emp_organisation_id=bvm_business_id, emp_branch_id=branch_id).values_list('user_id', flat=True)
+                    expense_form.fields['exp_to'].queryset = MyUser.objects.filter(id__in=user_ids)
             context = {
                 'expense_form': expense_form,
                 'first_name': first_name,
@@ -57,6 +64,14 @@ def expense_add(request, expense_id=0, is_petty_cash=False, petty_cash_type=None
             except ExpenseInfo.DoesNotExist:
                 messages.error(request, "Expense not found.")
                 return redirect('expense_list')
+            
+            from ..models import User_extInfo, MyUser
+            bvm_business_id = expense.exp_business_id
+            branch_id = get_session_branch_id(request)
+            if bvm_business_id and branch_id:
+                user_ids = User_extInfo.objects.filter(emp_organisation_id=bvm_business_id, emp_branch_id=branch_id).values_list('user_id', flat=True)
+                expense_form.fields['exp_to'].queryset = MyUser.objects.filter(id__in=user_ids)
+
             context = {
                 'expense_form': expense_form,
                 'first_name': first_name,

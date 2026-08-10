@@ -30,6 +30,7 @@ class ExpenseInfo(models.Model):
     exp_number= models.CharField(blank=True,null=True,max_length=50)
     exp_business = models.ForeignKey(Business_Sol_info, on_delete=models.CASCADE, null=True)
     exp_iou = models.ForeignKey(iou_info, on_delete=models.CASCADE, null=True,blank=True)
+    exp_to = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='expense_to')
 
     class Meta:
         ordering = ["exp_number"]

@@ -1,0 +1,403 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+<style>
+    /* Compact styling for this page only */
+    #tms_petty_cash_add .form-group-modern {
+        margin-bottom: 0.6rem; 
+    }
+    #tms_petty_cash_add .form-control-modern {
+        border-radius: 6px;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        height: 34px;
+    }
+    #tms_petty_cash_add .form-label-modern {
+        margin-bottom: 0.15rem;
+        font-size: 0.8rem;
+    }
+    #tms_petty_cash_add .form-section {
+        padding: 0.8rem;
+    }
+    
+    /* Fix Select2 Missing Outline */
+    .select2-container .select2-selection--single {
+        height: 34px !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 6px !important;
+        padding: 0.2rem 0.4rem;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 32px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 26px !important;
+        font-size: 0.95rem; /* Increased from 0.85rem */
+        font-weight: 600;
+        color: #495057;
+    }
+</style>
+
+<form method="POST" id="tms_petty_cash_add" action="">
+    {% csrf_token %}
+    
+    <div class="container-fluid">
+        <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+                <i class="fas fa-money-bill-wave mr-2"></i> Add/Update TMS Petty Cash
+            </h3>
+            <div>
+                <a href="{% url 'tms_petty_cash_list' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+        
+        <div class="modern-card" style="border-top:none; padding: 1rem !important;">
+            <div class="row">
+                <!-- ========== COLUMN 1 ========== -->
+                <div class="col-12 col-md-4">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-info-circle"></i> GENERAL INFO</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Business</label>
+                            {% render_field form.tpc_business id="tpc_business" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Branch</label>
+                            {% render_field form.tpc_branch id="tpc_branch" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Expenses Category</label>
+                            {% render_field form.tpc_category id="tpc_category" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Voucher Number</label>
+                            <input type="text" id="tpc_number" name="tpc_number" class="form-control form-control-modern disable_a_href bg-secondary text-white" placeholder="Auto generated" readonly="readonly" value="{{ form.instance.tpc_number|default_if_none:'' }}">
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Transaction Date</label>
+                            {% render_field form.tpc_transaction_date id="tpc_transaction_date" class="form-control form-control-modern" type="date" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Expenses Type</label>
+                            {% render_field form.tpc_expense_type id="tpc_expense_type" class="form-control form-control-modern select2" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Amount</label>
+                            {% render_field form.tpc_amount id="tpc_amount" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Credit Ledger</label>
+                            {% render_field form.tpc_credit_ledger id="tpc_credit_ledger" class="form-control form-control-modern" %}
+                            <span id="ledger_balance_display" class="text-success font-weight-bold" style="font-size: 0.9rem; margin-top: 6px; display: block;"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ========== COLUMN 2 ========== -->
+                <div class="col-12 col-md-4">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-truck"></i> TRIP DETAILS</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">To Person</label>
+                            {% render_field form.tpc_to id="tpc_to" class="form-control form-control-modern select2" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Trip Date</label>
+                            {% render_field form.tpc_trip_date id="tpc_trip_date" class="form-control form-control-modern" type="date" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Job No (Cnote No)</label>
+                            {% render_field form.tpc_job_no id="tpc_job_no" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer</label>
+                            {% render_field form.tpc_customer id="tpc_customer" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vehicle Source</label>
+                            {% render_field form.tpc_vehicle_source id="tpc_vehicle_source" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Units</label>
+                            {% render_field form.tpc_unit id="tpc_unit" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">From Location</label>
+                            <input type="text" id="tpc_from_location" class="form-control form-control-modern" value="{{ from_location }}" readonly>
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">To Location</label>
+                            <input type="text" id="tpc_to_location" class="form-control form-control-modern" value="{{ to_location }}" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== COLUMN 3 ========== -->
+                <div class="col-12 col-md-4">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-info"></i> ADDITIONAL DETAILS</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vehicle No.</label>
+                            {% render_field form.tpc_vehicle_number id="tpc_vehicle_number" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Driver Name</label>
+                            {% render_field form.tpc_driver_name id="tpc_driver_name" class="form-control form-control-modern" %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ================= ACTION BUTTONS ================= -->
+            <div class="action-row mt-4 d-flex justify-content-between">
+                <button type="submit" class="btn-modern btn-highlight">
+                    <i class="fas fa-check"></i> Submit
+                </button>
+                <a href="{% url 'tms_petty_cash_list' %}" class="btn-modern btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </div>
+
+        <!-- ================= TRIP LIST TABLE ================= -->
+        <div id="trip_table_container" class="modern-card mt-4" style="display:none; padding: 1rem !important;">
+            <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 text-white">Available Trips for Selected Date</h5>
+            </div>
+            <div class="table-responsive shadow-box-table p-3">
+                <table class="table table-striped table-bordered table-sm" id="trip_table">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Action</th>
+                            <th>Cnote No</th>
+                            <th>Route (From - To)</th>
+                            <th>Customer</th>
+                            <th>Vehicle Source</th>
+                            <th>Vehicle No</th>
+                            <th>Driver Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated via AJAX -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            width: '100%',
+            placeholder: '--Select--',
+            allowClear: true
+        });
+        
+        // Mutually exclusive Unit and Vehicle Source
+        function toggleTransFields(changedField) {
+            var vehicleSource = $('#tpc_vehicle_source').val();
+            var department = $('#tpc_unit').val();
+            
+            if (changedField === 'unit' && department !== "") {
+                $('#tpc_vehicle_source').val("").trigger('change.select2');
+            }
+            
+            if (changedField === 'source' && vehicleSource !== "") {
+                $('#tpc_unit').val("");
+            }
+            
+            vehicleSource = $('#tpc_vehicle_source').val();
+            department = $('#tpc_unit').val();
+            
+            if (vehicleSource !== "") {
+                $('#tpc_unit').prop('disabled', true);
+            } else {
+                $('#tpc_unit').prop('disabled', false);
+            }
+            
+            if (department !== "") {
+                $('#tpc_vehicle_source').prop('disabled', true);
+                if ($('#tpc_vehicle_source').hasClass('select2-hidden-accessible')) {
+                    $('#tpc_vehicle_source').select2('enable', false);
+                }
+            } else {
+                $('#tpc_vehicle_source').prop('disabled', false);
+                if ($('#tpc_vehicle_source').hasClass('select2-hidden-accessible')) {
+                    $('#tpc_vehicle_source').select2('enable', true);
+                }
+            }
+        }
+        
+        $('#tpc_vehicle_source').change(function() { toggleTransFields('source'); });
+        $('#tpc_unit').change(function() { toggleTransFields('unit'); });
+        toggleTransFields(); // run on load
+        
+        // AJAX to fetch trips by date
+        $('#tpc_trip_date').change(function() {
+            var selectedDate = $(this).val();
+            
+            // Auto-populate transaction date if it's empty
+            if (!$('#tpc_transaction_date').val()) {
+                $('#tpc_transaction_date').val(selectedDate);
+            }
+            
+            if (selectedDate) {
+                $.ajax({
+                    url: "{% url 'get_tms_trips_by_date' %}",
+                    data: { 'trip_date': selectedDate },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            var tbody = $('#trip_table tbody');
+                            tbody.empty();
+                            if (response.data.length > 0) {
+                                response.data.forEach(function(trip) {
+                                    var row = `<tr>
+                                        <td><button type="button" class="btn btn-sm btn-success select-trip-btn font-weight-bold" 
+                                            data-cnote="${trip.cnote_no}" 
+                                            data-customer="${trip.customer_id}" 
+                                            data-source="${trip.vehicle_source_id}" 
+                                            data-vehicle="${trip.vehicle_number}" 
+                                            data-driver="${trip.driver_name}"
+                                            data-from="${trip.from_location}"
+                                            data-to="${trip.to_location}">
+                                            <i class="fas fa-hand-pointer"></i> Select
+                                        </button></td>
+                                        <td>${trip.cnote_no}</td>
+                                        <td>${trip.from_location} - ${trip.to_location}</td>
+                                        <td>${trip.customer_name}</td>
+                                        <td>${trip.vehicle_source_name}</td>
+                                        <td>${trip.vehicle_number}</td>
+                                        <td>${trip.driver_name}</td>
+                                    </tr>`;
+                                    tbody.append(row);
+                                });
+                                $('#trip_table_container').show();
+                            } else {
+                                tbody.append('<tr><td colspan="7" class="text-center text-danger font-weight-bold">No trips found for this date.</td></tr>');
+                                $('#trip_table_container').show();
+                            }
+                        }
+                    },
+                    error: function() {
+                        alert("Error fetching trips.");
+                    }
+                });
+            } else {
+                $('#trip_table_container').hide();
+            }
+        });
+        
+        // Handle trip selection
+        $(document).on('click', '.select-trip-btn', function() {
+            var cnote = $(this).data('cnote');
+            var customer = $(this).data('customer');
+            var source = $(this).data('source');
+            var vehicle = $(this).data('vehicle');
+            var driver = $(this).data('driver');
+            var from_loc = $(this).data('from');
+            var to_loc = $(this).data('to');
+            
+            $('#tpc_job_no').val(cnote);
+            $('#tpc_from_location').val(from_loc);
+            $('#tpc_to_location').val(to_loc);
+            
+            if (customer) {
+                $('#tpc_customer').val(customer).trigger('change');
+            } else {
+                $('#tpc_customer').val('').trigger('change');
+            }
+            
+            if (source) {
+                $('#tpc_vehicle_source').val(source).trigger('change');
+            } else {
+                $('#tpc_vehicle_source').val('').trigger('change');
+            }
+            
+            if (vehicle) {
+                var v_opt = $('#tpc_vehicle_number option').filter(function() { 
+                    return $(this).text().trim().toUpperCase() === String(vehicle).trim().toUpperCase(); 
+                });
+                if (v_opt.length > 0) {
+                    $('#tpc_vehicle_number').val(v_opt.val()).trigger('change');
+                } else {
+                    var newVOpt = new Option(vehicle, vehicle, true, true);
+                    $('#tpc_vehicle_number').append(newVOpt).trigger('change');
+                }
+            } else {
+                $('#tpc_vehicle_number').val('').trigger('change');
+            }
+            
+            if (driver) {
+                var d_opt = $('#tpc_driver_name option').filter(function() { 
+                    return $(this).text().trim().toUpperCase() === String(driver).trim().toUpperCase(); 
+                });
+                if (d_opt.length > 0) {
+                    $('#tpc_driver_name').val(d_opt.val()).trigger('change');
+                } else {
+                    var newDOpt = new Option(driver, driver, true, true);
+                    $('#tpc_driver_name').append(newDOpt).trigger('change');
+                }
+            } else {
+                $('#tpc_driver_name').val('').trigger('change');
+            }
+            
+            // Scroll back to the top of the form smoothly
+            $('html, body').animate({
+                scrollTop: $("#tms_petty_cash_add").offset().top - 20
+            }, 500);
+        });
+
+        // Fetch Credit Ledger balance on change
+        $('#tpc_credit_ledger').change(function() {
+            var ledgerId = $(this).val();
+            if (ledgerId) {
+                $.ajax({
+                    url: "{% url 'get_ledger_balance' %}",
+                    data: { 'ledger_id': ledgerId },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $('#ledger_balance_display').text("Total Balance: " + response.balance);
+                        } else {
+                            $('#ledger_balance_display').text("");
+                        }
+                    },
+                    error: function() {
+                        $('#ledger_balance_display').text("");
+                    }
+                });
+            } else {
+                $('#ledger_balance_display').text("");
+            }
+        });
+        
+        // Trigger check on load if initial value exists
+        if ($('#tpc_credit_ledger').val()) {
+            $('#tpc_credit_ledger').trigger('change');
+        }
+    });
+</script>
+{% endblock %}
