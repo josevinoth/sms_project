@@ -2,43 +2,6 @@
 {% load widget_tweaks %}
 
 {% block content %}
-<style>
-    /* Compact styling for this page only */
-    #tms_petty_cash_add .form-group-modern {
-        margin-bottom: 0.6rem; 
-    }
-    #tms_petty_cash_add .form-control-modern {
-        border-radius: 6px;
-        padding: 0.3rem 0.6rem;
-        font-size: 0.85rem;
-        font-weight: 600;
-        height: 34px;
-    }
-    #tms_petty_cash_add .form-label-modern {
-        margin-bottom: 0.15rem;
-        font-size: 0.8rem;
-    }
-    #tms_petty_cash_add .form-section {
-        padding: 0.8rem;
-    }
-    
-    /* Fix Select2 Missing Outline */
-    .select2-container .select2-selection--single {
-        height: 34px !important;
-        border: 1px solid #ced4da !important;
-        border-radius: 6px !important;
-        padding: 0.2rem 0.4rem;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 32px !important;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 26px !important;
-        font-size: 0.95rem; /* Increased from 0.85rem */
-        font-weight: 600;
-        color: #495057;
-    }
-</style>
 
 <form method="POST" id="tms_petty_cash_add" action="">
     {% csrf_token %}
@@ -211,11 +174,39 @@
 
 <script>
     $(document).ready(function() {
-        $('.select2').select2({
+        $('.select2').not('#tpc_to').select2({
             width: '100%',
             placeholder: '--Select--',
             allowClear: true
         });
+
+        $('#tpc_to').select2({
+            width: '100%',
+            placeholder: '--Select--',
+            allowClear: true,
+            tags: true,
+            createTag: function (params) {
+                var term = $.trim(params.term);
+                if (term === '') {
+                    return null;
+                }
+                return {
+                    id: term,
+                    text: term,
+                    newTag: true
+                }
+            }
+        });
+
+        {% if form.instance.tpc_to_manual %}
+            var manualVal = "{{ form.instance.tpc_to_manual|escapejs }}";
+            if ($('#tpc_to option[value="' + manualVal + '"]').length === 0) {
+                var newOption = new Option(manualVal, manualVal, true, true);
+                $('#tpc_to').append(newOption).trigger('change');
+            } else {
+                $('#tpc_to').val(manualVal).trigger('change');
+            }
+        {% endif %}
         
         // Mutually exclusive Unit and Vehicle Source
         function toggleTransFields(changedField) {
@@ -400,4 +391,42 @@
         }
     });
 </script>
+<style>
+    /* Compact styling for this page only */
+    #tms_petty_cash_add .form-group-modern {
+        margin-bottom: 0.6rem;
+    }
+    #tms_petty_cash_add .form-control-modern {
+        border-radius: 6px;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        height: 34px;
+    }
+    #tms_petty_cash_add .form-label-modern {
+        margin-bottom: 0.15rem;
+        font-size: 0.8rem;
+    }
+    #tms_petty_cash_add .form-section {
+        padding: 0.8rem;
+    }
+
+    /* Fix Select2 Missing Outline */
+    .select2-container .select2-selection--single {
+        height: 34px !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 6px !important;
+        padding: 0.2rem 0.4rem;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 32px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 26px !important;
+        font-size: 0.95rem; /* Increased from 0.85rem */
+        font-weight: 600;
+        color: #495057;
+    }
+</style>
+
 {% endblock %}

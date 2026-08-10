@@ -90,6 +90,15 @@ def tms_petty_cash_add(request, tpc_id=0):
             )
             post_data['tpc_driver_name'] = str(drv.id)
 
+        if post_data.get('tpc_to'):
+            if not str(post_data['tpc_to']).isdigit():
+                post_data['tpc_to_manual'] = str(post_data['tpc_to']).strip()
+                post_data['tpc_to'] = ''
+            else:
+                post_data['tpc_to_manual'] = ''
+        else:
+            post_data['tpc_to_manual'] = ''
+
         if tpc_id == 0:
             form = TMSPettyCashForm(post_data, request=request)
         else:

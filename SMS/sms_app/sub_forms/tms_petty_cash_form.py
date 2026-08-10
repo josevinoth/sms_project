@@ -22,6 +22,9 @@ class TMSPettyCashForm(forms.ModelForm):
             
         if 'tpc_category' in self.fields:
             self.fields['tpc_category'].queryset = self.fields['tpc_category'].queryset.filter(exp_category_name__icontains='Cash')
+
+        if 'tpc_to' in self.fields:
+            self.fields['tpc_to'].queryset = self.fields['tpc_to'].queryset.filter(drivermasterinfo__isnull=False)
             
         if self.request and 'tpc_credit_ledger' in self.fields:
             try:
