@@ -149,6 +149,9 @@
         <div id="trip_table_container" class="modern-card mt-4" style="display:none; padding: 1rem !important;">
             <div class="modern-header d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0 text-white">Available Trips for Selected Date</h5>
+                <div style="width: 250px;">
+                    <input type="text" id="trip_search_input" class="form-control" placeholder="Search trips..." style="height: 30px; font-size: 0.85rem; border-radius: 4px; padding: 2px 8px; font-weight: 600;">
+                </div>
             </div>
             <div class="table-responsive shadow-box-table p-3">
                 <table class="table table-striped table-bordered table-sm" id="trip_table">
@@ -250,6 +253,7 @@
         // AJAX to fetch trips by date
         $('#tpc_trip_date').change(function() {
             var selectedDate = $(this).val();
+            $('#trip_search_input').val('');
             
             // Auto-populate transaction date if it's empty
             if (!$('#tpc_transaction_date').val()) {
@@ -389,6 +393,19 @@
         if ($('#tpc_credit_ledger').val()) {
             $('#tpc_credit_ledger').trigger('change');
         }
+
+        // Search filter for available trips table
+        $('#trip_search_input').on('keyup', function() {
+            var value = $(this).val().toLowerCase();
+            $('#trip_table tbody tr').each(function() {
+                var rowText = $(this).text().toLowerCase();
+                // Ensure we don't hide the "No trips found" message row
+                if ($(this).find('td').attr('colspan')) {
+                    return;
+                }
+                $(this).toggle(rowText.indexOf(value) > -1);
+            });
+        });
     });
 </script>
 <style>
