@@ -157,8 +157,15 @@
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Handling</label>
                             <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_handlingcost class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
+                                {% render_field tripclosure_form.tc_handlingcost id="tc_handlingcost" class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
                                 {% render_field tripclosure_form.tc_handlingcost_check id="tc_handlingcost_check" class="ml-2" style="width:16px; height:16px;" %}
+                            </div>
+                        </div>
+
+                        <div id="handling_reason_container" class="align-items-center justify-content-between mb-2 d-none">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Handling Reason</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_handlingcost_reason id="tc_handlingcost_reason" class="form-control form-control-modern form-control-sm py-1 w-100" style="height:28px;" placeholder="Reason for handling cost" %}
                             </div>
                         </div>
 
@@ -460,8 +467,21 @@
         });
     }
 
+    function checkHandlingReasonVisibility() {
+        var cost = parseFloat($('#tc_handlingcost').val()) || 0;
+        if (cost > 0) {
+            $('#handling_reason_container').removeClass('d-none').addClass('d-flex');
+        } else {
+            $('#handling_reason_container').removeClass('d-flex').addClass('d-none');
+        }
+    }
+
     $(document).ready(function() {
         attachEventListeners();
+        checkHandlingReasonVisibility();
+        $(document).on('input change keyup', '#tc_handlingcost', function() {
+            checkHandlingReasonVisibility();
+        });
     });
 </script>
 <script>

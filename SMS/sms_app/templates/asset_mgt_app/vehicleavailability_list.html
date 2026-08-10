@@ -1,69 +1,133 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center text-light bg-info">
-            <h3>Vehicle Availability List</h3>
+<div class="container-fluid py-3">
+    <!-- Header Section -->
+    <div class="modern-header mb-4 d-flex align-items-center justify-content-between flex-wrap" style="gap: 15px;">
+        <div>
+            <h3 class="mb-1"><i class="fas fa-truck-monster mr-2"></i> Vehicle Availability List</h3>
+            <p class="mb-0 text-white-50 small">Live fleet availability and operational trip status tracking</p>
         </div>
-        <div class="col-5"></div>
+        <div>
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel" style="padding: 0.5rem 1.2rem; text-decoration: none;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Summary Pills -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex flex-wrap align-items-center" style="gap: 10px;">
+            <button class="btn btn-sm btn-outline-info active avail-filter-btn" data-filter="">
+                <i class="fas fa-list mr-1"></i> All Vehicles <span class="badge badge-light ml-1">{{ total_count }}</span>
+            </button>
+            <button class="btn btn-sm btn-outline-success avail-filter-btn" data-filter="Yes">
+                <i class="fas fa-check-circle mr-1"></i> Available <span class="badge badge-success ml-1">{{ available_count }}</span>
+            </button>
+            <button class="btn btn-sm btn-outline-danger avail-filter-btn" data-filter="No">
+                <i class="fas fa-ban mr-1"></i> In Trip / Busy <span class="badge badge-danger ml-1">{{ busy_count }}</span>
+            </button>
+            {% if allotted_count > 0 %}
+            <button class="btn btn-sm btn-outline-warning avail-filter-btn" data-filter="Allotted">
+                <i class="fas fa-clock mr-1"></i> Allotted <span class="badge badge-warning ml-1">{{ allotted_count }}</span>
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Card & Data Table -->
+    <div class="modern-card p-3">
+        <div class="table-responsive">
+            <table id="vehicleavailability_list" class="table modern-table w-100">
+                <thead>
+                    <tr>
+                        <th>Registration Number</th>
+                        <th>Manufacturer</th>
+                        <th>Model</th>
+                        <th>Vehicle Type</th>
+                        <th>Ownership</th>
+                        <th>Reported Location</th>
+                        <th>Reported Date & Time</th>
+                        <th>Trip Status</th>
+                        <th>Availability</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vehicle in vehicle_data %}
+                    <tr>
+                        <td>
+                            <span class="font-weight-bold text-dark">{{ vehicle.vehicle_number }}</span>
+                        </td>
+                        <td>{{ vehicle.manufacturer|default:"-" }}</td>
+                        <td>{{ vehicle.model|default:"-" }}</td>
+                        <td>
+                            <span class="badge badge-secondary px-2 py-1">{{ vehicle.vehicle_type }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-light border">{{ vehicle.ownership }}</span>
+                        </td>
+                        <td>
+                            {% if vehicle.location != 'N/A' %}
+                                <i class="fas fa-map-marker-alt text-danger mr-1"></i> {{ vehicle.location }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if vehicle.date_time != 'N/A' %}
+                                <span class="small font-weight-bold">{{ vehicle.date_time }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-info px-2 py-1">{{ vehicle.trip_status }}</span>
+                        </td>
+                        <td data-search="{{ vehicle.availability }}">
+                            {% if vehicle.availability == 'Yes' %}
+                                <span class="badge badge-success px-3 py-1 font-weight-bold"><i class="fas fa-check-circle mr-1"></i> Yes</span>
+                            {% elif vehicle.availability == 'Allotted' %}
+                                <span class="badge badge-warning px-3 py-1 font-weight-bold text-dark"><i class="fas fa-clock mr-1"></i> Allotted</span>
+                            {% else %}
+                                <span class="badge badge-danger px-3 py-1 font-weight-bold"><i class="fas fa-times-circle mr-1"></i> No</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2 text-secondary d-block"></i>
+                            No Vehicles Found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+{% endblock content %}
 
-<div class="container-fluid row">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-</div>
-
-<hr>
-
-<div class="container-fluid">
-    <table id="vehicleavailability_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-            <tr>
-                <th>Registration Number</th>
-                <th>Vehicle Manufacturer</th>
-                <th>Vehicle Model</th>
-                <th>Vehicle Type</th>
-                <th>Vehicle Ownership</th>
-                <th>Reported Location</th>
-                <th>Reported Date & Time</th>
-                <th>Trip Status</th>
-                <th>Availability</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for vehicle in vehicle_data %}
-            <tr>
-                <td>{{ vehicle.vehicle_number }}</td>
-                <td>{{ vehicle.manufacturer }}</td>
-                <td>{{ vehicle.model }}</td>
-                <td>{{ vehicle.vehicle_type }}</td>
-                <td>{{ vehicle.ownership }}</td>
-                <td>{{ vehicle.location }}</td>
-                <td>{{ vehicle.date_time }}</td>
-                <td>{{ vehicle.trip_status }}</td>
-                <td class="{% if vehicle.availability == 'No' %}{% else %}{% endif %}">
-                    {{ vehicle.availability }}
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="11" class="text-center">No Vehicles Found</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
+{% block extra_js %}
 <script>
     $(document).ready(function() {
-        $('#vehicleavailability_list').DataTable();
+        var table = $('#vehicleavailability_list').DataTable({
+            paging: true,
+            pageLength: 25,
+            scrollX: true,
+            order: [[8, 'asc'], [0, 'asc']],
+            dom: "<'d-flex align-items-center justify-content-between mb-3'Bf>rt<'d-flex align-items-center justify-content-between mt-3'lip>",
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+
+        // Quick Filter Buttons
+        $('.avail-filter-btn').on('click', function() {
+            $('.avail-filter-btn').removeClass('active btn-info btn-success btn-danger btn-warning');
+            var filterVal = $(this).data('filter');
+            $(this).addClass('active');
+            
+            table.column(8).search(filterVal ? '^' + filterVal + '$' : '', true, false).draw();
+        });
     });
 </script>
-
-{% endblock content %}
+{% endblock extra_js %}

@@ -1420,57 +1420,100 @@ def load_truck_details(request):
 
 
 def fleet_management_view(request):
-    vehicles = VehiclemasterInfo.objects.all()
+    vehicles = VehiclemasterInfo.objects.all().select_related('vm_vehicletype', 'vm_vehiclemanufacturer', 'vm_vehiclemodel', 'vm_ownership')
     vehicle_status_list = []
 
+    COMPLETED_STATUS_IDS = [2, 3, 4, 5, 6, 7, 9, 10]   # Settled, Closed, Cancelled, etc.
+
+    total_count = 0
+    in_trip_count = 0
+    available_count = 0
+
     for vehicle in vehicles:
+        reg_num = vehicle.vm_registrationnumber
+
         trip = TripdetailInfo.objects.filter(
-            tr_vehiclenumber=vehicle.vm_registrationnumber
+            tr_vehiclenumber=reg_num
         ).select_related(
-            'tr_enquirynumber__en_customername'
-        ).order_by('-tr_created_at').first()
+            'tr_enquirynumber__en_customername',
+            'tr_departedlocation',
+            'tr_reportedlocation',
+            'tr_vehicletype_placed',
+            'tr_vehicletype',
+            'tr_vehiclesource',
+            'tc_financestatus'
+        ).order_by('-tr_created_at', '-id').first()
+
+        master_vtype = vehicle.vm_vehicletype.vt_vehicletype if vehicle.vm_vehicletype else ''
+        master_vsrc = vehicle.vm_ownership.ow_ownership if vehicle.vm_ownership else ''
 
         if trip:
             enquiry = trip.tr_enquirynumber
             customer = enquiry.en_customername if enquiry else None
 
+            from_loc = getattr(trip, 'tr_departedlocation', None)
+            to_loc = getattr(trip, 'tr_reportedlocation', None)
+            v_placed = getattr(trip, 'tr_vehicletype_placed', None)
+            v_req = getattr(trip, 'tr_vehicletype', None)
+            v_src = getattr(trip, 'tr_vehiclesource', None)
+            fin_status = getattr(trip, 'tc_financestatus', None)
+
+            status_id = fin_status.id if fin_status else None
+            is_active_trip = status_id not in COMPLETED_STATUS_IDS if status_id else False
+
+            if is_active_trip:
+                operational_status = 'In Trip'
+                in_trip_count += 1
+            else:
+                operational_status = 'Available'
+                available_count += 1
+
+            consignment_obj = getattr(trip, 'tr_consignmentnumber', None)
+
             status = {
-                'registration_number': vehicle.vm_registrationnumber,
+                'registration_number': reg_num,
                 'customer_name': customer.cu_name if customer else '',
-                'driver_name': trip.tr_drivername,
-                'from_location': trip.tr_departedlocation.place_name if trip.tr_departedlocation else '',
-                'to_location': trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else '',
-                'vehicle_type': trip.tr_vehicletype_placed.vt_vehicletype if trip.tr_vehicletype_placed else '',
-                'vehicle_source': trip.tr_vehiclesource.ow_ownership if trip.tr_vehiclesource else '',
+                'driver_name': trip.tr_drivername or '',
+                'from_location': from_loc.place_name if from_loc else '',
+                'to_location': to_loc.place_name if to_loc else '',
+                'vehicle_type': v_placed.vt_vehicletype if v_placed else (v_req.vt_vehicletype if v_req else master_vtype),
+                'vehicle_source': v_src.ow_ownership if v_src else master_vsrc,
                 'departed_date': trip.tr_departeddate,
                 'reported_date': trip.tr_reporteddate,
-                'trip_status': trip.tc_financestatus.status if trip.tc_financestatus else 'Unknown',
-                'trip_number': trip.tr_tripnumber,
-                'status': 'In Trip'
+                'trip_status': fin_status.status if fin_status else 'Unknown',
+                'trip_number': trip.tr_tripnumber or '',
+                'consignment_number': consignment_obj.co_consignmentnumber if consignment_obj else '',
+                'status': operational_status
             }
         else:
+            available_count += 1
             status = {
-                'registration_number': vehicle.vm_registrationnumber,
+                'registration_number': reg_num,
                 'customer_name': '',
                 'driver_name': '',
                 'from_location': '',
                 'to_location': '',
-                'trip_status': '',
+                'trip_status': 'No Trip Data',
                 'trip_number': '',
-                'vehicle_type': '',
-                'vehicle_source': '',
+                'consignment_number': '',
+                'vehicle_type': master_vtype,
+                'vehicle_source': master_vsrc,
                 'departed_date': '',
                 'reported_date': '',
                 'status': 'Available'
             }
 
+        total_count += 1
         vehicle_status_list.append(status)
 
-    return render(
-        request,
-        "asset_mgt_app/fleet_management.html",
-        {'vehicle_status_list': vehicle_status_list}
-    )
+    context = {
+        'vehicle_status_list': vehicle_status_list,
+        'total_count': total_count,
+        'in_trip_count': in_trip_count,
+        'available_count': available_count,
+    }
+
+    return render(request, "asset_mgt_app/fleet_management.html", context)
 
 
 @login_required(login_url='login_page')

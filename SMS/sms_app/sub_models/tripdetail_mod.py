@@ -63,6 +63,7 @@ class TripdetailInfo(models.Model):
     tc_unloadingcost = models.FloatField(default=0.0)
     tc_weighmentcost = models.FloatField(default=0.0)
     tc_handlingcost = models.FloatField(default=0.0)
+    tc_handlingcost_reason = models.CharField(max_length=500, null=True, blank=True)
     tc_haltingcost = models.FloatField(default=0.0)
     tc_total_halting_cost = models.FloatField(default=0.0)
     tc_supervisorcost = models.FloatField(default=0.0)
