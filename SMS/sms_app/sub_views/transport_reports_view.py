@@ -776,7 +776,7 @@ OWN_VS_MARKET_SALES_HEADERS = [
 ]
 
 ENQUIRY_PENDING_HEADERS = [
-    "SNo", "Date", "Enquiry No", "From", "To", "Vehicle Requested", "Assigned Vehicles", "Unassigned Vehicles", "Cancelled Vehicles",
+    "SNo", "Date", "Enquiry No", "From", "To", "Vehicle Requested", "Consignment Note Created", "Assigned Vehicles", "Unassigned Vehicles", "Cancelled Vehicles",
     "Vehicle Type",
     "Customer Name", "Reason"
 ]
@@ -5266,7 +5266,7 @@ def own_vs_market_sales_report_view(request):
 
 @login_required(login_url='login_page')
 def enquiry_pending_report_view(request):
-    from ..models import EnquirynoteInfo, Enquirynotevehicle, Vehicle_allotmentInfo, StatusList
+    from ..models import EnquirynoteInfo, Enquirynotevehicle, Vehicle_allotmentInfo, ConsignmentdetailInfo, StatusList
     first_name = request.session.get('first_name')
 
     if request.method == "POST":
@@ -5330,6 +5330,12 @@ def enquiry_pending_report_view(request):
         if va.va_status_id == 4:
             cancelled_map.setdefault(va.va_enquirynumber_id, []).append(va.id)
 
+    # Consignment Notes mapping
+    cnote_map = {}
+    for cn in ConsignmentdetailInfo.objects.filter(co_enquirynumber_id__in=enquiry_ids):
+        if cn.co_enquirynumber_id:
+            cnote_map[cn.co_enquirynumber_id] = cnote_map.get(cn.co_enquirynumber_id, 0) + 1
+
     data_rows = []
     for idx, enq in enumerate(enquiries, start=1):
         # Vehicle Requested
@@ -5345,6 +5351,7 @@ def enquiry_pending_report_view(request):
         total_cancelled = len(cancelled_map.get(enq.id, []))
         unplaced_count = max(0, total_req - total_placed)
         places_str = str(unplaced_count)
+        cnote_count_str = str(cnote_map.get(enq.id, 0))
 
         if unplaced_count > 0:
             row = [
@@ -5354,6 +5361,7 @@ def enquiry_pending_report_view(request):
                 safe_str(enq.en_fromlocaion),
                 safe_str(enq.en_tolocation),
                 veh_req_str,
+                cnote_count_str,
                 str(total_placed),
                 places_str,
                 str(total_cancelled),
@@ -5643,7 +5651,7 @@ def pod_pending_report_ajax_view(request):
 
 @login_required(login_url='login_page')
 def enquiry_pending_report_ajax_view(request):
-    from ..models import EnquirynoteInfo, Enquirynotevehicle, Vehicle_allotmentInfo
+    from ..models import EnquirynoteInfo, Enquirynotevehicle, Vehicle_allotmentInfo, ConsignmentdetailInfo
     from django.db.models import Sum, Count, Q
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
@@ -5716,7 +5724,7 @@ def enquiry_pending_report_ajax_view(request):
         2: 'en_enquirynumber',
         3: 'en_fromlocaion__place_name',
         4: 'en_tolocation__place_name',
-        9: 'en_customername__cu_name',
+        11: 'en_customername__cu_name',
     }
     order_field = col_map.get(order_col, '-en_created_at')
     if order_dir == 'desc' and not order_field.startswith('-'):
@@ -5750,6 +5758,11 @@ def enquiry_pending_report_ajax_view(request):
         if va.va_status_id == 4:
             cancelled_map.setdefault(va.va_enquirynumber_id, []).append(va.id)
 
+    # Fetch Consignment Notes Count
+    cnotes = ConsignmentdetailInfo.objects.filter(co_enquirynumber_id__in=enquiry_ids).values(
+        'co_enquirynumber_id').annotate(tot=Count('id'))
+    cnote_map = {c['co_enquirynumber_id']: c['tot'] or 0 for c in cnotes}
+
     def safe_str(val):
         return str(val) if val else ""
 
@@ -5762,6 +5775,7 @@ def enquiry_pending_report_ajax_view(request):
         total_placed = len(allot_map.get(enq.id, []))
         total_cancelled = len(cancelled_map.get(enq.id, []))
         unplaced_count = max(0, total_req - total_placed)
+        cnote_count_str = str(cnote_map.get(enq.id, 0))
 
         data.append([
             idx,
@@ -5770,6 +5784,7 @@ def enquiry_pending_report_ajax_view(request):
             safe_str(enq.en_fromlocaion),
             safe_str(enq.en_tolocation),
             veh_req_str,
+            cnote_count_str,
             str(total_placed),
             str(unplaced_count),
             str(total_cancelled),
