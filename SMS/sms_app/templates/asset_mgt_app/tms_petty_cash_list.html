@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container-fluid py-4">
 
-    <!-- 🌟 Page Header 🌟 -->
+
     <div class="modern-list-header d-flex justify-content-between align-items-center mb-4">
         <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
             <i class="fas fa-list-alt mr-2"></i> TMS Petty Cash List
@@ -21,7 +21,7 @@
         </div>
     </div>
 
-    <!-- 🌟 Search Form Filter Row 🌟 -->
+
     <div class="form-section mb-4">
         <form method="GET" action="" class="d-flex flex-wrap align-items-end" style="gap:15px;">
             <div class="form-group-modern mb-0" style="flex: 0 0 300px;">
@@ -40,7 +40,7 @@
         </form>
     </div>
 
-    <!-- 🌟 Table Container 🌟 -->
+
     <div class="table-container-modern p-4">
         <!-- Django Flash Messages -->
         {% if messages %}
@@ -80,7 +80,7 @@
                     <td>{{ tpc.tpc_business }}</td>
                     <td>{{ tpc.tpc_branch }}</td>
                     <td>{{ tpc.tpc_amount }}</td>
-                    <td>{{ tpc.tpc_to }}</td>
+                    <td>{% if tpc.tpc_to %}{{ tpc.tpc_to }}{% else %}{{ tpc.tpc_to_manual|default_if_none:"" }}{% endif %}</td>
                     <td>{{ tpc.tpc_vehicle_number|default_if_none:"" }}</td>
                     <td>
                         <a href="{% url 'tms_petty_cash_update' tpc.id %}" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;"><i class="far fa-edit"></i></a>

@@ -150,6 +150,7 @@
                 <tr><th>Revenue</th><td id="sum_revenue">{{ summary_data.revenue }}</td></tr>
                 <tr><th>Operational Expenses</th><td id="sum_operational_expenses">{{ summary_data.operational_expenses }}</td></tr>
                 <tr><th>Maintenance cost</th><td id="sum_maintenance_cost">{{ summary_data.maintenance_cost }}</td></tr>
+                <tr><th>General Expenses</th><td id="sum_general_expenses">{{ summary_data.general_expenses }}</td></tr>
                 <tr><th>Insurance</th><td id="sum_insurance">{{ summary_data.insurance }}</td></tr>
                 <tr><th>Road Tax</th><td id="sum_road_tax">{{ summary_data.road_tax }}</td></tr>
                 <tr><th>Permit</th><td id="sum_permit">{{ summary_data.permit }}</td></tr>
@@ -193,6 +194,7 @@ $(document).ready(function () {
                     $('#sum_revenue').text(json.summary.revenue);
                     $('#sum_operational_expenses').text(json.summary.operational_expenses);
                     $('#sum_maintenance_cost').text(json.summary.maintenance_cost);
+                    $('#sum_general_expenses').text(json.summary.general_expenses);
                     $('#sum_insurance').text(json.summary.insurance);
                     $('#sum_road_tax').text(json.summary.road_tax);
                     $('#sum_permit').text(json.summary.permit);

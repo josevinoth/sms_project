@@ -2,53 +2,6 @@
 {% load widget_tweaks %}
 
 {% block content %}
-<style>
-    /* Scope compact rules for table elements only, keeping general forms as standard modern style */
-    .maintenance-bill-modern {
-        padding-top: 0.5rem !important;
-        padding-bottom: 0.5rem !important;
-    }
-
-    .maintenance-bill-modern .form-section {
-        padding: 0.85rem 1rem !important;
-        border-radius: 12px !important;
-    }
-
-    .maintenance-bill-modern .form-section-title {
-        margin-bottom: 0.55rem !important;
-        font-size: 0.78rem !important;
-    }
-
-    .maintenance-bill-modern .form-group-modern {
-        margin-bottom: 0.5rem !important;
-    }
-
-    .maintenance-bill-modern .form-label-modern {
-        margin-bottom: 0.22rem !important;
-        font-size: 0.72rem !important;
-    }
-
-    .maintenance-bill-modern input.form-control-modern,
-    .maintenance-bill-modern select.form-control-modern {
-        height: 36px !important;
-        padding: 0.4rem 0.7rem !important;
-        font-size: 0.85rem !important;
-    }
-
-    .maintenance-bill-modern .select2-container--default .select2-selection--single {
-        height: 36px !important;
-        border-radius: 10px !important;
-    }
-
-    .maintenance-bill-modern .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 32px !important;
-        font-size: 0.85rem !important;
-    }
-
-    .maintenance-bill-modern .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 34px !important;
-    }
-</style>
 
 <div class="container-fluid py-4 maintenance-bill-modern">
 
@@ -455,4 +408,52 @@
         }
     })();
 </script>
+<style>
+    /* Scope compact rules for table elements only, keeping general forms as standard modern style */
+    .maintenance-bill-modern {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+
+    .maintenance-bill-modern .form-section {
+        padding: 0.85rem 1rem !important;
+        border-radius: 12px !important;
+    }
+
+    .maintenance-bill-modern .form-section-title {
+        margin-bottom: 0.55rem !important;
+        font-size: 0.78rem !important;
+    }
+
+    .maintenance-bill-modern .form-group-modern {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .maintenance-bill-modern .form-label-modern {
+        margin-bottom: 0.22rem !important;
+        font-size: 0.72rem !important;
+    }
+
+    .maintenance-bill-modern input.form-control-modern,
+    .maintenance-bill-modern select.form-control-modern {
+        height: 36px !important;
+        padding: 0.4rem 0.7rem !important;
+        font-size: 0.85rem !important;
+    }
+
+    .maintenance-bill-modern .select2-container--default .select2-selection--single {
+        height: 36px !important;
+        border-radius: 10px !important;
+    }
+
+    .maintenance-bill-modern .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 32px !important;
+        font-size: 0.85rem !important;
+    }
+
+    .maintenance-bill-modern .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 34px !important;
+    }
+</style>
+
 {% endblock %}
