@@ -40,10 +40,8 @@ def safe_int(val, default=0):
 
 def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=None):
     from ..models import TripdetailInfo, DrivermasterInfo, DriverSalaryInfo, Fuelfillinginfo
-    from django.db.models import Q, Count
+    from django.db.models import Q
     from django.db.models.functions import Coalesce
-    import calendar
-    from datetime import date as date_cls
     import re
     from sms_app.sub_views.dmr_report_view import safe_num
 
@@ -56,37 +54,64 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
     # ==========================
     # 1. OPTIMIZED SALARY CALC
     # ==========================
-    driver_month_pairs = set()
-    driver_pk_map = {}
-    trip_driver_info = [] # store (trip.id, d_id, resolved_date)
+    all_drivers = list(DrivermasterInfo.objects.all())
 
-    for t in trips_list:
-        if t.tr_vehiclesource_id != 1: continue
-        d_id = None
-        if t.tr_driver_master_id:
-            d_id = t.tr_driver_master_id
-        elif t.tr_drivername:
-            m_id = re.search(r'\((\d+)\)', t.tr_drivername)
-            if m_id:
-                dm_id = m_id.group(1)
-                # Avoid DB query in loop by deferring it
-                driver_pk_map[dm_id] = None # placeholder
+    # Pre-build lookup dictionaries for fast O(1) matching:
+    driver_by_dm_id = {}
+    driver_by_phone = {}
+    driver_by_exact_name = {}
 
-    if driver_pk_map:
-        dms = DrivermasterInfo.objects.filter(dm_id__in=driver_pk_map.keys())
-        for dm in dms:
-            driver_pk_map[dm.dm_id] = dm.id
+    for d in all_drivers:
+        if d.dm_id:
+            driver_by_dm_id[str(d.dm_id).strip()] = d.id
+        if d.dm_drivernumber:
+            driver_by_phone[str(d.dm_drivernumber).strip()] = d.id
+        if d.dm_name:
+            driver_by_exact_name[d.dm_name.strip().lower()] = d.id
 
-    for t in trips_list:
-        if t.tr_vehiclesource_id != 1: continue
-        d_id = None
-        if t.tr_driver_master_id:
-            d_id = t.tr_driver_master_id
-        elif t.tr_drivername:
-            m_id = re.search(r'\((\d+)\)', t.tr_drivername)
-            if m_id and m_id.group(1) in driver_pk_map:
-                d_id = driver_pk_map[m_id.group(1)]
+    def resolve_driver_id(tr_driver_master_id, tr_drivername, tr_drivernumber):
+        if tr_driver_master_id:
+            return tr_driver_master_id
         
+        drivername_clean = str(tr_drivername).strip() if tr_drivername else ""
+        drivernumber_clean = str(tr_drivernumber).strip() if tr_drivernumber else ""
+        
+        # 1. Try parsing dm_id from name (e.g. "Gregory (20063)")
+        m_id = re.search(r'\((\d+)\)', drivername_clean)
+        if m_id:
+            dm_id_val = m_id.group(1)
+            d_id = driver_by_dm_id.get(dm_id_val)
+            if d_id:
+                return d_id
+                    
+        # 2. Try matching by phone number
+        if drivernumber_clean:
+            d_id = driver_by_phone.get(drivernumber_clean)
+            if d_id:
+                return d_id
+                    
+        # 3. Try matching by name (case-insensitive exact)
+        if drivername_clean:
+            d_id = driver_by_exact_name.get(drivername_clean.lower())
+            if d_id:
+                return d_id
+            
+            # Substring fallback
+            name_lower = drivername_clean.lower()
+            for d in all_drivers:
+                if d.dm_name:
+                    dm_name_lower = d.dm_name.lower()
+                    if name_lower in dm_name_lower or dm_name_lower in name_lower:
+                        return d.id
+                        
+        return None
+
+    driver_month_pairs = set()
+    trip_driver_info = [] # store (trip.id, d_id, month, year)
+
+    for t in trips_list:
+        if t.tr_vehiclesource_id != 1: continue
+        d_id = resolve_driver_id(t.tr_driver_master_id, t.tr_drivername, t.tr_drivernumber)
         if d_id:
             d = getattr(t, 'resolved_date', None)
             if not d:
@@ -96,32 +121,52 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
                 driver_month_pairs.add((d_id, month, year))
                 trip_driver_info.append((t.id, d_id, month, year))
 
-    salary_lookup_raw = {}
-    for d_id, m, y in driver_month_pairs:
-        q_filter = Q(tr_driver_master_id=d_id)
-        driver_obj = DrivermasterInfo.objects.filter(id=d_id).first()
-        if driver_obj and driver_obj.dm_id:
-            q_filter |= Q(tr_drivername__icontains=f"({driver_obj.dm_id})")
+    # Query all trips for the relevant months/years in ONE database query
+    distinct_months = set((m, y) for (d_id, m, y) in driver_month_pairs)
+    trips_count_map = {}
+    
+    if distinct_months:
+        month_year_q = Q()
+        for m, y in distinct_months:
+            month_year_q |= Q(resolved_date__month=m, resolved_date__year=y)
 
-        total_trips = TripdetailInfo.objects.annotate(
+        all_trips_in_months = TripdetailInfo.objects.annotate(
             resolved_date=Coalesce('tr_departeddate_pickup', 'tr_loading_time', 'tr_departeddate', 'tr_created_at')
         ).filter(
-            q_filter,
-            resolved_date__month=m,
-            resolved_date__year=y,
+            month_year_q,
             tr_category_id__in=[1, 2, 3]
-        ).count()
+        ).only('tr_driver_master_id', 'tr_drivername', 'tr_drivernumber')
 
-        salary_rec = DriverSalaryInfo.objects.filter(
-            ds_driverid_id=d_id,
-            ds_month__month=m,
-            ds_month__year=y
-        ).first()
+        for mt in all_trips_in_months:
+            mt_date = mt.resolved_date
+            if not mt_date:
+                continue
+            m, y = mt_date.month, mt_date.year
+            mt_d_id = resolve_driver_id(mt.tr_driver_master_id, mt.tr_drivername, mt.tr_drivernumber)
+            if mt_d_id:
+                key = (mt_d_id, m, y)
+                trips_count_map[key] = trips_count_map.get(key, 0) + 1
 
-        if salary_rec and total_trips > 0:
-            val = salary_rec.ds_monthly_salary
-            val = float(val) if val else 0.0
-            salary_lookup_raw[(d_id, m, y)] = val / total_trips
+    # Query all driver salaries in ONE database query
+    salary_map = {}
+    if driver_month_pairs:
+        salary_q = Q()
+        for d_id, m, y in driver_month_pairs:
+            salary_q |= Q(ds_driverid_id=d_id, ds_month__month=m, ds_month__year=y)
+        
+        salaries = DriverSalaryInfo.objects.filter(salary_q)
+        for s in salaries:
+            s_date = s.ds_month
+            if s_date:
+                key = (s.ds_driverid_id, s_date.month, s_date.year)
+                salary_map[key] = float(s.ds_monthly_salary) if s.ds_monthly_salary else 0.0
+
+    salary_lookup_raw = {}
+    for d_id, m, y in driver_month_pairs:
+        total_trips = trips_count_map.get((d_id, m, y), 0)
+        monthly_salary = salary_map.get((d_id, m, y), 0.0)
+        if total_trips > 0 and monthly_salary > 0:
+            salary_lookup_raw[(d_id, m, y)] = monthly_salary / total_trips
         else:
             salary_lookup_raw[(d_id, m, y)] = 0.0
 
@@ -160,6 +205,11 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
         vno = f.ff_vehicle_num.vm_registrationnumber.strip()
         fuel_by_veh.setdefault(vno, []).append(f)
 
+    # Find earliest fuel fill date to restrict scanned history
+    min_fuel_date = None
+    if all_fuel:
+        min_fuel_date = min(f.ff_date for f in all_fuel)
+
     all_trips_by_veh = {}
     if veh_nos:
         # We need all trips to compute total_km per fuel interval correctly!
@@ -168,7 +218,14 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
             tr_category_id__in=[1, 2, 3]
         ).annotate(
             resolved_date=Coalesce('tr_loading_time', 'tr_departeddate', 'tr_created_at')
-        ).values('tr_vehiclenumber', 'resolved_date', 'tr_reportedkm_pickup', 'tr_departedkm', 'tr_reportedkm_delivery', 'tr_reportedkm')
+        )
+        if min_fuel_date:
+            all_period_trips = all_period_trips.filter(resolved_date__date__gte=min_fuel_date)
+            
+        all_period_trips = all_period_trips.values(
+            'tr_vehiclenumber', 'resolved_date', 'tr_reportedkm_pickup', 
+            'tr_departedkm', 'tr_reportedkm_delivery', 'tr_reportedkm'
+        )
         
         # group all period trips by vehicle
         for pt in all_period_trips:
@@ -244,45 +301,48 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill, prorat
     # --- Revenue (Harmonized) ---
     # Prioritize Trip Settlement fields (tc_...) if they are non-zero/checked,
     # then fallback to Invoice (ti_...) if available.
-    tc_tripcost = (safe_num(trip.tc_tripcost) if (
-            getattr(trip, 'tc_tripcost_check', True) and safe_num(trip.tc_tripcost) > 0) else (
-        safe_num(inv.ti_transportation_charges) if inv else 0.0))
-    tc_tollcost = (safe_num(trip.tc_tollcost) if (
-            getattr(trip, 'tc_tollcost_check', True) and safe_num(trip.tc_tollcost) > 0) else (
-        safe_num(inv.ti_toll_charges) if inv else 0.0))
-    tc_supervisorcost = (safe_num(trip.tc_supervisorcost) if (
-            getattr(trip, 'tc_supervisorcost_check', True) and safe_num(trip.tc_supervisorcost) > 0) else (
-        safe_num(inv.ti_docket_charges) if inv else 0.0))
-    tc_loadingcost = (safe_num(trip.tc_loadingcost) if (
-            getattr(trip, 'tc_loadingcost_check', True) and safe_num(trip.tc_loadingcost) > 0) else (
-        safe_num(inv.ti_loading_charges) if inv else 0.0))
-    tc_unloadingcost = (safe_num(trip.tc_unloadingcost) if (
-            getattr(trip, 'tc_unloadingcost_check', True) and safe_num(trip.tc_unloadingcost) > 0) else (
-        safe_num(inv.ti_unloading_charges) if inv else 0.0))
-    tc_weighmentcost = (safe_num(trip.tc_weighmentcost) if (
-            getattr(trip, 'tc_weighmentcost_check', True) and safe_num(trip.tc_weighmentcost) > 0) else (
-        safe_num(inv.ti_weighment_charges) if inv else 0.0))
-
-    # Halting Logic
-    halting_days = safe_num(trip.tc_no_of_days_halting)
-    if getattr(trip, 'tc_total_halting_cost_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
-        tc_haltingcost = safe_num(trip.tc_total_halting_cost)
-    elif getattr(trip, 'tc_haltingcost_check', False) and safe_num(trip.tc_haltingcost) > 0:
-        tc_haltingcost = safe_num(trip.tc_haltingcost) * halting_days
-    elif inv:
-        tc_haltingcost = safe_num(inv.ti_halting_charges)
+    if trip.tr_category_id in [2, 3]:
+        tc_tripcost = tc_tollcost = tc_supervisorcost = tc_loadingcost = tc_unloadingcost = tc_weighmentcost = tc_haltingcost = tc_handlingcost = tc_parkingcost = tc_rtocost = tc_betacost = tc_cancellation = 0.0
     else:
-        tc_haltingcost = 0.0
+        tc_tripcost = (safe_num(trip.tc_tripcost) if (
+                getattr(trip, 'tc_tripcost_check', True) and safe_num(trip.tc_tripcost) > 0) else (
+            safe_num(inv.ti_transportation_charges) if inv else 0.0))
+        tc_tollcost = (safe_num(trip.tc_tollcost) if (
+                getattr(trip, 'tc_tollcost_check', True) and safe_num(trip.tc_tollcost) > 0) else (
+            safe_num(inv.ti_toll_charges) if inv else 0.0))
+        tc_supervisorcost = (safe_num(trip.tc_supervisorcost) if (
+                getattr(trip, 'tc_supervisorcost_check', True) and safe_num(trip.tc_supervisorcost) > 0) else (
+            safe_num(inv.ti_docket_charges) if inv else 0.0))
+        tc_loadingcost = (safe_num(trip.tc_loadingcost) if (
+                getattr(trip, 'tc_loadingcost_check', True) and safe_num(trip.tc_loadingcost) > 0) else (
+            safe_num(inv.ti_loading_charges) if inv else 0.0))
+        tc_unloadingcost = (safe_num(trip.tc_unloadingcost) if (
+                getattr(trip, 'tc_unloadingcost_check', True) and safe_num(trip.tc_unloadingcost) > 0) else (
+            safe_num(inv.ti_unloading_charges) if inv else 0.0))
+        tc_weighmentcost = (safe_num(trip.tc_weighmentcost) if (
+                getattr(trip, 'tc_weighmentcost_check', True) and safe_num(trip.tc_weighmentcost) > 0) else (
+            safe_num(inv.ti_weighment_charges) if inv else 0.0))
 
-    tc_handlingcost = (safe_num(trip.tc_handlingcost) if (
-            getattr(trip, 'tc_handlingcost_check', True) and safe_num(trip.tc_handlingcost) > 0) else (
-        safe_num(inv.ti_handling_charges) if inv else 0.0))
-    tc_parkingcost = (safe_num(trip.tc_parkingcost) if (
-            getattr(trip, 'tc_parkingcost_check', True) and safe_num(trip.tc_parkingcost) > 0) else (
-        safe_num(inv.ti_parking_charges) if inv else 0.0))
-    tc_rtocost = safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0
-    tc_betacost = safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_check', True) else 0.0
-    tc_cancellation = safe_num(trip.tc_cancellation) if getattr(trip, 'tc_cancellation_check', True) else 0.0
+        # Halting Logic
+        halting_days = safe_num(trip.tc_no_of_days_halting)
+        if getattr(trip, 'tc_total_halting_cost_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
+            tc_haltingcost = safe_num(trip.tc_total_halting_cost)
+        elif getattr(trip, 'tc_haltingcost_check', False) and safe_num(trip.tc_haltingcost) > 0:
+            tc_haltingcost = safe_num(trip.tc_haltingcost) * halting_days
+        elif inv:
+            tc_haltingcost = safe_num(inv.ti_halting_charges)
+        else:
+            tc_haltingcost = 0.0
+
+        tc_handlingcost = (safe_num(trip.tc_handlingcost) if (
+                getattr(trip, 'tc_handlingcost_check', True) and safe_num(trip.tc_handlingcost) > 0) else (
+            safe_num(inv.ti_handling_charges) if inv else 0.0))
+        tc_parkingcost = (safe_num(trip.tc_parkingcost) if (
+                getattr(trip, 'tc_parkingcost_check', True) and safe_num(trip.tc_parkingcost) > 0) else (
+            safe_num(inv.ti_parking_charges) if inv else 0.0))
+        tc_rtocost = safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0
+        tc_betacost = safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_check', True) else 0.0
+        tc_cancellation = safe_num(trip.tc_cancellation) if getattr(trip, 'tc_cancellation_check', True) else 0.0
 
     total_selling = (tc_tripcost + tc_tollcost + tc_supervisorcost + tc_loadingcost + tc_unloadingcost +
                      tc_weighmentcost + tc_haltingcost + tc_handlingcost + tc_parkingcost +
@@ -3587,6 +3647,26 @@ def own_vehicle_pl_report_view(request):
             if t_id and t_id in trip_id_to_pk:
                 expense_map.setdefault(t_id, []).append(e)
 
+        # Maps consignment number (Cnote no) to trip.id
+        consignment_to_pk = {}
+        for t in trips_list:
+            if t.tr_consignmentnumber:
+                key = str(t.tr_consignmentnumber).strip().upper()
+                consignment_to_pk[key] = t.id
+
+        consignment_keys = [str(t.tr_consignmentnumber).strip() for t in trips_list if t.tr_consignmentnumber]
+
+        from ..models import TMSPettyCashInfo
+        petty_cash_records = TMSPettyCashInfo.objects.filter(tpc_job_no__in=consignment_keys).select_related('tpc_expense_type')
+
+        petty_cash_map = {}
+        for pc in petty_cash_records:
+            if pc.tpc_job_no:
+                key = str(pc.tpc_job_no).strip().upper()
+                if key in consignment_to_pk:
+                    t_id = consignment_to_pk[key]
+                    petty_cash_map.setdefault(t_id, []).append(pc)
+
         # -------------------------------
         # VEHICLE MASTER (FIXED COSTS)
         # -------------------------------
@@ -3636,47 +3716,61 @@ def own_vehicle_pl_report_view(request):
             # then fallback to Invoice (ti_...) if available.
             inv = invoice_obj_map.get(trip.id)
 
-            selling_trip = (safe_num(trip.tc_tripcost) if (
-                    getattr(trip, 'tc_tripcost_check', True) and safe_num(trip.tc_tripcost) > 0) else (
-                safe_num(inv.ti_transportation_charges) if inv else 0.0))
-            selling_toll = (safe_num(trip.tc_tollcost) if (
-                    getattr(trip, 'tc_tollcost_check', True) and safe_num(trip.tc_tollcost) > 0) else (
-                safe_num(inv.ti_toll_charges) if inv else 0.0))
-            selling_parking = (safe_num(trip.tc_parkingcost) if (
-                    getattr(trip, 'tc_parkingcost_check', True) and safe_num(trip.tc_parkingcost) > 0) else (
-                safe_num(inv.ti_parking_charges) if inv else 0.0))
-            selling_loading = (safe_num(trip.tc_loadingcost) if (
-                    getattr(trip, 'tc_loadingcost_check', True) and safe_num(trip.tc_loadingcost) > 0) else (
-                safe_num(inv.ti_loading_charges) if inv else 0.0))
-            selling_unloading = (safe_num(trip.tc_unloadingcost) if (
-                    getattr(trip, 'tc_unloadingcost_check', True) and safe_num(trip.tc_unloadingcost) > 0) else (
-                safe_num(inv.ti_unloading_charges) if inv else 0.0))
-            selling_weighment = (safe_num(trip.tc_weighmentcost) if (
-                    getattr(trip, 'tc_weighmentcost_check', True) and safe_num(trip.tc_weighmentcost) > 0) else (
-                safe_num(inv.ti_weighment_charges) if inv else 0.0))
-            selling_handling = (safe_num(trip.tc_handlingcost) if (
-                    getattr(trip, 'tc_handlingcost_check', True) and safe_num(trip.tc_handlingcost) > 0) else (
-                safe_num(inv.ti_handling_charges) if inv else 0.0))
-
-            # Halting Logic
-            halting_days = safe_num(trip.tc_no_of_days_halting)
-            if getattr(trip, 'tc_total_halting_cost_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
-                selling_halting = safe_num(trip.tc_total_halting_cost)
-            elif getattr(trip, 'tc_haltingcost_check', False) and safe_num(trip.tc_haltingcost) > 0:
-                selling_halting = safe_num(trip.tc_haltingcost) * halting_days
-            elif inv:
-                selling_halting = safe_num(inv.ti_halting_charges)
-            else:
+            if trip.tr_category_id in [2, 3]:
+                selling_trip = 0.0
+                selling_toll = 0.0
+                selling_parking = 0.0
+                selling_loading = 0.0
+                selling_unloading = 0.0
+                selling_weighment = 0.0
+                selling_handling = 0.0
                 selling_halting = 0.0
+                selling_supervisor = 0.0
+                selling_rto = 0.0
+                selling_beta = 0.0
+                selling_cancellation = 0.0
+            else:
+                selling_trip = (safe_num(trip.tc_tripcost) if (
+                        getattr(trip, 'tc_tripcost_check', True) and safe_num(trip.tc_tripcost) > 0) else (
+                    safe_num(inv.ti_transportation_charges) if inv else 0.0))
+                selling_toll = (safe_num(trip.tc_tollcost) if (
+                        getattr(trip, 'tc_tollcost_check', True) and safe_num(trip.tc_tollcost) > 0) else (
+                    safe_num(inv.ti_toll_charges) if inv else 0.0))
+                selling_parking = (safe_num(trip.tc_parkingcost) if (
+                        getattr(trip, 'tc_parkingcost_check', True) and safe_num(trip.tc_parkingcost) > 0) else (
+                    safe_num(inv.ti_parking_charges) if inv else 0.0))
+                selling_loading = (safe_num(trip.tc_loadingcost) if (
+                        getattr(trip, 'tc_loadingcost_check', True) and safe_num(trip.tc_loadingcost) > 0) else (
+                    safe_num(inv.ti_loading_charges) if inv else 0.0))
+                selling_unloading = (safe_num(trip.tc_unloadingcost) if (
+                        getattr(trip, 'tc_unloadingcost_check', True) and safe_num(trip.tc_unloadingcost) > 0) else (
+                    safe_num(inv.ti_unloading_charges) if inv else 0.0))
+                selling_weighment = (safe_num(trip.tc_weighmentcost) if (
+                        getattr(trip, 'tc_weighmentcost_check', True) and safe_num(trip.tc_weighmentcost) > 0) else (
+                    safe_num(inv.ti_weighment_charges) if inv else 0.0))
+                selling_handling = (safe_num(trip.tc_handlingcost) if (
+                        getattr(trip, 'tc_handlingcost_check', True) and safe_num(trip.tc_handlingcost) > 0) else (
+                    safe_num(inv.ti_handling_charges) if inv else 0.0))
 
-            selling_supervisor = (safe_num(trip.tc_supervisorcost) if (
-                    getattr(trip, 'tc_supervisorcost_check', True) and safe_num(trip.tc_supervisorcost) > 0) else (
-                safe_num(inv.ti_docket_charges) if inv else 0.0))
-            selling_rto = (safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0)
-            selling_beta = (safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_check', True) else 0.0)
-            selling_cancellation = (safe_num(trip.tc_cancellation) if (
-                    getattr(trip, 'tc_cancellation_check', True) and safe_num(trip.tc_cancellation) > 0) else (
-                safe_num(inv.ti_cancellation_charges) if inv else 0.0))
+                # Halting Logic
+                halting_days = safe_num(trip.tc_no_of_days_halting)
+                if getattr(trip, 'tc_total_halting_cost_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
+                    selling_halting = safe_num(trip.tc_total_halting_cost)
+                elif getattr(trip, 'tc_haltingcost_check', False) and safe_num(trip.tc_haltingcost) > 0:
+                    selling_halting = safe_num(trip.tc_haltingcost) * halting_days
+                elif inv:
+                    selling_halting = safe_num(inv.ti_halting_charges)
+                else:
+                    selling_halting = 0.0
+
+                selling_supervisor = (safe_num(trip.tc_supervisorcost) if (
+                        getattr(trip, 'tc_supervisorcost_check', True) and safe_num(trip.tc_supervisorcost) > 0) else (
+                    safe_num(inv.ti_docket_charges) if inv else 0.0))
+                selling_rto = (safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0)
+                selling_beta = (safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_check', True) else 0.0)
+                selling_cancellation = (safe_num(trip.tc_cancellation) if (
+                        getattr(trip, 'tc_cancellation_check', True) and safe_num(trip.tc_cancellation) > 0) else (
+                    safe_num(inv.ti_cancellation_charges) if inv else 0.0))
 
             selling_total = (
                     selling_trip + selling_toll + selling_parking + selling_loading +
@@ -3755,13 +3849,67 @@ def own_vehicle_pl_report_view(request):
                 elif 'handling' in extype:
                     if not handling_val: handling_expense += cost
 
-            # --- 3. Fuel Cost: prorated from Fuelfillinginfo (pre-calculated above) ---
-            fuel_expense = round(fuel_lookup.get(trip.id, 0.0), 2)
+            # Process petty cash expenses for this trip
+            for pc in petty_cash_map.get(trip.id, []):
+                if not pc.tpc_expense_type:
+                    continue
+                extype = str(pc.tpc_expense_type.tms_exp_type_name).lower()
+                cost = safe_num(pc.tpc_amount)
 
-            total_expense = (
-                    driver_salary + fuel_expense + acting_driver + driver_bata +
-                    toll_expense + parking_expense + loading_expense + unloading_expense +
-                    weighment_expense + handling_expense + vehicle_hire
+                if 'fuel' in extype or 'diesel' in extype:
+                    # Fuel cost is pre-calculated
+                    pass
+                elif 'salary' in extype:
+                    if driver_salary == 0.0:
+                        driver_salary += cost
+                elif 'acting' in extype:
+                    acting_driver += cost
+                elif 'hire' in extype or 'freight' in extype:
+                    vehicle_hire += cost
+                elif 'toll' in extype:
+                    toll_expense += cost
+                elif 'parking' in extype:
+                    parking_expense += cost
+                elif 'loading' in extype:
+                    loading_expense += cost
+                elif 'unloading' in extype:
+                    unloading_expense += cost
+                elif 'weighment' in extype:
+                    weighment_expense += cost
+                elif 'bata' in extype or 'batta' in extype:
+                    driver_bata += cost
+                elif 'handling' in extype:
+                    handling_expense += cost
+
+            # --- 3. Fuel Cost: prorated from Fuelfillinginfo (pre-calculated above) ---
+            # Round all variables to 2 decimal places to prevent float precision display errors
+            selling_trip = round(selling_trip, 2)
+            selling_toll = round(selling_toll, 2)
+            selling_parking = round(selling_parking, 2)
+            selling_loading = round(selling_loading, 2)
+            selling_unloading = round(selling_unloading, 2)
+            selling_weighment = round(selling_weighment, 2)
+            selling_handling = round(selling_handling, 2)
+            selling_halting = round(selling_halting, 2)
+            selling_total = round(selling_total, 2)
+
+            driver_salary = round(driver_salary, 2)
+            fuel_expense = round(fuel_lookup.get(trip.id, 0.0), 2)
+            acting_driver = round(acting_driver, 2)
+            driver_bata = round(driver_bata, 2)
+            toll_expense = round(toll_expense, 2)
+            parking_expense = round(parking_expense, 2)
+            loading_expense = round(loading_expense, 2)
+            unloading_expense = round(unloading_expense, 2)
+            weighment_expense = round(weighment_expense, 2)
+            handling_expense = round(handling_expense, 2)
+            vehicle_hire = round(vehicle_hire, 2)
+
+            total_expense = round(
+                driver_salary + fuel_expense + acting_driver + driver_bata +
+                toll_expense + parking_expense + loading_expense + unloading_expense +
+                weighment_expense + handling_expense + vehicle_hire,
+                2
             )
 
             row = [
@@ -3773,14 +3921,14 @@ def own_vehicle_pl_report_view(request):
                 safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
                 safe_str(trip.tr_departedlocation),
                 safe_str(trip.tr_reportedlocation),
-                safe_num(trip.tc_tripcost),
-                safe_num(trip.tc_tollcost),
-                safe_num(trip.tc_parkingcost),
-                safe_num(trip.tc_loadingcost),
-                safe_num(trip.tc_unloadingcost),
-                safe_num(trip.tc_weighmentcost),
-                safe_num(trip.tc_handlingcost),
-                safe_num(trip.tc_haltingcost) * safe_num(trip.tc_no_of_days_halting),
+                selling_trip,
+                selling_toll,
+                selling_parking,
+                selling_loading,
+                selling_unloading,
+                selling_weighment,
+                selling_handling,
+                selling_halting,
 
                 selling_total,
                 driver_salary,
@@ -3898,7 +4046,25 @@ def own_vehicle_pl_report_view(request):
             for mb in m_bills:
                 maintenance_cost += safe_num(mb.mnb_total_amount)
 
-        total_fixed_expenses = insurance + road_tax + permit + maintenance_cost
+        # General Expenses from ExpenseExtinfo
+        from ..models import ExpenseExtinfo
+        general_expenses = 0.0
+
+        ext_expenses = ExpenseExtinfo.objects.filter(exp_ext_vehicle_source__ow_ownership__icontains='own')
+        if vehicle_number:
+            ext_expenses = ext_expenses.filter(exp_ext_vehicle_number__vm_registrationnumber=vehicle_number)
+        else:
+            ext_expenses = ext_expenses.filter(exp_ext_vehicle_number__vm_registrationnumber__in=unique_veh_nos)
+
+        if date_from:
+            ext_expenses = ext_expenses.filter(exp_ext_expense_number__exp_service_end_date__gte=date_from)
+        if date_to:
+            ext_expenses = ext_expenses.filter(exp_ext_expense_number__exp_service_start_date__lte=date_to)
+
+        for ext_exp in ext_expenses:
+            general_expenses += safe_num(ext_exp.exp_ext_amount)
+
+        total_fixed_expenses = insurance + road_tax + permit + maintenance_cost + general_expenses
         base_expenses = total_operational_expense + total_fixed_expenses
 
         empty_km_cost = 0.0
@@ -3944,6 +4110,7 @@ def own_vehicle_pl_report_view(request):
             'revenue': round(total_revenue, 2),
             'operational_expenses': round(total_operational_expense, 2),
             'maintenance_cost': round(maintenance_cost, 2),
+            'general_expenses': round(general_expenses, 2),
             'insurance': round(insurance, 2),
             'road_tax': round(road_tax, 2),
             'permit': round(permit, 2),

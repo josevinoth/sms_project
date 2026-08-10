@@ -355,6 +355,36 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                     referer = request.META.get('HTTP_REFERER')
                     return redirect(referer if referer else request.path)
 
+            # 🚫 VEHICLE TYPE & QUANTITY VALIDATION AGAINST ENQUIRY NOTE
+            requested_entries = Enquirynotevehicle.objects.filter(env_enquirynumber_id=enquiry_id)
+            if requested_entries.exists():
+                requested_vt_ids = list(requested_entries.values_list('env_vehicletype_id', flat=True))
+                if obj.va_vehicletype_id not in requested_vt_ids:
+                    requested_vt_names = ", ".join(list(requested_entries.values_list('env_vehicletype__vt_vehicletype', flat=True)))
+                    messages.error(
+                        request,
+                        f"🚫 Vehicle type '{obj.va_vehicletype}' was not requested in this Enquiry Note. Requested type(s): {requested_vt_names}."
+                    )
+                    referer = request.META.get('HTTP_REFERER')
+                    return redirect(referer if referer else request.path)
+
+                total_requested_for_type = requested_entries.filter(
+                    env_vehicletype_id=obj.va_vehicletype_id
+                ).aggregate(total=Sum('env_quantity'))['total'] or 0
+
+                already_allotted_count = Vehicle_allotmentInfo.objects.filter(
+                    va_enquirynumber_id=enquiry_id,
+                    va_vehicletype_id=obj.va_vehicletype_id
+                ).count()
+
+                if already_allotted_count >= total_requested_for_type:
+                    messages.error(
+                        request,
+                        f"🚫 Cannot allot vehicle: Total requested quantity of '{obj.va_vehicletype}' ({total_requested_for_type}) has already been allotted ({already_allotted_count} allotted)."
+                    )
+                    referer = request.META.get('HTTP_REFERER')
+                    return redirect(referer if referer else request.path)
+
             duplicate_qs = Vehicle_allotmentInfo.objects.filter(
                 va_enquirynumber_id=enquiry_id
             )
@@ -484,6 +514,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             obj.va_drivernumber = va.va_drivernumber
             obj.va_driver_lic = va.va_driver_lic
             obj.va_driver_lic_expiry = va.va_driver_lic_expiry
+            obj.va_driver_master_id = va.va_driver_master_id
             obj.va_created_at = va.va_created_at
 
             if request.user and request.user.is_authenticated:
@@ -532,7 +563,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                         busy_enquiry = trip_item.tr_enquirynumber.en_enquirynumber if trip_item.tr_enquirynumber else str(trip_item.tr_enquirynumber_id)
                         break
 
-            if is_busy:
+            # For UPDATE mode of an already assigned vehicle allotment, allow updating commercial fields (Special Buy, Standard Buy, Sell, Remarks)
+            if is_busy and vehicle_allotment_id == 0:
                 messages.error(
                     request,
                     f"This vehicle is currently allotted to another active trip/enquiry ({busy_enquiry}) and the trip has not been closed."
@@ -929,11 +961,16 @@ def load_vehicle_number(request):
     from django.utils.timezone import make_aware
     cutoff_date = make_aware(datetime(2026, 8, 1))
 
-    # 2) Busy allotments are those created on/after cutoff date whose enquiry is NOT in free_enquiry_ids
+    # 2) Busy allotments are active allotments created on/after cutoff date whose enquiry is NOT in free_enquiry_ids
+    # Exclude cancelled (4), replaced (2), completed (5) allotments and dead/cancelled enquiries (5, 8)
     busy_allotments_qs = Vehicle_allotmentInfo.objects.filter(
         va_created_at__gte=cutoff_date
     ).exclude(
         va_enquirynumber_id__in=free_enquiry_ids
+    ).exclude(
+        va_status_id__in=[2, 4, 5]
+    ).exclude(
+        va_enquirynumber__en_status_id__in=[5, 8]
     ).exclude(va_vehiclenumber__isnull=True)
 
     enquiry_veh_ids = set()
@@ -1400,6 +1437,9 @@ def vehicle_allotment_replace(request, allotment_id):
                 new_driver_number = request.POST.get('va_drivernumber')
                 new_driver_lic = request.POST.get('va_driver_lic')
                 new_driver_lic_expiry = request.POST.get('va_driver_lic_expiry')
+                new_driver_master_id = request.POST.get('va_driver_master_id')
+                if not new_driver_master_id or not str(new_driver_master_id).strip():
+                    new_driver_master_id = None
                 new_vendor_id = request.POST.get('va_vendor')
                 reason = request.POST.get('reason', '')
 
@@ -1445,6 +1485,7 @@ def vehicle_allotment_replace(request, allotment_id):
                     va_drivernumber=new_driver_number,
                     va_driver_lic=new_driver_lic,
                     va_driver_lic_expiry=new_driver_lic_expiry,
+                    va_driver_master_id=new_driver_master_id,
                     va_status_id=1,  # Vehicle Assigned (new active allotment)
                     va_replaced_allotment=old_va,
                     va_replacement_reason=reason,
@@ -1474,6 +1515,7 @@ def vehicle_allotment_replace(request, allotment_id):
                 active_trip.tr_vehiclenumber = new_vehicle_num
                 active_trip.tr_drivername = new_va.va_drivername
                 active_trip.tr_drivernumber = new_va.va_drivernumber
+                active_trip.tr_driver_master_id = new_va.va_driver_master_id
                 current_remarks = active_trip.tr_remarks or ""
                 replacement_note = f"\n[AUTO-NOTE] Vehicle replaced from {old_vehicle_num} to {new_vehicle_num} on {timezone.now().strftime('%Y-%m-%d %H:%M')} due to: {reason}"
                 active_trip.tr_remarks = (current_remarks + replacement_note)[:250]
@@ -1545,6 +1587,9 @@ def vehicle_allotment_driver_replace(request, allotment_id):
                 new_driver_number = request.POST.get('va_drivernumber')
                 new_driver_lic = request.POST.get('va_driver_lic')
                 new_driver_lic_expiry = request.POST.get('va_driver_lic_expiry')
+                new_driver_master_id = request.POST.get('va_driver_master_id')
+                if not new_driver_master_id or not str(new_driver_master_id).strip():
+                    new_driver_master_id = None
                 reason = request.POST.get('reason', '')
 
                 if not reason or not new_driver_name:
@@ -1579,6 +1624,7 @@ def vehicle_allotment_driver_replace(request, allotment_id):
                     va_drivernumber=new_driver_number,
                     va_driver_lic=new_driver_lic,
                     va_driver_lic_expiry=new_driver_lic_expiry,
+                    va_driver_master_id=new_driver_master_id,
                     va_status_id=1,  # Vehicle Assigned (new active record)
                     va_replaced_allotment=old_va,
                     va_replacement_reason=reason,
@@ -1609,6 +1655,7 @@ def vehicle_allotment_driver_replace(request, allotment_id):
                     active_trip.tr_drivername = new_driver_name
                     active_trip.tr_drivernumber = new_driver_number
                     active_trip.tr_driver_lic = new_driver_lic
+                    active_trip.tr_driver_master_id = new_va.va_driver_master_id
                     active_trip.save()
 
                 return JsonResponse({'success': True, 'new_id': new_va.id})

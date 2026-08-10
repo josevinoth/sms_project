@@ -36,14 +36,6 @@ def trip_settlement_list_ajax_view(request):
         date_to = request.GET.get('date_to', '').strip()
         search_value = request.GET.get('search[value]', '').strip()
 
-        # Direct Exists subquery on the outer queryset - correct Django ORM pattern
-        has_settled_consignment = Exists(
-            ConsignmentdetailInfo.objects.filter(
-                co_enquirynumber=OuterRef('tr_enquirynumber_id'),
-                co_status_id__in=[8, 9]
-            )
-        )
-
         trip_list = TripdetailInfo.objects.select_related(
             'tr_enquirynumber',
             'tr_enquirynumber__en_customername',
@@ -54,21 +46,13 @@ def trip_settlement_list_ajax_view(request):
             'tc_financestatus',
             'tr_operational_status'
         ).filter(
-            # Path 1: Cancellation with Billing — any category, with or without consignment
+            # Path 1: Cancellation with Billing — any category (including Empty and Business Empty), with or without consignment
             # Check BOTH tr_operational_status (permanent) and tc_financestatus (fallback)
             Q(tr_operational_status_id=10) |
             (Q(tr_operational_status_id__isnull=True) & Q(tc_financestatus_id=10)) |
-            # Path 2: Normal Trip Closed (status 4) — apply category/consignment rules
+            # Path 2: Normal Trip Closed (status 4) — ONLY Business category (1)
             (
-                Q(tc_financestatus_id=4) & (
-                    Q(tr_category_id=1) |
-                    (
-                        Q(tr_category_id=3) & (
-                            Q(tr_consignmentnumber__co_status_id__in=[8, 9]) |
-                            has_settled_consignment
-                        )
-                    )
-                )
+                Q(tc_financestatus_id=4) & Q(tr_category_id=1)
             )
         )
 
@@ -273,6 +257,8 @@ def trip_settlement_edit(request, trip_id):
 
             trip_obj = form.save(commit=False)
             trip_obj.tr_updated_by = request.user
+            if trip_obj.tc_financestatus_id:
+                trip_obj.tr_operational_status_id = trip_obj.tc_financestatus_id
             trip_obj.save()
 
             files_obj = files_form.save(commit=False)

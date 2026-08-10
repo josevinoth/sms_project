@@ -6,9 +6,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 
+from django.db.models import Q
 from ..forms import ConsignmentgoodsaddForm, ConsignmentdetailaddForm
 from ..models import EnquirynoteInfo, ConsignmentgoodsInfo, ConsignmentdetailInfo, Stock_type, ConsigneeInfo, \
-    ConsignerInfo
+    ConsignerInfo, TripdetailInfo, CustomerInfo
 
 
 @login_required(login_url='login_page')
@@ -46,17 +47,43 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             .exclude(cg_consignerinvoice__exact='')
             .distinct()
         )
+
+        consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
+        enquiry_num_id = consignmentdetail.co_enquirynumber_id
+        enquiry_num = consignmentdetail.co_enquirynumber.en_enquirynumber
+
+        customer = consignmentdetail.co_enquirynumber.en_customername
+        customer_obj = CustomerInfo.objects.filter(cu_name=customer).first()
+        customer_id = customer_obj.id if customer_obj else None
+        customer_code = customer_obj.cu_customercode if customer_obj else ""
+
+        linked_trip = TripdetailInfo.objects.filter(tr_consignmentnumber_id=consignment_detail_id).first()
+        selected_trip_id = linked_trip.id if linked_trip else None
+
+        eligible_trips = TripdetailInfo.objects.filter(
+            tr_enquirynumber=enquiry_num_id,
+            tr_category_id=1
+        ).filter(
+            Q(tr_consignmentnumber_id=consignment_detail_id) |
+            Q(tr_consignmentnumber__isnull=True)
+        ).distinct()
+
+        has_invoice_or_ewaybill = ConsignmentgoodsInfo.objects.filter(
+            cg_consignmentnumber=consignment_detail_id
+        ).filter(
+            Q(cg_consignerinvoice__isnull=False, cg_consignerinvoice__gt='') |
+            Q(cg_ebillno__isnull=False, cg_ebillno__gt='')
+        ).exists()
+
         if consignmentgoods_id == 0:
             form = ConsignmentgoodsaddForm(initial={'cg_consignmentnumber': consignment_detail_id})
-            consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
             con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
-
         else:
             consignmentgoods = ConsignmentgoodsInfo.objects.get(pk=consignmentgoods_id)
-            consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignment_detail_id)
             con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
             form = ConsignmentgoodsaddForm(instance=consignmentgoods)
             form.fields['cg_description'].queryset = Stock_type.objects.all()
+
         context = {
             'form': form,
             'con_det_form': con_det_form,
@@ -65,6 +92,14 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             'existing_invoices': existing_invoices,
             'consignmentdetail_id': consignment_detail_id,
             'consignmentgoods_list': ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=consignment_detail_id),
+            'enquiry_num': enquiry_num,
+            'enquiry_num_id': enquiry_num_id,
+            'customer_id': customer_id,
+            'customer_code': customer_code,
+            'has_invoice_or_ewaybill': has_invoice_or_ewaybill,
+            'eligible_trips': eligible_trips,
+            'selected_trip_id': selected_trip_id,
+            'vehicle_type': consignmentdetail.co_vehicletype,
         }
         return render(request, "asset_mgt_app/consignmentdetail_add.html", context)
 

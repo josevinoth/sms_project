@@ -55,26 +55,35 @@
                                     </div>
                                     {% render_field form.exp_ext_branch id="exp_ext_branch"  class="form-control" %}
                                 </div>
+                                {% if "bvm trans solutions" in parent_business|lower %}
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
-                                        {% if "bvm trans solutions" in parent_business|lower %}
-                                            <span class="input-group-text">Vehicle Source</span>
-                                        {% else %}
-                                            <span class="input-group-text">Unit</span>
-                                        {% endif %}
+                                        <span class="input-group-text">Vehicle Source</span>
                                     </div>
-                                    {% if "bvm trans solutions" in parent_business|lower %}
-                                        {% render_field form.exp_ext_vehicle_source id="exp_ext_vehicle_source" class="form-control" %}
-                                    {% else %}
-                                        {% render_field form.exp_ext_unit id="exp_ext_unit" class="form-control disable_a_href" %}
-                                    {% endif %}
+                                    {% render_field form.exp_ext_vehicle_source id="exp_ext_vehicle_source" class="form-control" %}
                                 </div>
-                                {% if "bvm trans solutions" in parent_business|lower %}
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Unit</span>
+                                    </div>
+                                    <select name="exp_ext_department" id="exp_ext_department" class="form-control">
+                                        <option value="">--Select--</option>
+                                        <option value="M-Dept"{% if form.instance.exp_ext_department == 'M-Dept' %} selected{% endif %}>M-Dept</option>
+                                        <option value="B-Dept"{% if form.instance.exp_ext_department == 'B-Dept' %} selected{% endif %}>B-Dept</option>
+                                    </select>
+                                </div>
                                 <div class="input-group input-group-sm mb-3">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">Vehicle Number</span>
                                     </div>
                                     {% render_field form.exp_ext_vehicle_number id="exp_ext_vehicle_number" class="form-control select2" %}
+                                </div>
+                                {% else %}
+                                <div class="input-group input-group-sm mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Unit</span>
+                                    </div>
+                                    {% render_field form.exp_ext_unit id="exp_ext_unit" class="form-control disable_a_href" %}
                                 </div>
                                 {% endif %}
                                 <div class="input-group input-group-sm mb-3">
@@ -160,6 +169,41 @@
             }
 
             fetchCustomerDetails();
+
+            function toggleTransFields(changedField) {
+                var vehicleSource = $('#exp_ext_vehicle_source').val();
+                var department = $('#exp_ext_department').val();
+                
+                if (changedField === 'department' && department !== "") {
+                    $('#exp_ext_vehicle_source').val("");
+                }
+                
+                if (changedField === 'source' && vehicleSource !== "") {
+                    $('#exp_ext_department').val("");
+                }
+                
+                // Re-evaluate
+                vehicleSource = $('#exp_ext_vehicle_source').val();
+                department = $('#exp_ext_department').val();
+                
+                if (vehicleSource !== "") {
+                    $('#exp_ext_department').prop('disabled', true);
+                    $('#exp_ext_department').addClass('disable_a_href');
+                } else {
+                    $('#exp_ext_department').prop('disabled', false);
+                    $('#exp_ext_department').removeClass('disable_a_href');
+                }
+                
+                if (department !== "") {
+                    $('#exp_ext_vehicle_source').prop('disabled', true).addClass('disable_a_href');
+                } else {
+                    $('#exp_ext_vehicle_source').prop('disabled', false).removeClass('disable_a_href');
+                }
+            }
+
+            $('#exp_ext_vehicle_source').change(function() { toggleTransFields('source'); });
+            $('#exp_ext_department').change(function() { toggleTransFields('department'); });
+            toggleTransFields(); // run on load
         });
 </script>
 

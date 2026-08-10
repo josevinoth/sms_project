@@ -33,10 +33,7 @@ class InvoiceDocumentInfo(models.Model):
         super().save(*args, **kwargs)
         if self.id_status and self.id_tripnumber:
             from ..sub_models.tripdetail_mod import TripdetailInfo
-            try:
-                trip = TripdetailInfo.objects.get(tr_tripnumber=self.id_tripnumber)
-                if trip.tc_financestatus != self.id_status:
-                    trip.tc_financestatus = self.id_status
-                    trip.save(update_fields=['tc_financestatus'])
-            except TripdetailInfo.DoesNotExist:
-                pass
+            trip = TripdetailInfo.objects.filter(tr_tripnumber=self.id_tripnumber).first()
+            if trip and trip.tc_financestatus != self.id_status:
+                trip.tc_financestatus = self.id_status
+                trip.save(update_fields=['tc_financestatus'])

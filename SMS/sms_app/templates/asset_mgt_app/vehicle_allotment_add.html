@@ -216,7 +216,7 @@
 										{% render_field vehicle_allotment_form.va_drivername id="va_drivername" class="form-control form-control-modern" %}
 										{% endif %}
 									</div>
-									<input type="hidden" id="va_driver_master_id" name="va_driver_master_id">
+									<input type="hidden" id="va_driver_master_id" name="va_driver_master_id" value="{{ va.va_driver_master_id|default:'' }}">
 									<div class="form-group-modern">
 										<label class="form-label-modern">Driver Number</label>
 										{% if va %}
@@ -476,6 +476,8 @@ function setDateFieldValue(selector, value) {
 			$('#vehicle_allotment_id,#vehicle_allotment_submit_id')
 				.removeClass('disable_a_href')
 				.prop('disabled', false);
+			// Auto load requested vehicles for this enquiry
+			vehicle_requested();
 		}
 		else if (window.location.href.includes("vehicle_allotment_update")) {
 			// Enable fields
@@ -851,6 +853,10 @@ document.addEventListener("DOMContentLoaded", function() {
        width: '100%',
        dropdownParent: $('#replaceVehicleModal') // Required for Select2 inside modals
    });
+   $("#modal_va_vehiclenumber").select2({
+       width: '100%',
+       dropdownParent: $('#replaceVehicleModal')
+   });
 </script>
 <script>
 </script>
@@ -1135,6 +1141,7 @@ $("#va_vehiclesource").on("change", function () {
                             <div class="form-group">
                                 <label>New Driver Name</label>
                                 <input type="text" name="va_drivername" id="modal_va_drivername" class="form-control" autocomplete="off" required placeholder="Type 2+ letters to search...">
+                                <input type="hidden" id="modal_va_driver_master_id" name="va_driver_master_id">
                             </div>
                         </div>
                     </div>
@@ -1231,6 +1238,7 @@ $("#va_vehiclesource").on("change", function () {
                             <div class="form-group">
                                 <label>New Driver Name <span style="color:red">*</span></label>
                                 <input type="text" name="va_drivername" id="modal_driver_only_name" class="form-control" autocomplete="off" required placeholder="Type 2+ letters to search...">
+                                <input type="hidden" id="modal_driver_only_id" name="va_driver_master_id">
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -1308,6 +1316,7 @@ $("#va_vehiclesource").on("change", function () {
                             $("#modal_va_vehiclenumber").append("<option value='" + vehicle_number_id[k] + "'>" + vehicle_number[k] + "</option>");
                         }
                     }
+                    $("#modal_va_vehiclenumber").trigger('change.select2');
                 }
             });
         }
@@ -1355,7 +1364,7 @@ $("#va_vehiclesource").on("change", function () {
         $("#modal_chk_placed").prop("checked", false);
         loadModalVendorOptions();
         $("#modal_va_vendor").val("").prop('disabled', false).removeClass('disable_a_href').trigger('change.select2');
-        $("#modal_va_vehiclenumber").empty().append("<option value=''>--Select--</option>");
+        $("#modal_va_vehiclenumber").empty().append("<option value=''>--Select--</option>").trigger('change.select2');
         $("#modal_va_vehiclenumber_mkt").val("");
         $("#modal_own_attached_div").show();
         $("#modal_market_div").hide();
@@ -1515,6 +1524,7 @@ $("#va_vehiclesource").on("change", function () {
                         return {
                             label: item.name,
                             value: item.name,
+                            id: item.id,
                             number: item.number,
                             lic: item.lic,
                             expiry: item.expiry
@@ -1526,6 +1536,7 @@ $("#va_vehiclesource").on("change", function () {
         minLength: 2,
         select: function (event, ui) {
             $("#modal_va_drivername").val(ui.item.value);
+            $("#modal_va_driver_master_id").val(ui.item.id);
             $("#modal_va_drivernumber").val(ui.item.number || "");
             $("#modal_va_driver_lic").val(ui.item.lic || "");
             setDateFieldValue("#modal_va_driver_lic_expiry", ui.item.expiry);
@@ -1600,6 +1611,7 @@ $("#va_vehiclesource").on("change", function () {
                         return {
                             label: item.name + " (" + item.number + ")",
                             value: item.name,
+                            id: item.id,
                             number: item.number,
                             lic: item.lic,
                             expiry: item.expiry
@@ -1611,6 +1623,7 @@ $("#va_vehiclesource").on("change", function () {
         minLength: 2,
         select: function (event, ui) {
             $("#modal_driver_only_name").val(ui.item.value);
+            $("#modal_driver_only_id").val(ui.item.id);
             $("#modal_driver_only_number").val(ui.item.number || "");
             $("#modal_driver_only_lic").val(ui.item.lic || "");
             setDateFieldValue("#modal_driver_only_lic_expiry", ui.item.expiry);

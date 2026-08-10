@@ -30,6 +30,11 @@ class ExpenseaddForm(forms.ModelForm):
         except Exception:
             pass
 
+        try:
+            self.fields['exp_to'].empty_label = "--Select--"
+        except Exception:
+            pass
+
         # If an instance is passed, convert the model's datetime values to date strings for the widget
         if self.instance and getattr(self.instance, 'pk', None):
             for fld in ('exp_vendor_bill_date', 'exp_service_start_date', 'exp_service_end_date', 'exp_due_date', 'exp_paid_date'):

@@ -1,191 +1,213 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-4"></div>
-        <div class="col-4 rounded text-center bg-info shadow-box text-white">
-            <h3 class="mb-0">Maintenance Bill List</h3>
-        </div>
-        <div class="col-4"></div>
-    </div>
 
-    <!-- Messages Block -->
-    <div class="row mt-2">
-        <div class="col-1"></div>
-        <div class="col-10">
-            <div class="message text-center">
-                {% for message in messages %}
-                <a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
-                {% endfor %}
-            </div>
-        </div>
-        <div class="col-1"></div>
-    </div>
-</div>
 
-<div class="container-fluid row mb-3 align-items-center">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-    <div class="col-md-1">
-        <a href="{% url 'maintenance_bill_add' %}" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-plus"></i> Add
-        </a>
-    </div>
-    <div class="col-md-10 d-flex justify-content-center">
-        <form method="GET" action="{% url 'maintenance_bill_list' %}" class="form-inline">
-            <div class="form-group mr-3">
-                <label for="from_date" class="mr-2 font-weight-bold">From Date:</label>
-                <input type="date" id="from_date" name="from_date" class="form-control" value="{{ from_date }}">
-            </div>
-            <div class="form-group mr-3">
-                <label for="to_date" class="mr-2 font-weight-bold">To Date:</label>
-                <input type="date" id="to_date" name="to_date" class="form-control" value="{{ to_date }}">
-            </div>
-            <button type="submit" class="btn btn-info mr-2">
-                <i class="fas fa-filter"></i> Filter
-            </button>
-            <a href="{% url 'maintenance_bill_list' %}" class="btn btn-secondary mr-2">
-                <i class="fas fa-times"></i> Clear
+<div class="container-fluid py-4 maintenance-bill-list-modern">
+
+    <!-- ══ Centralized Page Header ══ -->
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+            <i class="fas fa-list mr-2"></i> Maintenance Bill List
+        </h3>
+        <div class="d-flex" style="gap: 12px;">
+            <a href="{% url 'home_page' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                <i class="fas fa-arrow-left"></i> Back
             </a>
-            <button type="submit" formaction="{% url 'maintenance_bill_export_tally' %}" class="btn btn-warning shadow-sm font-weight-bold" style="color: #6a1b9a; background-color: #ffd54f; border: none;">
-                <i class="fas fa-file-excel mr-1"></i> Tally Export
-            </button>
-            {% if from_date or to_date %}
-            <span class="ml-3 text-muted small">
-                Showing bills
-                {% if from_date %}from <strong>{{ from_date }}</strong>{% endif %}
-                {% if to_date %}to <strong>{{ to_date }}</strong>{% endif %}
-                — <strong>{{ bills|length }}</strong> record(s)
-            </span>
-            {% endif %}
+            <a href="{% url 'maintenance_bill_add' %}" class="btn btn-submit" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                <i class="fas fa-plus"></i> Add New
+            </a>
+        </div>
+    </div>
+
+
+
+    <!-- ══ Date Filter Form Section ══ -->
+    <div class="form-section mb-4">
+        <form method="GET" action="{% url 'maintenance_bill_list' %}">
+            <!-- Section Header -->
+            <div class="form-section-title mb-3">
+                <i class="fas fa-filter text-primary"></i> Bill Date Filter
+            </div>
+            
+            <!-- Controls Row -->
+            <div class="d-flex flex-wrap align-items-end" style="gap: 15px;">
+                <div class="form-group-modern mb-0" style="flex: 1 1 150px;">
+                    <label class="form-label-modern">From Date</label>
+                    <input type="date" id="from_date" name="from_date" class="form-control form-control-modern" value="{{ from_date }}">
+                </div>
+
+                <div class="form-group-modern mb-0" style="flex: 1 1 150px;">
+                    <label class="form-label-modern">To Date</label>
+                    <input type="date" id="to_date" name="to_date" class="form-control form-control-modern" value="{{ to_date }}">
+                </div>
+
+                <div class="d-flex align-items-center flex-wrap" style="gap: 10px; flex: 0 0 auto;">
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-filter mr-1"></i> Filter
+                    </button>
+                    <a href="{% url 'maintenance_bill_list' %}" class="btn btn-cancel d-inline-flex align-items-center justify-content-center" style="text-decoration:none;">
+                        <i class="fas fa-times mr-1"></i> Clear
+                    </a>
+                    <button type="submit" formaction="{% url 'maintenance_bill_export_tally' %}" class="btn btn-submit" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-file-excel mr-1"></i> Tally Export
+                    </button>
+                </div>
+
+                {% if from_date or to_date %}
+                <div class="ml-2 mb-1">
+                    <span class="badge badge-success" style="font-size: 0.85rem; padding: 6px 12px; border-radius: 8px;">
+                        Filter Active: {{ from_date|default:"..." }} to {{ to_date|default:"..." }}
+                        — <strong>{{ bills|length }}</strong> record(s)
+                    </span>
+                </div>
+                {% endif %}
+            </div>
         </form>
     </div>
-</div>
 
-<div class="container-fluid shadow-box-table">
-    <div class="table-responsive">
-        <table id="maintenanceBillTable" class="table table-striped table-bordered" style="width:100%">
-            <thead class="thead-dark">
-                <tr>
-                    <th></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Bill No"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Date"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Voucher Number"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Vehicle"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search JC No"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Vendor"></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Created On"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Created By"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Updated On"></th>
-                    <th><input type="text" class="form-control filter-input" placeholder="Search Updated By"></th>
-                    <th></th>
-                    {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Super User' %}
-                    <th></th>
-                    {% endif %}
-                </tr>
-                <tr>
-                    <th>S.No</th>
-                    <th>Bill No</th>
-                    <th>Bill Date</th>
-                    <th>Voucher Number</th>
-                    <th>Vehicle No</th>
-                    <th>JC No</th>
-                    <th>Vendor</th>
-                    <th>Amount (Taxable)</th>
-                    <th>GST</th>
-                    <th>TDS</th>
-                    <th>Payable</th>
-                    <th>File</th>
-                    <th>Created On</th>
-                    <th>Created By</th>
-                    <th>Updated On</th>
-                    <th>Updated By</th>
-                    <th>Edit</th>
-                    {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Super User' %}
-                    <th>Delete</th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for bill in bills %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td class="font-weight-bold">{{ bill.mnb_bill_no }}</td>
-                    <td>{{ bill.mnb_bill_date|date:"d-m-Y" }}</td>
-                    <td>{{ bill.get_voucher_number }}</td>
-                    <td><span class="badge badge-info">{{ bill.mnb_maintenance.mi_vehicle.vm_registrationnumber }}</span>
-                    </td>
-                    <td>{{ bill.mnb_maintenance.mi_job_card_no }}</td>
-                    <td>{{ bill.mnb_maintenance.mi_vendor.vend_name|default:bill.mnb_maintenance.mi_technician|default:"N/A" }}</td>
-                    <td>{{ bill.mnb_bill_amount_taxable }}</td>
-                    <td>{{ bill.mnb_gst_amount }} ({{ bill.mnb_gst_percentage }}%)</td>
-                    <td>{{ bill.mnb_tds_amount }} ({{ bill.mnb_tds_percentage }}%)</td>
-                    <td class="text-primary font-weight-bold">{{ bill.mnb_amount_payable }}</td>
-                    <td>
-                        {% if bill.mnb_bill_upload %}
-                        <a href="{{ bill.mnb_bill_upload.url }}" target="_blank" class="text-danger">
-                            <i class="fas fa-file-pdf"></i>
-                        </a>
-                        {% else %}
-                        <span class="text-muted small">No File</span>
+    <!-- ══ Table Container ══ -->
+    <div class="table-container-modern p-4">
+
+        <!-- Messages Block -->
+        {% if messages %}
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="message text-center">
+                    {% for message in messages %}
+                    <a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        <div class="table-responsive">
+            <table id="maintenanceBillTable" class="table modern-table w-100">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th><input type="text" class="form-control form-control-modern py-1 px-2 filter-input" style="height: 32px; font-size: 0.8rem; font-weight: normal; border-radius: 6px;" placeholder="Search Bill No"></th>
+                        <th><input type="text" class="form-control form-control-modern py-1 px-2 filter-input" style="height: 32px; font-size: 0.8rem; font-weight: normal; border-radius: 6px;" placeholder="Search Date"></th>
+                        <th><input type="text" class="form-control form-control-modern py-1 px-2 filter-input" style="height: 32px; font-size: 0.8rem; font-weight: normal; border-radius: 6px;" placeholder="Search Voucher Number"></th>
+                        <th><input type="text" class="form-control form-control-modern py-1 px-2 filter-input" style="height: 32px; font-size: 0.8rem; font-weight: normal; border-radius: 6px;" placeholder="Search Vehicle"></th>
+                        <th><input type="text" class="form-control form-control-modern py-1 px-2 filter-input" style="height: 32px; font-size: 0.8rem; font-weight: normal; border-radius: 6px;" placeholder="Search JC No"></th>
+                        <th><input type="text" class="form-control form-control-modern py-1 px-2 filter-input" style="height: 32px; font-size: 0.8rem; font-weight: normal; border-radius: 6px;" placeholder="Search Vendor"></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th><input type="text" class="form-control form-control-modern py-1 px-2 filter-input" style="height: 32px; font-size: 0.8rem; font-weight: normal; border-radius: 6px;" placeholder="Search Created On"></th>
+                        <th><input type="text" class="form-control form-control-modern py-1 px-2 filter-input" style="height: 32px; font-size: 0.8rem; font-weight: normal; border-radius: 6px;" placeholder="Search Created By"></th>
+                        <th><input type="text" class="form-control form-control-modern py-1 px-2 filter-input" style="height: 32px; font-size: 0.8rem; font-weight: normal; border-radius: 6px;" placeholder="Search Updated On"></th>
+                        <th><input type="text" class="form-control form-control-modern py-1 px-2 filter-input" style="height: 32px; font-size: 0.8rem; font-weight: normal; border-radius: 6px;" placeholder="Search Updated By"></th>
+                        <th></th>
+                        {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Super User' %}
+                        <th></th>
                         {% endif %}
-                    </td>
-                    <td>
-                        {{ bill.mnb_created_at|date:"d-m-Y H:i" }}
-                    </td>
-                    <td>
-                        {% if bill.mnb_created_by %}
-                            {{ bill.mnb_created_by.first_name }} {{ bill.mnb_created_by.last_name }}
-                        {% elif bill.mnb_maintenance.mi_job_card_creator %}
-                            {{ bill.mnb_maintenance.mi_job_card_creator }}
-                        {% else %}-{% endif %}
-                    </td>
-                    <td>
-                        {{ bill.mnb_updated_at|date:"d-m-Y H:i" }}
-                    </td>
-                    <td>
-                        {% if bill.mnb_updated_by %}
-                            {{ bill.mnb_updated_by.first_name }} {{ bill.mnb_updated_by.last_name }}
-                        {% elif bill.mnb_maintenance.mi_updated_by %}
-                            {{ bill.mnb_maintenance.mi_updated_by }}
-                        {% else %}-{% endif %}
-                    </td>
-                    <td class="text-center">
-                        <a class="btn btn-primary btn-sm action-btn" href="{% url 'maintenance_bill_edit' bill.id %}">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                    </td>
-                    {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Super User' %}
-                    <td class="text-center">
-                        <a class="btn btn-danger btn-sm action-btn" href="{% url 'maintenance_bill_delete' bill.id %}"
-                            onclick="return confirm('Are you sure you want to delete this bill?');">
-                            <i class="fas fa-trash"></i>
-                        </a>
-                    </td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    </tr>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Bill No</th>
+                        <th>Bill Date</th>
+                        <th>Voucher Number</th>
+                        <th>Vehicle No</th>
+                        <th>JC No</th>
+                        <th>Vendor</th>
+                        <th>Amount (Taxable)</th>
+                        <th>GST</th>
+                        <th>TDS</th>
+                        <th>Payable</th>
+                        <th>File</th>
+                        <th>Created On</th>
+                        <th>Created By</th>
+                        <th>Updated On</th>
+                        <th>Updated By</th>
+                        <th class="text-center">Edit</th>
+                        {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Super User' %}
+                        <th class="text-center">Delete</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bill in bills %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td class="font-weight-bold">{{ bill.mnb_bill_no }}</td>
+                        <td>{{ bill.mnb_bill_date|date:"d-m-Y" }}</td>
+                        <td>{{ bill.get_voucher_number }}</td>
+                        <td><span class="badge badge-info" style="background-color: #17a2b8;">{{ bill.mnb_maintenance.mi_vehicle.vm_registrationnumber }}</span></td>
+                        <td>{{ bill.mnb_maintenance.mi_job_card_no }}</td>
+                        <td>{{ bill.mnb_maintenance.mi_vendor.vend_name|default:bill.mnb_maintenance.mi_technician|default:"N/A" }}</td>
+                        <td>{{ bill.mnb_bill_amount_taxable }}</td>
+                        <td>{{ bill.mnb_gst_amount }} ({{ bill.mnb_gst_percentage }}%)</td>
+                        <td>{{ bill.mnb_tds_amount }} ({{ bill.mnb_tds_percentage }}%)</td>
+                        <td class="text-primary font-weight-bold">{{ bill.mnb_amount_payable }}</td>
+                        <td>
+                            {% if bill.mnb_bill_upload %}
+                            <a href="{{ bill.mnb_bill_upload.url }}" target="_blank" class="text-danger">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            {% else %}
+                            <span class="text-muted small">No File</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ bill.mnb_created_at|date:"d-m-Y H:i" }}</td>
+                        <td>
+                            {% if bill.mnb_created_by %}
+                                {{ bill.mnb_created_by.first_name }} {{ bill.mnb_created_by.last_name }}
+                            {% elif bill.mnb_maintenance.mi_job_card_creator %}
+                                {{ bill.mnb_maintenance.mi_job_card_creator }}
+                            {% else %}-{% endif %}
+                        </td>
+                        <td>{{ bill.mnb_updated_at|date:"d-m-Y H:i" }}</td>
+                        <td>
+                            {% if bill.mnb_updated_by %}
+                                {{ bill.mnb_updated_by.first_name }} {{ bill.mnb_updated_by.last_name }}
+                            {% elif bill.mnb_maintenance.mi_updated_by %}
+                                {{ bill.mnb_maintenance.mi_updated_by }}
+                            {% else %}-{% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a class="btn btn-submit btn-sm btn-icon-only" href="{% url 'maintenance_bill_edit' bill.id %}">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                        {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Super User' %}
+                        <td class="text-center">
+                            <a class="btn btn-cancel btn-sm btn-icon-only text-danger border-danger" style="background: var(--bg-card);" href="{% url 'maintenance_bill_delete' bill.id %}"
+                                onclick="return confirm('Are you sure you want to delete this bill?');">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <script>
     $(document).ready(function () {
         var table = $('#maintenanceBillTable').DataTable({
-            dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+            scrollX: true,
+            autoWidth: false,
+            responsive: false,
+            dom:
+                "<'row mb-2'<'col-md-6'l><'col-md-6 text-end'f>>" +
+                "<'row mb-2'<'col-md-12'B>>" +
+                "<'row'<'col-md-12'tr>>" +
+                "<'row mt-2'<'col-md-5'i><'col-md-7'p>>",
+            buttons: [
+                { extend: 'copy', className: 'btn btn-secondary btn-sm' },
+                { extend: 'csv', className: 'btn btn-secondary btn-sm' },
+                { extend: 'excel', className: 'btn btn-secondary btn-sm' },
+                { extend: 'print', className: 'btn btn-secondary btn-sm' }
+            ],
             order: [],
             pageLength: 25,
-            responsive: true,
+            lengthMenu: [5, 10, 25, 50, 100],
             initComplete: function () {
                 var api = this.api();
                 $('.filter-input').on('keyup change', function () {
@@ -201,37 +223,45 @@
         });
     });
 </script>
-
 <style>
-    .shadow-box {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        padding: 5px;
-        margin-bottom: 20px;
+    .maintenance-bill-list-modern {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
     }
 
-    .shadow-box-table {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-        padding: 20px;
-        background: #fff;
-        border-radius: 8px;
+    .maintenance-bill-list-modern .form-section {
+        padding: 0.85rem 1rem !important;
+        border-radius: 12px !important;
     }
 
-    .badge-info {
-        background-color: #17a2b8;
+    .maintenance-bill-list-modern .form-group-modern {
+        margin-bottom: 0.5rem !important;
     }
 
-    .thead-dark th {
-        vertical-align: middle !important;
+    .maintenance-bill-list-modern .form-label-modern {
+        margin-bottom: 0.22rem !important;
+        font-size: 0.72rem !important;
     }
 
-    .action-btn {
-        width: 35px;
-        height: 35px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 4px;
+    /* Small table action buttons overrides */
+    .maintenance-bill-list-modern .btn-sm {
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 4px 10px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+        min-width: auto !important;
+    }
+
+    .btn-icon-only {
+        width: 32px !important;
+        min-width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 </style>
+
 {% endblock %}

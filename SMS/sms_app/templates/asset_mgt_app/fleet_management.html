@@ -1,72 +1,166 @@
-{% extends "asset_mgt_app/base.html" %}
-
+{% extends "asset_mgt_app/base_modern.html" %}
 
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-3 rounded text-center bg-info">
-            <h3>Fleet Management</h3>
+<div class="container-fluid py-3">
+    <!-- Header Section -->
+    <div class="modern-header mb-4 d-flex align-items-center justify-content-between flex-wrap" style="gap: 15px;">
+        <div>
+            <h3 class="mb-1"><i class="fas fa-truck mr-2"></i> Fleet Management</h3>
+            <p class="mb-0 text-white-50 small">Real-time status and operational history across all vehicles</p>
         </div>
-        <div class="col-5"></div>
+        <div>
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel" style="padding: 0.5rem 1.2rem; text-decoration: none;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
+            </a>
+        </div>
     </div>
-</div>
-<div class="container-fluid row">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-</div>
-<hr>
-<div class="container-fluid">
-    <table  id="fleet_management" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-        <tr>
 
-            <th>Registration Number</th>
-            <th>Customer</th>
-            <th>Trip Number</th>
-            <th>Vehicle Type</th>
-            <th>Vehicle Source</th>
-            <th>Driver Name</th>
-            <th>From</th>
-            <th>To</th>
-            <th>Departed Date</th>
-            <th>Reported Date</th>
-            <th>Status</th>
-            <th>Trip Status</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for vehicle in vehicle_status_list %}
-        <tr class="{% if vehicle.status == 'Available' %}available{% else %}in-trip{% endif %}">
-            <td>{{ vehicle.registration_number }}</td>
-            <td>{{ vehicle.customer_name }}</td>
-            <td>{{ vehicle.trip_number }}</td>
-            <td>{{ vehicle.vehicle_type }}</td>
-            <td>{{ vehicle.vehicle_source }}</td>
-            <td>{{ vehicle.driver_name }}</td>
-            <td>{{ vehicle.from_location }}</td>
-            <td>{{ vehicle.to_location }}</td>
-            <td>{{ vehicle.departed_date }}</td>
-            <td>{{ vehicle.reported_date }}</td>
-            <td>{{ vehicle.status }}</td>
-            <td>{{ vehicle.trip_status }}</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <!-- Filter Summary Pills -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex flex-wrap align-items-center" style="gap: 10px;">
+            <button class="btn btn-sm btn-outline-info active fleet-filter-btn" data-filter="">
+                <i class="fas fa-list mr-1"></i> Total Fleet <span class="badge badge-light ml-1">{{ total_count }}</span>
+            </button>
+            <button class="btn btn-sm btn-outline-danger fleet-filter-btn" data-filter="In Trip">
+                <i class="fas fa-route mr-1"></i> In Trip <span class="badge badge-danger ml-1">{{ in_trip_count }}</span>
+            </button>
+            <button class="btn btn-sm btn-outline-success fleet-filter-btn" data-filter="Available">
+                <i class="fas fa-check-circle mr-1"></i> Available <span class="badge badge-success ml-1">{{ available_count }}</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Card & Data Table -->
+    <div class="modern-card p-3">
+        <div class="table-responsive">
+            <table id="fleet_management" class="table modern-table w-100">
+                <thead>
+                    <tr>
+                        <th>Registration Number</th>
+                        <th>Customer</th>
+                        <th>Trip Number</th>
+                        <th>Consignment Number</th>
+                        <th>Vehicle Type</th>
+                        <th>Vehicle Source</th>
+                        <th>Driver Name</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Departed Date</th>
+                        <th>Reported Date</th>
+                        <th>Status</th>
+                        <th>Trip Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vehicle in vehicle_status_list %}
+                    <tr>
+                        <td>
+                            <span class="font-weight-bold text-dark">{{ vehicle.registration_number }}</span>
+                        </td>
+                        <td>{{ vehicle.customer_name|default:"-" }}</td>
+                        <td>
+                            {% if vehicle.trip_number %}
+                                <span class="badge badge-light border font-weight-bold">{{ vehicle.trip_number }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if vehicle.consignment_number %}
+                                <span class="badge badge-info px-2 py-1 font-weight-bold">{{ vehicle.consignment_number }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if vehicle.vehicle_type %}
+                                <span class="badge badge-secondary px-2 py-1">{{ vehicle.vehicle_type }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if vehicle.vehicle_source %}
+                                <span class="badge badge-light border">{{ vehicle.vehicle_source }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ vehicle.driver_name|default:"-" }}</td>
+                        <td>
+                            {% if vehicle.from_location %}
+                                <i class="fas fa-map-marker-alt text-success mr-1"></i> {{ vehicle.from_location }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if vehicle.to_location %}
+                                <i class="fas fa-map-marker-alt text-danger mr-1"></i> {{ vehicle.to_location }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if vehicle.departed_date %}
+                                <span class="small font-weight-bold">{{ vehicle.departed_date }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if vehicle.reported_date %}
+                                <span class="small font-weight-bold">{{ vehicle.reported_date }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td data-search="{{ vehicle.status }}">
+                            {% if vehicle.status == 'In Trip' %}
+                                <span class="badge badge-danger px-3 py-1 font-weight-bold"><i class="fas fa-route mr-1"></i> In Trip</span>
+                            {% else %}
+                                <span class="badge badge-success px-3 py-1 font-weight-bold"><i class="fas fa-check-circle mr-1"></i> Available</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-info px-2 py-1">{{ vehicle.trip_status }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="13" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2 text-secondary d-block"></i>
+                            No Fleet Records Found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+{% endblock content %}
+
+{% block extra_js %}
 <script>
     $(document).ready(function() {
-    $('#fleet_management').DataTable({
-        order: [0, 'desc' ],
-        dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel','print'
-        ]
+        var table = $('#fleet_management').DataTable({
+            paging: true,
+            pageLength: 25,
+            scrollX: true,
+            order: [[11, 'asc'], [0, 'asc']],
+            dom: "<'d-flex align-items-center justify-content-between mb-3'Bf>rt<'d-flex align-items-center justify-content-between mt-3'lip>",
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+
+        // Quick Filter Buttons
+        $('.fleet-filter-btn').on('click', function() {
+            $('.fleet-filter-btn').removeClass('active btn-info btn-success btn-danger');
+            var filterVal = $(this).data('filter');
+            $(this).addClass('active');
+            
+            table.column(11).search(filterVal ? '^' + filterVal + '$' : '', true, false).draw();
+        });
     });
-} );
 </script>
-{% endblock content %}
+{% endblock extra_js %}

@@ -471,7 +471,6 @@ def attached_bill_export_tally(request):
 
         total_toll = sum(float(t.tc_tollcost or 0) for t in regular_trips)
         bill_buy_cost = float(bill.ab_bill_amount or 0) - total_toll
-        bill_total_km = float(bill.ab_total_km_run or 0)
 
         def calc_trip_km(trip):
             start_km = trip.tr_reportedkm_pickup if trip.tr_reportedkm_pickup else (trip.tr_departedkm or 0)
@@ -481,6 +480,11 @@ def attached_bill_export_tally(request):
                 if 0 < diff < 15000:
                     return diff
             return 0
+
+        # Calculate total KM by summing all trips included in this export (selected + empty in range)
+        bill_total_km = sum(calc_trip_km(t) for t in unique_trips)
+        if bill_total_km == 0:
+            bill_total_km = float(bill.ab_total_km_run or 0)
 
         def calc_buy_cost(trip_km):
             if bill_total_km > 0 and trip_km > 0:
@@ -527,15 +531,10 @@ def attached_bill_export_tally(request):
             current_transport_sum = sum(all_rows[i][1] for i in transport_rows_idx)
             diff = round(bill_buy_cost - current_transport_sum, 2)
             if diff != 0:
-                if abs(diff) < 1.00:
-                    # Small rounding difference — absorb into the last Transportation row silently
-                    last_idx = transport_rows_idx[-1]
-                    r = all_rows[last_idx]
-                    all_rows[last_idx] = (r[0], round(r[1] + diff, 2), r[2], r[3], r[4], r[5])
-                else:
-                    # Large difference — there are genuinely unaccounted KMs, show adjustment row
-                    vehicle_disp = f"{bill.ab_vehicle_number.vm_registrationnumber}(A)" if bill.ab_vehicle_number and getattr(bill.ab_vehicle_number, 'vm_registrationnumber', None) else ""
-                    all_rows.append(("Transportation", diff, "NA(J)", vehicle_disp, "NA(C)", " (KM Difference Adjustment)"))
+                # Always absorb the difference (regardless of size) into the last Transportation row silently to prevent adjustment rows
+                last_idx = transport_rows_idx[-1]
+                r = all_rows[last_idx]
+                all_rows[last_idx] = (r[0], round(r[1] + diff, 2), r[2], r[3], r[4], r[5])
 
         # Write all rows to worksheet
         for exp_name, amt, job_no, vehicle_disp, customer_name, narr_suffix in all_rows:
