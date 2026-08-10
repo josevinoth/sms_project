@@ -20,6 +20,54 @@
                         </div>
                     </div>
                     <div class="card-body bg-light">
+                        {% if vehicle_obj %}
+                        <div class="alert alert-secondary border shadow-sm mb-3 text-dark p-3 rounded" style="background-color: #f8f9fa;">
+                            <h5 class="mb-2 text-primary font-weight-bold">
+                                <i class="fas fa-truck mr-1"></i> Vehicle Master Document Verification ({{ trip.tr_vehiclenumber|default:vehicle_obj.vm_registrationnumber }} - Ownership: <span class="badge badge-info">{{ vehicle_docs_info.ownership }}</span>)
+                            </h5>
+                            <div class="row text-center text-md-left">
+                                <div class="col-md-4 mb-2">
+                                    <strong>Vehicle RC & FC:</strong> 
+                                    {% if vehicle_docs_info.rc_status %}
+                                        <span class="badge badge-success"><i class="fas fa-check-circle"></i> Valid</span>
+                                    {% else %}
+                                        <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Expired / Missing</span>
+                                    {% endif %}
+                                    <br>
+                                    <small class="text-muted">Expiry / Reg Date: {{ vehicle_docs_info.rc_expiry|date:"d-m-Y"|default:"Not Available" }}</small>
+                                    {% if vehicle_docs_info.rc_attach %}
+                                        | <a href="{{ vehicle_docs_info.rc_attach }}" target="_blank" class="text-primary font-weight-bold"><i class="fas fa-paperclip"></i> View RC Doc</a>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <strong>Insurance & Validity:</strong> 
+                                    {% if vehicle_docs_info.insurance_status %}
+                                        <span class="badge badge-success"><i class="fas fa-check-circle"></i> Valid</span>
+                                    {% else %}
+                                        <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Expired / Missing</span>
+                                    {% endif %}
+                                    <br>
+                                    <small class="text-muted">Expiry Date: {{ vehicle_docs_info.insurance_expiry|date:"d-m-Y"|default:"Not Available" }}</small>
+                                    {% if vehicle_docs_info.insurance_attach %}
+                                        | <a href="{{ vehicle_docs_info.insurance_attach }}" target="_blank" class="text-primary font-weight-bold"><i class="fas fa-paperclip"></i> View Insurance</a>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <strong>Goods Permit:</strong> 
+                                    {% if vehicle_docs_info.permit_status %}
+                                        <span class="badge badge-success"><i class="fas fa-check-circle"></i> Valid</span>
+                                    {% else %}
+                                        <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Expired / Missing</span>
+                                    {% endif %}
+                                    <br>
+                                    <small class="text-muted">Expiry Date: {{ vehicle_docs_info.permit_expiry|date:"d-m-Y"|default:"Not Available" }}</small>
+                                    {% if vehicle_docs_info.permit_attach %}
+                                        | <a href="{{ vehicle_docs_info.permit_attach }}" target="_blank" class="text-primary font-weight-bold"><i class="fas fa-paperclip"></i> View Permit</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                         <div class="row">
                             <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
                                 <div class="input-group input-group-sm mb-3">
@@ -247,10 +295,54 @@
         ];
         fields.forEach(function (id) {
             highlightIfNo(id);
-            document.getElementById(id).addEventListener("change", function () {
-                highlightIfNo(id);
-            });
+            var elem = document.getElementById(id);
+            if (elem) {
+                elem.addEventListener("change", function () {
+                    highlightIfNo(id);
+                    validateApprovalState();
+                });
+            }
         });
+
+        var approvalStatusElem = document.getElementById("thc_approval_status");
+        if (approvalStatusElem) {
+            approvalStatusElem.addEventListener("change", function () {
+                validateApprovalState(true);
+            });
+        }
+
+        function validateApprovalState(showAlert = false) {
+            if (!approvalStatusElem) return true;
+            if (approvalStatusElem.value === "1") { // User selected "Approved"
+                var hasNoField = false;
+                fields.forEach(function (id) {
+                    if (id === "thc_packagesloaded") return;
+                    var elem = document.getElementById(id);
+                    if (elem && elem.value === "2") { // 2 = No
+                        hasNoField = true;
+                    }
+                });
+
+                if (hasNoField) {
+                    if (showAlert) {
+                        alert("⚠️ CANNOT APPROVE: All document and safety checklist items must be set to 'Yes' before this checklist can be approved!");
+                    }
+                    approvalStatusElem.value = "2"; // Reset back to Not Approved
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        var formElem = document.querySelector("form");
+        if (formElem) {
+            formElem.addEventListener("submit", function (e) {
+                if (!validateApprovalState(true)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
     };
 </script>
 
