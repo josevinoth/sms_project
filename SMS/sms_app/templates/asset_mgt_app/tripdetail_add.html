@@ -876,7 +876,9 @@ document.addEventListener("DOMContentLoaded", function () {
 	}
 	function enableUnloadingStage1() {
 		$("#tr_reportedlocation, #tr_reporteddate, #tr_reportedkm").prop("disabled", false).removeClass('disable_a_href');
-		enableUnloadingStage2();
+		if (g_unloadingReportedDateSaved || g_unloadingSent) {
+			enableUnloadingStage2();
+		}
 		validateStatusRestriction();
 	}
 	function enableUnloadingStage2() {
@@ -1012,7 +1014,8 @@ document.addEventListener("DOMContentLoaded", function () {
 			if ((status !== "8" && status !== "") || g_pickupDateSaved) {
 				enableLoadingFields();
 			}
-			if (cat === "2" || cat === "3" || g_hasLoadingStartedSaved || g_tripStartedSent || status == "2" || status == "1") {
+			// Enable unloading ONLY when status is Trip Started (1) or Trip Closed (2), or for Empty trips (cat 2/3)
+			if (cat === "2" || cat === "3" || status == "2" || status == "1" || status === 1) {
 				enableUnloadingStage1();
 			}
 			validateStatusRestriction();
