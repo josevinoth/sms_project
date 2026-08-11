@@ -19,7 +19,7 @@
 									<div class="input-group-prepend">
 										<span class="input-group-text" id="">Name</span>
 									</div>
-									{% render_field form.vend_name class="form-control" %}
+									{% render_field form.vend_name class="form-control" style="text-transform: uppercase;" %}
 								</div>
 								<div class="input-group input-group-sm mb-3">
 									<div class="input-group-prepend">
@@ -158,7 +158,59 @@
 <script>
 	$(document).ready(function() {
         document.getElementById("vend_updated_by").value ='{{user_id}}';
-        remaining_days_calc()
+        remaining_days_calc();
+
+        // Vendor name validation/formatting
+        var $vendName = $('input[name="vend_name"]');
+        if ($vendName.length) {
+            $vendName.on('input', function() {
+                var start = this.selectionStart;
+                var end = this.selectionEnd;
+                var val = this.value;
+
+                // Force uppercase
+                val = val.toUpperCase();
+
+                // Prevent leading space(s) as the user types
+                if (val.startsWith(' ')) {
+                    val = val.trimStart();
+                    if (start > 0) {
+                        start--;
+                        end--;
+                    }
+                }
+
+                // Prevent multiple consecutive spaces
+                var processedVal = val.replace(/\s{2,}/g, ' ');
+                if (val !== processedVal) {
+                    val = processedVal;
+                    // adjust cursor if it was inside the collapsed space
+                    if (start > 0) {
+                        start--;
+                        end--;
+                    }
+                }
+
+                if (this.value !== val) {
+                    this.value = val;
+                    this.setSelectionRange(start, end);
+                }
+            });
+
+            // Trim leading/trailing spaces and collapse multiple internal spaces on blur
+            $vendName.on('blur', function() {
+                var val = this.value;
+                val = val.trim().replace(/\s+/g, ' ').toUpperCase();
+                this.value = val;
+            });
+
+            // Also ensure it is cleaned before submission
+            $vendName.closest('form').on('submit', function() {
+                var val = $vendName.val();
+                val = val.trim().replace(/\s+/g, ' ').toUpperCase();
+                $vendName.val(val);
+            });
+        }
       });
 </script>
 

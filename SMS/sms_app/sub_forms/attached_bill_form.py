@@ -41,7 +41,7 @@ class AttachedBillForm(forms.ModelForm):
                 field.widget = forms.HiddenInput()
             
             # Read-only fields (Calculated/Pulled)
-            if field_name in ['ab_vehicle_type', 'ab_total_km_run', 'ab_leave_amount', 'ab_extra_km_run', 'ab_tds_amount', 'ab_payable_amount', 'ab_voucher_no']:
+            if field_name in ['ab_vehicle_type', 'ab_total_km_run', 'ab_leave_amount', 'ab_extra_km_run', 'ab_tds_amount', 'ab_payable_amount', 'ab_voucher_no', 'ab_toll_cost']:
                 field.widget.attrs['readonly'] = 'readonly'
             
             # Empty labels
