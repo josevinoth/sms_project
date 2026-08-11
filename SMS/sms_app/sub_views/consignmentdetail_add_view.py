@@ -70,18 +70,42 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     user_branch_id = Location_info.objects.get(loc_name=user_branch).id
     enquiry_num = request.session.get('ses_enqiury_num')
     
+    selected_trip_id_param = request.GET.get('trip_id')
+    selected_trip_id = None
+    if selected_trip_id_param:
+        try:
+            selected_trip_id = int(selected_trip_id_param)
+        except (ValueError, TypeError):
+            pass
+
+    if selected_trip_id:
+        trip_obj = TripdetailInfo.objects.filter(id=selected_trip_id).first()
+        if trip_obj:
+            # If clicking Add Consignment on a trip that ALREADY has a consignment linked,
+            # redirect to update that existing consignment directly instead of creating a new one or jumping to another trip!
+            if consignmentdetail_id == 0 and trip_obj.tr_consignmentnumber_id:
+                return redirect('consignmentdetail_update', consignmentdetail_id=trip_obj.tr_consignmentnumber_id)
+
+            if trip_obj.tr_enquirynumber_id:
+                enquiry_num_id = trip_obj.tr_enquirynumber_id
+                request.session['enquiry_num_id'] = enquiry_num_id
+                request.session['ses_enqiury_id'] = enquiry_num_id
+                if trip_obj.tr_enquirynumber:
+                    enquiry_num = trip_obj.tr_enquirynumber.en_enquirynumber
+                    request.session['ses_enqiury_num'] = enquiry_num
+
     enq_id_param = request.GET.get('enq_id')
     if enq_id_param:
-        enquiry_num_id = int(enq_id_param)
-        request.session['enquiry_num_id'] = enquiry_num_id
-        request.session['ses_enqiury_id'] = enquiry_num_id
         try:
+            enquiry_num_id = int(enq_id_param)
+            request.session['enquiry_num_id'] = enquiry_num_id
+            request.session['ses_enqiury_id'] = enquiry_num_id
             enquiry = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
             request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
             enquiry_num = enquiry.en_enquirynumber
-        except ObjectDoesNotExist:
+        except (ValueError, TypeError, ObjectDoesNotExist):
             pass
-    else:
+    elif not enquiry_num_id:
         # Prioritize 'enquiry_num_id' over the misspelled session key
         enquiry_num_id = request.session.get('enquiry_num_id') or request.session.get('ses_enqiury_id')
 
@@ -130,14 +154,6 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             if existing_dummy and existing_dummy.tc_cancellation:
                 existing_cancellation_charge = existing_dummy.tc_cancellation
 
-        selected_trip_id_param = request.GET.get('trip_id')
-        selected_trip_id = None
-        if selected_trip_id_param:
-            try:
-                selected_trip_id = int(selected_trip_id_param)
-            except (ValueError, TypeError):
-                pass
-
         if not selected_trip_id and consignmentdetail_id != 0:
             linked_trip = TripdetailInfo.objects.filter(tr_consignmentnumber_id=consignmentdetail_id).first()
             if linked_trip:
@@ -151,13 +167,16 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                 if consignmentdetail_id == 0:
                     con_det_form.initial['co_vehicelnumber'] = selected_vehicle_num
 
+        eligible_filter = Q(tr_consignmentnumber_id=consignmentdetail_id) | Q(tr_consignmentnumber__isnull=True)
+        if selected_trip_id:
+            eligible_filter |= Q(id=selected_trip_id)
+
         eligible_trips = TripdetailInfo.objects.filter(
             tr_enquirynumber=enquiry_num_id
         ).filter(
             Q(tr_category_id=1) | Q(tr_operational_status_id=10) | Q(tc_financestatus_id=10)
         ).filter(
-            Q(tr_consignmentnumber_id=consignmentdetail_id) |
-            Q(tr_consignmentnumber__isnull=True)
+            eligible_filter
         ).distinct()
 
         context = {

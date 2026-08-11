@@ -12,9 +12,15 @@
             </a>
             {% if trip_instance.id %}
                 {% if has_dock_out %}
-                <a href="{% url 'consignmentdetail_insert' %}?trip_id={{ trip_instance.id }}&enq_id={{ enquiry_num_id }}" class="btn-modern btn-submit py-2 px-4 mr-2" style="background: linear-gradient(135deg, #10b981, #059669); text-decoration:none;">
-                    <i class="fas fa-file-invoice"></i> + ADD CONSIGNMENT
-                </a>
+                    {% if trip_instance.tr_consignmentnumber %}
+                    <a href="{% url 'consignmentdetail_update' trip_instance.tr_consignmentnumber.id %}?trip_id={{ trip_instance.id }}&enq_id={{ enquiry_num_id }}" class="btn-modern btn-submit py-2 px-4 mr-2" style="background: linear-gradient(135deg, #10b981, #059669); text-decoration:none;">
+                        <i class="fas fa-file-invoice"></i> EDIT CONSIGNMENT
+                    </a>
+                    {% else %}
+                    <a href="{% url 'consignmentdetail_insert' %}?trip_id={{ trip_instance.id }}&enq_id={{ enquiry_num_id }}" class="btn-modern btn-submit py-2 px-4 mr-2" style="background: linear-gradient(135deg, #10b981, #059669); text-decoration:none;">
+                        <i class="fas fa-file-invoice"></i> + ADD CONSIGNMENT
+                    </a>
+                    {% endif %}
                 {% else %}
                 <button type="button" class="btn-modern btn-cancel py-2 px-4 mr-2" disabled title="Save Dock-Out Time to Add Consignment" style="opacity:0.6; cursor:not-allowed;">
                     <i class="fas fa-lock"></i> + ADD CONSIGNMENT
