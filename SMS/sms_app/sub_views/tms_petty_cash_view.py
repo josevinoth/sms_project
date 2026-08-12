@@ -11,14 +11,21 @@ from ..models import Business_Sol_info, Location_info
 from ..sub_forms.tms_petty_cash_form import TMSPettyCashForm
 from .general_utils import get_financial_year, get_session_branch_id
 
-def generate_tms_petty_cash_number(model_class, field_name):
+def generate_tms_petty_cash_number(model_class, field_name, branch_obj=None):
     """
-    Generates M_T_26-27_yy_xxx
+    Generates [BranchCode]_T_26-27_yy_xxx
     """
-    fy = get_financial_year() # returns e.g. "24-25" (but user asked for 26-27, wait, function handles this)
+    fy = get_financial_year() # returns e.g. "24-25"
     today = datetime.now()
     month_str = today.strftime("%m")
-    prefix = f"M_T_{fy}_{month_str}_"
+    
+    branch_prefix = "M"
+    if branch_obj and branch_obj.loc_name:
+        loc_name_lower = branch_obj.loc_name.lower()
+        if "blr" in loc_name_lower or "bengaluru" in loc_name_lower or "bangalore" in loc_name_lower:
+            branch_prefix = "B"
+            
+    prefix = f"{branch_prefix}_T_{fy}_{month_str}_"
     
     # fetch latest for this prefix
     latest_obj = model_class.objects.filter(**{f"{field_name}__startswith": prefix}).order_by('-id').first()
@@ -108,7 +115,7 @@ def tms_petty_cash_add(request, tpc_id=0):
         if form.is_valid():
             saved_tpc = form.save(commit=False)
             if tpc_id == 0:
-                saved_tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number')
+                saved_tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', saved_tpc.tpc_branch)
             saved_tpc.save()
             messages.success(request, "Petty Cash saved successfully.")
             return redirect('tms_petty_cash_list')
@@ -137,18 +144,69 @@ def tms_petty_cash_add(request, tpc_id=0):
 
 def tms_petty_cash_list(request):
     tpc_number = request.GET.get('tpc_number', "")
+    search_date = request.GET.get('search_date', "")
+    search_vehicle = request.GET.get('search_vehicle', "")
+    search_branch = request.GET.get('search_branch', "")
+    
     filters = Q()
     if tpc_number:
         filters &= Q(tpc_number__icontains=tpc_number)
+    if search_date:
+        filters &= Q(tpc_trip_date=search_date)
+    if search_vehicle:
+        filters &= Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle)
         
+    user = request.user
+    is_admin_or_supervisor = user.is_superuser
+    if not is_admin_or_supervisor:
+        try:
+            from ..sub_models.user_ext_mod import User_extInfo
+            user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
+            desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
+            role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
+            if 'supervisor' in desig or 'admin' in role:
+                is_admin_or_supervisor = True
+        except Exception:
+            pass
+
+    if not is_admin_or_supervisor:
+        branch_id = get_session_branch_id(request)
+        if branch_id:
+            filters &= Q(tpc_branch_id=branch_id)
+    else:
+        if search_branch:
+            filters &= Q(tpc_branch__loc_name__icontains=search_branch)
+            
+            
     tpc_list = TMSPettyCashInfo.objects.filter(filters).order_by('-id')
     paginator = Paginator(tpc_list, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
+    # Dynamically add from_to_location to each object in the page
+    for tpc in page_obj.object_list:
+        tpc.from_to_location = ""
+        if tpc.tpc_job_no:
+            try:
+                trip = TripdetailInfo.objects.filter(
+                    Q(tr_consignmentnumber__co_consignmentnumber=tpc.tpc_job_no) | 
+                    Q(tr_tripnumber=tpc.tpc_job_no)
+                ).first()
+                if trip:
+                    fr = trip.tr_departedlocation.place_name if trip.tr_departedlocation else ""
+                    to = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else ""
+                    if fr or to:
+                        tpc.from_to_location = f"{fr} - {to}"
+            except Exception:
+                pass
+                
     context = {
         'tpc_list': page_obj,
-        'search_tpc_number': tpc_number
+        'search_tpc_number': tpc_number,
+        'search_date': search_date,
+        'search_vehicle': search_vehicle,
+        'search_branch': search_branch,
+        'is_admin_or_supervisor': is_admin_or_supervisor,
     }
     return render(request, "asset_mgt_app/tms_petty_cash_list.html", context)
 
