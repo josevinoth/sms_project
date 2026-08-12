@@ -305,27 +305,52 @@ def enquirynote_list(request):
                 'raw_num': ""
             })
 
-    # Trip dict
-    trip_dict = {}
-    for trip_id, enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num, tc_cancellation_check in trip_data:
-        # Check category safely
-        cat_lower = trip_category.strip().lower() if trip_category else ""
+    # Pre-fetch POD files for page's trips efficiently (ONLY Business category trips get POD)
+    trips_all = TripdetailInfo.objects.filter(
+        tr_enquirynumber_id__in=enquiry_ids
+    ).select_related('tr_category')
 
-        # If category is "Business", show consignment number; otherwise show category name
-        # Added "bussiness" to handle potential typos in the database
-        if tc_cancellation_check or trip_status_id in [10, 11]:
-            display_text = "Cancelled Trip"
-        elif cat_lower in ["business", "bussiness"]:
-            display_text = trip_cons if trip_cons else "No Consignment"
-        else:
-            display_text = trip_category if trip_category else "No Category"
+    trip_numbers = [t.tr_tripnumber for t in trips_all if t.tr_tripnumber]
+    closures = Trip_closure_files_Info.objects.filter(
+        tcf_tripnumber__in=trip_numbers
+    ).only('tcf_tripnumber', 'tcf_pod')
+    closure_pod_map = {c.tcf_tripnumber: c.tcf_pod for c in closures if c.tcf_pod and c.tcf_pod.name}
 
-        display_veh_num = trip_veh_num if trip_veh_num else (trip_num or "No Trip")
-        is_invoiced = trip_id in invoiced_trip_ids
+    inv_docs = InvoiceDocumentInfo.objects.filter(
+        id_tripnumber__in=trip_numbers
+    ).only('id_tripnumber', 'id_pod_doc')
+    inv_pod_map = {i.id_tripnumber: i.id_pod_doc for i in inv_docs if i.id_pod_doc and i.id_pod_doc.name}
 
-        trip_dict.setdefault(enq_id, []).append(
-            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, display_veh_num, is_invoiced)
-        )
+    trip_pod_map = {}
+    pod_dict = {}
+    for trip in trips_all:
+        cat_name = (trip.tr_category.category if trip.tr_category else "").strip().lower()
+        if cat_name not in ["business", "bussiness"]:
+            continue  # ONLY Business category trips have PODs
+
+        pod_file = None
+        if trip.tr_tripnumber and trip.tr_tripnumber in inv_pod_map:
+            pod_file = inv_pod_map[trip.tr_tripnumber]
+        elif trip.tr_tripnumber and trip.tr_tripnumber in closure_pod_map:
+            pod_file = closure_pod_map[trip.tr_tripnumber]
+        elif trip.tc_pod_attachment and trip.tc_pod_attachment.name:
+            pod_file = trip.tc_pod_attachment
+        elif trip.td_pod and trip.td_pod.name:
+            pod_file = trip.td_pod
+
+        if pod_file and hasattr(pod_file, 'url'):
+            try:
+                url = pod_file.url
+                veh_num = trip.tr_vehiclenumber or trip.tr_tripnumber or "POD"
+                pod_info = {
+                    'trip_id': trip.id,
+                    'veh_number': veh_num,
+                    'url': url
+                }
+                trip_pod_map[trip.id] = pod_info
+                pod_dict.setdefault(trip.tr_enquirynumber_id, []).append(pod_info)
+            except Exception:
+                pass
 
     # Vehicle limits
     vehicle_limits = (
@@ -355,45 +380,28 @@ def enquirynote_list(request):
     )
     dock_out_count_dict = {d['tr_enquirynumber_id']: d['total_docked_out'] for d in docked_out_trips}
 
-    # Pre-fetch POD files for page's trips efficiently
-    trips_all = TripdetailInfo.objects.filter(
-        tr_enquirynumber_id__in=enquiry_ids
-    )
+    # Trip dict
+    trip_dict = {}
+    for trip_id, enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num, tc_cancellation_check in trip_data:
+        # Check category safely
+        cat_lower = trip_category.strip().lower() if trip_category else ""
 
-    trip_numbers = [t.tr_tripnumber for t in trips_all if t.tr_tripnumber]
-    closures = Trip_closure_files_Info.objects.filter(
-        tcf_tripnumber__in=trip_numbers
-    ).only('tcf_tripnumber', 'tcf_pod')
-    closure_pod_map = {c.tcf_tripnumber: c.tcf_pod for c in closures if c.tcf_pod and c.tcf_pod.name}
+        # If category is "Business", show consignment number; otherwise show category name
+        # Added "bussiness" to handle potential typos in the database
+        if tc_cancellation_check or trip_status_id in [10, 11]:
+            display_text = "Cancelled Trip"
+        elif cat_lower in ["business", "bussiness"]:
+            display_text = trip_cons if trip_cons else "No Consignment"
+        else:
+            display_text = trip_category if trip_category else "No Category"
 
-    inv_docs = InvoiceDocumentInfo.objects.filter(
-        id_tripnumber__in=trip_numbers
-    ).only('id_tripnumber', 'id_pod_doc')
-    inv_pod_map = {i.id_tripnumber: i.id_pod_doc for i in inv_docs if i.id_pod_doc and i.id_pod_doc.name}
+        display_veh_num = trip_veh_num if trip_veh_num else (trip_num or "No Trip")
+        is_invoiced = trip_id in invoiced_trip_ids
+        pod_info = trip_pod_map.get(trip_id, None) if cat_lower in ["business", "bussiness"] else None
 
-    pod_dict = {}
-    for trip in trips_all:
-        pod_file = None
-        if trip.tr_tripnumber and trip.tr_tripnumber in inv_pod_map:
-            pod_file = inv_pod_map[trip.tr_tripnumber]
-        elif trip.tr_tripnumber and trip.tr_tripnumber in closure_pod_map:
-            pod_file = closure_pod_map[trip.tr_tripnumber]
-        elif trip.tc_pod_attachment and trip.tc_pod_attachment.name:
-            pod_file = trip.tc_pod_attachment
-        elif trip.td_pod and trip.td_pod.name:
-            pod_file = trip.td_pod
-
-        if pod_file and hasattr(pod_file, 'url'):
-            try:
-                url = pod_file.url
-                veh_num = trip.tr_vehiclenumber or trip.tr_tripnumber or "POD"
-                pod_dict.setdefault(trip.tr_enquirynumber_id, []).append({
-                    'trip_id': trip.id,
-                    'veh_number': veh_num,
-                    'url': url
-                })
-            except Exception:
-                pass
+        trip_dict.setdefault(enq_id, []).append(
+            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, display_veh_num, is_invoiced, pod_info)
+        )
 
     # Build final data
     enquiry_data = []

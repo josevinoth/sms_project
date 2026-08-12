@@ -426,7 +426,7 @@
 
                         <div>
                             {% if data.trips and data.trips|length > 0 %}
-                                {% for trip_cons,trip_num, trip_status, trip_status_id, display_veh_num, is_invoiced in data.trips %}
+                                {% for trip_cons,trip_num, trip_status, trip_status_id, display_veh_num, is_invoiced, pod_info in data.trips %}
                                     {% if "Empty" in trip_cons or "Business" in trip_cons %}
                                     <a class="badge p-2 mb-2 d-inline-block" href="{% url 'tripdetail_enquiry' data.enquiry.id trip_num %}" style="text-decoration: none; background: rgba(139, 92, 246, 0.1); border: 1px solid #8b5cf6; color: #7c3aed; font-weight: 600; font-size: 0.8rem;">
                                         <i class="fas fa-route"></i> {{ display_veh_num }} <span class="small" style="opacity: 0.8;">({{ trip_cons }})</span>
@@ -474,7 +474,7 @@
                     <!-- Trip Settlement -->
                     <td style="min-width:260px; width:260px; white-space:normal; word-break:break-word;">
                         {% if data.trips %}
-                            {% for trip_cons,trip_num,trip_status,trip_status_id, display_veh_num, is_invoiced in data.trips %}
+                            {% for trip_cons,trip_num,trip_status,trip_status_id, display_veh_num, is_invoiced, pod_info in data.trips %}
                                 {% if is_invoiced %}
                                 <span class="badge p-2 mb-1" style="font-size: 0.8rem; background: rgba(20, 184, 166, 0.15); border: 1px solid #14b8a6; color: #0d9488; font-weight: 600;"><i class="fas fa-file-invoice"></i> Invoice Completed <span class="small" style="opacity: 0.8;">({{ display_veh_num }} - {{ trip_cons }})</span></span><br>
                                 {% elif trip_status_id == 1 or trip_status_id == 5 or trip_status_id == 8 or trip_status_id == 11 %}
@@ -512,23 +512,25 @@
                         {% endif %}
                     </td>
 
-                    <!-- POD Column -->
+                    <!-- POD Column (Mapped 1-to-1 per Trip) -->
                     <td class="text-center" style="vertical-align: top; padding-top: 12px; padding-bottom: 12px;">
-                        {% if data.pod_list %}
-                            {% if data.consignments or data.has_docked_out_trip %}
-                            <!-- Top spacer to align icon buttons with Consignment Number rows below header badge -->
-                            <div style="height: 32px; margin-bottom: 8px;"></div>
-                            {% endif %}
-                            {% for pod in data.pod_list %}
-                            <div class="eye-btn-wrapper">
-                                <a href="{{ pod.url }}" target="_blank" download class="pod-btn" title="Download POD ({{ pod.veh_number }})">
+                        {% if data.trips %}
+                            {% for trip_cons,trip_num,trip_status,trip_status_id,display_veh_num,is_invoiced,pod_info in data.trips %}
+                            <div class="eye-btn-wrapper mb-1">
+                                {% if pod_info %}
+                                <a href="{{ pod_info.url }}" target="_blank" download class="pod-btn" title="Download POD ({{ display_veh_num }})">
                                     <i class="fas fa-download"></i>
                                 </a>
+                                {% else %}
+                                <button class="btn btn-sm btn-secondary text-white pod-btn" style="opacity: 0.35; background-color: #64748b !important;" disabled title="No POD for {{ display_veh_num }}">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                {% endif %}
                             </div>
                             {% endfor %}
                         {% else %}
                             <div class="eye-btn-wrapper">
-                                <button class="btn btn-sm btn-secondary text-white pod-btn" style="opacity: 0.4; background-color: #64748b !important;" disabled title="No POD Available">
+                                <button class="btn btn-sm btn-secondary text-white pod-btn" style="opacity: 0.35; background-color: #64748b !important;" disabled title="No Trips">
                                     <i class="fas fa-download"></i>
                                 </button>
                             </div>
