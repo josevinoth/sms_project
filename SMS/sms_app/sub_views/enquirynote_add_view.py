@@ -321,6 +321,7 @@ def enquirynote_list(request):
     ).only('id_tripnumber', 'id_pod_doc')
     inv_pod_map = {i.id_tripnumber: i.id_pod_doc for i in inv_docs if i.id_pod_doc and i.id_pod_doc.name}
 
+    consignment_pod_map = {}
     trip_pod_map = {}
     pod_dict = {}
     for trip in trips_all:
@@ -348,6 +349,8 @@ def enquirynote_list(request):
                     'url': url
                 }
                 trip_pod_map[trip.id] = pod_info
+                if trip.tr_consignmentnumber_id:
+                    consignment_pod_map[trip.tr_consignmentnumber_id] = pod_info
                 pod_dict.setdefault(trip.tr_enquirynumber_id, []).append(pod_info)
             except Exception:
                 pass
@@ -408,6 +411,8 @@ def enquirynote_list(request):
     for enquiry in page_obj:
         vehicles = vehicle_dict.get(enquiry.id, [])
         consignments = consignment_dict.get(enquiry.id, [])
+        for c in consignments:
+            c.pod_info = consignment_pod_map.get(c.id, None)
 
         total_allowed = vehicle_limit_dict.get(enquiry.id, 0)
         total_allotted = vehicle_allotted_dict.get(enquiry.id, 0)
