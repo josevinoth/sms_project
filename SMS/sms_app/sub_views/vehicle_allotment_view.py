@@ -989,11 +989,24 @@ def load_vehicle_number(request):
         except (ValueError, TypeError):
             pass
 
-    # 3) Get vehicles matching type+ownership
+    # 3) Get vehicles matching type+ownership (Active only)
     candidate_qs = VehiclemasterInfo.objects.filter(
+        Q(vm_status_id=1) | Q(vm_status__isnull=True),
         vm_vehicletype=vehicletype_placed,
         vm_ownership=vehicletype_source
-    ).exclude(id__in=busy_vehicle_ids).values_list('id', 'vm_registrationnumber')
+    )
+    if current_vehicle_id:
+        try:
+            curr_vid = int(current_vehicle_id)
+            candidate_qs = VehiclemasterInfo.objects.filter(
+                (Q(vm_status_id=1) | Q(vm_status__isnull=True) | Q(pk=curr_vid)),
+                vm_vehicletype=vehicletype_placed,
+                vm_ownership=vehicletype_source
+            )
+        except (ValueError, TypeError):
+            pass
+
+    candidate_qs = candidate_qs.exclude(id__in=busy_vehicle_ids).values_list('id', 'vm_registrationnumber')
 
     vehicle_data = []
     seen_regs = set()

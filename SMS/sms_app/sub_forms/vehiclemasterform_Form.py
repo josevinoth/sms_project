@@ -1,5 +1,5 @@
 from django import forms
-from ..models import VehiclemasterInfo, OwnershipInfo
+from ..models import VehiclemasterInfo, OwnershipInfo, ActiveinactiveInfo
 
 class VehiclemasteraddForm(forms.ModelForm):
 
@@ -25,4 +25,9 @@ class VehiclemasteraddForm(forms.ModelForm):
         self.fields['vm_permitcopy'].empty_label = "--Select--"
         self.fields['vm_pollutioncertificatecopy'].empty_label = "--Select--"
         self.fields['vm_vendor'].empty_label = "--Select--"
+        if 'vm_status' in self.fields:
+            self.fields['vm_status'].empty_label = "--Select Status--"
+            self.fields['vm_status'].queryset = ActiveinactiveInfo.objects.filter(active_inactive__in=['Active', 'Inactive'])
+            if not self.instance.pk and not self.initial.get('vm_status'):
+                self.fields['vm_status'].initial = 1
 

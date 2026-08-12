@@ -1,3 +1,4 @@
+import os
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
@@ -6,8 +7,9 @@ from django.http import JsonResponse
 
 from ..forms import ConsignmentdetailaddForm, EnquirynoteaddForm, EnquirynotevehicleForm
 from ..models import Vehicle_allotmentInfo, User_extInfo, TripdetailInfo, ConsignmentdetailInfo, EnquirynoteInfo, \
-    Enquirynotevehicle, VehiclemasterInfo, Tripstatusinfo, DeletionLog
+    Enquirynotevehicle, VehiclemasterInfo, Tripstatusinfo, DeletionLog, Trip_closure_files_Info
 from ..sub_models.trans_invoice_mod import TransInvoiceInfo
+from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 
@@ -199,16 +201,20 @@ def enquirynote_list(request):
     select_all = request.GET.get('select_all', '')
 
     if select_all == "true":
-        # Load records with a sensible limit (1000 max for performance) when "Show All" is clicked
-        page_obj = list(enquirynote_queryset[:1000])
-    elif date_from or date_to or enquiry_number or consignment_number or vehicle_number:
-        # Load records with a larger limit (5000 max) when specific filters/search terms are applied
-        page_obj = list(enquirynote_queryset[:5000])
+        # Load records with a limit of 1000 when "Show All" is clicked
+        paginator = Paginator(enquirynote_queryset, 1000)
     else:
-        # Normal pagination
-        paginator = Paginator(enquirynote_queryset, 75)
-        page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number if page_number and page_number.isdigit() else 1)
+        # Default 30 records per page limit as requested
+        paginator = Paginator(enquirynote_queryset, 30)
+
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number if page_number and str(page_number).isdigit() else 1)
+
+    # Build query string for pagination links preserving active search/filters
+    get_copy = request.GET.copy()
+    if 'page' in get_copy:
+        del get_copy['page']
+    query_params = get_copy.urlencode()
 
     # Efficiently get enquiry IDs
     enquiry_ids = [enq.id for enq in page_obj]
@@ -349,6 +355,46 @@ def enquirynote_list(request):
     )
     dock_out_count_dict = {d['tr_enquirynumber_id']: d['total_docked_out'] for d in docked_out_trips}
 
+    # Pre-fetch POD files for page's trips efficiently
+    trips_all = TripdetailInfo.objects.filter(
+        tr_enquirynumber_id__in=enquiry_ids
+    )
+
+    trip_numbers = [t.tr_tripnumber for t in trips_all if t.tr_tripnumber]
+    closures = Trip_closure_files_Info.objects.filter(
+        tcf_tripnumber__in=trip_numbers
+    ).only('tcf_tripnumber', 'tcf_pod')
+    closure_pod_map = {c.tcf_tripnumber: c.tcf_pod for c in closures if c.tcf_pod and c.tcf_pod.name}
+
+    inv_docs = InvoiceDocumentInfo.objects.filter(
+        id_tripnumber__in=trip_numbers
+    ).only('id_tripnumber', 'id_pod_doc')
+    inv_pod_map = {i.id_tripnumber: i.id_pod_doc for i in inv_docs if i.id_pod_doc and i.id_pod_doc.name}
+
+    pod_dict = {}
+    for trip in trips_all:
+        pod_file = None
+        if trip.tr_tripnumber and trip.tr_tripnumber in inv_pod_map:
+            pod_file = inv_pod_map[trip.tr_tripnumber]
+        elif trip.tr_tripnumber and trip.tr_tripnumber in closure_pod_map:
+            pod_file = closure_pod_map[trip.tr_tripnumber]
+        elif trip.tc_pod_attachment and trip.tc_pod_attachment.name:
+            pod_file = trip.tc_pod_attachment
+        elif trip.td_pod and trip.td_pod.name:
+            pod_file = trip.td_pod
+
+        if pod_file and hasattr(pod_file, 'url'):
+            try:
+                url = pod_file.url
+                veh_num = trip.tr_vehiclenumber or trip.tr_tripnumber or "POD"
+                pod_dict.setdefault(trip.tr_enquirynumber_id, []).append({
+                    'trip_id': trip.id,
+                    'veh_number': veh_num,
+                    'url': url
+                })
+            except Exception:
+                pass
+
     # Build final data
     enquiry_data = []
     for enquiry in page_obj:
@@ -375,6 +421,7 @@ def enquirynote_list(request):
             'consignments': consignments,
             'trips': trip_dict.get(enquiry.id, []),
             'vehicles': vehicles,
+            'pod_list': pod_dict.get(enquiry.id, []),
             'vehicle_limit': total_allowed,
             'vehicle_allotted': total_allotted,
             'limit_reached': limit_reached,
@@ -477,6 +524,7 @@ def enquirynote_list(request):
 
     context = {
         'page_obj': page_obj,
+        'query_params': query_params,
         'first_name': first_name,
         'role': user_role,
         'enquiry_data': enquiry_data,
@@ -496,13 +544,15 @@ def search_vehicle_numbers(request):
     if len(term) < 2:
         return JsonResponse({'results': []})
 
-    # Search in VehiclemasterInfo (registered vehicles)
+    # Search in VehiclemasterInfo (registered vehicles - Active only)
     vm_regs = list(VehiclemasterInfo.objects.filter(
+        Q(vm_status_id=1) | Q(vm_status__isnull=True),
         vm_registrationnumber__icontains=term
     ).values_list('vm_registrationnumber', flat=True).distinct()[:200])
 
-    # Search in Vehicle_allotmentInfo (own & market vehicles)
+    # Search in Vehicle_allotmentInfo (own & market vehicles - Active only)
     own_regs = list(Vehicle_allotmentInfo.objects.filter(
+        (Q(va_vehiclenumber__vm_status_id=1) | Q(va_vehiclenumber__vm_status__isnull=True)),
         va_vehiclenumber__vm_registrationnumber__icontains=term
     ).values_list('va_vehiclenumber__vm_registrationnumber', flat=True).distinct()[:200])
 

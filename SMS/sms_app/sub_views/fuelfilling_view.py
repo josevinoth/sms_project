@@ -76,7 +76,8 @@ def fuelfilling_list(request):
     if vehicle_id:
         queryset = queryset.filter(ff_vehicle_num_id=vehicle_id)
         
-    vehicles = VehiclemasterInfo.objects.all().order_by('vm_registrationnumber')
+    from django.db.models import Q
+    vehicles = VehiclemasterInfo.objects.filter(Q(vm_status_id=1) | Q(vm_status__isnull=True)).order_by('vm_registrationnumber')
         
     context = {
         'fuelfilling_list' : queryset,

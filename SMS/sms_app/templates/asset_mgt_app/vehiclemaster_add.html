@@ -1,841 +1,1017 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+
 {% block content %}
 
-<form method="POST" action="" enctype="multipart/form-data">
-	{% csrf_token %}
+<style>
+    .vehicle-master-tabbed {
+        padding-top: 0.5rem !important;
+        padding-bottom: 2.5rem !important;
+    }
 
-	<!--{{form.as_p}}-->
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Vehicle Master</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col">
-								<div class="accordion" id="accordionExample">
-									<div class="card">
-										<div class="card-header bg-info" id="headingOne">
-											<h3 class="mb-0  ">
-												<button class="btn btn-link btn-block text-left text-white" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-													Vehicle Details
-												</button>
-											</h3>
-										</div>
-										<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
-											<div class="card-body">
-												<div class="row">
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Vehicle Manufacturer</span>
-															</div>
-															{% render_field form.vm_vehiclemanufacturer class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Vehicle Model</span>
-															</div>
-															{% render_field form.vm_vehiclemodel class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Ownership</span>
-															</div>
-															{% render_field form.vm_ownership class="form-control" id="id_vm_ownership" %}
-														</div>
-														<div class="input-group input-group-sm mb-3" id="vendor_group">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Vendor Name</span>
-															</div>
-															{% render_field form.vm_vendor class="form-control" id="id_vm_vendor" %}
-														</div>
-														<div class="input-group input-group-sm mb-3" id="buycost_group">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Buy Cost</span>
-															</div>
-															{% render_field form.vm_buycost class="form-control" %}
-														</div>
-														<div class="input-group input-group-sm mb-3" id="agreedkm_group">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Agreed KM</span>
-															</div>
-															{% render_field form.vm_agreedkm class="form-control" %}
-														</div>
-														<div class="input-group input-group-sm mb-3" id="extrakm_group">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Extra KM Amount</span>
-															</div>
-															{% render_field form.vm_extrakm class="form-control" %}
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Tonnage</span>
-															</div>
-															{% render_field form.vm_tonnage class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Container Size</span>
-															</div>
-															{% render_field form.vm_containersize class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Capacity</span>
-															</div>
-															{% render_field form.vm_capacity class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Category</span>
-															</div>
-															{% render_field form.vm_category class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Body</span>
-															</div>
-															{% render_field form.vm_body class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Vehicle Type</span>
-															</div>
-															{% render_field form.vm_vehicletype class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Axle Type</span>
-															</div>
-															{% render_field form.vm_axletype class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Registration Number</span>
-															</div>
-															{% render_field form.vm_registrationnumber class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Millage</span>
-															</div>
-															{% render_field form.vm_millage class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Cost</span>
-															</div>
-															{% render_field form.vm_cost class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
+    /* Modern Nav Tabs */
+    .modern-nav-tabs {
+        border-bottom: none !important;
+        gap: 8px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        margin-bottom: 1.25rem !important;
+        scrollbar-width: thin;
+    }
+    .modern-nav-tabs::-webkit-scrollbar {
+        height: 4px;
+    }
+    .modern-nav-tabs::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
 
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Fuel Type</span>
-															</div>
-															{% render_field form.vm_fueltype class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Year Of Depreciation</span>
-															</div>
-															{% render_field form.vm_yearofdepreciation class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">% Of Depreciation</span>
-															</div>
-															{% render_field form.vm_ofdepreciation class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Vehicle Colour</span>
-															</div>
-															{% render_field form.vm_vehiclecolour class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Registration Date</span>
-															</div>
-															{% render_field form.vm_registrationdate type="Date" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">% Of value of Vehicle</span>
-															</div>
-															{% render_field form.vm_valueofvehicle class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Chassis Number</span>
-															</div>
-															{% render_field form.vm_chassisnumber class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Engine Number</span>
-															</div>
-															{% render_field form.vm_enginenumber class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Battery Number</span>
-															</div>
-															{% render_field form.vm_batterynumber class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Battery Warranty Date</span>
-															</div>
-															{% render_field form.vm_batterywarrantydate type="Date" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="card">
-										<div class="card-header bg-info" id="headingTwo">
-											<h2 class="mb-0">
-												<button class="btn btn-link btn-block text-left text-white collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-													Tyre Details
-												</button>
-											</h2>
-										</div>
-										<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
-											<div class="card-body">
-												<div class="row">
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Number of Tyres</span>
-															</div>
-															{% render_field form.vm_numberoftyres class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Tyre Make</span>
-															</div>
-															{% render_field form.vm_tyremake class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Stephanie Tyre Make</span>
-															</div>
-															{% render_field form.vm_stephanietyremake class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Stephanie Tyre#</span>
-															</div>
-															{% render_field form.vm_stephanietyre class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Tyre 1#</span>
-															</div>
-															{% render_field form.vm_tyre1 class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Tyre 2#</span>
-															</div>
-															{% render_field form.vm_tyre2 class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Tyre 3#</span>
-															</div>
-															{% render_field form.vm_tyre3 class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Tyre 4#</span>
-															</div>
-															{% render_field form.vm_tyre4 class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="card">
-										<div class="card-header bg-info" id="headingThree">
-											<h2 class="mb-0">
-												<button class="btn btn-link btn-block text-left text-white collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-													Tools Details
-												</button>
-											</h2>
-										</div>
-										<div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
-											<div class="card-body">
-												<div class="row">
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Fire Extinguisher#</span>
-															</div>
-															{% render_field form.vm_fireextinguisher class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Fire Ext Expiry date</span>
-															</div>
-															{% render_field form.vm_fireextexpirydate type="Date" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">First Aid Kit#(FAK)</span>
-															</div>
-															{% render_field form.vm_firstaidkit class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">FAK Expiry Date</span>
-															</div>
-															{% render_field form.vm_fakexpirydate type="Date" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">GPRS Tracking ID</span>
-															</div>
-															{% render_field form.vm_gprstrackingid class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Tool Box Content1</span>
-															</div>
-															{% render_field form.vm_toolboxcontent1 class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Tool Box Content2</span>
-															</div>
-															{% render_field form.vm_toolboxcontent2 class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Tool Box Content3</span>
-															</div>
-															{% render_field form.vm_toolboxcontent3 class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Tool Box Content4</span>
-															</div>
-															{% render_field form.vm_toolboxcontent4 class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Tool Box Content5</span>
-															</div>
-															{% render_field form.vm_toolboxcontent5 class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">GPRS SIM ID</span>
-															</div>
-															{% render_field form.vm_gprssimid class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="card">
-										<div class="card-header bg-info" id="headingFour">
-											<h2 class="mb-0">
-												<button class="btn btn-link btn-block text-left text-white collapsed" type="button" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-													Insurance Details
-												</button>
-											</h2>
-										</div>
-										<div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordionExample">
-											<div class="card-body">
-												<div class="row">
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Insurance Type</span>
-															</div>
-															{% render_field form.vm_insurancetype class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Company </span>
-															</div>
-															{% render_field form.vm_company class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Policy#</span>
-															</div>
-															{% render_field form.vm_policy class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Policy Expiry Date</span>
-															</div>
-															{% render_field form.vm_policyexpirydate type="Date" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Premium </span>
-															</div>
-															{% render_field form.vm_premium class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">IDV Value</span>
-															</div>
-															{% render_field form.vm_icvvalue class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">NCB </span>
-															</div>
-															{% render_field form.vm_ncb class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Insurance Copy</span>
-															</div>
-															{% render_field form.vm_insurancecopy class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Insurance Attachment</span>
-															</div>
-															{% render_field form.vm_insurance_attach id="vm_insurance_attach" class="form-control" %}
-														</div>
+    .modern-nav-tabs .nav-link {
+        border: 1px solid var(--border-light, #cbd5e1) !important;
+        border-radius: 12px !important;
+        background: var(--bg-card, #ffffff) !important;
+        color: var(--text-muted, #64748b) !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        padding: 0.65rem 1.1rem !important;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
 
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="card">
-										<div class="card-header bg-info" id="headingFive">
-											<h2 class="mb-0">
-												<button class="btn btn-link btn-block text-left text-white collapsed" type="button" data-toggle="collapse" data-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-													RTO Details
-												</button>
-											</h2>
-										</div>
-										<div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#accordionExample">
-											<div class="card-body">
-												<div class="row">
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">RTO Name</span>
-															</div>
-															{% render_field form.vm_rtoname class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">FC Date</span>
-															</div>
-															{% render_field form.vm_fcdate type="Date"  class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Receipt #</span>
-															</div>
-															{% render_field form.vm_receipt class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">FC Amount</span>
-															</div>
-															{% render_field form.vm_fcamount class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">FC Expiry Date</span>
-															</div>
-															{% render_field form.vm_fcexpirydate type="Date" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">FC Copy</span>
-															</div>
-															{% render_field form.vm_fccopy class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Agency Name</span>
-															</div>
-															{% render_field form.vm_agencyname class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Agency Charges</span>
-															</div>
-															{% render_field form.vm_agencycharges class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">RoadTax Amount</span>
-															</div>
-															{% render_field form.vm_roadtaxamount class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">RoadTax Expiry Date</span>
-															</div>
-															{% render_field form.vm_roadtaxexpirydate type="Date" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">RoadTax Receipt#</span>
-															</div>
-															{% render_field form.vm_roadtaxreceipt class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">RoadTax Receipt Date</span>
-															</div>
-															{% render_field form.vm_roadtaxreceiptdate type="Date" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">RoadTax Copy</span>
-															</div>
-															{% render_field form.vm_roadtaxcopy class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">RC Attachment</span>
-															</div>
-															{% render_field form.vm_rc_attach id="vm_rc_attach" class="form-control" %}
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">RTO Attachment</span>
-															</div>
-															{% render_field form.vm_rto_attach id="vm_rto_attach" class="form-control" %}
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="card">
-										<div class="card-header bg-info" id="headingSix">
-											<h2 class="mb-0">
-												<button class="btn btn-link btn-block text-left text-white collapsed" type="button" data-toggle="collapse" data-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
-													Permit & Pollution Control
-												</button>
-											</h2>
-										</div>
-										<div id="collapseSix" class="collapse" aria-labelledby="headingSix" data-parent="#accordionExample">
-											<div class="card-body">
-												<div class="row">
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Permit Type</span>
-															</div>
-															{% render_field form.vm_permittype class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Permit Expiry Date</span>
-															</div>
-															{% render_field form.vm_permitexpirydate type="Date" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Permit #</span>
-															</div>
-															{% render_field form.vm_permit class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Permit Amount</span>
-															</div>
-															{% render_field form.vm_permitamount class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Permit Date</span>
-															</div>
-															{% render_field form.vm_permitdate type="Date" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Permit Copy</span>
-															</div>
-															{% render_field form.vm_permitcopy class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Permit Attachment</span>
-															</div>
-															{% render_field form.vm_permit_attach id="vm_permit_attach" class="form-control" %}
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Pollution Certificate #</span>
-															</div>
-															{% render_field form.vm_pollutioncertificate class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Pollution Certificate Amt</span>
-															</div>
-															{% render_field form.vm_pollutioncertificateamt class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Pollution Certificate Date</span>
-															</div>
-															{% render_field form.vm_pollutioncertificatedate type="Date" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Pollution Certificate Copy Manufacturer</span>
-															</div>
-															{% render_field form.vm_pollutioncertificatecopy class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Pollution Attachment</span>
-															</div>
-															{% render_field form.vm_pollution_attach id="vm_pollution_attach" class="form-control" %}
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="card">
-										<div class="card-header bg-info" id="headingSeven">
-											<h2 class="mb-0">
-												<button class="btn btn-link btn-block text-left text-white collapsed" type="button" data-toggle="collapse" data-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
-													Other Details
-												</button>
-											</h2>
-										</div>
-										<div id="collapseSeven" class="collapse" aria-labelledby="headingSeven" data-parent="#accordionExample">
-											<div class="card-body">
-												<div class="row">
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Mobile App Device ID</span>
-															</div>
-															{% render_field form.vm_mobileappdeviceid class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">BPCL Card # Manufacturer</span>
-															</div>
-															{% render_field form.vm_bpclcard class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Fastag ID</span>
-															</div>
-															{% render_field form.vm_fastagid class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Budget Expense</span>
-															</div>
-															{% render_field form.vm_budgetexpense class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Potential Revenue</span>
-															</div>
-															{% render_field form.vm_potenialrevenue class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Primary Driver Name</span>
-															</div>
-															{% render_field form.vm_primarydrivername class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Primary Driver Mob#</span>
-															</div>
-															{% render_field form.vm_primarydrivermob class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Primary Driver License#</span>
-															</div>
-															{% render_field form.vm_primarydriver_license id="vm_primarydriver_license" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Primary License Expiry</span>
-															</div>
-															{% render_field form.vm_primarydriver_license_exp_date id="vm_primarydriver_license_exp_date"  type="Date" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Secondary Driver Name</span>
-															</div>
-															{% render_field form.vm_secondarydrivername class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Secondary Driver Mob#</span>
-															</div>
-															{% render_field form.vm_secondarydrivermob class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Secondary Driver License#</span>
-															</div>
-															{% render_field form.vm_secondarydriver_license id="vm_secondarydriver_license" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-														<div class="input-group input-group-sm mb-3">
-															<div class="input-group-prepend">
-																<span class="input-group-text">Secondary License Expiry</span>
-															</div>
-															{% render_field form.vm_secondarydriver_license_exp_date id="vm_secondarydriver_license_exp_date"  type="Date" class="form-control" %}
-															<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<br>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'vehiclemaster_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    .modern-nav-tabs .nav-link:hover {
+        color: #14b8a6 !important;
+        border-color: #14b8a6 !important;
+        transform: translateY(-1px);
+    }
 
-</form>
+    .modern-nav-tabs .nav-link.active {
+        background: var(--primary-glow) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+        box-shadow: 0 4px 12px rgba(20, 184, 166, 0.35) !important;
+    }
+
+    /* Tab Content Pane */
+    .tab-content-card {
+        background: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-light, #e2e8f0);
+        border-radius: 16px;
+        padding: 1.5rem !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+    }
+
+    .tab-pane-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-main, #1e293b);
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.65rem;
+        border-bottom: 2px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .tab-pane-title i {
+        color: #14b8a6;
+        margin-right: 8px;
+    }
+
+    /* Tab Footer Navigation Buttons */
+    .tab-nav-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 1.25rem;
+        margin-top: 1rem;
+        border-top: 1px solid var(--border-light, #e2e8f0);
+    }
+
+    .btn-tab-nav {
+        padding: 0.5rem 1.25rem;
+        font-size: 0.88rem;
+        font-weight: 600;
+        border-radius: 10px;
+        border: 1px solid var(--border-light, #cbd5e1);
+        background: var(--bg-body, #f8fafc);
+        color: var(--text-main, #334155);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+    }
+    .btn-tab-nav:hover:not(:disabled) {
+        background: #14b8a6;
+        color: #ffffff;
+        border-color: #14b8a6;
+    }
+    .btn-tab-nav:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    /* Compact Responsive Field Styling (Matching Vehicle Allotment & Consignment Detail) */
+    .vehicle-master-tabbed .form-group-modern {
+        margin-bottom: 0.55rem !important;
+    }
+
+    .vehicle-master-tabbed .form-label-modern {
+        margin-bottom: 0.22rem !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.3px !important;
+        text-transform: uppercase !important;
+        color: var(--text-muted, #64748b) !important;
+    }
+
+    .vehicle-master-tabbed .form-control-modern,
+    .vehicle-master-tabbed .form-control,
+    .vehicle-master-tabbed select,
+    .vehicle-master-tabbed input[type="text"],
+    .vehicle-master-tabbed input[type="date"],
+    .vehicle-master-tabbed input[type="number"],
+    .vehicle-master-tabbed input[type="file"] {
+        min-height: 32px !important;
+        height: 32px !important;
+        padding: 0.35rem 0.65rem !important;
+        font-size: 0.78rem !important;
+        font-weight: 500 !important;
+        border-radius: 8px !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .vehicle-master-tabbed .tab-content-card {
+        padding: 1.15rem 1.25rem !important;
+    }
+
+    .vehicle-master-tabbed .tab-pane-title {
+        font-size: 0.98rem !important;
+        margin-bottom: 0.85rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+
+    .modern-nav-tabs .nav-link {
+        padding: 0.45rem 0.85rem !important;
+        font-size: 0.78rem !important;
+        border-radius: 10px !important;
+    }
+
+    /* 5-Column Responsive Grid Layout */
+    .row-5-cols {
+        display: grid !important;
+        grid-template-columns: repeat(5, 1fr) !important;
+        gap: 0.5rem 0.85rem !important;
+    }
+
+    @media (max-width: 1400px) {
+        .row-5-cols {
+            grid-template-columns: repeat(4, 1fr) !important;
+        }
+    }
+
+    @media (max-width: 1100px) {
+        .row-5-cols {
+            grid-template-columns: repeat(3, 1fr) !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .row-5-cols {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .row-5-cols {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
+    .row-5-cols > [class*="col-"] {
+        max-width: 100% !important;
+        flex: none !important;
+        width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+</style>
+
+<div class="container-fluid vehicle-master-tabbed py-3">
+
+    <!-- Page Header (Uses standard .modern-header from modern_css.css) -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <div class="header-icon-box mr-3" style="width: 48px; height: 48px; border-radius: 14px; background: rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; backdrop-filter: blur(4px);">
+                <i class="fas fa-truck-monster text-white" style="font-size: 1.4rem;"></i>
+            </div>
+            <div>
+                <h3 class="m-0 font-weight-bold text-white" style="font-size: 1.4rem; letter-spacing: -0.3px;">Add / Update Vehicle Master</h3>
+                <p class="text-white-50 small m-0" style="font-size: 0.85rem;">Manage vehicle specifications, status, insurance & RTO details</p>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'vehiclemaster_list' %}" class="btn btn-light font-weight-bold shadow-sm" style="padding: 0.5rem 1.25rem; border-radius: 10px; font-size: 0.9rem; color: #0f766e; text-decoration: none; display: inline-flex; align-items: center;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <form method="POST" action="" enctype="multipart/form-data" id="vehicleMasterForm">
+        {% csrf_token %}
+
+        <!-- Modern Tab Navigation Bar -->
+        <ul class="nav nav-tabs modern-nav-tabs" id="vehicleMasterTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="tab-vehicle-link" data-toggle="tab" href="#tab-vehicle" role="tab" aria-controls="tab-vehicle" aria-selected="true">
+                    <i class="fas fa-truck"></i> 1. Vehicle Basic
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="tab-tyre-link" data-toggle="tab" href="#tab-tyre" role="tab" aria-controls="tab-tyre" aria-selected="false">
+                    <i class="fas fa-circle-notch"></i> 2. Tyre Specs
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="tab-tools-link" data-toggle="tab" href="#tab-tools" role="tab" aria-controls="tab-tools" aria-selected="false">
+                    <i class="fas fa-tools"></i> 3. Safety & Tools
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="tab-insurance-link" data-toggle="tab" href="#tab-insurance" role="tab" aria-controls="tab-insurance" aria-selected="false">
+                    <i class="fas fa-shield-alt"></i> 4. Insurance
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="tab-rto-link" data-toggle="tab" href="#tab-rto" role="tab" aria-controls="tab-rto" aria-selected="false">
+                    <i class="fas fa-file-contract"></i> 5. RTO & Tax
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="tab-permit-link" data-toggle="tab" href="#tab-permit" role="tab" aria-controls="tab-permit" aria-selected="false">
+                    <i class="fas fa-passport"></i> 6. Permit
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="tab-pollution-link" data-toggle="tab" href="#tab-pollution" role="tab" aria-controls="tab-pollution" aria-selected="false">
+                    <i class="fas fa-smog"></i> 7. Pollution
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="tab-driver-link" data-toggle="tab" href="#tab-driver" role="tab" aria-controls="tab-driver" aria-selected="false">
+                    <i class="fas fa-id-card"></i> 8. Driver & Telematics
+                </a>
+            </li>
+        </ul>
+
+        <!-- Tab Content Card -->
+        <div class="tab-content tab-content-card" id="vehicleMasterTabContent">
+
+            <!-- TAB 1: VEHICLE BASIC DETAILS -->
+            <div class="tab-pane fade show active" id="tab-vehicle" role="tabpanel" aria-labelledby="tab-vehicle-link">
+                <div class="tab-pane-title">
+                    <span><i class="fas fa-truck"></i> Section 1: Vehicle Basic Details</span>
+                    <span class="badge badge-light border font-weight-normal text-muted" style="font-size: 0.78rem;">Step 1 of 8</span>
+                </div>
+                <div class="row row-5-cols">
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern" style="color: #0ea5e9; font-weight: 700;">Status</label>
+                            {% render_field form.vm_status class="form-control form-control-modern font-weight-bold" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Registration Number <span style="color:#e74c3c;">*</span></label>
+                            {% render_field form.vm_registrationnumber class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Manufacturer</label>
+                            {% render_field form.vm_vehiclemanufacturer class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Model</label>
+                            {% render_field form.vm_vehiclemodel class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Ownership</label>
+                            {% render_field form.vm_ownership class="form-control form-control-modern" id="id_vm_ownership" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3" id="vendor_group">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vendor Name</label>
+                            {% render_field form.vm_vendor class="form-control form-control-modern" id="id_vm_vendor" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3" id="buycost_group">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Buy Cost</label>
+                            {% render_field form.vm_buycost class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3" id="agreedkm_group">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Agreed KM</label>
+                            {% render_field form.vm_agreedkm class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3" id="extrakm_group">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Extra KM Amount</label>
+                            {% render_field form.vm_extrakm class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Category</label>
+                            {% render_field form.vm_category class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Body</label>
+                            {% render_field form.vm_body class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vehicle Type</label>
+                            {% render_field form.vm_vehicletype class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Axle Type</label>
+                            {% render_field form.vm_axletype class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Tonnage</label>
+                            {% render_field form.vm_tonnage class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Container Size</label>
+                            {% render_field form.vm_containersize class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Capacity</label>
+                            {% render_field form.vm_capacity class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Millage</label>
+                            {% render_field form.vm_millage class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Cost</label>
+                            {% render_field form.vm_cost class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Fuel Type</label>
+                            {% render_field form.vm_fueltype class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Depreciation Yr</label>
+                            {% render_field form.vm_yearofdepreciation class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">% Depreciation</label>
+                            {% render_field form.vm_ofdepreciation class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vehicle Colour</label>
+                            {% render_field form.vm_vehiclecolour class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Registration Date</label>
+                            {% render_field form.vm_registrationdate type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">% Value of Vehicle</label>
+                            {% render_field form.vm_valueofvehicle class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Chassis Number</label>
+                            {% render_field form.vm_chassisnumber class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Engine Number</label>
+                            {% render_field form.vm_enginenumber class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Battery Number</label>
+                            {% render_field form.vm_batterynumber class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Battery Expiry Date</label>
+                            {% render_field form.vm_batterywarrantydate type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-nav-footer">
+                    <button type="button" class="btn-tab-nav" disabled><i class="fas fa-arrow-left"></i> Previous</button>
+                    <button type="button" class="btn-tab-nav text-primary border-primary" onclick="switchTab('tab-tyre-link')">Next: Tyre Specs <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- TAB 2: TYRE DETAILS -->
+            <div class="tab-pane fade" id="tab-tyre" role="tabpanel" aria-labelledby="tab-tyre-link">
+                <div class="tab-pane-title">
+                    <span><i class="fas fa-circle-notch"></i> Section 2: Tyre Specifications</span>
+                    <span class="badge badge-light border font-weight-normal text-muted" style="font-size: 0.78rem;">Step 2 of 8</span>
+                </div>
+                <div class="row row-5-cols">
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">No of Tyres</label>
+                            {% render_field form.vm_numberoftyres class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Tyre Make</label>
+                            {% render_field form.vm_tyremake class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Stephanie Tyre Make</label>
+                            {% render_field form.vm_stephanietyremake class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Stephanie Tyre#</label>
+                            {% render_field form.vm_stephanietyre class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Tyre# 1</label>
+                            {% render_field form.vm_tyre1 class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Tyre# 2</label>
+                            {% render_field form.vm_tyre2 class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Tyre# 3</label>
+                            {% render_field form.vm_tyre3 class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Tyre# 4</label>
+                            {% render_field form.vm_tyre4 class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-nav-footer">
+                    <button type="button" class="btn-tab-nav" onclick="switchTab('tab-vehicle-link')"><i class="fas fa-arrow-left"></i> Previous</button>
+                    <button type="button" class="btn-tab-nav text-primary border-primary" onclick="switchTab('tab-tools-link')">Next: Safety & Tools <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- TAB 3: SAFETY & TOOLS -->
+            <div class="tab-pane fade" id="tab-tools" role="tabpanel" aria-labelledby="tab-tools-link">
+                <div class="tab-pane-title">
+                    <span><i class="fas fa-tools"></i> Section 3: Safety & Tools Details</span>
+                    <span class="badge badge-light border font-weight-normal text-muted" style="font-size: 0.78rem;">Step 3 of 8</span>
+                </div>
+                <div class="row row-5-cols">
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Fire Extinguisher</label>
+                            {% render_field form.vm_fireextinguisher class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Extinguisher Expiry Date</label>
+                            {% render_field form.vm_fireextexpirydate type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">First Aid Kit</label>
+                            {% render_field form.vm_firstaidkit class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">FA Kit Expiry Date</label>
+                            {% render_field form.vm_fakexpirydate type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">GPRS Tracking ID</label>
+                            {% render_field form.vm_gprstrackingid class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">GPRS SIM ID</label>
+                            {% render_field form.vm_gprssimid class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Toolbox Content 1</label>
+                            {% render_field form.vm_toolboxcontent1 class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Toolbox Content 2</label>
+                            {% render_field form.vm_toolboxcontent2 class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Toolbox Content 3</label>
+                            {% render_field form.vm_toolboxcontent3 class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Toolbox Content 4</label>
+                            {% render_field form.vm_toolboxcontent4 class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Toolbox Content 5</label>
+                            {% render_field form.vm_toolboxcontent5 class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-nav-footer">
+                    <button type="button" class="btn-tab-nav" onclick="switchTab('tab-tyre-link')"><i class="fas fa-arrow-left"></i> Previous</button>
+                    <button type="button" class="btn-tab-nav text-primary border-primary" onclick="switchTab('tab-insurance-link')">Next: Insurance <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- TAB 4: INSURANCE DETAILS -->
+            <div class="tab-pane fade" id="tab-insurance" role="tabpanel" aria-labelledby="tab-insurance-link">
+                <div class="tab-pane-title">
+                    <span><i class="fas fa-shield-alt"></i> Section 4: Insurance Details</span>
+                    <span class="badge badge-light border font-weight-normal text-muted" style="font-size: 0.78rem;">Step 4 of 8</span>
+                </div>
+                <div class="row row-5-cols">
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Insurance Type</label>
+                            {% render_field form.vm_insurancetype class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Company Name</label>
+                            {% render_field form.vm_company class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Policy Number</label>
+                            {% render_field form.vm_policy class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Policy Expiry Date</label>
+                            {% render_field form.vm_policyexpirydate type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Premium</label>
+                            {% render_field form.vm_premium class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">ICV Value</label>
+                            {% render_field form.vm_icvvalue class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">NCB</label>
+                            {% render_field form.vm_ncb class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Insurance Copy</label>
+                            {% render_field form.vm_insurancecopy class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Attach Insurance File</label>
+                            {% render_field form.vm_insurance_attach class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-nav-footer">
+                    <button type="button" class="btn-tab-nav" onclick="switchTab('tab-tools-link')"><i class="fas fa-arrow-left"></i> Previous</button>
+                    <button type="button" class="btn-tab-nav text-primary border-primary" onclick="switchTab('tab-rto-link')">Next: RTO & Tax <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- TAB 5: RTO DETAILS -->
+            <div class="tab-pane fade" id="tab-rto" role="tabpanel" aria-labelledby="tab-rto-link">
+                <div class="tab-pane-title">
+                    <span><i class="fas fa-file-contract"></i> Section 5: RTO & Road Tax Details</span>
+                    <span class="badge badge-light border font-weight-normal text-muted" style="font-size: 0.78rem;">Step 5 of 8</span>
+                </div>
+                <div class="row row-5-cols">
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">RTO Name</label>
+                            {% render_field form.vm_rtoname class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">FC Date</label>
+                            {% render_field form.vm_fcdate type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Receipt</label>
+                            {% render_field form.vm_receipt class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">FC Amount</label>
+                            {% render_field form.vm_fcamount class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">FC Expiry Date</label>
+                            {% render_field form.vm_fcexpirydate type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">FC Copy</label>
+                            {% render_field form.vm_fccopy class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Attach RC File</label>
+                            {% render_field form.vm_rc_attach class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Agency Name</label>
+                            {% render_field form.vm_agencyname class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Agency Charges</label>
+                            {% render_field form.vm_agencycharges class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Road Tax Amount</label>
+                            {% render_field form.vm_roadtaxamount class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Road Tax Expiry Date</label>
+                            {% render_field form.vm_roadtaxexpirydate type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Road Tax Receipt</label>
+                            {% render_field form.vm_roadtaxreceipt class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Road Tax Receipt Date</label>
+                            {% render_field form.vm_roadtaxreceiptdate type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Road Tax Copy</label>
+                            {% render_field form.vm_roadtaxcopy class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Attach RTO File</label>
+                            {% render_field form.vm_rto_attach class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-nav-footer">
+                    <button type="button" class="btn-tab-nav" onclick="switchTab('tab-insurance-link')"><i class="fas fa-arrow-left"></i> Previous</button>
+                    <button type="button" class="btn-tab-nav text-primary border-primary" onclick="switchTab('tab-permit-link')">Next: Permit <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- TAB 6: PERMIT DETAILS -->
+            <div class="tab-pane fade" id="tab-permit" role="tabpanel" aria-labelledby="tab-permit-link">
+                <div class="tab-pane-title">
+                    <span><i class="fas fa-passport"></i> Section 6: Permit Details</span>
+                    <span class="badge badge-light border font-weight-normal text-muted" style="font-size: 0.78rem;">Step 6 of 8</span>
+                </div>
+                <div class="row row-5-cols">
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Permit Type</label>
+                            {% render_field form.vm_permittype class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Permit Expiry Date</label>
+                            {% render_field form.vm_permitexpirydate type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Permit Number</label>
+                            {% render_field form.vm_permit class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Permit Amount</label>
+                            {% render_field form.vm_permitamount class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Permit Date</label>
+                            {% render_field form.vm_permitdate type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Permit Copy</label>
+                            {% render_field form.vm_permitcopy class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Attach Permit File</label>
+                            {% render_field form.vm_permit_attach class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-nav-footer">
+                    <button type="button" class="btn-tab-nav" onclick="switchTab('tab-rto-link')"><i class="fas fa-arrow-left"></i> Previous</button>
+                    <button type="button" class="btn-tab-nav text-primary border-primary" onclick="switchTab('tab-pollution-link')">Next: Pollution <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- TAB 7: POLLUTION DETAILS -->
+            <div class="tab-pane fade" id="tab-pollution" role="tabpanel" aria-labelledby="tab-pollution-link">
+                <div class="tab-pane-title">
+                    <span><i class="fas fa-smog"></i> Section 7: Pollution Details</span>
+                    <span class="badge badge-light border font-weight-normal text-muted" style="font-size: 0.78rem;">Step 7 of 8</span>
+                </div>
+                <div class="row row-5-cols">
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Pollution Certificate</label>
+                            {% render_field form.vm_pollutioncertificate class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Certificate Amount</label>
+                            {% render_field form.vm_pollutioncertificateamt class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Certificate Date</label>
+                            {% render_field form.vm_pollutioncertificatedate type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Certificate Copy</label>
+                            {% render_field form.vm_pollutioncertificatecopy class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Attach Pollution File</label>
+                            {% render_field form.vm_pollution_attach class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-nav-footer">
+                    <button type="button" class="btn-tab-nav" onclick="switchTab('tab-permit-link')"><i class="fas fa-arrow-left"></i> Previous</button>
+                    <button type="button" class="btn-tab-nav text-primary border-primary" onclick="switchTab('tab-driver-link')">Next: Driver Specs <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <!-- TAB 8: DRIVER & TELEMATICS -->
+            <div class="tab-pane fade" id="tab-driver" role="tabpanel" aria-labelledby="tab-driver-link">
+                <div class="tab-pane-title">
+                    <span><i class="fas fa-id-card"></i> Section 8: Driver & Telematics Specifications</span>
+                    <span class="badge badge-light border font-weight-normal text-muted" style="font-size: 0.78rem;">Step 8 of 8</span>
+                </div>
+                <div class="row row-5-cols">
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Mobile App Device ID</label>
+                            {% render_field form.vm_mobileappdeviceid class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">BPCL Card</label>
+                            {% render_field form.vm_bpclcard class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">FASTag ID</label>
+                            {% render_field form.vm_fastagid class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Potential Revenue</label>
+                            {% render_field form.vm_potenialrevenue class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Primary Driver Name</label>
+                            {% render_field form.vm_primarydrivername class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Primary Driver Mob#</label>
+                            {% render_field form.vm_primarydrivermob class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Primary License#</label>
+                            {% render_field form.vm_primarydriver_license id="vm_primarydriver_license" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Primary License Expiry</label>
+                            {% render_field form.vm_primarydriver_license_exp_date id="vm_primarydriver_license_exp_date" type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Secondary Driver Name</label>
+                            {% render_field form.vm_secondarydrivername class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Secondary Driver Mob#</label>
+                            {% render_field form.vm_secondarydrivermob class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Secondary License#</label>
+                            {% render_field form.vm_secondarydriver_license id="vm_secondarydriver_license" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Secondary License Expiry</label>
+                            {% render_field form.vm_secondarydriver_license_exp_date id="vm_secondarydriver_license_exp_date" type="Date" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Budget Expense</label>
+                            {% render_field form.vm_budgetexpense class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-nav-footer">
+                    <button type="button" class="btn-tab-nav" onclick="switchTab('tab-pollution-link')"><i class="fas fa-arrow-left"></i> Previous Section</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Main Form Actions Footer (Always Visible at Bottom) -->
+        <div class="form-actions-modern d-flex justify-content-between align-items-center mt-3">
+            <a href="{% url 'vehiclemaster_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 1rem; text-decoration: none; border-radius: 12px; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn-modern btn-submit py-2 px-5" style="font-size: 1rem; font-weight: 700; border-radius: 12px; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-check"></i> Submit Record
+            </button>
+        </div>
+
+    </form>
+
+</div>
 
 <script>
+    function switchTab(tabLinkId) {
+        const link = document.getElementById(tabLinkId);
+        if (link) {
+            $(link).tab('show');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const ownershipField = document.getElementById('id_vm_ownership');
         const vendorGroup = document.getElementById('vendor_group');
@@ -844,20 +1020,23 @@
         const extrakmGroup = document.getElementById('extrakm_group');
 
         function toggleFields() {
+            if (!ownershipField) return;
             const isAttached = ownershipField.value == '2'; // Ownership id = 2 (ATTACHED)
-            const displayStyle = isAttached ? 'flex' : 'none';
+            const displayStyle = isAttached ? 'block' : 'none';
             
-            vendorGroup.style.display = displayStyle;
-            buycostGroup.style.display = displayStyle;
-            agreedkmGroup.style.display = displayStyle;
-            extrakmGroup.style.display = displayStyle;
+            if (vendorGroup) vendorGroup.style.display = displayStyle;
+            if (buycostGroup) buycostGroup.style.display = displayStyle;
+            if (agreedkmGroup) agreedkmGroup.style.display = displayStyle;
+            if (extrakmGroup) extrakmGroup.style.display = displayStyle;
         }
 
         // Initialize on page load
         toggleFields();
 
         // Listen for changes
-        ownershipField.addEventListener('change', toggleFields);
+        if (ownershipField) {
+            ownershipField.addEventListener('change', toggleFields);
+        }
     });
 </script>
 {% endblock content %}

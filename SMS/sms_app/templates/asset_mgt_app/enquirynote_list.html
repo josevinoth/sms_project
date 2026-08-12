@@ -171,6 +171,29 @@
         background-color: #0284c7 !important;
         transform: scale(1.08) !important;
     }
+    .pod-btn {
+        width: 38px !important;
+        height: 32px !important;
+        border-radius: 8px !important;
+        background-color: #10b981 !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-size: 0.85rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: 0 2px 5px rgba(16, 185, 129, 0.25) !important;
+        margin-top: 4px !important;
+        margin-bottom: 8px !important;
+        padding: 0 !important;
+        transition: all 0.2s !important;
+        text-decoration: none !important;
+    }
+    .pod-btn:hover {
+        background-color: #059669 !important;
+        transform: scale(1.08) !important;
+        color: #ffffff !important;
+    }
     .eye-btn-wrapper {
         height: 38px !important;
         margin-bottom: 8px !important;
@@ -178,6 +201,63 @@
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+    }
+
+    /* Modern Pagination Styles */
+    .pagination-modern-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 12px 20px;
+        background: var(--bg-card, #ffffff);
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-light, #e2e8f0);
+    }
+    .pagination-modern-info {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-muted, #64748b);
+    }
+    .pagination-modern-nav {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .pagination-modern-link {
+        min-width: 36px;
+        height: 36px;
+        padding: 0 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-main, #334155);
+        background: var(--bg-body, #f8fafc);
+        border: 1px solid var(--border-light, #cbd5e1);
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+    }
+    .pagination-modern-link:hover:not(.disabled):not(.active) {
+        background: #0ea5e9;
+        color: #ffffff !important;
+        border-color: #0ea5e9;
+        transform: translateY(-1px);
+    }
+    .pagination-modern-link.active {
+        background: #0ea5e9;
+        color: #ffffff !important;
+        border-color: #0ea5e9;
+        box-shadow: 0 2px 6px rgba(14, 165, 233, 0.3);
+    }
+    .pagination-modern-link.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
     }
 </style>
 
@@ -259,6 +339,7 @@
                     <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Trip Number"></th>
                     <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Settlement"></th>
                     <th></th>
+                    <th></th>
                     <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Updated On"></th>
                     <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Updated By"></th>
                     <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Status"></th>
@@ -281,6 +362,7 @@
                     <th style="min-width:180px; width:220px; white-space:normal; word-break:break-word;">Consignment Number</th>
                     <th style="min-width:260px; width:260px; white-space:normal; word-break:break-word;">Trip Settlement</th>
                     <th class="text-center">View Consignment</th>
+                    <th class="text-center">POD</th>
                     <th>Updated On</th>
                     <th>Updated By</th>
                     <th>Status</th>
@@ -430,6 +512,29 @@
                         {% endif %}
                     </td>
 
+                    <!-- POD Column -->
+                    <td class="text-center" style="vertical-align: top; padding-top: 12px; padding-bottom: 12px;">
+                        {% if data.pod_list %}
+                            {% if data.consignments or data.has_docked_out_trip %}
+                            <!-- Top spacer to align icon buttons with Consignment Number rows below header badge -->
+                            <div style="height: 32px; margin-bottom: 8px;"></div>
+                            {% endif %}
+                            {% for pod in data.pod_list %}
+                            <div class="eye-btn-wrapper">
+                                <a href="{{ pod.url }}" target="_blank" download class="pod-btn" title="Download POD ({{ pod.veh_number }})">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="eye-btn-wrapper">
+                                <button class="btn btn-sm btn-secondary text-white pod-btn" style="opacity: 0.4; background-color: #64748b !important;" disabled title="No POD Available">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        {% endif %}
+                    </td>
+
                     <td style="padding-top: 12px; padding-bottom: 12px;">
                         {{ data.enquiry.en_updatedon|date:"d-m-Y" }}<br>
                         <span class="small text-muted font-weight-bold">{{ data.enquiry.en_updatedon|date:"h:i A" }}</span>
@@ -474,8 +579,43 @@
                 {% endfor %}
                 </tbody>
             </table>
+    </div>
+
+    <!-- Pagination Bottom Controls -->
+    {% if page_obj and page_obj.paginator.num_pages > 1 %}
+    <div class="pagination-modern-container mt-3">
+        <div class="pagination-modern-info">
+            <i class="fas fa-list-ol text-info mr-1"></i> Showing <strong>{{ page_obj.start_index }}</strong> to <strong>{{ page_obj.end_index }}</strong> of <strong>{{ page_obj.paginator.count }}</strong> records (Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }})
+        </div>
+        <div class="pagination-modern-nav">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if query_params %}&{{ query_params }}{% endif %}" class="pagination-modern-link" title="First Page"><i class="fas fa-angle-double-left"></i></a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if query_params %}&{{ query_params }}{% endif %}" class="pagination-modern-link" title="Previous Page"><i class="fas fa-angle-left"></i> Previous</a>
+            {% else %}
+                <span class="pagination-modern-link disabled"><i class="fas fa-angle-double-left"></i></span>
+                <span class="pagination-modern-link disabled"><i class="fas fa-angle-left"></i> Previous</span>
+            {% endif %}
+
+            {% for p in page_obj.paginator.page_range %}
+                {% if p >= page_obj.number|add:"-2" and p <= page_obj.number|add:"2" %}
+                    {% if p == page_obj.number %}
+                        <span class="pagination-modern-link active">{{ p }}</span>
+                    {% else %}
+                        <a href="?page={{ p }}{% if query_params %}&{{ query_params }}{% endif %}" class="pagination-modern-link">{{ p }}</a>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if query_params %}&{{ query_params }}{% endif %}" class="pagination-modern-link" title="Next Page">Next <i class="fas fa-angle-right"></i></a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if query_params %}&{{ query_params }}{% endif %}" class="pagination-modern-link" title="Last Page"><i class="fas fa-angle-double-right"></i></a>
+            {% else %}
+                <span class="pagination-modern-link disabled">Next <i class="fas fa-angle-right"></i></span>
+                <span class="pagination-modern-link disabled"><i class="fas fa-angle-double-right"></i></span>
+            {% endif %}
         </div>
     </div>
+    {% endif %}
 </div>
 
 <!-- Vehicle Summary Modal -->

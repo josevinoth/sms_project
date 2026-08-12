@@ -69,6 +69,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
     user_branch_id = Location_info.objects.get(loc_name=user_branch).id
     enquiry_num = request.session.get('ses_enqiury_num')
+    enquiry_num_id = None
     
     selected_trip_id_param = request.GET.get('trip_id')
     selected_trip_id = None
@@ -105,9 +106,23 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             enquiry_num = enquiry.en_enquirynumber
         except (ValueError, TypeError, ObjectDoesNotExist):
             pass
-    elif not enquiry_num_id:
+    
+    if not enquiry_num_id:
         # Prioritize 'enquiry_num_id' over the misspelled session key
         enquiry_num_id = request.session.get('enquiry_num_id') or request.session.get('ses_enqiury_id')
+
+    if consignmentdetail_id != 0:
+        try:
+            cons_obj = ConsignmentdetailInfo.objects.get(id=consignmentdetail_id)
+            if cons_obj.co_enquirynumber_id:
+                enquiry_num_id = cons_obj.co_enquirynumber_id
+                request.session['enquiry_num_id'] = enquiry_num_id
+                request.session['ses_enqiury_id'] = enquiry_num_id
+                if cons_obj.co_enquirynumber:
+                    enquiry_num = cons_obj.co_enquirynumber.en_enquirynumber
+                    request.session['ses_enqiury_num'] = enquiry_num
+        except ConsignmentdetailInfo.DoesNotExist:
+            pass
 
     print("Enquiry Number:", enquiry_num)
     print("Enquiry ID:", enquiry_num_id)
@@ -119,12 +134,6 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
         Q(cg_consignerinvoice__isnull=False, cg_consignerinvoice__gt='') |
         Q(cg_ebillno__isnull=False, cg_ebillno__gt='')
     ).exists()
-
-    if consignmentdetail_id != 0:
-        try:
-            enquiry_num_id = ConsignmentdetailInfo.objects.get(id=consignmentdetail_id).co_enquirynumber.id
-        except ConsignmentdetailInfo.DoesNotExist:
-            pass
 
     if not enquiry_num_id or enquiry_num_id == 0:
         # Handle error, redirect to enquirynote_list instead of self or placeholder
