@@ -198,13 +198,17 @@ def enquirynote_list(request):
 
     enquirynote_queryset = enquirynote_queryset.order_by('-id')
 
-    select_all = request.GET.get('select_all', '')
+    has_search_filter = bool(
+        enquiry_number or consignment_number or vehicle_number or
+        date_from or date_to or select_all == "true"
+    )
 
-    if select_all == "true":
-        # Load records with a limit of 1000 when "Show All" is clicked
-        paginator = Paginator(enquirynote_queryset, 1000)
+    if has_search_filter:
+        total_filtered = enquirynote_queryset.count()
+        # When searching/filtering (by date, enquiry no, vehicle, etc.), show ALL matching records without limit
+        paginator = Paginator(enquirynote_queryset, max(total_filtered, 1))
     else:
-        # Default 30 records per page limit as requested
+        # Normal list view: keep standard 30 records per page pagination
         paginator = Paginator(enquirynote_queryset, 30)
 
     page_number = request.GET.get('page')
