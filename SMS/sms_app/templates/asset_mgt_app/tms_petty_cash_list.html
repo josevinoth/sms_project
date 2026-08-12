@@ -24,10 +24,31 @@
 
     <div class="form-section mb-4">
         <form method="GET" action="" class="d-flex flex-wrap align-items-end" style="gap:15px;">
-            <div class="form-group-modern mb-0" style="flex: 0 0 300px;">
+            <div class="form-group-modern mb-0" style="flex: 0 0 200px;">
                 <label for="tpc_number" class="form-label-modern">Voucher Number</label>
                 <input type="text" name="tpc_number" id="tpc_number" class="form-control form-control-modern" placeholder="Search by Voucher No" value="{{ search_tpc_number }}">
             </div>
+            
+            <div class="form-group-modern mb-0" style="flex: 0 0 200px;">
+                <label for="search_date" class="form-label-modern">Trip Date</label>
+                <input type="date" name="search_date" id="search_date" class="form-control form-control-modern" value="{{ search_date }}">
+            </div>
+
+            <div class="form-group-modern mb-0" style="flex: 0 0 200px;">
+                <label for="search_vehicle" class="form-label-modern">Vehicle Number</label>
+                <input type="text" name="search_vehicle" id="search_vehicle" class="form-control form-control-modern" placeholder="Search by Vehicle No" value="{{ search_vehicle }}">
+            </div>
+
+            {% if is_admin_or_supervisor %}
+            <div class="form-group-modern mb-0" style="flex: 0 0 200px;">
+                <label for="search_branch" class="form-label-modern">Branch</label>
+                <select name="search_branch" id="search_branch" class="form-control form-control-modern">
+                    <option value="">All Branches</option>
+                    <option value="BLR" {% if search_branch == 'BLR' %}selected{% endif %}>BLR</option>
+                    <option value="MAA" {% if search_branch == 'MAA' %}selected{% endif %}>MAA</option>
+                </select>
+            </div>
+            {% endif %}
 
             <div class="d-flex" style="gap:10px; flex: 0 0 auto;">
                 <button type="submit" class="btn-modern btn-submit d-flex align-items-center justify-content-center" style="height: 42px; border-radius: 10px; min-width: 50px;">
@@ -66,7 +87,7 @@
                     <th>Business</th>
                     <th>Branch</th>
                     <th>Amount</th>
-                    <th>To Person</th>
+                    <th>From - To</th>
                     <th>Vehicle No</th>
                     <th>Action</th>
                 </tr>
@@ -80,7 +101,7 @@
                     <td>{{ tpc.tpc_business }}</td>
                     <td>{{ tpc.tpc_branch }}</td>
                     <td>{{ tpc.tpc_amount }}</td>
-                    <td>{% if tpc.tpc_to %}{{ tpc.tpc_to }}{% else %}{{ tpc.tpc_to_manual|default_if_none:"" }}{% endif %}</td>
+                    <td>{{ tpc.from_to_location }}</td>
                     <td>{{ tpc.tpc_vehicle_number|default_if_none:"" }}</td>
                     <td>
                         <a href="{% url 'tms_petty_cash_update' tpc.id %}" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;"><i class="far fa-edit"></i></a>

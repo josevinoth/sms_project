@@ -1,73 +1,103 @@
-{% extends "asset_mgt_app/base.html" %}
-
+{% extends "asset_mgt_app/base_modern.html" %}
 
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center text-light bg-info">
-            <h3>Vehicle Master List</h3>
-        </div>
-        <div class="col-5"></div>
-    </div>
-</div>
-<div class="container-fluid row">
-    <div class="col-md-1">
-      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-        <i class="fas fa-arrow-left"></i> Back
-      </a>
-    </div>
-    <div class="col-md-1">
-      <a href="{% url 'vehiclemaster_insert' %}" class="btn btn-success btn-block btn-lg">
-        <i class="fas fa-plus"></i> Add
-      </a>
-    </div>
-</div>
-<hr>
-<div class="container-fluid">
-<table  id="vehiclemaster_list" class="table table-striped table-bordered">
-    <thead class="thead-dark">
-        <tr>
-<!--            <th>Product Category</th>-->
-            <th>Registration Number</th>
-            <th>Manufacturer</th>
-            <th>Model</th>
-            <th>Type</th>
-            <th>Ownership</th>
-            <th>Edit</th>
-            <th>Delete</th>
-    </thead>
-    <tbody>
-        {% for vehiclemasterinfo in vehiclemaster_list %}
-            <tr>
-                <td> {{vehiclemasterinfo.vm_registrationnumber}}</td>
-                <td> {{vehiclemasterinfo.vm_vehiclemanufacturer}}</td>
-                <td> {{vehiclemasterinfo.vm_vehiclemodel}}</td>
-                <td> {{vehiclemasterinfo.vm_vehicletype}}</td>
-                <td> {{vehiclemasterinfo.vm_ownership}}</td>
-                <td>
+<div class="container-fluid py-4">
 
-                    <a class="btn btn-primary" href="{% url 'vehiclemaster_update' vehiclemasterinfo.id %}" >
-                        <i class="far fa-edit"></i>
-                    </a>
-                </td>
-                <td>
-                    <form action="{% url 'vehiclemaster_delete' vehiclemasterinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <!-- Modern Top Header (Matching Trip Detail List format) -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <div class="header-icon-box mr-3" style="width: 48px; height: 48px; border-radius: 14px; background: rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; backdrop-filter: blur(4px);">
+                <i class="fas fa-truck-moving text-white" style="font-size: 1.4rem;"></i>
+            </div>
+            <div>
+                <h3 class="m-0 font-weight-bold text-white" style="font-size: 1.4rem; letter-spacing: -0.3px;">Vehicle Master List</h3>
+                <p class="text-white-50 small m-0" style="font-size: 0.85rem;">Manage fleet registration, ownership, status, specifications & master records</p>
+            </div>
+        </div>
+        <div class="d-flex align-items-center">
+            <a href="{% url 'home_page' %}" class="btn btn-outline-light font-weight-bold mr-2" style="padding: 0.5rem 1.1rem; border-radius: 10px; font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-home mr-1"></i> Home
+            </a>
+            <a href="{% url 'vehiclemaster_insert' %}" class="btn btn-light font-weight-bold shadow-sm" style="padding: 0.5rem 1.1rem; border-radius: 10px; font-size: 0.9rem; color: #0f766e; text-decoration: none;">
+                <i class="fas fa-plus mr-1"></i> Add New Vehicle
+            </a>
+        </div>
+    </div>
+
+    <!-- Modern Table Container (Matching Trip Detail List format) -->
+    <div class="table-container-modern p-4">
+        <div class="table-responsive">
+            <table id="vehiclemaster_list" class="table modern-table w-100" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Registration Number</th>
+                        <th>Manufacturer</th>
+                        <th>Model</th>
+                        <th>Type</th>
+                        <th>Ownership</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Edit</th>
+                        <th class="text-center">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vehiclemasterinfo in vehiclemaster_list %}
+                        <tr>
+                            <td class="font-weight-bold text-primary">{{ vehiclemasterinfo.vm_registrationnumber }}</td>
+                            <td>{{ vehiclemasterinfo.vm_vehiclemanufacturer|default:"—" }}</td>
+                            <td>{{ vehiclemasterinfo.vm_vehiclemodel|default:"—" }}</td>
+                            <td>{{ vehiclemasterinfo.vm_vehicletype|default:"—" }}</td>
+                            <td>
+                                {% if vehiclemasterinfo.vm_ownership %}
+                                    <span class="badge badge-light border text-dark px-2 py-1" style="font-size: 0.8rem;">{{ vehiclemasterinfo.vm_ownership }}</span>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if vehiclemasterinfo.vm_status and vehiclemasterinfo.vm_status.active_inactive == 'Inactive' %}
+                                    <span class="badge badge-danger px-3 py-1" style="font-size: 0.8rem; border-radius: 6px;"><i class="fas fa-times-circle mr-1"></i> Inactive</span>
+                                {% else %}
+                                    <span class="badge badge-success px-3 py-1" style="font-size: 0.8rem; border-radius: 6px; background-color: #10b981 !important;"><i class="fas fa-check-circle mr-1"></i> Active</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a class="btn btn-sm btn-outline-primary" style="border-radius: 8px; padding: 5px 10px;" href="{% url 'vehiclemaster_update' vehiclemasterinfo.id %}" title="Edit Vehicle">
+                                    <i class="far fa-edit"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <form action="{% url 'vehiclemaster_delete' vehiclemasterinfo.id %}" method="post" style="margin:0;" onclick="return confirm('Are you sure you want to delete vehicle {{ vehiclemasterinfo.vm_registrationnumber }}?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px; padding: 5px 10px;" title="Delete Vehicle">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
+{% endblock content %}
+
+{% block extra_js %}
 <script>
     $(document).ready(function() {
-    $('#vehiclemaster_list').DataTable();
-} );
+        if ($.fn.DataTable.isDataTable('#vehiclemaster_list')) {
+            $('#vehiclemaster_list').DataTable().destroy();
+        }
+        $('#vehiclemaster_list').DataTable({
+            destroy: true,
+            responsive: true,
+            order: [[0, 'asc']],
+            pageLength: 25,
+            dom: "<'d-flex align-items-center justify-content-between mb-3'fB>rtip",
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+    });
 </script>
-
-{% endblock content %}
+{% endblock %}

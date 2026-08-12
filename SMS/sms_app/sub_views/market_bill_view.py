@@ -459,38 +459,30 @@ def get_trips_by_vendor(request):
     for allotment in vendor_allotments:
         enq_id = allotment.va_enquirynumber_id
 
-        # Check if there are other market vendors assigned to this enquiry
+        # Collect vehicle numbers allotted to THIS vendor on this enquiry (including replacement chain for this vendor)
         all_enq_market_vas = Vehicle_allotmentInfo.objects.filter(
             va_enquirynumber_id=enq_id,
             va_vehiclesource_id=market_ownership_id
         )
-        vendor_ids_for_enq = set(all_enq_market_vas.values_list('va_vendor_id', flat=True))
-        other_vendors = [v for v in vendor_ids_for_enq if v is not None and v != int(vendor_id)]
+        veh_numbers = set()
+        for v_item in all_enq_market_vas.filter(va_vendor_id=vendor_id):
+            reg = v_item.va_vehiclenumber.vm_registrationnumber if v_item.va_vehiclenumber else v_item.va_vehiclenumber_mkt
+            if reg:
+                veh_numbers.add(reg.strip())
+            curr = v_item
+            while curr.va_replaced_allotment and curr.va_replaced_allotment.va_vendor_id == int(vendor_id):
+                curr = curr.va_replaced_allotment
+                r = curr.va_vehiclenumber.vm_registrationnumber if curr.va_vehiclenumber else curr.va_vehiclenumber_mkt
+                if r:
+                    veh_numbers.add(r.strip())
 
-        if not other_vendors:
-            # Only this vendor is assigned to this enquiry for market trips! Match by enquiry ID directly
-            allotment_filters |= Q(tr_enquirynumber_id=enq_id)
-            has_allotments = True
-        else:
-            # Multiple vendors assigned to this enquiry: match any vehicle numbers for this vendor (including replacement chain)
-            veh_numbers = set()
-            for v_item in all_enq_market_vas.filter(va_vendor_id=vendor_id):
-                reg = v_item.va_vehiclenumber.vm_registrationnumber if v_item.va_vehiclenumber else v_item.va_vehiclenumber_mkt
-                if reg:
-                    veh_numbers.add(reg.strip())
-                curr = v_item
-                while curr.va_replaced_allotment:
-                    curr = curr.va_replaced_allotment
-                    r = curr.va_vehiclenumber.vm_registrationnumber if curr.va_vehiclenumber else curr.va_vehiclenumber_mkt
-                    if r:
-                        veh_numbers.add(r.strip())
-
+        if veh_numbers:
             for vn in veh_numbers:
                 allotment_filters |= Q(tr_enquirynumber_id=enq_id, tr_vehiclenumber__iexact=vn)
             has_allotments = True
-            # Fallback if vehicle was replaced: match by enquiry ID only (so any vehicle on the trip is accepted)
-            if allotment.va_status_id == 2:
-                allotment_filters |= Q(tr_enquirynumber_id=allotment.va_enquirynumber_id)
+        else:
+            allotment_filters |= Q(tr_enquirynumber_id=enq_id)
+            has_allotments = True
 
     if not has_allotments:
         allotment_filters = Q(pk__in=[])

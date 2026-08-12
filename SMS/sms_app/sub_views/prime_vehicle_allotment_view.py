@@ -66,7 +66,7 @@ def prime_vehicle_allotment_add(request, pev_id=None, vehicle_allotment_id=0):
             'pev_id': pev_id,
             'enquiry_num_id': enquiry_id,
             'vehicle_allotment_list': PrimeVehicleAllotmentInfo.objects.filter(pva_prime_enquiry_vehicle_id=pev_id),
-            'vehicles_data': VehiclemasterInfo.objects.all(),
+            'vehicles_data': VehiclemasterInfo.objects.filter(Q(vm_status_id=1) | Q(vm_status__isnull=True)),
             'customer_name': enquiry.pen_customername.cu_name if enquiry.pen_customername else "",
             'from_location': enquiry.pen_fromlocaion.place_name if enquiry.pen_fromlocaion else "",
             'to_location': enquiry.pen_tolocation.place_name if enquiry.pen_tolocation else "",
@@ -190,7 +190,7 @@ def prime_vehicle_allotment_list(request):
         'user_id': user_id,
         'vehicle_allotment_list': vehicle_allotment_queryset,
         'select_all': select_all,
-        'vehicles_data': VehiclemasterInfo.objects.all(),
+        'vehicles_data': VehiclemasterInfo.objects.filter(Q(vm_status_id=1) | Q(vm_status__isnull=True)),
     })
 
 

@@ -11,3 +11,9 @@ class VendoraddForm(forms.ModelForm):
         self.fields['vend_service_type'].empty_label = "--Select--"
         self.fields['vend_status'].empty_label = "--Select--"
         self.fields['vend_description'].empty_label = "--Select--"
+
+    def clean_vend_name(self):
+        vend_name = self.cleaned_data.get('vend_name')
+        if vend_name:
+            vend_name = " ".join(vend_name.strip().split()).upper()
+        return vend_name

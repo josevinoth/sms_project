@@ -146,7 +146,7 @@
         <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">INCOME</td>
     </tr>
     {% for summary in income_summary %}
-    <tr class="{% if summary.is_total %}total{% endif %}">
+    <tr class="{% if summary.is_total %}total-row{% endif %}">
         <td colspan="2">{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
@@ -168,7 +168,7 @@
         <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">OPERATIONAL EXPENSES - FIXED</td>
     </tr>
     {% for summary in op_fixed_summary %}
-    <tr class="{% if summary.is_total %}total{% endif %}">
+    <tr class="{% if summary.is_total %}total-row{% endif %}">
         <td colspan="2">{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
@@ -190,7 +190,7 @@
         <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">OPERATIONAL EXPENSES - VARIABLE</td>
     </tr>
     {% for summary in op_variable_summary %}
-    <tr class="{% if summary.is_total %}total{% endif %}">
+    <tr class="{% if summary.is_total %}total-row{% endif %}">
         <td colspan="2">{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
@@ -212,7 +212,7 @@
         <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">NON-OPERATIONAL EXPENSES - FIXED</td>
     </tr>
     {% for summary in non_op_fixed_summary %}
-    <tr class="{% if summary.is_total %}total{% endif %}">
+    <tr class="{% if summary.is_total %}total-row{% endif %}">
         <td colspan="2">{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
@@ -234,7 +234,7 @@
         <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">NON-OPERATIONAL EXPENSES - VARIABLE</td>
     </tr>
     {% for summary in non_op_variable_summary %}
-    <tr class="{% if summary.is_total %}total{% endif %}">
+    <tr class="{% if summary.is_total %}total-row{% endif %}">
         <td colspan="2">{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
@@ -256,7 +256,7 @@
         <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">EMPLOYEE BENEFITS</td>
     </tr>
     {% for summary in employee_benefits_summary %}
-    <tr class="{% if summary.is_total %}total{% endif %}">
+    <tr class="{% if summary.is_total %}total-row{% endif %}">
         <td colspan="2">{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
@@ -278,7 +278,7 @@
         <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">DEPARTMENT EXPENSES</td>
     </tr>
     {% for summary in dept_expenses_summary %}
-    <tr class="{% if summary.is_total %}total{% endif %}">
+    <tr class="{% if summary.is_total %}total-row{% endif %}">
         <td colspan="2">{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
@@ -300,7 +300,7 @@
         <td colspan="{{ months|length|multiply:3|add:5 }}" style="text-align: left; padding-left: 10px;">INTEREST EXPENSES</td>
     </tr>
     {% for summary in interest_summary %}
-    <tr class="{% if summary.is_total %}total{% endif %}">
+    <tr class="{% if summary.is_total %}total-row{% endif %}">
         <td colspan="2">{{ summary.expense_type }}</td>
         {% for m_idx in months %}
         <td class="income-bg">{{ summary.monthly_budgets|get_item:m_idx|default:0|floatformat:0 }}</td>
@@ -317,8 +317,25 @@
     </tr>
     {% endfor %}
 
+    <!-- TOTAL EXPENSES -->
+    <tr class="total-expense-row">
+        <td colspan="2"><strong>TOTAL EXPENSES</strong></td>
+        {% for m_idx in months %}
+        <td><strong>{{ total_expense_summary.monthly_budget|get_item:m_idx|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ total_expense_summary.total_budget|floatformat:0 }}</strong></td>
+        {% for m_idx in months %}
+        <td><strong>{{ total_expense_summary.monthly_actual|get_item:m_idx|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ total_expense_summary.total_actual|floatformat:0 }}</strong></td>
+        {% for m_idx in months %}
+        <td><strong>{{ total_expense_summary.monthly_variance|get_item:m_idx|floatformat:0 }}</strong></td>
+        {% endfor %}
+        <td><strong>{{ total_expense_summary.total_variance|floatformat:0 }}</strong></td>
+    </tr>
+
     <!-- NET PROFIT SUMMARY -->
-    <tr style="background:#ffff1a;">
+    <tr class="net-profit-row">
         <td colspan="2"><strong>NET PROFIT/LOSS</strong></td>
         {% for m_idx in months %}
         <td><strong>{{ net_summary.monthly_budget|get_item:m_idx|floatformat:0 }}</strong></td>
@@ -334,7 +351,7 @@
         <td><strong>{{ net_summary.total_variance|floatformat:0 }}</strong></td>
     </tr>
     <!-- PROFIT % ROW -->
-    <tr style="background:#ccffcc;">
+    <tr class="profit-percent-row">
         <td colspan="2"><strong>PROFIT %</strong></td>
         <td colspan="{{ months|length|multiply:2|add:2 }}">&nbsp;</td> <!-- Skip Budget and Actual sections -->
         {% for m_idx in months %}
@@ -391,6 +408,13 @@
                 .actuals-bg { background-color: #F4B084 !important; -webkit-print-color-adjust: exact; }
                 .variance-bg { background-color: #B4C6E7 !important; -webkit-print-color-adjust: exact; }
                 .category-row { background-color: #8faadc !important; -webkit-print-color-adjust: exact; }
+                .total-row td { font-weight: bold !important; color: #000000 !important; -webkit-print-color-adjust: exact; }
+                .total-row td.income-bg { background-color: #a9d08e !important; -webkit-print-color-adjust: exact; }
+                .total-row td.actuals-bg { background-color: #e28c54 !important; -webkit-print-color-adjust: exact; }
+                .total-row td.variance-bg { background-color: #8ea9db !important; -webkit-print-color-adjust: exact; }
+                .total-expense-row td { background-color: #fce4d6 !important; font-weight: bold !important; color: #c00000 !important; -webkit-print-color-adjust: exact; }
+                .net-profit-row td { background-color: #ffff1a !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
+                .profit-percent-row td { background-color: #ccffcc !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
             </style>`;
         const html = '<html><head><title>Transport MIS Report</title>' + css + '</head><body>' +
                      '<h3 style="text-align:center;">Transport MIS Report</h3>' +
@@ -445,7 +469,10 @@
     function getDataRows() {
         // All tbody rows that are NOT category/section headers
         return Array.from(document.querySelectorAll('#mis-table tbody tr')).filter(
-            r => !r.classList.contains('category-row') && !r.style.cssText.includes('background:#ffff1a') && !r.style.cssText.includes('background:#ccffcc')
+            r => !r.classList.contains('category-row') && 
+                 !r.classList.contains('total-expense-row') && 
+                 !r.classList.contains('net-profit-row') && 
+                 !r.classList.contains('profit-percent-row')
         );
     }
 
@@ -481,10 +508,11 @@
         // Handle last category
         if (categoryRow) categoryRow.style.display = hasVisible ? '' : 'none';
 
-        // Always show summary rows (profit/loss and profit %)
+        // Always show summary rows (total expenses, profit/loss and profit %)
         allRows.forEach(row => {
-            if (row.style.cssText.includes('background:#ffff1a') ||
-                row.style.cssText.includes('background:#ccffcc')) {
+            if (row.classList.contains('total-expense-row') ||
+                row.classList.contains('net-profit-row') ||
+                row.classList.contains('profit-percent-row')) {
                 row.style.display = '';
             }
         });
@@ -618,7 +646,35 @@
         color: black;
         font-weight: bold;
     }
-    .total-row { background-color: #c6e0b4 !important; font-weight: bold; }
+    .total-row td {
+        font-weight: bold !important;
+        color: #000000 !important;
+    }
+    .total-row td.income-bg {
+        background-color: #a9d08e !important;
+    }
+    .total-row td.actuals-bg {
+        background-color: #e28c54 !important;
+    }
+    .total-row td.variance-bg {
+        background-color: #8ea9db !important;
+    }
+    .total-row td[colspan="2"] {
+        background-color: #d9e1f2 !important;
+    }
+    .total-expense-row td {
+        background-color: #fce4d6 !important;
+        font-weight: bold !important;
+        color: #c00000 !important;
+    }
+    .net-profit-row td {
+        background-color: #ffff1a !important;
+        font-weight: bold !important;
+    }
+    .profit-percent-row td {
+        background-color: #ccffcc !important;
+        font-weight: bold !important;
+    }
     .mis-title-banner {
         background: linear-gradient(135deg, #d9534f 0%, #c9302c 100%);
         color: white;

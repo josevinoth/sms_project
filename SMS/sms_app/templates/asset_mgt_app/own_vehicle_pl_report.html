@@ -155,6 +155,7 @@
                 <tr><th>Road Tax</th><td id="sum_road_tax">{{ summary_data.road_tax }}</td></tr>
                 <tr><th>Permit</th><td id="sum_permit">{{ summary_data.permit }}</td></tr>
                 <tr><th>Empty KM Cost</th><td id="sum_empty_km_cost">{{ summary_data.empty_km_cost }}</td></tr>
+                <tr><th>Toll Cost</th><td id="sum_toll_cost">{{ summary_data.toll_cost }}</td></tr>
                 <tr><th>Business Empty KM Cost</th><td id="sum_business_empty_km_cost">{{ summary_data.business_empty_km_cost }}</td></tr>
                 <tr><th>Total expenses</th><td id="sum_total_expenses">{{ summary_data.total_expenses }}</td></tr>
                 <tr><th>Profit</th><td id="sum_profit">{{ summary_data.profit }}</td></tr>
@@ -199,6 +200,7 @@ $(document).ready(function () {
                     $('#sum_road_tax').text(json.summary.road_tax);
                     $('#sum_permit').text(json.summary.permit);
                     $('#sum_empty_km_cost').text(json.summary.empty_km_cost);
+                    $('#sum_toll_cost').text(json.summary.toll_cost);
                     $('#sum_business_empty_km_cost').text(json.summary.business_empty_km_cost);
                     $('#sum_total_expenses').text(json.summary.total_expenses);
                     $('#sum_profit').text(json.summary.profit);
