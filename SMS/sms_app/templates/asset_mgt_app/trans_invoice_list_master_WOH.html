@@ -342,25 +342,74 @@
            DATE + DEPARTMENT FILTER
            =============================== */
 
+        function parseInputDate(val, isEnd) {
+            if (!val) return null;
+            let parts = val.split('-');
+            if (parts.length === 3) {
+                let y = parseInt(parts[0], 10);
+                let m = parseInt(parts[1], 10) - 1;
+                let d = parseInt(parts[2], 10);
+                if (isEnd) {
+                    return new Date(y, m, d, 23, 59, 59, 999);
+                } else {
+                    return new Date(y, m, d, 0, 0, 0, 0);
+                }
+            }
+            return null;
+        }
+
+        function parseDate(val) {
+            if (!val) return null;
+            val = val.replace(/<[^>]*>/g, '').trim();
+            if (val === '-' || val === '') return null;
+
+            // Handle dd/mm/yyyy
+            let datePart = val.split(' ')[0];
+            let parts = datePart.split('/');
+            if (parts.length === 3) {
+                let d = parseInt(parts[0], 10);
+                let m = parseInt(parts[1], 10) - 1;
+                let y = parseInt(parts[2], 10);
+                let dateObj = new Date(y, m, d, 0, 0, 0, 0);
+                return isNaN(dateObj.getTime()) ? null : dateObj;
+            }
+
+            // Handle yyyy-mm-dd
+            parts = datePart.split('-');
+            if (parts.length === 3) {
+                let y = parseInt(parts[0], 10);
+                let m = parseInt(parts[1], 10) - 1;
+                let d = parseInt(parts[2], 10);
+                let dateObj = new Date(y, m, d, 0, 0, 0, 0);
+                return isNaN(dateObj.getTime()) ? null : dateObj;
+            }
+
+            let dateObj = new Date(val);
+            return isNaN(dateObj.getTime()) ? null : dateObj;
+        }
+
         $.fn.dataTable.ext.search.push(function (settings, data) {
 
             if (settings.nTable.id !== 'trans_invoice_master_list') {
                 return true;
             }
 
-            let from = $('#fromDate').val();
-            let to = $('#toDate').val();
+            let fromStr = $('#fromDate').val();
+            let toStr = $('#toDate').val();
             let dept = $('#departmentFilter').val();
 
             let rowDate = parseDate(data[PLANNING_DATE_COL]);
-            let rowDept = data[DEPT_COL];
+            let rowDept = data[DEPT_COL] ? data[DEPT_COL].trim() : '';
 
-            if (from || to) {
+            if (fromStr || toStr) {
                 if (!rowDate) return false;
             }
 
-            if (from && rowDate < new Date(from)) return false;
-            if (to && rowDate > new Date(to)) return false;
+            let fromDate = parseInputDate(fromStr, false);
+            let toDate = parseInputDate(toStr, true);
+
+            if (fromDate && rowDate < fromDate) return false;
+            if (toDate && rowDate > toDate) return false;
             if (dept && rowDept !== dept) return false;
 
             return true;
@@ -385,19 +434,6 @@
         $(document).on('click', '.filter-input', function (e) {
             e.stopPropagation();
         });
-
-        function parseDate(val) {
-            if (!val || val.trim() === '-' || val.trim() === '') return null;
-            // Handle dd/mm/yyyy
-            let parts = val.split('/');
-            if (parts.length === 3) {
-                // new Date(year, monthIndex, day)
-                let d = new Date(parts[2], parts[1] - 1, parts[0]);
-                return isNaN(d.getTime()) ? null : d;
-            }
-            let d = new Date(val);
-            return isNaN(d.getTime()) ? null : d;
-        }
 
     });
 </script>
