@@ -391,6 +391,15 @@ def market_bill_edit(request, id):
                 'halting_cost': halting_cost,
                 'halting_rate': float(halting_rate),
                 'mail_attachment_url': mail_attachment_url,
+                'tc_tripcost_vendor_check': getattr(trip, 'tc_tripcost_vendor_check', True),
+                'tc_parkingcost_vendor_check': getattr(trip, 'tc_parkingcost_vendor_check', False),
+                'tc_tollcost_vendor_check': getattr(trip, 'tc_tollcost_vendor_check', False),
+                'tc_loadingcost_vendor_check': getattr(trip, 'tc_loadingcost_vendor_check', False),
+                'tc_unloadingcost_vendor_check': getattr(trip, 'tc_unloadingcost_vendor_check', False),
+                'tc_weighmentcost_vendor_check': getattr(trip, 'tc_weighmentcost_vendor_check', False),
+                'tc_supervisorcost_vendor_check': getattr(trip, 'tc_supervisorcost_vendor_check', False),
+                'tc_handlingcost_vendor_check': getattr(trip, 'tc_handlingcost_vendor_check', False),
+                'tc_haltingcost_vendor_check': getattr(trip, 'tc_haltingcost_vendor_check', False),
             })
 
     return render(
@@ -629,6 +638,15 @@ def get_trips_by_vendor(request):
             'halting_days': halting_days,
             'halting_cost': float(halting_cost),
             'halting_rate': float(halting_rate),
+            'tc_tripcost_vendor_check': getattr(trip, 'tc_tripcost_vendor_check', True),
+            'tc_parkingcost_vendor_check': getattr(trip, 'tc_parkingcost_vendor_check', False),
+            'tc_tollcost_vendor_check': getattr(trip, 'tc_tollcost_vendor_check', False),
+            'tc_loadingcost_vendor_check': getattr(trip, 'tc_loadingcost_vendor_check', False),
+            'tc_unloadingcost_vendor_check': getattr(trip, 'tc_unloadingcost_vendor_check', False),
+            'tc_weighmentcost_vendor_check': getattr(trip, 'tc_weighmentcost_vendor_check', False),
+            'tc_supervisorcost_vendor_check': getattr(trip, 'tc_supervisorcost_vendor_check', False),
+            'tc_handlingcost_vendor_check': getattr(trip, 'tc_handlingcost_vendor_check', False),
+            'tc_haltingcost_vendor_check': getattr(trip, 'tc_haltingcost_vendor_check', False),
             'mail_attachment_url': '', # New trips won't have attachments yet
         })
 
