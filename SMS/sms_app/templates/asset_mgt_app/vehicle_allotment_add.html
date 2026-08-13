@@ -855,10 +855,22 @@ document.addEventListener("DOMContentLoaded", function() {
                 alert("Vendor Name is required for Market Vehicles.");
                 return false;
             }
+        // -----------------------------------------
+        // 5️⃣ DOUBLE SUBMIT PREVENTION
+        // -----------------------------------------
+        if ($(form).data("is_submitting") === true) {
+            event.preventDefault();
+            return false;
         }
-        
+        $(form).data("is_submitting", true);
+
         // Enable disabled fields so they are submitted
         $(this).find(":disabled").prop("disabled", false);
+
+        // Disable submit buttons to prevent rapid double-clicks
+        setTimeout(function() {
+            $(form).find('button[type="submit"]').prop("disabled", true).addClass("disabled");
+        }, 10);
     });
 });
 </script>

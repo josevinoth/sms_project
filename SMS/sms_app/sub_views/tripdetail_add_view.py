@@ -2,6 +2,7 @@ import base64
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
 from django.core.files.base import ContentFile
@@ -11,7 +12,7 @@ from django.utils import timezone
 
 from .send_department_email import send_department_email
 from ..forms import TripclosurefilesForm, TripdetailaddForm
-from ..models import Vehicle_allotmentInfo, ConsignmentdetailInfo, ConsignmentgoodsInfo, Tripstatusinfo, Trip_closure_files_Info, \
+from ..models import Vehicle_allotmentInfo, ConsignmentdetailInfo, ConsignmentgoodsInfo, Tripstatusinfo, Trip_closure_files_Info, TripAttachmentInfo, \
     EnquirynoteInfo, TripdetailInfo, VehiclemasterInfo, TripHighvalueInfo, Emailmaster, Email_type, User_extInfo, TransInvoiceInfo, DeletionLog
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
@@ -472,6 +473,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 'has_vehicle_started': has_vehicle_started,
                 'allotted_vehicle_list': allotted_vehicle_list,
                 'allotted_vehicle_map_json': allotted_vehicle_map_json,
+                'trip_attachments': TripAttachmentInfo.objects.filter(ta_tripnumber=trip_instance.tr_tripnumber).order_by('-ta_uploaded_at'),
             }
 
         return render(request, "asset_mgt_app/tripdetail_add.html", context)
@@ -854,6 +856,16 @@ def tripdetail_add(request, tripdetail_id=0):
                     for field, errors in tripclosurefiles_form.errors.items():
                         for error in errors:
                             messages.warning(request, f"Attachment not saved - {field}: {error}")
+
+                # Save Multiple Attachments if provided
+                pod_files = request.FILES.getlist('tc_pod_attachments') or request.FILES.getlist('tcf_pod')
+                for f in pod_files:
+                    TripAttachmentInfo.objects.create(
+                        ta_tripnumber=trip.tr_tripnumber,
+                        ta_file=f,
+                        ta_filename=f.name,
+                        ta_category='POD'
+                    )
 
                 # ✅ AUTOMATED EMAIL TRIGGERS
                 def trigger_alert(alert_func, label):
@@ -2039,3 +2051,112 @@ def get_trip_email_recipients(request):
 
     except Exception as e:
         return JsonResponse({"success": False, "msg": str(e)})
+
+
+@csrf_exempt
+@login_required(login_url='login_page')
+def delete_trip_attachment(request, attachment_id):
+    if request.method == "POST":
+        attachment = get_object_or_404(TripAttachmentInfo, pk=attachment_id)
+        attachment.delete()
+        messages.success(request, "Attachment deleted successfully.")
+        return JsonResponse({"status": "success", "message": "Attachment deleted successfully"})
+    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
+
+
+def generate_combined_pod_pdf(trip_num):
+    """
+    Finds all attachment files for a given trip (from TripAttachmentInfo, Trip_closure_files_Info,
+    and TripdetailInfo) and merges them into a single multi-page PDF buffer.
+    """
+    import io
+    import os
+    from PIL import Image
+    import pypdf
+    from django.conf import settings
+    from sms_app.models import TripAttachmentInfo, Trip_closure_files_Info, TripdetailInfo
+
+    file_paths = []
+    
+    # 1. Gather files from TripAttachmentInfo
+    attachments = TripAttachmentInfo.objects.filter(ta_tripnumber=trip_num).order_by('ta_uploaded_at')
+    for att in attachments:
+        if att.ta_file:
+            fp = os.path.join(settings.MEDIA_ROOT, str(att.ta_file))
+            if os.path.exists(fp) and fp not in file_paths:
+                file_paths.append(fp)
+
+    # 2. Gather from Trip_closure_files_Info
+    closure = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
+    if closure and closure.tcf_pod:
+        fp = os.path.join(settings.MEDIA_ROOT, str(closure.tcf_pod))
+        if os.path.exists(fp) and fp not in file_paths:
+            file_paths.append(fp)
+
+    # 3. Gather from TripdetailInfo
+    trip = TripdetailInfo.objects.filter(tr_tripnumber=trip_num).first()
+    if trip and trip.tc_pod_attachment:
+        fp = os.path.join(settings.MEDIA_ROOT, str(trip.tc_pod_attachment))
+        if os.path.exists(fp) and fp not in file_paths:
+            file_paths.append(fp)
+
+    if not file_paths:
+        return None
+
+    writer = pypdf.PdfWriter()
+
+    for fp in file_paths:
+        ext = os.path.splitext(fp)[1].lower()
+        if ext in ['.jpg', '.jpeg', '.png', '.webp', '.bmp']:
+            try:
+                img = Image.open(fp)
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                pdf_buf = io.BytesIO()
+                img.save(pdf_buf, format='PDF')
+                pdf_buf.seek(0)
+                reader = pypdf.PdfReader(pdf_buf)
+                writer.append(reader)
+            except Exception as e:
+                print(f"Error converting image {fp} to PDF: {e}")
+        elif ext == '.pdf':
+            try:
+                reader = pypdf.PdfReader(fp)
+                writer.append(reader)
+            except Exception as e:
+                print(f"Error appending PDF {fp}: {e}")
+
+    if len(writer.pages) == 0:
+        return None
+
+    output_buf = io.BytesIO()
+    writer.write(output_buf)
+    writer.close()
+    output_buf.seek(0)
+    return output_buf
+
+
+@login_required(login_url='login_page')
+def view_combined_pod(request, trip_num):
+    """
+    Generates and returns an inline combined multi-page PDF of all uploaded POD attachments for a trip.
+    The filename is set to the Consignment Number if available, otherwise trip_num.
+    """
+    pdf_buf = generate_combined_pod_pdf(trip_num)
+    if not pdf_buf:
+        messages.error(request, f"No POD attachments found for trip '{trip_num}'.")
+        return redirect(request.META.get('HTTP_REFERER', 'tripdetail_list'))
+
+    filename = str(trip_num)
+    trip = TripdetailInfo.objects.filter(tr_tripnumber=trip_num).first()
+    if trip and trip.tr_consignmentnumber:
+        filename = str(trip.tr_consignmentnumber.co_consignmentnumber)
+
+    filename = filename.replace(" ", "_").replace("/", "_")
+
+    response = HttpResponse(pdf_buf.read(), content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{filename}.pdf"'
+    return response
+
+
+

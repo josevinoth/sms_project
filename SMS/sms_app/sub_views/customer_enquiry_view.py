@@ -736,12 +736,26 @@ def customer_shipment_tracking(request, trip_id):
 
 @login_required
 def download_pod(request, trip_id):
-    """View POD inline — works in both WebView and desktop browsers."""
+    """View POD inline — combines all uploaded attachment pages into a single multi-page PDF."""
     import os
     from django.conf import settings
+    from django.http import HttpResponse
+    from sms_app.sub_views.tripdetail_add_view import generate_combined_pod_pdf
 
     customer, _, is_lp, agent_name = get_customer_context(request)
     trip = get_object_or_404(TripdetailInfo, id=trip_id, tr_enquirynumber__en_customername=customer)
+
+    # Generate combined PDF of all uploaded attachment pages/files
+    pdf_buf = generate_combined_pod_pdf(trip.tr_tripnumber)
+    if pdf_buf:
+        filename = str(trip.tr_tripnumber)
+        if trip and trip.tr_consignmentnumber:
+            filename = str(trip.tr_consignmentnumber.co_consignmentnumber)
+        filename = filename.replace(" ", "_").replace("/", "_")
+
+        response = HttpResponse(pdf_buf.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="{filename}.pdf"'
+        return response
 
     file_url = None
     file_name = None

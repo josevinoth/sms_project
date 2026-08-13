@@ -84,6 +84,21 @@ class TripdetailInfo(models.Model):
     tc_betacost_check = models.BooleanField(default=False)
     tc_cancellation_check = models.BooleanField(default=False)
 
+    # Bill to Vendor Checkboxes (Specifically for Market / Vendor Bill)
+    tc_tripcost_vendor_check = models.BooleanField(default=True)
+    tc_parkingcost_vendor_check = models.BooleanField(default=False)
+    tc_tollcost_vendor_check = models.BooleanField(default=False)
+    tc_loadingcost_vendor_check = models.BooleanField(default=False)
+    tc_unloadingcost_vendor_check = models.BooleanField(default=False)
+    tc_weighmentcost_vendor_check = models.BooleanField(default=False)
+    tc_supervisorcost_vendor_check = models.BooleanField(default=False)
+    tc_handlingcost_vendor_check = models.BooleanField(default=False)
+    tc_haltingcost_vendor_check = models.BooleanField(default=False)
+    tc_total_halting_cost_vendor_check = models.BooleanField(default=False)
+    tc_rtocost_vendor_check = models.BooleanField(default=False)
+    tc_betacost_vendor_check = models.BooleanField(default=False)
+    tc_cancellation_vendor_check = models.BooleanField(default=False)
+
     tc_no_of_days_halting = models.IntegerField(null=True, blank=True,default=0)
     tc_pod = models.CharField(default=" ")
     tc_financestatus = models.ForeignKey(Tripstatusinfo, on_delete=models.CASCADE,blank=True,null=True)
@@ -115,3 +130,19 @@ class Trip_closure_files_Info(models.Model):
     tcf_weighment_cost = models.FileField(upload_to=trip_closure_directory_path, null=True,blank=True)
     tcf_handling_cost = models.FileField(upload_to=trip_closure_directory_path, null=True,blank=True)
     tcf_pod = models.FileField(upload_to=trip_closure_directory_path, null=True,blank=True)
+
+
+def trip_attachment_directory_path(instance, filename):
+    return 'Tripattachments/{0}/{1}'.format(instance.ta_tripnumber, filename)
+
+
+class TripAttachmentInfo(models.Model):
+    ta_tripnumber = models.CharField(max_length=300, db_index=True)
+    ta_file = models.FileField(upload_to=trip_attachment_directory_path)
+    ta_filename = models.CharField(max_length=300, null=True, blank=True)
+    ta_category = models.CharField(max_length=100, default='POD')
+    ta_uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.ta_tripnumber} - {self.ta_filename or 'Attachment'}"
+

@@ -6,7 +6,7 @@ from django.core.files.base import ContentFile
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 
-from ..models import TripdetailInfo, Trip_closure_files_Info, Vehicle_allotmentInfo
+from ..models import TripdetailInfo, Trip_closure_files_Info, Vehicle_allotmentInfo, TripAttachmentInfo
 from ..forms import TripSettlementForm, TripclosurefilesForm
 from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
 from ..sub_forms.invoice_document_form import InvoiceDocumentForm
@@ -72,6 +72,14 @@ def _try_merge_pdfs(inv_obj, closure_obj=None):
             closure_obj.tcf_handling_cost,
             closure_obj.tcf_pod,
         ])
+
+    # Also collect multi-file attachments from TripAttachmentInfo
+    trip_num = getattr(inv_obj, 'id_tripnumber', None)
+    if trip_num:
+        multi_atts = TripAttachmentInfo.objects.filter(ta_tripnumber=trip_num)
+        for att in multi_atts:
+            if att.ta_file:
+                file_fields.append(att.ta_file)
 
     IMAGE_EXTS = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif', '.webp')
     has_any = False
@@ -230,7 +238,7 @@ def sync_closure_files_to_invoice(request, trip, files_obj):
         invoice_doc.id_pod_doc = None
         changed = True
 
-    if changed or not invoice_doc.pk:
+    if changed or not invoice_doc.pk or TripAttachmentInfo.objects.filter(ta_tripnumber=trip.tr_tripnumber).exists():
         invoice_doc.id_updated_by = request.user
         invoice_doc.save()
         _try_merge_pdfs(invoice_doc)
@@ -603,6 +611,26 @@ def invoice_documents_add(request, trip_id):
             from .trans_invoice_view import sync_trip_charges_to_invoice
             sync_trip_charges_to_invoice(trip_obj)
 
+            # Save multi-file attachments per category
+            MULTI_CAT_MAP = {
+                'id_trip_cost_files': 'TRIP_CHARGES',
+                'id_parking_files': 'PARKING',
+                'id_toll_files': 'TOLL',
+                'id_loading_files': 'LOADING',
+                'id_unloading_files': 'UNLOADING',
+                'id_weighment_files': 'WEIGHMENT',
+                'id_handling_files': 'HANDLING',
+                'id_pod_files': 'POD',
+            }
+            for field_name, cat in MULTI_CAT_MAP.items():
+                for uploaded_file in request.FILES.getlist(field_name):
+                    TripAttachmentInfo.objects.create(
+                        ta_tripnumber=trip.tr_tripnumber,
+                        ta_file=uploaded_file,
+                        ta_filename=uploaded_file.name,
+                        ta_category=cat,
+                    )
+
             # Attempt PDF merge using both record types
             _try_merge_pdfs(inv_obj, files_obj)
 
@@ -690,6 +718,12 @@ def invoice_documents_add(request, trip_id):
     if allotment and float(allotment.va_special_sale or 0) > float(allotment.va_sale or 0):
         is_sell_rate_doc_required = True
 
+    # Build attachments grouped by category for collapsible dropdowns
+    raw_atts = TripAttachmentInfo.objects.filter(ta_tripnumber=trip.tr_tripnumber).order_by('ta_uploaded_at')
+    attachments_by_cat = {}
+    for att in raw_atts:
+        attachments_by_cat.setdefault(att.ta_category, []).append(att)
+
     return render(request, 'asset_mgt_app/invoice_documents_add.html', {
         'trip': trip,
         'tripclosure_form': settlement_form,
@@ -708,4 +742,5 @@ def invoice_documents_add(request, trip_id):
             if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_cusrefnum
             else trip.tr_customerref or ''
         ),
+        'attachments_by_cat': attachments_by_cat,
     })

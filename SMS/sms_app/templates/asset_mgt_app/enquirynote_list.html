@@ -520,8 +520,8 @@
                             {% for c in data.consignments %}
                             <div class="eye-btn-wrapper">
                                 {% if c.pod_info %}
-                                <a href="{{ c.pod_info.url }}" target="_blank" download class="pod-btn" title="Download POD ({{ c.co_consignmentnumber }})">
-                                    <i class="fas fa-download"></i>
+                                <a href="{{ c.pod_info.url }}" target="_blank" class="pod-btn" title="View Combined POD PDF - Vehicle: {{ c.pod_info.veh_number }} ({{ c.co_consignmentnumber }})">
+                                    <i class="fas fa-file-pdf"></i>
                                 </a>
                                 {% else %}
                                 <button class="btn btn-sm btn-secondary text-white pod-btn" style="opacity: 0.35; background-color: #64748b !important;" disabled title="No POD Available">

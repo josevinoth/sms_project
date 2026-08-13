@@ -7,7 +7,8 @@ from django.http import JsonResponse
 
 from ..forms import ConsignmentdetailaddForm, EnquirynoteaddForm, EnquirynotevehicleForm
 from ..models import Vehicle_allotmentInfo, User_extInfo, TripdetailInfo, ConsignmentdetailInfo, EnquirynoteInfo, \
-    Enquirynotevehicle, VehiclemasterInfo, Tripstatusinfo, DeletionLog, Trip_closure_files_Info
+    Enquirynotevehicle, VehiclemasterInfo, Tripstatusinfo, DeletionLog, Trip_closure_files_Info, TripAttachmentInfo
+from django.urls import reverse
 from ..sub_models.trans_invoice_mod import TransInvoiceInfo
 from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
 from django.shortcuts import render, redirect
@@ -325,6 +326,12 @@ def enquirynote_list(request):
     ).only('id_tripnumber', 'id_pod_doc')
     inv_pod_map = {i.id_tripnumber: i.id_pod_doc for i in inv_docs if i.id_pod_doc and i.id_pod_doc.name}
 
+    attachment_trips = set(
+        TripAttachmentInfo.objects.filter(
+            ta_tripnumber__in=trip_numbers
+        ).values_list('ta_tripnumber', flat=True).distinct()
+    )
+
     consignment_pod_map = {}
     trip_pod_map = {}
     pod_dict = {}
@@ -338,17 +345,20 @@ def enquirynote_list(request):
             pod_file = inv_pod_map[trip.tr_tripnumber]
         elif trip.tr_tripnumber and trip.tr_tripnumber in closure_pod_map:
             pod_file = closure_pod_map[trip.tr_tripnumber]
+        elif trip.tr_tripnumber and trip.tr_tripnumber in attachment_trips:
+            pod_file = True
         elif trip.tc_pod_attachment and trip.tc_pod_attachment.name:
             pod_file = trip.tc_pod_attachment
         elif trip.td_pod and trip.td_pod.name:
             pod_file = trip.td_pod
 
-        if pod_file and hasattr(pod_file, 'url'):
+        if pod_file:
             try:
-                url = pod_file.url
                 veh_num = trip.tr_vehiclenumber or trip.tr_tripnumber or "POD"
+                url = reverse('view_combined_pod', kwargs={'trip_num': trip.tr_tripnumber}) if trip.tr_tripnumber else (pod_file.url if hasattr(pod_file, 'url') else '#')
                 pod_info = {
                     'trip_id': trip.id,
+                    'trip_num': trip.tr_tripnumber,
                     'veh_number': veh_num,
                     'url': url
                 }

@@ -444,10 +444,24 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                         busy_enquiry = trip_item.tr_enquirynumber.en_enquirynumber if trip_item.tr_enquirynumber else str(trip_item.tr_enquirynumber_id)
                         break
 
-            if is_busy:
-                messages.error(
+            # 🚫 DOUBLE-SUBMISSION / RACE CONDITION GUARD (Last 15 seconds check)
+            from datetime import timedelta
+            from django.utils import timezone
+
+            fifteen_sec_ago = timezone.now() - timedelta(seconds=15)
+            recent_duplicate = Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber_id=enquiry_id,
+                va_created_at__gte=fifteen_sec_ago
+            )
+            if vehicle_source in [1, 2] and obj.va_vehiclenumber:
+                recent_duplicate = recent_duplicate.filter(va_vehiclenumber=obj.va_vehiclenumber)
+            elif vehicle_source == 3 and obj.va_vehiclenumber_mkt:
+                recent_duplicate = recent_duplicate.filter(va_vehiclenumber_mkt__iexact=obj.va_vehiclenumber_mkt.strip())
+
+            if recent_duplicate.exists():
+                messages.warning(
                     request,
-                    f"This vehicle is currently allotted to another active trip/enquiry ({busy_enquiry}) and the trip has not been closed."
+                    "⚠️ Duplicate submission detected. Vehicle allotment was already processed."
                 )
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
