@@ -304,7 +304,13 @@ def tripclosure_add(request, tripclosure_id=0):
             if tripclosure_form.is_valid():
                 tripclosure_form.save()
                 print("Trip Closure Main Form Saved")
-                enquiry_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_enquirynumber
+
+                # Sync checked/unchecked charge amounts to any linked TransInvoiceInfo record
+                refreshed_trip = TripdetailInfo.objects.get(pk=tripclosure_id)
+                from .trans_invoice_view import sync_trip_charges_to_invoice
+                sync_trip_charges_to_invoice(refreshed_trip)
+
+                enquiry_num = refreshed_trip.tr_enquirynumber
                 enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
                 tripclosure_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id).values_list(
                     'tc_financestatus', flat=True)

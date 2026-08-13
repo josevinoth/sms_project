@@ -246,15 +246,25 @@
 
 
                 <!-- Charges (trip costs) -->
-                <td>{{ inv.tc_tripcost }}</td>
-                <td>{{ inv.tc_tollcost }}</td>
-                <td>{{ inv.tc_parkingcost }}</td>
-                <td>{{ inv.tc_loadingcost }}</td>
-                <td>{{ inv.tc_unloadingcost }}</td>
-                <td>{{ inv.tc_haltingcost }}</td>
-                <td>{{ inv.tc_weighmentcost }}</td>
-                <td>{{ inv.tc_handlingcost|add:inv.tc_supervisorcost }}</td>
-                <td>{{ inv.tc_cancellation }}</td>
+                <td>{% if inv.tc_tripcost_check %}{{ inv.tc_tripcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if inv.tc_tollcost_check %}{{ inv.tc_tollcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if inv.tc_parkingcost_check %}{{ inv.tc_parkingcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if inv.tc_loadingcost_check %}{{ inv.tc_loadingcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if inv.tc_unloadingcost_check %}{{ inv.tc_unloadingcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if inv.tc_haltingcost_check %}{{ inv.tc_haltingcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if inv.tc_weighmentcost_check %}{{ inv.tc_weighmentcost }}{% else %}0.0{% endif %}</td>
+                <td>
+                    {% if inv.tc_handlingcost_check and inv.tc_supervisorcost_check %}
+                        {{ inv.tc_handlingcost|add:inv.tc_supervisorcost }}
+                    {% elif inv.tc_handlingcost_check %}
+                        {{ inv.tc_handlingcost }}
+                    {% elif inv.tc_supervisorcost_check %}
+                        {{ inv.tc_supervisorcost }}
+                    {% else %}
+                        0.0
+                    {% endif %}
+                </td>
+                <td>{% if inv.tc_cancellation_check %}{{ inv.tc_cancellation }}{% else %}0.0{% endif %}</td>
 
                 <!-- Invoice Documents -->
                 <td class="text-center">

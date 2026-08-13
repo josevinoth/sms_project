@@ -16,6 +16,7 @@ class InvoiceDocumentInfo(models.Model):
     id_weighment_doc = models.FileField(upload_to=invoice_doc_path, null=True, blank=True)
     id_handling_doc = models.FileField(upload_to=invoice_doc_path, null=True, blank=True)
     id_pod_doc = models.FileField(upload_to=invoice_doc_path, null=True, blank=True)
+    id_sell_rate_doc = models.FileField(upload_to=invoice_doc_path, null=True, blank=True)
     id_merged_pdf = models.FileField(upload_to=invoice_doc_path, null=True, blank=True)
     id_status = models.ForeignKey(
         Tripstatusinfo, on_delete=models.SET_NULL, null=True, blank=True

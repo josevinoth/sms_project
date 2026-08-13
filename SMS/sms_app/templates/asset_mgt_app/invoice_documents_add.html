@@ -306,6 +306,21 @@
                                 {% render_field invoice_form.id_pod_doc id="id_pod_doc" class="form-control-file small m-0" style="font-size:0.7rem;" %}
                             </div>
                         </div>
+
+                        <!-- Sell Rate Doc Field -->
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
+                                Sell Rate Doc {% if is_sell_rate_doc_required %}<span class="text-danger font-weight-bold" title="Mandatory because Special Sell > Standard Sell">*</span>{% endif %}
+                                {% if invoice_doc and invoice_doc.id_sell_rate_doc %}<a href="{{ invoice_doc.id_sell_rate_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                            </label>
+                            <div class="w-50">
+                                {% if is_sell_rate_doc_required and not invoice_doc.id_sell_rate_doc %}
+                                    {% render_field invoice_form.id_sell_rate_doc id="id_sell_rate_doc" class="form-control-file small m-0" style="font-size:0.7rem;" required="required" %}
+                                {% else %}
+                                    {% render_field invoice_form.id_sell_rate_doc id="id_sell_rate_doc" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

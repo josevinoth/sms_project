@@ -504,6 +504,19 @@ def invoice_documents_add(request, trip_id):
         for field in files_form.fields:
             files_form.fields[field].required = False
 
+        # Validate Sell Rate Doc if Special Sell > Standard Sell
+        allotment = Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber=trip.tr_enquirynumber
+        ).filter(
+            Q(va_vehiclenumber__vm_registrationnumber=trip.tr_vehiclenumber) |
+            Q(va_vehiclenumber_mkt=trip.tr_vehiclenumber)
+        ).first()
+        if allotment and float(allotment.va_special_sale or 0) > float(allotment.va_sale or 0):
+            has_sell_rate_doc = 'id_sell_rate_doc' in request.FILES or (invoice_doc and invoice_doc.id_sell_rate_doc and not request.POST.get('id_sell_rate_doc-clear'))
+            if not has_sell_rate_doc:
+                messages.error(request, "Sell Rate Doc is mandatory because Special Sell > Standard Sell.")
+                return redirect('invoice_documents_add', trip_id=trip_id)
+
         if invoice_form.is_valid() and settlement_form.is_valid() and files_form.is_valid():
             # Save status change on trip
             trip_obj = settlement_form.save(commit=False)
@@ -585,6 +598,10 @@ def invoice_documents_add(request, trip_id):
             if inv_obj.id_status and trip_obj.tc_financestatus != inv_obj.id_status:
                 trip_obj.tc_financestatus = inv_obj.id_status
                 trip_obj.save()
+
+            # Sync checked/unchecked charge amounts to any linked TransInvoiceInfo record
+            from .trans_invoice_view import sync_trip_charges_to_invoice
+            sync_trip_charges_to_invoice(trip_obj)
 
             # Attempt PDF merge using both record types
             _try_merge_pdfs(inv_obj, files_obj)
@@ -669,6 +686,9 @@ def invoice_documents_add(request, trip_id):
         Q(va_vehiclenumber_mkt=trip.tr_vehiclenumber)
     ).first()
     va_sale = allotment.va_sale if allotment else 0
+    is_sell_rate_doc_required = False
+    if allotment and float(allotment.va_special_sale or 0) > float(allotment.va_sale or 0):
+        is_sell_rate_doc_required = True
 
     return render(request, 'asset_mgt_app/invoice_documents_add.html', {
         'trip': trip,
@@ -682,6 +702,7 @@ def invoice_documents_add(request, trip_id):
             trip.tr_enquirynumber.en_enquirynumber if trip.tr_enquirynumber else ''
         ),
         'va_sale': va_sale,
+        'is_sell_rate_doc_required': is_sell_rate_doc_required,
         'live_customer_ref': (
             trip.tr_consignmentnumber.co_cusrefnum
             if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_cusrefnum

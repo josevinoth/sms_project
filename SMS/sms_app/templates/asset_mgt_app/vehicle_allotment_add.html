@@ -118,6 +118,11 @@
 										<label class="form-label-modern">To</label>
 										<input type="text" class="form-control form-control-modern" value="{{ to_location }}" readonly>
 									</div>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Vehicle Category Requested</label>
+										<input type="text" id="va_vehiclecategory_requested" class="form-control form-control-modern disable_a_href" readonly="readonly">
+										<input type="hidden" id="va_vehiclecategory_id">
+									</div>
 								</div>
 							</div>
 
@@ -259,8 +264,12 @@
 										{% render_field vehicle_allotment_form.va_specialbuy id="va_specialbuy" class="form-control form-control-modern" %}
 									</div>
 									<div class="form-group-modern">
-										<label class="form-label-modern">Sell</label>
-										{% render_field vehicle_allotment_form.va_sale id="va_sale" class="form-control form-control-modern" %}
+										<label class="form-label-modern">Standard Sell</label>
+										{% render_field vehicle_allotment_form.va_sale id="va_sale" class="form-control form-control-modern disable_a_href" readonly="readonly" %}
+									</div>
+									<div class="form-group-modern">
+										<label class="form-label-modern">Special Sell</label>
+										{% render_field vehicle_allotment_form.va_special_sale id="va_special_sale" class="form-control form-control-modern" %}
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Profit %</label>
@@ -392,6 +401,7 @@ function setDateFieldValue(selector, value) {
 
 		market_vehicle_enable_disable();
 		loadAvailableVehicleNumbers(); // Ensure list is loaded on start if values exist
+
 	});
 
 </script>
@@ -437,12 +447,25 @@ function setDateFieldValue(selector, value) {
 			success: function (data) {
 				var vehicles = data.vehicles;
 				var $dropdown = $("#va_vehicletype");
-				$dropdown.empty().append("<option value=''>--Select--</option>");
+				var selectedVal = $dropdown.val() || '{{ vehicle_allotment_form.instance.va_vehicletype_id|default:"" }}';
+				$dropdown.empty().append("<option value='' data-category-id='' data-category-name=''>--Select--</option>");
 				vehicles.forEach(function (v) {
-					$dropdown.append("<option value='" + v.id + "'>" + v.name + "</option>");
+					var isSelected = (selectedVal == v.id) ? "selected" : "";
+					$dropdown.append("<option value='" + v.id + "' data-category-id='" + v.category_id + "' data-category-name='" + v.category_name + "' " + isSelected + ">" + v.name + "</option>");
 				});
+				
+				if (selectedVal) {
+					var selectedOption = $dropdown.find("option:selected");
+					$("#va_vehiclecategory_requested").val(selectedOption.data("category-name") || "");
+					$("#va_vehiclecategory_id").val(selectedOption.data("category-id") || "");
+				}
+
 				$dropdown.off("change").on("change", function () {
 					var vehicleTypeId = $(this).val();
+					var selectedOption = $(this).find("option:selected");
+					$("#va_vehiclecategory_requested").val(selectedOption.data("category-name") || "");
+					$("#va_vehiclecategory_id").val(selectedOption.data("category-id") || "");
+
 					if (vehicleTypeId) {
 						fetchVehicleQuantity(vehicleTypeId);
 					} else {
@@ -582,6 +605,7 @@ function loadVendorBuyRate(isAutoLoad=false) {
     var vehiclePlaced = $('#va_vehicletype_placed').val();
     var selectedType = $('#chk_requested').is(':checked') ? vehicleRequested : vehiclePlaced;
     var vendorId = $('#va_vendor').val();
+    var vehicleCategoryId = $('#va_vehiclecategory_id').val();
 
     if (!vendorId || !selectedType) return;
     $.ajax({
@@ -589,7 +613,8 @@ function loadVendorBuyRate(isAutoLoad=false) {
         data: {
             enquiry_id: "{{ enquiry_num_id }}",
             vendor_id: vendorId,
-            vehicle_id: selectedType
+            vehicle_id: selectedType,
+            vehicle_category_id: vehicleCategoryId
         },
         success: function(data) {
             if (data.standard_buy > 0 || !isAutoLoad) {
@@ -641,6 +666,7 @@ $('#va_vehicletype_placed').on('change', function() {
 }
 });
 function loadVendorSaleRate(checkboxId, isAutoLoad=false) {
+    var vehicleCategoryId = $('#va_vehiclecategory_id').val();
     $.ajax({
         url: '{% url "get_vendor_sale_rate" %}',
         type: 'GET',
@@ -648,7 +674,8 @@ function loadVendorSaleRate(checkboxId, isAutoLoad=false) {
                     enquiry_id: "{{ enquiry_num_id }}",  // ✅ ADD THIS
             checkbox_id: checkboxId,
             vehicle_requested: $('#va_vehicletype').val(),
-            vehicle_placed: $('#va_vehicletype_placed').val()
+            vehicle_placed: $('#va_vehicletype_placed').val(),
+            vehicle_category_id: vehicleCategoryId
         },
         dataType: 'json',
         success: function(data) {
@@ -658,10 +685,14 @@ function loadVendorSaleRate(checkboxId, isAutoLoad=false) {
                 if (!isAutoLoad) {
                     alert("Rate not assigned for this customer");
                     $('#va_sale').val('');
+                    $('#va_special_sale').val('');
                 }
             } else {
                 if (!isAutoLoad || !$('#va_sale').val() || $('#va_sale').val() === "0" || $('#va_sale').val() === "0.0") {
                     $('#va_sale').val(saleRate);
+                }
+                if (!isAutoLoad || !$('#va_special_sale').val() || $('#va_special_sale').val() === "0" || $('#va_special_sale').val() === "0.0") {
+                    $('#va_special_sale').val(saleRate);
                 }
             }
             calculateProfit();
@@ -736,8 +767,8 @@ function loadVendorSaleRate(checkboxId, isAutoLoad=false) {
 </script>
 <script>
 	function calculateProfit() {
-      const buyVal = parseFloat(document.getElementById("va_standardbuy").value) || 0;
-      const sellVal = parseFloat(document.getElementById("va_sale").value) || 0;
+      const buyVal = parseFloat(document.getElementById("va_specialbuy").value) || parseFloat(document.getElementById("va_standardbuy").value) || 0;
+      const sellVal = parseFloat(document.getElementById("va_special_sale").value) || parseFloat(document.getElementById("va_sale").value) || 0;
       const profitField = document.getElementById("va_profit_percentage");
       if (buyVal > 0) {
         const profit = ((sellVal - buyVal) / buyVal) * 100;
@@ -748,7 +779,9 @@ function loadVendorSaleRate(checkboxId, isAutoLoad=false) {
     }
     document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("va_standardbuy").addEventListener("input", calculateProfit);
+      document.getElementById("va_specialbuy").addEventListener("input", calculateProfit);
       document.getElementById("va_sale").addEventListener("input", calculateProfit);
+      document.getElementById("va_special_sale").addEventListener("input", calculateProfit);
     });
 </script>
 <script>
@@ -843,32 +876,31 @@ document.addEventListener("DOMContentLoaded", function() {
 {% block extra_js %}
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <script>
-	$("#va_vehiclenumber").select2({
-       width: 'resolve'
+$(document).ready(function () {
+   $("#va_vehiclenumber").select2({
+       width: '100%'
    });
    $("#va_vendor").select2({
        width: '100%'
    });
+   $("#va_vehicletype_placed").select2({
+       width: '100%'
+   });
    $("#modal_va_vendor").select2({
        width: '100%',
-       dropdownParent: $('#replaceVehicleModal') // Required for Select2 inside modals
+       dropdownParent: $('#replaceVehicleModal')
    });
    $("#modal_va_vehiclenumber").select2({
        width: '100%',
        dropdownParent: $('#replaceVehicleModal')
    });
-</script>
-<script>
-</script>
-<script>
-	$("#va_vehicletype_placed").on("change", function() {
-    loadRouteBuyRates();
+
+   // On select2 select event, update hidden field and trigger both rate loaders
+   $("#va_vehicletype_placed").on('select2:select select2:unselect change', function() {
+       loadVendorBuyRate();
+       if (typeof loadRouteBuyRates === 'function') loadRouteBuyRates();
+   });
 });
-</script>
-<script>
-	$(document).ready(function () {
-		loadRouteBuyRates();
-	});
 </script>
 <script>
 	$("#va_vehiclenumber").change(function () {
@@ -941,7 +973,7 @@ $(function () {
 <script>
 function calculateProfit() {
     const specialBuy = parseFloat($("#va_specialbuy").val()) || 0;
-    const sale = parseFloat($("#va_sale").val()) || 0;
+    const sale = parseFloat($("#va_special_sale").val()) || parseFloat($("#va_sale").val()) || 0;
     if (specialBuy > 0) {
         const profit = ((sale - specialBuy) / specialBuy) * 100;
         $("#va_profit_percentage").val(profit.toFixed(2));
@@ -952,6 +984,7 @@ function calculateProfit() {
 $(document).ready(function () {
     $("#va_specialbuy").on("input", calculateProfit);
     $("#va_sale").on("input", calculateProfit);
+    $("#va_special_sale").on("input", calculateProfit);
 });
 </script>
 <script>
@@ -1182,8 +1215,14 @@ $("#va_vehiclesource").on("change", function () {
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label>Sell</label>
-                                <input type="number" name="va_sale" id="modal_va_sale" class="form-control" value="{{ va.va_sale }}">
+                                <label>Standard Sell</label>
+                                <input type="number" name="va_sale" id="modal_va_sale" class="form-control disable_a_href" readonly value="{{ va.va_sale }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Special Sell</label>
+                                <input type="number" name="va_special_sale" id="modal_va_special_sale" class="form-control" value="{{ va.va_special_sale }}">
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -1327,7 +1366,7 @@ $("#va_vehiclesource").on("change", function () {
     // ---- Replacement Modal Cost Calculation ----
     function calculateModalProfit() {
         const specialBuy = parseFloat($("#modal_va_specialbuy").val()) || 0;
-        const sale = parseFloat($("#modal_va_sale").val()) || 0;
+        const sale = parseFloat($("#modal_va_special_sale").val()) || parseFloat($("#modal_va_sale").val()) || 0;
         if (specialBuy > 0) {
             const profit = ((sale - specialBuy) / specialBuy) * 100;
             $("#modal_va_profit_percentage").val(profit.toFixed(2));
@@ -1335,7 +1374,7 @@ $("#va_vehiclesource").on("change", function () {
             $("#modal_va_profit_percentage").val("0.00");
         }
     }
-    $("#modal_va_specialbuy, #modal_va_sale").on("input", calculateModalProfit);
+    $("#modal_va_specialbuy, #modal_va_sale, #modal_va_special_sale").on("input", calculateModalProfit);
 
     function loadModalVendorOptions(selectedVendorId = null) {
         $.ajax({
@@ -1439,17 +1478,14 @@ $("#va_vehiclesource").on("change", function () {
             $("#modal_vendor_star").show();
             $("#modal_va_vendor").prop('required', true).prop('disabled', false).removeClass('disable_a_href').trigger('change.select2');
             $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
-            $("#modal_va_sale").prop('disabled', false).removeClass('disable_a_href');
         } else if (source == "2") { // Attached
             $("#modal_vendor_star").show();
             $("#modal_va_vendor").prop('required', false).prop('disabled', false).removeClass('disable_a_href').trigger('change.select2');
             $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
-            $("#modal_va_sale").prop('disabled', true).addClass('disable_a_href');
         } else { // Own
             $("#modal_vendor_star").hide();
             $("#modal_va_vendor").val("").prop('required', false).prop('disabled', true).addClass('disable_a_href').trigger('change.select2');
             $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
-            $("#modal_va_sale").prop('disabled', true).addClass('disable_a_href');
         }
     });
 

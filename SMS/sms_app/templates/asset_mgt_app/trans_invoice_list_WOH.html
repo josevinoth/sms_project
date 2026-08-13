@@ -145,15 +145,25 @@
                 {% endwith %}
 
                 <!-- ================= CHARGES ================= -->
-                <td>{{ trip.tc_tripcost }}</td>
-                <td>{{ trip.tc_tollcost }}</td>
-                <td>{{ trip.tc_parkingcost }}</td>
-                <td>{{ trip.tc_loadingcost }}</td>
-                <td>{{ trip.tc_unloadingcost }}</td>
-                <td>{{ trip.tc_haltingcost }}</td>
-                <td>{{ trip.tc_weighmentcost }}</td>
-                <td>{{ trip.tc_handlingcost|add:trip.tc_supervisorcost }}</td>
-                <td>{{ trip.tc_cancellation }}</td>
+                <td>{% if trip.tc_tripcost_check %}{{ trip.tc_tripcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if trip.tc_tollcost_check %}{{ trip.tc_tollcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if trip.tc_parkingcost_check %}{{ trip.tc_parkingcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if trip.tc_loadingcost_check %}{{ trip.tc_loadingcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if trip.tc_unloadingcost_check %}{{ trip.tc_unloadingcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if trip.tc_haltingcost_check %}{{ trip.tc_haltingcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if trip.tc_weighmentcost_check %}{{ trip.tc_weighmentcost }}{% else %}0.0{% endif %}</td>
+                <td>
+                    {% if trip.tc_handlingcost_check and trip.tc_supervisorcost_check %}
+                        {{ trip.tc_handlingcost|add:trip.tc_supervisorcost }}
+                    {% elif trip.tc_handlingcost_check %}
+                        {{ trip.tc_handlingcost }}
+                    {% elif trip.tc_supervisorcost_check %}
+                        {{ trip.tc_supervisorcost }}
+                    {% else %}
+                        0.0
+                    {% endif %}
+                </td>
+                <td>{% if trip.tc_cancellation_check %}{{ trip.tc_cancellation }}{% else %}0.0{% endif %}</td>
 
                 <!-- ================= Invoice Documents ================= -->
                 <td class="text-center">

@@ -567,6 +567,8 @@ urlpatterns = [
          name='vehicle_allotment_replace'),
     path('vehicle_allotment_driver_replace/<int:allotment_id>/', views.vehicle_allotment_driver_replace,
          name='vehicle_allotment_driver_replace'),
+    path('sell_rate_approval_list/', views.sell_rate_approval_list, name='sell_rate_approval_list'),
+    path('approve_sell_rate/<int:va_id>/', views.approve_sell_rate, name='approve_sell_rate'),
 
     path('search/', views.get_queryset, name='search'),  # View Gate-in search
     path('pre_gatein_search/', views.pre_gatein_search, name='pre_gatein_search'),  # View pre Gate-in search
