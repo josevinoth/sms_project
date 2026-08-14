@@ -26,6 +26,78 @@ from ..models import EnquirynoteInfo
 from django.core.paginator import Paginator
 
 
+def get_allotment_sale_rate(trip):
+    """
+    Match Enquiry Number and Vehicle Number in Vehicle_allotmentInfo.
+    Pull cost from Special Sell (va_special_sale) first, fallback to Standard Sell (va_sale).
+    If allotment rates are missing/0, fallback to Route Rate Master (RtratemasterInfo).
+    """
+    if not trip or not trip.tr_enquirynumber:
+        return 0.0
+
+    allotments = Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber=trip.tr_enquirynumber
+    ).select_related('va_vehiclenumber')
+
+    target_veh = (trip.tr_vehiclenumber or '').strip().replace(' ', '').replace('-', '').upper()
+
+    # 1. Match by Enquiry Number + Vehicle Number in Allotments
+    if allotments.exists() and target_veh:
+        for a in allotments:
+            reg = ''
+            if a.va_vehiclenumber and getattr(a.va_vehiclenumber, 'vm_registrationnumber', None):
+                reg = a.va_vehiclenumber.vm_registrationnumber.strip().replace(' ', '').replace('-', '').upper()
+            elif a.va_vehiclenumber_mkt:
+                reg = a.va_vehiclenumber_mkt.strip().replace(' ', '').replace('-', '').upper()
+
+            if reg and reg == target_veh:
+                if a.va_special_sale is not None and float(a.va_special_sale) > 0:
+                    return float(a.va_special_sale)
+                if a.va_sale is not None and float(a.va_sale) > 0:
+                    return float(a.va_sale)
+
+    # 2. Fallback: match any allotment for this enquiry that has va_special_sale or va_sale
+    if allotments.exists():
+        for a in allotments:
+            if a.va_special_sale is not None and float(a.va_special_sale) > 0:
+                return float(a.va_special_sale)
+            if a.va_sale is not None and float(a.va_sale) > 0:
+                return float(a.va_sale)
+
+    # 3. Fallback: Query Route Rate Master (RtratemasterInfo) for this Enquiry + Vehicle Type
+    enquiry = trip.tr_enquirynumber
+    from_loc_id = getattr(trip, 'tr_departedlocation_id', None) or getattr(enquiry, 'en_fromlocaion_id', None)
+    to_loc_id = getattr(trip, 'tr_reportedlocation_id', None) or getattr(enquiry, 'en_tolocation_id', None)
+    vt_id = getattr(trip, 'tr_vehicletype_placed_id', None) or getattr(trip, 'tr_vehicletype_id', None) or getattr(enquiry, 'en_vehicledetails_id', None)
+    customer = getattr(enquiry, 'en_customername', None)
+    dept = getattr(enquiry, 'en_customerdepartment', None)
+
+    if from_loc_id and to_loc_id and customer:
+        rate_filter = {
+            'ro_customer': customer,
+            'ro_fromlocation_id': from_loc_id,
+            'ro_tolocation_id': to_loc_id,
+        }
+        if vt_id:
+            rate_filter['ro_vehicletype_id'] = vt_id
+
+        if dept:
+            dept_filter = dict(rate_filter)
+            dept_filter['ro_customerdepartment'] = dept
+            rt_match = RtratemasterInfo.objects.filter(**dept_filter).first()
+            if rt_match and rt_match.ro_rate:
+                return float(rt_match.ro_rate)
+
+        rt_match = RtratemasterInfo.objects.filter(**rate_filter).first()
+        if rt_match and rt_match.ro_rate:
+            return float(rt_match.ro_rate)
+
+    return 0.0
+
+
+
+
+
 @login_required(login_url='login_page')
 def tripclosure_enquiry(request, enquiry_id, trip_num):
     # Fetch the enquiry object (optional - only needed if you want to verify or log it)
@@ -209,14 +281,8 @@ def tripclosure_add(request, tripclosure_id=0):
             )
             status_list = list(Tripstatusinfo.objects.filter(id__in=[4, 5, 6, 7]))
 
-            # Fetch Sell value from allotment
-            allotment = Vehicle_allotmentInfo.objects.filter(
-                va_enquirynumber=trip.tr_enquirynumber
-            ).filter(
-                Q(va_vehiclenumber__vm_registrationnumber=trip.tr_vehiclenumber) |
-                Q(va_vehiclenumber_mkt=trip.tr_vehiclenumber)
-            ).first()
-            va_sale = allotment.va_sale if (allotment and allotment.va_sale is not None) else 0.0
+            # Fetch Sell value robustly from allotment
+            va_sale = get_allotment_sale_rate(trip)
 
             # Pre-populate Trip Charges from va_sale if currently zero
             if not trip.tc_tripcost or trip.tc_tripcost == 0.0:
@@ -574,26 +640,30 @@ def transport_calculate_trip_charges(request):
     # vehicle_category_id=EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_vehiclecategory
 
     if trip_category_id == '1':
-        # Retrieve RoRateInfo based on the selected values
-        try:
-            ro_rate = RtratemasterInfo.objects.get(
+        # Retrieve RoRateInfo with department, then fallback without department
+        rate_obj = RtratemasterInfo.objects.filter(
+            ro_fromlocation=from_location_id,
+            ro_tolocation=to_location_id,
+            ro_vehicletype=vehicle_type_id,
+            ro_customer=customer_id,
+            ro_customerdepartment=customer_department_id,
+        ).first()
+        if not rate_obj:
+            rate_obj = RtratemasterInfo.objects.filter(
                 ro_fromlocation=from_location_id,
                 ro_tolocation=to_location_id,
                 ro_vehicletype=vehicle_type_id,
                 ro_customer=customer_id,
-                ro_customerdepartment=customer_department_id,
-                # ro_vehiclecategory_id=vehicle_category_id
-            ).ro_rate
-            print('ro_rate', ro_rate)
-            return JsonResponse({'ro_rate': ro_rate})
+            ).first()
 
-        except RtratemasterInfo.DoesNotExist:
-            print("Doest not exist")
-            # Handle the case where the RoRateInfo does not exist
+        if rate_obj and rate_obj.ro_rate:
+            return JsonResponse({'ro_rate': rate_obj.ro_rate})
+        else:
             return JsonResponse({'ro_rate': 0})
     else:
         # Return 100 if trip_category is not 1
         return JsonResponse({'ro_rate': 100})
+
 
 
 @csrf_exempt

@@ -47,16 +47,6 @@
         </select>
     </div>
 
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Vehicle Type</label>
-        <select name="vehicle_type" class="form-control select2">
-            <option value="">Select Vehicle Type</option>
-            {% for vt in vehicle_types %}
-            <option value="{{ vt.id }}" {% if vt.id == vehicle_type_id %}selected{% endif %}>{{ vt.vt_vehicletype }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
 
     <div class="col-md-2">
         <label class="form-label fw-bold">Vehicle No</label>
@@ -212,24 +202,16 @@
             
             if (vendorId) {
                 $.ajax({
-                    url: "{% url 'get_vehicles_by_vendor' %}",
+                    url: "{% url 'get_pl_vehicles_by_vendor' %}",
                     data: { 'vendor_id': vendorId },
                     success: function (data) {
-                        if (data.vehicles && data.vehicles.length > 0) {
-                            $.each(data.vehicles, function (index, vehicle) {
-                                // For P&L report, the value is the registration number, not the ID
-                                $vehicleSelect.append('<option value="' + vehicle.reg_no + '">' + vehicle.reg_no + '</option>');
-                            });
-                        } else if (Array.isArray(data)) {
-                            // Fallback if data is just a flat list of strings
-                            $.each(data, function(index, regNo) {
-                                $vehicleSelect.append('<option value="' + regNo + '">' + regNo + '</option>');
-                            });
-                        }
-                        $vehicleSelect.trigger('change');
+                        $.each(data, function(index, regNo) {
+                            $vehicleSelect.append('<option value="' + regNo + '">' + regNo + '</option>');
+                        });
+                        $vehicleSelect.trigger('change.select2');
                     },
                     error: function() {
-                        $vehicleSelect.trigger('change');
+                        $vehicleSelect.trigger('change.select2');
                     }
                 });
             } else {
@@ -254,7 +236,6 @@ $(document).ready(function () {
             data: function (d) {
                 d.vendor_id = $('#vendor_select').val();
                 d.veh_no = $('#vehicle_number').val();
-                d.vehicle_type = $('select[name="vehicle_type"]').val();
                 d.date_from = $('input[name="date_from"]').val();
                 d.date_to = $('input[name="date_to"]').val();
                 d.from_location = $('select[name="from_location"]').val();
