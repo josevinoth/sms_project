@@ -235,7 +235,7 @@
 
               <div class="form-group-modern">
                 <label class="form-label-modern fw-bold">Total Charges</label>
-                <input type="text" id="id_ti_total" name="ti_total" class="form-control form-control-modern" value="{{ total_charges }}" readonly>
+                <input type="text" id="id_ti_total" name="ti_total" class="form-control form-control-modern" value="{{ total_charges|floatformat:2 }}" readonly>
               </div>
 
             </div>
@@ -283,6 +283,7 @@
             <th>Dept</th>
             <th>Veh No</th>
             <th>Veh Type</th>
+            <th>Veh Category</th>
             <th>Consignee</th>
             <th>Reference No</th>
             <th>HAWB No</th>
@@ -315,6 +316,7 @@
             <td>{{ inv.ti_department|default:"-" }}</td>
             <td>{{ inv.ti_trip.tr_vehiclenumber|default:"-" }}</td>
             <td>{{ inv.ti_trip.tr_vehicletype|default:"-" }}</td>
+            <td>{{ inv.ti_trip.vehicle_category|default:"-" }}</td>
             {% with goods=inv.ti_goods %}
             <td>{% if goods %}{{ goods.cg_consignee }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
             <td>{% if inv.ti_consignment %}{{ inv.ti_consignment.co_cusrefnum }}{% else %}<span

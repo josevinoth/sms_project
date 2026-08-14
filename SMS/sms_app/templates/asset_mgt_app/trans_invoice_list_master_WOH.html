@@ -73,6 +73,7 @@
 
                 <th><input class="form-control filter-input" placeholder="Search Veh No"></th>
                 <th><input class="form-control filter-input" placeholder="Search Veh Type"></th>
+                <th><input class="form-control filter-input" placeholder="Search Veh Category"></th>
 
                 <!-- <th><input class="form-control filter-input" placeholder="Search Veh Placed Date & Time"></th>
     <th><input class="form-control filter-input" placeholder="Search Veh Released Date & Time"></th>
@@ -126,6 +127,7 @@
 
                 <th>Veh No</th>
                 <th>Veh Type</th>
+                <th>Veh Category</th>
 
                 <!--   <th>Veh Placed Date & Time</th>
             <th>Veh Released Date & Time</th>
@@ -196,6 +198,9 @@
 
                 <!-- Vehicle Type -->
                 <td>{{ inv.tr_vehicletype }}</td>
+
+                <!-- Vehicle Category -->
+                <td>{{ inv.vehicle_category|default:"-" }}</td>
 
                 {% with goods=inv.tr_consignmentnumber.cg_consignmentnumber.first %}
                 <!-- Consignee -->
