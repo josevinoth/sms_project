@@ -1985,9 +1985,10 @@ def invoice_pending_report_view(request):
 @login_required(login_url='login_page')
 def invoice_pending_report_ajax_view(request):
     """Server-side DataTables AJAX endpoint for Invoice Pending Report (Synced)."""
-    from ..models import TransInvoiceInfo, ConsignmentgoodsInfo
+    from ..models import TransInvoiceInfo, ConsignmentgoodsInfo, Vehicle_allotmentInfo
     from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
     from django.http import JsonResponse
+    from collections import defaultdict
 
     # DataTables params
     draw = int(request.GET.get('draw', 1))
@@ -2038,7 +2039,7 @@ def invoice_pending_report_ajax_view(request):
     # -------------------------
     trips = TripdetailInfo.objects.filter(
         tr_category_id=1,
-        tr_departeddate_pickup__date__gte='2026-06-01'
+        tr_departeddate__date__gte='2026-06-01'
     ).filter(
         Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') |
         Q(tr_consignmentnumber__co_consignmentnumber__icontains='BLR')
@@ -2093,10 +2094,10 @@ def invoice_pending_report_ajax_view(request):
         trips = trips.filter(tr_enquirynumber__en_customerdepartment_id=dept_id)
 
     if from_date:
-        trips = trips.filter(tr_departeddate_pickup__date__gte=from_date)
+        trips = trips.filter(tr_departeddate__date__gte=from_date)
 
     if to_date:
-        trips = trips.filter(tr_departeddate_pickup__date__lte=to_date)
+        trips = trips.filter(tr_departeddate__date__lte=to_date)
 
     if from_loc_id:
         trips = trips.filter(tr_departedlocation_id=from_loc_id)
@@ -2196,6 +2197,16 @@ def invoice_pending_report_ajax_view(request):
     invoice_docs = InvoiceDocumentInfo.objects.filter(id_tripnumber__in=trip_numbers).select_related('id_status')
     invoice_doc_map = {doc.id_tripnumber: doc.id_status.status for doc in invoice_docs if doc.id_status}
 
+    # Bulk-fetch allotments for current page
+    enquiry_ids = [t.tr_enquirynumber_id for t in trips_slice if t.tr_enquirynumber_id]
+    allotments = Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber_id__in=enquiry_ids
+    ).select_related('va_vehicletype', 'va_vehicletype_placed', 'va_vehiclenumber')
+    
+    allotment_map = defaultdict(list)
+    for a in allotments:
+        allotment_map[a.va_enquirynumber_id].append(a)
+
     # -------------------------
     # Build data rows
     # -------------------------
@@ -2213,13 +2224,41 @@ def invoice_pending_report_ajax_view(request):
         elif 'BLR' in cnote_str:
             branch_name = 'BLR'
 
-        # Date selection logic (strictly using tr_departeddate_pickup as the planning date)
-        display_date = timezone.localtime(trip.tr_departeddate_pickup).strftime("%d-%m-%Y") if trip.tr_departeddate_pickup else ""
+        # Date selection logic (strictly using tr_departeddate as the planning date, which is started date at loading point)
+        display_date = timezone.localtime(trip.tr_departeddate).strftime("%d-%m-%Y") if trip.tr_departeddate else ""
 
         if trip.id in all_invoiced_ids:
             trip_status_display = "Invoice Completed"
         else:
             trip_status_display = safe_str(trip.tc_financestatus) if trip.tc_financestatus else "-"
+
+        # Determine Veh Type from allotment checkboxes
+        veh_type_str = safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype)
+        if trip.tr_enquirynumber_id in allotment_map:
+            al_list = allotment_map[trip.tr_enquirynumber_id]
+            allotment = None
+            if trip.tr_vehiclenumber:
+                clean_veh = str(trip.tr_vehiclenumber).replace(" ", "").upper()
+                for a in al_list:
+                    a_veh = ""
+                    if a.va_vehiclenumber:
+                        a_veh = str(a.va_vehiclenumber.vm_registrationnumber)
+                    elif a.va_vehiclenumber_mkt:
+                        a_veh = str(a.va_vehiclenumber_mkt)
+                        
+                    if a_veh.replace(" ", "").upper() == clean_veh:
+                        allotment = a
+                        break
+                if not allotment and al_list:
+                    allotment = al_list[0]
+            elif al_list:
+                allotment = al_list[0]
+                
+            if allotment:
+                if allotment.va_vehicletype_selection_placed:
+                    veh_type_str = safe_str(allotment.va_vehicletype_placed.vt_vehicletype) if allotment.va_vehicletype_placed else veh_type_str
+                elif allotment.va_vehicletype_selection_requested:
+                    veh_type_str = safe_str(allotment.va_vehicletype.vt_vehicletype) if allotment.va_vehicletype else veh_type_str
 
         data.append([
             idx,
@@ -2231,7 +2270,7 @@ def invoice_pending_report_ajax_view(request):
             safe_str(trip.tr_reportedlocation),
             safe_str(trip.tr_enquirynumber.en_customerdepartment) if trip.tr_enquirynumber else "",
             safe_str(trip.tr_vehiclenumber),
-            safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype),
+            veh_type_str,
             safe_str(trip.tr_vehiclesource.ow_ownership) if trip.tr_vehiclesource else "",
             safe_str(goods.cg_consignee) if goods else "",
             safe_num(goods.cg_qty) if goods else 0,
