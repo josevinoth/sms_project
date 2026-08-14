@@ -2370,12 +2370,9 @@ def vendor_p_l_mkt_report_ajax_view(request):
 
     # BASE TRIPS
     trips = TripdetailInfo.objects.filter(
-        tc_financestatus_id__in=[2, 7, 9],
+        tc_financestatus_id__in=[2, 4, 5, 6, 7, 9],
         tr_vehiclesource_id=3,  # 3 = MARKET
-    ).filter(
-        Q(tr_category_id=1, tr_departeddate__isnull=False) |
-        Q(tr_category_id__in=[2, 3])
-    ).select_related(
+    ).exclude(tr_category_id__in=[2, 3]).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -2533,35 +2530,34 @@ def vendor_p_l_mkt_report_ajax_view(request):
     # We will use start + idx for serial number
     for idx, trip in enumerate(trips_list, start=1):
         inv = invoice_obj_map.get(trip.id)
-        selling_trip = (safe_num(inv.ti_transportation_charges) if inv else (safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0.0))
-
-        if trip.tr_vehiclesource_id == 3:  # MARKET
-            selling_toll = (safe_num(inv.ti_toll_charges) if inv else (safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0.0))
-            selling_aai = (safe_num(inv.ti_docket_charges) if inv else (safe_num(trip.tc_supervisorcost) if trip.tc_supervisorcost_check else 0.0))
-            selling_loading = (safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0.0))
-            selling_unloading = (safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0.0))
-            selling_weighment = (safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0.0))
-            selling_halting = (safe_num(inv.ti_halting_charges) if inv else ((safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0)))
-            selling_handling = (safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0.0))
-            selling_parking = (safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0.0))
+        selling_trip = safe_num(inv.ti_transportation_charges) if inv else (safe_num(trip.tc_tripcost) if getattr(trip, 'tc_tripcost_check', True) else 0.0)
+        selling_toll = safe_num(inv.ti_toll_charges) if inv else (safe_num(trip.tc_tollcost) if getattr(trip, 'tc_tollcost_check', True) else 0.0)
+        selling_parking = safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if getattr(trip, 'tc_parkingcost_check', True) else 0.0)
+        selling_loading = safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if getattr(trip, 'tc_loadingcost_check', True) else 0.0)
+        selling_unloading = safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if getattr(trip, 'tc_unloadingcost_check', True) else 0.0)
+        selling_weighment = safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if getattr(trip, 'tc_weighmentcost_check', True) else 0.0)
+        selling_handling = safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if getattr(trip, 'tc_handlingcost_check', True) else 0.0)
+        
+        halting_days = safe_num(trip.tc_no_of_days_halting)
+        if inv:
+            selling_halting = safe_num(inv.ti_halting_charges)
+        elif getattr(trip, 'tc_total_halting_cost_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
+            selling_halting = safe_num(trip.tc_total_halting_cost)
+        elif getattr(trip, 'tc_haltingcost_check', False) and safe_num(trip.tc_haltingcost) > 0:
+            selling_halting = safe_num(trip.tc_haltingcost) * halting_days
         else:
-            selling_toll = (safe_num(inv.ti_toll_charges) if inv else (safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0.0))
-            selling_aai = (safe_num(inv.ti_docket_charges) if inv else (safe_num(trip.tc_supervisorcost) if trip.tc_supervisorcost_check else 0.0))
-            selling_loading = (safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0.0))
-            selling_unloading = (safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0.0))
-            selling_weighment = (safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0.0))
-            selling_halting = (safe_num(inv.ti_halting_charges) if inv else ((safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0)))
-            selling_handling = (safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0.0))
-            selling_parking = (safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0.0))
-
+            selling_halting = 0.0
+            
+        selling_aai = safe_num(inv.ti_docket_charges) if inv else (safe_num(trip.tc_supervisorcost) if getattr(trip, 'tc_supervisorcost_check', True) else 0.0)
+        selling_rto = safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0
+        selling_beta = safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_check', True) else 0.0
+        selling_cancellation = safe_num(inv.ti_cancellation_charges) if inv else (safe_num(trip.tc_cancellation) if getattr(trip, 'tc_cancellation_check', True) else 0.0)
+        
         total_selling = (
-                selling_trip + selling_toll +
-                selling_loading + selling_unloading +
-                selling_weighment + selling_halting +
-                selling_handling + selling_parking +
-                (safe_num(trip.tc_rtocost) if trip.tc_rtocost_check else 0.0) +
-                (safe_num(trip.tc_betacost) if trip.tc_betacost_check else 0.0) +
-                (safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0.0)
+                selling_trip + selling_toll + selling_parking + selling_loading +
+                selling_unloading + selling_weighment + selling_handling +
+                selling_halting + selling_aai + selling_rto +
+                selling_beta + selling_cancellation
         )
 
         allotment = allotment_map.get((trip.tr_enquirynumber_id, trip.tr_vehiclenumber))
@@ -2816,12 +2812,9 @@ def vendor_p_l_attached_report_ajax_view(request):
     all_invoiced_ids = set(invoiced_trip_ids + trips_from_cons + trips_from_goods)
 
     trips = TripdetailInfo.objects.filter(
-        tc_financestatus_id__in=[2, 7, 9],
+        tc_financestatus_id__in=[2, 4, 5, 6, 7, 9],
         tr_vehiclesource_id=2,  # 2 = ATTACHED
-    ).filter(
-        Q(tr_category_id=1, tr_departeddate__isnull=False) |
-        Q(tr_category_id__in=[2, 3])
-    ).select_related(
+    ).exclude(tr_category_id__in=[2, 3]).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -3016,24 +3009,38 @@ def vendor_p_l_attached_report_ajax_view(request):
             continue
 
         if trip.tr_category_id in [2, 3]:
-            selling_trip = 0.0
+            selling_trip = selling_toll = selling_aai = selling_loading = selling_unloading = 0.0
+            selling_weighment = selling_halting = selling_handling = selling_parking = 0.0
+            selling_rto = selling_beta = selling_cancellation = 0.0
         else:
-            selling_trip = safe_num(inv.ti_transportation_charges) if inv else (safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0.0)
-        selling_toll = safe_num(inv.ti_toll_charges) if inv else (safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0.0)
-        selling_aai = safe_num(inv.ti_docket_charges) if inv else (safe_num(trip.tc_supervisorcost) if trip.tc_supervisorcost_check else 0.0)
-        selling_loading = safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0.0)
-        selling_unloading = safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0.0)
-        selling_weighment = safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0.0)
-        selling_halting = safe_num(inv.ti_halting_charges) if inv else ((safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0))
-        selling_handling = safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0.0)
-        selling_parking = safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0.0)
+            selling_trip = safe_num(inv.ti_transportation_charges) if inv else (safe_num(trip.tc_tripcost) if getattr(trip, 'tc_tripcost_check', True) else 0.0)
+            selling_toll = safe_num(inv.ti_toll_charges) if inv else (safe_num(trip.tc_tollcost) if getattr(trip, 'tc_tollcost_check', True) else 0.0)
+            selling_parking = safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if getattr(trip, 'tc_parkingcost_check', True) else 0.0)
+            selling_loading = safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if getattr(trip, 'tc_loadingcost_check', True) else 0.0)
+            selling_unloading = safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if getattr(trip, 'tc_unloadingcost_check', True) else 0.0)
+            selling_weighment = safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if getattr(trip, 'tc_weighmentcost_check', True) else 0.0)
+            selling_handling = safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if getattr(trip, 'tc_handlingcost_check', True) else 0.0)
+            
+            halting_days = safe_num(trip.tc_no_of_days_halting)
+            if inv:
+                selling_halting = safe_num(inv.ti_halting_charges)
+            elif getattr(trip, 'tc_total_halting_cost_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
+                selling_halting = safe_num(trip.tc_total_halting_cost)
+            elif getattr(trip, 'tc_haltingcost_check', False) and safe_num(trip.tc_haltingcost) > 0:
+                selling_halting = safe_num(trip.tc_haltingcost) * halting_days
+            else:
+                selling_halting = 0.0
+                
+            selling_aai = safe_num(inv.ti_docket_charges) if inv else (safe_num(trip.tc_supervisorcost) if getattr(trip, 'tc_supervisorcost_check', True) else 0.0)
+            selling_rto = safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0
+            selling_beta = safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_check', True) else 0.0
+            selling_cancellation = safe_num(inv.ti_cancellation_charges) if inv else (safe_num(trip.tc_cancellation) if getattr(trip, 'tc_cancellation_check', True) else 0.0)
 
         total_selling = (
-                selling_trip + selling_toll + selling_aai + selling_loading + selling_unloading +
-                selling_weighment + selling_halting + selling_handling + selling_parking +
-                (safe_num(trip.tc_rtocost) if trip.tc_rtocost_check else 0.0) +
-                (safe_num(trip.tc_betacost) if trip.tc_betacost_check else 0.0) +
-                (safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0.0)
+                selling_trip + selling_toll + selling_parking + selling_loading +
+                selling_unloading + selling_weighment + selling_handling +
+                selling_halting + selling_aai + selling_rto +
+                selling_beta + selling_cancellation
         )
 
         buying_trip_cost = 0.0
@@ -3248,24 +3255,38 @@ def vendor_p_l_attached_report_ajax_view(request):
             continue
 
         if trip.tr_category_id in [2, 3]:
-            selling_trip = 0.0
+            selling_trip = selling_toll = selling_aai = selling_loading = selling_unloading = 0.0
+            selling_weighment = selling_halting = selling_handling = selling_parking = 0.0
+            selling_rto = selling_beta = selling_cancellation = 0.0
         else:
-            selling_trip = safe_num(inv.ti_transportation_charges) if inv else (safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0.0)
-        selling_toll = safe_num(inv.ti_toll_charges) if inv else (safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0.0)
-        selling_aai = safe_num(inv.ti_docket_charges) if inv else (safe_num(trip.tc_supervisorcost) if trip.tc_supervisorcost_check else 0.0)
-        selling_loading = safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0.0)
-        selling_unloading = safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0.0)
-        selling_weighment = safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0.0)
-        selling_halting = safe_num(inv.ti_halting_charges) if inv else ((safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0))
-        selling_handling = safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0.0)
-        selling_parking = safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0.0)
+            selling_trip = safe_num(inv.ti_transportation_charges) if inv else (safe_num(trip.tc_tripcost) if getattr(trip, 'tc_tripcost_check', True) else 0.0)
+            selling_toll = safe_num(inv.ti_toll_charges) if inv else (safe_num(trip.tc_tollcost) if getattr(trip, 'tc_tollcost_check', True) else 0.0)
+            selling_parking = safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if getattr(trip, 'tc_parkingcost_check', True) else 0.0)
+            selling_loading = safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if getattr(trip, 'tc_loadingcost_check', True) else 0.0)
+            selling_unloading = safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if getattr(trip, 'tc_unloadingcost_check', True) else 0.0)
+            selling_weighment = safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if getattr(trip, 'tc_weighmentcost_check', True) else 0.0)
+            selling_handling = safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if getattr(trip, 'tc_handlingcost_check', True) else 0.0)
+            
+            halting_days = safe_num(trip.tc_no_of_days_halting)
+            if inv:
+                selling_halting = safe_num(inv.ti_halting_charges)
+            elif getattr(trip, 'tc_total_halting_cost_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
+                selling_halting = safe_num(trip.tc_total_halting_cost)
+            elif getattr(trip, 'tc_haltingcost_check', False) and safe_num(trip.tc_haltingcost) > 0:
+                selling_halting = safe_num(trip.tc_haltingcost) * halting_days
+            else:
+                selling_halting = 0.0
+                
+            selling_aai = safe_num(inv.ti_docket_charges) if inv else (safe_num(trip.tc_supervisorcost) if getattr(trip, 'tc_supervisorcost_check', True) else 0.0)
+            selling_rto = safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0
+            selling_beta = safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_check', True) else 0.0
+            selling_cancellation = safe_num(inv.ti_cancellation_charges) if inv else (safe_num(trip.tc_cancellation) if getattr(trip, 'tc_cancellation_check', True) else 0.0)
 
         total_selling = (
-                selling_trip + selling_toll + selling_aai + selling_loading + selling_unloading +
-                selling_weighment + selling_halting + selling_handling + selling_parking +
-                (safe_num(trip.tc_rtocost) if trip.tc_rtocost_check else 0.0) +
-                (safe_num(trip.tc_betacost) if trip.tc_betacost_check else 0.0) +
-                (safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0.0)
+                selling_trip + selling_toll + selling_parking + selling_loading +
+                selling_unloading + selling_weighment + selling_handling +
+                selling_halting + selling_aai + selling_rto +
+                selling_beta + selling_cancellation
         )
         total_revenue += total_selling
 
@@ -3426,7 +3447,7 @@ def vendor_p_l_attached_report_ajax_view(request):
 
 
 @login_required(login_url='login_page')
-def get_vehicles_by_vendor(request):
+def get_pl_vehicles_by_vendor(request):
     from ..models import Vehicle_allotmentInfo
     vendor_id = request.GET.get('vendor_id', '').strip()
 
@@ -3441,8 +3462,18 @@ def get_vehicles_by_vendor(request):
         'va_vehiclenumber__vm_registrationnumber', flat=True
     ).distinct()
 
+    # Also check Market Vehicles which are stored directly as strings
+    va_qs_mkt = Vehicle_allotmentInfo.objects.filter(
+        va_vendor_id=vendor_id,
+        va_vehiclenumber_mkt__isnull=False
+    ).values_list(
+        'va_vehiclenumber_mkt', flat=True
+    ).distinct()
+
+    combined_qs = list(va_qs) + list(va_qs_mkt)
+
     vehicle_list = sorted(set(
-        v for v in va_qs
+        v for v in combined_qs
         if v and v.strip() and v.strip().lower() != 'null'
     ))
 
@@ -3853,7 +3884,7 @@ def own_vehicle_pl_report_view(request):
         trips = TripdetailInfo.objects.filter(
             tr_vehiclesource_id=1,  # BVM - OWN only
         ).filter(
-            Q(tr_category_id=1, tr_departeddate__isnull=False, tc_financestatus_id__in=[2, 7, 9]) |
+            Q(tr_category_id=1, tr_departeddate__isnull=False, tc_financestatus_id__in=[2, 4, 5, 6, 7, 9]) |
             Q(tr_category_id__in=[2, 3])
         ).select_related(
             'tr_vehicletype',
@@ -6156,11 +6187,23 @@ def get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date
     if customer_id:
         trips = trips.filter(tr_enquirynumber__en_customername_id=customer_id)
 
-    trips = trips.filter(
-        tr_departeddate__isnull=False
-    ).annotate(
-        resolved_date=F('tr_departeddate')
-    )
+    trips = trips.annotate(
+        resolved_date=Case(
+            When(tr_category_id=1, then=F('tr_departeddate')),
+            default=Coalesce(
+                'tr_departeddate_pickup',
+                'tr_departeddate',
+                'tr_loading_time',
+                'tr_reporteddate',
+                'tr_reporteddate_pickup',
+                'tr_reporteddate_delivery',
+                'tr_unloading_time',
+                'tr_dock_in_time',
+                'tr_dock_out_time',
+                'tr_created_at'
+            )
+        )
+    ).exclude(tr_category_id__in=[2, 3])
 
     if from_date or to_date or (selected_year and selected_year != '0') or (selected_month and selected_month != '0'):
 
@@ -6705,11 +6748,27 @@ def location_pl_report_view(request):
             pass
 
     trips = TripdetailInfo.objects.filter(
-        tc_financestatus_id__in=[2, 7, 9]
+        tc_financestatus_id__in=[2, 4, 5, 6, 7, 9]
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_consignmentnumber'
+    ).annotate(
+        resolved_date=Case(
+            When(tr_category_id=1, then=F('tr_departeddate')),
+            default=Coalesce(
+                'tr_departeddate_pickup',
+                'tr_departeddate',
+                'tr_loading_time',
+                'tr_reporteddate',
+                'tr_reporteddate_pickup',
+                'tr_reporteddate_delivery',
+                'tr_unloading_time',
+                'tr_dock_in_time',
+                'tr_dock_out_time',
+                'tr_created_at'
+            )
+        )
     )
 
     if branch_id:
@@ -6719,11 +6778,11 @@ def location_pl_report_view(request):
             trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
 
     if date_from and date_to:
-        trips = trips.filter(tr_departeddate__date__range=[date_from, date_to])
+        trips = trips.filter(resolved_date__date__range=[date_from, date_to])
     elif date_from:
-        trips = trips.filter(tr_departeddate__date__gte=date_from)
+        trips = trips.filter(resolved_date__date__gte=date_from)
     elif date_to:
-        trips = trips.filter(tr_departeddate__date__lte=date_to)
+        trips = trips.filter(resolved_date__date__lte=date_to)
 
     trips_list = [t for t in trips if t.tr_category_id not in [2, 3]]
     trip_ids = [t.id for t in trips_list]
@@ -6873,34 +6932,33 @@ def location_pl_report_view(request):
             )
             own_rev += selling_total
         elif v_source in [2, 3]:
-            selling_trip = (safe_num(inv.ti_transportation_charges) if inv else (
-                safe_num(trip.tc_tripcost) if getattr(trip, 'tc_tripcost_check', True) else 0.0))
-            selling_toll = (safe_num(inv.ti_toll_charges) if inv else (
-                safe_num(trip.tc_tollcost) if getattr(trip, 'tc_tollcost_check', True) else 0.0))
-            selling_parking = (safe_num(inv.ti_parking_charges) if inv else (
-                safe_num(trip.tc_parkingcost) if getattr(trip, 'tc_parkingcost_check', True) else 0.0))
-            selling_loading = (safe_num(inv.ti_loading_charges) if inv else (
-                safe_num(trip.tc_loadingcost) if getattr(trip, 'tc_loadingcost_check', True) else 0.0))
-            selling_unloading = (safe_num(inv.ti_unloading_charges) if inv else (
-                safe_num(trip.tc_unloadingcost) if getattr(trip, 'tc_unloadingcost_check', True) else 0.0))
-            selling_weighment = (safe_num(inv.ti_weighment_charges) if inv else (
-                safe_num(trip.tc_weighmentcost) if getattr(trip, 'tc_weighmentcost_check', True) else 0.0))
-            selling_handling = (safe_num(inv.ti_handling_charges) if inv else (
-                safe_num(trip.tc_handlingcost) if getattr(trip, 'tc_handlingcost_check', True) else 0.0))
-            halting_days = safe_num(trip.tc_no_of_days_halting)
-            if inv:
-                selling_halting = safe_num(inv.ti_halting_charges)
-            elif getattr(trip, 'tc_haltingcost_check', False) or getattr(trip, 'tc_total_halting_cost_check', False):
-                selling_halting = safe_num(trip.tc_haltingcost) * halting_days
+            if trip.tr_category_id in [2, 3]:
+                selling_trip = selling_toll = selling_supervisor = selling_loading = selling_unloading = 0.0
+                selling_weighment = selling_halting = selling_handling = selling_parking = 0.0
+                selling_rto = selling_beta = selling_cancellation = 0.0
             else:
-                selling_halting = 0.0
-
-            selling_supervisor = (
-                safe_num(trip.tc_supervisorcost) if getattr(trip, 'tc_supervisorcost_check', True) else 0.0)
-            selling_rto = (safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0)
-            selling_beta = (safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_check', True) else 0.0)
-            selling_cancellation = (safe_num(inv.ti_cancellation_charges) if inv else (
-                safe_num(trip.tc_cancellation) if getattr(trip, 'tc_cancellation_check', True) else 0.0))
+                selling_trip = safe_num(inv.ti_transportation_charges) if inv else (safe_num(trip.tc_tripcost) if getattr(trip, 'tc_tripcost_check', True) else 0.0)
+                selling_toll = safe_num(inv.ti_toll_charges) if inv else (safe_num(trip.tc_tollcost) if getattr(trip, 'tc_tollcost_check', True) else 0.0)
+                selling_parking = safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if getattr(trip, 'tc_parkingcost_check', True) else 0.0)
+                selling_loading = safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if getattr(trip, 'tc_loadingcost_check', True) else 0.0)
+                selling_unloading = safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if getattr(trip, 'tc_unloadingcost_check', True) else 0.0)
+                selling_weighment = safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if getattr(trip, 'tc_weighmentcost_check', True) else 0.0)
+                selling_handling = safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if getattr(trip, 'tc_handlingcost_check', True) else 0.0)
+                
+                halting_days = safe_num(trip.tc_no_of_days_halting)
+                if inv:
+                    selling_halting = safe_num(inv.ti_halting_charges)
+                elif getattr(trip, 'tc_total_halting_cost_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
+                    selling_halting = safe_num(trip.tc_total_halting_cost)
+                elif getattr(trip, 'tc_haltingcost_check', False) and safe_num(trip.tc_haltingcost) > 0:
+                    selling_halting = safe_num(trip.tc_haltingcost) * halting_days
+                else:
+                    selling_halting = 0.0
+                    
+                selling_supervisor = safe_num(inv.ti_docket_charges) if inv else (safe_num(trip.tc_supervisorcost) if getattr(trip, 'tc_supervisorcost_check', True) else 0.0)
+                selling_rto = safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0
+                selling_beta = safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_check', True) else 0.0
+                selling_cancellation = safe_num(inv.ti_cancellation_charges) if inv else (safe_num(trip.tc_cancellation) if getattr(trip, 'tc_cancellation_check', True) else 0.0)
 
             selling_total = (
                     selling_trip + selling_toll + selling_parking + selling_loading +

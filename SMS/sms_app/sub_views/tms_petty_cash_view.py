@@ -230,7 +230,7 @@ def get_tms_trips_by_date(request):
     except Exception:
         pass
         
-    trips = TripdetailInfo.objects.filter(tr_departeddate__date=trip_date)
+    trips = TripdetailInfo.objects.filter(tr_departeddate__date=trip_date).exclude(tr_category__category__icontains='empty')
     
     trip_data = []
     for t in trips:

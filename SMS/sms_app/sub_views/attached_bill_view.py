@@ -688,6 +688,8 @@ def attached_bill_summary(request, id):
     per_km_amount      = ((actual_amount - toll_cost) / total_km_saved) if total_km_saved > 0 else 0
     empty_km_buy_cost  = per_km_amount * empty_km
     business_empty_km_buy_cost = per_km_amount * business_empty_km
+    loaded_km          = total_km_saved - empty_km - business_empty_km
+    loaded_buy_cost    = per_km_amount * loaded_km
 
     # --- Selling = sum of all trip charges billed to customer ---
     selling = 0.0
@@ -733,6 +735,7 @@ def attached_bill_summary(request, id):
         'empty_km_buy_cost':     round(empty_km_buy_cost, 2),
         'business_empty_km':          round(business_empty_km, 2),
         'business_empty_km_buy_cost': round(business_empty_km_buy_cost, 2),
+        'buy_cost':              round(loaded_buy_cost, 2),
         'selling': round(selling, 2),
         'buying':  round(buying, 2),
         'profit':  round(profit, 2),
@@ -816,19 +819,20 @@ def attached_bill_summary_excel(request, id):
         [17, 'EMPTY KM BUY COST',             format_num(data.get('empty_km_buy_cost', 0))],
         [18, 'BUSINESS EMPTY KM',             format_num(data.get('business_empty_km', 0))],
         [19, 'BUSINESS EMPTY KM BUY COST',    format_num(data.get('business_empty_km_buy_cost', 0))],
-        [20, 'SELLING',                       format_num(data.get('selling', 0))],
-        [21, 'BUYING',                        format_num(data.get('buying', 0))],
-        [22, 'PROFIT',                        format_num(data.get('profit', 0))],
-        [23, 'SELLING %',                     f"{data.get('sell_pct', 0)}%"],
-        [24, 'BUYING %',                      f"{data.get('buy_pct', 0)}%"],
+        [20, 'BUY COST',                      format_num(data.get('buy_cost', 0))],
+        [21, 'SELLING',                       format_num(data.get('selling', 0))],
+        [22, 'BUYING',                        format_num(data.get('buying', 0))],
+        [23, 'PROFIT',                        format_num(data.get('profit', 0))],
+        [24, 'SELLING %',                     f"{data.get('sell_pct', 0)}%"],
+        [25, 'BUYING %',                      f"{data.get('buy_pct', 0)}%"],
     ]
 
     for row_data in rows:
         ws.append(row_data)
 
-    # Style Profit row (row 22 maps to data row 24 in Excel since 1 for header + 1 for col names = 2)
+    # Style Profit row (row 23 maps to data row 25 in Excel since 1 for header + 1 for col names = 2)
     for col in ['A', 'B', 'C']:
-        cell = ws[col + '24']
+        cell = ws[col + '25']
         cell.fill = PatternFill("solid", fgColor="D4EDDA")
         cell.font = Font(bold=True)
     

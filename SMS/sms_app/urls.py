@@ -1190,6 +1190,7 @@ urlpatterns = [
     path('attached_bill_summary_excel/<int:id>/', views.attached_bill_summary_excel, name='attached_bill_summary_excel'),
     path('get_attached_vehicle_details/', views.get_attached_vehicle_details, name='get_attached_vehicle_details'),
     path('get_vehicles_by_vendor/', views.get_vehicles_by_vendor, name='get_vehicles_by_vendor'),
+    path('get_pl_vehicles_by_vendor/', views.get_pl_vehicles_by_vendor, name='get_pl_vehicles_by_vendor'),
     path('fetch_maintenance_bill_details/', views.fetch_maintenance_bill_details, name='fetch_maintenance_bill_details'),
     path('get_maintenance_records_by_vehicle/', views.get_maintenance_records_by_vehicle, name='get_maintenance_records_by_vehicle'),
     path('fuelfilling_export_excel/', views.fuelfilling_export_excel, name='fuelfilling_export_excel'),
