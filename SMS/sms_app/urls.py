@@ -1070,6 +1070,7 @@ urlpatterns = [
     path('trans_invoice_add/', views.trans_invoice_add, name='trans_invoice_add'),
     path('trans_invoice_edit/<int:invoice_id>/', views.trans_invoice_edit, name='trans_invoice_edit'),
     path('trans_invoice_list/', views.trans_invoice_list, name='trans_invoice_list'),
+    path('trans_invoice_cnote_pdf/<int:invoice_id>/', views.trans_invoice_cnote_pdf, name='trans_invoice_cnote_pdf'),
     path('trans_invoice_list_woh/<int:customer_id>/', views.trans_invoice_list_woh, name='trans_invoice_list_woh'),
     path('trans_invoice_delete/<int:invoice_id>/', views.trans_invoice_delete, name='trans_invoice_delete'),
     path('fetch_customer_details/', views.fetch_customer_details, name='fetch_customer_details'),

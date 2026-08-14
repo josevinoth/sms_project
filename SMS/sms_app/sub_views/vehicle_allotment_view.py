@@ -251,8 +251,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(
                 va_enquirynumber=enquiry_id
             ).order_by('-id'),
-            'vehicles_data': VehiclemasterInfo.objects.all(),
-            'customer_name': enquiry.en_customername.cu_name,
+            'vehicles_data': VehiclemasterInfo.objects.only('id', 'vm_registrationnumber').order_by('vm_registrationnumber'),
+            'customer_name': enquiry.en_customername.cu_name if enquiry.en_customername else "",
             'from_location': enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "",
             'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
             'all_vehicletypes': VehicletypeInfo.objects.all(),
@@ -261,12 +261,16 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
 
     # ---------- UPDATE MODE (GET) ----------
     if request.method == "GET" and vehicle_allotment_id != 0:
-        va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
+        va = Vehicle_allotmentInfo.objects.select_related(
+            'va_enquirynumber', 'va_enquirynumber__en_customername',
+            'va_enquirynumber__en_fromlocaion', 'va_enquirynumber__en_tolocation',
+            'va_status'
+        ).get(pk=vehicle_allotment_id)
         enquiry_id = va.va_enquirynumber.id
 
         # Store correct enquiry ID in session
         request.session['ses_enquiry_id'] = enquiry_id
-        enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)  # ⬅ Fetch enquiry
+        enquiry = va.va_enquirynumber  # ⬅ Fetch enquiry
 
         form = VehicleallotmentForm(instance=va)
 
@@ -278,9 +282,9 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             'enquiry_num_id': enquiry_id,
             'vehicle_allotment_list': Vehicle_allotmentInfo.objects.filter(
                 va_enquirynumber=enquiry_id
-            ).order_by('-id'),
-            'vehicles_data': VehiclemasterInfo.objects.all(),
-            'customer_name': enquiry.en_customername.cu_name,
+            ).select_related('va_status', 'va_vehicletype', 'va_vehicletype_placed', 'va_vendor', 'va_vehiclesource').order_by('-id'),
+            'vehicles_data': VehiclemasterInfo.objects.only('id', 'vm_registrationnumber').order_by('vm_registrationnumber'),
+            'customer_name': enquiry.en_customername.cu_name if enquiry.en_customername else "",
             'from_location': enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "",
             'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
             'all_vehicletypes': VehicletypeInfo.objects.all(),

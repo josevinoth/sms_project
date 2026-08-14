@@ -1,139 +1,161 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+{% block title %}Driver Master{% endblock %}
 {% block content %}
 
+<style>
+	.driver-add-modern .legacy-form-card {
+		padding: 0 !important;
+		overflow: hidden;
+	}
+
+	.driver-add-modern .form-grid-body {
+		padding: 1.25rem 1.5rem;
+	}
+
+	.driver-add-modern .form-control,
+	.driver-add-modern .custom-select {
+		background: var(--input-bg, #ffffff) !important;
+		border: 1.5px solid var(--input-border, #cbd5e1) !important;
+		border-radius: 8px !important;
+		color: var(--text-main, #1e293b) !important;
+		font-weight: 600;
+		min-height: 38px;
+	}
+
+	.driver-add-modern .form-group-modern {
+		margin-bottom: 1rem;
+	}
+
+	.driver-add-modern .form-label-modern {
+		font-size: 0.78rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: var(--text-muted, #64748b);
+		margin-bottom: 0.35rem;
+		display: block;
+	}
+
+	.driver-add-modern .form-section-title {
+		font-size: 0.9rem;
+		font-weight: 700;
+		color: var(--accent-blue, #0284c7);
+		margin-bottom: 1rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 2px solid var(--border-color, #e2e8f0);
+	}
+</style>
+
 <form method="POST" action="">
-    {% csrf_token %}
-    <div class="row">
-        <div class="col">
-            <div class="container-fluid">
-                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="card-header text-center">
-                        <h4>Driver Master</h4>
-                    </div>
+	{% csrf_token %}
+	<div class="container-fluid px-3 py-2 driver-add-modern">
+		<div class="modern-card legacy-form-card mb-3">
+			<div class="modern-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+				<div class="d-flex align-items-center gap-2">
+					<i class="fas fa-id-card fa-lg text-info mr-2"></i>
+					<h2 class="mb-0 text-white font-weight-bold" style="font-size: 1.3rem;">Driver Master Entry</h2>
+				</div>
+				<a href="{% url 'driver_list' %}" class="btn-modern btn-highlight-cyan m-0 py-2 px-3">
+					<i class="fas fa-arrow-left mr-1"></i> Back to List
+				</a>
+			</div>
 
-                    <div class="card-body bg-light">
-                        <div class="row">
+			<div class="form-grid-body">
+				<div class="row">
+					<!-- Left Column -->
+					<div class="col-md-6">
+						<div class="form-section-title"><i class="fas fa-user-cog mr-1"></i> Driver Identification</div>
+						
+						<div class="form-group-modern">
+							<label class="form-label-modern">Driver ID</label>
+							{% render_field form.dm_id class="form-control disable_a_href" %}
+						</div>
 
-                            <!-- Column 1 -->
-                            <div class="col-6">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Driver ID</span>
-                                    </div>
-                                    {% render_field form.dm_id class="form-control disable_a_href" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Transporter Type</span>
-                                    </div>
-                                    {% render_field form.dm_vehiclesource class="form-control" %}
-                                </div>
+						<div class="form-group-modern">
+							<label class="form-label-modern">Transporter Type</label>
+							{% render_field form.dm_vehiclesource class="form-control" %}
+						</div>
 
-                                <div class="input-group input-group-sm mb-3" id="employee_id_div">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Employee ID</span>
-                                    </div>
-                                    {% render_field form.dm_user_id class="form-control" %}
-                                </div>
+						<div class="form-group-modern" id="employee_id_div">
+							<label class="form-label-modern">Employee ID</label>
+							{% render_field form.dm_user_id class="form-control" %}
+						</div>
 
-                                <div class="input-group input-group-sm mb-3" id="driver_name_div">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Driver Name</span>
-                                    </div>
-                                    {% render_field form.dm_name class="form-control" %}
-                                </div>
+						<div class="form-group-modern" id="driver_name_div">
+							<label class="form-label-modern">Driver Name <span class="text-danger">*</span></label>
+							{% render_field form.dm_name class="form-control" %}
+						</div>
+					</div>
 
+					<!-- Right Column -->
+					<div class="col-md-6">
+						<div class="form-section-title"><i class="fas fa-address-card mr-1"></i> Contact & Licensing</div>
 
-                            </div>
+						<div class="form-group-modern" id="driver_mobile_div">
+							<label class="form-label-modern">Mobile No</label>
+							{% render_field form.dm_drivernumber class="form-control" %}
+						</div>
 
-                            <!-- Column 2 -->
-                            <div class="col-6">
+						<div class="form-group-modern">
+							<label class="form-label-modern">License No</label>
+							{% render_field form.dm_driver_lic class="form-control" %}
+						</div>
 
-                                <div class="input-group input-group-sm mb-3" id="driver_mobile_div">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Mobile No</span>
-                                    </div>
-                                    {% render_field form.dm_drivernumber class="form-control" %}
-                                </div>
+						<div class="form-group-modern">
+							<label class="form-label-modern">License Expiry Date</label>
+							{% render_field form.dm_driver_lic_expiry type="date" class="form-control" %}
+						</div>
+					</div>
+				</div>
 
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">License No</span>
-                                    </div>
-                                    {% render_field form.dm_driver_lic class="form-control" %}
-                                </div>
+				{% if messages %}
+				<div class="row mt-2">
+					<div class="col-12">
+						<div class="message text-center">
+							{% for message in messages %}
+							<div class="alert alert-warning py-2">{{ message }}</div>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+				{% endif %}
 
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">License Expiry</span>
-                                    </div>
-                                    {% render_field form.dm_driver_lic_expiry type="date" class="form-control" %}
-                                </div>
-
-                            </div>
-
-                            <!-- Column 3 -->
-
-
-                        </div>
-
-                        <!-- Messages -->
-                        <div class="row">
-                            <div class="col-1"></div>
-                            <div class="col-10 text-center">
-                                {% for message in messages %}
-                                <a {% if message.tags %}class="{{ message.tags }}"{% endif %}>
-                                    {{ message }}
-                                </a>
-                                {% endfor %}
-                            </div>
-                            <div class="col-1"></div>
-                        </div>
-
-                        <!-- Buttons -->
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-check"></i> Submit
-                        </button>
-
-                        <a href="{% url 'driver_list' %}" class="btn btn-danger float-right">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+				<!-- Actions -->
+				<div class="d-flex align-items-center justify-content-between mt-4 pt-3 border-top">
+					<button type="submit" class="btn-modern btn-submit m-0 px-4 py-2">
+						<i class="fas fa-check mr-1"></i> Submit Driver Info
+					</button>
+					<a href="{% url 'driver_list' %}" class="btn-modern btn-highlight-cyan m-0 px-4 py-2">
+						<i class="fas fa-times mr-1"></i> Cancel
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
 </form>
+
 <script>
 $(document).ready(function () {
-
     function toggleFields() {
         const sourceId = $('#id_dm_vehiclesource').val();
 
         if (sourceId === "1") {
             // OWN vehicle
             $('#employee_id_div').show();
-
         } else {
             // ATTACHED vehicle
             $('#employee_id_div').hide();
-
-            // clear auto-filled fields
             $('#id_dm_user_id').val('');
         }
     }
 
-    // Initial load
     toggleFields();
 
-    // On vehicle source change
     $('#id_dm_vehiclesource').change(function () {
         toggleFields();
     });
 
-    // On employee select → fetch name & mobile
     $('#id_dm_user_id').change(function () {
         const userId = $(this).val();
         if (!userId) return;
@@ -147,7 +169,6 @@ $(document).ready(function () {
             }
         });
     });
-
 });
 </script>
 

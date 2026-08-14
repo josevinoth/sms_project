@@ -6,6 +6,11 @@ from django.contrib import messages
 from openpyxl import Workbook
 from django.http import HttpResponse
 
+import io
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from pypdf import PdfWriter, PdfReader
+
 from ..sub_forms.trans_invoice_Form import TransInvoiceForm
 from ..sub_models.trans_invoice_mod import TransInvoiceInfo
 from ..sub_models.customer_mod import CustomerInfo
@@ -14,6 +19,8 @@ from ..sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
 from ..sub_models.trip_status_mod import Tripstatusinfo
+from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
+from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
 from django.db.models import F, Sum, Q, Case, When, Value, FloatField
 from django.db.models.functions import Coalesce
 from ..utils.pdf_utils import merge_pdf_files
@@ -419,11 +426,23 @@ def trans_invoice_edit(request, invoice_id):
 def trans_invoice_list(request):
     first_name = request.session.get('first_name')
 
-    queryset = (
+    queryset = list(
         TransInvoiceInfo.objects
         .filter(is_woh=False)
         .order_by('-id')
     )
+
+    # Fetch all (ti_inv_no, ti_customer_id) combinations that have at least one CNote
+    woh_cnote_items = TransInvoiceInfo.objects.filter(
+        is_woh=True
+    ).filter(
+        Q(ti_consignment__isnull=False) | Q(ti_trip__tr_consignmentnumber__isnull=False)
+    ).values_list('ti_inv_no', 'ti_customer_id')
+
+    cnote_inv_keys = set(woh_cnote_items)
+
+    for invoice in queryset:
+        invoice.has_cnote = (invoice.ti_inv_no, invoice.ti_customer_id) in cnote_inv_keys
 
     return render(
         request,
@@ -433,6 +452,121 @@ def trans_invoice_list(request):
             'first_name': first_name,
         }
     )
+
+
+# ==================================================
+# DOWNLOAD COMBINED CNOTE PDF FOR INVOICE
+# ==================================================
+@login_required(login_url='login_page')
+def trans_invoice_cnote_pdf(request, invoice_id):
+    master_inv = get_object_or_404(TransInvoiceInfo, pk=invoice_id, is_woh=False)
+
+    woh_items = TransInvoiceInfo.objects.filter(
+        ti_inv_no=master_inv.ti_inv_no,
+        ti_customer=master_inv.ti_customer,
+        is_woh=True
+    ).select_related('ti_trip', 'ti_consignment', 'ti_trip__tr_consignmentnumber')
+
+    consignments = []
+    seen_ids = set()
+    for item in woh_items:
+        cons = item.ti_consignment or (item.ti_trip.tr_consignmentnumber if item.ti_trip else None)
+        if cons and cons.id not in seen_ids:
+            seen_ids.add(cons.id)
+            consignments.append(cons)
+
+    if not consignments:
+        return HttpResponse("No Consignment Notes found for the trip(s) in this invoice.", content_type="text/plain")
+
+    pdf_writer = PdfWriter()
+    has_pages = False
+
+    for consignment in consignments:
+        consignment_note_id = consignment.id
+        consignment_num = consignment.co_consignmentnumber
+        vehicle_reg_num = consignment.co_vehicelnumber
+        enquiry_id = consignment.co_enquirynumber_id
+
+        consignment_goods_list = list(ConsignmentgoodsInfo.objects.filter(
+            cg_consignmentnumber=consignment_note_id
+        ).order_by('id'))
+
+        for goods in consignment_goods_list:
+            if goods.cg_consignerinvoice:
+                goods.cg_consignerinvoice = goods.cg_consignerinvoice.replace('/', '/ ').replace(',', ', ')
+            if goods.cg_hawbno:
+                goods.cg_hawbno = goods.cg_hawbno.replace('/', '/ ').replace(',', ', ')
+            if goods.cg_ebillno:
+                goods.cg_ebillno = goods.cg_ebillno.replace('/', '/ ').replace(',', ', ')
+
+        vehicle_detail = Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber=enquiry_id,
+            va_vehiclenumber_mkt=vehicle_reg_num
+        ).last()
+
+        if not vehicle_detail:
+            try:
+                vehicle_master = VehiclemasterInfo.objects.get(vm_registrationnumber=vehicle_reg_num)
+                vehicle_detail = Vehicle_allotmentInfo.objects.filter(
+                    va_enquirynumber=enquiry_id,
+                    va_vehiclenumber=vehicle_master.id
+                ).last()
+            except VehiclemasterInfo.DoesNotExist:
+                vehicle_detail = None
+
+        vehicle_number_val = []
+        driver_name = []
+        driver_lic = []
+        driver_number = []
+
+        if vehicle_detail:
+            if vehicle_detail.va_vehiclenumber:
+                vehicle_number_val.append(vehicle_detail.va_vehiclenumber.vm_registrationnumber)
+            if vehicle_detail.va_vehiclenumber_mkt:
+                vehicle_number_val.append(vehicle_detail.va_vehiclenumber_mkt)
+
+            raw_name = vehicle_detail.va_drivername or ""
+            clean_name = raw_name.split('(')[0].strip()
+            driver_name.append(clean_name)
+            driver_lic.append(vehicle_detail.va_driver_lic)
+            driver_number.append(vehicle_detail.va_drivernumber)
+
+        context = {
+            'consignment_details': [consignment],
+            'consignment_goods_list': consignment_goods_list,
+            'vehicle_details': [vehicle_detail] if vehicle_detail else [],
+            'vehicle_number': vehicle_number_val,
+            'Driver_name': driver_name,
+            'Driver_lic': driver_lic,
+            'Driver_number': driver_number,
+        }
+
+        template_path = 'asset_mgt_app/consignement_note_pdf.html'
+        template = get_template(template_path)
+        html = template.render(context)
+
+        pdf_buffer = io.BytesIO()
+        pisa_status = pisa.CreatePDF(html, dest=pdf_buffer)
+        if not pisa_status.err:
+            pdf_buffer.seek(0)
+            reader = PdfReader(pdf_buffer)
+            for page in reader.pages:
+                pdf_writer.add_page(page)
+                has_pages = True
+
+    if not has_pages:
+        return HttpResponse("Failed to generate PDF for consignment notes.", content_type="text/plain")
+
+    output = io.BytesIO()
+    pdf_writer.write(output)
+    output.seek(0)
+
+    clean_inv_no = (master_inv.ti_inv_no or "").replace('/', '_').replace('\\', '_')
+    filename = f"Combined_CNote_{clean_inv_no}.pdf"
+
+    response = HttpResponse(output.read(), content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    return response
 
 
 # ==================================================
