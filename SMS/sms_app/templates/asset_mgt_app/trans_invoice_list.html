@@ -76,7 +76,7 @@
                     <td>{{ invoice.ti_state }}</td>
                     <td>
                         <span class="badge badge-pill" style="background:#3a9e96; color:#fff; font-size:0.85rem; padding:5px 12px;">
-                            &#8377; {{ invoice.ti_total }}
+                            &#8377; {{ invoice.ti_total|floatformat:2 }}
                         </span>
                     </td>
 
