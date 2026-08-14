@@ -26,6 +26,59 @@ from ..models import EnquirynoteInfo
 from django.core.paginator import Paginator
 
 
+def get_allotment_sale_rate(trip):
+    """
+    Robustly fetch va_sale for a trip across single and multi-vehicle allotments.
+    """
+    if not trip or not trip.tr_enquirynumber:
+        return 0.0
+
+    allotments = Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber=trip.tr_enquirynumber
+    ).select_related('va_vehiclenumber')
+
+    if not allotments.exists():
+        return 0.0
+
+    target_veh = (trip.tr_vehiclenumber or '').strip().replace(' ', '').replace('-', '').upper()
+
+    # 1. Try normalized vehicle registration string match
+    if target_veh:
+        for a in allotments:
+            reg = ''
+            if a.va_vehiclenumber and getattr(a.va_vehiclenumber, 'vm_registrationnumber', None):
+                reg = a.va_vehiclenumber.vm_registrationnumber.strip().replace(' ', '').replace('-', '').upper()
+            elif a.va_vehiclenumber_mkt:
+                reg = a.va_vehiclenumber_mkt.strip().replace(' ', '').replace('-', '').upper()
+
+            if reg and reg == target_veh and a.va_sale is not None:
+                return float(a.va_sale)
+
+    # 2. Match by placed vehicle type if present
+    if getattr(trip, 'tr_vehicletype_placed_id', None):
+        for a in allotments:
+            if a.va_vehicletype_placed_id == trip.tr_vehicletype_placed_id and a.va_sale is not None:
+                return float(a.va_sale)
+
+    # 3. Match by requested vehicle type
+    if getattr(trip, 'tr_vehicletype_id', None):
+        for a in allotments:
+            if a.va_vehicletype_id == trip.tr_vehicletype_id and a.va_sale is not None:
+                return float(a.va_sale)
+
+    # 4. Fallback to any allotment under this enquiry that has va_sale > 0
+    for a in allotments:
+        if a.va_sale is not None and float(a.va_sale) > 0:
+            return float(a.va_sale)
+
+    # 5. Fallback to first allotment's va_sale if present
+    first_allotment = allotments.first()
+    if first_allotment and first_allotment.va_sale is not None:
+        return float(first_allotment.va_sale)
+
+    return 0.0
+
+
 @login_required(login_url='login_page')
 def tripclosure_enquiry(request, enquiry_id, trip_num):
     # Fetch the enquiry object (optional - only needed if you want to verify or log it)
@@ -209,14 +262,8 @@ def tripclosure_add(request, tripclosure_id=0):
             )
             status_list = list(Tripstatusinfo.objects.filter(id__in=[4, 5, 6, 7]))
 
-            # Fetch Sell value from allotment
-            allotment = Vehicle_allotmentInfo.objects.filter(
-                va_enquirynumber=trip.tr_enquirynumber
-            ).filter(
-                Q(va_vehiclenumber__vm_registrationnumber=trip.tr_vehiclenumber) |
-                Q(va_vehiclenumber_mkt=trip.tr_vehiclenumber)
-            ).first()
-            va_sale = allotment.va_sale if (allotment and allotment.va_sale is not None) else 0.0
+            # Fetch Sell value robustly from allotment
+            va_sale = get_allotment_sale_rate(trip)
 
             # Pre-populate Trip Charges from va_sale if currently zero
             if not trip.tc_tripcost or trip.tc_tripcost == 0.0:

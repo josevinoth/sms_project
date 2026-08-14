@@ -305,14 +305,10 @@ def trip_settlement_edit(request, trip_id):
         for field in files_form.fields:
             files_form.fields[field].required = False
 
-    # Fetch Sell value from allotment
-    allotment = Vehicle_allotmentInfo.objects.filter(
-        va_enquirynumber=trip.tr_enquirynumber
-    ).filter(
-        Q(va_vehiclenumber__vm_registrationnumber=trip.tr_vehiclenumber) |
-        Q(va_vehiclenumber_mkt=trip.tr_vehiclenumber)
-    ).first()
-    va_sale = allotment.va_sale if allotment else 0
+    # Fetch Sell value robustly from allotment
+    from .tripclosure_add_view import get_allotment_sale_rate
+    va_sale = get_allotment_sale_rate(trip)
+
 
     # Determine if this is a Cancellation with Billing trip
     is_cancellation_billing = (
