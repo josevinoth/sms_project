@@ -1,275 +1,302 @@
-{% extends "asset_mgt_app/base_1.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<style>
-    .input-error {
-        background-color: #ffcccc !important;   /* Light red background */
-        border: 2px solid red !important;       /* Red border */
-    }
-</style>
 
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="row">
-        <div class="col">
-            <div class="container-fluid">
-                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="card-header text-center">
-                        <div class="col-12 col-md-10 text-center">
-                            <h3>Add/Update Trip High Value Check</h3>
+<div class="container-fluid py-2">
+
+    <!-- Page Header (Matching enquirynote_add style) -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-2 py-2 px-3">
+        <h3 class="mb-0 text-white" style="font-size: 1.25rem; font-weight: 700; letter-spacing: 1px;">
+            <i class="fas fa-edit mr-2"></i> Add/Update Trip High Value Check
+        </h3>
+        <a href="{% url 'trip_highvalue_cancel' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; border-radius: 10px; border: 1px solid var(--border-light); display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <!-- Main Form Card -->
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="modern-card p-3" style="border-top: none;">
+            
+            <!-- Messages Section -->
+            {% if messages %}
+            <div class="row mb-2">
+                <div class="col-12 text-center">
+                    {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'warning' %}warning{% else %}success{% endif %} alert-dismissible fade show d-inline-block shadow-sm py-1 px-3 mb-1" role="alert" style="border-radius: 8px; font-size: 0.85rem;">
+                        <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-check-circle{% endif %} mr-2"></i>
+                        {{ message }}
+                        <button type="button" class="close ml-2" data-dismiss="alert" aria-label="Close" style="font-size: 1rem; line-height: 1;">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Vehicle Master Document Verification Card -->
+            {% if vehicle_obj %}
+            <div class="form-section form-section-compact mb-2 p-2" style="background: rgba(45, 212, 191, 0.04); border: 1px solid rgba(45, 212, 191, 0.2);">
+                <div class="form-section-title mb-2" style="color: var(--accent-emerald, #0d9488); font-size: 0.85rem;">
+                    <i class="fas fa-truck mr-1"></i> Vehicle Master Document Verification 
+                    <span class="text-secondary font-weight-normal font-italic ml-1">({{ trip.tr_vehiclenumber|default:vehicle_obj.vm_registrationnumber }})</span>
+                    <span class="badge badge-info ml-2" style="font-size: 0.78rem; padding: 3px 8px; border-radius: 6px;">Ownership: {{ vehicle_docs_info.ownership }}</span>
+                </div>
+
+                <div class="row row-compact">
+                    <!-- RC & FC -->
+                    <div class="col-12 col-md-4 col-compact mb-1 mb-md-0">
+                        <div class="doc-stat-box d-flex align-items-center justify-content-between flex-nowrap py-1 px-2">
+                            <span class="form-label-modern mb-0 mr-1" style="font-size: 0.78rem; font-weight: 700; white-space: nowrap;">Vehicle RC & FC:</span>
+                            {% if vehicle_docs_info.rc_status %}
+                                <span class="badge-status-valid mr-1"><i class="fas fa-check-circle"></i> Valid</span>
+                            {% else %}
+                                <span class="badge-status-invalid mr-1"><i class="fas fa-exclamation-triangle"></i> Expired / Missing</span>
+                            {% endif %}
+                            <small class="text-muted mr-1" style="white-space: nowrap;">Exp: <strong>{{ vehicle_docs_info.rc_expiry|date:"d-m-Y"|default:"N/A" }}</strong></small>
+                            {% if vehicle_docs_info.rc_attach %}
+                                <a href="{{ vehicle_docs_info.rc_attach }}" target="_blank" class="text-primary font-weight-bold" style="font-size: 0.78rem; white-space: nowrap;">
+                                    <i class="fas fa-paperclip"></i> View RC Doc
+                                </a>
+                            {% endif %}
                         </div>
                     </div>
-                    <div class="card-body bg-light">
-                        {% if vehicle_obj %}
-                        <div class="alert alert-secondary border shadow-sm mb-3 text-dark p-3 rounded" style="background-color: #f8f9fa;">
-                            <h5 class="mb-2 text-primary font-weight-bold">
-                                <i class="fas fa-truck mr-1"></i> Vehicle Master Document Verification ({{ trip.tr_vehiclenumber|default:vehicle_obj.vm_registrationnumber }} - Ownership: <span class="badge badge-info">{{ vehicle_docs_info.ownership }}</span>)
-                            </h5>
-                            <div class="row text-center text-md-left">
-                                <div class="col-md-4 mb-2">
-                                    <strong>Vehicle RC & FC:</strong> 
-                                    {% if vehicle_docs_info.rc_status %}
-                                        <span class="badge badge-success"><i class="fas fa-check-circle"></i> Valid</span>
-                                    {% else %}
-                                        <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Expired / Missing</span>
-                                    {% endif %}
-                                    <br>
-                                    <small class="text-muted">Expiry / Reg Date: {{ vehicle_docs_info.rc_expiry|date:"d-m-Y"|default:"Not Available" }}</small>
-                                    {% if vehicle_docs_info.rc_attach %}
-                                        | <a href="{{ vehicle_docs_info.rc_attach }}" target="_blank" class="text-primary font-weight-bold"><i class="fas fa-paperclip"></i> View RC Doc</a>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-4 mb-2">
-                                    <strong>Insurance & Validity:</strong> 
-                                    {% if vehicle_docs_info.insurance_status %}
-                                        <span class="badge badge-success"><i class="fas fa-check-circle"></i> Valid</span>
-                                    {% else %}
-                                        <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Expired / Missing</span>
-                                    {% endif %}
-                                    <br>
-                                    <small class="text-muted">Expiry Date: {{ vehicle_docs_info.insurance_expiry|date:"d-m-Y"|default:"Not Available" }}</small>
-                                    {% if vehicle_docs_info.insurance_attach %}
-                                        | <a href="{{ vehicle_docs_info.insurance_attach }}" target="_blank" class="text-primary font-weight-bold"><i class="fas fa-paperclip"></i> View Insurance</a>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-4 mb-2">
-                                    <strong>Goods Permit:</strong> 
-                                    {% if vehicle_docs_info.permit_status %}
-                                        <span class="badge badge-success"><i class="fas fa-check-circle"></i> Valid</span>
-                                    {% else %}
-                                        <span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> Expired / Missing</span>
-                                    {% endif %}
-                                    <br>
-                                    <small class="text-muted">Expiry Date: {{ vehicle_docs_info.permit_expiry|date:"d-m-Y"|default:"Not Available" }}</small>
-                                    {% if vehicle_docs_info.permit_attach %}
-                                        | <a href="{{ vehicle_docs_info.permit_attach }}" target="_blank" class="text-primary font-weight-bold"><i class="fas fa-paperclip"></i> View Permit</a>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        <div class="row">
-                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Enquiry Number</span>
-                                    </div>
-                                    {% render_field form.thc_enquirynumber id="thc_enquirynumber" class="form-control disable_a_href" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Trip Number</span>
-                                    </div>
-                                    {% render_field form.thc_tripnumber id="thc_tripnumber" class="form-control disable_a_href" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Vehicle RC & Validity</span>
-                                    </div>
-                                    {% render_field form.thc_vehicleRC id="thc_vehicleRC" class="form-control " %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Vehicle Insurance & Validity</span>
-                                    </div>
-                                    {% render_field form.thc_vehicle_insurance id="thc_vehicle_insurance" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Goods Permit & Validity</span>
-                                    </div>
-                                    {% render_field form.thc_goodspermit id="thc_goodspermit" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Outside/Under Carriage</span>
-                                    </div>
-                                    {% render_field form.thc_outside_undercarriage id="thc_outside_undercarriage" class="form-control" onchange="validateEndDate()" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Inside & Outside Doors</span>
-                                    </div>
-                                    {% render_field form.thc_inoutside_doors id="thc_inoutside_doors" class="form-control" %}
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">RightSide Inner Wall</span>
-                                    </div>
-                                    {% render_field form.thc_rightinnerwall id="thc_rightinnerwall" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">LeftSide Inner Wall</span>
-                                    </div>
-                                    {% render_field form.thc_leftinnerwall id="thc_leftinnerwall" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">FrontSide Inner Wall</span>
-                                    </div>
-                                    {% render_field form.thc_frontinnerwall id="thc_frontinnerwall" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Ceiling/Roof</span>
-                                    </div>
-                                    {% render_field form.thc_roof id="thc_roof" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Floor Inside</span>
-                                    </div>
-                                    {% render_field form.thc_floorinside id="thc_floorinside" class="form-control" %}
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend" style="width:35%;">
-                                        <span class="input-group-text" style="width:100%;">GPS Fitted and Working Status</span>
-                                    </div>
-                                    {% render_field form.thc_gpsfit id="thc_gpsfit" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend" style="width:37%;">
-                                        <span class="input-group-text" style="width:100%;">SIM Tracking Enabled</span>
-                                    </div>
-                                    {% render_field form.thc_simtracking id="thc_simtracking" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Smart Lock Fixed&Working Status(Card,RFID,GPS)</span>
-                                    </div>
-                                    {% render_field form.thc_smartlock id="thc_smartlock" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">SmartLock Battery Charge Status</span>
-                                    </div>
-                                    {% render_field form.thc_smartlockbaterry id="thc_smartlockbaterry" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Bottle OTL Seal Fixed(ISO Std)</span>
-                                    </div>
-                                    {% render_field form.thc_bottle_otlseal id="thc_bottle_otlseal" class="form-control" %}
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend" style="width:40%;">
-                                        <span class="input-group-text" style="width:100%;">No of Packages Loaded</span>
-                                    </div>
-                                    {% render_field form.thc_packagesloaded id="thc_packagesloaded" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend" style="width:50%;">
-                                        <span class="input-group-text" style="width:100%;">Commercial Invoice</span>
-                                    </div>
-                                    {% render_field form.thc_commercialinvoice id="thc_commercialinvoice" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Packing List</span>
-                                    </div>
-                                    {% render_field form.thc_packinglist id="thc_packinglist" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">EPIL COC List</span>
-                                    </div>
-                                    {% render_field form.thc_eipl_coc id="thc_eipl_coc" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Consignment Note</span>
-                                    </div>
-                                    {% render_field form.thc_consignmentnote id="thc_consignmentnote" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">E-Way Bill Copy & Validity</span>
-                                    </div>
-                                    {% render_field form.thc_ewaybill id="thc_ewaybill" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Status</span>
-                                    </div>
-                                    {% if request.user.is_superuser %}
-                                    {% render_field form.thc_approval_status id="thc_approval_status" class="form-control" %}
-                                    {% else %}
-                                    {% render_field form.thc_approval_status id="thc_approval_status" class="form-control disable_a_href" %}
-                                    {% endif %}
-                                </div>
 
-                            </div>
+                    <!-- Insurance -->
+                    <div class="col-12 col-md-4 col-compact mb-1 mb-md-0">
+                        <div class="doc-stat-box d-flex align-items-center justify-content-between flex-nowrap py-1 px-2">
+                            <span class="form-label-modern mb-0 mr-1" style="font-size: 0.78rem; font-weight: 700; white-space: nowrap;">Insurance & Validity:</span>
+                            {% if vehicle_docs_info.insurance_status %}
+                                <span class="badge-status-valid mr-1"><i class="fas fa-check-circle"></i> Valid</span>
+                            {% else %}
+                                <span class="badge-status-invalid mr-1"><i class="fas fa-exclamation-triangle"></i> Expired / Missing</span>
+                            {% endif %}
+                            <small class="text-muted mr-1" style="white-space: nowrap;">Exp: <strong>{{ vehicle_docs_info.insurance_expiry|date:"d-m-Y"|default:"N/A" }}</strong></small>
+                            {% if vehicle_docs_info.insurance_attach %}
+                                <a href="{{ vehicle_docs_info.insurance_attach }}" target="_blank" class="text-primary font-weight-bold" style="font-size: 0.78rem; white-space: nowrap;">
+                                    <i class="fas fa-paperclip"></i> View Insurance
+                                </a>
+                            {% endif %}
                         </div>
-                        <div class="input-group input-group-sm mb-3 p-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Remarks</span>
-                            </div>
-                            {% render_field form.thc_remarks id="thc_remarks" class="form-control" %}
-                        </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-1"></div>
-                            <div class="col-10">
-                                <div class="message text-center">
-                                    {% for message in messages %}
-                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="col-1"></div>
+                    <!-- Goods Permit -->
+                    <div class="col-12 col-md-4 col-compact">
+                        <div class="doc-stat-box d-flex align-items-center justify-content-between flex-nowrap py-1 px-2">
+                            <span class="form-label-modern mb-0 mr-1" style="font-size: 0.78rem; font-weight: 700; white-space: nowrap;">Goods Permit:</span>
+                            {% if vehicle_docs_info.permit_status %}
+                                <span class="badge-status-valid mr-1"><i class="fas fa-check-circle"></i> Valid</span>
+                            {% else %}
+                                <span class="badge-status-invalid mr-1"><i class="fas fa-exclamation-triangle"></i> Expired / Missing</span>
+                            {% endif %}
+                            <small class="text-muted mr-1" style="white-space: nowrap;">Exp: <strong>{{ vehicle_docs_info.permit_expiry|date:"d-m-Y"|default:"N/A" }}</strong></small>
+                            {% if vehicle_docs_info.permit_attach %}
+                                <a href="{{ vehicle_docs_info.permit_attach }}" target="_blank" class="text-primary font-weight-bold" style="font-size: 0.78rem; white-space: nowrap;">
+                                    <i class="fas fa-paperclip"></i> View Permit
+                                </a>
+                            {% endif %}
                         </div>
-
-                        <button type="submit" class="btn btn-success" id="save-btn">
-                            <i class="fas fa-check"></i> Submit
-                        </button>
-                        <a href="{% url 'trip_highvalue_cancel' %}" class="btn btn-danger float-right">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
                     </div>
                 </div>
             </div>
+            {% endif %}
+
+            <!-- Form Columns Grid (Compact Single Page Layout) -->
+            <div class="row row-compact">
+
+                <!-- Column 1: Documents & Base Info -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact mb-2">
+                    <div class="form-section form-section-compact h-100">
+                        <div class="form-section-title"><i class="fas fa-file-alt"></i> Documents & Base Info</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Enquiry Number</label>
+                            {% render_field form.thc_enquirynumber id="thc_enquirynumber" readonly="True" class="form-control form-control-modern modern-readonly" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Trip Number</label>
+                            {% render_field form.thc_tripnumber id="thc_tripnumber" readonly="True" class="form-control form-control-modern modern-readonly" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vehicle RC & Validity</label>
+                            {% render_field form.thc_vehicleRC id="thc_vehicleRC" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vehicle Insurance & Validity</label>
+                            {% render_field form.thc_vehicle_insurance id="thc_vehicle_insurance" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Goods Permit & Validity</label>
+                            {% render_field form.thc_goodspermit id="thc_goodspermit" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Outside / Under Carriage</label>
+                            {% render_field form.thc_outside_undercarriage id="thc_outside_undercarriage" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Inside & Outside Doors</label>
+                            {% render_field form.thc_inoutside_doors id="thc_inoutside_doors" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Vehicle Structure Check -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact mb-2">
+                    <div class="form-section form-section-compact h-100">
+                        <div class="form-section-title"><i class="fas fa-truck-loading"></i> Vehicle Structure Check</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">RightSide Inner Wall</label>
+                            {% render_field form.thc_rightinnerwall id="thc_rightinnerwall" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">LeftSide Inner Wall</label>
+                            {% render_field form.thc_leftinnerwall id="thc_leftinnerwall" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">FrontSide Inner Wall</label>
+                            {% render_field form.thc_frontinnerwall id="thc_frontinnerwall" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Ceiling / Roof</label>
+                            {% render_field form.thc_roof id="thc_roof" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Floor Inside</label>
+                            {% render_field form.thc_floorinside id="thc_floorinside" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Security & Tracking -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact mb-2">
+                    <div class="form-section form-section-compact h-100">
+                        <div class="form-section-title"><i class="fas fa-satellite-dish"></i> Security & Tracking</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">GPS Fitted & Working Status</label>
+                            {% render_field form.thc_gpsfit id="thc_gpsfit" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">SIM Tracking Enabled</label>
+                            {% render_field form.thc_simtracking id="thc_simtracking" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Smart Lock Status (Card, RFID, GPS)</label>
+                            {% render_field form.thc_smartlock id="thc_smartlock" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">SmartLock Battery Charge Status</label>
+                            {% render_field form.thc_smartlockbaterry id="thc_smartlockbaterry" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Bottle OTL Seal Fixed (ISO Std)</label>
+                            {% render_field form.thc_bottle_otlseal id="thc_bottle_otlseal" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 4: Cargo & Verification -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact mb-2">
+                    <div class="form-section form-section-compact h-100">
+                        <div class="form-section-title"><i class="fas fa-boxes"></i> Cargo & Verification</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">No of Packages Loaded</label>
+                            {% render_field form.thc_packagesloaded id="thc_packagesloaded" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Commercial Invoice</label>
+                            {% render_field form.thc_commercialinvoice id="thc_commercialinvoice" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Packing List</label>
+                            {% render_field form.thc_packinglist id="thc_packinglist" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">EPIL COC List</label>
+                            {% render_field form.thc_eipl_coc id="thc_eipl_coc" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Consignment Note</label>
+                            {% render_field form.thc_consignmentnote id="thc_consignmentnote" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">E-Way Bill Copy & Validity</label>
+                            {% render_field form.thc_ewaybill id="thc_ewaybill" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Approval Status</label>
+                            {% if request.user.is_superuser %}
+                                {% render_field form.thc_approval_status id="thc_approval_status" class="form-control form-control-modern" %}
+                            {% else %}
+                                {% render_field form.thc_approval_status id="thc_approval_status" class="form-control form-control-modern disable_a_href" %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Remarks Box -->
+            <div class="form-section form-section-compact mt-1 mb-2">
+                <div class="form-section-title"><i class="fas fa-comment-dots"></i> Checklist Remarks / Additional Notes</div>
+                {% render_field form.thc_remarks id="thc_remarks" class="form-control form-control-modern" rows="1" placeholder="Enter optional checklist notes or remarks here..." %}
+            </div>
+
+            <!-- Form Action Buttons -->
+            <div class="d-flex justify-content-between align-items-center mt-2 px-2">
+                <button type="submit" class="btn-modern btn-submit px-4 py-2" id="save-btn" style="font-size: 0.9rem;">
+                    <i class="fas fa-check mr-1"></i> Submit Checklist
+                </button>
+                <a href="{% url 'trip_highvalue_cancel' %}" class="btn-modern btn-cancel px-4 py-2" style="text-decoration: none; font-size: 0.9rem;">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </a>
+            </div>
+
         </div>
-    </div>
-</form>
+    </form>
+</div>
+
 <script>
     function highlightIfNo(fieldId) {
         var field = document.getElementById(fieldId);
-        if (field.value == "2") {  // Assuming 2 represents "No"
-            field.classList.add("input-error");
+        if (!field) return;
+        
+        if (field.value === "2") {  // 2 represents "No"
+            field.classList.add("status-no");
+            field.classList.remove("status-yes");
+        } else if (field.value === "1") { // 1 represents "Yes"
+            field.classList.add("status-yes");
+            field.classList.remove("status-no");
         } else {
-            field.classList.remove("input-error");
+            field.classList.remove("status-no", "status-yes");
         }
     }
 
-    // Call this function on page load for default selected values
-    window.onload = function () {
+    window.addEventListener("DOMContentLoaded", function () {
         var fields = [
             "thc_vehicleRC",
             "thc_vehicle_insurance",
@@ -286,13 +313,13 @@
             "thc_smartlock",
             "thc_smartlockbaterry",
             "thc_bottle_otlseal",
-            "thc_packagesloaded",
             "thc_commercialinvoice",
             "thc_packinglist",
             "thc_eipl_coc",
             "thc_consignmentnote",
             "thc_ewaybill"
         ];
+
         fields.forEach(function (id) {
             highlightIfNo(id);
             var elem = document.getElementById(id);
@@ -311,12 +338,11 @@
             });
         }
 
-        function validateApprovalState(showAlert = false) {
+        function validateApprovalState(showAlert) {
             if (!approvalStatusElem) return true;
             if (approvalStatusElem.value === "1") { // User selected "Approved"
                 var hasNoField = false;
                 fields.forEach(function (id) {
-                    if (id === "thc_packagesloaded") return;
                     var elem = document.getElementById(id);
                     if (elem && elem.value === "2") { // 2 = No
                         hasNoField = true;
@@ -343,7 +369,10 @@
                 }
             });
         }
-    };
+    });
 </script>
-
 {% endblock content %}
+
+
+
+

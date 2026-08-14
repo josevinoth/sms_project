@@ -246,15 +246,25 @@
 
 
                 <!-- Charges (trip costs) -->
-                <td>{{ inv.tc_tripcost }}</td>
-                <td>{{ inv.tc_tollcost }}</td>
-                <td>{{ inv.tc_parkingcost }}</td>
-                <td>{{ inv.tc_loadingcost }}</td>
-                <td>{{ inv.tc_unloadingcost }}</td>
-                <td>{{ inv.tc_haltingcost }}</td>
-                <td>{{ inv.tc_weighmentcost }}</td>
-                <td>{{ inv.tc_handlingcost|add:inv.tc_supervisorcost }}</td>
-                <td>{{ inv.tc_cancellation }}</td>
+                <td>{% if inv.tc_tripcost_check %}{{ inv.tc_tripcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if inv.tc_tollcost_check %}{{ inv.tc_tollcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if inv.tc_parkingcost_check %}{{ inv.tc_parkingcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if inv.tc_loadingcost_check %}{{ inv.tc_loadingcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if inv.tc_unloadingcost_check %}{{ inv.tc_unloadingcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if inv.tc_haltingcost_check %}{{ inv.tc_haltingcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if inv.tc_weighmentcost_check %}{{ inv.tc_weighmentcost }}{% else %}0.0{% endif %}</td>
+                <td>
+                    {% if inv.tc_handlingcost_check and inv.tc_supervisorcost_check %}
+                        {{ inv.tc_handlingcost|add:inv.tc_supervisorcost }}
+                    {% elif inv.tc_handlingcost_check %}
+                        {{ inv.tc_handlingcost }}
+                    {% elif inv.tc_supervisorcost_check %}
+                        {{ inv.tc_supervisorcost }}
+                    {% else %}
+                        0.0
+                    {% endif %}
+                </td>
+                <td>{% if inv.tc_cancellation_check %}{{ inv.tc_cancellation }}{% else %}0.0{% endif %}</td>
 
                 <!-- Invoice Documents -->
                 <td class="text-center">
@@ -342,25 +352,74 @@
            DATE + DEPARTMENT FILTER
            =============================== */
 
+        function parseInputDate(val, isEnd) {
+            if (!val) return null;
+            let parts = val.split('-');
+            if (parts.length === 3) {
+                let y = parseInt(parts[0], 10);
+                let m = parseInt(parts[1], 10) - 1;
+                let d = parseInt(parts[2], 10);
+                if (isEnd) {
+                    return new Date(y, m, d, 23, 59, 59, 999);
+                } else {
+                    return new Date(y, m, d, 0, 0, 0, 0);
+                }
+            }
+            return null;
+        }
+
+        function parseDate(val) {
+            if (!val) return null;
+            val = val.replace(/<[^>]*>/g, '').trim();
+            if (val === '-' || val === '') return null;
+
+            // Handle dd/mm/yyyy
+            let datePart = val.split(' ')[0];
+            let parts = datePart.split('/');
+            if (parts.length === 3) {
+                let d = parseInt(parts[0], 10);
+                let m = parseInt(parts[1], 10) - 1;
+                let y = parseInt(parts[2], 10);
+                let dateObj = new Date(y, m, d, 0, 0, 0, 0);
+                return isNaN(dateObj.getTime()) ? null : dateObj;
+            }
+
+            // Handle yyyy-mm-dd
+            parts = datePart.split('-');
+            if (parts.length === 3) {
+                let y = parseInt(parts[0], 10);
+                let m = parseInt(parts[1], 10) - 1;
+                let d = parseInt(parts[2], 10);
+                let dateObj = new Date(y, m, d, 0, 0, 0, 0);
+                return isNaN(dateObj.getTime()) ? null : dateObj;
+            }
+
+            let dateObj = new Date(val);
+            return isNaN(dateObj.getTime()) ? null : dateObj;
+        }
+
         $.fn.dataTable.ext.search.push(function (settings, data) {
 
             if (settings.nTable.id !== 'trans_invoice_master_list') {
                 return true;
             }
 
-            let from = $('#fromDate').val();
-            let to = $('#toDate').val();
+            let fromStr = $('#fromDate').val();
+            let toStr = $('#toDate').val();
             let dept = $('#departmentFilter').val();
 
             let rowDate = parseDate(data[PLANNING_DATE_COL]);
-            let rowDept = data[DEPT_COL];
+            let rowDept = data[DEPT_COL] ? data[DEPT_COL].trim() : '';
 
-            if (from || to) {
+            if (fromStr || toStr) {
                 if (!rowDate) return false;
             }
 
-            if (from && rowDate < new Date(from)) return false;
-            if (to && rowDate > new Date(to)) return false;
+            let fromDate = parseInputDate(fromStr, false);
+            let toDate = parseInputDate(toStr, true);
+
+            if (fromDate && rowDate < fromDate) return false;
+            if (toDate && rowDate > toDate) return false;
             if (dept && rowDept !== dept) return false;
 
             return true;
@@ -385,19 +444,6 @@
         $(document).on('click', '.filter-input', function (e) {
             e.stopPropagation();
         });
-
-        function parseDate(val) {
-            if (!val || val.trim() === '-' || val.trim() === '') return null;
-            // Handle dd/mm/yyyy
-            let parts = val.split('/');
-            if (parts.length === 3) {
-                // new Date(year, monthIndex, day)
-                let d = new Date(parts[2], parts[1] - 1, parts[0]);
-                return isNaN(d.getTime()) ? null : d;
-            }
-            let d = new Date(val);
-            return isNaN(d.getTime()) ? null : d;
-        }
 
     });
 </script>

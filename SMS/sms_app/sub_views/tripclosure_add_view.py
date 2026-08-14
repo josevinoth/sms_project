@@ -11,7 +11,7 @@ from django.core.files.base import ContentFile
 
 from ..forms import TripclosurefilesForm, TripclosureaddForm
 from ..models import RtratemasterInfo, User_extInfo, Trip_closure_files_Info, EnquirynoteInfo, TripdetailInfo, \
-    Tripstatusinfo, Vehicle_allotmentInfo, DeletionLog
+    Tripstatusinfo, Vehicle_allotmentInfo, DeletionLog, TripAttachmentInfo
 from ..sub_models.ownership_mod import OwnershipInfo
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -226,9 +226,17 @@ def tripclosure_add(request, tripclosure_id=0):
             if trip.tr_category_id == 3 and trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_status_id == 8:
                 is_business_empty_and_cancelled = True
 
+            # Build attachments grouped by category for collapsible dropdowns
+            trip_num_for_ctx = trip.tr_tripnumber if trip else None
+            raw_atts = TripAttachmentInfo.objects.filter(ta_tripnumber=trip_num_for_ctx).order_by('ta_uploaded_at') if trip_num_for_ctx else []
+            attachments_by_cat = {}
+            for att in raw_atts:
+                attachments_by_cat.setdefault(att.ta_category, []).append(att)
+
             context = {
                 'tripclosure_form': tripclosure_form,
                 'tripclosurefiles_form': tripclosurefiles_form,
+                'trip': trip,
                 'first_name': first_name,
                 'enquiry_num': enquiry_num,
                 'consignment_num': consignment_num,
@@ -239,6 +247,7 @@ def tripclosure_add(request, tripclosure_id=0):
                 'tripclosure_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num),
                 'va_sale': va_sale,
                 'is_business_empty_and_cancelled': is_business_empty_and_cancelled,
+                'attachments_by_cat': attachments_by_cat,
             }
         return render(request, "asset_mgt_app/tripclosure_add.html", context)
     else:
@@ -304,7 +313,13 @@ def tripclosure_add(request, tripclosure_id=0):
             if tripclosure_form.is_valid():
                 tripclosure_form.save()
                 print("Trip Closure Main Form Saved")
-                enquiry_num = TripdetailInfo.objects.get(pk=tripclosure_id).tr_enquirynumber
+
+                # Sync checked/unchecked charge amounts to any linked TransInvoiceInfo record
+                refreshed_trip = TripdetailInfo.objects.get(pk=tripclosure_id)
+                from .trans_invoice_view import sync_trip_charges_to_invoice
+                sync_trip_charges_to_invoice(refreshed_trip)
+
+                enquiry_num = refreshed_trip.tr_enquirynumber
                 enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
                 tripclosure_list = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id).values_list(
                     'tc_financestatus', flat=True)
@@ -358,10 +373,30 @@ def tripclosure_add(request, tripclosure_id=0):
                         except (FileNotFoundError, ValueError) as e:
                             print(f"Error copying td_pod: {e}")
                 files_obj.save()
-                
+
+                # Save multi-file attachments per category from separate multi-file inputs
+                MULTI_CAT_MAP = {
+                    'tcf_trip_cost_files': 'TRIP_CHARGES',
+                    'tcf_parking_files': 'PARKING',
+                    'tcf_toll_files': 'TOLL',
+                    'tcf_loading_files': 'LOADING',
+                    'tcf_unloading_files': 'UNLOADING',
+                    'tcf_weighment_files': 'WEIGHMENT',
+                    'tcf_handling_files': 'HANDLING',
+                    'tcf_pod_files': 'POD',
+                }
+                for field_name, cat in MULTI_CAT_MAP.items():
+                    for uploaded_file in request.FILES.getlist(field_name):
+                        TripAttachmentInfo.objects.create(
+                            ta_tripnumber=trip_num,
+                            ta_file=uploaded_file,
+                            ta_filename=uploaded_file.name,
+                            ta_category=cat,
+                        )
+
                 if trip_detail:
                     sync_closure_files_to_invoice(request, trip_detail, files_obj)
-                    
+
                 print("Trip Closure files Form Saved")
                 messages.success(request, 'Record Updated Successfully')
             else:

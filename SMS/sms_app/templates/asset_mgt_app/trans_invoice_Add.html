@@ -323,15 +323,15 @@
             <td>{% if goods %}{{ goods.cg_qty }}{% else %}<span class="text-muted">0</span>{% endif %}</td>
             <td>{% if goods %}{{ goods.cg_weight }}{% else %}<span class="text-muted">0.0</span>{% endif %}</td>
             {% endwith %}
-            <td>{{ inv.ti_trip.tc_tripcost }}</td>
-            <td>{{ inv.ti_trip.tc_tollcost }}</td>
-            <td>{{ inv.ti_trip.tc_parkingcost }}</td>
-            <td>{{ inv.ti_trip.tc_loadingcost }}</td>
-            <td>{{ inv.ti_trip.tc_unloadingcost }}</td>
-            <td>{{ inv.ti_trip.tc_haltingcost }}</td>
-            <td>{{ inv.ti_trip.tc_weighmentcost }}</td>
+            <td>{{ inv.ti_transportation_charges }}</td>
+            <td>{{ inv.ti_toll_charges }}</td>
+            <td>{{ inv.ti_parking_charges }}</td>
+            <td>{{ inv.ti_loading_charges }}</td>
+            <td>{{ inv.ti_unloading_charges }}</td>
+            <td>{{ inv.ti_halting_charges }}</td>
+            <td>{{ inv.ti_weighment_charges }}</td>
             <td>{{ inv.ti_handling_charges }}</td>
-            <td>{{ inv.ti_trip.tc_cancellation }}</td>
+            <td>{{ inv.ti_cancellation_charges }}</td>
             <td class="text-center">
                 {% if inv.combined_pdf_url %}
                 <a href="{{ inv.combined_pdf_url }}" target="_blank" class="btn btn-success btn-sm">

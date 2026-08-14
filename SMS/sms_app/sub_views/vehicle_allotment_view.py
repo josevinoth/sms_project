@@ -22,6 +22,7 @@ from ..sub_models.vendor_info_mod import Vendor_info
 from ..sub_models.emailmaster_mod import Emailmaster
 from ..sub_models.emailtype_mod import Email_type
 from ..sub_models.trans_invoice_mod import TransInvoiceInfo
+from ..sub_models.vehicle_replacement_status_mod import Replacementstatus
 
 
 VEHICLE_NUMBER_REGEX = re.compile(r'^[A-Za-z]{2}[0-9]{2}[A-Za-z]{0,2}[0-9]{4}$')
@@ -443,14 +444,34 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                         busy_enquiry = trip_item.tr_enquirynumber.en_enquirynumber if trip_item.tr_enquirynumber else str(trip_item.tr_enquirynumber_id)
                         break
 
-            if is_busy:
-                messages.error(
+            # 🚫 DOUBLE-SUBMISSION / RACE CONDITION GUARD (Last 15 seconds check)
+            from datetime import timedelta
+            from django.utils import timezone
+
+            fifteen_sec_ago = timezone.now() - timedelta(seconds=15)
+            recent_duplicate = Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber_id=enquiry_id,
+                va_created_at__gte=fifteen_sec_ago
+            )
+            if vehicle_source in [1, 2] and obj.va_vehiclenumber:
+                recent_duplicate = recent_duplicate.filter(va_vehiclenumber=obj.va_vehiclenumber)
+            elif vehicle_source == 3 and obj.va_vehiclenumber_mkt:
+                recent_duplicate = recent_duplicate.filter(va_vehiclenumber_mkt__iexact=obj.va_vehiclenumber_mkt.strip())
+
+            if recent_duplicate.exists():
+                messages.warning(
                     request,
-                    f"This vehicle is currently allotted to another active trip/enquiry ({busy_enquiry}) and the trip has not been closed."
+                    "⚠️ Duplicate submission detected. Vehicle allotment was already processed."
                 )
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
 
+            # Check for rate approval
+            if float(obj.va_special_sale or 0) < float(obj.va_sale or 0):
+                rate_approval_status = Replacementstatus.objects.filter(id=6).first()
+                if rate_approval_status:
+                    obj.va_status = rate_approval_status
+            
             # ✅ SAVE
             obj.save()
 
@@ -571,6 +592,12 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 )
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
+
+            # Check for rate approval
+            if float(obj.va_special_sale or 0) < float(obj.va_sale or 0):
+                rate_approval_status = Replacementstatus.objects.filter(id=6).first()
+                if rate_approval_status:
+                    obj.va_status = rate_approval_status
 
             obj.save()
 
@@ -989,11 +1016,24 @@ def load_vehicle_number(request):
         except (ValueError, TypeError):
             pass
 
-    # 3) Get vehicles matching type+ownership
+    # 3) Get vehicles matching type+ownership (Active only)
     candidate_qs = VehiclemasterInfo.objects.filter(
+        Q(vm_status_id=1) | Q(vm_status__isnull=True),
         vm_vehicletype=vehicletype_placed,
         vm_ownership=vehicletype_source
-    ).exclude(id__in=busy_vehicle_ids).values_list('id', 'vm_registrationnumber')
+    )
+    if current_vehicle_id:
+        try:
+            curr_vid = int(current_vehicle_id)
+            candidate_qs = VehiclemasterInfo.objects.filter(
+                (Q(vm_status_id=1) | Q(vm_status__isnull=True) | Q(pk=curr_vid)),
+                vm_vehicletype=vehicletype_placed,
+                vm_ownership=vehicletype_source
+            )
+        except (ValueError, TypeError):
+            pass
+
+    candidate_qs = candidate_qs.exclude(id__in=busy_vehicle_ids).values_list('id', 'vm_registrationnumber')
 
     vehicle_data = []
     seen_regs = set()
@@ -1071,7 +1111,7 @@ def vehicle_requested(request):
     enquiry_number = request.GET.get('enquiry_number')
 
     requested_vehicles = Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry_number) \
-        .values('env_vehicletype__id', 'env_vehicletype__vt_vehicletype') \
+        .values('env_vehicletype__id', 'env_vehicletype__vt_vehicletype', 'env_vehiclecategory__id', 'env_vehiclecategory__vc_vehiclecategory') \
         .annotate(requested_qty=Sum('env_quantity'))
 
     vehicle_list = []
@@ -1079,6 +1119,8 @@ def vehicle_requested(request):
     for rv in requested_vehicles:
         vehicle_type_id = rv['env_vehicletype__id']
         vehicle_type_name = rv['env_vehicletype__vt_vehicletype']
+        vehicle_category_id = rv.get('env_vehiclecategory__id', '')
+        vehicle_category_name = rv.get('env_vehiclecategory__vc_vehiclecategory', '')
         requested_qty = rv['requested_qty']
 
         # FIXED: Use va_enquirynumber_id instead of nested lookup
@@ -1093,6 +1135,8 @@ def vehicle_requested(request):
             vehicle_list.append({
                 'id': vehicle_type_id,
                 'name': vehicle_type_name,
+                'category_id': vehicle_category_id,
+                'category_name': vehicle_category_name,
                 'remaining': remaining
             })
 
@@ -1126,6 +1170,7 @@ def get_vendor_buy_rate(request):
     vehicle_id = request.GET.get('vehicle_id')  # This is actually a vehicle type ID, not the Vehicle_allotmentInfo ID
     vendor_id = request.GET.get('vendor_id')
     enquiry_id = request.GET.get('enquiry_id')  # ✅ NO SESSION
+    vehicle_category_id = request.GET.get('vehicle_category_id')
 
     print("vehicle_id:", vehicle_id)
     print("vendor_id:", vendor_id)
@@ -1134,16 +1179,20 @@ def get_vendor_buy_rate(request):
     enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)
 
     # Filter for the matching vendor rate
-    rate = VendorratemasterInfo1.objects.filter(
-        vr1_vendor_id=vendor_id,
-        vr1_fromlocation=enquiry.en_fromlocaion,
-        vr1_tolocation=enquiry.en_tolocation,
-        vr1_vehicletype=vehicle_id,  # This is likely a ForeignKey ID
-        vr1_touchpoint=enquiry.en_touchpoint,
-        vr1_touchpoint2=enquiry.en_touchpoint2,
-        vr1_touchpoint3=enquiry.en_touchpoint3,
-        vr1_touchpoint4=enquiry.en_touchpoint4
-    ).first()
+    filter_kwargs = {
+        'vr1_vendor_id': vendor_id,
+        'vr1_fromlocation': enquiry.en_fromlocaion,
+        'vr1_tolocation': enquiry.en_tolocation,
+        'vr1_vehicletype': vehicle_id,  # This is likely a ForeignKey ID
+        'vr1_touchpoint': enquiry.en_touchpoint,
+        'vr1_touchpoint2': enquiry.en_touchpoint2,
+        'vr1_touchpoint3': enquiry.en_touchpoint3,
+        'vr1_touchpoint4': enquiry.en_touchpoint4
+    }
+    if vehicle_category_id:
+        filter_kwargs['vr1_vehiclecategory_id'] = vehicle_category_id
+
+    rate = VendorratemasterInfo1.objects.filter(**filter_kwargs).first()
 
     buy_rate = str(rate.vr1_rate) if rate else "0"
     print("Buy Rate:", buy_rate)
@@ -1161,6 +1210,7 @@ def get_vendor_sale_rate(request):
     vehicle_placed = request.GET.get('vehicle_placed')
     vendor_id = request.GET.get('vendor_id')
     enquiry_id = request.GET.get('enquiry_id')  # ✅ NO SESSION
+    vehicle_category_id = request.GET.get('vehicle_category_id')
 
     if not enquiry_id:
         return JsonResponse({'sale_rate': "0"})
@@ -1179,16 +1229,20 @@ def get_vendor_sale_rate(request):
         return JsonResponse({'sale_rate': "0"})
 
     # Filter for the matching vendor rate
-    rate = RtratemasterInfo.objects.filter(
-        ro_customer=enquiry.en_customername,
-        ro_fromlocation=enquiry.en_fromlocaion,
-        ro_tolocation=enquiry.en_tolocation,
-        ro_vehicletype=vehicle_id,  # ForeignKey to vehicle type
-        ro_touchpoint=enquiry.en_touchpoint,
-        ro_touchpoint2=enquiry.en_touchpoint2,
-        ro_touchpoint3=enquiry.en_touchpoint3,
-        ro_touchpoint4=enquiry.en_touchpoint4
-    ).first()
+    filter_kwargs = {
+        'ro_customer': enquiry.en_customername,
+        'ro_fromlocation': enquiry.en_fromlocaion,
+        'ro_tolocation': enquiry.en_tolocation,
+        'ro_vehicletype': vehicle_id,  # ForeignKey to vehicle type
+        'ro_touchpoint': enquiry.en_touchpoint,
+        'ro_touchpoint2': enquiry.en_touchpoint2,
+        'ro_touchpoint3': enquiry.en_touchpoint3,
+        'ro_touchpoint4': enquiry.en_touchpoint4
+    }
+    if vehicle_category_id:
+        filter_kwargs['ro_vehiclecategory_id'] = vehicle_category_id
+
+    rate = RtratemasterInfo.objects.filter(**filter_kwargs).first()
 
     sale_rate = str(rate.ro_rate) if rate else "0"
 
@@ -1662,3 +1716,26 @@ def vehicle_allotment_driver_replace(request, allotment_id):
 
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
+
+@login_required(login_url='login_page')
+def sell_rate_approval_list(request):
+    allotments = Vehicle_allotmentInfo.objects.filter(va_status_id=6).select_related(
+        'va_enquirynumber',
+        'va_enquirynumber__en_customername',
+        'va_enquirynumber__en_fromlocaion',
+        'va_enquirynumber__en_tolocation',
+        'va_vehiclenumber'
+    ).order_by('-id')
+    return render(request, 'asset_mgt_app/sell_rate_approval_list.html', {'vehicle_allotment_list': allotments})
+
+@login_required(login_url='login_page')
+def approve_sell_rate(request, va_id):
+    va = get_object_or_404(Vehicle_allotmentInfo, pk=va_id)
+    approved_status = Replacementstatus.objects.filter(id=1).first()
+    if approved_status:
+        va.va_status = approved_status
+        va.save(update_fields=['va_status'])
+        messages.success(request, 'Rate approved successfully and vehicle assigned.')
+    else:
+        messages.error(request, 'Status "Vehicle Assigned" not found.')
+    return redirect('sell_rate_approval_list')

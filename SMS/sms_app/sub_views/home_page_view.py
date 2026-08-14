@@ -16,6 +16,7 @@ from ..sub_models.DG_cargo_checklist_mod import DGcargovalueInfo
 from ..sub_models.maintenance_mod import MaintenanceInfo
 from ..sub_models.pk_needassessment_mod import PkneedassessmentInfo
 from ..sub_models.wh_highvaluecheck_info_mod import HighvalueInfo
+from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 
 
 @login_required(login_url='login_page')
@@ -62,6 +63,7 @@ def home_page(request):
     manager_listcount =MaintenanceInfo.objects.filter(mi_approval_status_id=1).count()
     finance_listcount =MaintenanceInfo.objects.filter(mi_approval_status_id=2).count()
     need_assessment_count= PkneedassessmentInfo.objects.filter(na_status_id=5).count()
+    sell_rate_approval_count = Vehicle_allotmentInfo.objects.filter(va_status_id=6).count()
 
     # Last 6 months labels used across monthly warehouse charts.
     now = timezone.now()
@@ -223,6 +225,7 @@ def home_page(request):
                'excess_count': excess_count,
                'manager_listcount': manager_listcount,
                'finance_listcount': finance_listcount,
+               'sell_rate_approval_count': sell_rate_approval_count,
                'count_retrival': count_retrival,
                'count_acceptance': count_acceptance,
                'customer_rate_due_count': customer_rate_due_count,

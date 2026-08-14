@@ -17,6 +17,7 @@ class InvoiceDocumentForm(forms.ModelForm):
             'id_weighment_doc',
             'id_handling_doc',
             'id_pod_doc',
+            'id_sell_rate_doc',
         ]
 
     def __init__(self, *args, **kwargs):

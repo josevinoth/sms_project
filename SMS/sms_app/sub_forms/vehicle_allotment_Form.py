@@ -1,5 +1,6 @@
 from django import forms
-from ..models import Vehicle_allotmentInfo
+from django.db.models import Q
+from ..models import Vehicle_allotmentInfo, VehiclemasterInfo
 
 class VehicleallotmentForm(forms.ModelForm):
     va_vehicletype_selection_requested = forms.BooleanField(initial=True,required=False)
@@ -17,6 +18,15 @@ class VehicleallotmentForm(forms.ModelForm):
             self.fields['va_vehicletype'].empty_label = "--Select--"
         if 'va_vehiclenumber' in self.fields:
             self.fields['va_vehiclenumber'].empty_label = "--Select--"
+            curr_id = self.instance.va_vehiclenumber_id if self.instance else None
+            if curr_id:
+                self.fields['va_vehiclenumber'].queryset = VehiclemasterInfo.objects.filter(
+                    Q(vm_status_id=1) | Q(vm_status__isnull=True) | Q(pk=curr_id)
+                )
+            else:
+                self.fields['va_vehiclenumber'].queryset = VehiclemasterInfo.objects.filter(
+                    Q(vm_status_id=1) | Q(vm_status__isnull=True)
+                )
         if 'va_vendor' in self.fields:
             self.fields['va_vendor'].empty_label = "--Select--"
         if 'va_status' in self.fields:

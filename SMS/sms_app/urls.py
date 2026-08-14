@@ -251,6 +251,8 @@ urlpatterns = [
     path('tripdetail_update/<int:tripdetail_id>/', views.tripdetail_add, name='tripdetail_update'),  # Update tripdetail
     path('tripdetail_nav/<int:tripdetail_id>/', views.tripdetail_nav, name='tripdetail_nav'),  # Navigate tripdetail
     path('tripdetail_delete/<int:tripdetail_id>/', views.tripdetail_delete, name='tripdetail_delete'),  # Delete tripdetail
+    path('delete_trip_attachment/<int:attachment_id>/', views.delete_trip_attachment, name='delete_trip_attachment'),  # Delete individual trip attachment
+    path('view_combined_pod/<str:trip_num>/', views.view_combined_pod, name='view_combined_pod'),  # View combined multi-page POD PDF
     path('trip_email/', views.trip_email, name='trip_email'),
     path('get_trip_email_recipients/', views.get_trip_email_recipients, name='get_trip_email_recipients'),
     path('movementtype_list/', views.movementtype_list, name='movementtype_list'),  # List movementtype,
@@ -567,6 +569,8 @@ urlpatterns = [
          name='vehicle_allotment_replace'),
     path('vehicle_allotment_driver_replace/<int:allotment_id>/', views.vehicle_allotment_driver_replace,
          name='vehicle_allotment_driver_replace'),
+    path('sell_rate_approval_list/', views.sell_rate_approval_list, name='sell_rate_approval_list'),
+    path('approve_sell_rate/<int:va_id>/', views.approve_sell_rate, name='approve_sell_rate'),
 
     path('search/', views.get_queryset, name='search'),  # View Gate-in search
     path('pre_gatein_search/', views.pre_gatein_search, name='pre_gatein_search'),  # View pre Gate-in search

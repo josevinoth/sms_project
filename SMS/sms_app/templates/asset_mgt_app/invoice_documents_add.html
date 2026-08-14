@@ -1,7 +1,6 @@
 {% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-
 <div class="container-fluid py-4">
     <!-- Page Header -->
     <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
@@ -12,7 +11,6 @@
             </a>
         </div>
     </div>
-
     <form method="POST" action="" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="modern-card" style="padding: 1rem !important;">
@@ -48,7 +46,6 @@
                         </div>
                     </div>
                 </div>
-
                 <!-- Column 2: Vehicle & Route Info -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="form-section h-100 p-3">
@@ -84,7 +81,6 @@
                         </div>
                     </div>
                 </div>
-
                 <!-- Column 3: Trip Charges & Status -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="form-section h-100 p-3">
@@ -101,7 +97,6 @@
                                 {% render_field tripclosure_form.tc_tripcost_check id="tc_tripcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
-
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Parking</label>
                             <div class="d-flex align-items-center w-50">
@@ -109,7 +104,6 @@
                                 {% render_field tripclosure_form.tc_parkingcost_check id="tc_parkingcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
-
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Toll</label>
                             <div class="d-flex align-items-center w-50">
@@ -117,7 +111,6 @@
                                 {% render_field tripclosure_form.tc_tollcost_check id="tc_tollcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
-
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Loading</label>
                             <div class="d-flex align-items-center w-50">
@@ -125,7 +118,6 @@
                                 {% render_field tripclosure_form.tc_loadingcost_check id="tc_loadingcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
-
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Unloading</label>
                             <div class="d-flex align-items-center w-50">
@@ -133,7 +125,6 @@
                                 {% render_field tripclosure_form.tc_unloadingcost_check id="tc_unloadingcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
-
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Weighment</label>
                             <div class="d-flex align-items-center w-50">
@@ -141,7 +132,6 @@
                                 {% render_field tripclosure_form.tc_weighmentcost_check id="tc_weighmentcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
-
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Supervisor</label>
                             <div class="d-flex align-items-center w-50">
@@ -149,7 +139,6 @@
                                 {% render_field tripclosure_form.tc_supervisorcost_check id="tc_supervisorcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
-
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Handling</label>
                             <div class="d-flex align-items-center w-50">
@@ -157,7 +146,6 @@
                                 {% render_field tripclosure_form.tc_handlingcost_check id="tc_handlingcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
-
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Halting per day</label>
                             <div class="d-flex align-items-center w-50">
@@ -165,14 +153,12 @@
                                 {% render_field tripclosure_form.tc_haltingcost_check id="tc_haltingcost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
-
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">No of Halting Days</label>
                             <div class="d-flex align-items-center w-50">
                                 {% render_field tripclosure_form.tc_no_of_days_halting id="tc_no_of_days_halting" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
                             </div>
                         </div>
-
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Total Halting</label>
                             <div class="d-flex align-items-center w-50">
@@ -180,7 +166,6 @@
                                 {% render_field tripclosure_form.tc_total_halting_cost_check id="tc_total_halting_cost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
-
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">RTO</label>
                             <div class="d-flex align-items-center w-50">
@@ -188,7 +173,6 @@
                                 {% render_field tripclosure_form.tc_rtocost_check id="tc_rtocost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
-
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Batta</label>
                             <div class="d-flex align-items-center w-50">
@@ -196,7 +180,6 @@
                                 {% render_field tripclosure_form.tc_betacost_check id="tc_betacost_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
-
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Cancellation</label>
                             <div class="d-flex align-items-center w-50">
@@ -204,18 +187,15 @@
                                 {% render_field tripclosure_form.tc_cancellation_check id="tc_cancellation_check" class="ml-2" style="width:16px; height:16px;" %}
                             </div>
                         </div>
-
                         <!-- Invoice Status -->
                         <div class="form-group-modern mt-3 mb-0">
                             <label class="form-label-modern small mb-1 font-weight-bold">Invoice Status</label>
                             {% render_field invoice_form.id_status id="id_status" class="form-control form-control-modern form-control-sm border-primary" %}
                         </div>
-
                         {% render_field tripclosure_form.tr_updated_by id="tr_updated_by" hidden="True" class="form-control form-control-modern" %}
                         {% render_field tripclosurefiles_form.tcf_tripnumber id="tcf_tripnumber" hidden="True" class="form-control form-control-modern" %}
                     </div>
                 </div>
-
                 <!-- Column 4: Document Uploads -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="form-section h-100 p-3">
@@ -225,91 +205,265 @@
                             <a href="{{ invoice_doc.id_merged_pdf.url }}" target="_blank" class="text-success ml-1" title="Download PDF"><i class="fas fa-download"></i></a>
                             {% endif %}
                         </div>
+                        <!-- Trip Charges Doc Row -->
+                        {% with cat_atts=attachments_by_cat.TRIP_CHARGES %}
+                        <div class="mb-2">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="form-label-modern small mb-0" style="font-size:0.8rem; width:38%;">
+                                    Trip Charges
+                                    {% if invoice_doc and invoice_doc.id_trip_cost_doc %}<a href="{{ invoice_doc.id_trip_cost_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                                    {% if cat_atts %}<a href="#inv_att_TRIP_CHARGES" data-toggle="collapse" class="text-info ml-1" title="{{ cat_atts|length }} attachment{{ cat_atts|length|pluralize }}" style="font-size:0.72rem; text-decoration:none;"><i class="fas fa-chevron-circle-down"></i><sup style="font-size:0.6rem; font-weight:600;">{{ cat_atts|length }}</sup></a>{% endif %}
+                                </label>
+                                <div style="width:62%;">
+                                    <input type="file" name="id_trip_cost_files" class="form-control-file small m-0" style="font-size:0.7rem;" multiple accept="image/*,.pdf">
+                                </div>
+                            </div>
+                            {% if cat_atts %}
+                            <div id="inv_att_TRIP_CHARGES" class="collapse">
+                                <div class="border rounded p-1" style="background:#f8fafc; max-height:120px; overflow-y:auto;">
+                                    {% for att in cat_atts %}
+                                    <div class="d-flex align-items-center justify-content-between py-1 border-bottom" id="att-row-{{ att.id }}">
+                                        <span class="text-truncate small" style="max-width:65%; font-size:0.68rem;" title="{{ att.ta_filename|default:att.ta_file.name }}"><i class="far fa-file-alt text-primary mr-1"></i>{{ att.ta_filename|default:att.ta_file.name }}</span>
+                                        <span>
+                                            <a href="{{ att.ta_file.url }}" target="_blank" class="text-primary mr-1" title="View" style="font-size:0.75rem;"><i class="fas fa-eye"></i></a>
+                                            <a role="button" class="text-danger" onclick="deleteTcAtt({{ att.id }})" title="Delete" style="cursor:pointer; font-size:0.75rem;"><i class="fas fa-trash-alt"></i></a>
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endwith %}
+                        <!-- Parking Doc Row -->
+                        {% with cat_atts=attachments_by_cat.PARKING %}
+                        <div class="mb-2">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="form-label-modern small mb-0" style="font-size:0.8rem; width:38%;">
+                                    Parking
+                                    {% if invoice_doc and invoice_doc.id_parking_doc %}<a href="{{ invoice_doc.id_parking_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                                    {% if cat_atts %}<a href="#inv_att_PARKING" data-toggle="collapse" class="text-info ml-1" title="{{ cat_atts|length }} attachment{{ cat_atts|length|pluralize }}" style="font-size:0.72rem; text-decoration:none;"><i class="fas fa-chevron-circle-down"></i><sup style="font-size:0.6rem; font-weight:600;">{{ cat_atts|length }}</sup></a>{% endif %}
+                                </label>
+                                <div style="width:62%;">
+                                    <input type="file" name="id_parking_files" class="form-control-file small m-0" style="font-size:0.7rem;" multiple accept="image/*,.pdf">
+                                </div>
+                            </div>
+                            {% if cat_atts %}
+                            <div id="inv_att_PARKING" class="collapse">
+                                <div class="border rounded p-1" style="background:#f8fafc; max-height:120px; overflow-y:auto;">
+                                    {% for att in cat_atts %}
+                                    <div class="d-flex align-items-center justify-content-between py-1 border-bottom" id="att-row-{{ att.id }}">
+                                        <span class="text-truncate small" style="max-width:65%; font-size:0.68rem;" title="{{ att.ta_filename|default:att.ta_file.name }}"><i class="far fa-file-alt text-primary mr-1"></i>{{ att.ta_filename|default:att.ta_file.name }}</span>
+                                        <span>
+                                            <a href="{{ att.ta_file.url }}" target="_blank" class="text-primary mr-1" title="View" style="font-size:0.75rem;"><i class="fas fa-eye"></i></a>
+                                            <a role="button" class="text-danger" onclick="deleteTcAtt({{ att.id }})" title="Delete" style="cursor:pointer; font-size:0.75rem;"><i class="fas fa-trash-alt"></i></a>
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endwith %}
+                        <!-- Toll Doc Row -->
+                        {% with cat_atts=attachments_by_cat.TOLL %}
+                        <div class="mb-2">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="form-label-modern small mb-0" style="font-size:0.8rem; width:38%;">
+                                    Toll
+                                    {% if invoice_doc and invoice_doc.id_toll_doc %}<a href="{{ invoice_doc.id_toll_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                                    {% if cat_atts %}<a href="#inv_att_TOLL" data-toggle="collapse" class="text-info ml-1" title="{{ cat_atts|length }} attachment{{ cat_atts|length|pluralize }}" style="font-size:0.72rem; text-decoration:none;"><i class="fas fa-chevron-circle-down"></i><sup style="font-size:0.6rem; font-weight:600;">{{ cat_atts|length }}</sup></a>{% endif %}
+                                </label>
+                                <div style="width:62%;">
+                                    <input type="file" name="id_toll_files" class="form-control-file small m-0" style="font-size:0.7rem;" multiple accept="image/*,.pdf">
+                                </div>
+                            </div>
+                            {% if cat_atts %}
+                            <div id="inv_att_TOLL" class="collapse">
+                                <div class="border rounded p-1" style="background:#f8fafc; max-height:120px; overflow-y:auto;">
+                                    {% for att in cat_atts %}
+                                    <div class="d-flex align-items-center justify-content-between py-1 border-bottom" id="att-row-{{ att.id }}">
+                                        <span class="text-truncate small" style="max-width:65%; font-size:0.68rem;" title="{{ att.ta_filename|default:att.ta_file.name }}"><i class="far fa-file-alt text-primary mr-1"></i>{{ att.ta_filename|default:att.ta_file.name }}</span>
+                                        <span>
+                                            <a href="{{ att.ta_file.url }}" target="_blank" class="text-primary mr-1" title="View" style="font-size:0.75rem;"><i class="fas fa-eye"></i></a>
+                                            <a role="button" class="text-danger" onclick="deleteTcAtt({{ att.id }})" title="Delete" style="cursor:pointer; font-size:0.75rem;"><i class="fas fa-trash-alt"></i></a>
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endwith %}
+                        <!-- Loading Doc Row -->
+                        {% with cat_atts=attachments_by_cat.LOADING %}
+                        <div class="mb-2">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="form-label-modern small mb-0" style="font-size:0.8rem; width:38%;">
+                                    Loading
+                                    {% if invoice_doc and invoice_doc.id_loading_doc %}<a href="{{ invoice_doc.id_loading_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                                    {% if cat_atts %}<a href="#inv_att_LOADING" data-toggle="collapse" class="text-info ml-1" title="{{ cat_atts|length }} attachment{{ cat_atts|length|pluralize }}" style="font-size:0.72rem; text-decoration:none;"><i class="fas fa-chevron-circle-down"></i><sup style="font-size:0.6rem; font-weight:600;">{{ cat_atts|length }}</sup></a>{% endif %}
+                                </label>
+                                <div style="width:62%;">
+                                    <input type="file" name="id_loading_files" class="form-control-file small m-0" style="font-size:0.7rem;" multiple accept="image/*,.pdf">
+                                </div>
+                            </div>
+                            {% if cat_atts %}
+                            <div id="inv_att_LOADING" class="collapse">
+                                <div class="border rounded p-1" style="background:#f8fafc; max-height:120px; overflow-y:auto;">
+                                    {% for att in cat_atts %}
+                                    <div class="d-flex align-items-center justify-content-between py-1 border-bottom" id="att-row-{{ att.id }}">
+                                        <span class="text-truncate small" style="max-width:65%; font-size:0.68rem;" title="{{ att.ta_filename|default:att.ta_file.name }}"><i class="far fa-file-alt text-primary mr-1"></i>{{ att.ta_filename|default:att.ta_file.name }}</span>
+                                        <span>
+                                            <a href="{{ att.ta_file.url }}" target="_blank" class="text-primary mr-1" title="View" style="font-size:0.75rem;"><i class="fas fa-eye"></i></a>
+                                            <a role="button" class="text-danger" onclick="deleteTcAtt({{ att.id }})" title="Delete" style="cursor:pointer; font-size:0.75rem;"><i class="fas fa-trash-alt"></i></a>
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endwith %}
 
-                        <!-- Compact Doc rows -->
+                        <!-- Sell Rate Doc Field -->
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
-                                Trip Charges Doc 
-                                {% if invoice_doc and invoice_doc.id_trip_cost_doc %}<a href="{{ invoice_doc.id_trip_cost_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                                Sell Rate Doc {% if is_sell_rate_doc_required %}<span class="text-danger font-weight-bold" title="Mandatory because Special Sell > Standard Sell">*</span>{% endif %}
+                                {% if invoice_doc and invoice_doc.id_sell_rate_doc %}<a href="{{ invoice_doc.id_sell_rate_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
                             </label>
                             <div class="w-50">
-                                {% render_field invoice_form.id_trip_cost_doc id="id_trip_cost_doc" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                                {% if is_sell_rate_doc_required and not invoice_doc.id_sell_rate_doc %}
+                                    {% render_field invoice_form.id_sell_rate_doc id="id_sell_rate_doc" class="form-control-file small m-0" style="font-size:0.7rem;" required="required" %}
+                                {% else %}
+                                    {% render_field invoice_form.id_sell_rate_doc id="id_sell_rate_doc" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                                {% endif %}
                             </div>
                         </div>
 
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
-                                Parking Doc 
-                                {% if invoice_doc and invoice_doc.id_parking_doc %}<a href="{{ invoice_doc.id_parking_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
-                            </label>
-                            <div class="w-50">
-                                {% render_field invoice_form.id_parking_doc id="id_parking_doc" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                        <!-- Unloading Doc Row -->
+                        {% with cat_atts=attachments_by_cat.UNLOADING %}
+                        <div class="mb-2">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="form-label-modern small mb-0" style="font-size:0.8rem; width:38%;">
+                                    Unloading
+                                    {% if invoice_doc and invoice_doc.id_unloading_doc %}<a href="{{ invoice_doc.id_unloading_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                                    {% if cat_atts %}<a href="#inv_att_UNLOADING" data-toggle="collapse" class="text-info ml-1" title="{{ cat_atts|length }} attachment{{ cat_atts|length|pluralize }}" style="font-size:0.72rem; text-decoration:none;"><i class="fas fa-chevron-circle-down"></i><sup style="font-size:0.6rem; font-weight:600;">{{ cat_atts|length }}</sup></a>{% endif %}
+                                </label>
+                                <div style="width:62%;">
+                                    <input type="file" name="id_unloading_files" class="form-control-file small m-0" style="font-size:0.7rem;" multiple accept="image/*,.pdf">
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
-                                Toll Doc 
-                                {% if invoice_doc and invoice_doc.id_toll_doc %}<a href="{{ invoice_doc.id_toll_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
-                            </label>
-                            <div class="w-50">
-                                {% render_field invoice_form.id_toll_doc id="id_toll_doc" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                            {% if cat_atts %}
+                            <div id="inv_att_UNLOADING" class="collapse">
+                                <div class="border rounded p-1" style="background:#f8fafc; max-height:120px; overflow-y:auto;">
+                                    {% for att in cat_atts %}
+                                    <div class="d-flex align-items-center justify-content-between py-1 border-bottom" id="att-row-{{ att.id }}">
+                                        <span class="text-truncate small" style="max-width:65%; font-size:0.68rem;" title="{{ att.ta_filename|default:att.ta_file.name }}"><i class="far fa-file-alt text-primary mr-1"></i>{{ att.ta_filename|default:att.ta_file.name }}</span>
+                                        <span>
+                                            <a href="{{ att.ta_file.url }}" target="_blank" class="text-primary mr-1" title="View" style="font-size:0.75rem;"><i class="fas fa-eye"></i></a>
+                                            <a role="button" class="text-danger" onclick="deleteTcAtt({{ att.id }})" title="Delete" style="cursor:pointer; font-size:0.75rem;"><i class="fas fa-trash-alt"></i></a>
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
                             </div>
+                            {% endif %}
                         </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
-                                Loading Doc 
-                                {% if invoice_doc and invoice_doc.id_loading_doc %}<a href="{{ invoice_doc.id_loading_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
-                            </label>
-                            <div class="w-50">
-                                {% render_field invoice_form.id_loading_doc id="id_loading_doc" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                        {% endwith %}
+                        <!-- Weighment Doc Row -->
+                        {% with cat_atts=attachments_by_cat.WEIGHMENT %}
+                        <div class="mb-2">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="form-label-modern small mb-0" style="font-size:0.8rem; width:38%;">
+                                    Weighment
+                                    {% if invoice_doc and invoice_doc.id_weighment_doc %}<a href="{{ invoice_doc.id_weighment_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                                    {% if cat_atts %}<a href="#inv_att_WEIGHMENT" data-toggle="collapse" class="text-info ml-1" title="{{ cat_atts|length }} attachment{{ cat_atts|length|pluralize }}" style="font-size:0.72rem; text-decoration:none;"><i class="fas fa-chevron-circle-down"></i><sup style="font-size:0.6rem; font-weight:600;">{{ cat_atts|length }}</sup></a>{% endif %}
+                                </label>
+                                <div style="width:62%;">
+                                    <input type="file" name="id_weighment_files" class="form-control-file small m-0" style="font-size:0.7rem;" multiple accept="image/*,.pdf">
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
-                                Unloading Doc 
-                                {% if invoice_doc and invoice_doc.id_unloading_doc %}<a href="{{ invoice_doc.id_unloading_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
-                            </label>
-                            <div class="w-50">
-                                {% render_field invoice_form.id_unloading_doc id="id_unloading_doc" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                            {% if cat_atts %}
+                            <div id="inv_att_WEIGHMENT" class="collapse">
+                                <div class="border rounded p-1" style="background:#f8fafc; max-height:120px; overflow-y:auto;">
+                                    {% for att in cat_atts %}
+                                    <div class="d-flex align-items-center justify-content-between py-1 border-bottom" id="att-row-{{ att.id }}">
+                                        <span class="text-truncate small" style="max-width:65%; font-size:0.68rem;" title="{{ att.ta_filename|default:att.ta_file.name }}"><i class="far fa-file-alt text-primary mr-1"></i>{{ att.ta_filename|default:att.ta_file.name }}</span>
+                                        <span>
+                                            <a href="{{ att.ta_file.url }}" target="_blank" class="text-primary mr-1" title="View" style="font-size:0.75rem;"><i class="fas fa-eye"></i></a>
+                                            <a role="button" class="text-danger" onclick="deleteTcAtt({{ att.id }})" title="Delete" style="cursor:pointer; font-size:0.75rem;"><i class="fas fa-trash-alt"></i></a>
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
                             </div>
+                            {% endif %}
                         </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
-                                Weighment Doc 
-                                {% if invoice_doc and invoice_doc.id_weighment_doc %}<a href="{{ invoice_doc.id_weighment_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
-                            </label>
-                            <div class="w-50">
-                                {% render_field invoice_form.id_weighment_doc id="id_weighment_doc" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                        {% endwith %}
+                        <!-- Handling Doc Row -->
+                        {% with cat_atts=attachments_by_cat.HANDLING %}
+                        <div class="mb-2">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="form-label-modern small mb-0" style="font-size:0.8rem; width:38%;">
+                                    Handling
+                                    {% if invoice_doc and invoice_doc.id_handling_doc %}<a href="{{ invoice_doc.id_handling_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                                    {% if cat_atts %}<a href="#inv_att_HANDLING" data-toggle="collapse" class="text-info ml-1" title="{{ cat_atts|length }} attachment{{ cat_atts|length|pluralize }}" style="font-size:0.72rem; text-decoration:none;"><i class="fas fa-chevron-circle-down"></i><sup style="font-size:0.6rem; font-weight:600;">{{ cat_atts|length }}</sup></a>{% endif %}
+                                </label>
+                                <div style="width:62%;">
+                                    <input type="file" name="id_handling_files" class="form-control-file small m-0" style="font-size:0.7rem;" multiple accept="image/*,.pdf">
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
-                                Handling Doc 
-                                {% if invoice_doc and invoice_doc.id_handling_doc %}<a href="{{ invoice_doc.id_handling_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
-                            </label>
-                            <div class="w-50">
-                                {% render_field invoice_form.id_handling_doc id="id_handling_doc" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                            {% if cat_atts %}
+                            <div id="inv_att_HANDLING" class="collapse">
+                                <div class="border rounded p-1" style="background:#f8fafc; max-height:120px; overflow-y:auto;">
+                                    {% for att in cat_atts %}
+                                    <div class="d-flex align-items-center justify-content-between py-1 border-bottom" id="att-row-{{ att.id }}">
+                                        <span class="text-truncate small" style="max-width:65%; font-size:0.68rem;" title="{{ att.ta_filename|default:att.ta_file.name }}"><i class="far fa-file-alt text-primary mr-1"></i>{{ att.ta_filename|default:att.ta_file.name }}</span>
+                                        <span>
+                                            <a href="{{ att.ta_file.url }}" target="_blank" class="text-primary mr-1" title="View" style="font-size:0.75rem;"><i class="fas fa-eye"></i></a>
+                                            <a role="button" class="text-danger" onclick="deleteTcAtt({{ att.id }})" title="Delete" style="cursor:pointer; font-size:0.75rem;"><i class="fas fa-trash-alt"></i></a>
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
                             </div>
+                            {% endif %}
                         </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
-                                POD Doc 
-                                {% if invoice_doc and invoice_doc.id_pod_doc %}<a href="{{ invoice_doc.id_pod_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
-                            </label>
-                            <div class="w-50">
-                                {% render_field invoice_form.id_pod_doc id="id_pod_doc" class="form-control-file small m-0" style="font-size:0.7rem;" %}
+                        {% endwith %}
+                        <!-- POD Doc Row -->
+                        {% with cat_atts=attachments_by_cat.POD %}
+                        <div class="mb-2">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="form-label-modern small mb-0" style="font-size:0.8rem; width:38%;">
+                                    POD
+                                    {% if invoice_doc and invoice_doc.id_pod_doc %}<a href="{{ invoice_doc.id_pod_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
+                                    {% if cat_atts %}<a href="#inv_att_POD" data-toggle="collapse" class="text-info ml-1" title="{{ cat_atts|length }} attachment{{ cat_atts|length|pluralize }}" style="font-size:0.72rem; text-decoration:none;"><i class="fas fa-chevron-circle-down"></i><sup style="font-size:0.6rem; font-weight:600;">{{ cat_atts|length }}</sup></a>{% endif %}
+                                </label>
+                                <div style="width:62%;">
+                                    <input type="file" name="id_pod_files" class="form-control-file small m-0" style="font-size:0.7rem;" multiple accept="image/*,.pdf">
+                                </div>
                             </div>
+                            {% if cat_atts %}
+                            <div id="inv_att_POD" class="collapse">
+                                <div class="border rounded p-1" style="background:#f8fafc; max-height:120px; overflow-y:auto;">
+                                    {% for att in cat_atts %}
+                                    <div class="d-flex align-items-center justify-content-between py-1 border-bottom" id="att-row-{{ att.id }}">
+                                        <span class="text-truncate small" style="max-width:65%; font-size:0.68rem;" title="{{ att.ta_filename|default:att.ta_file.name }}"><i class="far fa-file-alt text-primary mr-1"></i>{{ att.ta_filename|default:att.ta_file.name }}</span>
+                                        <span>
+                                            <a href="{{ att.ta_file.url }}" target="_blank" class="text-primary mr-1" title="View" style="font-size:0.75rem;"><i class="fas fa-eye"></i></a>
+                                            <a role="button" class="text-danger" onclick="deleteTcAtt({{ att.id }})" title="Delete" style="cursor:pointer; font-size:0.75rem;"><i class="fas fa-trash-alt"></i></a>
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
+                        {% endwith %}
                     </div>
                 </div>
             </div>
-
             <!-- Message Area -->
             {% if messages %}
             <div class="message-container my-3 text-center">
@@ -320,7 +474,6 @@
                 {% endfor %}
             </div>
             {% endif %}
-
             <!-- Action Buttons -->
             <div class="row mt-4">
                 <div class="col-12">
@@ -340,7 +493,6 @@
     <!-- Shared Table Sub-template -->
     {% include "asset_mgt_app/tripclosure_list_woh.html" %}
 </div>
-
 <script>
 	const IS_EDIT = true;
 </script>
@@ -348,12 +500,9 @@
 	function calcTotalHalting() {
         let halting = parseFloat($("#tc_haltingcost").val()) || 0;
         let days = parseFloat($("#tc_no_of_days_halting").val()) || 0;
-
         let total = halting * days;
-
         $("#tc_total_halting_cost").val(total.toFixed(2));
     }
-
 	$(document).ready(function () {
 		document.getElementById("tr_updated_by").value = '{{ user_id }}';
 		var tr_enquirynumber_val = document.getElementById("tr_enquirynumber").value;
@@ -364,13 +513,25 @@
 		{% if invoice_doc and invoice_doc.id_status %}
 			document.getElementById("id_status").value = '{{ invoice_doc.id_status.id }}';
 		{% endif %}
-
         // Calculate when user types in days OR when halting cost changes
         $("#tc_no_of_days_halting").on("input", calcTotalHalting);
         $("#tc_haltingcost").on("input", calcTotalHalting);
-
         // Also calculate once on load
         calcTotalHalting();
 	});
+</script>
+<script>
+function deleteTcAtt(attId) {
+    if (!confirm('Delete this attachment?')) return;
+    fetch('/SMS/delete_trip_attachment/' + attId + '/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+    }).then(function(r){ return r.json(); }).then(function(data){
+        if (data.status === 'success') {
+            var row = document.getElementById('att-row-' + attId);
+            if (row) row.remove();
+        } else { alert('Delete failed: ' + data.message); }
+    }).catch(function(e){ alert('Error: ' + e); });
+}
 </script>
 {% endblock content %}

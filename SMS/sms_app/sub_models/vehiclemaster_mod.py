@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import Vendor_info,VehiclecategoryInfo,VhmanufacturerInfo,VehiclemodelInfo,OwnershipInfo,BodyInfo,VehicletypeInfo,AxletypeInfo,FueltypeInfo,VehiclecolourInfo,Insurance_Type,PermittypeInfo,StatusList
+from ..models import Vendor_info,VehiclecategoryInfo,VhmanufacturerInfo,VehiclemodelInfo,OwnershipInfo,BodyInfo,VehicletypeInfo,AxletypeInfo,FueltypeInfo,VehiclecolourInfo,Insurance_Type,PermittypeInfo,StatusList,ActiveinactiveInfo
 
 def insurance_attach_path(instance, filename):
     return 'Insurance attachfiles/{0}/{1}'.format(instance.vm_vehiclemanufacturer, filename)
@@ -17,6 +17,7 @@ def pollution_attach_path(instance, filename):
     return 'Pollution attachfiles/{0}/{1}'.format(instance.vm_vehiclemanufacturer, filename)
 
 class VehiclemasterInfo(models.Model):
+    vm_status = models.ForeignKey(ActiveinactiveInfo, on_delete=models.SET_NULL, default=1, null=True, blank=True, verbose_name="Vehicle Status")
     vm_vehiclemanufacturer = models.ForeignKey(VhmanufacturerInfo, on_delete=models.CASCADE, default='',null=True,blank=True)
     vm_vehiclemodel = models.ForeignKey(VehiclemodelInfo, on_delete=models.CASCADE, default='',null=True,blank=True)
     vm_ownership = models.ForeignKey(OwnershipInfo, on_delete=models.CASCADE, default='',null=True,blank=True)

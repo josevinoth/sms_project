@@ -166,7 +166,7 @@ from .sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
 from .sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from .sub_models.approval_status_mod import approval_status_info
 from .sub_models.trip_approval_info_mod import Trip_approval_info
-from .sub_models.tripdetail_mod import TripdetailInfo,Trip_category_info,Trip_closure_files_Info
+from .sub_models.tripdetail_mod import TripdetailInfo,Trip_category_info,Trip_closure_files_Info,TripAttachmentInfo
 from .sub_models.test_info_mod import TestInfo
 from .sub_models.fuel_vendor_mod import Fuelvendor
 from .sub_models.bunk_name_mod import Bunkname

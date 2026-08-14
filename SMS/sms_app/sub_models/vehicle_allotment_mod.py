@@ -23,6 +23,7 @@ class Vehicle_allotmentInfo(models.Model):
     va_remarks=models.TextField(max_length=300,blank=True, null=True)
     va_vendor = models.ForeignKey(Vendor_info,on_delete=models.CASCADE, default='',blank=True, null=True)
     va_sale = models.FloatField(max_length=100,null=True,blank=True)
+    va_special_sale = models.FloatField(max_length=100,null=True,blank=True)
     # va_status = models.ForeignKey(StatusList, on_delete=models.CASCADE, default=6,blank=True,null=True)
     va_status = models.ForeignKey(Replacementstatus, on_delete=models.CASCADE, default=1,blank=True,null=True)
     va_profit_percentage = models.FloatField(null=True, blank=True)
