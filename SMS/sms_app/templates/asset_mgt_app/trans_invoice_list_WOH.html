@@ -64,6 +64,7 @@
 
                 <th>Veh No</th>
                 <th>Veh Type</th>
+                <th>Veh Category</th>
 
                 <th>Veh Placed Date & Time</th>
                 <th>Veh Released Date & Time</th>
@@ -128,6 +129,7 @@
                 <!-- ================= VEHICLE ================= -->
                 <td>{{ trip.tr_vehiclenumber|default:"-" }}</td>
                 <td>{{ trip.tr_vehicletype|default:"-" }}</td>
+                <td>{{ trip.vehicle_category|default:"-" }}</td>
 
                 <!-- ================= TIMELINE ================= -->
                 <td data-order="{{ trip.tr_departeddate_pickup|date:'Y-m-d H:i' }}">{{ trip.tr_departeddate_pickup|date:"d/m/Y H:i"|default:"-" }}</td>

@@ -157,11 +157,32 @@
             width: '100%'
         });
 
-        // Auto-submit on vendor change
+        // Auto-submit and update vehicle dropdown on vendor change
         $('#vendor_select').on('change', function () {
-            // Reset vehicle selection
-            $('#vehicle_number').val('').trigger('change');
-            $('#vendor_p_l_report_table').DataTable().ajax.reload();
+            var vendorId = $(this).val();
+            
+            // If vendor selected, fetch its vehicles via AJAX
+            if (vendorId) {
+                $.ajax({
+                    url: "{% url 'get_pl_vehicles_by_vendor' %}",
+                    data: { 'vendor_id': vendorId },
+                    dataType: 'json',
+                    success: function (data) {
+                        var $vehicleSelect = $('#vehicle_number');
+                        $vehicleSelect.empty();
+                        $vehicleSelect.append('<option value="">Select Vehicle</option>');
+                        $.each(data, function (index, vehicle) {
+                            $vehicleSelect.append('<option value="' + vehicle + '">' + vehicle + '</option>');
+                        });
+                        $vehicleSelect.val('').trigger('change.select2');
+                        $('#vendor_p_l_report_table').DataTable().ajax.reload();
+                    }
+                });
+            } else {
+                // If vendor is cleared, we could fetch all vehicles or just reload the page.
+                // Since Django populates all vehicles on initial load when vendor is empty, reload is cleanest.
+                window.location.reload();
+            }
         });
     });
 </script>

@@ -333,17 +333,18 @@
                         [17, 'EMPTY KM BUY COST',             d.empty_km_buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
                         [18, 'BUSINESS EMPTY KM',             d.business_empty_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
                         [19, 'BUSINESS EMPTY KM BUY COST',    d.business_empty_km_buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [20, 'SELLING',                       d.selling.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [21, 'BUYING',                        d.buying.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [22, 'PROFIT',                        d.profit.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [23, 'SELLING %',                     d.sell_pct + '%'],
-                        [24, 'BUYING %',                      d.buy_pct + '%'],
+                        [20, 'BUY COST',                      d.buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [21, 'SELLING',                       d.selling.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [22, 'BUYING',                        d.buying.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [23, 'PROFIT',                        d.profit.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [24, 'SELLING %',                     d.sell_pct + '%'],
+                        [25, 'BUYING %',                      d.buy_pct + '%'],
                     ];
 
                     var html = '';
                     rows.forEach(function (r) {
                         var rowStyle = '';
-                        if (r[0] === 22) rowStyle = 'style="background:#d4edda; font-weight:700;"'; // profit row
+                        if (r[0] === 23) rowStyle = 'style="background:#d4edda; font-weight:700;"'; // profit row
                         html += '<tr ' + rowStyle + '><td class="text-center font-weight-bold">' + r[0] + '</td><td class="font-weight-bold">' + r[1] + ':</td><td>' + r[2] + '</td></tr>';
                     });
                     tbody.html(html);
