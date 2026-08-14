@@ -28,7 +28,9 @@ from django.core.paginator import Paginator
 
 def get_allotment_sale_rate(trip):
     """
-    Robustly fetch va_sale for a trip across single and multi-vehicle allotments.
+    Match Enquiry Number and Vehicle Number in Vehicle_allotmentInfo.
+    Pull cost from Special Sell (va_special_sale) first, fallback to Standard Sell (va_sale).
+    If allotment rates are missing/0, fallback to Route Rate Master (RtratemasterInfo).
     """
     if not trip or not trip.tr_enquirynumber:
         return 0.0
@@ -37,13 +39,10 @@ def get_allotment_sale_rate(trip):
         va_enquirynumber=trip.tr_enquirynumber
     ).select_related('va_vehiclenumber')
 
-    if not allotments.exists():
-        return 0.0
-
     target_veh = (trip.tr_vehiclenumber or '').strip().replace(' ', '').replace('-', '').upper()
 
-    # 1. Try normalized vehicle registration string match
-    if target_veh:
+    # 1. Match by Enquiry Number + Vehicle Number in Allotments
+    if allotments.exists() and target_veh:
         for a in allotments:
             reg = ''
             if a.va_vehiclenumber and getattr(a.va_vehiclenumber, 'vm_registrationnumber', None):
@@ -51,32 +50,52 @@ def get_allotment_sale_rate(trip):
             elif a.va_vehiclenumber_mkt:
                 reg = a.va_vehiclenumber_mkt.strip().replace(' ', '').replace('-', '').upper()
 
-            if reg and reg == target_veh and a.va_sale is not None:
-                return float(a.va_sale)
+            if reg and reg == target_veh:
+                if a.va_special_sale is not None and float(a.va_special_sale) > 0:
+                    return float(a.va_special_sale)
+                if a.va_sale is not None and float(a.va_sale) > 0:
+                    return float(a.va_sale)
 
-    # 2. Match by placed vehicle type if present
-    if getattr(trip, 'tr_vehicletype_placed_id', None):
+    # 2. Fallback: match any allotment for this enquiry that has va_special_sale or va_sale
+    if allotments.exists():
         for a in allotments:
-            if a.va_vehicletype_placed_id == trip.tr_vehicletype_placed_id and a.va_sale is not None:
+            if a.va_special_sale is not None and float(a.va_special_sale) > 0:
+                return float(a.va_special_sale)
+            if a.va_sale is not None and float(a.va_sale) > 0:
                 return float(a.va_sale)
 
-    # 3. Match by requested vehicle type
-    if getattr(trip, 'tr_vehicletype_id', None):
-        for a in allotments:
-            if a.va_vehicletype_id == trip.tr_vehicletype_id and a.va_sale is not None:
-                return float(a.va_sale)
+    # 3. Fallback: Query Route Rate Master (RtratemasterInfo) for this Enquiry + Vehicle Type
+    enquiry = trip.tr_enquirynumber
+    from_loc_id = getattr(trip, 'tr_departedlocation_id', None) or getattr(enquiry, 'en_fromlocaion_id', None)
+    to_loc_id = getattr(trip, 'tr_reportedlocation_id', None) or getattr(enquiry, 'en_tolocation_id', None)
+    vt_id = getattr(trip, 'tr_vehicletype_placed_id', None) or getattr(trip, 'tr_vehicletype_id', None) or getattr(enquiry, 'en_vehicledetails_id', None)
+    customer = getattr(enquiry, 'en_customername', None)
+    dept = getattr(enquiry, 'en_customerdepartment', None)
 
-    # 4. Fallback to any allotment under this enquiry that has va_sale > 0
-    for a in allotments:
-        if a.va_sale is not None and float(a.va_sale) > 0:
-            return float(a.va_sale)
+    if from_loc_id and to_loc_id and customer:
+        rate_filter = {
+            'ro_customer': customer,
+            'ro_fromlocation_id': from_loc_id,
+            'ro_tolocation_id': to_loc_id,
+        }
+        if vt_id:
+            rate_filter['ro_vehicletype_id'] = vt_id
 
-    # 5. Fallback to first allotment's va_sale if present
-    first_allotment = allotments.first()
-    if first_allotment and first_allotment.va_sale is not None:
-        return float(first_allotment.va_sale)
+        if dept:
+            dept_filter = dict(rate_filter)
+            dept_filter['ro_customerdepartment'] = dept
+            rt_match = RtratemasterInfo.objects.filter(**dept_filter).first()
+            if rt_match and rt_match.ro_rate:
+                return float(rt_match.ro_rate)
+
+        rt_match = RtratemasterInfo.objects.filter(**rate_filter).first()
+        if rt_match and rt_match.ro_rate:
+            return float(rt_match.ro_rate)
 
     return 0.0
+
+
+
 
 
 @login_required(login_url='login_page')
@@ -621,26 +640,30 @@ def transport_calculate_trip_charges(request):
     # vehicle_category_id=EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_vehiclecategory
 
     if trip_category_id == '1':
-        # Retrieve RoRateInfo based on the selected values
-        try:
-            ro_rate = RtratemasterInfo.objects.get(
+        # Retrieve RoRateInfo with department, then fallback without department
+        rate_obj = RtratemasterInfo.objects.filter(
+            ro_fromlocation=from_location_id,
+            ro_tolocation=to_location_id,
+            ro_vehicletype=vehicle_type_id,
+            ro_customer=customer_id,
+            ro_customerdepartment=customer_department_id,
+        ).first()
+        if not rate_obj:
+            rate_obj = RtratemasterInfo.objects.filter(
                 ro_fromlocation=from_location_id,
                 ro_tolocation=to_location_id,
                 ro_vehicletype=vehicle_type_id,
                 ro_customer=customer_id,
-                ro_customerdepartment=customer_department_id,
-                # ro_vehiclecategory_id=vehicle_category_id
-            ).ro_rate
-            print('ro_rate', ro_rate)
-            return JsonResponse({'ro_rate': ro_rate})
+            ).first()
 
-        except RtratemasterInfo.DoesNotExist:
-            print("Doest not exist")
-            # Handle the case where the RoRateInfo does not exist
+        if rate_obj and rate_obj.ro_rate:
+            return JsonResponse({'ro_rate': rate_obj.ro_rate})
+        else:
             return JsonResponse({'ro_rate': 0})
     else:
         # Return 100 if trip_category is not 1
         return JsonResponse({'ro_rate': 100})
+
 
 
 @csrf_exempt

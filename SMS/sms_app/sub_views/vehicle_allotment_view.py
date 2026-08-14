@@ -466,6 +466,28 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
 
+            # Auto-fill va_sale from RtratemasterInfo if left blank or 0
+            if not obj.va_sale or float(obj.va_sale) == 0:
+                enquiry_obj = obj.va_enquirynumber
+                vt_id = obj.va_vehicletype_placed_id or obj.va_vehicletype_id
+                if enquiry_obj and vt_id:
+                    rm = RtratemasterInfo.objects.filter(
+                        ro_customer=enquiry_obj.en_customername,
+                        ro_customerdepartment=enquiry_obj.en_customerdepartment,
+                        ro_fromlocation=enquiry_obj.en_fromlocaion,
+                        ro_tolocation=enquiry_obj.en_tolocation,
+                        ro_vehicletype_id=vt_id
+                    ).first()
+                    if not rm:
+                        rm = RtratemasterInfo.objects.filter(
+                            ro_customer=enquiry_obj.en_customername,
+                            ro_fromlocation=enquiry_obj.en_fromlocaion,
+                            ro_tolocation=enquiry_obj.en_tolocation,
+                            ro_vehicletype_id=vt_id
+                        ).first()
+                    if rm and rm.ro_rate:
+                        obj.va_sale = float(rm.ro_rate)
+
             # Check for rate approval
             if float(obj.va_special_sale or 0) < float(obj.va_sale or 0):
                 rate_approval_status = Replacementstatus.objects.filter(id=6).first()
@@ -474,6 +496,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             
             # ✅ SAVE
             obj.save()
+
 
             # ===== AUTO EMAIL TRIGGER (only if Submit & Email clicked) =====
             submit_and_email = request.POST.get('submit_and_email')
