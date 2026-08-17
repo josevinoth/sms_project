@@ -688,6 +688,41 @@ a.btn-modern + a.btn-modern {
     letter-spacing: 0.5px;
     padding: 0.6rem 0.8rem !important;
     border: none !important;
+    border-bottom: none !important;
+}
+
+/* ══ Remove line/border under table header for modern tables & DataTables ══ */
+.modern-table,
+.modern-table thead,
+.modern-table thead tr,
+.modern-table thead th,
+table.dataTable.modern-table,
+table.dataTable.modern-table thead,
+table.dataTable.modern-table thead tr,
+table.dataTable.modern-table thead th,
+div.dataTables_scrollHead,
+div.dataTables_scrollHeadInner,
+div.dataTables_scrollHeadInner table,
+div.dataTables_scrollHeadInner table.modern-table,
+div.dataTables_scrollBody table.modern-table,
+table.dataTable.no-footer {
+    border-bottom: none !important;
+    border-top: none !important;
+    box-shadow: none !important;
+}
+
+div.dataTables_scrollBody thead {
+    visibility: collapse !important;
+}
+div.dataTables_scrollBody thead tr,
+div.dataTables_scrollBody thead th {
+    height: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    border: none !important;
+    border-top-width: 0 !important;
+    border-bottom-width: 0 !important;
+    line-height: 0 !important;
 }
 
 [data-theme="dark"] .modern-table thead tr:last-child th {
@@ -707,6 +742,7 @@ a.btn-modern + a.btn-modern {
     background: transparent !important;
     padding: 0.5rem 0.2rem !important;
     border: none !important;
+    border-bottom: none !important;
 }
 
 .modern-table tbody tr {

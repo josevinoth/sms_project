@@ -138,7 +138,8 @@ def sync_trip_charges_to_invoice(trip):
     parking   = t.tc_parkingcost if t.tc_parkingcost_check else 0
     loading   = t.tc_loadingcost if t.tc_loadingcost_check else 0
     unloading = t.tc_unloadingcost if t.tc_unloadingcost_check else 0
-    halting   = t.tc_haltingcost if t.tc_haltingcost_check else 0
+    halting   = ((t.tc_total_halting_cost or 0) if t.tc_total_halting_cost_check else 0) + \
+                ((t.tc_haltingcost or 0) if t.tc_haltingcost_check else 0)
     weighment = t.tc_weighmentcost if t.tc_weighmentcost_check else 0
     handling  = ((t.tc_handlingcost or 0) if t.tc_handlingcost_check else 0) + \
                 ((t.tc_supervisorcost or 0) if t.tc_supervisorcost_check else 0)
@@ -613,7 +614,7 @@ def trans_invoice_list_woh(request, customer_id):
                         "ti_parking_charges": trip.tc_parkingcost if trip.tc_parkingcost_check else 0,
                         "ti_loading_charges": trip.tc_loadingcost if trip.tc_loadingcost_check else 0,
                         "ti_unloading_charges": trip.tc_unloadingcost if trip.tc_unloadingcost_check else 0,
-                        "ti_halting_charges": trip.tc_haltingcost if trip.tc_haltingcost_check else 0,
+                        "ti_halting_charges": ((trip.tc_total_halting_cost or 0) if trip.tc_total_halting_cost_check else 0) + ((trip.tc_haltingcost or 0) if trip.tc_haltingcost_check else 0),
                         "ti_weighment_charges": trip.tc_weighmentcost if trip.tc_weighmentcost_check else 0,
                         "ti_handling_charges": (trip.tc_handlingcost if trip.tc_handlingcost_check else 0) + (trip.tc_supervisorcost if trip.tc_supervisorcost_check else 0),
                         "ti_cancellation_charges": trip.tc_cancellation if trip.tc_cancellation_check else 0,
@@ -623,7 +624,8 @@ def trans_invoice_list_woh(request, customer_id):
                                 (trip.tc_parkingcost if trip.tc_parkingcost_check else 0) +
                                 (trip.tc_loadingcost if trip.tc_loadingcost_check else 0) +
                                 (trip.tc_unloadingcost if trip.tc_unloadingcost_check else 0) +
-                                (trip.tc_haltingcost if trip.tc_haltingcost_check else 0) +
+                                ((trip.tc_total_halting_cost or 0) if trip.tc_total_halting_cost_check else 0) +
+                                ((trip.tc_haltingcost or 0) if trip.tc_haltingcost_check else 0) +
                                 (trip.tc_weighmentcost if trip.tc_weighmentcost_check else 0) +
                                 (trip.tc_handlingcost if trip.tc_handlingcost_check else 0) +
                                 (trip.tc_supervisorcost if trip.tc_supervisorcost_check else 0) +
@@ -960,7 +962,7 @@ def trans_invoice_excel(request, invoice_no):
         parking = trip.tc_parkingcost if trip else obj.ti_parking_charges
         loading = trip.tc_loadingcost if trip else obj.ti_loading_charges
         unloading = trip.tc_unloadingcost if trip else obj.ti_unloading_charges
-        halting = trip.tc_haltingcost if trip else obj.ti_halting_charges
+        halting = (((trip.tc_total_halting_cost or 0) if trip.tc_total_halting_cost_check else 0) + ((trip.tc_haltingcost or 0) if trip.tc_haltingcost_check else 0)) if trip else obj.ti_halting_charges
         weighment = trip.tc_weighmentcost if trip else obj.ti_weighment_charges
         handling = trip.tc_handlingcost if trip else obj.ti_handling_charges
         cancellation = trip.tc_cancellation if trip else obj.ti_cancellation_charges
@@ -1083,7 +1085,7 @@ def trans_invoice_tally_excel(request, invoice_no):
         parking = trip.tc_parkingcost if trip else obj.ti_parking_charges
         loading = trip.tc_loadingcost if trip else obj.ti_loading_charges
         unloading = trip.tc_unloadingcost if trip else obj.ti_unloading_charges
-        halting = trip.tc_haltingcost if trip else obj.ti_halting_charges
+        halting = (((trip.tc_total_halting_cost or 0) if trip.tc_total_halting_cost_check else 0) + ((trip.tc_haltingcost or 0) if trip.tc_haltingcost_check else 0)) if trip else obj.ti_halting_charges
         weighment = trip.tc_weighmentcost if trip else obj.ti_weighment_charges
         handling = trip.tc_handlingcost if trip else obj.ti_handling_charges
         cancellation = trip.tc_cancellation if trip else obj.ti_cancellation_charges

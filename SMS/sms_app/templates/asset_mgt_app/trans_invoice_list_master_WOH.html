@@ -256,7 +256,7 @@
                 <td>{% if inv.tc_parkingcost_check %}{{ inv.tc_parkingcost }}{% else %}0.0{% endif %}</td>
                 <td>{% if inv.tc_loadingcost_check %}{{ inv.tc_loadingcost }}{% else %}0.0{% endif %}</td>
                 <td>{% if inv.tc_unloadingcost_check %}{{ inv.tc_unloadingcost }}{% else %}0.0{% endif %}</td>
-                <td>{% if inv.tc_haltingcost_check %}{{ inv.tc_haltingcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if inv.tc_total_halting_cost_check %}{{ inv.tc_total_halting_cost }}{% elif inv.tc_haltingcost_check %}{{ inv.tc_haltingcost }}{% else %}0.0{% endif %}</td>
                 <td>{% if inv.tc_weighmentcost_check %}{{ inv.tc_weighmentcost }}{% else %}0.0{% endif %}</td>
                 <td>
                     {% if inv.tc_handlingcost_check and inv.tc_supervisorcost_check %}
