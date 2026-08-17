@@ -152,7 +152,7 @@
                 <td>{% if trip.tc_parkingcost_check %}{{ trip.tc_parkingcost }}{% else %}0.0{% endif %}</td>
                 <td>{% if trip.tc_loadingcost_check %}{{ trip.tc_loadingcost }}{% else %}0.0{% endif %}</td>
                 <td>{% if trip.tc_unloadingcost_check %}{{ trip.tc_unloadingcost }}{% else %}0.0{% endif %}</td>
-                <td>{% if trip.tc_total_halting_cost_check %}{{ trip.tc_total_halting_cost }}{% elif trip.tc_haltingcost_check %}{{ trip.tc_haltingcost }}{% else %}0.0{% endif %}</td>
+                <td>{{ trip.calculated_halting|default:0.0|floatformat:2 }}</td>
                 <td>{% if trip.tc_weighmentcost_check %}{{ trip.tc_weighmentcost }}{% else %}0.0{% endif %}</td>
                 <td>
                     {% if trip.tc_handlingcost_check and trip.tc_supervisorcost_check %}
