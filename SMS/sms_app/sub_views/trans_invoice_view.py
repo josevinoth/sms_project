@@ -66,6 +66,38 @@ def _sync_trans_invoice_pdf(invoice_no, customer_id):
             master_inv.save()
 
 
+def get_trip_halting_charge(t):
+    """
+    Robust calculation of halting charges for a trip (TripdetailInfo):
+    1. If tc_total_halting_cost_check is ticked, use tc_total_halting_cost.
+       If tc_total_halting_cost is 0/empty, fallback to (tc_haltingcost * tc_no_of_days_halting).
+    2. Else if tc_haltingcost_check is ticked, use (tc_haltingcost * tc_no_of_days_halting).
+    3. Otherwise return 0.0.
+    """
+    if not t:
+        return 0.0
+    halting = 0.0
+    tc_total_check = getattr(t, 'tc_total_halting_cost_check', False)
+    tc_day_check = getattr(t, 'tc_haltingcost_check', False)
+
+    tot_cost = float(getattr(t, 'tc_total_halting_cost', 0.0) or 0.0)
+    day_cost = float(getattr(t, 'tc_haltingcost', 0.0) or 0.0)
+    days = float(getattr(t, 'tc_no_of_days_halting', 1.0) or 1.0)
+    if days <= 0:
+        days = 1.0
+
+    if tc_total_check:
+        if tot_cost > 0:
+            halting += tot_cost
+        elif day_cost > 0:
+            halting += (day_cost * days)
+    elif tc_day_check:
+        if day_cost > 0:
+            halting += (day_cost * days)
+
+    return halting
+
+
 # ==================================================
 # MASTER INVOICE TOTALS SYNC HELPER
 # ==================================================
@@ -73,6 +105,7 @@ def sync_master_invoice_totals(master_inv):
     """
     Recalculates individual charge fields and ti_total for a master invoice (is_woh=False)
     by aggregating all attached WOH detail records (is_woh=True).
+    Re-syncs each WOH item from its underlying TripdetailInfo first.
     """
     if not master_inv or master_inv.is_woh:
         return 0.0
@@ -81,7 +114,35 @@ def sync_master_invoice_totals(master_inv):
         ti_customer_id=master_inv.ti_customer_id,
         ti_inv_no=master_inv.ti_inv_no,
         is_woh=True
-    )
+    ).select_related('ti_trip')
+
+    for item in woh_items:
+        t = item.ti_trip
+        if t:
+            transport = t.tc_tripcost   if t.tc_tripcost_check   else 0
+            toll      = t.tc_tollcost   if t.tc_tollcost_check   else 0
+            parking   = t.tc_parkingcost if t.tc_parkingcost_check else 0
+            loading   = t.tc_loadingcost if t.tc_loadingcost_check else 0
+            unloading = t.tc_unloadingcost if t.tc_unloadingcost_check else 0
+            halting   = get_trip_halting_charge(t)
+            weighment = t.tc_weighmentcost if t.tc_weighmentcost_check else 0
+            handling  = ((t.tc_handlingcost or 0) if t.tc_handlingcost_check else 0) + \
+                        ((t.tc_supervisorcost or 0) if t.tc_supervisorcost_check else 0)
+            cancellation = t.tc_cancellation if t.tc_cancellation_check else 0
+
+            item.ti_transportation_charges = transport or 0
+            item.ti_toll_charges           = toll      or 0
+            item.ti_parking_charges        = parking   or 0
+            item.ti_loading_charges        = loading   or 0
+            item.ti_unloading_charges      = unloading or 0
+            item.ti_halting_charges        = halting   or 0
+            item.ti_weighment_charges      = weighment or 0
+            item.ti_handling_charges       = handling
+            item.ti_cancellation_charges   = cancellation or 0
+            item.ti_total                  = (transport or 0) + (toll or 0) + (parking or 0) + \
+                                             (loading or 0) + (unloading or 0) + (halting or 0) + \
+                                             (weighment or 0) + handling + (cancellation or 0)
+            item.save()
 
     aggs = woh_items.aggregate(
         transport=Sum('ti_transportation_charges'),
@@ -145,8 +206,7 @@ def sync_trip_charges_to_invoice(trip):
     parking   = t.tc_parkingcost if t.tc_parkingcost_check else 0
     loading   = t.tc_loadingcost if t.tc_loadingcost_check else 0
     unloading = t.tc_unloadingcost if t.tc_unloadingcost_check else 0
-    halting   = ((t.tc_total_halting_cost or 0) if t.tc_total_halting_cost_check else 0) + \
-                ((t.tc_haltingcost or 0) if t.tc_haltingcost_check else 0)
+    halting   = get_trip_halting_charge(t)
     weighment = t.tc_weighmentcost if t.tc_weighmentcost_check else 0
     handling  = ((t.tc_handlingcost or 0) if t.tc_handlingcost_check else 0) + \
                 ((t.tc_supervisorcost or 0) if t.tc_supervisorcost_check else 0)
@@ -807,7 +867,7 @@ def trans_invoice_list_woh(request, customer_id):
                         "ti_parking_charges": trip.tc_parkingcost if trip.tc_parkingcost_check else 0,
                         "ti_loading_charges": trip.tc_loadingcost if trip.tc_loadingcost_check else 0,
                         "ti_unloading_charges": trip.tc_unloadingcost if trip.tc_unloadingcost_check else 0,
-                        "ti_halting_charges": ((trip.tc_total_halting_cost or 0) if trip.tc_total_halting_cost_check else 0) + ((trip.tc_haltingcost or 0) if trip.tc_haltingcost_check else 0),
+                        "ti_halting_charges": get_trip_halting_charge(trip),
                         "ti_weighment_charges": trip.tc_weighmentcost if trip.tc_weighmentcost_check else 0,
                         "ti_handling_charges": (trip.tc_handlingcost if trip.tc_handlingcost_check else 0) + (trip.tc_supervisorcost if trip.tc_supervisorcost_check else 0),
                         "ti_cancellation_charges": trip.tc_cancellation if trip.tc_cancellation_check else 0,
@@ -817,8 +877,7 @@ def trans_invoice_list_woh(request, customer_id):
                                 (trip.tc_parkingcost if trip.tc_parkingcost_check else 0) +
                                 (trip.tc_loadingcost if trip.tc_loadingcost_check else 0) +
                                 (trip.tc_unloadingcost if trip.tc_unloadingcost_check else 0) +
-                                ((trip.tc_total_halting_cost or 0) if trip.tc_total_halting_cost_check else 0) +
-                                ((trip.tc_haltingcost or 0) if trip.tc_haltingcost_check else 0) +
+                                get_trip_halting_charge(trip) +
                                 (trip.tc_weighmentcost if trip.tc_weighmentcost_check else 0) +
                                 (trip.tc_handlingcost if trip.tc_handlingcost_check else 0) +
                                 (trip.tc_supervisorcost if trip.tc_supervisorcost_check else 0) +
@@ -954,6 +1013,11 @@ def trans_invoice_list_woh(request, customer_id):
     pdf_map = {doc.id_tripnumber: doc.id_merged_pdf.url if doc.id_merged_pdf else None for doc in invoice_docs}
     for trip in invoice_list_master:
         trip.combined_pdf_url = pdf_map.get(trip.tr_tripnumber)
+
+    for trip in trans_invoice_list:
+        trip.calculated_halting = get_trip_halting_charge(trip)
+    for trip in invoice_list_master:
+        trip.calculated_halting = get_trip_halting_charge(trip)
 
     invoice_qs = TransInvoiceInfo.objects.filter(ti_trip_id__in=current_woh_trip_ids, ti_customer_id=customer_id, is_woh=True)
     invoice_map = {inv.ti_trip_id: inv for inv in invoice_qs}
@@ -1159,7 +1223,7 @@ def trans_invoice_excel(request, invoice_no):
         parking = trip.tc_parkingcost if trip else obj.ti_parking_charges
         loading = trip.tc_loadingcost if trip else obj.ti_loading_charges
         unloading = trip.tc_unloadingcost if trip else obj.ti_unloading_charges
-        halting = (((trip.tc_total_halting_cost or 0) if trip.tc_total_halting_cost_check else 0) + ((trip.tc_haltingcost or 0) if trip.tc_haltingcost_check else 0)) if trip else obj.ti_halting_charges
+        halting = get_trip_halting_charge(trip) if trip else (obj.ti_halting_charges or 0.0)
         weighment = trip.tc_weighmentcost if trip else obj.ti_weighment_charges
         handling = trip.tc_handlingcost if trip else obj.ti_handling_charges
         cancellation = trip.tc_cancellation if trip else obj.ti_cancellation_charges
@@ -1282,7 +1346,7 @@ def trans_invoice_tally_excel(request, invoice_no):
         parking = trip.tc_parkingcost if trip else obj.ti_parking_charges
         loading = trip.tc_loadingcost if trip else obj.ti_loading_charges
         unloading = trip.tc_unloadingcost if trip else obj.ti_unloading_charges
-        halting = (((trip.tc_total_halting_cost or 0) if trip.tc_total_halting_cost_check else 0) + ((trip.tc_haltingcost or 0) if trip.tc_haltingcost_check else 0)) if trip else obj.ti_halting_charges
+        halting = get_trip_halting_charge(trip) if trip else (obj.ti_halting_charges or 0.0)
         weighment = trip.tc_weighmentcost if trip else obj.ti_weighment_charges
         handling = trip.tc_handlingcost if trip else obj.ti_handling_charges
         cancellation = trip.tc_cancellation if trip else obj.ti_cancellation_charges
