@@ -414,8 +414,39 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill, prorat
             total_buying = 0.0
 
     elif v_source == 3:  # MARKET
-        if mb_bill:
-            total_buying = safe_num(mb_bill.mb_total_cost)
+        if mb_bill and mb_bill.mb_trip_details and str(trip.id) in mb_bill.mb_trip_details:
+            details = mb_bill.mb_trip_details[str(trip.id)]
+            total_buying = (
+                safe_num(details.get('trip_cost', 0)) +
+                safe_num(details.get('loading_cost', 0)) +
+                safe_num(details.get('unloading_cost', 0)) +
+                safe_num(details.get('parking_cost', 0)) +
+                safe_num(details.get('halting_cost', 0))
+            )
+        else:
+            tc_tripcost = safe_num(trip.tc_tripcost) if getattr(trip, 'tc_tripcost_vendor_check', True) else 0.0
+            tc_tollcost = safe_num(trip.tc_tollcost) if getattr(trip, 'tc_tollcost_vendor_check', False) else 0.0
+            tc_supervisorcost = safe_num(trip.tc_supervisorcost) if getattr(trip, 'tc_supervisorcost_vendor_check', False) else 0.0
+            tc_loadingcost = safe_num(trip.tc_loadingcost) if getattr(trip, 'tc_loadingcost_vendor_check', False) else 0.0
+            tc_unloadingcost = safe_num(trip.tc_unloadingcost) if getattr(trip, 'tc_unloadingcost_vendor_check', False) else 0.0
+            tc_weighmentcost = safe_num(trip.tc_weighmentcost) if getattr(trip, 'tc_weighmentcost_vendor_check', False) else 0.0
+            tc_handlingcost = safe_num(trip.tc_handlingcost) if getattr(trip, 'tc_handlingcost_vendor_check', False) else 0.0
+            tc_parkingcost = safe_num(trip.tc_parkingcost) if getattr(trip, 'tc_parkingcost_vendor_check', False) else 0.0
+            tc_rtocost = safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_vendor_check', False) else 0.0
+            tc_betacost = safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_vendor_check', False) else 0.0
+            tc_cancellation = safe_num(trip.tc_cancellation) if getattr(trip, 'tc_cancellation_vendor_check', False) else 0.0
+            
+            halting_days = safe_num(trip.tc_no_of_days_halting)
+            if getattr(trip, 'tc_total_halting_cost_vendor_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
+                tc_haltingcost = safe_num(trip.tc_total_halting_cost)
+            elif getattr(trip, 'tc_haltingcost_vendor_check', False) and safe_num(trip.tc_haltingcost) > 0:
+                tc_haltingcost = safe_num(trip.tc_haltingcost) * halting_days
+            else:
+                tc_haltingcost = 0.0
+                
+            total_buying = (tc_tripcost + tc_tollcost + tc_supervisorcost + tc_loadingcost + tc_unloadingcost +
+                            tc_weighmentcost + tc_haltingcost + tc_handlingcost + tc_parkingcost +
+                            tc_rtocost + tc_betacost + tc_cancellation)
 
     profit = total_selling - total_buying
     profit_pct = (profit / total_selling * 100) if total_selling > 0 else 0
@@ -2624,10 +2655,13 @@ def vendor_p_l_mkt_report_ajax_view(request):
                 v_type_id = trip.tr_vehicletype_id or (trip.tr_vehicletype_placed_id if hasattr(trip, 'tr_vehicletype_placed_id') else None)
                 key = (trip.tr_departedlocation_id, trip.tr_reportedlocation_id, v_type_id, allotment.va_vendor_id)
                 rate_val = rate_map.get(key)
-                if rate_val is not None:
+                
+                if safe_num(allotment.va_specialbuy) > 0:
+                    buying_trip_cost = safe_num(allotment.va_specialbuy)
+                elif rate_val is not None:
                     buying_trip_cost = safe_num(rate_val)
                 else:
-                    buying_trip_cost = safe_num(allotment.va_specialbuy) or safe_num(allotment.va_standardbuy)
+                    buying_trip_cost = safe_num(allotment.va_standardbuy)
             else:
                 buying_trip_cost = safe_num(allotment.va_specialbuy) or safe_num(allotment.va_standardbuy)
         else:
@@ -6432,7 +6466,7 @@ def movementwise_pl_report_ajax_view(request):
         vendor_ids = set(a.va_vendor_id for a in va_map.values() if a.va_vendor_id)
 
         bill_no_map = {}
-        for b in MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost'):
+        for b in MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost', 'mb_trip_details'):
             if b.mb_selected_trips:
                 for tid in [tid.strip() for tid in b.mb_selected_trips.split(',') if tid.strip()]:
                     try:
@@ -6624,7 +6658,7 @@ def customerwise_pl_report_ajax_view(request):
         vendor_ids = set(a.va_vendor_id for a in va_map.values() if a.va_vendor_id)
 
         bill_no_map = {}
-        for b in MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost'):
+        for b in MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost', 'mb_trip_details'):
             if b.mb_selected_trips:
                 for tid in [tid.strip() for tid in b.mb_selected_trips.split(',') if tid.strip()]:
                     try:
@@ -6850,7 +6884,7 @@ def location_pl_report_view(request):
             expense_map.setdefault(t_id, []).append(e)
 
     # VENDOR BILLS (MARKET & ATTACHED)
-    all_bills = MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost')
+    all_bills = MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost', 'mb_trip_details')
     bill_no_map = {}
     for b in all_bills:
         if b.mb_selected_trips:
@@ -8446,3 +8480,195 @@ def transport_mis(request):
         "to_date": to_date,
     })
 
+
+
+@login_required(login_url='login')
+def trip_status_count_report_view(request):
+    first_name = request.user.first_name
+    from ..forms import DmrForm
+    form = DmrForm(request.GET or None)
+    
+    headers = [
+        "S.No", "Cnote Date", "Cnote Count", "Invoice Completed", "Not Associated with Trip", "Awaiting Trip Approval", "Trip Started", "Trip Closed", "AwaitingTrip settlement", "Trip Settled", "Ready for Invoice", "Cancellation with Billing", "Cancellation without Billing"
+    ]
+    
+    context = {
+        'first_name': first_name,
+        'headers': headers,
+        'form': form,
+    }
+    return render(request, 'asset_mgt_app/trip_status_count_report.html', context)
+
+@login_required(login_url='login')
+def trip_status_count_report_ajax_view(request):
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    
+    from_date = request.GET.get('from_date', '')
+    to_date = request.GET.get('to_date', '')
+    
+    from ..models import TripdetailInfo, Tripstatusinfo, ConsignmentdetailInfo, TransInvoiceInfo
+    from django.db.models import Count, Q, F
+    
+    # Base query is now Cnotes (ConsignmentdetailInfo)
+    qs = ConsignmentdetailInfo.objects.all()
+    
+    if from_date:
+        qs = qs.filter(co_consignmentdate__gte=from_date)
+    if to_date:
+        qs = qs.filter(co_consignmentdate__lte=to_date)
+        
+    order_col = request.GET.get('order[0][column]')
+    order_dir = request.GET.get('order[0][dir]')
+    
+    order_prefix = '-'
+    if order_col == '1' and order_dir == 'asc':
+        order_prefix = ''
+        
+    distinct_dates_qs = qs.values_list('co_consignmentdate', flat=True).distinct().order_by(f'{order_prefix}co_consignmentdate')
+    
+    total_records = distinct_dates_qs.count()
+    
+    if length == -1:
+        paginated_dates_objs = list(distinct_dates_qs[start:])
+    else:
+        paginated_dates_objs = list(distinct_dates_qs[start:start + length])
+        
+    # Fetch trips ONLY for the paginated dates
+    trips_for_page = TripdetailInfo.objects.filter(
+        tr_consignmentnumber__co_consignmentdate__in=paginated_dates_objs
+    ).select_related(
+        'tr_consignmentnumber', 'tr_enquirynumber', 'tr_operational_status', 'tc_financestatus'
+    ).order_by('-tr_consignmentnumber__co_consignmentdate')
+    
+    cnotes_for_page = qs.filter(co_consignmentdate__in=paginated_dates_objs).select_related('co_enquirynumber')
+    
+    invoices_for_page = TransInvoiceInfo.objects.filter(
+        ti_consignment__co_consignmentdate__in=paginated_dates_objs
+    ).values_list('ti_consignment_id', flat=True)
+    cnotes_with_invoice = set(invoices_for_page)
+    
+    date_groups = {}
+    for d_obj in paginated_dates_objs:
+        d_str = d_obj.strftime('%d-%m-%Y')
+        date_groups[d_str] = {
+            'Cnotes': set(),
+            'Invoice Completed': [],
+            'Not Associated with Trip': [],
+            'Awaiting Trip Approval': [],
+            'Trip Started': [],
+            'Trip Closed': [],
+            'AwaitingTrip settlement': [],
+            'Trip Settled': [],
+            'Ready for Invoice': [],
+            'Cancellation with Billing': [],
+            'Cancellation without Billing': []
+        }
+        
+    cnote_has_valid_trip = set()
+    
+    for t in trips_for_page:
+        cdate = t.tr_consignmentnumber.co_consignmentdate
+        cdate_str = cdate.strftime('%d-%m-%Y')
+        
+        op_status = t.tr_operational_status.status if t.tr_operational_status else ""
+        fin_status = t.tc_financestatus.status if t.tc_financestatus else ""
+        
+        enq_info = ""
+        if t.tr_enquirynumber:
+            enq_no = t.tr_enquirynumber.en_enquirynumber
+            enq_date = t.tr_enquirynumber.en_created_at
+            enq_date_str = enq_date.strftime('%d-%m-%Y') if enq_date else ""
+            enq_info = f"{enq_no} ({enq_date_str})"
+            
+        counted = False
+        # Classify the trip into the relevant bucket(s) - Mutually Exclusive
+        if t.tr_consignmentnumber_id in cnotes_with_invoice:
+            date_groups[cdate_str]['Invoice Completed'].append(enq_info)
+            counted = True
+        elif fin_status == 'Cancellation with Billing':
+            date_groups[cdate_str]['Cancellation with Billing'].append(enq_info)
+            counted = True
+        elif fin_status == 'Cancellation without Billing':
+            date_groups[cdate_str]['Cancellation without Billing'].append(enq_info)
+            counted = True
+        elif fin_status == 'Ready for Invoice':
+            date_groups[cdate_str]['Ready for Invoice'].append(enq_info)
+            counted = True
+        elif fin_status == 'Trip Settled':
+            date_groups[cdate_str]['Trip Settled'].append(enq_info)
+            counted = True
+        elif fin_status == 'Awaiting Trip Settlement':
+            date_groups[cdate_str]['AwaitingTrip settlement'].append(enq_info)
+            counted = True
+        elif op_status == 'Trip Closed' or fin_status == 'Trip Closed':
+            date_groups[cdate_str]['Trip Closed'].append(enq_info)
+            counted = True
+        elif op_status == 'Trip Started':
+            date_groups[cdate_str]['Trip Started'].append(enq_info)
+            counted = True
+        elif op_status == 'Awaiting Trip Approval':
+            date_groups[cdate_str]['Awaiting Trip Approval'].append(enq_info)
+            counted = True
+            
+        if counted:
+            date_groups[cdate_str]['Cnotes'].add(t.tr_consignmentnumber.pk)
+            cnote_has_valid_trip.add(t.tr_consignmentnumber.pk)
+            
+    # Now check Cnotes that have NO valid trip
+    for c in cnotes_for_page:
+        if c.pk not in cnote_has_valid_trip:
+            cdate_str = c.co_consignmentdate.strftime('%d-%m-%Y')
+            
+            enq_info = ""
+            if c.co_enquirynumber:
+                enq_no = c.co_enquirynumber.en_enquirynumber
+                enq_date = c.co_enquirynumber.en_created_at
+                enq_date_str = enq_date.strftime('%d-%m-%Y') if enq_date else ""
+                enq_info = f"{enq_no} ({enq_date_str})"
+                
+            if c.pk in cnotes_with_invoice:
+                date_groups[cdate_str]['Invoice Completed'].append(enq_info)
+            else:
+                date_groups[cdate_str]['Not Associated with Trip'].append(enq_info)
+            
+            date_groups[cdate_str]['Cnotes'].add(c.pk)
+            
+    def build_tooltip_html(enq_list, title=""):
+        if not enq_list:
+            return '<span style="color: #6c757d; font-weight: bold; cursor: default;">0</span>'
+        count = len(enq_list)
+        
+        full_html = "<br>".join(enq_list)
+        full_html_escaped = full_html.replace('"', '&quot;').replace("'", "&#39;")
+        
+        return f'<span class="status-count" style="cursor: pointer; color: #0d6efd; font-weight: bold;" title="Click to view {count} enquiries" data-full-list="{full_html_escaped}" onclick="showStatusModal(\'{title}\', this)">{count}</span>'
+
+    data = []
+    for idx, d_obj in enumerate(paginated_dates_objs):
+        d_str = d_obj.strftime('%d-%m-%Y')
+        counts = date_groups[d_str]
+        
+        data.append([
+            start + idx + 1,
+            d_str,
+            f'<span class="badge badge-info px-2 py-1" style="font-size:0.85rem; font-weight:600;">{len(counts["Cnotes"])}</span>',
+            build_tooltip_html(counts['Invoice Completed'], f"Invoice Completed ({d_str})"),
+            build_tooltip_html(counts['Not Associated with Trip'], f"Not Associated with Trip ({d_str})"),
+            build_tooltip_html(counts['Awaiting Trip Approval'], f"Awaiting Trip Approval ({d_str})"),
+            build_tooltip_html(counts['Trip Started'], f"Trip Started ({d_str})"),
+            build_tooltip_html(counts['Trip Closed'], f"Trip Closed ({d_str})"),
+            build_tooltip_html(counts['AwaitingTrip settlement'], f"Awaiting Trip Settlement ({d_str})"),
+            build_tooltip_html(counts['Trip Settled'], f"Trip Settled ({d_str})"),
+            build_tooltip_html(counts['Ready for Invoice'], f"Ready for Invoice ({d_str})"),
+            build_tooltip_html(counts['Cancellation with Billing'], f"Cancellation with Billing ({d_str})"),
+            build_tooltip_html(counts['Cancellation without Billing'], f"Cancellation without Billing ({d_str})"),
+        ])
+        
+    return JsonResponse({
+        "draw": draw,
+        "recordsTotal": total_records,
+        "recordsFiltered": total_records,
+        "data": data,
+    })
