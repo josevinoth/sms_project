@@ -6,6 +6,11 @@ from django.contrib import messages
 from openpyxl import Workbook
 from django.http import HttpResponse
 
+import io
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from pypdf import PdfWriter, PdfReader
+
 from ..sub_forms.trans_invoice_Form import TransInvoiceForm
 from ..sub_models.trans_invoice_mod import TransInvoiceInfo
 from ..sub_models.customer_mod import CustomerInfo
@@ -14,6 +19,8 @@ from ..sub_models.consignmentdetail_mod import ConsignmentdetailInfo
 from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
 from ..sub_models.trip_status_mod import Tripstatusinfo
+from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
+from ..sub_models.vehiclemaster_mod import VehiclemasterInfo
 from django.db.models import F, Sum, Q, Case, When, Value, FloatField
 from django.db.models.functions import Coalesce
 from ..utils.pdf_utils import merge_pdf_files
@@ -138,7 +145,8 @@ def sync_trip_charges_to_invoice(trip):
     parking   = t.tc_parkingcost if t.tc_parkingcost_check else 0
     loading   = t.tc_loadingcost if t.tc_loadingcost_check else 0
     unloading = t.tc_unloadingcost if t.tc_unloadingcost_check else 0
-    halting   = t.tc_haltingcost if t.tc_haltingcost_check else 0
+    halting   = ((t.tc_total_halting_cost or 0) if t.tc_total_halting_cost_check else 0) + \
+                ((t.tc_haltingcost or 0) if t.tc_haltingcost_check else 0)
     weighment = t.tc_weighmentcost if t.tc_weighmentcost_check else 0
     handling  = ((t.tc_handlingcost or 0) if t.tc_handlingcost_check else 0) + \
                 ((t.tc_supervisorcost or 0) if t.tc_supervisorcost_check else 0)
@@ -310,6 +318,64 @@ def attach_vehicle_category_to_trips(trips):
     return trips
 
 
+def attach_invoice_veh_type_to_trips(trips):
+    """
+    For each TripdetailInfo in `trips`, look up the linked Vehicle_allotmentInfo
+    and read its checkbox flags to determine whether to show
+    'Vehicle Type Placed' or 'Vehicle Type Requested'.
+    Attaches the result as trip.invoice_veh_type (a plain string attribute).
+    No model property changes needed.
+    """
+    if not trips:
+        return trips
+
+    enq_ids = {
+        t.tr_enquirynumber_id
+        for t in trips
+        if getattr(t, 'tr_enquirynumber_id', None)
+    }
+    if not enq_ids:
+        for t in trips:
+            t.invoice_veh_type = str(t.tr_vehicletype) if t.tr_vehicletype else ""
+        return trips
+
+    # Fetch latest allotment per enquiry in one DB query
+    allotments = (
+        Vehicle_allotmentInfo.objects
+        .filter(va_enquirynumber_id__in=enq_ids)
+        .select_related('va_vehicletype', 'va_vehicletype_placed')
+        .order_by('va_enquirynumber_id', '-va_updated_at')
+    )
+
+    # Build map: enquiry_id -> best allotment (prefer active status 1)
+    enq_va_map = {}
+    for va in allotments:
+        eid = va.va_enquirynumber_id
+        if eid not in enq_va_map:
+            enq_va_map[eid] = va
+        elif va.va_status_id == 1:  # prefer Vehicle Assigned status
+            enq_va_map[eid] = va
+
+    for t in trips:
+        va = enq_va_map.get(t.tr_enquirynumber_id)
+        veh_type = ""
+        if va:
+            if va.va_vehicletype_selection_placed and va.va_vehicletype_placed:
+                veh_type = str(va.va_vehicletype_placed)
+            elif va.va_vehicletype_selection_requested and va.va_vehicletype:
+                veh_type = str(va.va_vehicletype)
+            elif va.va_vehicletype_placed:
+                veh_type = str(va.va_vehicletype_placed)
+            elif va.va_vehicletype:
+                veh_type = str(va.va_vehicletype)
+        if not veh_type:
+            # Fallback: use trip's own vehicletype fields
+            veh_type = str(t.tr_vehicletype_placed or t.tr_vehicletype or "")
+        t.invoice_veh_type = veh_type
+
+    return trips
+
+
 @login_required(login_url='login_page')
 def trans_invoice_edit(request, invoice_id):
     first_name = request.session.get('first_name')
@@ -431,6 +497,7 @@ def trans_invoice_edit(request, invoice_id):
     woh_items = context['invoice_list']
     trips = [item.ti_trip for item in woh_items if item.ti_trip]
     attach_vehicle_category_to_trips(trips)
+    attach_invoice_veh_type_to_trips(trips)
     trip_numbers = [item.ti_trip.tr_tripnumber for item in woh_items if item.ti_trip and item.ti_trip.tr_tripnumber]
     pdf_docs = InvoiceDocumentInfo.objects.filter(id_tripnumber__in=trip_numbers)
     pdf_map = {doc.id_tripnumber: doc.id_merged_pdf.url if doc.id_merged_pdf else None for doc in pdf_docs}
@@ -447,11 +514,23 @@ def trans_invoice_edit(request, invoice_id):
 def trans_invoice_list(request):
     first_name = request.session.get('first_name')
 
-    queryset = (
+    queryset = list(
         TransInvoiceInfo.objects
         .filter(is_woh=False)
         .order_by('-id')
     )
+
+    # Fetch all (ti_inv_no, ti_customer_id) combinations that have at least one CNote
+    woh_cnote_items = TransInvoiceInfo.objects.filter(
+        is_woh=True
+    ).filter(
+        Q(ti_consignment__isnull=False) | Q(ti_trip__tr_consignmentnumber__isnull=False)
+    ).values_list('ti_inv_no', 'ti_customer_id')
+
+    cnote_inv_keys = set(woh_cnote_items)
+
+    for invoice in queryset:
+        invoice.has_cnote = (invoice.ti_inv_no, invoice.ti_customer_id) in cnote_inv_keys
 
     return render(
         request,
@@ -461,6 +540,121 @@ def trans_invoice_list(request):
             'first_name': first_name,
         }
     )
+
+
+# ==================================================
+# DOWNLOAD COMBINED CNOTE PDF FOR INVOICE
+# ==================================================
+@login_required(login_url='login_page')
+def trans_invoice_cnote_pdf(request, invoice_id):
+    master_inv = get_object_or_404(TransInvoiceInfo, pk=invoice_id, is_woh=False)
+
+    woh_items = TransInvoiceInfo.objects.filter(
+        ti_inv_no=master_inv.ti_inv_no,
+        ti_customer=master_inv.ti_customer,
+        is_woh=True
+    ).select_related('ti_trip', 'ti_consignment', 'ti_trip__tr_consignmentnumber')
+
+    consignments = []
+    seen_ids = set()
+    for item in woh_items:
+        cons = item.ti_consignment or (item.ti_trip.tr_consignmentnumber if item.ti_trip else None)
+        if cons and cons.id not in seen_ids:
+            seen_ids.add(cons.id)
+            consignments.append(cons)
+
+    if not consignments:
+        return HttpResponse("No Consignment Notes found for the trip(s) in this invoice.", content_type="text/plain")
+
+    pdf_writer = PdfWriter()
+    has_pages = False
+
+    for consignment in consignments:
+        consignment_note_id = consignment.id
+        consignment_num = consignment.co_consignmentnumber
+        vehicle_reg_num = consignment.co_vehicelnumber
+        enquiry_id = consignment.co_enquirynumber_id
+
+        consignment_goods_list = list(ConsignmentgoodsInfo.objects.filter(
+            cg_consignmentnumber=consignment_note_id
+        ).order_by('id'))
+
+        for goods in consignment_goods_list:
+            if goods.cg_consignerinvoice:
+                goods.cg_consignerinvoice = goods.cg_consignerinvoice.replace('/', '/ ').replace(',', ', ')
+            if goods.cg_hawbno:
+                goods.cg_hawbno = goods.cg_hawbno.replace('/', '/ ').replace(',', ', ')
+            if goods.cg_ebillno:
+                goods.cg_ebillno = goods.cg_ebillno.replace('/', '/ ').replace(',', ', ')
+
+        vehicle_detail = Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber=enquiry_id,
+            va_vehiclenumber_mkt=vehicle_reg_num
+        ).last()
+
+        if not vehicle_detail:
+            try:
+                vehicle_master = VehiclemasterInfo.objects.get(vm_registrationnumber=vehicle_reg_num)
+                vehicle_detail = Vehicle_allotmentInfo.objects.filter(
+                    va_enquirynumber=enquiry_id,
+                    va_vehiclenumber=vehicle_master.id
+                ).last()
+            except VehiclemasterInfo.DoesNotExist:
+                vehicle_detail = None
+
+        vehicle_number_val = []
+        driver_name = []
+        driver_lic = []
+        driver_number = []
+
+        if vehicle_detail:
+            if vehicle_detail.va_vehiclenumber:
+                vehicle_number_val.append(vehicle_detail.va_vehiclenumber.vm_registrationnumber)
+            if vehicle_detail.va_vehiclenumber_mkt:
+                vehicle_number_val.append(vehicle_detail.va_vehiclenumber_mkt)
+
+            raw_name = vehicle_detail.va_drivername or ""
+            clean_name = raw_name.split('(')[0].strip()
+            driver_name.append(clean_name)
+            driver_lic.append(vehicle_detail.va_driver_lic)
+            driver_number.append(vehicle_detail.va_drivernumber)
+
+        context = {
+            'consignment_details': [consignment],
+            'consignment_goods_list': consignment_goods_list,
+            'vehicle_details': [vehicle_detail] if vehicle_detail else [],
+            'vehicle_number': vehicle_number_val,
+            'Driver_name': driver_name,
+            'Driver_lic': driver_lic,
+            'Driver_number': driver_number,
+        }
+
+        template_path = 'asset_mgt_app/consignement_note_pdf.html'
+        template = get_template(template_path)
+        html = template.render(context)
+
+        pdf_buffer = io.BytesIO()
+        pisa_status = pisa.CreatePDF(html, dest=pdf_buffer)
+        if not pisa_status.err:
+            pdf_buffer.seek(0)
+            reader = PdfReader(pdf_buffer)
+            for page in reader.pages:
+                pdf_writer.add_page(page)
+                has_pages = True
+
+    if not has_pages:
+        return HttpResponse("Failed to generate PDF for consignment notes.", content_type="text/plain")
+
+    output = io.BytesIO()
+    pdf_writer.write(output)
+    output.seek(0)
+
+    clean_inv_no = (master_inv.ti_inv_no or "").replace('/', '_').replace('\\', '_')
+    filename = f"Combined_CNote_{clean_inv_no}.pdf"
+
+    response = HttpResponse(output.read(), content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    return response
 
 
 # ==================================================
@@ -613,7 +807,7 @@ def trans_invoice_list_woh(request, customer_id):
                         "ti_parking_charges": trip.tc_parkingcost if trip.tc_parkingcost_check else 0,
                         "ti_loading_charges": trip.tc_loadingcost if trip.tc_loadingcost_check else 0,
                         "ti_unloading_charges": trip.tc_unloadingcost if trip.tc_unloadingcost_check else 0,
-                        "ti_halting_charges": trip.tc_haltingcost if trip.tc_haltingcost_check else 0,
+                        "ti_halting_charges": ((trip.tc_total_halting_cost or 0) if trip.tc_total_halting_cost_check else 0) + ((trip.tc_haltingcost or 0) if trip.tc_haltingcost_check else 0),
                         "ti_weighment_charges": trip.tc_weighmentcost if trip.tc_weighmentcost_check else 0,
                         "ti_handling_charges": (trip.tc_handlingcost if trip.tc_handlingcost_check else 0) + (trip.tc_supervisorcost if trip.tc_supervisorcost_check else 0),
                         "ti_cancellation_charges": trip.tc_cancellation if trip.tc_cancellation_check else 0,
@@ -623,7 +817,8 @@ def trans_invoice_list_woh(request, customer_id):
                                 (trip.tc_parkingcost if trip.tc_parkingcost_check else 0) +
                                 (trip.tc_loadingcost if trip.tc_loadingcost_check else 0) +
                                 (trip.tc_unloadingcost if trip.tc_unloadingcost_check else 0) +
-                                (trip.tc_haltingcost if trip.tc_haltingcost_check else 0) +
+                                ((trip.tc_total_halting_cost or 0) if trip.tc_total_halting_cost_check else 0) +
+                                ((trip.tc_haltingcost or 0) if trip.tc_haltingcost_check else 0) +
                                 (trip.tc_weighmentcost if trip.tc_weighmentcost_check else 0) +
                                 (trip.tc_handlingcost if trip.tc_handlingcost_check else 0) +
                                 (trip.tc_supervisorcost if trip.tc_supervisorcost_check else 0) +
@@ -686,7 +881,8 @@ def trans_invoice_list_woh(request, customer_id):
     trans_invoice_list = (
         TripdetailInfo.objects
         .filter(id__in=current_woh_trip_ids)
-        .select_related('tr_enquirynumber','tr_consignmentnumber','tr_vehicletype','tr_vehiclesource')
+        .select_related('tr_enquirynumber','tr_consignmentnumber','tr_vehicletype','tr_vehicletype_placed','tr_vehiclesource')
+
         .annotate(
             trip_total=(
                 Case(When(tc_tripcost_check=True, then=F('tc_tripcost')), default=0.0, output_field=FloatField()) +
@@ -708,6 +904,7 @@ def trans_invoice_list_woh(request, customer_id):
 
     trans_invoice_list = list(trans_invoice_list)
     attach_vehicle_category_to_trips(trans_invoice_list)
+    attach_invoice_veh_type_to_trips(trans_invoice_list)
 
     # Attach PDF links to Current Invoice trips (Top Table)
     curr_trip_numbers = [t.tr_tripnumber for t in trans_invoice_list if t.tr_tripnumber]
@@ -726,7 +923,8 @@ def trans_invoice_list_woh(request, customer_id):
         .exclude(tr_consignmentnumber__co_consignmentnumber__isnull=True)
         .exclude(tr_consignmentnumber__co_consignmentnumber='')
         .exclude(id__in=all_assigned_trip_ids)
-        .select_related('tr_enquirynumber','tr_consignmentnumber','tr_vehicletype','tr_vehiclesource')
+        .select_related('tr_enquirynumber','tr_consignmentnumber','tr_vehicletype','tr_vehicletype_placed','tr_vehiclesource')
+
         .annotate(
             trip_total=(
                 Case(When(tc_tripcost_check=True, then=F('tc_tripcost')), default=0.0, output_field=FloatField()) +
@@ -748,6 +946,7 @@ def trans_invoice_list_woh(request, customer_id):
 
     invoice_list_master = list(invoice_list_master)
     attach_vehicle_category_to_trips(invoice_list_master)
+    attach_invoice_veh_type_to_trips(invoice_list_master)
 
     # Attach PDF links to master list trips
     master_trip_numbers = [t.tr_tripnumber for t in invoice_list_master if t.tr_tripnumber]
@@ -960,7 +1159,7 @@ def trans_invoice_excel(request, invoice_no):
         parking = trip.tc_parkingcost if trip else obj.ti_parking_charges
         loading = trip.tc_loadingcost if trip else obj.ti_loading_charges
         unloading = trip.tc_unloadingcost if trip else obj.ti_unloading_charges
-        halting = trip.tc_haltingcost if trip else obj.ti_halting_charges
+        halting = (((trip.tc_total_halting_cost or 0) if trip.tc_total_halting_cost_check else 0) + ((trip.tc_haltingcost or 0) if trip.tc_haltingcost_check else 0)) if trip else obj.ti_halting_charges
         weighment = trip.tc_weighmentcost if trip else obj.ti_weighment_charges
         handling = trip.tc_handlingcost if trip else obj.ti_handling_charges
         cancellation = trip.tc_cancellation if trip else obj.ti_cancellation_charges
@@ -978,7 +1177,7 @@ def trans_invoice_excel(request, invoice_no):
             safe(str(obj.ti_trip.tr_reportedlocation) if obj.ti_trip else ""),
             safe(obj.ti_department),
             safe(str(obj.ti_trip.tr_vehiclenumber) if obj.ti_trip else ""),
-            safe(str(obj.ti_trip.tr_vehicletype) if obj.ti_trip else ""),
+            safe(obj.ti_trip.invoice_veh_type if obj.ti_trip and hasattr(obj.ti_trip, 'invoice_veh_type') else (str(obj.ti_trip.tr_vehicletype) if obj.ti_trip and obj.ti_trip.tr_vehicletype else "")),
             safe(str(obj.ti_trip.vehicle_category) if obj.ti_trip and hasattr(obj.ti_trip, 'vehicle_category') else ""),
             safe(obj.ti_trip.tr_departeddate_pickup.strftime('%d/%m/%Y %H:%M') if obj.ti_trip and obj.ti_trip.tr_departeddate_pickup else ""),
             safe(obj.ti_trip.tr_departeddate.strftime('%d/%m/%Y %H:%M') if obj.ti_trip and obj.ti_trip.tr_departeddate else ""),
@@ -1083,7 +1282,7 @@ def trans_invoice_tally_excel(request, invoice_no):
         parking = trip.tc_parkingcost if trip else obj.ti_parking_charges
         loading = trip.tc_loadingcost if trip else obj.ti_loading_charges
         unloading = trip.tc_unloadingcost if trip else obj.ti_unloading_charges
-        halting = trip.tc_haltingcost if trip else obj.ti_halting_charges
+        halting = (((trip.tc_total_halting_cost or 0) if trip.tc_total_halting_cost_check else 0) + ((trip.tc_haltingcost or 0) if trip.tc_haltingcost_check else 0)) if trip else obj.ti_halting_charges
         weighment = trip.tc_weighmentcost if trip else obj.ti_weighment_charges
         handling = trip.tc_handlingcost if trip else obj.ti_handling_charges
         cancellation = trip.tc_cancellation if trip else obj.ti_cancellation_charges

@@ -1,103 +1,157 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+{% block title %}Add/Update Fuel Filling{% endblock %}
 {% block content %}
+
+<style>
+	.fuel-add-modern .legacy-form-card {
+		padding: 0 !important;
+		overflow: hidden;
+	}
+
+	.fuel-add-modern .form-grid-body {
+		padding: 1.25rem 1.5rem;
+	}
+
+	.fuel-add-modern .form-control,
+	.fuel-add-modern .custom-select {
+		background: var(--input-bg, #ffffff) !important;
+		border: 1.5px solid var(--input-border, #cbd5e1) !important;
+		border-radius: 8px !important;
+		color: var(--text-main, #1e293b) !important;
+		font-weight: 600;
+		min-height: 38px;
+	}
+
+	.fuel-add-modern .form-group-modern {
+		margin-bottom: 1rem;
+	}
+
+	.fuel-add-modern .form-label-modern {
+		font-size: 0.78rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: var(--text-muted, #64748b);
+		margin-bottom: 0.35rem;
+		display: block;
+	}
+
+	.fuel-add-modern .form-section-title {
+		font-size: 0.9rem;
+		font-weight: 700;
+		color: var(--accent-blue, #0284c7);
+		margin-bottom: 1rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 2px solid var(--border-color, #e2e8f0);
+	}
+</style>
 
 <form method="POST" action="" id="fuelfilling_add">
 	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Fuel Filling</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Vehicle Number</span>
-									</div>
-									{% render_field form.ff_vehicle_num id="ff_vehicle_num" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text"> Fuel Rate/ltr</span>
-									</div>
-									{% render_field form.ff_fuel_rate id="ff_fuel_rate" onchange="change_charge_type()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Filled ltr(s)</span>
-									</div>
-									{% render_field form.ff_filled_ltr id="ff_filled_ltr" onchange="change_charge_type()" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text"> Fuel Price (LKR)</span>
-									</div>
-									{% render_field form.ff_fuel_price id="ff_fuel_price" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Date</span>
-									</div>
-									{% render_field form.ff_date id="ff_date" type="Date" class="form-control" %}
-								</div>
-							</div>
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text"> Bunk Name</span>
-									</div>
-									{% render_field form.ff_bunk_name id="ff_bunk_name" class="form-control " %}
-								</div>
-                                <div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text"> Location</span>
-									</div>
-									{% render_field form.ff_location id="ff_location" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">State</span>
-									</div>
-									{% render_field form.ff_state id="ff_state" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Odometer Reading At Filling</span>
-									</div>
-									{% render_field form.ff_odometer_reading id="ff_odometer_reading" class="form-control " %}
-								</div>
-							</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Remarks</span>
-									</div>
-									{% render_field form.ff_remarks id="ff_remarks"  class="form-control " %}
-								</div>
-								{% render_field form.ff_updated_by id="ff_updated_by" hidden="True" class="form-control" %}
+	<div class="container-fluid px-3 py-2 fuel-add-modern">
+		<div class="modern-card legacy-form-card mb-3">
+			<div class="modern-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+				<div class="d-flex align-items-center gap-2">
+					<i class="fas fa-gas-pump fa-lg text-info mr-2"></i>
+					<h2 class="mb-0 text-white font-weight-bold" style="font-size: 1.3rem;">Add / Update Fuel Filling</h2>
+				</div>
+				<a href="{% url 'fuelfilling_list' %}" class="btn-modern btn-highlight-cyan m-0 py-2 px-3">
+					<i class="fas fa-arrow-left mr-1"></i> Back to List
+				</a>
+			</div>
+
+			<div class="form-grid-body">
+				<div class="row">
+					<!-- Left Column -->
+					<div class="col-md-6">
+						<div class="form-section-title"><i class="fas fa-truck mr-1"></i> Vehicle & Fuel Metrics</div>
+						
+						<div class="form-group-modern">
+							<label class="form-label-modern">Vehicle Number <span class="text-danger">*</span></label>
+							{% render_field form.ff_vehicle_num id="ff_vehicle_num" class="form-control" %}
 						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
+
+						<div class="form-group-modern">
+							<label class="form-label-modern">Fuel Rate / Ltr <span class="text-danger">*</span></label>
+							{% render_field form.ff_fuel_rate id="ff_fuel_rate" onchange="change_charge_type()" class="form-control" %}
 						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'fuelfilling_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
+
+						<div class="form-group-modern">
+							<label class="form-label-modern">Filled Ltr(s) <span class="text-danger">*</span></label>
+							{% render_field form.ff_filled_ltr id="ff_filled_ltr" onchange="change_charge_type()" class="form-control" %}
+						</div>
+
+						<div class="form-group-modern">
+							<label class="form-label-modern">Fuel Price (LKR)</label>
+							{% render_field form.ff_fuel_price id="ff_fuel_price" class="form-control disable_a_href" %}
+						</div>
+
+						<div class="form-group-modern">
+							<label class="form-label-modern">Date <span class="text-danger">*</span></label>
+							{% render_field form.ff_date id="ff_date" type="Date" class="form-control" %}
+						</div>
 					</div>
+
+					<!-- Right Column -->
+					<div class="col-md-6">
+						<div class="form-section-title"><i class="fas fa-map-marker-alt mr-1"></i> Station & Location Info</div>
+
+						<div class="form-group-modern">
+							<label class="form-label-modern">Bunk Name</label>
+							{% render_field form.ff_bunk_name id="ff_bunk_name" class="form-control" %}
+						</div>
+
+						<div class="form-group-modern">
+							<label class="form-label-modern">Location</label>
+							{% render_field form.ff_location id="ff_location" class="form-control disable_a_href" %}
+						</div>
+
+						<div class="form-group-modern">
+							<label class="form-label-modern">State</label>
+							{% render_field form.ff_state id="ff_state" class="form-control disable_a_href" %}
+						</div>
+
+						<div class="form-group-modern">
+							<label class="form-label-modern">Odometer Reading At Filling (Km)</label>
+							{% render_field form.ff_odometer_reading id="ff_odometer_reading" class="form-control" %}
+						</div>
+
+						<div class="form-group-modern">
+							<label class="form-label-modern">Remarks</label>
+							{% render_field form.ff_remarks id="ff_remarks" class="form-control" rows="1" %}
+						</div>
+
+						{% render_field form.ff_updated_by id="ff_updated_by" hidden="True" class="form-control" %}
+					</div>
+				</div>
+
+				{% if messages %}
+				<div class="row mt-2">
+					<div class="col-12">
+						<div class="message text-center">
+							{% for message in messages %}
+							<div class="alert alert-warning py-2">{{ message }}</div>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+				{% endif %}
+
+				<!-- Actions -->
+				<div class="d-flex align-items-center justify-content-between mt-4 pt-3 border-top">
+					<button type="submit" class="btn-modern btn-submit m-0 px-4 py-2">
+						<i class="fas fa-check mr-1"></i> Submit Fuel Entry
+					</button>
+					<a href="{% url 'fuelfilling_list' %}" class="btn-modern btn-highlight-cyan m-0 px-4 py-2">
+						<i class="fas fa-times mr-1"></i> Cancel
+					</a>
 				</div>
 			</div>
 		</div>
 	</div>
 </form>
+
 <script>
   $(document).ready(function () {
     document.getElementById("ff_updated_by").value = '{{ user_id }}';

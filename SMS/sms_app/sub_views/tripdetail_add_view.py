@@ -150,17 +150,24 @@ def tripdetail_add(request, tripdetail_id=0):
                 except Vehicle_allotmentInfo.DoesNotExist:
                     pass
 
-            # Fetch latest reported KM for this vehicle from its last completed trip
+            # Fetch latest reported KM for this vehicle from its last completed trip (only for Own / Attached, skip Market)
             search_vehicle_num = selected_vehicle_number
+            is_market_vehicle = False
+            if vehicle_allotment_id:
+                try:
+                    is_market_vehicle = (va.va_vehiclesource_id == 3)
+                except Exception:
+                    pass
+
             last_trip_km = None
-            if search_vehicle_num:
+            if search_vehicle_num and not is_market_vehicle:
                 last_trip_km = TripdetailInfo.objects.filter(
                     tr_vehiclenumber=search_vehicle_num
                 ).filter(
                     Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False)
                 ).order_by('-id').first()
 
-            if last_trip_km:
+            if last_trip_km and not is_market_vehicle:
                 latest_km = last_trip_km.tr_reportedkm or last_trip_km.tr_reportedkm_delivery
                 if latest_km:
                     initial_data['tr_reportedkm_pickup'] = latest_km
@@ -1562,6 +1569,26 @@ def get_customer_ref(request):
 def get_last_reported_km(request):
     vehicle = request.GET.get("vehicle")
     enquiry_id = request.GET.get("enquiry_id")
+
+    # Check if vehicle is Market vehicle
+    if vehicle:
+        v_obj = VehiclemasterInfo.objects.filter(vm_registrationnumber=vehicle).first()
+        if not v_obj:
+            # If vehicle registration is not found in master, check allotment for Market vehicle (vehiclesource_id == 3)
+            va_obj = Vehicle_allotmentInfo.objects.filter(
+                Q(va_vehiclenumber_mkt=vehicle) | Q(va_vehiclesource_id=3)
+            ).filter(va_vehiclenumber_mkt=vehicle).first()
+            if va_obj or not v_obj:
+                # Market vehicle -> do not auto-populate
+                return JsonResponse({
+                    "reported_km": None,
+                    "reported_date": None
+                })
+        elif v_obj and v_obj.vm_vehiclesource_id == 3:
+            return JsonResponse({
+                "reported_km": None,
+                "reported_date": None
+            })
 
     last_trip = None
     if vehicle:
