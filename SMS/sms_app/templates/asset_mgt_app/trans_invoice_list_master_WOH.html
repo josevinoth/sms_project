@@ -197,7 +197,7 @@
                 <td>{{ inv.tr_vehiclenumber }}</td>
 
                 <!-- Vehicle Type -->
-                <td>{{ inv.tr_vehicletype }}</td>
+                <td>{{ inv.invoice_veh_type|default:"-" }}</td>
 
                 <!-- Vehicle Category -->
                 <td>{{ inv.vehicle_category|default:"-" }}</td>
