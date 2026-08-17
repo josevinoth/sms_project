@@ -424,7 +424,13 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill, prorat
                 safe_num(details.get('halting_cost', 0))
             )
         else:
-            tc_tripcost = safe_num(trip.tc_tripcost) if getattr(trip, 'tc_tripcost_vendor_check', True) else 0.0
+            if va_info:
+                if safe_num(va_info.va_specialbuy) > 0:
+                    tc_tripcost = safe_num(va_info.va_specialbuy)
+                else:
+                    tc_tripcost = 0.0
+            else:
+                tc_tripcost = 0.0
             tc_tollcost = safe_num(trip.tc_tollcost) if getattr(trip, 'tc_tollcost_vendor_check', False) else 0.0
             tc_supervisorcost = safe_num(trip.tc_supervisorcost) if getattr(trip, 'tc_supervisorcost_vendor_check', False) else 0.0
             tc_loadingcost = safe_num(trip.tc_loadingcost) if getattr(trip, 'tc_loadingcost_vendor_check', False) else 0.0
@@ -2661,9 +2667,9 @@ def vendor_p_l_mkt_report_ajax_view(request):
                 elif rate_val is not None:
                     buying_trip_cost = safe_num(rate_val)
                 else:
-                    buying_trip_cost = safe_num(allotment.va_standardbuy)
+                    buying_trip_cost = 0.0
             else:
-                buying_trip_cost = safe_num(allotment.va_specialbuy) or safe_num(allotment.va_standardbuy)
+                buying_trip_cost = safe_num(allotment.va_specialbuy)
         else:
             vendor_name = "Market"
 
@@ -2887,7 +2893,7 @@ def vendor_p_l_attached_report_ajax_view(request):
     trips = TripdetailInfo.objects.filter(
         tc_financestatus_id__in=[2, 4, 5, 6, 7, 9],
         tr_vehiclesource_id=2,  # 2 = ATTACHED
-    ).exclude(tr_category_id__in=[2, 3]).select_related(
+    ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -8489,7 +8495,7 @@ def trip_status_count_report_view(request):
     form = DmrForm(request.GET or None)
     
     headers = [
-        "S.No", "Cnote Date", "Cnote Count", "Invoice Completed", "Not Associated with Trip", "Awaiting Trip Approval", "Trip Started", "Trip Closed", "AwaitingTrip settlement", "Trip Settled", "Ready for Invoice", "Cancellation with Billing", "Cancellation without Billing"
+        "S.No", "Cnote Date", "Cnote Count", "Not Associated with Trip", "Awaiting Trip Approval", "Trip Started", "Trip Closed", "AwaitingTrip settlement", "Trip Settled", "Ready for Invoice", "Invoice Completed", "Cancellation with Billing", "Cancellation without Billing"
     ]
     
     context = {
@@ -8498,7 +8504,6 @@ def trip_status_count_report_view(request):
         'form': form,
     }
     return render(request, 'asset_mgt_app/trip_status_count_report.html', context)
-
 @login_required(login_url='login')
 def trip_status_count_report_ajax_view(request):
     draw = int(request.GET.get('draw', 1))
@@ -8507,6 +8512,7 @@ def trip_status_count_report_ajax_view(request):
     
     from_date = request.GET.get('from_date', '')
     to_date = request.GET.get('to_date', '')
+    branch = request.GET.get('branch', '')
     
     from ..models import TripdetailInfo, Tripstatusinfo, ConsignmentdetailInfo, TransInvoiceInfo
     from django.db.models import Count, Q, F
@@ -8518,6 +8524,8 @@ def trip_status_count_report_ajax_view(request):
         qs = qs.filter(co_consignmentdate__gte=from_date)
     if to_date:
         qs = qs.filter(co_consignmentdate__lte=to_date)
+    if branch:
+        qs = qs.filter(co_consignmentnumber__icontains=branch)
         
     order_col = request.GET.get('order[0][column]')
     order_dir = request.GET.get('order[0][dir]')
@@ -8544,9 +8552,13 @@ def trip_status_count_report_ajax_view(request):
     
     cnotes_for_page = qs.filter(co_consignmentdate__in=paginated_dates_objs).select_related('co_enquirynumber')
     
-    invoices_for_page = TransInvoiceInfo.objects.filter(
-        ti_consignment__co_consignmentdate__in=paginated_dates_objs
-    ).values_list('ti_consignment_id', flat=True)
+    invoice_qs = TransInvoiceInfo.objects.filter(ti_consignment__co_consignmentdate__in=paginated_dates_objs)
+    
+    if branch:
+        trips_for_page = trips_for_page.filter(tr_consignmentnumber__co_consignmentnumber__icontains=branch)
+        invoice_qs = invoice_qs.filter(ti_consignment__co_consignmentnumber__icontains=branch)
+        
+    invoices_for_page = invoice_qs.values_list('ti_consignment_id', flat=True)
     cnotes_with_invoice = set(invoices_for_page)
     
     date_groups = {}
@@ -8576,11 +8588,11 @@ def trip_status_count_report_ajax_view(request):
         fin_status = t.tc_financestatus.status if t.tc_financestatus else ""
         
         enq_info = ""
-        if t.tr_enquirynumber:
-            enq_no = t.tr_enquirynumber.en_enquirynumber
-            enq_date = t.tr_enquirynumber.en_created_at
-            enq_date_str = enq_date.strftime('%d-%m-%Y') if enq_date else ""
-            enq_info = f"{enq_no} ({enq_date_str})"
+        if t.tr_consignmentnumber:
+            cnote_no = t.tr_consignmentnumber.co_consignmentnumber
+            cnote_date = t.tr_consignmentnumber.co_consignmentdate
+            cnote_date_str = cnote_date.strftime('%d-%m-%Y') if cnote_date else ""
+            enq_info = f"{cnote_no} ({cnote_date_str})"
             
         counted = False
         # Classify the trip into the relevant bucket(s) - Mutually Exclusive
@@ -8622,11 +8634,11 @@ def trip_status_count_report_ajax_view(request):
             cdate_str = c.co_consignmentdate.strftime('%d-%m-%Y')
             
             enq_info = ""
-            if c.co_enquirynumber:
-                enq_no = c.co_enquirynumber.en_enquirynumber
-                enq_date = c.co_enquirynumber.en_created_at
-                enq_date_str = enq_date.strftime('%d-%m-%Y') if enq_date else ""
-                enq_info = f"{enq_no} ({enq_date_str})"
+            if c.co_consignmentnumber:
+                cnote_no = c.co_consignmentnumber
+                cnote_date = c.co_consignmentdate
+                cnote_date_str = cnote_date.strftime('%d-%m-%Y') if cnote_date else ""
+                enq_info = f"{cnote_no} ({cnote_date_str})"
                 
             if c.pk in cnotes_with_invoice:
                 date_groups[cdate_str]['Invoice Completed'].append(enq_info)
@@ -8654,7 +8666,6 @@ def trip_status_count_report_ajax_view(request):
             start + idx + 1,
             d_str,
             f'<span class="badge badge-info px-2 py-1" style="font-size:0.85rem; font-weight:600;">{len(counts["Cnotes"])}</span>',
-            build_tooltip_html(counts['Invoice Completed'], f"Invoice Completed ({d_str})"),
             build_tooltip_html(counts['Not Associated with Trip'], f"Not Associated with Trip ({d_str})"),
             build_tooltip_html(counts['Awaiting Trip Approval'], f"Awaiting Trip Approval ({d_str})"),
             build_tooltip_html(counts['Trip Started'], f"Trip Started ({d_str})"),
@@ -8662,6 +8673,7 @@ def trip_status_count_report_ajax_view(request):
             build_tooltip_html(counts['AwaitingTrip settlement'], f"Awaiting Trip Settlement ({d_str})"),
             build_tooltip_html(counts['Trip Settled'], f"Trip Settled ({d_str})"),
             build_tooltip_html(counts['Ready for Invoice'], f"Ready for Invoice ({d_str})"),
+            build_tooltip_html(counts['Invoice Completed'], f"Invoice Completed ({d_str})"),
             build_tooltip_html(counts['Cancellation with Billing'], f"Cancellation with Billing ({d_str})"),
             build_tooltip_html(counts['Cancellation without Billing'], f"Cancellation without Billing ({d_str})"),
         ])
