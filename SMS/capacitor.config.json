@@ -3,10 +3,10 @@
   "appName": "BVM SMS",
   "webDir": "sms_app/templates",
   "server": {
-    "url": "http://sms.thebvmgroup.com/SMS/customer_login/2/",
+    "url": "http://3.110.26.240/SMS/customer_login/2/",
     "cleartext": true,
     "allowNavigation": [
-      "sms.thebvmgroup.com",
+      "3.110.26.240",
       "localhost"
     ]
   },

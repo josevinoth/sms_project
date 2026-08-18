@@ -1,244 +1,162 @@
-{% extends "asset_mgt_app/base_1.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
-
-
+{% load static %}
 {% block content %}
 
-<!-- Select2/DataTables CSS -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"
-    rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.3.2/css/fixedHeader.bootstrap4.min.css">
-
-<!-- Select2/DataTables JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://cdn.datatables.net/fixedheader/3.3.2/js/dataTables.fixedHeader.min.js"></script>
 
-<div class="container-fluid d-flex justify-content-center py-3">
-    <div class="rounded text-center bg-info shadow-box px-4 py-2">
-        <h3>Renewal Due - Insurance Report</h3>
+<div class="modern-list-header">
+    <div class="modern-list-title">
+        <i class="fas fa-shield-alt"></i>
+        <h2>Renewal Due - Insurance Report</h2>
+    </div>
+    <div class="modern-list-actions">
+        <a href="{% url 'transport_reports' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left mr-1"></i> Back to Reports
+        </a>
     </div>
 </div>
 
-<br>
+{% if messages %}
 <div class="row">
-    <div class="col-2"></div>
-    <div class="col-8 message text-center">
+    <div class="col-12 message text-center my-2">
         {% for message in messages %}
-        <a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
+        <div class="alert alert-info py-2 mb-2">{{ message }}</div>
         {% endfor %}
     </div>
-    <div class="col-2"></div>
 </div>
+{% endif %}
 
-<div class="row mb-3 px-3">
-    <div class="col-12">
-        <a href="{% url 'transport_reports' %}" class="btn btn-primary shadow-sm">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-</div>
-<form method="POST" action="{% url 'insurance_renewal_report' %}" class="row g-3 align-items-end mb-4"
-    id="report-filter-form">
-    {% csrf_token %}
+<!-- Modern Filter Form -->
+<div class="form-section">
+    <form method="POST" action="{% url 'insurance_renewal_report' %}" class="row g-3 align-items-end" id="report-filter-form">
+        {% csrf_token %}
 
-    <!-- Column 1: Branch -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Branch</label>
-        <select name="branch_search" class="form-control select2">
-            <option value="">Select Branch</option>
-            {% for branch in all_branches %}
-            <option value="{{ branch.id }}" {% if branch_search == branch.id %}selected{% endif %}>
-                {{ branch.loc_name }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <!-- Column 2: Company Name -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Company Name</label>
-        <select name="company_search" class="form-control select2">
-            <option value="">Select Company</option>
-            {% for company in all_companies %}
-            <option value="{{ company }}" {% if company_search == company %}selected{% endif %}>
-                {{ company }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <!-- Column 3: Vehicle No -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Vehicle No</label>
-        <select name="vehicle_search" id="vehicle_search" class="form-control select2">
-            <option value="">Search Vehicle No</option>
-            {% for vehicle in all_vehicles %}
-            <option value="{{ vehicle.vm_registrationnumber }}" {% if vehicle_search == vehicle.vm_registrationnumber %}selected{% endif %}>
-                {{ vehicle.vm_registrationnumber }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <!-- From Date -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">From Date</label>
-        <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
-    </div>
-
-    <!-- To Date -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">To Date</label>
-        <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
-    </div>
-
-    <!-- Column 4: Buttons -->
-    <div class="col-md-2 d-flex gap-2 align-items-end">
-        <button type="submit" class="btn btn-primary flex-grow-1 shadow-sm"><i class="fas fa-filter"></i> Filter</button>
-        <a href="{% url 'insurance_renewal_report' %}" class="btn btn-secondary shadow-sm">
-            <i class="fas fa-sync"></i> Clear
-        </a>
-    </div>
-</form>
-
-
-
-<div class="container-fluid shadow-box-table mt-4 pt-0">
-    <table id="insurance_renewal_report_table" class="table table-striped table-bordered text-nowrap mt-0">
-        <thead class="thead-dark">
-            <tr>
-                {% for h in headers %}
-                <th>{{ h }}</th>
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">Branch</label>
+            <select name="branch_search" class="form-control form-control-modern select2">
+                <option value="">Select Branch</option>
+                {% for branch in all_branches %}
+                <option value="{{ branch.id }}" {% if branch_search == branch.id %}selected{% endif %}>
+                    {{ branch.loc_name }}
+                </option>
                 {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in data_rows %}
-            <tr>
-                {% for cell in row %}
-                <td>
-                    {% if forloop.counter == 12 %} {# DS Status #}
-                    {% if cell == "Expired" %}
-                    <span class="badge bg-danger">{{ cell }}</span>
-                    {% elif cell == "Renewal Due" %}
-                    <span class="badge bg-warning text-dark">{{ cell }}</span>
-                    {% else %}
-                    <span class="badge bg-success">{{ cell }}</span>
-                    {% endif %}
-                    {% else %}
-                    {{ cell }}
-                    {% endif %}
-                </td>
+            </select>
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">Company Name</label>
+            <select name="company_search" class="form-control form-control-modern select2">
+                <option value="">Select Company</option>
+                {% for company in all_companies %}
+                <option value="{{ company }}" {% if company_search == company %}selected{% endif %}>
+                    {{ company }}
+                </option>
                 {% endfor %}
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </select>
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">Vehicle No</label>
+            <select name="vehicle_search" id="vehicle_search" class="form-control form-control-modern select2">
+                <option value="">Search Vehicle No</option>
+                {% for vehicle in all_vehicles %}
+                <option value="{{ vehicle.vm_registrationnumber }}" {% if vehicle_search == vehicle.vm_registrationnumber %}selected{% endif %}>
+                    {{ vehicle.vm_registrationnumber }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">From Date</label>
+            <input type="date" name="from_date" class="form-control form-control-modern" value="{{ from_date }}">
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">To Date</label>
+            <input type="date" name="to_date" class="form-control form-control-modern" value="{{ to_date }}">
+        </div>
+
+        <div class="col-md-2 mb-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-block mr-1">
+                <i class="fas fa-filter mr-1"></i> Filter
+            </button>
+            <a href="{% url 'insurance_renewal_report' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-undo"></i>
+            </a>
+        </div>
+    </form>
 </div>
 
-<style>
-    /* Premium Table Styling */
-    .text-nowrap {
-        white-space: nowrap;
-    }
-
-    .shadow-box-table {
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-        padding: 15px;
-        background: #fff;
-    }
-
-    /* STICKY HEADER Styling */
-    #insurance_renewal_report_table thead th {
-        background-color: #0A3278 !important;
-        color: white !important;
-        z-index: 1001;
-        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
-    }
-    /* UI Tweak: Inline buttons with length menu */
-    .dataTables_length {
-        display: inline-block !important;
-        margin-right: 20px;
-    }
-    .dt-buttons {
-        display: inline-block !important;
-        margin-bottom: 5px;
-    }
-</style>
+<!-- Modern Table Card -->
+<div class="modern-card">
+    <div class="table-responsive">
+        <table id="insurance_renewal_report_table" class="table modern-table table-hover display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    {% for h in headers %}
+                    <th class="text-nowrap">{{ h }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data_rows %}
+                <tr>
+                    {% for cell in row %}
+                    <td>
+                        {% if forloop.counter == 12 %}
+                        {% if cell == "Expired" %}
+                        <span class="badge bg-danger text-white px-2 py-1">{{ cell }}</span>
+                        {% elif cell == "Renewal Due" %}
+                        <span class="badge bg-warning text-dark px-2 py-1">{{ cell }}</span>
+                        {% else %}
+                        <span class="badge bg-success text-white px-2 py-1">{{ cell }}</span>
+                        {% endif %}
+                        {% else %}
+                        {{ cell }}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <script>
     $(document).ready(function () {
+        $('.select2').select2({
+            width: '100%',
+            placeholder: 'Search and select...',
+            allowClear: true
+        });
+
         const table = $('#insurance_renewal_report_table').DataTable({
             scrollX: true,
-            fixedHeader: {
-                header: true,
-                headerOffset: 0
-            },
-            dom: "<'row'<'col-sm-12 col-md-6'lB><'col-sm-12 col-md-6'f>>" +
+            scrollY: "58vh",
+            scrollCollapse: true,
+            autoWidth: false,
+            dom: "<'row mb-2'<'col-sm-12 col-md-6 d-flex align-items-center'lB><'col-sm-12 col-md-6 d-flex justify-content-end'f>>" +
                  "<'row'<'col-sm-12'tr>>" +
-                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                 "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
             lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
             pageLength: 50,
             buttons: [
-                'copy', 'csv',
-                {
-                    extend: 'excelHtml5',
-                    text: 'Excel',
-                    title: 'Renewal Due Insurance Report',
-                    customize: function (xlsx) {
-                        let sheet = xlsx.xl.worksheets['sheet1.xml'];
-                        let styles = xlsx.xl['styles.xml'];
-                        let fonts = $('fonts', styles);
-                        fonts.append(`<font><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/><b/></font>`);
-                        let fontId = fonts.children().length - 1;
-                        let fills = $('fills', styles);
-                        fills.append(`<fill><patternFill patternType="solid"><fgColor rgb="FF0A3278"/><bgColor indexed="64"/></patternFill></fill>`);
-                        let fillId = fills.children().length - 1;
-                        let cellXfs = $('cellXfs', styles);
-                        cellXfs.append(`<xf xfId="0" fontId="${fontId}" fillId="${fillId}" borderId="0" applyFont="1" applyFill="1"/>`);
-                        let styleId = cellXfs.children().length - 1;
-                        $('row:eq(1) c', sheet).attr('s', styleId);
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    orientation: 'landscape',
-                    pageSize: 'A4',
-                    title: 'Renewal Due Insurance Report',
-                    customize: function (doc) {
-                        doc.styles.tableHeader.fillColor = '#0A3278';
-                        doc.styles.tableHeader.color = 'white';
-                        doc.styles.tableHeader.bold = true;
-                    }
-                },
-                {
-                    extend: 'print',
-                    title: 'Renewal Due Insurance Report',
-                    customize: function (win) {
-                        $(win.document.body).find('thead th')
-                            .css('background-color', '#0A3278')
-                            .css('color', 'white')
-                            .css('font-weight', 'bold');
-                    }
-                }
+                { extend: 'copy', className: 'btn btn-outline-secondary btn-sm mr-1' },
+                { extend: 'csv', className: 'btn btn-outline-secondary btn-sm mr-1' },
+                { extend: 'excelHtml5', className: 'btn btn-outline-success btn-sm mr-1', text: 'Excel', title: 'Renewal Due Insurance Report' },
+                { extend: 'pdfHtml5', className: 'btn btn-outline-danger btn-sm mr-1', orientation: 'landscape', pageSize: 'A4', title: 'Renewal Due Insurance Report' },
+                { extend: 'print', className: 'btn btn-outline-dark btn-sm', title: 'Renewal Due Insurance Report' }
             ],
             order: [[0, 'asc']]
         });
 
-        $('.select2').select2({
-            width: '100%',
-            theme: 'bootstrap4',
-            allowClear: true,
-            placeholder: 'Search...'
-        });
-
-        // Handle window resize for FixedHeader alignment
         $(window).on('resize', function () {
-            table.fixedHeader.adjust();
+            table.columns.adjust();
         });
     });
 </script>
-
 {% endblock %}
