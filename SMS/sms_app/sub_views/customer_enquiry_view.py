@@ -68,7 +68,7 @@ def ajax_get_vehicle_types(request):
     types = VehicletypeInfo.objects.all().order_by('vt_vehicletype').values('id', 'vt_vehicletype')
     return JsonResponse(list(types), safe=False)
 
-@login_required
+@login_required(login_url='/SMS/customer_login/2/')
 def customer_dashboard(request):
     """
     Premium dashboard for customers showing summary stats and recent shipments.
@@ -77,7 +77,9 @@ def customer_dashboard(request):
     
     if not customer:
         messages.error(request, 'Your account is not linked to a Customer Profile. Please contact support.')
-        return render(request, 'asset_mgt_app/customer_portal_dashboard.html', {'error': True})
+        if request.user.is_staff or request.user.is_superuser:
+            return redirect('home_page')
+        return redirect('login_page')
 
     # Base queryset for enquiries
     enquiry_qs = EnquirynoteInfo.objects.filter(en_customername=customer)
@@ -107,7 +109,10 @@ def customer_dashboard(request):
     from sms_app.models import Trip_closure_files_Info
     closed_trip_numbers = Trip_closure_files_Info.objects.values_list('tcf_tripnumber', flat=True)
     
-    # All historical delivered trips (to exclude from pending vehicle allotments)
+    active_trip_enq_ids = list(business_trips.filter(
+        tc_financestatus_id__in=[1, 8]
+    ).values_list('tr_enquirynumber_id', flat=True).distinct())
+
     all_closed_via_closure_enq_ids = business_trips.filter(
         tr_tripnumber__in=closed_trip_numbers
     ).values_list('tr_enquirynumber_id', flat=True).distinct()
@@ -117,7 +122,7 @@ def customer_dashboard(request):
             tc_financestatus_id__in=[2, 7, 9]
         ).values_list('tr_enquirynumber_id', flat=True).distinct()) +
         list(all_closed_via_closure_enq_ids)
-    ))
+    ) - set(active_trip_enq_ids))
 
     closed_via_closure_enq_ids = business_trips.filter(
         tr_tripnumber__in=closed_trip_numbers,
@@ -130,29 +135,31 @@ def customer_dashboard(request):
             tr_created_at__gte=first_day_of_month
         ).values_list('tr_enquirynumber_id', flat=True).distinct()) +
         list(closed_via_closure_enq_ids)
-    ))
+    ) - set(active_trip_enq_ids))
     delivered = enquiry_qs.filter(id__in=delivered_enq_ids).count()
 
     # Vehicle Allotted = enquiries created in current month that have a vehicle allotted
     # but NO business trip started (not in-transit, not delivered)
     allotted_trip_enq_ids = business_trips.filter(
-        tr_vehiclenumber__isnull=False,
-        tr_enquirynumber__en_created_at__gte=first_day_of_month
+        tr_vehiclenumber__isnull=False
+    ).filter(
+        Q(tr_enquirynumber__en_created_at__gte=first_day_of_month) | Q(tr_created_at__gte=first_day_of_month)
     ).exclude(
         tr_vehiclenumber=''
     ).values_list('tr_enquirynumber_id', flat=True).distinct()
 
     allotted_va_ids = Vehicle_allotmentInfo.objects.filter(
-        va_enquirynumber__en_customername=customer,
-        va_enquirynumber__en_created_at__gte=first_day_of_month
+        va_enquirynumber__en_customername=customer
+    ).filter(
+        Q(va_enquirynumber__en_created_at__gte=first_day_of_month) | Q(va_created_at__gte=first_day_of_month)
     ).filter(
         ~Q(va_vehiclenumber__isnull=True) | (~Q(va_vehiclenumber_mkt='') & ~Q(va_vehiclenumber_mkt__isnull=True))
     ).values_list('va_enquirynumber_id', flat=True).distinct()
 
     allotted_all_ids = list(set(list(allotted_trip_enq_ids) + list(allotted_va_ids)))
 
-    # Exclude explicitly dead/cancelled/completed enquiries
-    dead_enq_ids = list(enquiry_qs.filter(en_status_id__in=[5, 8]).values_list('id', flat=True))
+    # Exclude explicitly dead/cancelled/completed enquiries (status 5 = Cancelled/Dead)
+    dead_enq_ids = list(enquiry_qs.filter(en_status_id__in=[5]).values_list('id', flat=True))
     cancelled_trip_enq_ids = list(all_trips.filter(
         Q(tc_financestatus_id__in=[10, 11]) |
         Q(tc_financestatus__status__icontains='Cancellation') |
@@ -207,7 +214,7 @@ def customer_dashboard(request):
         'recent_shipments': recent_shipments
     })
 
-@login_required
+@login_required(login_url='/SMS/customer_login/2/')
 def customer_enquiry_add(request):
     """
     Simplified enquiry submission form for logged-in customers.
@@ -295,14 +302,29 @@ def customer_enquiry_add(request):
                 if ajay_user:
                     assigned_user = ajay_user
 
-            # Default trip type if not specified to satisfy database NOT NULL constraint
             from ..sub_models.tr_triptype_mod import Tr_triptype_Info
             trip_type_id = request.POST.get('trip_type')
             trip_type_obj = None
             if trip_type_id:
                 trip_type_obj = Tr_triptype_Info.objects.filter(id=trip_type_id).first()
             if not trip_type_obj:
-                trip_type_obj = Tr_triptype_Info.objects.first()
+                messages.error(request, 'Please select a Trip Type.')
+                places = Places.objects.all().order_by('place_name')
+                categories = VehiclecategoryInfo.objects.all().order_by('vc_vehiclecategory')
+                types = VehicletypeInfo.objects.all().order_by('vt_vehicletype')
+                departments = CustomerdepartmentInfo.objects.all().order_by('ct_customerdepartment')
+                trip_types = Tr_triptype_Info.objects.all().order_by('tr_trip_type')
+                return render(request, 'asset_mgt_app/customer_enquiry_add.html', {
+                    'customer': customer,
+                    'department': department,
+                    'departments': departments,
+                    'places': places,
+                    'categories': categories,
+                    'types': types,
+                    'trip_types': trip_types,
+                    'is_lp': is_lp,
+                    'default_agent_name': agent_name
+                })
 
             enquiry = EnquirynoteInfo(
                 en_customername=customer,
@@ -358,10 +380,12 @@ def customer_enquiry_add(request):
         except Exception as e:
             messages.error(request, f'Error: {str(e)}')
             
+    from ..sub_models.tr_triptype_mod import Tr_triptype_Info
     places = Places.objects.all().order_by('place_name')
     categories = VehiclecategoryInfo.objects.all().order_by('vc_vehiclecategory')
     types = VehicletypeInfo.objects.all().order_by('vt_vehicletype')
     departments = CustomerdepartmentInfo.objects.all().order_by('ct_customerdepartment')
+    trip_types = Tr_triptype_Info.objects.all().order_by('tr_trip_type')
 
     return render(request, 'asset_mgt_app/customer_enquiry_add.html', {
         'customer': customer,
@@ -370,13 +394,15 @@ def customer_enquiry_add(request):
         'places': places,
         'categories': categories,
         'types': types,
+        'trip_types': trip_types,
         'is_lp': is_lp,
         'default_agent_name': agent_name
     })
 
-@login_required
+@login_required(login_url='/SMS/customer_login/2/')
 def customer_enquiry_edit(request, enquiry_id):
     """Edit an existing customer enquiry."""
+    from ..sub_models.tr_triptype_mod import Tr_triptype_Info
     customer, department, is_lp, agent_name = get_customer_context(request)
     if not customer:
         return redirect('customer_dashboard')
@@ -398,91 +424,81 @@ def customer_enquiry_edit(request, enquiry_id):
                 req_time = parts[1] if len(parts) > 1 else None
             except Exception:
                 pass
+        
+        # Trip type update
+        trip_type_id = request.POST.get('trip_type')
+        if trip_type_id:
+            tt_obj = Tr_triptype_Info.objects.filter(id=trip_type_id).first()
+            if tt_obj:
+                enquiry.en_trip_type = tt_obj
+        
+        dept_id = request.POST.get('customer_department')
+        if dept_id:
+            selected_dept = CustomerdepartmentInfo.objects.filter(id=dept_id).first()
+            if selected_dept:
+                enquiry.en_customerdepartment = selected_dept
 
-        agent_name = request.POST.get('agent_name')
-        no_of_veh = request.POST.get('no_of_veh', 0)
-        no_of_pcs = request.POST.get('no_of_pcs', 0)
-        weight = request.POST.get('weight')
-        dimensions = request.POST.get('dimensions')
-        cbm = request.POST.get('cbm')
-        pickup_contact_name = request.POST.get('pickup_contact_name')
-        pickup_contact_mobile = request.POST.get('pickup_contact_mobile')
-        delivery_contact_name = request.POST.get('delivery_contact_name')
-        delivery_contact_mobile = request.POST.get('delivery_contact_mobile')
+        if from_loc_id:
+            enquiry.en_fromlocaion = Places.objects.filter(id=from_loc_id).first()
+        if to_loc_id:
+            enquiry.en_tolocation = Places.objects.filter(id=to_loc_id).first()
 
-        try:
-            from_loc = Places.objects.get(id=from_loc_id) if from_loc_id else None
-            to_loc = Places.objects.get(id=to_loc_id) if to_loc_id else None
+        if pickup_datetime_str:
+            enquiry.en_pickupdatetime = pickup_datetime_str
+        if req_time:
+            enquiry.en_vehicle_req_time = req_time
 
-            category_name = ""
-            vc_obj = None
-            if category_id:
-                vc_obj = VehiclecategoryInfo.objects.filter(id=category_id).first()
-                if vc_obj:
-                    category_name = vc_obj.vc_vehiclecategory
-
-            vt_obj = None
-            if type_id:
-                vt_obj = VehicletypeInfo.objects.filter(id=type_id).first()
-                # ONLY use vehicle type if cargo_details is explicitly empty
-                if not cargo_details and vt_obj:
-                    cargo_details = vt_obj.vt_vehicletype
-
-            # Department
-            dept_id = request.POST.get('customer_department')
-            selected_dept = None
-            if dept_id:
-                selected_dept = CustomerdepartmentInfo.objects.filter(id=dept_id).first()
-            if not selected_dept:
-                selected_dept = department
-
-            enquiry.en_customerdepartment = selected_dept
+        if cargo_details:
             enquiry.en_consignmentdetails = cargo_details
-            enquiry.en_vehicledetails = category_name
-            enquiry.en_pickupdatetime = pickup_datetime_str if pickup_datetime_str else enquiry.en_pickupdatetime
-            enquiry.en_fromlocaion = from_loc
-            enquiry.en_tolocation = to_loc
-            enquiry.en_agent_name = agent_name
-            enquiry.en_vehicle_req_time = req_time if req_time else None
-            enquiry.en_no_of_vehicles = int(no_of_veh) if no_of_veh else 0
-            enquiry.en_no_of_pcs = int(no_of_pcs) if no_of_pcs else 0
-            enquiry.en_weight = weight
-            enquiry.en_dimensions = dimensions
-            enquiry.en_cbm = cbm
-            enquiry.en_pickup_contact_name = pickup_contact_name
-            enquiry.en_pickup_contact_mobile = pickup_contact_mobile
-            enquiry.en_delivery_contact_name = delivery_contact_name
-            enquiry.en_delivery_contact_mobile = delivery_contact_mobile
-            enquiry.save()
 
-            # Update vehicle detail record
-            if vc_obj and vt_obj:
-                env = Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry).first()
-                if env:
-                    env.env_vehiclecategory = vc_obj
-                    env.env_vehicletype = vt_obj
-                    env.env_quantity = int(no_of_veh) if no_of_veh else 1
-                    env.env_updated_by = request.user
-                    env.save()
-                else:
-                    Enquirynotevehicle.objects.create(
-                        env_enquirynumber=enquiry,
-                        env_vehiclecategory=vc_obj,
-                        env_vehicletype=vt_obj,
-                        env_quantity=int(no_of_veh) if no_of_veh else 1,
-                        env_updated_by=request.user
-                    )
+        enquiry.en_agent_name = request.POST.get('agent_name', enquiry.en_agent_name)
+        
+        no_veh_val = request.POST.get('no_of_veh')
+        if no_veh_val not in (None, ''):
+            try:
+                enquiry.en_no_of_vehicles = int(no_veh_val)
+            except (ValueError, TypeError):
+                pass
 
-            messages.success(request, f'Booking {enquiry.en_enquirynumber} updated successfully!')
-            return redirect('customer_enquiry_list')
+        no_pcs_val = request.POST.get('no_of_pcs')
+        if no_pcs_val not in (None, ''):
+            try:
+                enquiry.en_no_of_pcs = int(no_pcs_val)
+            except (ValueError, TypeError):
+                pass
 
-        except Exception as e:
-            messages.error(request, f'Error: {str(e)}')
+        enquiry.en_weight = request.POST.get('weight', enquiry.en_weight)
+        enquiry.en_dimensions = request.POST.get('dimensions', enquiry.en_dimensions)
+        enquiry.en_cbm = request.POST.get('cbm', enquiry.en_cbm)
+        enquiry.en_pickup_contact_name = request.POST.get('pickup_contact_name', enquiry.en_pickup_contact_name)
+        enquiry.en_pickup_contact_mobile = request.POST.get('pickup_contact_mobile', enquiry.en_pickup_contact_mobile)
+        enquiry.en_delivery_contact_name = request.POST.get('delivery_contact_name', enquiry.en_delivery_contact_name)
+        enquiry.en_delivery_contact_mobile = request.POST.get('delivery_contact_mobile', enquiry.en_delivery_contact_mobile)
+
+        enquiry.save()
+
+        # Update structured vehicle detail
+        vc_obj = VehiclecategoryInfo.objects.filter(id=category_id).first() if category_id else None
+        vt_obj = VehicletypeInfo.objects.filter(id=type_id).first() if type_id else None
+        if vc_obj and vt_obj:
+            Enquirynotevehicle.objects.update_or_create(
+                env_enquirynumber=enquiry,
+                defaults={
+                    'env_vehiclecategory': vc_obj,
+                    'env_vehicletype': vt_obj,
+                    'env_quantity': enquiry.en_no_of_vehicles or 1,
+                    'env_updated_by': request.user
+                }
+            )
+
+        messages.success(request, f'Booking {enquiry.en_enquirynumber} updated successfully!')
+        return redirect('customer_enquiry_list')
 
     places = Places.objects.all().order_by('place_name')
     categories = VehiclecategoryInfo.objects.all().order_by('vc_vehiclecategory')
     types = VehicletypeInfo.objects.all().order_by('vt_vehicletype')
     departments = CustomerdepartmentInfo.objects.all().order_by('ct_customerdepartment')
+    trip_types = Tr_triptype_Info.objects.all().order_by('tr_trip_type')
 
     # Get current vehicle detail for pre-selection
     env = Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry).first()
@@ -494,6 +510,7 @@ def customer_enquiry_edit(request, enquiry_id):
         'places': places,
         'categories': categories,
         'types': types,
+        'trip_types': trip_types,
         'is_lp': is_lp,
         'enquiry': enquiry,
         'env': env,
@@ -501,7 +518,7 @@ def customer_enquiry_edit(request, enquiry_id):
         'default_agent_name': enquiry.en_agent_name or agent_name
     })
 
-@login_required
+@login_required(login_url='/SMS/customer_login/2/')
 def customer_enquiry_list(request):
     """
     List previous enquiries and current shipments for the customer.
@@ -552,15 +569,17 @@ def customer_enquiry_list(request):
         tr_category_id=1
     )
     _allotted_trip_enq_ids = _business_trips.filter(
-        tr_vehiclenumber__isnull=False,
-        tr_enquirynumber__en_created_at__gte=first_day_of_month
+        tr_vehiclenumber__isnull=False
+    ).filter(
+        Q(tr_enquirynumber__en_created_at__gte=first_day_of_month) | Q(tr_created_at__gte=first_day_of_month)
     ).exclude(
         tr_vehiclenumber=''
     ).values_list('tr_enquirynumber_id', flat=True).distinct()
 
     _allotted_va_ids = Vehicle_allotmentInfo.objects.filter(
-        va_enquirynumber__en_customername=customer,
-        va_enquirynumber__en_created_at__gte=first_day_of_month
+        va_enquirynumber__en_customername=customer
+    ).filter(
+        Q(va_enquirynumber__en_created_at__gte=first_day_of_month) | Q(va_created_at__gte=first_day_of_month)
     ).filter(
         ~Q(va_vehiclenumber__isnull=True) | (~Q(va_vehiclenumber_mkt='') & ~Q(va_vehiclenumber_mkt__isnull=True))
     ).values_list('va_enquirynumber_id', flat=True).distinct()
@@ -572,7 +591,10 @@ def customer_enquiry_list(request):
         tr_created_at__gte=first_day_of_month
     ).values_list('tr_enquirynumber_id', flat=True).distinct()
 
-    # All historical delivered trips (to exclude from pending vehicle allotments)
+    _active_trip_enq_ids = list(_business_trips.filter(
+        tc_financestatus_id__in=[1, 8]
+    ).values_list('tr_enquirynumber_id', flat=True).distinct())
+
     from sms_app.models import Trip_closure_files_Info
     _closed_trip_numbers = Trip_closure_files_Info.objects.values_list('tcf_tripnumber', flat=True)
     _all_closed_via_closure_enq_ids = _business_trips.filter(
@@ -584,7 +606,7 @@ def customer_enquiry_list(request):
             tc_financestatus_id__in=[2, 7, 9]
         ).values_list('tr_enquirynumber_id', flat=True).distinct()) +
         list(_all_closed_via_closure_enq_ids)
-    ))
+    ) - set(_active_trip_enq_ids))
 
     first_day_of_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     _closed_via_closure_enq_ids = _business_trips.filter(
@@ -598,11 +620,11 @@ def customer_enquiry_list(request):
             tr_created_at__gte=first_day_of_month
         ).values_list('tr_enquirynumber_id', flat=True).distinct()) +
         list(_closed_via_closure_enq_ids)
-    ))
+    ) - set(_active_trip_enq_ids))
 
     # Exclusions for dead/closed/cancelled enquiries
     _all_trips = TripdetailInfo.objects.filter(tr_enquirynumber__en_customername=customer)
-    _dead_enq_ids = list(enquiries_qs.filter(en_status_id__in=[5, 8]).values_list('id', flat=True))
+    _dead_enq_ids = list(enquiries_qs.filter(en_status_id__in=[5]).values_list('id', flat=True))
     _cancelled_trip_enq_ids = list(_all_trips.filter(
         Q(tc_financestatus_id__in=[10, 11]) |
         Q(tc_financestatus__status__icontains='Cancellation') |
@@ -634,10 +656,9 @@ def customer_enquiry_list(request):
         # Delivered = business trips with status 2 or 7 (closed/settled)
         enquiries_qs = enquiries_qs.filter(id__in=_delivered_enq_ids)
     elif status_filter == 'allotted':
-        # Allotted = has vehicle, created in current month, but NOT yet in-transit or delivered, and NOT dead
+        # Allotted = has vehicle, created or allotted in current month, but NOT yet in-transit or delivered, and NOT dead
         enquiries_qs = enquiries_qs.filter(
-            id__in=_allotted_all_ids,
-            en_created_at__gte=first_day_of_month
+            id__in=_allotted_all_ids
         ).exclude(
             id__in=_in_transit_enq_ids
         ).exclude(
@@ -893,7 +914,7 @@ def download_dmr(request, trip_id):
     response['Content-Disposition'] = f'attachment; filename="DMR_{trip.tr_tripnumber}.xlsx"'
     return response
 
-@login_required
+@login_required(login_url='/SMS/customer_login/2/')
 def customer_documents(request):
     """Documents page showing all PODs and documents for the customer."""
     customer, department, is_lp, agent_name = get_customer_context(request)
@@ -975,7 +996,8 @@ def customer_documents(request):
         'documents': documents,
         'page_obj': page_obj,
     })
-@login_required
+
+@login_required(login_url='/SMS/customer_login/2/')
 def customer_profile(request):
     """View to display customer user profile."""
     customer, department, is_lp, agent_name = get_customer_context(request)
@@ -990,7 +1012,7 @@ def customer_profile(request):
         'user': request.user
     })
 
-@login_required
+@login_required(login_url='/SMS/customer_login/2/')
 def customer_support(request):
     """View to display support contact information."""
     customer, department, is_lp, agent_name = get_customer_context(request)

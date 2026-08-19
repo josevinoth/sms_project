@@ -196,7 +196,7 @@
             <div class="avatar-large">{{ user.username|make_list|first|upper }}</div>
             <div class="header-content">
                 <h1>{{ user.username }}</h1>
-                <p>{{ customer.cu_nameshort|default:customer.cu_name }}</p>
+                <p>{% if customer %}{{ customer.cu_nameshort|default:customer.cu_name }}{% else %}{{ user.username }}{% endif %}</p>
                 {% if is_lp %}
                 <span class="badge" style="margin-top: 0.5rem; display: inline-block;">AISATS Collaboration</span>
                 {% endif %}
@@ -230,7 +230,7 @@
                 <h3><i class="fas fa-building"></i> Company Profile</h3>
                 <div class="info-row">
                     <span class="label">Company Name</span>
-                    <span class="value">{{ customer.cu_nameshort|default:customer.cu_name }}</span>
+                    <span class="value">{% if customer %}{{ customer.cu_nameshort|default:customer.cu_name }}{% else %}-{% endif %}</span>
                 </div>
                 {% if department %}
                 <div class="info-row">
