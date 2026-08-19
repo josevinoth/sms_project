@@ -1,0 +1,71 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-white"><i class="fas fa-tags mr-2"></i> Sell Rate Approval</h2>
+        <div style="position: relative; z-index: 10;">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK TO DASHBOARD
+            </a>
+        </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container-modern">
+        <div class="form-section-title">
+            <i class="fas fa-list-ul"></i> Pending Sell Rate Approvals
+        </div>
+        <div class="table-responsive">
+            <table id="sell_rate_approval_table" class="table modern-table text-center">
+                <thead>
+                    <tr style="white-space: nowrap;">
+                        <th>Enquiry Number</th>
+                        <th>Vehicle Number</th>
+                        <th>Customer Name</th>
+                        <th>Standard Sell</th>
+                        <th>Special Sell</th>
+                        <th>From Place</th>
+                        <th>To Place</th>
+                        <th>Approve</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for va in vehicle_allotment_list %}
+                    <tr>
+                        <td>{{ va.va_enquirynumber.en_enquirynumber }}</td>
+                        <td>{% if va.va_vehiclenumber %}{{ va.va_vehiclenumber.vm_registrationnumber }}{% else %}{{ va.va_vehiclenumber_mkt }}{% endif %}</td>
+                        <td>{{ va.va_enquirynumber.en_customername.cu_name|default:"-" }}</td>
+                        <td>₹{{ va.va_sale|default:"0.00" }}</td>
+                        <td>₹{{ va.va_special_sale|default:"0.00" }}</td>
+                        <td>{{ va.va_enquirynumber.en_fromlocaion.place_name|default:"-" }}</td>
+                        <td>{{ va.va_enquirynumber.en_tolocation.place_name|default:"-" }}</td>
+
+                        <!-- APPROVE BUTTON -->
+                        <td class="text-center">
+                            <form method="post" action="{% url 'approve_sell_rate' va.id %}">
+                                {% csrf_token %}
+                                <button class="btn-modern btn-submit py-1 px-3" style="font-size: 0.85rem;">
+                                    <i class="fas fa-check mr-1"></i> Approve
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#sell_rate_approval_table').DataTable({
+            order: [0, 'desc'],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+    });
+</script>
+{% endblock %}
