@@ -1,97 +1,136 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load static %}
 
 {% block content %}
-
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center text-light bg-info shadow-box">
-            <h3>Email Master List</h3>
-        </div>
-        <div class="col-5"></div>
-    </div>
-</div>
-
-<div class="container-fluid mb-3">
-    <div class="row">
-        <div class="col-md-12 d-flex align-items-center">
-
-            <a href="{% url 'home_page' %}" class="btn btn-primary">
-                <i class="fas fa-arrow-left"></i> Back
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-white">
+            <i class="fas fa-envelope-open-text mr-2"></i> Email Master List
+        </h2>
+        <div class="d-flex" style="gap: 10px;">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK
             </a>
-
-            <div style="width: 20px;"></div>
-            <a href="{% url 'email_master_add' %}" class="btn btn-success">
-                <i class="fas fa-plus"></i> Add
+            <a href="{% url 'email_master_add' %}" class="btn-modern btn-submit py-2 px-4" style="font-size: 0.9rem; text-decoration: none;">
+                <i class="fas fa-plus"></i> ADD NEW
             </a>
-
-
         </div>
     </div>
-</div>
 
-<!-- Table -->
-<div class="container-fluid shadow-box-table">
-    <table id="email_master_table" class="table table-striped table-bordered" style="width:100%">
-        <thead class="thead-dark text-nowrap">
-            <tr>
-                <th>#</th>
-                <th>Customer</th>
-                <th>Department</th>
-                <th>Email Type</th>
-                <th>User</th>
-                <th>To Emails</th>
-                <th>CC Emails</th>
-                <th>Updated By</th>
-                <th class="text-center">Edit</th>
-                <th class="text-center">Delete</th>
-            </tr>
-        </thead>
+    <!-- Messages -->
+    {% if messages %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="message text-center">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show d-inline-block px-4 py-2 shadow-sm" role="alert">
+                    {{ message }}
+                    <button type="button" class="close ml-3" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
-        <tbody>
-            {% for item in email_master_list %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ item.em_Customer_name }}</td>
-                <td>{{ item.em_customerdepartment }}</td>
-                <td>{{ item.em_emailtype }}</td>
-                <td>{{ item.em_user|default:"" }}</td>
-                <td>{{ item.em_to_names|default:"" }}</td>
-                <td>{{ item.em_cc_names|default:"" }}</td>
-                <td>{{ item.em_updated_by|default:"" }}</td>
-
-                <td class="text-center">
-                    <a class="btn btn-primary btn-sm" href="{% url 'email_master_edit' item.id %}">
-                        <i class="far fa-edit"></i>
-                    </a>
-                </td>
-
-                <td class="text-center">
-                    <form action="{% url 'email_delete' item.id %}" method="post" class="d-inline"
-                        onclick="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger btn-sm">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <!-- Table Container -->
+    <div class="table-container-modern">
+        <div class="form-section-title">
+            <i class="fas fa-list-ul"></i> Email Master Records
+        </div>
+        <div class="table-responsive">
+            <table id="email_master_table" class="table modern-table text-center w-100">
+                <thead>
+                    <tr style="white-space: nowrap;">
+                        <th>#</th>
+                        <th>Customer</th>
+                        <th>Department</th>
+                        <th>Email Type</th>
+                        <th>User</th>
+                        <th>To Emails</th>
+                        <th>CC Emails</th>
+                        <th>Updated By</th>
+                        <th class="text-center">Edit</th>
+                        <th class="text-center">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in email_master_list %}
+                    <tr class="modern-tr">
+                        <td class="font-weight-bold">{{ forloop.counter }}</td>
+                        <td class="font-weight-bold text-dark text-left">{{ item.em_Customer_name }}</td>
+                        <td>{{ item.em_customerdepartment }}</td>
+                        <td><span class="badge badge-info px-2 py-1">{{ item.em_emailtype }}</span></td>
+                        <td>{{ item.em_user|default:"" }}</td>
+                        <td class="text-left align-middle" style="white-space: nowrap;">{{ item.em_to_names|default:"" }}</td>
+                        <td class="text-left align-middle" style="white-space: nowrap;">{{ item.em_cc_names|default:"" }}</td>
+                        <td>{{ item.em_updated_by|default:"" }}</td>
+                        <td class="text-center align-middle">
+                            <a class="btn-modern btn-submit py-1 px-3" href="{% url 'email_master_edit' item.id %}" style="font-size: 0.8rem; text-decoration: none; border-radius: 8px;" title="Edit">
+                                <i class="far fa-edit"></i>
+                            </a>
+                        </td>
+                        <td class="text-center align-middle">
+                            <form action="{% url 'email_delete' item.id %}" method="post" class="d-inline" style="margin: 0;"
+                                onsubmit="return confirm('Are you sure you want to delete this email master record?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px; padding: 6px 12px;" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center py-4 text-muted italic">No Email Master records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
     $(document).ready(function () {
         $('#email_master_table').DataTable({
             scrollX: true,
-            dom: 'lBfrtip',
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            dom: "<'row mb-2'<'col-md-6'l><'col-md-6 text-right'f>>" +
+                 "<'row mb-2'<'col-md-12'B>>" +
+                 "<'row'<'col-md-12'tr>>" +
+                 "<'row mt-2'<'col-md-5'i><'col-md-7'p>>",
             buttons: [
                 'copy', 'csv', 'excel', 'print'
+            ],
+            columnDefs: [
+                {
+                    targets: [5, 6], // Column indices for To Emails and CC Emails
+                    render: function (data, type, row) {
+                        if (type === 'display') {
+                            if (!data || data.trim() === '' || data.trim() === '-') {
+                                return '<span class="text-muted">-</span>';
+                            }
+                            var rawText = data.replace(/<[^>]*>/g, '');
+                            var emailList = rawText.replace(/;/g, ',').replace(/\n/g, ',').split(',');
+                            var formatted = [];
+                            emailList.forEach(function (email) {
+                                var trimmed = email.trim();
+                                if (trimmed) {
+                                    formatted.push('<div style="padding: 2px 0;">' + trimmed + '</div>');
+                                }
+                            });
+                            return formatted.length ? formatted.join('') : '<span class="text-muted">-</span>';
+                        }
+                        return data;
+                    }
+                }
             ]
         });
     });
 </script>
-
 {% endblock %}

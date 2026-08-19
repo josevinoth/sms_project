@@ -1,102 +1,170 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+
 {% block content %}
-<form method="POST" action="" id="timesheet_add"  onload="bay_branch_name()" data-branches-url="{% url 'load_units_origin' %}">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Time Sheet</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Task Number</span>
-									</div>
-									{% render_field form.ts_task_id  id="ts_task_id" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Start Date</span>
-									</div>
-									{% render_field form.ts_start_date id="ts_start_date" type="Datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">End Date</span>
-									</div>
-									{% render_field form.ts_end_date id="ts_end_date" type="Datetime-local" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Hours</span>
-									</div>
-									{% render_field form.ts_hours id="ts_hours" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Developer</span>
-									</div>
-									{% render_field form.ts_developer id="ts_developer" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Remarks</span>
-									</div>
-									{% render_field form.ts_remarks id="ts_remarks" class="form-control" %}
-								</div>
-								{% render_field form.ts_updated_by id="ts_updated_by" hidden="True" class="form-control" %}
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'task_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-3"></div>
-	</div>
-</form>
-<div class="container-fluid">
-	{% include "asset_mgt_app/timesheet_list_woh.html" %}
+<div class="container-fluid px-3 py-1 timesheet-page-wrapper">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+            <i class="fas fa-business-time mr-2"></i> Time Sheet – Add / Update
+        </h3>
+        <div>
+            <a href="{% url 'task_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ Form Card (Full Width) ══ -->
+    <div class="modern-card p-3 mb-3 w-100">
+        <div class="form-section-title mb-2">
+            <i class="fas fa-clock text-primary"></i> Time Sheet Entry
+        </div>
+
+        <form method="POST" action="" id="timesheet_add" onload="bay_branch_name()" data-branches-url="{% url 'load_units_origin' %}">
+            {% csrf_token %}
+            
+            <!-- Row 1: Task Number (Reduced Size) -->
+            <div class="row">
+                <div class="col-md-3 col-sm-6">
+                    <div class="form-group-modern mb-2">
+                        <label for="ts_task_id" class="form-label-modern font-weight-bold">Task Number</label>
+                        {% render_field form.ts_task_id id="ts_task_id" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Start Date & End Date (Below Task Number) -->
+            <div class="row">
+                <div class="col-md-6 pr-md-3">
+                    <div class="form-group-modern mb-2">
+                        <label for="ts_start_date" class="form-label-modern font-weight-bold">Start Date</label>
+                        {% render_field form.ts_start_date id="ts_start_date" type="datetime-local" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+
+                <div class="col-md-6 pl-md-3">
+                    <div class="form-group-modern mb-2">
+                        <label for="ts_end_date" class="form-label-modern font-weight-bold">End Date</label>
+                        {% render_field form.ts_end_date id="ts_end_date" type="datetime-local" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: Developer & Hours (Below Dates) -->
+            <div class="row">
+                <div class="col-md-6 pr-md-3">
+                    <div class="form-group-modern mb-2">
+                        <label for="ts_developer" class="form-label-modern font-weight-bold">Developer</label>
+                        {% render_field form.ts_developer id="ts_developer" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+
+                <div class="col-md-6 pl-md-3">
+                    <div class="form-group-modern mb-2">
+                        <label for="ts_hours" class="form-label-modern font-weight-bold">Hours</label>
+                        {% render_field form.ts_hours id="ts_hours" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 4: Remarks (Below Developer & Hours) -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="form-group-modern mb-2">
+                        <label for="ts_remarks" class="form-label-modern font-weight-bold">Remarks</label>
+                        {% render_field form.ts_remarks id="ts_remarks" class="form-control form-control-modern timesheet-remarks" rows="3" %}
+                    </div>
+                </div>
+            </div>
+
+            {% render_field form.ts_updated_by id="ts_updated_by" hidden="True" class="form-control" %}
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="message text-center my-2">
+                {% for message in messages %}
+                <a class="{% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'info' %}alert-info{% else %}{{ message.tags }}{% endif %}">{{ message }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between align-items-center pt-2 mt-1" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+                <button type="submit" class="btn-modern btn-submit py-1 px-4">
+                    <i class="fas fa-check mr-1"></i> Submit
+                </button>
+                <a href="{% url 'task_list' %}" class="btn-modern btn-cancel py-1 px-4" style="text-decoration:none;">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ══ Embedded Time Sheet List ══ -->
+    <div class="container-fluid px-0">
+        {% include "asset_mgt_app/timesheet_list_woh.html" %}
+    </div>
 </div>
+
+<style>
+    .timesheet-page-wrapper .form-group-modern {
+        margin-bottom: 0.45rem !important;
+    }
+    .timesheet-page-wrapper .form-label-modern {
+        font-size: 0.76rem !important;
+        margin-bottom: 2px !important;
+        letter-spacing: 0.6px !important;
+    }
+    .timesheet-page-wrapper input.form-control-modern,
+    .timesheet-page-wrapper select.form-control-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        font-size: 0.86rem !important;
+        padding: 4px 10px !important;
+        border-radius: 8px !important;
+    }
+    .timesheet-page-wrapper textarea.timesheet-remarks {
+        height: 70px !important;
+        min-height: 70px !important;
+        font-size: 0.86rem !important;
+        padding: 6px 10px !important;
+        border-radius: 8px !important;
+        line-height: 1.4 !important;
+        resize: vertical;
+    .timesheet-page-wrapper .modern-card {
+        padding: 0.85rem 1.4rem !important;
+        border-radius: 16px !important;
+    }
+    .timesheet-page-wrapper .form-section-title {
+        font-size: 0.82rem !important;
+        margin-bottom: 0.45rem !important;
+        letter-spacing: 1px !important;
+    }
+    .timesheet-page-wrapper .btn-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0.25rem 1.4rem !important;
+        font-size: 0.84rem !important;
+        border-radius: 10px !important;
+    }
+</style>
+
 <script>
 $(document).ready(function() {
-	document.getElementById("ts_updated_by").value ='{{user_id}}';
-	ts_task_id_val=document.getElementById("ts_task_id").value
-		if (ts_task_id_val=="")
-		{
-			document.getElementById("ts_task_id").value ='{{task_id}}';
-		}
-		else
-		{
-			document.getElementById("ts_task_id").value =ts_task_id_val;
-		}
-	ts_developer_val=document.getElementById("ts_developer").value
-		if (ts_developer_val=="")
-		{
-			document.getElementById("ts_developer").value ='{{user_id}}';
-		}
-		else
-		{
-			document.getElementById("ts_developer").value =ts_developer_val;
-		}
-	});
+    document.getElementById("ts_updated_by").value ='{{user_id}}';
+    var ts_task_id_val = document.getElementById("ts_task_id").value;
+    if (ts_task_id_val == "") {
+        document.getElementById("ts_task_id").value ='{{task_id}}';
+    } else {
+        document.getElementById("ts_task_id").value = ts_task_id_val;
+    }
+    var ts_developer_val = document.getElementById("ts_developer").value;
+    if (ts_developer_val == "") {
+        document.getElementById("ts_developer").value ='{{user_id}}';
+    } else {
+        document.getElementById("ts_developer").value = ts_developer_val;
+    }
+});
 </script>
 {% endblock content %}

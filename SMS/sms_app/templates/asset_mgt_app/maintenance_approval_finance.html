@@ -1,73 +1,107 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% block content %}
 
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-4"></div>
-        <div class="col-4 rounded text-center bg-info text-white">
-            <h3>Maintenance Finance Approval</h3>
+<div class="container-fluid py-4">
+    <!-- ══ Centralized Modern Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-white">
+            <i class="fas fa-file-invoice-dollar mr-2"></i> Maintenance Finance Approval
+        </h2>
+        <div class="d-flex" style="gap: 12px;">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left"></i> BACK
+            </a>
         </div>
-        <div class="col-4"></div>
     </div>
-</div>
 
-<div class="container-fluid row mb-2">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-sm">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-</div>
-
-<hr>
-
-<table id="finance_approval_table" class="table table-bordered table-sm">
-    <thead class="thead-dark">
-        <tr>
-            <th>Job Card No</th>
-            <th>Vehicle No</th>
-            <th>Complaint</th>
-            <th>Estimated Amount</th>
-            <th>Budget</th>
-            <th>Budget Balance</th>
-            <th>Approve</th>
-            <th>Edit</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        {% for r in records %}
-        <tr>
-            <td>{{ r.mi_job_card_no }}</td>
-            <td>{{ r.mi_vehicle.vm_registrationnumber }}</td>
-            <td>{{ r.mi_complaint.complaint_type }}</td>
-            <td>{{ r.mi_estimated_amount }}</td>
-            <td>{{ r.mi_budget }}</td>
-            <td>{{ r.mi_budget_balance }}</td>
-            <td>
-                <form method="post" action="{% url 'finance_approve' r.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-success">
-                        Approve
+    <!-- ══ Message Notifications ══ -->
+    {% if messages %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="message text-center">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show d-inline-block px-4 py-2 shadow-sm" role="alert">
+                    <i class="fas fa-info-circle mr-2"></i>{{ message }}
+                    <button type="button" class="close ml-3" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
                     </button>
-                </form>
-            </td>
-            <td class="text-center">
-                <a href="{% url 'maintenance_edit' r.id %}" class="btn btn-sm btn-primary" title="Edit Job Card">
-                    <i class="fas fa-edit"></i>
-                </a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══ Modern Table Container ══ -->
+    <div class="table-container-modern">
+        <div class="form-section-title">
+            <i class="fas fa-calculator text-primary"></i> Pending Finance Approvals
+        </div>
+        <div class="table-responsive">
+            <table id="finance_approval_table" class="table modern-table text-center w-100">
+                <thead>
+                    <tr style="white-space: nowrap;">
+                        <th>Job Card No</th>
+                        <th>Vehicle No</th>
+                        <th>Complaint</th>
+                        <th>Estimated Amount</th>
+                        <th>Budget</th>
+                        <th>Budget Balance</th>
+                        <th class="text-center">Approve</th>
+                        <th class="text-center">Edit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td style="white-space: nowrap;" class="font-weight-bold">{{ r.mi_job_card_no }}</td>
+                        <td><span class="badge badge-secondary px-2 py-1" style="font-size:0.85rem;">{{ r.mi_vehicle.vm_registrationnumber }}</span></td>
+                        <td>{{ r.mi_complaint.complaint_type }}</td>
+                        <td class="font-weight-bold text-success">₹{{ r.mi_estimated_amount|default:"0.00" }}</td>
+                        <td>{{ r.mi_budget|default:"None" }}</td>
+                        <td>{{ r.mi_budget_balance|default:"None" }}</td>
+
+                        <!-- APPROVE BUTTON -->
+                        <td class="text-center">
+                            <form method="post" action="{% url 'finance_approve' r.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success px-3 py-1" style="border-radius:6px; font-weight:600;">
+                                    <i class="fas fa-check mr-1"></i> Approve
+                                </button>
+                            </form>
+                        </td>
+                        <td class="text-center">
+                            <a class="btn-modern btn-submit py-1 px-3" href="{% url 'maintenance_edit' r.id %}" style="font-size: 0.8rem; text-decoration: none; border-radius: 8px;" title="Edit Job Card">
+                                <i class="far fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 <script>
     $(document).ready(function () {
         $('#finance_approval_table').DataTable({
-            order: [0, 'desc'],
-            dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print']
+            autoWidth: false,
+            responsive: false,
+            order: [[0, 'desc']],
+            dom:
+                "<'row mb-3 align-items-center'<'col-md-6'l><'col-md-6 text-right'f>>" +
+                "<'row mb-3'<'col-md-12'B>>" +
+                "<'row'<'col-md-12'tr>>" +
+                "<'row mt-3 align-items-center'<'col-md-5'i><'col-md-7'p>>",
+            buttons: [
+                { extend: 'copy', className: 'btn-modern-dt' },
+                { extend: 'csv', className: 'btn-modern-dt' },
+                { extend: 'excel', className: 'btn-modern-dt' },
+                { extend: 'print', className: 'btn-modern-dt' }
+            ],
+            pageLength: 10,
+            lengthMenu: [5, 10, 25, 50]
         });
     });
 </script>
