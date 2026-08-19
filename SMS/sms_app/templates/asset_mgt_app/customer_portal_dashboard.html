@@ -578,7 +578,7 @@
     <div class="container">
         <header>
             <div class="welcome">
-                <h1>Welcome back, {{ customer.cu_name }}</h1>
+                <h1>Welcome back, {{ customer.cu_nameshort|default:customer.cu_name }}</h1>
                 {% if department %}
                 <p
                     style="font-size: 1.1rem; color: #4facfe; margin-top: -0.5rem; margin-bottom: 0.5rem; font-weight: 600;">

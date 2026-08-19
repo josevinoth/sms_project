@@ -584,7 +584,7 @@
                     <tbody>
                         {% for item in enquiry_list %}
                         <tr>
-                            <td>{{ item.enq.en_customername.cu_name }}</td>
+                            <td>{{ item.enq.en_customername.cu_nameshort|default:item.enq.en_customername.cu_name }}</td>
                             <td>{{ item.vehicle_no }}</td>
                             <td>{{ item.driver_number|default:"-" }}</td>
                             <td>
