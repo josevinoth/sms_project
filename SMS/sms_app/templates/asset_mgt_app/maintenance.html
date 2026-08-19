@@ -1,304 +1,266 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
 
 <style>
-  /* ── Select2 inside Bootstrap 4 input-group ── */
-
-  /* Wrapper div that carries Select2 must participate in flex */
+  /* ── Select2 inside Modern Form Controls ── */
   .select2-wrapper {
     flex: 1 1 auto;
     min-width: 0;
+    width: 100%;
   }
 
-  /* Select2 container fills its wrapper completely */
   .select2-wrapper .select2-container {
     display: block !important;
     width: 100% !important;
   }
 
-  /* Match Bootstrap sm input-group height */
   .select2-wrapper .select2-selection--single {
-    height: 31px !important;
-    border-radius: 0 4px 4px 0 !important;
-    border-color: #ced4da !important;
+    height: 42px !important;
+    border-radius: var(--btn-radius, 10px) !important;
+    border: 1px solid var(--input-border, #cbd5e1) !important;
+    background-color: var(--input-bg, #ffffff) !important;
+    display: flex !important;
+    align-items: center !important;
   }
   .select2-wrapper .select2-selection--single .select2-selection__rendered {
-    line-height: 29px !important;
-    color: #495057;
-    font-size: 0.875rem;
-    padding-left: 8px;
+    line-height: 40px !important;
+    color: var(--text-main, #0f172a) !important;
+    font-size: 0.92rem !important;
+    padding-left: 12px !important;
   }
   .select2-wrapper .select2-selection--single .select2-selection__arrow {
-    height: 29px !important;
+    height: 40px !important;
+    right: 8px !important;
   }
   .select2-dropdown {
-    font-size: 0.875rem;
-    z-index: 9999;
+    font-size: 0.92rem !important;
+    z-index: 9999 !important;
+    background-color: var(--bg-card, #ffffff) !important;
+    border-color: var(--border-light, #e2e8f0) !important;
+  }
+  [data-theme="dark"] .select2-dropdown {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+  }
+  [data-theme="dark"] .select2-results__option {
+    color: #ffffff !important;
+  }
+  [data-theme="dark"] .select2-results__option--highlighted[aria-selected] {
+    background-color: #3b82f6 !important;
   }
 </style>
 
-<form id="maintenanceForm" method="POST">
-  {% csrf_token %}
-
-  <!-- messages removed per request; approval_status will be shown in the form field -->
-
-  <div class="container-fluid">
-    <div class="card text-white bg-info mb-3" style="max-width:100%;">
-
-      <!-- ================= HEADER ================= -->
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h3 class="mb-0">Vehicle Maintenance</h3>
-
-        {% if form.instance.pk %}
-        <a href="{% url 'maintenance_pdf' form.instance.pk %}" class="btn btn-sm btn-light" target="_blank">
-          <i class="fas fa-download"></i> Maintenance PDF
-        </a>
-        {% endif %}
-      </div>
-
-
-      <!-- ================= BODY ================= -->
-      <div class="card-body bg-light">
-
-        <!-- ================= ROW 1 : TWO COLUMNS ================= -->
-        <div class="row">
-
-          <!-- ========== COLUMN 1 : TRUCK DETAILS ========== -->
-          <div class="col-12 col-md-6">
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Truck Job Card</span>
-              </div>
-              <input type="text" class="form-control" value="{{ form.instance.mi_job_card_no }}" readonly>
-            </div>
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Location</span>
-              </div>
-              {% render_field form.mi_location class="form-control" id="mi_location" %}
-            </div>
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Vehicle No</span>
-              </div>
-              <div class="select2-wrapper">
-                {% render_field form.registration_no class="form-control" id="registration_no" %}
-              </div>
-            </div>
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Model</span>
-              </div>
-              {% render_field form.mi_make_model class="form-control" id="make_model" readonly="readonly" %}
-            </div>
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Registration Date</span>
-              </div>
-              {% render_field form.mi_registration_date class="form-control" id="registration_date" readonly="readonly" %}
-            </div>
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Chassis No</span>
-              </div>
-              {% render_field form.mi_chassis_no class="form-control" id="chassis_no" readonly="readonly" %}
-            </div>
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Engine No</span>
-              </div>
-              {% render_field form.mi_engine_no class="form-control" id="engine_no" readonly="readonly" %}
-            </div>
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Approval Status</span>
-              </div>
-              {% render_field form.mi_approval_status class="form-control" %}
-              --><!-- replaced by explicit value below -->
-              <input type="text" class="form-control" value="{{ approval_status_label }}" readonly>
-            </div>
-
-
-          </div>
-
-          <!-- ========== COLUMN 2 : JOB CARD DETAILS ========== -->
-          <div class="col-12 col-md-6">
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Current KM</span>
-              </div>
-              {% render_field form.mi_current_km class="form-control" %}
-            </div>
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Total KM Run</span>
-              </div>
-              {% render_field form.mi_total_km_run class="form-control" %}
-            </div>
-
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Service Type</span>
-              </div>
-              {% render_field form.mi_service_type class="form-control" %}
-            </div>
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Driver</span>
-              </div>
-              {% render_field form.mi_driver_name class="form-control" %}
-            </div>
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Vendor</span>
-              </div>
-              {% render_field form.mi_vendor class="form-control" %}
-            </div>
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Advance</span>
-              </div>
-              {% render_field form.mi_advance class="form-control" %}
-            </div>
-
-              <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Est.Amount</span>
-              </div>
-              {% render_field form.mi_estimated_amount class="form-control" %}
-            </div>
-
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Est. Delivery</span>
-              </div>
-              {% render_field form.mi_est_delivery %}
-            </div>
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Budget</span>
-              </div>
-              {% render_field form.mi_budget class="form-control" %}
-            </div>
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Budget Balance</span>
-              </div>
-              {% render_field form.mi_budget_balance class="form-control" %}
-            </div>
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Work Area</span>
-              </div>
-              {% render_field form.mi_work_area class="form-control" %}
-            </div>
-
-          </div>
-        </div>
-
-
-
-        <!-- ================= JOB CARD META ================= -->
-
-
-        <!-- ================= COMPLAINT SECTION ================= -->
-        <div class="row">
-          <!-- LEFT COLUMN (Complaint) -->
-          <div class="col-12 col-md-6">
-            <div class="input-group input-group-sm mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Complaint</span>
-              </div>
-              <div class="select2-wrapper">
-                {% render_field form.mi_complaint class="form-control form-control-sm" %}
-              </div>
-            </div>
-          </div>
-
-          <!-- RIGHT COLUMN (EMPTY – for alignment) -->
-          <div class="col-12 col-md-6"></div>
-        </div>
-
-
-
-        <div class="input-group input-group-sm mb-3">
-          <div class="input-group-prepend">
-            <span class="input-group-text">Description</span>
-          </div>
-          {% render_field form.mi_description class="form-control" %}
-        </div>
-
-        <div class="input-group input-group-sm mb-3">
-          <div class="input-group-prepend">
-            <span class="input-group-text">Remarks</span>
-          </div>
-          {% render_field form.mi_remarks class="form-control" %}
-        </div>
-
-        <!-- ================= ACTION ================= -->
-
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <div class="input-group input-group-sm">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Job Card Creator</span>
-              </div>
-              <input type="text" id="job_creator" class="form-control" readonly value="{{ job_creator }}">
-            </div>
-          </div>
-
-          <div class="col-md-6">
-            <div class="input-group input-group-sm">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Created On</span>
-              </div>
-              <input type="text" id="created_on" class="form-control" readonly
-                value="{{ created_on|date:'d-m-Y H:i' }}">
-            </div>
-          </div>
-        </div>
-
-
-        <div id="msgBox" class="mb-2"></div>
-
-        <div class="d-flex justify-content-between">
-          <button type="submit" class="btn btn-success">
-            <i class="fas fa-check"></i> Save
-          </button>
-          <a href="{% url 'maintenance_list' %}" class="btn btn-danger">
-            <i class="fas fa-times"></i> Cancel
-          </a>
-        </div>
-
-      </div>
+<div class="container-fluid py-4">
+  <!-- ══ Centralized Modern Header ══ -->
+  <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0 text-white">
+      <i class="fas fa-tools mr-2"></i> Vehicle Maintenance
+    </h2>
+    <div class="d-flex" style="gap: 12px;">
+      {% if form.instance.pk %}
+      <a href="{% url 'maintenance_pdf' form.instance.pk %}" class="btn-modern btn-cancel py-2 px-3" target="_blank" style="font-size: 0.85rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+        <i class="fas fa-download mr-1"></i> PDF
+      </a>
+      {% endif %}
+      <a href="{% url 'maintenance_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+        <i class="fas fa-arrow-left"></i> BACK
+      </a>
     </div>
   </div>
-</form>
+
+  <!-- ══ Form Container ══ -->
+  <form id="maintenanceForm" method="POST">
+    {% csrf_token %}
+
+    <div class="modern-card p-4">
+      <div class="row g-4">
+
+        <!-- ══ COLUMN 1 : VEHICLE & LOCATION INFO ══ -->
+        <div class="col-12 col-lg-6 mb-4 mb-lg-0">
+          <div class="form-section h-100 p-3" style="border-radius:12px; background:var(--bg-section, rgba(0,0,0,0.02)); border:1px solid var(--border-light, #e2e8f0);">
+            <div class="form-section-title mb-3">
+              <i class="fas fa-truck text-primary mr-2"></i> Vehicle & Location Info
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Truck Job Card</label>
+              <input type="text" class="form-control form-control-modern" value="{{ form.instance.mi_job_card_no }}" readonly style="background-color: var(--input-disabled-bg, #f1f5f9);">
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Location</label>
+              {% render_field form.mi_location class="form-control form-control-modern" id="mi_location" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Vehicle No</label>
+              <div class="select2-wrapper">
+                {% render_field form.registration_no class="form-control form-control-modern" id="registration_no" %}
+              </div>
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Model</label>
+              {% render_field form.mi_make_model class="form-control form-control-modern" id="make_model" readonly="readonly" style="background-color: var(--input-disabled-bg, #f1f5f9);" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Registration Date</label>
+              {% render_field form.mi_registration_date class="form-control form-control-modern" id="registration_date" readonly="readonly" style="background-color: var(--input-disabled-bg, #f1f5f9);" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Chassis No</label>
+              {% render_field form.mi_chassis_no class="form-control form-control-modern" id="chassis_no" readonly="readonly" style="background-color: var(--input-disabled-bg, #f1f5f9);" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Engine No</label>
+              {% render_field form.mi_engine_no class="form-control form-control-modern" id="engine_no" readonly="readonly" style="background-color: var(--input-disabled-bg, #f1f5f9);" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Approval Status</label>
+              <div style="display:none;">
+                {% render_field form.mi_approval_status class="form-control" %}
+              </div>
+              <input type="text" class="form-control form-control-modern" value="{{ approval_status_label }}" readonly style="background-color: var(--input-disabled-bg, #f1f5f9); font-weight: 600;">
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ══ COLUMN 2 : MAINTENANCE & SERVICE DETAILS ══ -->
+        <div class="col-12 col-lg-6">
+          <div class="form-section h-100 p-3" style="border-radius:12px; background:var(--bg-section, rgba(0,0,0,0.02)); border:1px solid var(--border-light, #e2e8f0);">
+            <div class="form-section-title mb-3">
+              <i class="fas fa-wrench text-primary mr-2"></i> Maintenance & Service Details
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Current KM</label>
+              {% render_field form.mi_current_km class="form-control form-control-modern" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Total KM Run</label>
+              {% render_field form.mi_total_km_run class="form-control form-control-modern" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Service Type</label>
+              {% render_field form.mi_service_type class="form-control form-control-modern" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Driver</label>
+              {% render_field form.mi_driver_name class="form-control form-control-modern" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Vendor</label>
+              {% render_field form.mi_vendor class="form-control form-control-modern" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Advance</label>
+              {% render_field form.mi_advance class="form-control form-control-modern" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Est. Amount</label>
+              {% render_field form.mi_estimated_amount class="form-control form-control-modern" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Est. Delivery</label>
+              {% render_field form.mi_est_delivery class="form-control form-control-modern" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Budget</label>
+              {% render_field form.mi_budget class="form-control form-control-modern" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Budget Balance</label>
+              {% render_field form.mi_budget_balance class="form-control form-control-modern" %}
+            </div>
+
+            <div class="form-group-modern mb-3">
+              <label class="form-label-modern font-weight-bold">Work Area</label>
+              {% render_field form.mi_work_area class="form-control form-control-modern" %}
+            </div>
+
+          </div>
+        </div>
+
+      </div><!-- /.row -->
+
+      <!-- ══ COMPLAINT & REMARKS SECTION ══ -->
+      <div class="form-section p-3 mt-4" style="border-radius:12px; background:var(--bg-section, rgba(0,0,0,0.02)); border:1px solid var(--border-light, #e2e8f0);">
+        <div class="form-section-title mb-3">
+          <i class="fas fa-edit text-primary mr-2"></i> Complaint, Description & Remarks
+        </div>
+
+        <div class="row">
+          <div class="col-12 col-md-6 mb-3">
+            <div class="form-group-modern">
+              <label class="form-label-modern font-weight-bold">Complaint</label>
+              <div class="select2-wrapper">
+                {% render_field form.mi_complaint class="form-control form-control-sm" id="id_mi_complaint" %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group-modern mb-3">
+          <label class="form-label-modern font-weight-bold">Description</label>
+          {% render_field form.mi_description class="form-control form-control-modern" rows="2" %}
+        </div>
+
+        <div class="form-group-modern mb-3">
+          <label class="form-label-modern font-weight-bold">Remarks</label>
+          {% render_field form.mi_remarks class="form-control form-control-modern" rows="2" %}
+        </div>
+      </div>
+
+      <!-- ══ CREATOR & AUDIT META ══ -->
+      <div class="row mt-4">
+        <div class="col-12 col-md-6 mb-3 mb-md-0">
+          <div class="form-group-modern">
+            <label class="form-label-modern font-weight-bold">Job Card Creator</label>
+            <input type="text" id="job_creator" class="form-control form-control-modern" readonly value="{{ job_creator }}" style="background-color: var(--input-disabled-bg, #f1f5f9);">
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="form-group-modern">
+            <label class="form-label-modern font-weight-bold">Created On</label>
+            <input type="text" id="created_on" class="form-control form-control-modern" readonly value="{{ created_on|date:'d-m-Y H:i' }}" style="background-color: var(--input-disabled-bg, #f1f5f9);">
+          </div>
+        </div>
+      </div>
+
+      <div id="msgBox" class="mt-3"></div>
+
+      <!-- ══ ACTION BUTTONS ══ -->
+      <div class="d-flex justify-content-between align-items-center mt-4 pt-3" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+        <button type="submit" class="btn-modern btn-submit px-4 py-2" style="display:inline-flex; align-items:center; gap:6px;">
+          <i class="fas fa-check"></i> Save Record
+        </button>
+        <a href="{% url 'maintenance_list' %}" class="btn-modern btn-cancel px-4 py-2" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+          <i class="fas fa-times"></i> Cancel
+        </a>
+      </div>
+
+    </div><!-- /.modern-card -->
+  </form>
+</div>
 
 <!-- ================= SELECT2 + VEHICLE FILTERING ================= -->
 <script>
-/*
- * IIFE captures the FIRST jQuery instance (which has Select2 attached).
- * base.html loads jQuery a second time at the bottom of <body>, which
- * overwrites the global $ — but our closure keeps the original reference.
- */
 (function ($) {
-
-  // ── Select2 : Vehicle No ──────────────────────────────────────────
   $(document).ready(function () {
 
     $('#registration_no').select2({
@@ -307,14 +269,12 @@
       width: '100%'
     });
 
-    // ── Select2 : Complaint ─────────────────────────────────────────
     $('#id_mi_complaint').select2({
       placeholder: '-- Select Complaint --',
       allowClear: true,
       width: '100%'
     });
 
-    // ── Location change → filter vehicles ──────────────────────────
     $('#mi_location').on('change', function () {
       var branchId = $(this).val();
       if (!branchId) return;
@@ -327,12 +287,11 @@
           data.vehicles.forEach(function (vehicle) {
             $sel.append(new Option(vehicle.vm_registrationnumber, vehicle.vm_registrationnumber));
           });
-          $sel.trigger('change.select2'); // refresh Select2 list
+          $sel.trigger('change.select2');
         })
         .catch(function (err) { console.error('Error filtering vehicles:', err); });
     });
 
-    // ── Vehicle No change → fetch vehicle details ───────────────────
     $('#registration_no').on('change', function () {
       var regNo = $(this).val();
       if (!regNo) {
@@ -354,88 +313,8 @@
         .catch(function () {});
     });
 
-  }); // end ready
-
-}(jQuery)); // ← captures first jQuery (has Select2) before body scripts reload it
+  });
+}(jQuery));
 </script>
-
-
-
-
-
-
-
-<!-- ================= SAVE AJAX =================
-
-<script>
-document.getElementById("maintenanceForm").addEventListener("submit", function (e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-
-    fetch("", {
-        method: "POST",
-        headers: {
-            "X-Requested-With": "XMLHttpRequest"
-        },
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-
-        if (data.status === "success") {
-
-            document.getElementById("job_creator").innerText =
-                data.job_card_creator;
-
-            document.getElementById("created_on").innerText =
-                data.job_card_created_on;
-
-            document.getElementById("jobInfoRow").style.display = "flex";
-
-            document.getElementById("msgBox").innerHTML =
-                `<div class="alert alert-success mt-2">
-                    Maintenance saved successfully
-                </div>`;
-        }
-        else {
-            document.getElementById("msgBox").innerHTML =
-                `<div class="alert alert-danger mt-2">
-                    ${JSON.stringify(data.errors)}
-                </div>`;
-        }
-    })
-    .catch(() => {
-        document.getElementById("msgBox").innerHTML =
-            `<div class="alert alert-danger mt-2">
-                Server error
-            </div>`;
-    });
-});
-</script>-->
-
-<!-- ================= FETCH VEHICLE DETAILS ================= -->
-<!--<script>
-document.getElementById("registration_no").addEventListener("change", function () {
-    const regNo = this.value;
-
-    if (!regNo) {
-        make_model.value = "";
-        registration_date.value = "";
-        chassis_no.value = "";
-        engine_no.value = "";
-        return;
-    }
-
-    fetch(`/SMS/fetch_vehicle_details/?reg_no=${regNo}`)
-    .then(res => res.json())
-    .then(data => {
-        make_model.value = data.make_model || "";
-        registration_date.value = data.registration_date || "";
-        chassis_no.value = data.chassis_no || "";
-        engine_no.value = data.engine_no || "";
-    });
-});
-</script>-->
 
 {% endblock %}

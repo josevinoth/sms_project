@@ -1,111 +1,147 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+
 {% block content %}
+<style>
+    .email-master-card {
+        padding: 1.25rem !important;
+    }
+    .email-master-card .form-section {
+        background: var(--bg-section, #ffffff);
+        border: 1px solid var(--border-light, #e2e8f0);
+        border-radius: 12px;
+        padding: 1.15rem;
+    }
+    .email-master-card .form-group-modern {
+        margin-bottom: 0.75rem !important;
+    }
+    .email-master-card .form-label-modern {
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+        margin-bottom: 0.25rem !important;
+    }
+    .select2-container--default .select2-selection--single {
+        height: 38px !important;
+        border: 1.5px solid var(--input-border, #cbd5e1) !important;
+        border-radius: 10px !important;
+        background-color: var(--input-bg, #ffffff) !important;
+        display: flex;
+        align-items: center;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 36px !important;
+        padding-left: 12px !important;
+        color: var(--text-main, #1e293b) !important;
+        font-size: 0.9rem !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+        right: 8px !important;
+    }
+</style>
 
-<form method="POST" id="email_master_add">
-    {% csrf_token %}
+<div class="container-fluid px-4 py-2">
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+            <i class="fas fa-envelope-open-text mr-2"></i> Email Master – Add / Update
+        </h3>
+        <div>
+            <a href="{% url 'email_master_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to List
+            </a>
+        </div>
+    </div>
 
-    <div class="row">
-        <div class="col-3"></div>
-        <div class="col-6">
+    <form method="POST" id="email_master_add">
+        {% csrf_token %}
 
-            <div class="container-fluid">
-                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="card-header text-center">
-                        <h3>Email Master – Add / Update</h3>
+        <div class="modern-card email-master-card shadow-sm">
+            <div class="row">
+                <!-- Left Section: Basic Information -->
+                <div class="col-12 col-lg-6 mb-3 mb-lg-0">
+                    <div class="form-section h-100">
+                        <div class="form-section-title mb-3">
+                            <i class="fas fa-sliders-h text-primary mr-1"></i> General Details
+                        </div>
+                        <div class="row">
+                            <div class="col-12 col-md-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Email Type</label>
+                                    {% render_field form.em_emailtype class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Department</label>
+                                    {% render_field form.em_customerdepartment id="em_customerdepartment" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Customer</label>
+                                    {% render_field form.em_Customer_name id="em_Customer_name" class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">User</label>
+                                    {% render_field form.em_user class="form-control form-control-modern" %}
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </div>
 
-                    <div class="card-body bg-light">
-
-                        <div class="row">
-                            <div class="col">
-
-                                <!-- Email Type Dropdown -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Email Type</span>
-                                    </div>
-                                    {% render_field form.em_emailtype class="form-control" %}
-                                </div>
-
-                                <!-- Customer Name -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Customer</span>
-                                    </div>
-                                    {% render_field form.em_Customer_name id="em_Customer_name" class="form-control" %}
-                                </div>
-
-                                <!-- Customer Department Dropdown -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Department</span>
-                                    </div>
-                                    {% render_field form.em_customerdepartment id="em_customerdepartment" class="form-control " %}
-                                </div>
-
-                                <!-- User -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">User</span>
-                                    </div>
-                                    {% render_field form.em_user class="form-control" placeholder="User" %}
-                                </div>
-
-                                <!-- TO Email List -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">To Email(s)</span>
-                                    </div>
-                                    {% render_field form.em_to_names class="form-control" rows="1" placeholder="Comma-separated emails" %}
-                                </div>
-
-                                <!-- CC Email List -->
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">CC Email(s)</span>
-                                    </div>
-                                    {% render_field form.em_cc_names class="form-control" rows="1" placeholder="Comma-separated emails" %}
-                                </div>
-
-                            </div>
+                <!-- Right Section: Email Recipients -->
+                <div class="col-12 col-lg-6">
+                    <div class="form-section h-100">
+                        <div class="form-section-title mb-3">
+                            <i class="fas fa-paper-plane text-primary mr-1"></i> Email Recipients
                         </div>
-
-                        <!-- Messages -->
-                        <div class="row">
-                            <div class="col-1"></div>
-                            <div class="col-10">
-                                <div class="message text-center">
-                                    {% for message in messages %}
-                                        <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>
-                                            {{ message }}
-                                        </a>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="col-1"></div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">To Email(s)</label>
+                            {% render_field form.em_to_names class="form-control form-control-modern" rows="2" %}
                         </div>
-
-                        <!-- Buttons -->
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-check"></i> Save
-                        </button>
-
-                        <a href="/SMS/email_master_list/" class="btn btn-danger float-right">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">CC Email(s)</label>
+                            {% render_field form.em_cc_names class="form-control form-control-modern" rows="2" %}
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Messages -->
+            {% if messages %}
+            <div class="message-container my-2 text-center">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} py-1 px-3 d-inline-block shadow-sm mb-0">
+                    <i class="fas fa-info-circle mr-1"></i> {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Form Action Buttons -->
+            <div class="d-flex justify-content-between align-items-center mt-3 pt-2" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+                <button type="submit" class="btn-modern btn-submit px-4 py-2">
+                    <i class="fas fa-check mr-1"></i> Save Record
+                </button>
+                <a href="{% url 'email_master_list' %}" class="btn-modern btn-cancel px-4 py-2" style="text-decoration: none;">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </a>
+            </div>
         </div>
-        <div class="col-3"></div>
-    </div>
-</form>
+    </form>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
 <script>
-    $("#em_Customer_name").select2({
-    	width: 'resolve'
+    $(document).ready(function() {
+        $("#em_Customer_name").select2({
+            width: '100%'
+        });
     });
 </script>
-{% endblock content %}
+{% endblock extra_js %}

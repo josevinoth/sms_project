@@ -1,151 +1,182 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+
 {% block content %}
+<div class="container-fluid px-3 py-1 compact-form">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+            <i class="fas fa-clipboard-list mr-2"></i> Requirements – Add / Update
+        </h3>
+        <div>
+            <a href="{% url 'requirements_search' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to List
+            </a>
+        </div>
+    </div>
 
-<form method="POST" action="" id="requirements_add" enctype="multipart/form-data"  >
-	{% csrf_token %}
-	<div class="row">
-		<div class="col-2"></div>
-		<div class="col-8">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Requirements</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Requirement Number</span>
-									</div>
-									{% render_field form.req_number id="req_number" readonly="True" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Backlogs</span>
-									</div>
-									{% render_field form.req_backlogs id="req_backlogs" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Module</span>
-									</div>
-									{% render_field form.req_module id="req_module" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Phase</span>
-									</div>
-									{% render_field form.req_phase id="req_phase" class="form-control " %}
-								</div>
-							</div>
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Raised By</span>
-									</div>
-									{% render_field form.req_owner id="req_owner" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Raised On</span>
-									</div>
-									{% render_field form.req_raisedon type="Date" id="req_raisedon" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Bug/Improvements?</span>
-									</div>
-									{% render_field form.req_bugimprove id="req_bugimprove" class="form-control " %}
-								</div>
+    <!-- ══ Form Card (Full Width) ══ -->
+    <div class="modern-card p-3 mb-0 w-100">
+        <div class="form-section-title mb-2">
+            <i class="fas fa-edit text-primary"></i> Requirement Details
+        </div>
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Implemented By</span>
-									</div>
-									{% render_field form.req_implementedby id="req_implementedby" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Implemented On</span>
-									</div>
-									{% render_field form.req_implementedon id="req_implementedon" type="Date" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Status</span>
-									</div>
-									{% render_field form.req_status id="req_status" class="form-control " %}
-								</div>
-								{% render_field form.req_updated_by id="req_updated_by" hidden="True" class="form-control" %}
-								<div class="row container-fluid">
-									<div class="input-group input-group-sm mb-3 bg-dark block">
-										<div class="input-group-prepend">
-											<span class="input-group-text">Attachment</span>
-										</div>
-										{% render_field form.req_attachment class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-									</div>
-									<div class="col-6"></div>
-								</div>
-							</div>
-						</div>
-						<div class="row container-fluid">
-							<div class="input-group input-group-sm mb-3 ">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Remarks</span>
-								</div>
-								{% render_field form.req_remarks id="req_remarks" class="form-control " %}
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'requirements_search' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-2"></div>
-	</div>
-</form>
+        <form method="POST" action="" id="requirements_add" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-lg-6 pr-lg-3">
+                    <!-- Requirement Number -->
+                    <div class="form-group-modern mb-2">
+                        <label for="req_number" class="form-label-modern font-weight-bold">Requirement Number</label>
+                        {% render_field form.req_number id="req_number" readonly="True" class="form-control form-control-modern" %}
+                    </div>
+
+                    <!-- Backlogs -->
+                    <div class="form-group-modern mb-2">
+                        <label for="req_backlogs" class="form-label-modern font-weight-bold">Backlogs</label>
+                        {% render_field form.req_backlogs id="req_backlogs" class="form-control form-control-modern" rows="2" %}
+                    </div>
+
+                    <!-- Module -->
+                    <div class="form-group-modern mb-2">
+                        <label for="req_module" class="form-label-modern font-weight-bold">Module</label>
+                        {% render_field form.req_module id="req_module" class="form-control form-control-modern" %}
+                    </div>
+
+                    <!-- Phase -->
+                    <div class="form-group-modern mb-2">
+                        <label for="req_phase" class="form-label-modern font-weight-bold">Phase</label>
+                        {% render_field form.req_phase id="req_phase" class="form-control form-control-modern" %}
+                    </div>
+
+                    <!-- Remarks -->
+                    <div class="form-group-modern mb-2">
+                        <label for="req_remarks" class="form-label-modern font-weight-bold">Remarks</label>
+                        {% render_field form.req_remarks id="req_remarks" class="form-control form-control-modern" rows="2" %}
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-lg-6 pl-lg-3">
+                    <!-- Raised By -->
+                    <div class="form-group-modern mb-2">
+                        <label for="req_owner" class="form-label-modern font-weight-bold">Raised By</label>
+                        {% render_field form.req_owner id="req_owner" class="form-control form-control-modern" %}
+                    </div>
+
+                    <!-- Raised On -->
+                    <div class="form-group-modern mb-2">
+                        <label for="req_raisedon" class="form-label-modern font-weight-bold">Raised On</label>
+                        {% render_field form.req_raisedon type="Date" id="req_raisedon" class="form-control form-control-modern" %}
+                    </div>
+
+                    <!-- Bug / Improvements? -->
+                    <div class="form-group-modern mb-2">
+                        <label for="req_bugimprove" class="form-label-modern font-weight-bold">Bug / Improvements?</label>
+                        {% render_field form.req_bugimprove id="req_bugimprove" class="form-control form-control-modern" %}
+                    </div>
+
+                    <!-- Implemented By -->
+                    <div class="form-group-modern mb-2">
+                        <label for="req_implementedby" class="form-label-modern font-weight-bold">Implemented By</label>
+                        {% render_field form.req_implementedby id="req_implementedby" class="form-control form-control-modern" %}
+                    </div>
+
+                    <!-- Implemented On -->
+                    <div class="form-group-modern mb-2">
+                        <label for="req_implementedon" class="form-label-modern font-weight-bold">Implemented On</label>
+                        {% render_field form.req_implementedon id="req_implementedon" type="Date" class="form-control form-control-modern" %}
+                    </div>
+
+                    <!-- Status -->
+                    <div class="form-group-modern mb-2">
+                        <label for="req_status" class="form-label-modern font-weight-bold">Status</label>
+                        {% render_field form.req_status id="req_status" class="form-control form-control-modern" %}
+                    </div>
+
+                    <!-- Attachment -->
+                    <div class="form-group-modern mb-2">
+                        <label class="form-label-modern font-weight-bold">Attachment</label>
+                        {% render_field form.req_attachment class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+            {% render_field form.req_updated_by id="req_updated_by" hidden="True" class="form-control" %}
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="message text-center my-2">
+                {% for message in messages %}
+                <a class="{% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'info' %}alert-info{% else %}{{ message.tags }}{% endif %}">{{ message }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between align-items-center pt-2 mt-2" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+                <button type="submit" class="btn-modern btn-submit py-1 px-4">
+                    <i class="fas fa-check mr-1"></i> Submit
+                </button>
+                <a href="{% url 'requirements_search' %}" class="btn-modern btn-cancel py-1 px-4" style="text-decoration:none;">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .compact-form .form-group-modern {
+        margin-bottom: 0.45rem !important;
+    }
+    .compact-form .form-label-modern {
+        font-size: 0.76rem !important;
+        margin-bottom: 2px !important;
+        letter-spacing: 0.6px !important;
+    }
+    .compact-form .form-control-modern {
+        height: 32px !important;
+        min-height: 32px !important;
+        font-size: 0.84rem !important;
+        padding: 3px 8px !important;
+        border-radius: 8px !important;
+    }
+    .compact-form textarea.form-control-modern {
+        height: 48px !important;
+        min-height: 48px !important;
+        resize: vertical;
+    }
+    .compact-form .modern-card {
+        padding: 0.85rem 1.4rem !important;
+        margin-bottom: 0 !important;
+        border-radius: 16px !important;
+    }
+    .compact-form .form-section-title {
+        font-size: 0.82rem !important;
+        margin-bottom: 0.45rem !important;
+        letter-spacing: 1px !important;
+    }
+    .compact-form .btn-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0.25rem 1.2rem !important;
+        font-size: 0.84rem !important;
+        border-radius: 10px !important;
+    }
+</style>
+
 <script>
 $(document).ready(function() {
-	document.getElementById("req_updated_by").value ='{{user_id}}';
-	var raised_by=document.getElementById("req_owner").value
-	if (raised_by=="")
-	{
-		document.getElementById("req_owner").value='{{user_id}}'
-	}
-	else
-	{
-		document.getElementById("req_owner").value=raised_by
-	}
-<!--	reqnum()-->
-	});
+    document.getElementById("req_updated_by").value ='{{user_id}}';
+    var raised_by = document.getElementById("req_owner").value;
+    if (raised_by == "") {
+        document.getElementById("req_owner").value = '{{user_id}}';
+    } else {
+        document.getElementById("req_owner").value = raised_by;
+    }
+});
 </script>
-<!--<script>-->
-<!--function reqnum() {-->
-<!--  var ran='{{req_num}}'-->
-<!--  var jn=document.getElementById("req_number").value-->
-<!--  if (jn=="")-->
-<!--  {-->
-<!--  	document.getElementById("req_number").value ="Req_"+ ran;-->
-<!--  }-->
-<!--  else-->
-<!--  {-->
-<!--  	document.getElementById("req_number").value =jn;-->
-<!--  }-->
-<!--}-->
-<!--</script>-->
 {% endblock content %}
