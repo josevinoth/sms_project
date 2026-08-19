@@ -638,6 +638,30 @@ a.btn-modern + a.btn-modern {
     justify-content: space-between;
 }
 
+.modern-list-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+.modern-list-title h1,
+.modern-list-title h2,
+.modern-list-title h3 {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 1.3rem !important;
+    font-weight: 800 !important;
+    color: inherit !important;
+    line-height: 1.2 !important;
+    display: inline-block !important;
+}
+
+.modern-list-title i {
+    font-size: 1.4rem !important;
+    line-height: 1 !important;
+    display: inline-block !important;
+}
+
 /* In dark mode: list header uses dark navy, not cyan gradient */
 [data-theme="dark"] .modern-list-header {
     background: linear-gradient(135deg, #0d1e32 0%, #162840 100%);
@@ -814,13 +838,36 @@ div.dataTables_scrollBody thead th {
     border-radius: 0 !important;
 }
 
+/* DataTables Length & Buttons Spacing Fix */
+.dataTables_length,
+.dataTables_wrapper .dataTables_length {
+    margin-right: 28px !important;
+    margin-bottom: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    vertical-align: middle !important;
+}
+
+.dataTables_wrapper .dataTables_length label {
+    margin-bottom: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-weight: 600 !important;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    margin: 0 4px !important;
+}
+
 /* DataTables Buttons Modernization */
 .dt-buttons,
 .dataTables_wrapper .dt-buttons,
 .dataTables_wrapper .dt-buttons.btn-group,
 .dataTables_wrapper .dt-buttons .btn-group {
-    margin-bottom: 1.5rem !important;
-    display: flex !important;
+    margin-bottom: 0.5rem !important;
+    display: inline-flex !important;
     align-items: center !important;
     flex-wrap: wrap !important;
     gap: var(--btn-group-gap) !important;
@@ -835,7 +882,7 @@ div.dataTables_scrollBody thead th {
 .dataTables_wrapper .dt-buttons .btn {
     background: var(--bg-section) !important;
     border: 1px solid var(--border-light) !important;
-    color: var(--text-main)
+    color: var(--text-main) !important;
     box-shadow: none !important;
     margin: 0 !important;
     padding: var(--btn-padding) !important;
@@ -2032,3 +2079,274 @@ select.form-control-modern.status-yes {
     background-color: #0ea5e9 !important;
     color: #ffffff !important;
 }
+
+/* ── Sticky Floating Horizontal Scrollbar ── */
+.sticky-table-scrollbar-wrapper {
+    position: fixed;
+    bottom: 0;
+    z-index: 1040;
+    display: none;
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(12px);
+    border-radius: 10px 10px 0 0;
+    padding: 3px 6px;
+    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.25);
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    border-bottom: none;
+    box-sizing: border-box;
+}
+
+[data-theme="light"] .sticky-table-scrollbar-wrapper {
+    background: rgba(241, 245, 249, 0.96);
+    border: 1.5px solid rgba(0, 0, 0, 0.12);
+    border-bottom: none;
+    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.sticky-table-scrollbar-inner {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 14px;
+}
+
+    overflow-y: hidden;
+    height: 14px;
+    margin: 0 8px;
+}
+
+.sticky-table-scrollbar-content {
+    height: 1px;
+}
+
+.sticky-scroll-btn {
+    background: var(--accent-blue, #3b82f6);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    width: 32px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.sticky-scroll-btn:hover {
+    background: #2563eb;
+    transform: scale(1.08);
+}
+
+.is-dragging-table {
+    cursor: grab !important;
+    user-select: none !important;
+}
+
+.is-dragging-table * {
+    user-select: none !important;
+}
+
+/* Enhanced Horizontal Scrollbar Visibility */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 6px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #64748b;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-blue, #3b82f6);
+    border: 1px solid transparent;
+}
+
+/* Header User Meta Overlap Fix */
+.header-user-panel {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    height: 100% !important;
+}
+
+.header-user-meta {
+    transform: none !important;
+    text-align: right !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    height: 100% !important;
+}
+
+.header-user-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.header-user-text {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    line-height: 1.2 !important;
+    position: relative !important;
+}
+
+.header-user-name {
+    font-size: 0.92rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+    position: relative !important;
+}
+
+.header-user-role {
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    color: #ff4d4f !important;
+    display: block !important;
+    line-height: 1.2 !important;
+    margin-top: 1px !important;
+    position: relative !important;
+}
+
+/* ==========================================================================
+   MODERN MINIMALIST HEADER DESIGN SYSTEM
+   ========================================================================== */
+.header_style_modern {
+    background: linear-gradient(180deg, #0b1537 0%, #08102b 100%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+    padding: 6px 16px !important;
+    min-height: 60px !important;
+    position: relative !important;
+    z-index: 1000 !important;
+}
+
+.header-home-btn {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    color: #e2e8f0 !important;
+    border-radius: 10px !important;
+    width: 38px !important;
+    height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+}
+
+.header-home-btn:hover {
+    background: rgba(59, 130, 246, 0.25) !important;
+    border-color: rgba(59, 130, 246, 0.5) !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+}
+
+.header-brand-title {
+    font-size: 1.65rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: 0.5px !important;
+    margin: 0 !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+.header-pill-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    background: rgba(255, 255, 255, 0.07) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    border-radius: 20px !important;
+    padding: 5px 12px !important;
+    color: #cbd5e1 !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.header-pill-badge:hover {
+    background: rgba(255, 255, 255, 0.14) !important;
+    border-color: rgba(255, 255, 255, 0.28) !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    transform: translateY(-1px) !important;
+}
+
+.header-pill-badge .pill-count {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+    padding: 1px 7px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+}
+
+.header-user-chip {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 12px !important;
+    padding: 4px 10px !important;
+}
+
+.header-user-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.header-logout-btn-modern {
+    background: rgba(239, 68, 68, 0.15) !important;
+    border: 1px solid rgba(239, 68, 68, 0.35) !important;
+    color: #fca5a5 !important;
+    border-radius: 10px !important;
+    width: 36px !important;
+    height: 36px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+    text-decoration: none !important;
+}
+
+.header-logout-btn-modern:hover {
+    background: rgba(239, 68, 68, 0.85) !important;
+    border-color: #ef4444 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35) !important;
+}
+
+

@@ -32,7 +32,9 @@
     <!-- Custom CSS -->
     {% load static %}
     <link rel="stylesheet" href="{% static 'all.css' %}">
-    <link rel="stylesheet" href="{% static 'modern_css.css' %}">
+    <link rel="stylesheet" href="{% static 'modern_css.css' %}?v=202608170939">
+
+
 
     <script src="{% static 'common-chart-config.js' %}"></script>
 
@@ -185,8 +187,10 @@
                 }
             });
 
-            // Global Language Override
+            // Global DataTables Override
             $.extend(true, $.fn.dataTable.defaults, {
+                responsive: false,
+                scrollX: true,
                 language: {
                     search: "",
                     searchPlaceholder: "Search records...",
@@ -199,6 +203,11 @@
     });
 </script>
 
+<script src="{% static 'table-scroll-helper.js' %}?v=202608170939"></script>
+
+
+
 {% block extra_js %}{% endblock %}
 </body>
 </html>
+

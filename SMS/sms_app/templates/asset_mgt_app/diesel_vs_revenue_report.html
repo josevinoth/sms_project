@@ -1,89 +1,71 @@
-{% extends "asset_mgt_app/base_1.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% load static %}
 {% block content %}
 
-
-<style>
-    .shadow-box-table {
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        border: 1px solid #ddd;
-        border-radius: 5px;
-    }
-
-    .text-right {
-        text-align: right;
-    }
-</style>
-
-<!-- Select2 CSS -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"
-    rel="stylesheet">
-<!-- Select2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<div class="container-fluid d-flex justify-content-center py-3">
-    <div class="rounded text-center bg-info shadow-box px-4 py-2">
-        <h3>Diesel Vs Revenue Report</h3>
+<div class="modern-list-header">
+    <div class="modern-list-title">
+        <i class="fas fa-gas-pump"></i>
+        <h2>Diesel Vs Revenue Report</h2>
     </div>
-</div>
-
-<div class="row mb-3">
-    <div class="col-12">
-        <a href="{% url 'transport_reports' %}" class="btn btn-primary shadow-sm">
-            <i class="fas fa-arrow-left"></i> Back
+    <div class="modern-list-actions">
+        <a href="{% url 'transport_reports' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left mr-1"></i> Back to Reports
         </a>
     </div>
 </div>
 
-<form class="row g-3 align-items-end mb-4">
-    {% csrf_token %}
+<!-- Modern Filter Form -->
+<div class="form-section">
+    <form class="row g-3 align-items-end" id="filterForm">
+        {% csrf_token %}
 
-    <!-- Branch Filter -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Branch</label>
-        {% render_field form.branch class="form-control" %}
-    </div>
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">Branch</label>
+            {% render_field form.branch class="form-control form-control-modern select2" %}
+        </div>
 
-    <!-- Vehicle Search -->
-    <div class="col-md-3">
-        <label class="form-label fw-bold">Vehicle Number</label>
-        <select name="vehicle_search" id="vehicle_search" class="form-control select2">
-            <option value="">Search Vehicle...</option>
-            {% for vehicle in all_vehicles %}
-            <option value="{{ vehicle.vm_registrationnumber }}" {% if vehicle_search == vehicle.vm_registrationnumber %}selected{% endif %}>
-                {{ vehicle.vm_registrationnumber }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
+        <div class="col-md-3 mb-2">
+            <label class="form-label font-weight-bold">Vehicle Number</label>
+            <select name="vehicle_search" id="vehicle_search" class="form-control form-control-modern select2">
+                <option value="">Search Vehicle...</option>
+                {% for vehicle in all_vehicles %}
+                <option value="{{ vehicle.vm_registrationnumber }}" {% if vehicle_search == vehicle.vm_registrationnumber %}selected{% endif %}>
+                    {{ vehicle.vm_registrationnumber }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
 
-    <!-- From & To Date -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">From Date</label>
-        {% render_field form.from_date class="form-control" %}
-    </div>
-    <div class="col-md-2">
-        <label class="form-label fw-bold">To Date</label>
-        {% render_field form.to_date class="form-control" %}
-    </div>
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">From Date</label>
+            {% render_field form.from_date class="form-control form-control-modern" %}
+        </div>
 
-    <div class="col-md-3">
-        <label class="form-label d-block text-white">Actions</label>
-        <button type="submit" class="btn btn-primary px-4 shadow-sm">
-            <i class="fas fa-filter"></i> Filter
-        </button>
-        <a href="{% url 'diesel_vs_revenue_report' %}" class="btn btn-secondary px-4 shadow-sm ms-2">
-            <i class="fas fa-sync"></i> Clear
-        </a>
-    </div>
-</form>
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">To Date</label>
+            {% render_field form.to_date class="form-control form-control-modern" %}
+        </div>
 
-<div class="container-fluid shadow-box-table mt-4 p-3 bg-white">
+        <div class="col-md-3 mb-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-block mr-1">
+                <i class="fas fa-filter mr-1"></i> Filter
+            </button>
+            <a href="{% url 'diesel_vs_revenue_report' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-undo"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Modern Table Card -->
+<div class="modern-card">
     <div class="table-responsive">
-        <table id="diesel_vs_revenue_report_table" class="table table-striped table-bordered table-sm w-100">
-            <thead class="thead-dark">
+        <table id="diesel_vs_revenue_report_table" class="table modern-table table-hover display nowrap" style="width:100%">
+            <thead>
                 <tr>
                     {% for h in headers %}
                     <th class="text-nowrap">{{ h }}</th>
@@ -96,9 +78,13 @@
     </div>
 </div>
 
-
 <script>
     $(document).ready(function () {
+        $('.select2').select2({
+            width: '100%',
+            placeholder: 'Search and select...',
+            allowClear: true
+        });
 
         const table = $('#diesel_vs_revenue_report_table').DataTable({
             processing: true,
@@ -114,123 +100,32 @@
                 }
             },
             scrollX: true,
+            scrollY: "58vh",
+            scrollCollapse: true,
             autoWidth: false,
             columnDefs: [
                 { targets: [6, 12], visible: false }
             ],
-            dom: "<'row'<'col-sm-12 col-md-6 d-flex align-items-center gap-2'lB><'col-sm-12 col-md-6'f>>" +
+            dom: "<'row mb-2'<'col-sm-12 col-md-6 d-flex align-items-center'lB><'col-sm-12 col-md-6 d-flex justify-content-end'f>>" +
                  "<'row'<'col-sm-12'tr>>" +
-                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-            
+                 "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
             lengthMenu: [
                 [10, 25, 50, 100, -1],
                 [10, 25, 50, 100, "All"]
             ],
             pageLength: 25,
             buttons: [
-                {
-                    extend: 'copy',
-                    className: 'btn btn-sm btn-info',
-                    exportOptions: { columns: ':visible' }
-                },
-                {
-                    extend: 'csv',
-                    className: 'btn btn-sm btn-info',
-                    exportOptions: { columns: ':visible' }
-                },
-                {
-                    extend: 'excelHtml5',
-                    className: 'btn btn-sm btn-info',
-                    text: 'Excel',
-                    title: 'Diesel Vs Revenue Report',
-                    exportOptions: { columns: ':visible' },
-                    customize: function (xlsx) {
-                        let sheet = xlsx.xl.worksheets['sheet1.xml'];
-                        let styles = xlsx.xl['styles.xml'];
-                        let fonts = $('fonts', styles);
-                        fonts.append(`
-                        <font>
-                            <sz val="11"/>
-                            <color rgb="FFFFFFFF"/>
-                            <name val="Calibri"/>
-                            <b/>
-                        </font>
-                    `);
-                        let fontId = fonts.children().length - 1;
-                        let fills = $('fills', styles);
-                        fills.append(`
-                        <fill>
-                            <patternFill patternType="solid">
-                                <fgColor rgb="FF0A3278"/>
-                                <bgColor indexed="64"/>
-                            </patternFill>
-                        </fill>
-                    `);
-                        let fillId = fills.children().length - 1;
-                        let cellXfs = $('cellXfs', styles);
-                        cellXfs.append(`
-                        <xf xfId="0"
-                            fontId="${fontId}"
-                            fillId="${fillId}"
-                            borderId="0"
-                            applyFont="1"
-                            applyFill="1"/>
-                    `);
-                        let styleId = cellXfs.children().length - 1;
-                        $('row:eq(1) c', sheet).attr('s', styleId);
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    className: 'btn btn-sm btn-info',
-                    orientation: 'landscape',
-                    pageSize: 'A4',
-                    title: 'Diesel Vs Revenue Report',
-                    exportOptions: { columns: ':visible' },
-                    customize: function (doc) {
-                        doc.styles.tableHeader.fillColor = '#0A3278';
-                        doc.styles.tableHeader.color = 'white';
-                        doc.styles.tableHeader.bold = true;
-                    }
-                },
-                {
-                    extend: 'print',
-                    className: 'btn btn-sm btn-info',
-                    title: 'Diesel Vs Revenue Report',
-                    exportOptions: { columns: ':visible' },
-                    customize: function (win) {
-                        $(win.document.body).find('thead th')
-                            .css('background-color', '#0A3278')
-                            .css('color', 'white')
-                            .css('font-weight', 'bold');
-                    }
-                }
-            ],
-            order: [[0, 'asc']]
+                { extend: 'copy', className: 'btn btn-outline-secondary btn-sm mr-1', exportOptions: { columns: ':visible' } },
+                { extend: 'csv', className: 'btn btn-outline-secondary btn-sm mr-1', exportOptions: { columns: ':visible' } },
+                { extend: 'excelHtml5', className: 'btn btn-outline-success btn-sm mr-1', text: 'Excel', title: 'Diesel Vs Revenue Report', exportOptions: { columns: ':visible' } },
+                { extend: 'pdfHtml5', className: 'btn btn-outline-danger btn-sm mr-1', orientation: 'landscape', pageSize: 'A4', title: 'Diesel Vs Revenue Report', exportOptions: { columns: ':visible' } },
+                { extend: 'print', className: 'btn btn-outline-dark btn-sm', title: 'Diesel Vs Revenue Report', exportOptions: { columns: ':visible' } }
+            ]
         });
 
-        
-        $('form').on('submit', function(e) {
-            e.preventDefault();
-            table.ajax.reload();
-        });
-
-        // Handle window resize to adjust columns
         $(window).on('resize', function () {
-            $('#diesel_vs_revenue_report_table').DataTable().columns.adjust();
-        });
-
-    });
-</script>
-<script>
-    $(document).ready(function () {
-        $('#vehicle_search').select2({
-            width: '100%',
-            theme: 'bootstrap4',
-            placeholder: 'Search Vehicle No',
-            allowClear: true
+            table.columns.adjust();
         });
     });
 </script>
-
-{% endblock content %}
+{% endblock %}

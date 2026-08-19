@@ -29,6 +29,9 @@
     <!-- Custom CSS -->
     {% load static %}
     <link rel="stylesheet" href="{% static 'all.css' %}">
+    <link rel="stylesheet" href="{% static 'modern_css.css' %}?v=202608170939">
+
+
 
     <script src="{% static 'common-chart-config.js' %}"></script>
 
@@ -88,9 +91,9 @@
             <div class="col-6">
                 <h1 style="font-weight: Bold;"><img src="/media/Company_Logo.png" style="width:50px;height:60px;padding:2px;margin-right:10px;">BVM Management System</h1>
             </div>
-            <div class="col-2">
-                <h6>Hi, {{ request.session.first_name }}</h6>
-                <h6 style="color:red">{{ request.session.ses_role }} , {{ request.session.ses_unit_name }}</h6>
+            <div class="col-2 d-flex flex-column justify-content-center align-items-center" style="line-height: 1.3;">
+                <span class="font-weight-bold text-white" style="font-size: 0.95rem;">Hi, {{ request.session.first_name }}</span>
+                <span style="color: #ff6b6b; font-size: 0.82rem; font-weight: 600;">{{ request.session.ses_role }} , {{ request.session.ses_unit_name }}</span>
             </div>
             <div class="col-1">
                 <h1><a href="{% url 'logout_page' %}" class="btn btn-dark "><i class="fas fa-sign-out-alt"></i></a></h1>
@@ -130,5 +133,9 @@
 
 <!-- Bootstrap Select JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+<script src="{% static 'table-scroll-helper.js' %}?v=202608170939"></script>
+
+
 </body>
 </html>
+

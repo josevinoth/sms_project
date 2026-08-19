@@ -209,11 +209,13 @@ def enquirynote_list(request):
         # When searching/filtering (by date, enquiry no, vehicle, etc.), show ALL matching records without limit
         paginator = Paginator(enquirynote_queryset, max(total_filtered, 1))
     else:
-        # Normal list view: keep standard 30 records per page pagination
-        paginator = Paginator(enquirynote_queryset, 30)
+        # Show only top 50 data records without pagination
+        enquirynote_slice = enquirynote_queryset[:50]
+        paginator = Paginator(enquirynote_slice, max(enquirynote_slice.count(), 1))
 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number if page_number and str(page_number).isdigit() else 1)
+
 
     # Build query string for pagination links preserving active search/filters
     get_copy = request.GET.copy()
