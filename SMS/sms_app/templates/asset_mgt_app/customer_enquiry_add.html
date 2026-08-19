@@ -547,7 +547,7 @@
             <li><a href="{% url 'customer_documents' %}"><i class="fas fa-file-alt"></i> Documents</a></li>
             <li><a href="{% url 'customer_support' %}"><i class="fas fa-headset"></i> Support</a></li>
             <li><a href="{% url 'customer_profile' %}"><i class="fas fa-user-circle"></i> Profile</a></li>
-            <li><a href="{% url 'logout_page' %}?business_id=2" style="color: #ef4444;"><i
+            <li><a href="{% url 'logout_page' %}?business_id={{ customer.cu_business_sol.id }}" style="color: #ef4444;"><i
                         class="fas fa-sign-out-alt"></i> Logout</a></li>
         </ul>
     </div>
@@ -569,7 +569,7 @@
                 style="width: 36px; height: 36px; background: linear-gradient(var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--dark); font-size: 0.85rem;">
                 {{ request.user.username|make_list|first|upper }}
             </div>
-            <a href="{% url 'logout_page' %}?business_id=2" title="Logout"
+            <a href="{% url 'logout_page' %}?business_id={{ customer.cu_business_sol.id }}" title="Logout"
                 style="color: #94a3b8; text-decoration: none; font-size: 1.1rem;"><i
                     class="fas fa-sign-out-alt"></i></a>
         </div>
