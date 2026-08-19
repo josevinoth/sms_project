@@ -68,32 +68,13 @@
             }
         });
 
-        // Mouse Grab-to-Scroll
-        var isMouseDown = false;
-        var startX, scrollLeftPos;
-
-        $container.on('mousedown.tableScrollHelper', function (e) {
-            if ($(e.target).is('input, select, textarea, button, a, i, label, .btn, .select2-container, .dropdown-item')) return;
-            isMouseDown = true;
-            $container.addClass('is-dragging-table');
-            startX = e.pageX - containerEl.offsetLeft;
-            scrollLeftPos = containerEl.scrollLeft;
-        });
-
-        $(document).on('mouseup.tableScrollHelper mouseleave.tableScrollHelper', function () {
-            if (isMouseDown) {
-                isMouseDown = false;
-                $container.removeClass('is-dragging-table');
-            }
-        });
-
-        $container.on('mousemove.tableScrollHelper', function (e) {
-            if (!isMouseDown) return;
-            e.preventDefault();
-            var x = e.pageX - containerEl.offsetLeft;
-            var walk = (x - startX) * 1.5;
-            containerEl.scrollLeft = scrollLeftPos - walk;
-        });
+        // Global DataTables configuration: disable responsive column collapse, force horizontal scrollbar
+        if ($.fn && $.fn.dataTable) {
+            $.extend(true, $.fn.dataTable.defaults, {
+                responsive: false,
+                scrollX: true
+            });
+        }
 
         // Update scrollbar dimensions and position
         function updateLayout() {

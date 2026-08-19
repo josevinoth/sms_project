@@ -653,7 +653,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Trip #</th>
+                        <th style="white-space: nowrap;">Trip #</th>
                         <th>Vehicle</th>
                         <th>Driver</th>
                         <th>Origin</th>
@@ -665,7 +665,7 @@
                 <tbody>
                     {% for trip in recent_shipments %}
                     <tr>
-                        <td style="font-weight: 600;">{{ trip.tr_tripnumber }}</td>
+                        <td style="font-weight: 600; white-space: nowrap;">{{ trip.tr_tripnumber }}</td>
                         <td>{{ trip.tr_vehiclenumber|default:"-" }}<br>
                             <small style="color:#94a3b8;">{{ trip.tr_vehicletype }}</small>
                         </td>

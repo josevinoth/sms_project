@@ -22,6 +22,7 @@ from django.contrib.auth.decorators import login_required
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
+
 @login_required(login_url='login_page')
 def consignmentdetail_enquiry(request, enquiry_id, consignment_number):
     enquiry = get_object_or_404(EnquirynoteInfo, pk=enquiry_id)

@@ -676,7 +676,10 @@
                 else
                 {
                     // Update the ro_rate field with the retrieved value
-                    $("#tc_tripcost").val(data.ro_rate);
+                    var current_val = $("#tc_tripcost").val();
+                    if (!current_val || current_val == "0" || current_val == "0.0" || current_val == "") {
+                        $("#tc_tripcost").val(data.ro_rate);
+                    }
                 }
             },
             error: function(xhr, status, error) {
@@ -1066,7 +1069,10 @@
                 else
                 {
                     // Update the ro_rate field with the retrieved value
-                    $("#tc_tripcost").val(data.ro_rate);
+                    var current_val = $("#tc_tripcost").val();
+                    if (!current_val || current_val == "0" || current_val == "0.0" || current_val == "") {
+                        $("#tc_tripcost").val(data.ro_rate);
+                    }
                 }
             },
             error: function(xhr, status, error) {

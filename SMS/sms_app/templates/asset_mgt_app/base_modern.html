@@ -187,8 +187,10 @@
                 }
             });
 
-            // Global Language Override
+            // Global DataTables Override
             $.extend(true, $.fn.dataTable.defaults, {
+                responsive: false,
+                scrollX: true,
                 language: {
                     search: "",
                     searchPlaceholder: "Search records...",

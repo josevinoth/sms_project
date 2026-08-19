@@ -614,9 +614,9 @@
                             <td>{{ item.enq.en_fromlocaion.place_name }}</td>
                             <td>{{ item.enq.en_tolocation.place_name }}</td>
                             <td>{{ item.enq.en_customerdepartment.ct_customerdepartment|default:"-" }}</td>
-                            <td>
+                            <td style="white-space: nowrap;">
                                 {% if item.consignment_id %}
-                                    <a href="{% url 'consignment_note_pdf' item.consignment_id %}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;" title="View Consignment Note">
+                                    <a href="{% url 'consignment_note_pdf' item.consignment_id %}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500; white-space: nowrap;" title="View Consignment Note">
                                         <i class="fas fa-file-pdf" style="margin-right: 4px;"></i>{{ item.cnote }}
                                     </a>
                                 {% else %}
