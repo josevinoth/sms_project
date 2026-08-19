@@ -735,32 +735,6 @@ table.dataTable.no-footer {
     box-shadow: none !important;
 }
 
-/* ══ DataTables Horizontal Scroll & Responsive Fix ══ */
-.table-responsive,
-div.dataTables_scrollBody {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    width: 100% !important;
-}
-
-div.dataTables_scrollHead {
-    overflow: hidden !important;
-}
-
-.modern-table th,
-.modern-table td,
-table.dataTable th,
-table.dataTable td {
-    white-space: nowrap !important;
-}
-
-div.dataTables_scrollBody table,
-.table-responsive table.modern-table,
-.table-responsive table.dataTable {
-    width: 100% !important;
-    max-width: none !important;
-}
-
 div.dataTables_scrollBody thead {
     visibility: collapse !important;
 }
