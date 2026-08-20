@@ -24,60 +24,73 @@
         <form method="POST" action="" id="requirements_add" enctype="multipart/form-data">
             {% csrf_token %}
             
+            <!-- Row 1: Requirement Number, Bug / Improvements?, Raised By (3 Columns) -->
             <div class="row">
-                <!-- Left Column -->
-                <div class="col-lg-6 pr-lg-3">
-                    <!-- Requirement Number -->
+                <div class="col-12 col-md-4">
                     <div class="form-group-modern mb-2">
                         <label for="req_number" class="form-label-modern font-weight-bold">Requirement Number</label>
                         {% render_field form.req_number id="req_number" readonly="True" class="form-control form-control-modern" %}
                     </div>
+                </div>
 
-                    <!-- Backlogs -->
+                <div class="col-12 col-md-4">
                     <div class="form-group-modern mb-2">
-                        <label for="req_backlogs" class="form-label-modern font-weight-bold">Backlogs</label>
-                        {% render_field form.req_backlogs id="req_backlogs" class="form-control form-control-modern" rows="2" %}
+                        <label for="req_bugimprove" class="form-label-modern font-weight-bold">Bug / Improvements?</label>
+                        {% render_field form.req_bugimprove id="req_bugimprove" class="form-control form-control-modern" %}
                     </div>
+                </div>
 
-                    <!-- Module -->
+                <div class="col-12 col-md-4">
+                    <div class="form-group-modern mb-2">
+                        <label for="req_owner" class="form-label-modern font-weight-bold">Raised By</label>
+                        {% render_field form.req_owner id="req_owner" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Phase, Module, Raised On (3 Columns) -->
+            <div class="row">
+                <div class="col-12 col-md-4">
+                    <div class="form-group-modern mb-2">
+                        <label for="req_phase" class="form-label-modern font-weight-bold">Phase</label>
+                        {% render_field form.req_phase id="req_phase" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
                     <div class="form-group-modern mb-2">
                         <label for="req_module" class="form-label-modern font-weight-bold">Module</label>
                         {% render_field form.req_module id="req_module" class="form-control form-control-modern" %}
                     </div>
+                </div>
 
-                    <!-- Phase -->
+                <div class="col-12 col-md-4">
                     <div class="form-group-modern mb-2">
-                        <label for="req_phase" class="form-label-modern font-weight-bold">Phase</label>
-                        {% render_field form.req_phase id="req_phase" class="form-control form-control-modern" %}
+                        <label for="req_raisedon" class="form-label-modern font-weight-bold">Raised On</label>
+                        {% render_field form.req_raisedon type="Date" id="req_raisedon" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: Backlogs & Remarks (col-md-8) + Implementation, Status & Attachment (col-md-4) -->
+            <div class="row">
+                <!-- Left: Backlogs (Top) & Remarks (Bottom) -->
+                <div class="col-12 col-md-8">
+                    <!-- Backlogs -->
+                    <div class="form-group-modern mb-2">
+                        <label for="req_backlogs" class="form-label-modern font-weight-bold">Backlogs</label>
+                        {% render_field form.req_backlogs id="req_backlogs" class="form-control form-control-modern form-textarea-large" rows="3" %}
                     </div>
 
                     <!-- Remarks -->
                     <div class="form-group-modern mb-2">
                         <label for="req_remarks" class="form-label-modern font-weight-bold">Remarks</label>
-                        {% render_field form.req_remarks id="req_remarks" class="form-control form-control-modern" rows="2" %}
+                        {% render_field form.req_remarks id="req_remarks" class="form-control form-control-modern form-textarea-large" rows="3" %}
                     </div>
                 </div>
 
-                <!-- Right Column -->
-                <div class="col-lg-6 pl-lg-3">
-                    <!-- Raised By -->
-                    <div class="form-group-modern mb-2">
-                        <label for="req_owner" class="form-label-modern font-weight-bold">Raised By</label>
-                        {% render_field form.req_owner id="req_owner" class="form-control form-control-modern" %}
-                    </div>
-
-                    <!-- Raised On -->
-                    <div class="form-group-modern mb-2">
-                        <label for="req_raisedon" class="form-label-modern font-weight-bold">Raised On</label>
-                        {% render_field form.req_raisedon type="Date" id="req_raisedon" class="form-control form-control-modern" %}
-                    </div>
-
-                    <!-- Bug / Improvements? -->
-                    <div class="form-group-modern mb-2">
-                        <label for="req_bugimprove" class="form-label-modern font-weight-bold">Bug / Improvements?</label>
-                        {% render_field form.req_bugimprove id="req_bugimprove" class="form-control form-control-modern" %}
-                    </div>
-
+                <!-- Right: Implemented By, Implemented On, Status, Attachment -->
+                <div class="col-12 col-md-4">
                     <!-- Implemented By -->
                     <div class="form-group-modern mb-2">
                         <label for="req_implementedby" class="form-label-modern font-weight-bold">Implemented By</label>
@@ -99,7 +112,7 @@
                     <!-- Attachment -->
                     <div class="form-group-modern mb-2">
                         <label class="form-label-modern font-weight-bold">Attachment</label>
-                        {% render_field form.req_attachment class="form-control form-control-modern" %}
+                        {% render_field form.req_attachment class="form-control form-control-modern file-input-modern" %}
                     </div>
                 </div>
             </div>
@@ -116,7 +129,7 @@
             {% endif %}
 
             <!-- Action Buttons -->
-            <div class="d-flex justify-content-between align-items-center pt-2 mt-2" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+            <div class="d-flex justify-content-between align-items-center pt-3 mt-2" style="border-top: 1px solid var(--border-light, #e2e8f0);">
                 <button type="submit" class="btn-modern btn-submit py-1 px-4">
                     <i class="fas fa-check mr-1"></i> Submit
                 </button>
@@ -130,39 +143,46 @@
 
 <style>
     .compact-form .form-group-modern {
-        margin-bottom: 0.45rem !important;
+        margin-bottom: 0.55rem !important;
     }
     .compact-form .form-label-modern {
         font-size: 0.76rem !important;
-        margin-bottom: 2px !important;
-        letter-spacing: 0.6px !important;
+        margin-bottom: 3px !important;
+        letter-spacing: 0.5px !important;
     }
     .compact-form .form-control-modern {
-        height: 32px !important;
-        min-height: 32px !important;
+        height: 34px !important;
+        min-height: 34px !important;
         font-size: 0.84rem !important;
-        padding: 3px 8px !important;
+        padding: 4px 10px !important;
         border-radius: 8px !important;
     }
-    .compact-form textarea.form-control-modern {
-        height: 48px !important;
-        min-height: 48px !important;
+    .compact-form textarea.form-control-modern,
+    .compact-form .form-textarea-large {
+        height: 80px !important;
+        min-height: 80px !important;
+        line-height: 1.45 !important;
         resize: vertical;
     }
+    .compact-form .file-input-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 3px 6px !important;
+    }
     .compact-form .modern-card {
-        padding: 0.85rem 1.4rem !important;
+        padding: 1rem 1.4rem !important;
         margin-bottom: 0 !important;
         border-radius: 16px !important;
     }
     .compact-form .form-section-title {
-        font-size: 0.82rem !important;
-        margin-bottom: 0.45rem !important;
+        font-size: 0.84rem !important;
+        margin-bottom: 0.6rem !important;
         letter-spacing: 1px !important;
     }
     .compact-form .btn-modern {
         height: 34px !important;
         min-height: 34px !important;
-        padding: 0.25rem 1.2rem !important;
+        padding: 0.25rem 1.3rem !important;
         font-size: 0.84rem !important;
         border-radius: 10px !important;
     }
