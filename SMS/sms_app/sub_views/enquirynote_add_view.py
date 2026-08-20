@@ -19,6 +19,33 @@ from ..sub_models.location_info_mod import Location_info
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id, is_tms_manager
 
 
+def _build_env_delete_flags(enquiry_id, enquirynotevehicle_list):
+    """
+    Returns a list of (Enquirynotevehicle, can_delete) tuples.
+    Rule: Delete is LOCKED only when allotted >= total_requested for that vehicle type
+    (i.e., all requested vehicles are fully allotted).
+    If even 1 vehicle is un-allotted, delete is allowed.
+    No model changes required; all logic is computed here.
+    """
+    result = []
+    for env in enquirynotevehicle_list:
+        total_requested = Enquirynotevehicle.objects.filter(
+            env_enquirynumber_id=enquiry_id,
+            env_vehicletype_id=env.env_vehicletype_id
+        ).aggregate(total=Sum('env_quantity'))['total'] or 0
+
+        allotted = Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber_id=enquiry_id,
+            va_vehicletype_id=env.env_vehicletype_id
+        ).count()
+
+        # Allow delete only if not fully allotted
+        can_delete = allotted < total_requested
+        result.append((env, can_delete))
+    return result
+
+
+
 @login_required(login_url='login_page')
 def enquirynote_nav(request, enquirynote_id=0, enquirynotevehicle_id=0):
     first_name = request.session.get('first_name')
@@ -39,12 +66,14 @@ def enquirynote_nav(request, enquirynote_id=0, enquirynotevehicle_id=0):
         form = EnquirynoteaddForm(instance=enquirynote)
         enquiryvechicle_form = EnquirynotevehicleForm()
         enquirynotevehicle_list = Enquirynotevehicle.objects.filter(env_enquirynumber=enquirynote_id)
+        enquirynotevehicle_list_with_flags = _build_env_delete_flags(enquirynote_id, enquirynotevehicle_list)
         context = {
             'user_id': user_id,
             'form': form,
             'enquiryvechicle_form': enquiryvechicle_form,
             'first_name': first_name,
             'enquirynotevehicle_list': enquirynotevehicle_list,
+            'enquirynotevehicle_list_with_flags': enquirynotevehicle_list_with_flags,
             'enquirynote_id': enquirynote_id,
         }
     return render(request, "asset_mgt_app/enquirynote_add.html", context)
@@ -78,12 +107,17 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
             # enquirynotevehicle = Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
             enquiryvechicle_form = EnquirynotevehicleForm()
             enquirynotevehicle_list = Enquirynotevehicle.objects.filter(env_enquirynumber=enquirynote_id)
+
+            # Build (env, can_delete) tuples for the template using inline logic
+            enquirynotevehicle_list_with_flags = _build_env_delete_flags(enquiry_num_id, enquirynotevehicle_list)
+
             context = {
                 'user_id': user_id,
                 'form': form,
                 'enquiryvechicle_form': enquiryvechicle_form,
                 'first_name': first_name,
                 'enquirynotevehicle_list': enquirynotevehicle_list,
+                'enquirynotevehicle_list_with_flags': enquirynotevehicle_list_with_flags,
                 'enquiry_num_id': enquiry_num_id,
             }
         return render(request, "asset_mgt_app/enquirynote_add.html", context)
