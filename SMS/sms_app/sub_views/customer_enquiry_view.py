@@ -141,17 +141,15 @@ def customer_dashboard(request):
     # Vehicle Allotted = enquiries created in current month that have a vehicle allotted
     # but NO business trip started (not in-transit, not delivered)
     allotted_trip_enq_ids = business_trips.filter(
-        tr_vehiclenumber__isnull=False
-    ).filter(
-        Q(tr_enquirynumber__en_created_at__gte=first_day_of_month) | Q(tr_created_at__gte=first_day_of_month)
+        tr_vehiclenumber__isnull=False,
+        tr_enquirynumber__en_created_at__gte=first_day_of_month
     ).exclude(
         tr_vehiclenumber=''
     ).values_list('tr_enquirynumber_id', flat=True).distinct()
 
     allotted_va_ids = Vehicle_allotmentInfo.objects.filter(
-        va_enquirynumber__en_customername=customer
-    ).filter(
-        Q(va_enquirynumber__en_created_at__gte=first_day_of_month) | Q(va_created_at__gte=first_day_of_month)
+        va_enquirynumber__en_customername=customer,
+        va_enquirynumber__en_created_at__gte=first_day_of_month
     ).filter(
         ~Q(va_vehiclenumber__isnull=True) | (~Q(va_vehiclenumber_mkt='') & ~Q(va_vehiclenumber_mkt__isnull=True))
     ).values_list('va_enquirynumber_id', flat=True).distinct()
@@ -569,17 +567,15 @@ def customer_enquiry_list(request):
         tr_category_id=1
     )
     _allotted_trip_enq_ids = _business_trips.filter(
-        tr_vehiclenumber__isnull=False
-    ).filter(
-        Q(tr_enquirynumber__en_created_at__gte=first_day_of_month) | Q(tr_created_at__gte=first_day_of_month)
+        tr_vehiclenumber__isnull=False,
+        tr_enquirynumber__en_created_at__gte=first_day_of_month
     ).exclude(
         tr_vehiclenumber=''
     ).values_list('tr_enquirynumber_id', flat=True).distinct()
 
     _allotted_va_ids = Vehicle_allotmentInfo.objects.filter(
-        va_enquirynumber__en_customername=customer
-    ).filter(
-        Q(va_enquirynumber__en_created_at__gte=first_day_of_month) | Q(va_created_at__gte=first_day_of_month)
+        va_enquirynumber__en_customername=customer,
+        va_enquirynumber__en_created_at__gte=first_day_of_month
     ).filter(
         ~Q(va_vehiclenumber__isnull=True) | (~Q(va_vehiclenumber_mkt='') & ~Q(va_vehiclenumber_mkt__isnull=True))
     ).values_list('va_enquirynumber_id', flat=True).distinct()
@@ -658,7 +654,16 @@ def customer_enquiry_list(request):
     elif status_filter == 'allotted':
         # Allotted = has vehicle, created or allotted in current month, but NOT yet in-transit or delivered, and NOT dead
         enquiries_qs = enquiries_qs.filter(
-            id__in=_allotted_all_ids
+            id__in=_allotted_all_ids,
+            en_created_at__gte=first_day_of_month
+        ).exclude(
+            id__in=_in_transit_enq_ids
+        ).exclude(
+            id__in=_all_delivered_enq_ids
+        ).exclude(
+            id__in=_dead_enq_ids
+        ).exclude(
+            id__in=_fully_closed_enq_ids
         ).exclude(
             id__in=_in_transit_enq_ids
         ).exclude(
