@@ -281,11 +281,16 @@ def tripclosure_add(request, tripclosure_id=0):
             )
             status_list = list(Tripstatusinfo.objects.filter(id__in=[4, 5, 6, 7]))
 
-            # Fetch Sell value robustly from allotment
+            # Fetch Sell value robustly from allotment (Special Sell > Standard Sell > Route Rate Master)
             va_sale = get_allotment_sale_rate(trip)
 
-            # Pre-populate Trip Charges from va_sale if currently zero
-            if not trip.tc_tripcost or trip.tc_tripcost == 0.0:
+            # Always sync Trip Charges from allotment rate if available (> 0)
+            if va_sale and va_sale > 0:
+                if trip.tc_tripcost != va_sale:
+                    trip.tc_tripcost = va_sale
+                    trip.save(update_fields=['tc_tripcost'])
+                tripclosure_form.initial['tc_tripcost'] = va_sale
+            elif not trip.tc_tripcost or trip.tc_tripcost == 0.0:
                 tripclosure_form.initial['tc_tripcost'] = va_sale
 
             is_business_empty_and_cancelled = False
