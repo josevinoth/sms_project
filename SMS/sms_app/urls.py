@@ -311,7 +311,8 @@ urlpatterns = [
     path('rtratemaster_list/', views.rtratemaster_list, name='rtratemaster_list'),  # List rtratemaster,
     path('rtratemaster_insert', views.rtratemaster_add, name='rtratemaster_insert'),  # Add rtratemaster
     path('rtratemaster_update/<int:rtratemaster_id>/', views.rtratemaster_add, name='rtratemaster_update'),
-    # Update rtratemaster
+    path('rtratemaster_history/<int:rtratemaster_id>/', views.rtratemaster_history, name='rtratemaster_history'),
+    path('rtratemaster_history/<int:rtratemaster_id>', views.rtratemaster_history),
     path('rtratemaster_delete/<int:rtratemaster_id>/', views.rtratemaster_delete, name='rtratemaster_delete'),
     # Delete rtratemaster
     path('gstexcepmtion_list/', views.gstexcepmtion_list, name='gstexcepmtion_list'),  # List gstexcepmtion,
@@ -1230,4 +1231,9 @@ urlpatterns = [
     path('packing_delivery_delete/<int:delivery_id>/', views.delivery_challan_delete, name='packing_delivery_delete'),
     path('packing_delivery_pdf/<int:delivery_id>/', views.delivery_challan_pdf, name='packing_delivery_pdf'),
     path('deletion_log_list/', views.deletion_log_list, name='deletion_log_list'),
+
+    # PMS Manpower Consumption
+    path('add_manpower_consumption/', views.add_manpower_consumption, name='add_manpower_consumption'),
+    path('delete_manpower_consumption/', views.delete_manpower_consumption, name='delete_manpower_consumption'),
+    path('get_manpower_consumption_logs/', views.get_manpower_consumption_logs, name='get_manpower_consumption_logs'),
 ]

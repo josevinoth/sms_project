@@ -70,7 +70,7 @@ from .sub_views.fueltype_add_view import fueltype_add,fueltype_list,fueltype_del
 from .sub_views.vehiclecolour_add_view import vehiclecolour_add,vehiclecolour_list,vehiclecolour_delete
 from .sub_views.permittype_add_view import permittype_add,permittype_list,permittype_delete
 from .sub_views.vehiclemaster_add_view import vehiclemaster_add,vehiclemaster_list,vehiclemaster_delete
-from .sub_views.rtratemaster_add_view import rtratemaster_add,rtratemaster_list,rtratemaster_delete
+from .sub_views.rtratemaster_add_view import rtratemaster_add,rtratemaster_list,rtratemaster_delete,rtratemaster_history
 from .sub_views.gstexcepmtion_add_view import gstexcepmtion_add,gstexcepmtion_list,gstexcepmtion_delete
 from .sub_views.gstmodel_add_view import gstmodel_add,gstmodel_list,gstmodel_delete
 from .sub_views.paymenttype_add_view import paymenttype_add,paymenttype_list,paymenttype_delete
@@ -206,3 +206,4 @@ from .sub_views.stock_description_view import stock_description_add, stock_descr
 from .sub_views.prime_trip_view import prime_trip_add, prime_trip_list
 from .sub_views.pk_invoice_view import pk_invoice_list, pk_invoice_add, pk_invoice_pdf, pk_invoice_get_po_items
 from .sub_views.tms_petty_cash_view import tms_petty_cash_add,tms_petty_cash_delete,tms_petty_cash_list,generate_tms_petty_cash_number,get_tms_trips_by_date,tms_petty_cash_export_tally,get_ledger_balance
+from .sub_views.pk_manpower_view import add_manpower_consumption, get_manpower_consumption_logs, delete_manpower_consumption
