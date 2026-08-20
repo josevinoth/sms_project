@@ -432,7 +432,7 @@
             align-items: center;
         }
         .select2-container--default .select2-selection--single .select2-selection__rendered {
-            color: #f8fafc;
+            color: #f8fafc !important;
             line-height: normal;
             padding-left: 1rem;
         }
@@ -447,23 +447,34 @@
             border-color: transparent transparent #94a3b8 transparent;
         }
         .select2-dropdown {
+            background-color: #1e293b !important;
+            border: 1px solid var(--glass-border) !important;
+            color: #f8fafc !important;
+            z-index: 9999;
+        }
+        .select2-results__option {
+            color: #f8fafc !important;
             background-color: #1e293b;
-            border: 1px solid var(--glass-border);
-            color: #f8fafc;
         }
         .select2-container--default .select2-results__option--highlighted[aria-selected] {
-            background-color: var(--primary);
-            color: var(--dark);
+            background-color: var(--primary) !important;
+            color: var(--dark) !important;
+            font-weight: 600;
         }
         .select2-container--default .select2-results__option[aria-selected=true] {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.15) !important;
+            color: #ffffff !important;
+        }
+        .select2-search--dropdown {
+            background-color: #1e293b !important;
+            padding: 6px;
         }
         .select2-search--dropdown .select2-search__field {
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
-            color: #f8fafc;
-            border-radius: 5px;
-            padding: 4px;
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            border: 1px solid var(--glass-border) !important;
+            color: #ffffff !important;
+            border-radius: 8px;
+            padding: 8px;
         }
 
         /* Responsive */
@@ -547,7 +558,7 @@
             <li><a href="{% url 'customer_documents' %}"><i class="fas fa-file-alt"></i> Documents</a></li>
             <li><a href="{% url 'customer_support' %}"><i class="fas fa-headset"></i> Support</a></li>
             <li><a href="{% url 'customer_profile' %}"><i class="fas fa-user-circle"></i> Profile</a></li>
-            <li><a href="{% url 'logout_page' %}?business_id={{ customer.cu_business_sol.id }}" style="color: #ef4444;"><i
+            <li><a href="{% url 'logout_page' %}?is_customer=1&business_id={{ customer.cu_business_sol.id|default:'2' }}" style="color: #ef4444;"><i
                         class="fas fa-sign-out-alt"></i> Logout</a></li>
         </ul>
     </div>
@@ -569,7 +580,7 @@
                 style="width: 36px; height: 36px; background: linear-gradient(var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--dark); font-size: 0.85rem;">
                 {{ request.user.username|make_list|first|upper }}
             </div>
-            <a href="{% url 'logout_page' %}?business_id={{ customer.cu_business_sol.id }}" title="Logout"
+            <a href="{% url 'logout_page' %}?is_customer=1&business_id={{ customer.cu_business_sol.id|default:'2' }}" title="Logout"
                 style="color: #94a3b8; text-decoration: none; font-size: 1.1rem;"><i
                     class="fas fa-sign-out-alt"></i></a>
         </div>
@@ -602,7 +613,7 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Customer Name</label>
-                        <input type="text" value="{{ customer.cu_nameshort|default:customer.cu_name }}" disabled>
+                        <input type="text" value="{% if customer %}{{ customer.cu_nameshort|default:customer.cu_name }}{% else %}{{ request.user.username }}{% endif %}" disabled>
                     </div>
                     <div class="form-group">
                         <label>Department</label>
@@ -610,6 +621,15 @@
                             <option value="">Select Department</option>
                             {% for dept in departments %}
                             <option value="{{ dept.id }}">{{ dept.ct_customerdepartment }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Trip Type <span style="color: #ef4444;">*</span></label>
+                        <select name="trip_type" id="trip_type" required>
+                            <option value="">Select Trip Type</option>
+                            {% for tt in trip_types %}
+                            <option value="{{ tt.id }}" {% if enquiry.en_trip_type_id == tt.id %}selected{% endif %}>{{ tt.tr_trip_type }}</option>
                             {% endfor %}
                         </select>
                     </div>

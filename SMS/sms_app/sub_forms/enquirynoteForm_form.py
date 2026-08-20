@@ -22,4 +22,5 @@ class EnquirynoteaddForm(forms.ModelForm):
         self.fields['en_touchpoint4'].empty_label = "--Select--"
         self.fields['en_business_type'].empty_label = "--Select--"
         self.fields['en_movement_type'].empty_label = "--Select--"
+        self.fields['en_trip_type'].empty_label = "--Select--"
         self.fields['en_trip_type'].required = True
