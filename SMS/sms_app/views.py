@@ -22,6 +22,7 @@ from .sub_views.reports_view import reports,damage_report_pdf,warehouse_reports,
 from .sub_views.service_add_view import service_add,service_list,service_delete
 from .sub_views.stock_add_view import stock_add,stock_list,stock_delete
 from .sub_views.user_add_view import user_add,user_list,user_delete
+from .sub_views.user_approval_view import user_approval_list, user_approve, user_reject
 from .sub_views.vendor_add_view import vendor_add,vendor_list,vendor_delete
 from .sub_views.country_add_view import country_list,country_delete,country_add
 from .sub_views.state_add_view import state_list,state_delete,state_add

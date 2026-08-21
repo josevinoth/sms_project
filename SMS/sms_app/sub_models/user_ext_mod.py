@@ -20,6 +20,9 @@ class User_extInfo(models.Model):
     # External Customer Links
     linked_customer = models.ForeignKey('CustomerInfo', on_delete=models.SET_NULL, null=True, blank=True)
     is_lp_customer = models.BooleanField(default=False)
+    
+    # Registration Approval Status
+    is_approved = models.BooleanField(default=True)
 
 
     def __str__(self):

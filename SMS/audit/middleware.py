@@ -15,12 +15,15 @@ class AuditUserMiddleware:
             # Fallback to session user_id if logged in via custom session
             ses_user_id = request.session.get('ses_userID') if hasattr(request, 'session') else None
             if ses_user_id:
-                from sms_app.sub_models.my_user_mod import MyUser
-                user = MyUser.objects.filter(pk=ses_user_id).first()
+                from django.contrib.auth.models import User
+                user = User.objects.filter(pk=ses_user_id).first()
+            else:
+                user = None
 
-        _thread_locals.user = user
+        _thread_locals.user = user if getattr(user, 'is_authenticated', False) else None
         response = self.get_response(request)
         if hasattr(_thread_locals, 'user'):
             del _thread_locals.user
         return response
+
 
