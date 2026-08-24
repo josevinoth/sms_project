@@ -143,16 +143,22 @@ def tms_petty_cash_add(request, tpc_id=0):
 
 
 def tms_petty_cash_list(request):
-    tpc_number = request.GET.get('tpc_number', "")
-    search_date = request.GET.get('search_date', "")
-    search_vehicle = request.GET.get('search_vehicle', "")
-    search_branch = request.GET.get('search_branch', "")
+    tpc_number = request.GET.get('tpc_number', "").strip()
+    search_date = request.GET.get('search_date', "").strip()
+    from_date = request.GET.get('from_date', "").strip()
+    to_date = request.GET.get('to_date', "").strip()
+    search_vehicle = request.GET.get('search_vehicle', "").strip()
+    search_branch = request.GET.get('search_branch', "").strip()
     
     filters = Q()
     if tpc_number:
         filters &= Q(tpc_number__icontains=tpc_number)
     if search_date:
         filters &= Q(tpc_trip_date=search_date)
+    if from_date:
+        filters &= Q(tpc_transaction_date__gte=from_date)
+    if to_date:
+        filters &= Q(tpc_transaction_date__lte=to_date)
     if search_vehicle:
         filters &= Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle)
         
@@ -204,6 +210,8 @@ def tms_petty_cash_list(request):
         'tpc_list': page_obj,
         'search_tpc_number': tpc_number,
         'search_date': search_date,
+        'from_date': from_date,
+        'to_date': to_date,
         'search_vehicle': search_vehicle,
         'search_branch': search_branch,
         'is_admin_or_supervisor': is_admin_or_supervisor,
@@ -264,10 +272,45 @@ def tms_petty_cash_export_tally(request):
     from openpyxl.styles import Font, PatternFill, Alignment
     from django.http import HttpResponse
     
-    tpc_number = request.GET.get('tpc_number', "")
+    tpc_number = request.GET.get('tpc_number', "").strip()
+    search_date = request.GET.get('search_date', "").strip()
+    from_date = request.GET.get('from_date', "").strip()
+    to_date = request.GET.get('to_date', "").strip()
+    search_vehicle = request.GET.get('search_vehicle', "").strip()
+    search_branch = request.GET.get('search_branch', "").strip()
+    
     filters = Q()
     if tpc_number:
         filters &= Q(tpc_number__icontains=tpc_number)
+    if search_date:
+        filters &= Q(tpc_trip_date=search_date)
+    if from_date:
+        filters &= Q(tpc_transaction_date__gte=from_date)
+    if to_date:
+        filters &= Q(tpc_transaction_date__lte=to_date)
+    if search_vehicle:
+        filters &= Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_vehicle)
+
+    user = request.user
+    is_admin_or_supervisor = user.is_superuser
+    if not is_admin_or_supervisor:
+        try:
+            from ..sub_models.user_ext_mod import User_extInfo
+            user_ext = User_extInfo.objects.select_related('emp_designation', 'emp_role').get(user_id=user.id)
+            desig = str(user_ext.emp_designation).lower() if user_ext.emp_designation else ''
+            role = str(user_ext.emp_role).lower() if user_ext.emp_role else ''
+            if 'supervisor' in desig or 'admin' in role:
+                is_admin_or_supervisor = True
+        except Exception:
+            pass
+
+    if not is_admin_or_supervisor:
+        branch_id = get_session_branch_id(request)
+        if branch_id:
+            filters &= Q(tpc_branch_id=branch_id)
+    else:
+        if search_branch:
+            filters &= Q(tpc_branch__loc_name__icontains=search_branch)
         
     tpc_list = TMSPettyCashInfo.objects.filter(filters).order_by('-id').select_related(
         'tpc_expense_type', 'tpc_credit_ledger', 'tpc_branch', 'tpc_customer', 

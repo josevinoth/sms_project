@@ -99,7 +99,13 @@ def enquirynotevehicle_add(request, enquirynotevehicle_id=0):
         if enquirynotevehicle_id == 0:
             form = EnquirynotevehicleForm(request.POST)
             if form.is_valid():
-                form.save()
+                instance = form.save(commit=False)
+                # Auto-fill env_special_sale from env_sale if left blank or 0
+                if not instance.env_special_sale or float(instance.env_special_sale) == 0:
+                    if instance.env_sale and float(instance.env_sale) > 0:
+                        instance.env_special_sale = float(instance.env_sale)
+                instance.save()
+                form.save_m2m()
                 print("enquirynotevehicle Form is Valid")
                 try:
                     last_id = (Enquirynotevehicle.objects.latest('id')).id
@@ -143,6 +149,11 @@ def enquirynotevehicle_add(request, enquirynotevehicle_id=0):
                             f"Cannot reduce quantity to {new_quantity}. Already {allotted_count} vehicle(s) have been allotted for this vehicle type (Minimum allowed: {min_allowed})."
                         )
                         return redirect(request.META.get('HTTP_REFERER', f'/SMS/enquirynote_update/{enquiry_num_id}'))
+
+                    # Auto-fill env_special_sale from env_sale if left blank or 0
+                    if not updated_instance.env_special_sale or float(updated_instance.env_special_sale) == 0:
+                        if updated_instance.env_sale and float(updated_instance.env_sale) > 0:
+                            updated_instance.env_special_sale = float(updated_instance.env_sale)
 
                     updated_instance.save()
                     form.save_m2m()

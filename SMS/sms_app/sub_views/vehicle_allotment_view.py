@@ -1286,9 +1286,12 @@ def get_vendor_sale_rate(request):
     vehicle_category_id = request.GET.get('vehicle_category_id')
 
     if not enquiry_id:
-        return JsonResponse({'sale_rate': "0"})
+        return JsonResponse({'sale_rate': "0", 'special_sale_rate': "0"})
 
-    enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)
+    try:
+        enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)
+    except EnquirynoteInfo.DoesNotExist:
+        return JsonResponse({'sale_rate': "0", 'special_sale_rate': "0"})
 
     # Determine which vehicle type to use based on the checkbox
     if checkbox_id == 'chk_requested':
@@ -1296,10 +1299,10 @@ def get_vendor_sale_rate(request):
     elif checkbox_id == 'chk_placed':
         vehicle_id = vehicle_placed
     else:
-        return JsonResponse({'sale_rate': "0"})
+        vehicle_id = vehicle_requested or vehicle_placed or request.GET.get('vehicle_id') or request.GET.get('vehicle_type_id')
 
     if not vehicle_id:
-        return JsonResponse({'sale_rate': "0"})
+        return JsonResponse({'sale_rate': "0", 'special_sale_rate': "0"})
 
     # Filter for the matching vendor rate
     filter_kwargs = {
@@ -1316,10 +1319,33 @@ def get_vendor_sale_rate(request):
         filter_kwargs['ro_vehiclecategory_id'] = vehicle_category_id
 
     rate = RtratemasterInfo.objects.filter(**filter_kwargs).first()
+    master_rate = str(rate.ro_rate) if rate else "0"
 
-    sale_rate = str(rate.ro_rate) if rate else "0"
+    # Check if Enquirynotevehicle has standard sell & special sale configured for this enquiry
+    env_match = Enquirynotevehicle.objects.filter(
+        env_enquirynumber=enquiry,
+        env_vehicletype_id=vehicle_id
+    )
+    if vehicle_category_id:
+        env_match_cat = env_match.filter(env_vehiclecategory_id=vehicle_category_id)
+        if env_match_cat.exists():
+            env_match = env_match_cat
+    env_obj = env_match.first()
 
-    return JsonResponse({'sale_rate': sale_rate})
+    if env_obj and env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+        sale_rate = str(env_obj.env_sale)
+    else:
+        sale_rate = master_rate
+
+    if env_obj and env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
+        special_sale_rate = str(env_obj.env_special_sale)
+    else:
+        special_sale_rate = sale_rate
+
+    return JsonResponse({
+        'sale_rate': sale_rate,
+        'special_sale_rate': special_sale_rate
+    })
 
 
 @login_required(login_url='login_page')
