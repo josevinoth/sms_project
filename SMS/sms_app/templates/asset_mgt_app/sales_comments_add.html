@@ -1,103 +1,160 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+{% block title %}Add/Update Sales Comments{% endblock %}
 {% block content %}
 {% load crispy_forms_tags %}
-<form method="POST" action="">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Sales Comments</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Sales Number</span>
-									</div>
-									{% render_field sales_comments_form.sc_sales_number id="sc_sales_number" class="form-control disable_a_href"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Date Of Call</span>
-									</div>
-									{% render_field sales_comments_form.sc_date_of_call id="sc_date_of_call"  type="Date" onclick="date_of_call_change()" value="" max="" min="" class="form-control"%}
-									<!--									<input type="datetime-local" class="form-control" id="sc_date_of_call" name="sc_date_of_call" placeholder="Call Date" aria-label="Call Date" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Type of Call</span>
-									</div>
-									{% render_field sales_comments_form.sc_call_type id="sc_call_type" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Complaints</span>
-									</div>
-									{% render_field sales_comments_form.sc_complaints id="sc_complaints" class="form-control " %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="col-6">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Nature of Call</span>
-									</div>
-									{% render_field sales_comments_form.sc_call_nature id="sc_call_nature" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Purpose of Call</span>
-									</div>
-									{% render_field sales_comments_form.sc_call_purpose id="sc_call_purpose"  class="form-control"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Joint Call Participant</span>
-									</div>
-									<!-- Render the form field for sc_joint_call_name -->
-									{% render_field sales_comments_form.sc_joint_call_name id="sc_joint_call_name" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Compliments</span>
-									</div>
-									{% render_field sales_comments_form.sc_compliments id="sc_compliments" class="form-control " %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text" >Comments</span>
-								</div>
-								{% render_field sales_comments_form.sc_comments class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							{% render_field sales_comments_form.sc_updated_by id="sc_updated_by" hidden="True" class="form-control" %}
-						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{{request.META.HTTP_REFERER}}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel </a>
-					</div>
-				</div>
-			</div>
+
+<div class="container-fluid px-3 py-2 compact-form">
+	<!-- ══ Page Header ══ -->
+	<div class="modern-header d-flex justify-content-between align-items-center mb-3">
+		<h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+			<i class="fas fa-comment-dots mr-2"></i> Add / Update Sales Comments
+		</h3>
+		<div>
+			<a href="{{request.META.HTTP_REFERER}}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+				<i class="fas fa-arrow-left mr-1"></i> Back
+			</a>
 		</div>
 	</div>
-</form>
+
+	<!-- ══ Form Card ══ -->
+	<div class="modern-card p-3 mb-0 w-100">
+		<form method="POST" action="">
+			{% csrf_token %}
+			<div class="form-section p-3 mb-3">
+				<div class="form-section-title mb-3">
+					<i class="fas fa-edit text-primary mr-1"></i> Comment Details
+				</div>
+				<div class="row">
+					<div class="col-12 col-md-6">
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Sales Number</label>
+							{% render_field sales_comments_form.sc_sales_number id="sc_sales_number" class="form-control form-control-modern disable_a_href" %}
+						</div>
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Date Of Call</label>
+							{% render_field sales_comments_form.sc_date_of_call id="sc_date_of_call" type="Date" onclick="date_of_call_change()" value="" max="" min="" class="form-control form-control-modern" %}
+						</div>
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Type of Call</label>
+							{% render_field sales_comments_form.sc_call_type id="sc_call_type" class="form-control form-control-modern" %}
+						</div>
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Complaints</label>
+							{% render_field sales_comments_form.sc_complaints id="sc_complaints" class="form-control form-control-modern" %}
+						</div>
+					</div>
+					<div class="col-12 col-md-6">
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Nature of Call</label>
+							{% render_field sales_comments_form.sc_call_nature id="sc_call_nature" class="form-control form-control-modern" %}
+						</div>
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Purpose of Call</label>
+							{% render_field sales_comments_form.sc_call_purpose id="sc_call_purpose" onchange="purpose_call_change()" class="form-control form-control-modern" %}
+						</div>
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Joint Call Participant</label>
+							<div>
+								{% render_field sales_comments_form.sc_joint_call_name id="sc_joint_call_name" class="form-control form-control-modern" %}
+							</div>
+						</div>
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Compliments</label>
+							{% render_field sales_comments_form.sc_compliments id="sc_compliments" class="form-control form-control-modern" %}
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-12">
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Comments</label>
+							{% render_field sales_comments_form.sc_comments class="form-control form-control-modern" rows="3" %}
+						</div>
+					</div>
+				</div>
+				{% render_field sales_comments_form.sc_updated_by id="sc_updated_by" hidden="True" class="form-control" %}
+			</div>
+
+			<!-- Messages -->
+			{% if messages %}
+			<div class="row my-2">
+				<div class="col-12 message text-center">
+					{% for message in messages %}
+					<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+						{{ message }}
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					{% endfor %}
+				</div>
+			</div>
+			{% endif %}
+
+			<!-- Form Actions -->
+			<div class="d-flex justify-content-between align-items-center pt-3 mt-2" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+				<button type="submit" class="btn-modern btn-submit py-1 px-4">
+					<i class="fas fa-check mr-1"></i> Submit
+				</button>
+				<a href="{{request.META.HTTP_REFERER}}" class="btn-modern btn-cancel py-1 px-4" style="text-decoration:none;">
+					<i class="fas fa-times mr-1"></i> Cancel
+				</a>
+			</div>
+		</form>
+	</div>
+</div>
+
+<style>
+    .compact-form .form-group-modern {
+        margin-bottom: 0.55rem !important;
+    }
+    .compact-form .form-label-modern {
+        font-size: 0.76rem !important;
+        margin-bottom: 3px !important;
+        letter-spacing: 0.5px !important;
+    }
+    .compact-form .form-control-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        font-size: 0.84rem !important;
+        padding: 4px 10px !important;
+        border-radius: 8px !important;
+    }
+    .compact-form textarea.form-control-modern {
+        height: 80px !important;
+        min-height: 80px !important;
+    }
+    .compact-form .modern-card {
+        padding: 1rem 1.4rem !important;
+        border-radius: 16px !important;
+    }
+    .compact-form .form-section-title {
+        font-size: 0.84rem !important;
+        margin-bottom: 0.6rem !important;
+        letter-spacing: 1px !important;
+    }
+    .compact-form .btn-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0.25rem 1.3rem !important;
+        font-size: 0.84rem !important;
+        border-radius: 10px !important;
+    }
+</style>
 
 <script>
 	$(document).ready(function() {
         var sale_num_id='{{ses_sales_num_id}}';
-        document.getElementById("sc_sales_number").value=sale_num_id
-        document.getElementById("sc_updated_by").value='{{user_id}}'
-        date_of_call_change()
-      });
+        document.getElementById("sc_sales_number").value=sale_num_id;
+        document.getElementById("sc_updated_by").value='{{user_id}}';
+        date_of_call_change();
+    });
 </script>
 
 <script>
 	function purpose_call_change() {
-	  var purpose_call=document.getElementById("sc_call_purpose").value
+	  var purpose_call=document.getElementById("sc_call_purpose").value;
 	  if(purpose_call==3)
 		  {
 			$('#sc_complaints').removeClass('disable_a_href');
@@ -107,16 +164,17 @@
 	  	{
 	  		$('#sc_complaints').addClass('disable_a_href');
 			$('#sc_compliments').addClass('disable_a_href');
-			document.getElementById("sc_complaints").value=""
-			document.getElementById("sc_compliments").value=""
+			document.getElementById("sc_complaints").value="";
+			document.getElementById("sc_compliments").value="";
 	  	}
-}
+    }
 </script>
+
 <script>
 	function date_of_call_change() {
-        document.getElementById("sc_date_of_call").min="06/30/2023"
-        document.getElementById("sc_date_of_call").max="07/30/2023"
-    });
+        document.getElementById("sc_date_of_call").min="06/30/2023";
+        document.getElementById("sc_date_of_call").max="07/30/2023";
+    }
 </script>
 
 <script>
@@ -126,38 +184,39 @@
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
 
-     // Get yesterdays's date
+    // Get yesterday's date
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
     const year_1 = yesterday.getFullYear();
     const month_1 = String(yesterday.getMonth() + 1).padStart(2, '0');
     const day_1 = String(yesterday.getDate()).padStart(2, '0');
 
-    // Set the default value for today's date in the input field
-    const todayInput = document.getElementById('sc_date_of_call');
-<!--        todayInput.value = `${year}-${month}-${day}`;-->
-
     // Set the 'max' and 'min' attributes to restrict selection to today's date
-    todayInput.setAttribute('max', `${year}-${month}-${day}`);
-    todayInput.setAttribute('min', `${year_1}-${month_1}-${day_1}`);
+    const todayInput = document.getElementById('sc_date_of_call');
+    if (todayInput) {
+        todayInput.setAttribute('max', `${year}-${month}-${day}`);
+        todayInput.setAttribute('min', `${year_1}-${month_1}-${day_1}`);
+    }
 </script>
 
 <script>
 	$(document).ready(function() {
-        $('#sc_joint_call_name').multiselect({
-            includeSelectAllOption: true,                // Allow selecting all options
-            enableCaseInsensitiveFiltering: true,        // Enable search functionality
-            nonSelectedText: 'Select options',           // Placeholder text for no selections
-            buttonWidth: '450px',                         // Ensure the button fills the parent width
-            buttonHeight: 'auto',                        // Auto height for flexibility
-            buttonClass: 'custom-multiselect-button',     // Apply custom styles to the button
-            enableFiltering: true,                       // Allow filtering options
-            maxHeight: 250,                              // Set max height for the dropdown
-            dropUp: false,                               // Ensure dropdown opens downwards
-            numberDisplayed: 3,                          // Display the number of selected items
-            selectAllText: 'Select All',                 // Text for "Select All" option
-            allSelectedText: 'All Selected'              // Text when all options are selected
-        });
+        if ($.fn.multiselect) {
+            $('#sc_joint_call_name').multiselect({
+                includeSelectAllOption: true,
+                enableCaseInsensitiveFiltering: true,
+                nonSelectedText: 'Select options',
+                buttonWidth: '100%',
+                buttonHeight: '34px',
+                buttonClass: 'form-control form-control-modern custom-multiselect-button',
+                enableFiltering: true,
+                maxHeight: 250,
+                dropUp: false,
+                numberDisplayed: 3,
+                selectAllText: 'Select All',
+                allSelectedText: 'All Selected'
+            });
+        }
     });
 </script>
 

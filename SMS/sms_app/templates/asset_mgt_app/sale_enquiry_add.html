@@ -1,742 +1,736 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
-
+{% block title %}Sale Enquiry Form{% endblock %}
 {% block content %}
+
 <style>
     .green-bg {
-        background-color: #c8e6c9 !important;
-        color: black !important;
-    }
-
-    /* Ensure conditional fields flow naturally in the grid */
-    .cond-section {
-        display: none;
-        padding: 15px;
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        margin-top: 10px;
+        background-color: rgba(46, 204, 113, 0.15) !important;
+        border-color: #2ecc71 !important;
     }
 
     /* Style Select2 to match the theme */
     .select2-container--default .select2-selection--single {
-        height: 31px !important;
-        border: 1px solid #ced4da !important;
-        border-radius: .2rem !important;
+        height: 34px !important;
+        border: 1px solid var(--border-light, #ced4da) !important;
+        border-radius: 8px !important;
+        background-color: var(--bg-card, #ffffff) !important;
+        color: var(--text-main, #2d3748) !important;
     }
     .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 31px !important;
+        line-height: 34px !important;
         padding-left: 10px !important;
+        color: inherit !important;
     }
     .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 31px !important;
+        height: 34px !important;
     }
 
-    /* Fix for Select2 in Bootstrap input-group (alignment fix) */
-    .input-group > .select2-container--default {
-        flex: 1 1 auto;
-        width: 1% !important;
+    .compact-form .form-group-modern {
+        margin-bottom: 0.55rem !important;
     }
-    .input-group > .select2-container--default .select2-selection--single {
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 0 !important;
+    .compact-form .form-label-modern {
+        font-size: 0.76rem !important;
+        margin-bottom: 3px !important;
+        letter-spacing: 0.5px !important;
+    }
+    .compact-form .form-control-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        font-size: 0.84rem !important;
+        padding: 4px 10px !important;
+        border-radius: 8px !important;
+    }
+    .compact-form textarea.form-control-modern {
+        height: 70px !important;
+        min-height: 70px !important;
+    }
+    .compact-form .modern-card {
+        padding: 1rem 1.4rem !important;
+        border-radius: 16px !important;
+    }
+    .compact-form .form-section-title {
+        font-size: 0.84rem !important;
+        margin-bottom: 0.6rem !important;
+        letter-spacing: 1px !important;
+    }
+    .compact-form .btn-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0.25rem 1.3rem !important;
+        font-size: 0.84rem !important;
+        border-radius: 10px !important;
+    }
+    .toggle-section {
+        background: var(--bg-body, #f8f9fa);
+        border: 1px solid var(--border-light, #e2e8f0);
+        border-radius: 12px;
+    }
+
+    /* ══ Full-Width 6-Button Grid (Precisely Equal Columns & Gaps) ══ */
+    .service-toggle-grid {
+        display: grid !important;
+        grid-template-columns: repeat(6, 1fr) !important;
+        gap: 12px !important;
+        width: 100% !important;
+        margin-bottom: 1.25rem !important;
+        box-sizing: border-box !important;
+    }
+    .service-toggle-grid .toggle-btn,
+    .service-toggle-grid button.toggle-btn,
+    .service-toggle-grid button.btn-modern,
+    .service-toggle-grid button.btn-cancel {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 4px !important;
+        font-size: 0.8rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.3px !important;
+        white-space: nowrap !important;
+        border-radius: 12px !important;
+        flex: 1 1 100% !important;
+        box-sizing: border-box !important;
+        text-align: center !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    .service-toggle-grid .toggle-btn + .toggle-btn,
+    .service-toggle-grid button.btn-modern + button.btn-modern,
+    .service-toggle-grid button.btn-cancel + button.btn-cancel {
+        margin-left: 0 !important;
+    }
+    @media (max-width: 1200px) {
+        .service-toggle-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+        }
+    }
+    @media (max-width: 768px) {
+        .service-toggle-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
     }
 </style>
 
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
+<div class="container-fluid px-3 py-2 compact-form">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+            <i class="fas fa-file-invoice-dollar mr-2"></i> Sale Enquiry Form
+        </h3>
+        <div>
+            <a href="{% url 'sale_enquiry_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to List
+            </a>
+        </div>
+    </div>
 
-    <div class="container-fluid" style="padding-top:15px;">
-        <div class="card text-white bg-info mb-3" style="max-width:100%;">
+    <!-- ══ Form Card ══ -->
+    <div class="modern-card p-3 mb-0 w-100">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
 
-            <!-- ================= HEADER ================= -->
-            <div class="card-header text-center position-relative">
-                <h3 class="mb-0">Sale Enquiry Form</h3>
-            </div>
-
-            <!-- ================= BODY ================= -->
-            <div class="card-body bg-light text-dark">
-                {% if form.errors %}
-                <div class="container-fluid">
-                    <div class="alert alert-danger fade show" role="alert">
-                        {% for field, errors in form.errors.items %}
-                        {% for error in errors %}
-                        {{ error }}<br>
-                        {% endfor %}
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-
-                {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-success fade show" role="alert">
-                    {{ message }}
-                </div>
+            {% if form.errors %}
+            <div class="alert alert-danger fade show shadow-sm" role="alert">
+                {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                {{ error }}<br>
                 {% endfor %}
-                {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
 
+            {% if messages %}
+            <div class="row mb-2">
+                <div class="col-12 message text-center">
+                    {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ══ Section: Enquiry Core Details ══ -->
+            <div class="form-section p-3 mb-3">
+                <div class="form-section-title mb-3">
+                    <i class="fas fa-info-circle text-primary mr-1"></i> Enquiry Information
+                </div>
                 <div class="row">
-
-                    <!-- ================= COLUMN 1 ================= -->
+                    <!-- COLUMN 1 -->
                     <div class="col-12 col-md-3">
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Enquiry ID</span>
-                            </div>
-                            {% render_field form.enquiry_id class="form-control" %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Enquiry ID</label>
+                            {% render_field form.enquiry_id class="form-control form-control-modern" %}
                         </div>
-
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Enquiry Date/Time</span>
-                            </div>
-                            {% render_field form.enquiry_date_time type="datetime-local" class="form-control" %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Enquiry Date/Time</label>
+                            {% render_field form.enquiry_date_time type="datetime-local" class="form-control form-control-modern" %}
                         </div>
-
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Source of Enquiry</span>
-                            </div>
-                            {% render_field form.enquiry_source class="form-control" id="enquiry_source_select" %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Source of Enquiry</label>
+                            {% render_field form.enquiry_source class="form-control form-control-modern" id="enquiry_source_select" %}
                         </div>
-
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Branch</span>
-                            </div>
-                            {% render_field form.branch class="form-control" id="branch_select" %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Branch</label>
+                            {% render_field form.branch class="form-control form-control-modern" id="branch_select" %}
                         </div>
                     </div>
 
-                    <!-- ================= COLUMN 2 ================= -->
+                    <!-- COLUMN 2 -->
                     <div class="col-12 col-md-3">
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Customer Name</span>
-                            </div>
-                            {% render_field form.customer_name class="form-control" id="customer_name_select" %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Customer Name</label>
+                            {% render_field form.customer_name class="form-control form-control-modern select2" id="customer_name_select" %}
                         </div>
-
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">New Customer Name</span>
-                            </div>
-                            {% render_field form.new_customer_name class="form-control" id="new_customer_name_input" %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">New Customer Name</label>
+                            {% render_field form.new_customer_name class="form-control form-control-modern" id="new_customer_name_input" %}
                         </div>
-
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Customer Code</span>
-                            </div>
-                            <input type="text" name="customer_code" id="customer_code_input" class="form-control"
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Customer Code</label>
+                            <input type="text" name="customer_code" id="customer_code_input" class="form-control form-control-modern"
                                 value="{% if form.customer_code.value %}{{ form.customer_code.value }}{% endif %}">
                         </div>
-
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Sales Number</span>
-                            </div>
-                            {% render_field form.sales_number class="form-control" id="sales_number_input" %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Sales Number</label>
+                            {% render_field form.sales_number class="form-control form-control-modern select2" id="sales_number_input" %}
                         </div>
                     </div>
 
-                    <!-- ================= COLUMN 3 ================= -->
+                    <!-- COLUMN 3 -->
                     <div class="col-12 col-md-3">
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Contact Person</span>
-                            </div>
-                            {% render_field form.contact_person_name class="form-control" id="contact_person_input" %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Contact Person</label>
+                            {% render_field form.contact_person_name class="form-control form-control-modern" id="contact_person_input" %}
                         </div>
-
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Contact No</span>
-                            </div>
-                            {% render_field form.contact_no class="form-control" id="contact_no_input" %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Contact No</label>
+                            {% render_field form.contact_no class="form-control form-control-modern" id="contact_no_input" %}
                         </div>
-
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Mail</span>
-                            </div>
-                            {% render_field form.mail class="form-control" id="mail_input" %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Mail</label>
+                            {% render_field form.mail class="form-control form-control-modern" id="mail_input" %}
                         </div>
-
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Assigned To</span>
-                            </div>
-                            {% render_field form.assigned_to class="form-control" id="assigned_to_input" %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Assigned To</label>
+                            {% render_field form.assigned_to class="form-control form-control-modern" id="assigned_to_input" %}
                         </div>
-
-                        <div class="input-group input-group-sm mb-3" style="display:none;">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Service Type</span>
-                            </div>
-                            {% render_field form.service_type class="form-control" id="service_type_input" %}
+                        <div class="form-group-modern mb-2" style="display:none;">
+                            <label class="form-label-modern font-weight-bold">Service Type</label>
+                            {% render_field form.service_type class="form-control form-control-modern" id="service_type_input" %}
                         </div>
                     </div>
 
-                    <!-- ================= COLUMN 4 ================= -->
+                    <!-- COLUMN 4 -->
                     <div class="col-12 col-md-3">
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Address</span>
-                            </div>
-                            {% render_field form.address class="form-control" rows="3" id="address_input" %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Address</label>
+                            {% render_field form.address class="form-control form-control-modern" rows="2" id="address_input" %}
                         </div>
-                        <div class="input-group input-group-sm mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Remarks</span>
-                            </div>
-                            {% render_field form.remarks class="form-control" rows="3" id="remarks_input" %}
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- ================= EXTRA FIELDS TOGGLES ================= -->
-                <hr>
-                <div class="d-flex w-100 mb-4" style="gap: 10px;">
-                    <button type="button" class="btn btn-outline-info flex-fill toggle-btn"
-                        data-target="fields-warehouse">Warehouse</button>
-                    <button type="button" class="btn btn-outline-info flex-fill toggle-btn"
-                        data-target="fields-transport">Transport</button>
-                    <button type="button" class="btn btn-outline-info flex-fill toggle-btn"
-                        data-target="fields-packing">Packing</button>
-                    <button type="button" class="btn btn-outline-info flex-fill toggle-btn"
-                        data-target="fields-express">Express</button>
-                    <button type="button" class="btn btn-outline-info flex-fill toggle-btn"
-                        data-target="fields-support">Support</button>
-                    <button type="button" class="btn btn-outline-info flex-fill toggle-btn" data-target="fields-mc">MC
-                        Tours&Travels</button>
-                </div>
-
-                <!-- ================= DYNAMIC CONTAINERS ================= -->
-                <div id="fields-warehouse" class="toggle-section p-3 mb-3 border rounded shadow-sm"
-                    style="display:none; background-color:#e0f7fa;">
-                    <h5 class="text-info mb-3">Warehouse Details</h5>
-                    <div class="row">
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Customer Type</span>
-                                </div>
-                                {% render_field form.wh_customer_type class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Sqft Required</span>
-                                </div>
-                                {% render_field form.wh_sqft_req class="form-control" %}
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Scope of Loading/Unloading</span>
-                                </div>
-                                {% render_field form.wh_scope_of_lul class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Tonnage</span>
-                                </div>
-                                {% render_field form.wh_tonnage class="form-control" %}
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Months Required</span>
-                                </div>
-                                {% render_field form.wh_no_of_months_req class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">RFQ Closed Date</span>
-                                </div>
-                                {% render_field form.wh_rfq_closed_date type="date" class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Remarks</span>
-                                </div>
-                                {% render_field form.wh_remarks class="form-control" rows="2" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <label class="btn btn-info mb-0" style="cursor: pointer; border-top-right-radius: 0; border-bottom-right-radius: 0;">
-                                        <i class="fas fa-paperclip"></i> Attachment
-                                        <input type="file" name="wh_attachment" style="display: none;" onchange="handleFileSelect(this)">
-                                    </label>
-                                </div>
-                                <input type="text" class="form-control bg-white filename-display" placeholder="No file chosen" readonly value="{% if form.instance.wh_attachment %}{{ form.instance.wh_attachment.name }}{% endif %}" onclick="$(this).closest('.input-group').find('input[type=file]').click();">
-                            </div>
-
-                            {% if form.instance.wh_attachment %}
-                            <small class="form-text mt-n2 mb-2"><a href="{{ form.instance.wh_attachment.url }}" target="_blank">View Current Attachment</a></small>
-                            {% endif %}
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Remarks</label>
+                            {% render_field form.remarks class="form-control form-control-modern" rows="2" id="remarks_input" %}
                         </div>
                     </div>
                 </div>
-                <div id="fields-transport" class="toggle-section p-3 mb-3 border rounded shadow-sm"
-                    style="display:none; background-color:#e0f7fa;">
-                    <h5 class="text-info mb-3">Transport Details</h5>
-                    <div class="row">
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Customer Type</span>
-                                </div>
-                                {% render_field form.tr_customer_type class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">No. Vehicles Req</span>
-                                </div>
-                                {% render_field form.tr_no_of_vehicles_req class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Veh Type Req</span>
-                                </div>
-                                {% render_field form.tr_veh_type_req class="form-control" %}
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">From</span>
-                                </div>
-                                {% render_field form.tr_from class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">To</span>
-                                </div>
-                                {% render_field form.tr_to class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Avg Trips/Month</span>
-                                </div>
-                                {% render_field form.tr_no_of_avg_trips_per_month class="form-control" %}
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Tonnage</span>
-                                </div>
-                                {% render_field form.tr_tonnage class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">RFQ Closed Date</span>
-                                </div>
-                                {% render_field form.tr_rfq_closed_date type="date" class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Remarks</span>
-                                </div>
-                                {% render_field form.tr_remarks class="form-control" rows="2" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <label class="btn btn-info mb-0" style="cursor: pointer; border-top-right-radius: 0; border-bottom-right-radius: 0;">
-                                        <i class="fas fa-paperclip"></i> Attachment
-                                        <input type="file" name="tr_attachment" style="display: none;" onchange="handleFileSelect(this)">
-                                    </label>
-                                </div>
-                                <input type="text" class="form-control bg-white filename-display" placeholder="No file chosen" readonly value="{% if form.instance.tr_attachment %}{{ form.instance.tr_attachment.name }}{% endif %}" onclick="$(this).closest('.input-group').find('input[type=file]').click();">
-                            </div>
+            </div>
 
-                            {% if form.instance.tr_attachment %}
-                            <small class="form-text mt-n2 mb-2"><a href="{{ form.instance.tr_attachment.url }}" target="_blank">View Current Attachment</a></small>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                <div id="fields-packing" class="toggle-section p-3 mb-3 border rounded shadow-sm"
-                    style="display:none; background-color:#e0f7fa;">
-                    <h5 class="text-info mb-3">Packing Details</h5>
-                    <div class="row">
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Customer Type</span>
-                                </div>
-                                {% render_field form.pa_customer_type class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Inhouse/Onsite</span>
-                                </div>
-                                {% render_field form.pa_inhouse_onsite class="form-control" %}
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">L/UL Scope</span></div>
-                                {% render_field form.pa_lul_scope class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Transport Scope</span>
-                                </div>
-                                {% render_field form.pa_transport_scope class="form-control" %}
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Boxes/Pallets</span>
-                                </div>
-                                {% render_field form.pa_no_of_boxes_per_month class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">RFQ Closed Date</span>
-                                </div>
-                                {% render_field form.pa_rfq_closed_date type="date" class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Remarks</span>
-                                </div>
-                                {% render_field form.pa_remarks class="form-control" rows="2" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <label class="btn btn-info mb-0" style="cursor: pointer; border-top-right-radius: 0; border-bottom-right-radius: 0;">
-                                        <i class="fas fa-paperclip"></i> Attachment
-                                        <input type="file" name="pa_attachment" style="display: none;" onchange="handleFileSelect(this)">
-                                    </label>
-                                </div>
-                                <input type="text" class="form-control bg-white filename-display" placeholder="No file chosen" readonly value="{% if form.instance.pa_attachment %}{{ form.instance.pa_attachment.name }}{% endif %}" onclick="$(this).closest('.input-group').find('input[type=file]').click();">
-                            </div>
-
-                            {% if form.instance.pa_attachment %}
-                            <small class="form-text mt-n2 mb-2"><a href="{{ form.instance.pa_attachment.url }}" target="_blank">View Current Attachment</a></small>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <div id="fields-express" class="toggle-section p-3 mb-3 border rounded shadow-sm"
-                    style="display:none; background-color:#e0f7fa;">
-                    <h5 class="text-info mb-3">Express Details</h5>
-                    <div class="row">
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Customer Type</span>
-                                </div>
-                                {% render_field form.ex_customer_type class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Veh Type (DD)</span>
-                                </div>
-                                {% render_field form.ex_veh_type class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">No. Vehicles (DD)</span>
-                                </div>
-                                {% render_field form.ex_no_of_vehicles class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Pickup</span></div>
-                                {% render_field form.ex_pickup class="form-control" %}
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Delivery</span></div>
-                                {% render_field form.ex_delivery class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Shipment Type</span>
-                                </div>
-                                {% render_field form.ex_shipment_type class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">No. Shipments</span>
-                                </div>
-                                {% render_field form.ex_no_of_shipments class="form-control" %}
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Avg Wt/Shipment</span>
-                                </div>
-                                {% render_field form.ex_avg_weight_per_shipment class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Delivery Type</span>
-                                </div>
-                                {% render_field form.ex_delivery_type class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">RFQ Closed Date</span>
-                                </div>
-                                {% render_field form.ex_rfq_closed_date type="date" class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Remarks</span>
-                                </div>
-                                {% render_field form.ex_remarks class="form-control" rows="2" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <label class="btn btn-info mb-0" style="cursor: pointer; border-top-right-radius: 0; border-bottom-right-radius: 0;">
-                                        <i class="fas fa-paperclip"></i> Attachment
-                                        <input type="file" name="ex_attachment" style="display: none;" onchange="handleFileSelect(this)">
-                                    </label>
-                                </div>
-                                <input type="text" class="form-control bg-white filename-display" placeholder="No file chosen" readonly value="{% if form.instance.ex_attachment %}{{ form.instance.ex_attachment.name }}{% endif %}" onclick="$(this).closest('.input-group').find('input[type=file]').click();">
-                            </div>
-
-                            {% if form.instance.ex_attachment %}
-                            <small class="form-text mt-n2 mb-2"><a href="{{ form.instance.ex_attachment.url }}" target="_blank">View Current Attachment</a></small>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <div id="fields-support" class="toggle-section p-3 mb-3 border rounded shadow-sm"
-                    style="display:none; background-color:#e0f7fa;">
-                    <h5 class="text-info mb-3">Support Details</h5>
-                    <div class="row">
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Customer Type</span>
-                                </div>
-                                {% render_field form.su_customer_type class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">No. Manpowers</span>
-                                </div>
-                                {% render_field form.su_no_of_manpowers class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Shift Type</span></div>
-                                {% render_field form.su_shift_type class="form-control" %}
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Working Days</span>
-                                </div>
-                                {% render_field form.su_working_days class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Supervisors</span></div>
-                                {% render_field form.su_supervisors class="form-control" %}
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Loaders</span></div>
-                                {% render_field form.su_loaders class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">RFQ Closed Date</span>
-                                </div>
-                                {% render_field form.su_rfq_closed_date type="date" class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Remarks</span>
-                                </div>
-                                {% render_field form.su_remarks class="form-control" rows="2" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <label class="btn btn-info mb-0" style="cursor: pointer; border-top-right-radius: 0; border-bottom-right-radius: 0;">
-                                        <i class="fas fa-paperclip"></i> Attachment
-                                        <input type="file" name="su_attachment" style="display: none;" onchange="handleFileSelect(this)">
-                                    </label>
-                                </div>
-                                <input type="text" class="form-control bg-white filename-display" placeholder="No file chosen" readonly value="{% if form.instance.su_attachment %}{{ form.instance.su_attachment.name }}{% endif %}" onclick="$(this).closest('.input-group').find('input[type=file]').click();">
-                            </div>
-
-                            {% if form.instance.su_attachment %}
-                            <small class="form-text mt-n2 mb-2"><a href="{{ form.instance.su_attachment.url }}" target="_blank">View Current Attachment</a></small>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <div id="fields-mc" class="toggle-section p-3 mb-3 border rounded shadow-sm"
-                    style="display:none; background-color:#e0f7fa;">
-                    <h5 class="text-info mb-3">MC Tours&Travels Details</h5>
-                    <div class="row">
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Customer Type</span>
-                                </div>
-                                {% render_field form.mc_customer_type class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Tour Type</span>
-                                </div>
-                                {% render_field form.mc_tour_type class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Travel Type</span></div>
-                                {% render_field form.mc_travel_type class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Mode of Transport</span></div>
-                                {% render_field form.mc_mode_of_transport class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">From</span></div>
-                                {% render_field form.mc_from class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">To</span></div>
-                                {% render_field form.mc_to class="form-control" %}
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">No. Passengers</span>
-                                </div>
-                                {% render_field form.mc_no_of_passengers class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Travel Date</span></div>
-                                {% render_field form.mc_travel_date type="date" class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Return Date</span></div>
-                                {% render_field form.mc_return_date type="date" class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Vehicle Source</span>
-                                </div>
-                                {% render_field form.mc_vehicle_source class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Vehicle Type</span>
-                                </div>
-                                {% render_field form.mc_vehicle_type class="form-control" id="mc_vehicle_type_input" %}
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Package Duration</span></div>
-                                {% render_field form.mc_package_req class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">Hotel Req</span></div>
-                                {% render_field form.mc_hotel_req class="form-control select2" id="mc_hotel_req_select" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend"><span class="input-group-text">RFQ Closed Date</span>
-                                </div>
-                                {% render_field form.mc_rfq_closed_date type="date" class="form-control" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Remarks</span>
-                                </div>
-                                {% render_field form.mc_remarks class="form-control" rows="2" %}
-                            </div>
-                            <div class="input-group input-group-sm mb-3">
-                                <div class="input-group-prepend">
-                                    <label class="btn btn-info mb-0" style="cursor: pointer; border-top-right-radius: 0; border-bottom-right-radius: 0;">
-                                        <i class="fas fa-paperclip"></i> Attachment
-                                        <input type="file" name="mc_attachment" style="display: none;" onchange="handleFileSelect(this)">
-                                    </label>
-                                </div>
-                                <input type="text" class="form-control bg-white filename-display" placeholder="No file chosen" readonly value="{% if form.instance.mc_attachment %}{{ form.instance.mc_attachment.name }}{% endif %}" onclick="$(this).closest('.input-group').find('input[type=file]').click();">
-                            </div>
-
-                            {% if form.instance.mc_attachment %}
-                            <small class="form-text mt-n2 mb-2"><a href="{{ form.instance.mc_attachment.url }}" target="_blank">View Current Attachment</a></small>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ================= ACTION BUTTONS ================= -->
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-check"></i> Save
+            <!-- ══ Service Details Toggles (Full-Width 6-Column Grid) ══ -->
+            <div class="service-toggle-grid">
+                <button type="button" class="btn-modern btn-cancel toggle-btn" data-target="fields-warehouse">
+                    <i class="fas fa-warehouse mr-1"></i> Warehouse
                 </button>
-                <a href="{% url 'sales_multiple_item_add_with_enquiry' enquiry_id %}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add Quote
-                </a>
-                <a href="{% url 'sale_enquiry_list' %}" class="btn btn-danger float-right">
-                    <i class="fas fa-times"></i> Cancel
-                </a>
-
+                <button type="button" class="btn-modern btn-cancel toggle-btn" data-target="fields-transport">
+                    <i class="fas fa-truck mr-1"></i> Transport
+                </button>
+                <button type="button" class="btn-modern btn-cancel toggle-btn" data-target="fields-packing">
+                    <i class="fas fa-box-open mr-1"></i> Packing
+                </button>
+                <button type="button" class="btn-modern btn-cancel toggle-btn" data-target="fields-express">
+                    <i class="fas fa-shipping-fast mr-1"></i> Express
+                </button>
+                <button type="button" class="btn-modern btn-cancel toggle-btn" data-target="fields-support">
+                    <i class="fas fa-users-cog mr-1"></i> Support
+                </button>
+                <button type="button" class="btn-modern btn-cancel toggle-btn" data-target="fields-mc">
+                    <i class="fas fa-route mr-1"></i> MC Tours & Travels
+                </button>
             </div>
+
+            <!-- ══ DYNAMIC SERVICE SECTIONS ══ -->
+            <!-- Warehouse -->
+            <div id="fields-warehouse" class="toggle-section p-3 mb-3 shadow-sm" style="display:none;">
+                <h6 class="font-weight-bold text-primary mb-3"><i class="fas fa-warehouse mr-1"></i> Warehouse Details</h6>
+                <div class="row">
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Customer Type</label>
+                            {% render_field form.wh_customer_type class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Sqft Required</label>
+                            {% render_field form.wh_sqft_req class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Scope of Loading/Unloading</label>
+                            {% render_field form.wh_scope_of_lul class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Tonnage</label>
+                            {% render_field form.wh_tonnage class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Months Required</label>
+                            {% render_field form.wh_no_of_months_req class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">RFQ Closed Date</label>
+                            {% render_field form.wh_rfq_closed_date type="date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Remarks</label>
+                            {% render_field form.wh_remarks class="form-control form-control-modern" rows="2" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Attachment</label>
+                            <div class="d-flex align-items-center" style="gap: 6px;">
+                                <label class="btn-modern btn-submit py-1 px-3 mb-0" style="cursor: pointer;">
+                                    <i class="fas fa-paperclip mr-1"></i> Browse
+                                    <input type="file" name="wh_attachment" style="display: none;" onchange="handleFileSelect(this)">
+                                </label>
+                                <input type="text" class="form-control form-control-modern filename-display" placeholder="No file chosen" readonly value="{% if form.instance.wh_attachment %}{{ form.instance.wh_attachment.name }}{% endif %}" onclick="$(this).closest('.form-group-modern').find('input[type=file]').click();">
+                            </div>
+                        </div>
+                        {% if form.instance.wh_attachment %}
+                        <small class="form-text mt-1"><a href="{{ form.instance.wh_attachment.url }}" target="_blank">View Current Attachment</a></small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transport -->
+            <div id="fields-transport" class="toggle-section p-3 mb-3 shadow-sm" style="display:none;">
+                <h6 class="font-weight-bold text-primary mb-3"><i class="fas fa-truck mr-1"></i> Transport Details</h6>
+                <div class="row">
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Customer Type</label>
+                            {% render_field form.tr_customer_type class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">No. Vehicles Req</label>
+                            {% render_field form.tr_no_of_vehicles_req class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Veh Type Req</label>
+                            {% render_field form.tr_veh_type_req class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">From</label>
+                            {% render_field form.tr_from class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">To</label>
+                            {% render_field form.tr_to class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Avg Trips/Month</label>
+                            {% render_field form.tr_no_of_avg_trips_per_month class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Tonnage</label>
+                            {% render_field form.tr_tonnage class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">RFQ Closed Date</label>
+                            {% render_field form.tr_rfq_closed_date type="date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Remarks</label>
+                            {% render_field form.tr_remarks class="form-control form-control-modern" rows="2" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Attachment</label>
+                            <div class="d-flex align-items-center" style="gap: 6px;">
+                                <label class="btn-modern btn-submit py-1 px-3 mb-0" style="cursor: pointer;">
+                                    <i class="fas fa-paperclip mr-1"></i> Browse
+                                    <input type="file" name="tr_attachment" style="display: none;" onchange="handleFileSelect(this)">
+                                </label>
+                                <input type="text" class="form-control form-control-modern filename-display" placeholder="No file chosen" readonly value="{% if form.instance.tr_attachment %}{{ form.instance.tr_attachment.name }}{% endif %}" onclick="$(this).closest('.form-group-modern').find('input[type=file]').click();">
+                            </div>
+                        </div>
+                        {% if form.instance.tr_attachment %}
+                        <small class="form-text mt-1"><a href="{{ form.instance.tr_attachment.url }}" target="_blank">View Current Attachment</a></small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Packing -->
+            <div id="fields-packing" class="toggle-section p-3 mb-3 shadow-sm" style="display:none;">
+                <h6 class="font-weight-bold text-primary mb-3"><i class="fas fa-box-open mr-1"></i> Packing Details</h6>
+                <div class="row">
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Customer Type</label>
+                            {% render_field form.pa_customer_type class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Inhouse/Onsite</label>
+                            {% render_field form.pa_inhouse_onsite class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">L/UL Scope</label>
+                            {% render_field form.pa_lul_scope class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Transport Scope</label>
+                            {% render_field form.pa_transport_scope class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Boxes/Pallets</label>
+                            {% render_field form.pa_no_of_boxes_per_month class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">RFQ Closed Date</label>
+                            {% render_field form.pa_rfq_closed_date type="date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Remarks</label>
+                            {% render_field form.pa_remarks class="form-control form-control-modern" rows="2" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Attachment</label>
+                            <div class="d-flex align-items-center" style="gap: 6px;">
+                                <label class="btn-modern btn-submit py-1 px-3 mb-0" style="cursor: pointer;">
+                                    <i class="fas fa-paperclip mr-1"></i> Browse
+                                    <input type="file" name="pa_attachment" style="display: none;" onchange="handleFileSelect(this)">
+                                </label>
+                                <input type="text" class="form-control form-control-modern filename-display" placeholder="No file chosen" readonly value="{% if form.instance.pa_attachment %}{{ form.instance.pa_attachment.name }}{% endif %}" onclick="$(this).closest('.form-group-modern').find('input[type=file]').click();">
+                            </div>
+                        </div>
+                        {% if form.instance.pa_attachment %}
+                        <small class="form-text mt-1"><a href="{{ form.instance.pa_attachment.url }}" target="_blank">View Current Attachment</a></small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Express -->
+            <div id="fields-express" class="toggle-section p-3 mb-3 shadow-sm" style="display:none;">
+                <h6 class="font-weight-bold text-primary mb-3"><i class="fas fa-shipping-fast mr-1"></i> Express Details</h6>
+                <div class="row">
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Customer Type</label>
+                            {% render_field form.ex_customer_type class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Veh Type (DD)</label>
+                            {% render_field form.ex_veh_type class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">No. Vehicles (DD)</label>
+                            {% render_field form.ex_no_of_vehicles class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Pickup</label>
+                            {% render_field form.ex_pickup class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Delivery</label>
+                            {% render_field form.ex_delivery class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Shipment Type</label>
+                            {% render_field form.ex_shipment_type class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">No. Shipments</label>
+                            {% render_field form.ex_no_of_shipments class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Avg Wt/Shipment</label>
+                            {% render_field form.ex_avg_weight_per_shipment class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Delivery Type</label>
+                            {% render_field form.ex_delivery_type class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">RFQ Closed Date</label>
+                            {% render_field form.ex_rfq_closed_date type="date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Remarks</label>
+                            {% render_field form.ex_remarks class="form-control form-control-modern" rows="2" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Attachment</label>
+                            <div class="d-flex align-items-center" style="gap: 6px;">
+                                <label class="btn-modern btn-submit py-1 px-3 mb-0" style="cursor: pointer;">
+                                    <i class="fas fa-paperclip mr-1"></i> Browse
+                                    <input type="file" name="ex_attachment" style="display: none;" onchange="handleFileSelect(this)">
+                                </label>
+                                <input type="text" class="form-control form-control-modern filename-display" placeholder="No file chosen" readonly value="{% if form.instance.ex_attachment %}{{ form.instance.ex_attachment.name }}{% endif %}" onclick="$(this).closest('.form-group-modern').find('input[type=file]').click();">
+                            </div>
+                        </div>
+                        {% if form.instance.ex_attachment %}
+                        <small class="form-text mt-1"><a href="{{ form.instance.ex_attachment.url }}" target="_blank">View Current Attachment</a></small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support -->
+            <div id="fields-support" class="toggle-section p-3 mb-3 shadow-sm" style="display:none;">
+                <h6 class="font-weight-bold text-primary mb-3"><i class="fas fa-users-cog mr-1"></i> Support Details</h6>
+                <div class="row">
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Customer Type</label>
+                            {% render_field form.su_customer_type class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">No. Manpowers</label>
+                            {% render_field form.su_no_of_manpowers class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Shift Type</label>
+                            {% render_field form.su_shift_type class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Working Days</label>
+                            {% render_field form.su_working_days class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Supervisors</label>
+                            {% render_field form.su_supervisors class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Loaders</label>
+                            {% render_field form.su_loaders class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">RFQ Closed Date</label>
+                            {% render_field form.su_rfq_closed_date type="date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Remarks</label>
+                            {% render_field form.su_remarks class="form-control form-control-modern" rows="2" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Attachment</label>
+                            <div class="d-flex align-items-center" style="gap: 6px;">
+                                <label class="btn-modern btn-submit py-1 px-3 mb-0" style="cursor: pointer;">
+                                    <i class="fas fa-paperclip mr-1"></i> Browse
+                                    <input type="file" name="su_attachment" style="display: none;" onchange="handleFileSelect(this)">
+                                </label>
+                                <input type="text" class="form-control form-control-modern filename-display" placeholder="No file chosen" readonly value="{% if form.instance.su_attachment %}{{ form.instance.su_attachment.name }}{% endif %}" onclick="$(this).closest('.form-group-modern').find('input[type=file]').click();">
+                            </div>
+                        </div>
+                        {% if form.instance.su_attachment %}
+                        <small class="form-text mt-1"><a href="{{ form.instance.su_attachment.url }}" target="_blank">View Current Attachment</a></small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- MC Tours & Travels -->
+            <div id="fields-mc" class="toggle-section p-3 mb-3 shadow-sm" style="display:none;">
+                <h6 class="font-weight-bold text-primary mb-3"><i class="fas fa-route mr-1"></i> MC Tours & Travels Details</h6>
+                <div class="row">
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Customer Type</label>
+                            {% render_field form.mc_customer_type class="form-control form-control-modern" id="mc_customer_type_select" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Tour Type</label>
+                            {% render_field form.mc_tour_type class="form-control form-control-modern" id="mc_tour_type_select" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Travel Type</label>
+                            {% render_field form.mc_travel_type class="form-control form-control-modern" id="mc_travel_type_select" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Mode of Transport</label>
+                            {% render_field form.mc_mode_of_transport class="form-control form-control-modern" id="mc_mode_of_transport_select" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">From</label>
+                            {% render_field form.mc_from class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">To</label>
+                            {% render_field form.mc_to class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">No. Passengers</label>
+                            {% render_field form.mc_no_of_passengers class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Travel Date</label>
+                            {% render_field form.mc_travel_date type="date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Return Date</label>
+                            {% render_field form.mc_return_date type="date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Vehicle Source</label>
+                            {% render_field form.mc_vehicle_source class="form-control form-control-modern" id="mc_vehicle_source_select" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Vehicle Type</label>
+                            {% render_field form.mc_vehicle_type class="form-control form-control-modern" id="mc_vehicle_type_input" %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Package Duration</label>
+                            {% render_field form.mc_package_req class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Hotel Req</label>
+                            {% render_field form.mc_hotel_req class="form-control form-control-modern select2" id="mc_hotel_req_select" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">RFQ Closed Date</label>
+                            {% render_field form.mc_rfq_closed_date type="date" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Remarks</label>
+                            {% render_field form.mc_remarks class="form-control form-control-modern" rows="2" %}
+                        </div>
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Attachment</label>
+                            <div class="d-flex align-items-center" style="gap: 6px;">
+                                <label class="btn-modern btn-submit py-1 px-3 mb-0" style="cursor: pointer;">
+                                    <i class="fas fa-paperclip mr-1"></i> Browse
+                                    <input type="file" name="mc_attachment" style="display: none;" onchange="handleFileSelect(this)">
+                                </label>
+                                <input type="text" class="form-control form-control-modern filename-display" placeholder="No file chosen" readonly value="{% if form.instance.mc_attachment %}{{ form.instance.mc_attachment.name }}{% endif %}" onclick="$(this).closest('.form-group-modern').find('input[type=file]').click();">
+                            </div>
+                        </div>
+                        {% if form.instance.mc_attachment %}
+                        <small class="form-text mt-1"><a href="{{ form.instance.mc_attachment.url }}" target="_blank">View Current Attachment</a></small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══ Form Action Buttons ══ -->
+            <div class="d-flex justify-content-between align-items-center pt-3 mt-3" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+                <div class="d-flex align-items-center" style="gap: 8px;">
+                    <button type="submit" class="btn-modern btn-submit py-1 px-4">
+                        <i class="fas fa-check mr-1"></i> Save
+                    </button>
+                    <a href="{% url 'sales_multiple_item_add_with_enquiry' enquiry_id %}" class="btn-modern btn-highlight py-1 px-3">
+                        <i class="fas fa-plus mr-1"></i> Add Quote
+                    </a>
+                </div>
+                <a href="{% url 'sale_enquiry_list' %}" class="btn-modern btn-cancel py-1 px-4" style="text-decoration:none;">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ══ Added Quotes Table ══ -->
+    {% if enquiry_id != 0 %}
+    <div class="modern-card p-3 mt-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0 font-weight-bold">
+                <i class="fas fa-quote-right text-primary mr-1"></i> Added Quotes
+            </h5>
+        </div>
+        <div class="table-responsive">
+            <table id="added_quotes_table" class="table table-striped table-bordered modern-table w-100">
+                <thead>
+                    <tr style="white-space: nowrap;">
+                        <th>Date of Quote</th>
+                        <th>Quote Ref</th>
+                        <th>Rate Approval</th>
+                        <th>Quote Status</th>
+                        <th>Reason</th>
+                        <th>Attachment</th>
+                        <th class="text-center">Edit</th>
+                        <th class="text-center">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sales in Salesmultipleitem_list %}
+                    <tr>
+                        <td class="align-middle" style="white-space: nowrap;">{{ sales.sm_Date_of_Quote|default:"-" }}</td>
+                        <td class="align-middle font-weight-bold text-primary" style="white-space: nowrap;">{{ sales.sm_Quote_Ref|default:"-" }}</td>
+                        <td class="align-middle">{{ sales.sm_Rate_Approval|default:"-" }}</td>
+                        <td class="align-middle">{{ sales.sm_quote_status|default:"-" }}</td>
+                        <td class="align-middle">{{ sales.sm_reason|default:"-" }}</td>
+                        <td class="align-middle text-center">
+                            {% if sales.sm_attachment %}
+                            <a href="{{ sales.sm_attachment.url }}" target="_blank" class="btn-modern btn-cancel py-1 px-2" style="font-size: 0.8rem; text-decoration: none;">
+                                <i class="fas fa-file-download text-primary mr-1"></i> View
+                            </a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td class="text-center align-middle">
+                            <a class="btn-modern btn-submit py-1 px-3" href="{% url 'sales_multiple_item_update' sales.id %}" style="font-size: 0.8rem; text-decoration: none; border-radius: 8px;" title="Edit">
+                                <i class="far fa-edit"></i>
+                            </a>
+                        </td>
+                        <td class="text-center align-middle">
+                            <form action="{% url 'sales_multiple_item_delete' sales.id %}" method="post" onclick="return confirm('Are you sure?');" class="d-inline" style="margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px; padding: 6px 12px;" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-</form>
-
-{% if enquiry_id != 0 %}
-<hr>
-<div class="container-fluid">
-    <div class="card">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0">Added Quotes</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table id="added_quotes_table" class="table table-striped table-bordered" style="width:100%">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th style="width:15%">Date of Quote</th>
-                            <th style="width:15%">Quote Ref</th>
-                            <th style="width:10%">Rate Approval</th>
-                            <th style="width:15%">Quote Status</th>
-                            <th style="width:20%">Reason</th>
-                            <th style="width:10%">Attachment</th>
-                            <th style="width:7%">Edit</th>
-                            <th style="width:8%">Delete</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for sales in Salesmultipleitem_list %}
-                        <tr>
-                            <td>{{ sales.sm_Date_of_Quote }}</td>
-                            <td>{{ sales.sm_Quote_Ref }}</td>
-                            <td>{{ sales.sm_Rate_Approval }}</td>
-                            <td>{{ sales.sm_quote_status|default:"-" }}</td>
-                            <td>{{ sales.sm_reason|default:"-" }}</td>
-                            <td>
-                                {% if sales.sm_attachment %}
-                                <a href="{{ sales.sm_attachment.url }}" target="_blank">
-                                    <i class="fas fa-file-download text-primary"></i> View
-                                </a>
-                                {% else %}
-                                -
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a class="btn btn-sm btn-primary" href="{% url 'sales_multiple_item_update' sales.id %}">
-                                    <i class="far fa-edit"></i>
-                                </a>
-                            </td>
-                            <td>
-                                <form action="{% url 'sales_multiple_item_delete' sales.id %}" method="post" onclick="return confirm('Are you sure?');">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    {% endif %}
 </div>
-{% endif %}
 
 <script>
     $(document).ready(function () {
@@ -758,7 +752,7 @@
                 $('#sales_number_input').addClass('green-bg');
                 $('#sales_number_input').next('.select2').find('.select2-selection').addClass('green-bg');
 
-                // Ensure Customer Name select is NOT green (user's specific preference from previous steps)
+                // Ensure Customer Name select is NOT green
                 $('#customer_name_select').removeClass('green-bg');
                 $('#customer_name_select').next('.select2').find('.select2-selection').removeClass('green-bg');
             } else {
@@ -840,12 +834,10 @@
                                 $('#customer_name_select').val(data.customer_id).trigger('change.select2-internal');
                                 $('#new_customer_name_input').val('');
                             } else {
-                                // Set customer_name_select to empty/placeholder if it's a new customer
                                 $('#customer_name_select').val('').trigger('change.select2-internal');
                                 $('#new_customer_name_input').val(data.new_customer_name);
                             }
                             
-                            // Apply green background and readonly to all filled fields
                             toggleFieldBackground(true);
 
                             $('#customer_code_input').val(data.customer_code);
@@ -880,12 +872,12 @@
             $('#customer_name_select').select2({
                 placeholder: "---------",
                 allowClear: true,
-                width: 'resolve'
+                width: '100%'
             });
             $('#sales_number_input').select2({
                 placeholder: "---------",
                 allowClear: true,
-                width: 'resolve'
+                width: '100%'
             });
 
             // Remove 'ATTACHED' (ID 2) from Vehicle Source for this page only
@@ -910,56 +902,43 @@
             // Toggle active styling
             $(this).toggleClass('active');
             if ($(this).hasClass('active')) {
-                $(this).removeClass('btn-outline-info').addClass('btn-info text-white');
+                $(this).removeClass('btn-cancel').addClass('btn-submit');
             } else {
-                $(this).removeClass('btn-info text-white').addClass('btn-outline-info');
+                $(this).removeClass('btn-submit').addClass('btn-cancel');
             }
 
             // Slide toggle the target section
             $('#' + target).slideToggle();
         });
 
-        // MC Tours & Travels: Toggle Tour Type / Travel Type / Mode of Transport visibility based on Customer Type
-        // 1 = Tours, 2 = Travels, 3 = Tours&Travels
+        // MC Tours & Travels
         function toggleMcFields() {
             var customerType = $('#mc_customer_type_select').val();
 
             if (customerType === '1') {
-                // Tours: show Tour Type + Mode of Transport
-                $('#mc_tour_type_select').closest('.input-group').show();
-                $('#mc_mode_of_transport_select').closest('.input-group').show();
-                // Hide Vehicle Type and Vehicle Source
-                $('#mc_vehicle_source_select').closest('.input-group').hide();
-                $('#mc_vehicle_type_input').closest('.input-group').hide();
-                // Hide Travel Type
-                $('#mc_travel_type_select').closest('.input-group').hide();
+                $('#mc_tour_type_select').closest('.form-group-modern').show();
+                $('#mc_mode_of_transport_select').closest('.form-group-modern').show();
+                $('#mc_vehicle_source_select').closest('.form-group-modern').hide();
+                $('#mc_vehicle_type_input').closest('.form-group-modern').hide();
+                $('#mc_travel_type_select').closest('.form-group-modern').hide();
             } else if (customerType === '2') {
-                // Travels: hide Tour Type + Mode of Transport
-                $('#mc_tour_type_select').closest('.input-group').hide();
-                $('#mc_mode_of_transport_select').closest('.input-group').hide();
-                // Show Vehicle Type and Vehicle Source
-                $('#mc_vehicle_source_select').closest('.input-group').show();
-                $('#mc_vehicle_type_input').closest('.input-group').show();
-                // Show Travel Type
-                $('#mc_travel_type_select').closest('.input-group').show();
+                $('#mc_tour_type_select').closest('.form-group-modern').hide();
+                $('#mc_mode_of_transport_select').closest('.form-group-modern').hide();
+                $('#mc_vehicle_source_select').closest('.form-group-modern').show();
+                $('#mc_vehicle_type_input').closest('.form-group-modern').show();
+                $('#mc_travel_type_select').closest('.form-group-modern').show();
             } else if (customerType === '3') {
-                // Tours & Travels: show Tour Type and Mode of Transport
-                $('#mc_tour_type_select').closest('.input-group').show();
-                $('#mc_mode_of_transport_select').closest('.input-group').show();
-                // Show Vehicle Type and Vehicle Source
-                $('#mc_vehicle_source_select').closest('.input-group').show();
-                $('#mc_vehicle_type_input').closest('.input-group').show();
-                // Show Travel Type
-                $('#mc_travel_type_select').closest('.input-group').show();
+                $('#mc_tour_type_select').closest('.form-group-modern').show();
+                $('#mc_mode_of_transport_select').closest('.form-group-modern').show();
+                $('#mc_vehicle_source_select').closest('.form-group-modern').show();
+                $('#mc_vehicle_type_input').closest('.form-group-modern').show();
+                $('#mc_travel_type_select').closest('.form-group-modern').show();
             } else {
-                // No selection: hide Tour Type + Mode of Transport
-                $('#mc_tour_type_select').closest('.input-group').hide();
-                $('#mc_mode_of_transport_select').closest('.input-group').hide();
-                // Show Vehicle Type and Vehicle Source
-                $('#mc_vehicle_source_select').closest('.input-group').show();
-                $('#mc_vehicle_type_input').closest('.input-group').show();
-                // Hide Travel Type
-                $('#mc_travel_type_select').closest('.input-group').hide();
+                $('#mc_tour_type_select').closest('.form-group-modern').hide();
+                $('#mc_mode_of_transport_select').closest('.form-group-modern').hide();
+                $('#mc_vehicle_source_select').closest('.form-group-modern').show();
+                $('#mc_vehicle_type_input').closest('.form-group-modern').show();
+                $('#mc_travel_type_select').closest('.form-group-modern').hide();
             }
         }
 
@@ -978,19 +957,17 @@
                 scrollX: true,
                 scrollCollapse: true,
                 paging: false,
-                order: [0, 'desc'],
+                order: [[0, 'desc']],
                 dom: 'Bfrtip',
                 buttons: [
                     'copy', 'csv', 'excel', 'print'
                 ]
             });
 
-            // Re-adjust columns on window resize (fixes alignment issues on zoom)
             $(window).on('resize', function () {
                 addedQuotesTable.columns.adjust().draw();
             });
             
-            // Also adjust after a short delay to catch layout shifts
             setTimeout(function() {
                 addedQuotesTable.columns.adjust().draw();
             }, 500);
@@ -999,15 +976,13 @@
 
     function handleFileSelect(input) {
         var fileName = input.files[0] ? input.files[0].name : "No file chosen";
-        // Find the display field in the same input-group
-        var display = $(input).closest('.input-group').find('.filename-display');
+        var display = $(input).closest('.form-group-modern').find('.filename-display');
         display.val(fileName);
         if (fileName !== "No file chosen") {
-            display.css('background-color', '#e8f5e9');
+            display.css('background-color', 'rgba(46, 204, 113, 0.15)');
         } else {
-            display.css('background-color', '#ffffff');
+            display.css('background-color', 'var(--bg-card, #ffffff)');
         }
     }
-
 </script>
 {% endblock content %}

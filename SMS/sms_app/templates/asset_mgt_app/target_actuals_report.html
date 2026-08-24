@@ -1,132 +1,141 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+{% block title %}Target vs Actuals Report{% endblock %}
 {% block content %}
-{% load crispy_forms_tags %}
 
-<body>
-<div class="col-md-1">
-    <a href="{% url 'sales_reports' %}" class="btn btn-primary">
-        <i class="fas fa-arrow-left"></i> Back
-    </a>
-</div>
-<br>
-<h2 style="color:black;">Target Vs Actuals Report</h2>
-
-<hr>
-<br>
-
-        <div class="col-md-11">
-            <label for="salesperson-filter"><b>Salesperson:</b></label>
-            <select id="salesperson-filter" name="salesperson" class="box-shadow rounded m-1">
-    <option value="">All</option>
-    {% for salesperson in salespersons %}
-        <option value="{{ salesperson }}"
-            {% if salesperson == selected_salesperson %} selected {% endif %}>
-            {{ salesperson }}
-        </option>
-    {% endfor %}
-</select>
-
-
-            <label for="from-date"><b> From:</b></label>
-            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="box-shadow">
-
-            <label for="to-date"><b> To:</b></label>
-            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="box-shadow">
+<div class="container-fluid px-3 py-2">
+    <!-- ══ Header Banner ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+            <i class="fas fa-bullseye mr-2"></i> Target vs Actuals Report
+        </h3>
+        <div>
+            <a href="{% url 'sales_reports' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Reports
+            </a>
         </div>
-<br>
-    <table id="target_actual_table" class="table table-striped table-bordered">
-        <thead class="thead-dark">
+    </div>
 
-                <tr>
-                    <th>Salesperson</th>
-                    <th>Total Target Customers</th>
-                    <th>Total Actual Customers</th>
-                     <th>New Customers</th>
-                    <th>Existing Customers</th>
-                    <th>Total Sales Calls</th>
-                    <th>Target New Customer Calls</th>
-                    <th>Actual New Customer Calls</th>
-                    <th>Target Existing Customer Calls</th>
-                    <th>Actual Existing Customer Calls</th>
-                    <th>Target Revenue</th>
-                    <th>Actual Revenue</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in summary %}
-                <tr>
-                    <td>{{ row.salesperson }}</td>
-                    <td>{{ row.total_target_customers }}</td>
-                    <td>{{ row.total_actual_customers }}</td>
-                     <td>{{ row.total_new_customers }}</td>
-                    <td>{{ row.total_existing_customers }}</td>
-                     <td>{{ row.total_sales_calls }}</td>
-                    <td>{{ row.target_new_customer_calls }}</td>
-                     <td>{{ row.actual_new_customer_calls }}</td>
-                    <td>{{ row.target_existing_customer_calls }}</td>
-                     <td>{{ row.actual_existing_customer_calls }}</td>
-                     <td>{{ row.target_revenue }}</td>
-                    <td>{{ row.actual_revenue }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- ══ Filter Section ══ -->
+    <div class="modern-card p-3 mb-3">
+        <div class="form-section p-3 mb-0">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="form-section-title mb-0" style="font-size: 0.85rem; letter-spacing: 1px;">
+                    <i class="fas fa-filter text-primary mr-1"></i> Filter Targets & Actuals
+                </div>
+            </div>
+            <div class="row align-items-end">
+                <div class="col-12 col-md-4 mb-2">
+                    <label class="form-label-modern font-weight-bold" for="salesperson-filter">Salesperson</label>
+                    <select id="salesperson-filter" name="salesperson" class="form-control form-control-modern">
+                        <option value="">All Salespersons</option>
+                        {% for salesperson in salespersons %}
+                        <option value="{{ salesperson }}" {% if salesperson == selected_salesperson %} selected {% endif %}>
+                            {{ salesperson }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-4 mb-2">
+                    <label class="form-label-modern font-weight-bold" for="from-date">From Date</label>
+                    <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control form-control-modern">
+                </div>
+                <div class="col-12 col-md-4 mb-2">
+                    <label class="form-label-modern font-weight-bold" for="to-date">To Date</label>
+                    <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control form-control-modern">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Table Container ══ -->
+    <div class="modern-card p-3 mb-4">
+        <div class="table-container-modern">
+            <table id="target_actual_table" class="table table-striped table-bordered modern-table w-100">
+                <thead>
+                    <tr style="white-space: nowrap;">
+                        <th>Salesperson</th>
+                        <th class="text-center">Total Target Customers</th>
+                        <th class="text-center">Total Actual Customers</th>
+                        <th class="text-center">New Customers</th>
+                        <th class="text-center">Existing Customers</th>
+                        <th class="text-center">Total Sales Calls</th>
+                        <th class="text-center">Target New Calls</th>
+                        <th class="text-center">Actual New Calls</th>
+                        <th class="text-center">Target Existing Calls</th>
+                        <th class="text-center">Actual Existing Calls</th>
+                        <th class="text-right">Target Revenue</th>
+                        <th class="text-right">Actual Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in summary %}
+                    <tr>
+                        <td class="font-weight-bold text-primary" style="white-space: nowrap;">{{ row.salesperson }}</td>
+                        <td class="text-center">{{ row.total_target_customers|default:0 }}</td>
+                        <td class="text-center">{{ row.total_actual_customers|default:0 }}</td>
+                        <td class="text-center">{{ row.total_new_customers|default:0 }}</td>
+                        <td class="text-center">{{ row.total_existing_customers|default:0 }}</td>
+                        <td class="text-center font-weight-bold">{{ row.total_sales_calls|default:0 }}</td>
+                        <td class="text-center">{{ row.target_new_customer_calls|default:0 }}</td>
+                        <td class="text-center">{{ row.actual_new_customer_calls|default:0 }}</td>
+                        <td class="text-center">{{ row.target_existing_customer_calls|default:0 }}</td>
+                        <td class="text-center">{{ row.actual_existing_customer_calls|default:0 }}</td>
+                        <td class="text-right font-weight-bold">{{ row.target_revenue|default:0 }}</td>
+                        <td class="text-right font-weight-bold text-success">{{ row.actual_revenue|default:0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 <script>
     $(document).ready(function() {
-    $('#target_actual_table').DataTable(
-        {
-        scrollY: "600px",
-        scrollX: true,
-        scrollCollapse: true,
-        order: [1, 'desc' ],
-        dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ]
-    } );
-} );
+        $('#target_actual_table').DataTable({
+            scrollY: "600px",
+            scrollX: true,
+            scrollCollapse: true,
+            order: [[0, 'asc']],
+            dom: 'lBfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'print'
+            ]
+        });
+    });
+
+    document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
+    document.getElementById('from-date').addEventListener('change', updateFilters);
+    document.getElementById('to-date').addEventListener('change', updateFilters);
+
+    function updateFilters() {
+        const salesperson = document.getElementById('salesperson-filter').value;
+        const fromDate = document.getElementById('from-date').value;
+        const toDate = document.getElementById('to-date').value;
+        const url = new URL(window.location.href);
+
+        if (salesperson) {
+            url.searchParams.set('salesperson', salesperson);
+        } else {
+            url.searchParams.delete('salesperson');
+        }
+
+        if (fromDate) {
+            url.searchParams.set('from_date', fromDate);
+        } else {
+            url.searchParams.delete('from_date');
+        }
+
+        if (toDate) {
+            url.searchParams.set('to_date', toDate);
+        } else {
+            url.searchParams.delete('to_date');
+        }
+
+        window.location.href = url.toString();
+    }
 </script>
-<script>
-
-document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
-document.getElementById('from-date').addEventListener('change', updateFilters);
-document.getElementById('to-date').addEventListener('change', updateFilters);
-
-function updateFilters() {
-    const salesperson = document.getElementById('salesperson-filter').value;
-    const fromDate = document.getElementById('from-date').value;
-    const toDate = document.getElementById('to-date').value;
-    const url = new URL(window.location.href);
-
-    // Update salesperson filter
-    if (salesperson) {
-        url.searchParams.set('salesperson', salesperson);
-    } else {
-        url.searchParams.delete('salesperson');
-    }
-
-    // Update from_date filter
-    if (fromDate) {
-        url.searchParams.set('from_date', fromDate);
-    } else {
-        url.searchParams.delete('from_date');
-    }
-
-    // Update to_date filter
-    if (toDate) {
-        url.searchParams.set('to_date', toDate);
-    } else {
-        url.searchParams.delete('to_date');
-    }
-
-    // Reload the page with updated URL
-    window.location.href = url.toString();
-}
-
-    </script>
-</body>
 {% endblock content %}
 
 

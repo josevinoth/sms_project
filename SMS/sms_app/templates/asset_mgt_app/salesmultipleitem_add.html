@@ -1,101 +1,144 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+{% block title %}Add/Update Sales Multiple{% endblock %}
 {% block content %}
 
-<div class="row">
-    <div class="col-3"></div>
-    <div class="col-6">
-        <form method="POST" enctype="multipart/form-data" >
-            {% csrf_token %}
-            <div class="container-fluid">
-                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="card-header text-center">
-                        <h3>Add/Update sales Multiple</h3>
-                    </div>
-                    <div class="card-body bg-light">
-                        <div class="row">
-                            <div class="col">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Sales Number</span>
-                                    </div>
-                                    {% render_field form.sm_sales_num id="sm_sales_num" class="form-control disable_a_href" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Enquiry No.</span>
-                                    </div>
-                                    {% render_field form.sm_enquiry_num id="sm_enquiry_num" class="form-control disable_a_href" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Date of Quote</span>
-                                    </div>
-                                    {% render_field form.sm_Date_of_Quote id="sm_Date_of_Quote" type="date" class="form-control" %}
-                                </div>
-
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Quote Ref</span>
-                                    </div>
-                                    {% render_field form.sm_Quote_Ref id="sm_Quote_Ref" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Rate Approval</span>
-                                    </div>
-                                    {% render_field form.sm_Rate_Approval id="sm_Rate_Approval" class="form-control"  %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Quote Status</span>
-                                    </div>
-                                    {% render_field form.sm_quote_status id="sm_quote_status" class="form-control"  %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Reason</span>
-                                    </div>
-                                    {% render_field form.sm_reason id="sm_reason" class="form-control" rows="2" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3 bg-dark block">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Attachment</span>
-									</div>
-									{% render_field form.sm_attachment class="form-control" %}
-								</div>
-                                {% render_field form.sm_lastmodifiedby id="sm_lastmodifiedby" hidden="True" class="form-control"  %}
-                            </div>
-                        </div>
-
-
-                        <!-- Message Display Section -->
-                        <div class="row">
-                            <div class="col-1"></div>
-                            <div class="col-10">
-                                <div class="message text-center">
-                                    {% for message in messages %}
-                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="col-1"></div>
-                        </div>
-
-                        <!-- Submit and Cancel Buttons -->
-                        <button type="submit" class="btn btn-success" id="save-btn">
-                            <i class="fas fa-check"></i> Submit
-                        </button>
-                        <a href="{% url 'sale_enquiry_list' %}" class="btn btn-danger float-right">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                    </div>
+<div class="container-fluid px-3 py-2 compact-form">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <!-- ══ Page Header ══ -->
+            <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+                    <i class="fas fa-file-invoice mr-2"></i> Add / Update Sales Multiple
+                </h3>
+                <div>
+                    <a href="{% url 'sale_enquiry_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                        <i class="fas fa-arrow-left mr-1"></i> Back
+                    </a>
                 </div>
             </div>
-        </form>
+
+            <!-- ══ Form Card ══ -->
+            <div class="modern-card p-3 mb-0 w-100">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-section p-3 mb-3">
+                        <div class="form-section-title mb-3">
+                            <i class="fas fa-edit text-primary mr-1"></i> Quote Details
+                        </div>
+                        
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Sales Number</label>
+                            {% render_field form.sm_sales_num id="sm_sales_num" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Enquiry No.</label>
+                            {% render_field form.sm_enquiry_num id="sm_enquiry_num" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Date of Quote</label>
+                            {% render_field form.sm_Date_of_Quote id="sm_Date_of_Quote" type="date" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Quote Ref</label>
+                            {% render_field form.sm_Quote_Ref id="sm_Quote_Ref" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Rate Approval</label>
+                            {% render_field form.sm_Rate_Approval id="sm_Rate_Approval" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Quote Status</label>
+                            {% render_field form.sm_quote_status id="sm_quote_status" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Reason</label>
+                            {% render_field form.sm_reason id="sm_reason" class="form-control form-control-modern" rows="2" %}
+                        </div>
+
+                        <div class="form-group-modern mb-2">
+                            <label class="form-label-modern font-weight-bold">Attachment</label>
+                            {% render_field form.sm_attachment class="form-control form-control-modern file-input-modern" %}
+                        </div>
+
+                        {% render_field form.sm_lastmodifiedby id="sm_lastmodifiedby" hidden="True" class="form-control" %}
+                    </div>
+
+                    <!-- Messages -->
+                    {% if messages %}
+                    <div class="row my-2">
+                        <div class="col-12 message text-center">
+                            {% for message in messages %}
+                            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between align-items-center pt-3 mt-2" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+                        <button type="submit" class="btn-modern btn-submit py-1 px-4" id="save-btn">
+                            <i class="fas fa-check mr-1"></i> Submit
+                        </button>
+                        <a href="{% url 'sale_enquiry_list' %}" class="btn-modern btn-cancel py-1 px-4" style="text-decoration:none;">
+                            <i class="fas fa-times mr-1"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    <div class="col-3"></div>
 </div>
+
+<style>
+    .compact-form .form-group-modern {
+        margin-bottom: 0.55rem !important;
+    }
+    .compact-form .form-label-modern {
+        font-size: 0.76rem !important;
+        margin-bottom: 3px !important;
+        letter-spacing: 0.5px !important;
+    }
+    .compact-form .form-control-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        font-size: 0.84rem !important;
+        padding: 4px 10px !important;
+        border-radius: 8px !important;
+    }
+    .compact-form textarea.form-control-modern {
+        height: 70px !important;
+        min-height: 70px !important;
+    }
+    .compact-form .modern-card {
+        padding: 1rem 1.4rem !important;
+        border-radius: 16px !important;
+    }
+    .compact-form .form-section-title {
+        font-size: 0.84rem !important;
+        margin-bottom: 0.6rem !important;
+        letter-spacing: 1px !important;
+    }
+    .compact-form .btn-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0.25rem 1.3rem !important;
+        font-size: 0.84rem !important;
+        border-radius: 10px !important;
+    }
+</style>
+
 <script>
     $(document).ready(function() {
         document.getElementById("sm_sales_num").value ='{{sales_id}}';
@@ -103,7 +146,7 @@
             document.getElementById("sm_enquiry_num").value ='{{enquiry_id}}';
         }
         document.getElementById("sm_lastmodifiedby").value ='{{user_id}}';
-        });
+    });
 </script>
 
 {% endblock content %}
