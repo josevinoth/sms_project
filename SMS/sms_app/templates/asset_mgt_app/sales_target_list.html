@@ -1,71 +1,108 @@
-{% extends "asset_mgt_app/base.html" %}
-
-
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block title %}Sales Target List{% endblock %}
 {% block content %}
-<div class="container-fluid row">
-    <div class="col-md-1">
-      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-        <i class="fas fa-arrow-left"></i> Back
-      </a>
+
+<div class="container-fluid py-3">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-3 flex-wrap" style="gap: 12px;">
+        <div class="modern-list-title d-flex align-items-center" style="gap: 10px;">
+            <i class="fas fa-bullseye text-white"></i>
+            <h3 class="mb-0 text-white" style="font-size:1.35rem; font-weight:700; letter-spacing:0.5px;">Sales Target List</h3>
+        </div>
+        <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-1 px-3" style="text-decoration:none;">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+            <a href="{% url 'sales_target_insert' %}" class="btn-modern btn-submit py-1 px-3" style="text-decoration:none;">
+                <i class="fas fa-plus mr-1"></i> Add Target
+            </a>
+        </div>
     </div>
-    <div class="col-md-1">
-      <a href="{% url 'sales_target_insert' %}" class="btn btn-success btn-block btn-lg">
-        <i class="fas fa-plus"></i> Add
-      </a>
+
+    <!-- ══ Messages ══ -->
+    {% if messages %}
+    <div class="row mb-3">
+        <div class="col-12 message text-center">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══ Table Container ══ -->
+    <div class="table-container-modern p-3">
+        <div class="table-responsive">
+            <table id="salestarget_list" class="table table-striped table-bordered modern-table w-100">
+                <thead>
+                    <tr style="white-space: nowrap;">
+                        <th>Created On</th>
+                        <th>Sales Executive</th>
+                        <th>Target Start Date</th>
+                        <th>Target End Date</th>
+                        <th>Target Revenue (INR)</th>
+                        <th>Target Customers</th>
+                        <th>Updated On</th>
+                        <th>Updated By</th>
+                        <th class="text-center">Edit</th>
+                        <th class="text-center">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for salestargetinfo in sales_target_list %}
+                    <tr>
+                        <td class="align-middle" style="white-space: nowrap;">
+                            <div>{{ salestargetinfo.st_created_at|date:"M. d, Y"|default:salestargetinfo.st_created_at }}</div>
+                            {% if salestargetinfo.st_created_at %}<small class="text-muted font-weight-bold">{{ salestargetinfo.st_created_at|date:"h:i A" }}</small>{% endif %}
+                        </td>
+                        <td class="font-weight-bold align-middle" style="white-space: nowrap;">{{ salestargetinfo.st_sales_person|default:"-" }}</td>
+                        <td class="align-middle" style="white-space: nowrap;">{{ salestargetinfo.st_start_date|default:"-" }}</td>
+                        <td class="align-middle" style="white-space: nowrap;">{{ salestargetinfo.st_end_date|default:"-" }}</td>
+                        <td class="align-middle font-weight-bold text-primary" style="white-space: nowrap;">{{ salestargetinfo.st_target_revenue|default:"-" }}</td>
+                        <td class="align-middle text-center">{{ salestargetinfo.st_target_customer|default:"-" }}</td>
+                        <td class="align-middle" style="white-space: nowrap;">
+                            <div>{{ salestargetinfo.st_updated_at|date:"M. d, Y"|default:salestargetinfo.st_updated_at }}</div>
+                            {% if salestargetinfo.st_updated_at %}<small class="text-muted font-weight-bold">{{ salestargetinfo.st_updated_at|date:"h:i A" }}</small>{% endif %}
+                        </td>
+                        <td class="align-middle" style="white-space: nowrap;">{{ salestargetinfo.st_updated_by|default:"-" }}</td>
+                        <td class="text-center align-middle">
+                            <a class="btn-modern btn-submit py-1 px-3" href="{% url 'sales_target_update' salestargetinfo.id %}" style="font-size: 0.8rem; text-decoration: none; border-radius: 8px;" title="Edit">
+                                <i class="far fa-edit"></i>
+                            </a>
+                        </td>
+                        <td class="text-center align-middle">
+                            <form action="{% url 'sales_target_delete' salestargetinfo.id %}" method="post" onclick="return confirm('Are you sure you want to delete this target?');" class="d-inline" style="margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px; padding: 6px 12px;" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
-<hr>
-<div class="container-fluid">
-<table  id="salestarget_list" class="table table-striped table-bordered">
-    <thead class="thead-dark">
-        <tr>
-            <th>Created On</th>
-            <th>Sales Executive</th>
-            <th>Target Start Date</th>
-            <th>Target End Date</th>
-            <th>Target Revenue (INR)</th>
-            <th>Target Customers</th>
-            <th>Updated On</th>
-            <th>Updated By</th>
-            <th>Edit</th>
-            <th>Delete</th>
-    </thead>
-    <tbody>
-        {% for salestargetinfo in sales_target_list %}
-            <tr>
-                <td> {{salestargetinfo.st_created_at}}</td>
-                <td> {{salestargetinfo.st_sales_person}}</td>
-                <td> {{salestargetinfo.st_start_date}}</td>
-                <td> {{salestargetinfo.st_end_date}}</td>
-                <td> {{salestargetinfo.st_target_revenue}}</td>
-                <td> {{salestargetinfo.st_target_customer}}</td>
-                <td> {{salestargetinfo.st_updated_at}}</td>
-                <td> {{salestargetinfo.st_updated_by}}</td>
-                <td>
-                    <a class="btn btn-primary" href="{% url 'sales_target_update' salestargetinfo.id %}" >
-                        <i class="far fa-edit"></i>
-                    </a>
-                </td>
-                <td>
-                    <form action="{% url 'sales_target_delete' salestargetinfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
-</div>
+
 <script>
     $(document).ready(function() {
-    $('#salestarget_list').DataTable({
-               order: [0, 'desc'],
-            });
-
-} );
+        $('#salestarget_list').DataTable({
+            scrollY: "600px",
+            scrollX: true,
+            order: [[0, 'desc']],
+            dom: 'lBfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'print'
+            ]
+        });
+    });
 </script>
 
 {% endblock content %}

@@ -59,6 +59,7 @@ def _try_merge_pdfs(inv_obj, closure_obj=None):
         inv_obj.id_weighment_doc,
         inv_obj.id_handling_doc,
         inv_obj.id_pod_doc,
+        getattr(inv_obj, 'id_sell_rate_doc', None),
     ]
 
     if closure_obj:
@@ -423,6 +424,63 @@ def invoice_documents_list_ajax_view(request):
         return JsonResponse({'error': str(e)})
 
 
+def check_sell_rate_doc_required(trip):
+    """
+    Sell Rate Doc is mandatory only when:
+    - A corresponding Vehicle Allotment exists,
+    - Standard Sell (va_sale) is configured and > 0,
+    - Special Sell (va_special_sale) is configured and > 0,
+    - Special Sell is strictly greater than Standard Sell (va_special_sale > va_sale).
+    If Standard Sell == Special Sell, or if Standard Sell is not defined (0/None),
+    the sell rate approval doc is NOT mandatory.
+    """
+    if not trip or not trip.tr_enquirynumber:
+        return False
+
+    allotments = Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber=trip.tr_enquirynumber
+    ).select_related('va_vehiclenumber')
+
+    target_veh = (trip.tr_vehiclenumber or '').strip().replace(' ', '').replace('-', '').upper()
+    matched_allotment = None
+
+    if allotments.exists() and target_veh:
+        for a in allotments:
+            reg = ''
+            if a.va_vehiclenumber and getattr(a.va_vehiclenumber, 'vm_registrationnumber', None):
+                reg = a.va_vehiclenumber.vm_registrationnumber.strip().replace(' ', '').replace('-', '').upper()
+            elif a.va_vehiclenumber_mkt:
+                reg = a.va_vehiclenumber_mkt.strip().replace(' ', '').replace('-', '').upper()
+
+            if reg and reg == target_veh:
+                matched_allotment = a
+                break
+
+    if not matched_allotment and allotments.exists():
+        matched_allotment = allotments.first()
+
+    if not matched_allotment:
+        return False
+
+    try:
+        std_sale = float(matched_allotment.va_sale) if matched_allotment.va_sale is not None else 0.0
+    except (ValueError, TypeError):
+        std_sale = 0.0
+
+    try:
+        spec_sale = float(matched_allotment.va_special_sale) if matched_allotment.va_special_sale is not None else 0.0
+    except (ValueError, TypeError):
+        spec_sale = 0.0
+
+    if std_sale <= 0.0 or spec_sale <= 0.0:
+        return False
+
+    if spec_sale <= std_sale:
+        return False
+
+    return True
+
+
 @login_required
 def invoice_documents_add(request, trip_id):
     trip = get_object_or_404(TripdetailInfo, pk=trip_id)
@@ -512,14 +570,8 @@ def invoice_documents_add(request, trip_id):
         for field in files_form.fields:
             files_form.fields[field].required = False
 
-        # Validate Sell Rate Doc if Special Sell > Standard Sell
-        allotment = Vehicle_allotmentInfo.objects.filter(
-            va_enquirynumber=trip.tr_enquirynumber
-        ).filter(
-            Q(va_vehiclenumber__vm_registrationnumber=trip.tr_vehiclenumber) |
-            Q(va_vehiclenumber_mkt=trip.tr_vehiclenumber)
-        ).first()
-        if allotment and float(allotment.va_special_sale or 0) > float(allotment.va_sale or 0):
+        # Validate Sell Rate Doc only if Special Sell > Standard Sell
+        if check_sell_rate_doc_required(trip):
             has_sell_rate_doc = 'id_sell_rate_doc' in request.FILES or (invoice_doc and invoice_doc.id_sell_rate_doc and not request.POST.get('id_sell_rate_doc-clear'))
             if not has_sell_rate_doc:
                 messages.error(request, "Sell Rate Doc is mandatory because Special Sell > Standard Sell.")
@@ -709,15 +761,7 @@ def invoice_documents_add(request, trip_id):
     # Sell value for display
     from .tripclosure_add_view import get_allotment_sale_rate
     va_sale = get_allotment_sale_rate(trip)
-    is_sell_rate_doc_required = False
-    allotment = Vehicle_allotmentInfo.objects.filter(
-        va_enquirynumber=trip.tr_enquirynumber
-    ).filter(
-        Q(va_vehiclenumber__vm_registrationnumber=trip.tr_vehiclenumber) |
-        Q(va_vehiclenumber_mkt=trip.tr_vehiclenumber)
-    ).first()
-    if allotment and float(allotment.va_special_sale or 0) > float(allotment.va_sale or 0):
-        is_sell_rate_doc_required = True
+    is_sell_rate_doc_required = check_sell_rate_doc_required(trip)
 
 
     # Build attachments grouped by category for collapsible dropdowns

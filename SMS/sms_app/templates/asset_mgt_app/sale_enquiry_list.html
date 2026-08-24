@@ -1,193 +1,441 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block title %}Sale Enquiry List{% endblock %}
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center shadow-box">
-            <h3>Sale Enquiry List</h3>
+
+<div class="container-fluid py-3">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-3 flex-wrap" style="gap: 12px;">
+        <div class="modern-list-title d-flex align-items-center" style="gap: 10px;">
+            <i class="fas fa-file-invoice-dollar text-white"></i>
+            <h3 class="mb-0 text-white" style="font-size:1.35rem; font-weight:700; letter-spacing:0.5px;">Sale Enquiry List</h3>
         </div>
-        <div class="col-5"></div>
-    </div>
-</div>
-<div class="container-fluid">
-    <div class="row align-items-center">
-        <div class="col-auto mb-3">
-            <a href="{% url 'home_page' %}" class="btn btn-primary btn-lg">
-                <i class="fas fa-arrow-left"></i> Back
+        <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+            <a href="{% url 'home_page' %}" class="btn-modern btn-cancel py-1 px-3" style="text-decoration:none;">
+                <i class="fas fa-arrow-left mr-1"></i> Back
             </a>
-        </div>
-        <div class="col-auto mb-3">
-            <a href="{% url 'sale_enquiry_add' %}" class="btn btn-success btn-lg">
-                <i class="fas fa-plus"></i> Add
+            <a href="{% url 'sale_enquiry_add' %}" class="btn-modern btn-submit py-1 px-3" style="text-decoration:none;">
+                <i class="fas fa-plus mr-1"></i> Add
             </a>
-        </div>
-        <div class="col-auto mb-3">
-            <a href="{% url 'sale_enquiry_list' %}" class="btn btn-warning btn-lg">
-                <i class="fa fa-eye" aria-hidden="true"></i> Show All
+            <a href="{% url 'sale_enquiry_list' %}" class="btn-modern btn-highlight py-1 px-3" style="text-decoration:none;">
+                <i class="fa fa-eye mr-1" aria-hidden="true"></i> Show All
             </a>
-        </div>
-        <div class="col-auto mb-3">
-            <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#calendarModal">
-                <i class="fas fa-calendar-alt"></i> MC CALENDAR
+            <button type="button" class="btn-modern btn-highlight py-1 px-3" data-toggle="modal" data-target="#calendarModal" style="border: 1px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-calendar-alt mr-1"></i> MC Calendar
             </button>
         </div>
-        <div class="col-auto mb-3">
-            <form method="GET" class="d-flex flex-nowrap align-items-center">
-                <label class="mr-2 font-weight-bold text-nowrap">From Date:</label>
-                <input type="date" name="from_date" class="form-control mr-3" value="{{ request.GET.from_date }}">
-                <label class="mr-2 font-weight-bold text-nowrap">To Date:</label>
-                <input type="date" name="to_date" class="form-control mr-3" value="{{ request.GET.to_date }}">
-                <button type="submit" class="btn btn-info btn-lg">Filter</button>
-            </form>
+    </div>
+
+    <!-- ══ Filter Bar ══ -->
+    <div class="form-section p-3 mb-3">
+        <form method="GET" class="d-flex flex-wrap align-items-center justify-content-end" style="gap: 12px;">
+            <div class="d-flex align-items-center" style="gap: 6px;">
+                <label class="mb-0 font-weight-bold form-label-modern" style="letter-spacing: 0.5px;">From Date:</label>
+                <input type="date" name="from_date" class="form-control form-control-modern" value="{{ request.GET.from_date }}" style="height: 38px; width: auto;">
+            </div>
+            <div class="d-flex align-items-center" style="gap: 6px;">
+                <label class="mb-0 font-weight-bold form-label-modern" style="letter-spacing: 0.5px;">To Date:</label>
+                <input type="date" name="to_date" class="form-control form-control-modern" value="{{ request.GET.to_date }}" style="height: 38px; width: auto;">
+            </div>
+            <button type="submit" class="btn-modern btn-submit py-1 px-4" style="height: 38px;">
+                <i class="fas fa-filter mr-1"></i> Filter
+            </button>
+        </form>
+    </div>
+
+    <!-- ══ Messages ══ -->
+    {% if messages %}
+    <div class="row mb-3">
+        <div class="col-12 message text-center">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══ Table Container ══ -->
+    <div class="table-container-modern p-3">
+        <div class="table-responsive">
+            <table id="enquiry_list" class="table table-striped table-bordered modern-table w-100">
+                <thead>
+                    <tr style="white-space: nowrap;">
+                        <th>ID</th>
+                        <th>Enquiry ID</th>
+                        <th>Enquiry Date & Time</th>
+                        <th>Source of Enquiry</th>
+                        <th>Branch</th>
+                        <th>Customer Name</th>
+                        <th>Customer Code</th>
+                        <th>Product</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th style="display: none;">Contact Person Name</th>
+                        <th style="display: none;">Contact No</th>
+                        <th style="display: none;">Mail</th>
+                        <th class="text-center">No. of Quotes</th>
+                        <th>Quote Status</th>
+                        <th>Created By</th>
+                        <th>Updated By</th>
+                        <th>Updated On</th>
+                        <th class="text-center">Edit</th>
+                        <th class="text-center">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for enquiry in page_obj %}
+                    <tr>
+                        <td class="font-weight-bold align-middle">{{ enquiry.id }}</td>
+                        <td class="align-middle font-weight-bold text-primary" style="white-space: nowrap;">{{ enquiry.enquiry_id }}</td>
+                        <td class="align-middle" style="white-space: nowrap;">{{ enquiry.enquiry_date_time|date:"Y-m-d H:i" }}</td>
+                        <td class="align-middle">{{ enquiry.enquiry_source|default:"-" }}</td>
+                        <td class="align-middle">{{ enquiry.branch|default:"-" }}</td>
+                        <td class="align-middle font-weight-bold">{{ enquiry.effective_customer_name|default:"-" }}</td>
+                        <td class="align-middle">{{ enquiry.customer_code|default:"-" }}</td>
+                        <td class="align-middle">{{ enquiry.get_product_names|default:"-" }}</td>
+                        <td class="align-middle">
+                            <span class="mobile-from"></span>
+                            {% if enquiry.tr_from %}
+                                {{ enquiry.tr_from|default:'-' }}
+                            {% elif enquiry.ex_pickup %}
+                                {{ enquiry.ex_pickup|default:'-' }}
+                            {% elif enquiry.mc_from %}
+                                {{ enquiry.mc_from|default:'-' }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="align-middle">
+                            <span class="mobile-to"></span>
+                            {% if enquiry.tr_to %}
+                                {{ enquiry.tr_to|default:'-' }}
+                            {% elif enquiry.ex_delivery %}
+                                {{ enquiry.ex_delivery|default:'-' }}
+                            {% elif enquiry.mc_to %}
+                                {{ enquiry.mc_to|default:'-' }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td style="display: none;">{{ enquiry.contact_person_name }}</td>
+                        <td style="display: none;">{{ enquiry.contact_no }}</td>
+                        <td style="display: none;">{{ enquiry.mail }}</td>
+                        <td class="align-middle text-center">{{ enquiry.quote_count }}</td>
+                        <td class="align-middle">
+                            {% if enquiry.latest_quote_status %}
+                            <span class="badge badge-pill badge-info px-2 py-1" style="font-size: 0.82rem;">{{ enquiry.latest_quote_status }}</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td class="align-middle" style="white-space: nowrap;">{{ enquiry.created_by|default:"-" }}</td>
+                        <td class="align-middle" style="white-space: nowrap;">{{ enquiry.updated_by|default:"-" }}</td>
+                        <td class="align-middle" style="white-space: nowrap;">{{ enquiry.updated_at|date:"Y-m-d H:i" }}</td>
+                        <td class="text-center align-middle">
+                            <a class="btn-modern btn-submit py-1 px-3" href="{% url 'sale_enquiry_update' enquiry.id %}" style="font-size: 0.8rem; text-decoration: none; border-radius: 8px;" title="Edit">
+                                <i class="far fa-edit"></i>
+                            </a>
+                        </td>
+                        <td class="text-center align-middle">
+                            <form action="{% url 'sale_enquiry_delete' enquiry.id %}" method="post" onclick="return confirm('Are you sure you want to delete this enquiry?');" class="d-inline" style="margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px; padding: 6px 12px;" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ══ Modern Pagination ══ -->
+        <div class="d-flex justify-content-between align-items-center flex-wrap mt-3 pt-3" style="border-top: 1px solid var(--border-light, #e2e8f0); gap: 10px;">
+            <div class="text-muted font-weight-bold">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </div>
+            <div class="d-flex" style="gap: 6px;">
+                {% if page_obj.has_previous %}
+                    <a class="btn-modern btn-cancel py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page=1{% if request.GET.from_date %}&from_date={{ request.GET.from_date }}{% endif %}{% if request.GET.to_date %}&to_date={{ request.GET.to_date }}{% endif %}">First</a>
+                    <a class="btn-modern btn-submit py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ page_obj.previous_page_number }}{% if request.GET.from_date %}&from_date={{ request.GET.from_date }}{% endif %}{% if request.GET.to_date %}&to_date={{ request.GET.to_date }}{% endif %}">Previous</a>
+                {% endif %}
+                <span class="btn-modern py-1 px-3" style="font-size:0.85rem; background: var(--bg-card); border: 1px solid var(--border-light); color: var(--text-main); font-weight: 700;">
+                    {{ page_obj.number }}
+                </span>
+                {% if page_obj.has_next %}
+                    <a class="btn-modern btn-submit py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ page_obj.next_page_number }}{% if request.GET.from_date %}&from_date={{ request.GET.from_date }}{% endif %}{% if request.GET.to_date %}&to_date={{ request.GET.to_date }}{% endif %}">Next</a>
+                    <a class="btn-modern btn-cancel py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.from_date %}&from_date={{ request.GET.from_date }}{% endif %}{% if request.GET.to_date %}&to_date={{ request.GET.to_date }}{% endif %}">Last</a>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
-<hr>
 
-<style>
-    /* Mobile-only visual labels for From/To. These are added via CSS so exports (copy/csv/excel/print)
-       don't include the literal labels in the table cell text. */
-    @media (max-width: 767.98px) {
-        .mobile-from:before { content: "From : "; font-weight: 700; margin-right: .5rem; }
-        .mobile-to:before { content: "To : "; font-weight: 700; margin-right: .5rem; }
-    }
-</style>
-
-{% if messages %}
-<div class="container-fluid">
-    {% for message in messages %}
-    <div class="alert alert-success fade show" role="alert">
-        {{ message }}
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
-<div class="container-fluid shadow-box-table table-responsive">
-    <table id="enquiry_list" class="table table-striped table-bordered" style="width: 100%;">
-        <thead class="thead-dark">
-            <tr>
-                <th>ID</th>
-                <th>Enquiry ID</th>
-                <th>Enquiry Date & Time</th>
-                <th>Source of Enquiry</th>
-                <th>Branch</th>
-                <th>Customer Name</th>
-                <th>Customer Code</th>
-                <th>Product</th>
-                <th>From</th>
-                <th>To</th>
-                <th style="display: none;">Contact Person Name</th>
-                <th style="display: none;">Contact No</th>
-                <th style="display: none;">Mail</th>
-                <th>No. of Quotes</th>
-                <th>Quote Status</th>
-                <th>Created By</th>
-                <th>Updated By</th>
-                <th>Updated On</th>
-                <th>Edit</th>
-                <th>Delete</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for enquiry in page_obj %}
-            <tr>
-                <td>{{enquiry.id}}</td>
-                <td>{{enquiry.enquiry_id}}</td>
-                <td>{{enquiry.enquiry_date_time|date:"Y-m-d H:i"}}</td>
-                <td>{{enquiry.enquiry_source}}</td>
-                <td>{{enquiry.branch}}</td>
-                <td>{{enquiry.effective_customer_name}}</td>
-                <td>{{enquiry.customer_code}}</td>
-                <td>{{enquiry.get_product_names}}</td>
-                <td>
-                    <span class="mobile-from"></span>
-                    {% comment %} Choose the appropriate "From" value: prefer transport, then express, then MC. {% endcomment %}
-                    {% if enquiry.tr_from %}
-                        {{ enquiry.tr_from|default:'-' }}
-                    {% elif enquiry.ex_pickup %}
-                        {{ enquiry.ex_pickup|default:'-' }}
-                    {% elif enquiry.mc_from %}
-                        {{ enquiry.mc_from|default:'-' }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-                <td>
-                    <span class="mobile-to"></span>
-                    {% comment %} Choose the appropriate "To" value: prefer transport, then express, then MC. {% endcomment %}
-                    {% if enquiry.tr_to %}
-                        {{ enquiry.tr_to|default:'-' }}
-                    {% elif enquiry.ex_delivery %}
-                        {{ enquiry.ex_delivery|default:'-' }}
-                    {% elif enquiry.mc_to %}
-                        {{ enquiry.mc_to|default:'-' }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-                <td style="display: none;">{{enquiry.contact_person_name}}</td>
-                <td style="display: none;">{{enquiry.contact_no}}</td>
-                <td style="display: none;">{{enquiry.mail}}</td>
-                <td>{{enquiry.quote_count}}</td>
-                <td>{{enquiry.latest_quote_status}}</td>
-                <td>{{enquiry.created_by}}</td>
-                <td>{{enquiry.updated_by|default:"-"}}</td>
-                <td>{{enquiry.updated_at|date:"Y-m-d H:i"}}</td>
-                <td>
-                    <a class="btn btn-primary" href="{% url 'sale_enquiry_update' enquiry.id %}">
-                        <i class="far fa-edit"></i>
-                    </a>
-                </td>
-                <td>
-                    <form action="{% url 'sale_enquiry_delete' enquiry.id %}" method="post"
-                        onclick="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <div class="pagination mt-3">
-        <span class="step-links">
-            {% if page_obj.has_previous %}
-            <a class="btn btn-warning" href="?page=1">First</a>
-            <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-            {% endif %}
-
-            <span class="current">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-            </span>
-
-            {% if page_obj.has_next %}
-            <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
-            <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
-            {% endif %}
-        </span>
-    </div>
-</div>
 <!-- Calendar Modal -->
 <div class="modal fade" id="calendarModal" tabindex="-1" role="dialog" aria-labelledby="calendarModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title" id="calendarModalLabel">MC Tours - Business Won Calendar</h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+            <div class="modal-header d-flex align-items-center justify-content-between text-white" style="background: var(--header-gradient, linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)); padding: 14px 20px;">
+                <h5 class="modal-title font-weight-bold mb-0 d-flex align-items-center" id="calendarModalLabel" style="font-size: 1.15rem; letter-spacing: 0.5px;">
+                    <i class="fas fa-calendar-alt mr-2"></i> MC Tours - Business Won Calendar
+                </h5>
+                <button type="button" class="close text-white mb-0" data-dismiss="modal" aria-label="Close" style="opacity: 0.9; font-size: 1.4rem; padding: 0; margin: 0; line-height: 1;">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-4">
                 <div id="calendar"></div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <div class="modal-footer d-flex justify-content-end py-2 px-4">
+                <button type="button" class="btn-modern btn-cancel py-1 px-4" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* ══ Modal Layout & Sizing ══ */
+    #calendarModal .modal-dialog {
+        max-width: 92vw;
+        width: 1200px;
+        margin: 1.75rem auto;
+    }
+
+    /* ══ FullCalendar Common Toolbar Layout ══ */
+    #calendarModal .fc .fc-toolbar {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-bottom: 1.25rem !important;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    #calendarModal .fc .fc-toolbar-chunk {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px;
+    }
+    #calendarModal .fc .fc-toolbar-title {
+        font-size: 1.35rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.5px;
+        margin: 0 !important;
+    }
+
+    /* Base Button Defaults */
+    #calendarModal .fc .fc-button {
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 0 14px !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        text-transform: capitalize !important;
+        border-radius: 8px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+        transition: all 0.2s ease-in-out !important;
+        outline: none !important;
+    }
+
+    /* Segmented Controls (Month / Week / Day) */
+    #calendarModal .fc .fc-button-group {
+        display: inline-flex !important;
+        padding: 3px;
+        border-radius: 10px;
+        gap: 2px;
+    }
+    #calendarModal .fc .fc-button-group > .fc-button {
+        border-radius: 7px !important;
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        padding: 0 12px !important;
+    }
+
+    /* Prev / Next buttons */
+    #calendarModal .fc .fc-prev-button,
+    #calendarModal .fc .fc-next-button {
+        width: 36px !important;
+        min-width: 36px !important;
+        padding: 0 !important;
+    }
+
+    /* Events Styling */
+    #calendarModal .fc-event {
+        cursor: pointer;
+        border-radius: 6px;
+        padding: 2px 5px;
+        font-size: 0.82rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    #calendarModal .fc .fc-col-header-cell {
+        padding: 8px 0;
+        font-weight: 700;
+        font-size: 0.88rem;
+    }
+    #calendarModal .fc .fc-daygrid-day-number {
+        font-weight: 600;
+        padding: 4px 8px;
+    }
+
+    /* ══ LIGHT THEME MODE (Default) ══ */
+    #calendarModal .modal-content {
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid #cbd5e1;
+        background-color: #ffffff !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+    }
+    #calendarModal .modal-body {
+        background-color: #ffffff !important;
+        color: #1e293b !important;
+    }
+    #calendarModal .modal-footer {
+        background-color: #f8fafc !important;
+        border-top: 1px solid #e2e8f0 !important;
+    }
+    #calendarModal .fc {
+        --fc-page-bg-color: #ffffff;
+        --fc-neutral-bg-color: #f8fafc;
+        --fc-border-color: #e2e8f0;
+        --fc-today-bg-color: rgba(30, 60, 114, 0.06);
+        color: #1e293b;
+    }
+    #calendarModal .fc .fc-toolbar-title {
+        color: #1e3c72 !important;
+    }
+    #calendarModal .fc .fc-col-header-cell {
+        background-color: #f8fafc;
+        color: #1e3c72;
+    }
+    #calendarModal .fc .fc-daygrid-day-number {
+        color: #475569;
+    }
+    #calendarModal .fc .fc-button-group {
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+    }
+    #calendarModal .fc .fc-button-group > .fc-button {
+        color: #64748b;
+        background: transparent !important;
+    }
+    #calendarModal .fc .fc-button-group > .fc-button:hover {
+        background: rgba(0, 0, 0, 0.04) !important;
+        color: #1e293b !important;
+    }
+    #calendarModal .fc .fc-button-group > .fc-button.fc-button-active {
+        background: #ffffff !important;
+        color: #1e3c72 !important;
+        font-weight: 700 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    }
+    #calendarModal .fc .fc-today-button,
+    #calendarModal .fc .fc-prev-button,
+    #calendarModal .fc .fc-next-button {
+        background: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #1e3c72 !important;
+    }
+
+    /* ══ DARK THEME MODE (Active Dark Mode) ══ */
+    html[data-theme="dark"] #calendarModal .modal-content,
+    body[data-theme="dark"] #calendarModal .modal-content,
+    [data-theme="dark"] #calendarModal .modal-content {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
+    }
+    html[data-theme="dark"] #calendarModal .modal-body,
+    body[data-theme="dark"] #calendarModal .modal-body,
+    [data-theme="dark"] #calendarModal .modal-body {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] #calendarModal .modal-footer,
+    body[data-theme="dark"] #calendarModal .modal-footer,
+    [data-theme="dark"] #calendarModal .modal-footer {
+        background-color: #0f172a !important;
+        border-top: 1px solid #334155 !important;
+    }
+    html[data-theme="dark"] #calendarModal .fc,
+    body[data-theme="dark"] #calendarModal .fc,
+    [data-theme="dark"] #calendarModal .fc {
+        --fc-page-bg-color: #1e293b !important;
+        --fc-neutral-bg-color: #0f172a !important;
+        --fc-border-color: #334155 !important;
+        --fc-today-bg-color: rgba(56, 189, 248, 0.12) !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme="dark"] #calendarModal .fc .fc-toolbar-title,
+    [data-theme="dark"] #calendarModal .fc .fc-toolbar-title {
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] #calendarModal .fc .fc-col-header-cell,
+    [data-theme="dark"] #calendarModal .fc .fc-col-header-cell {
+        background-color: #0f172a !important;
+        color: #38bdf8 !important;
+        border-color: #334155 !important;
+    }
+    html[data-theme="dark"] #calendarModal .fc .fc-daygrid-day-number,
+    [data-theme="dark"] #calendarModal .fc .fc-daygrid-day-number {
+        color: #94a3b8 !important;
+    }
+    html[data-theme="dark"] #calendarModal .fc .fc-day-today .fc-daygrid-day-number,
+    [data-theme="dark"] #calendarModal .fc .fc-day-today .fc-daygrid-day-number {
+        color: #38bdf8 !important;
+        font-weight: 800;
+    }
+    html[data-theme="dark"] #calendarModal .fc .fc-button-group,
+    [data-theme="dark"] #calendarModal .fc .fc-button-group {
+        background: #0f172a !important;
+        border: 1px solid #334155 !important;
+    }
+    html[data-theme="dark"] #calendarModal .fc .fc-button-group > .fc-button,
+    [data-theme="dark"] #calendarModal .fc .fc-button-group > .fc-button {
+        color: #94a3b8 !important;
+        background: transparent !important;
+    }
+    html[data-theme="dark"] #calendarModal .fc .fc-button-group > .fc-button:hover,
+    [data-theme="dark"] #calendarModal .fc .fc-button-group > .fc-button:hover {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #ffffff !important;
+    }
+    html[data-theme="dark"] #calendarModal .fc .fc-button-group > .fc-button.fc-button-active,
+    [data-theme="dark"] #calendarModal .fc .fc-button-group > .fc-button.fc-button-active {
+        background: #334155 !important;
+        color: #38bdf8 !important;
+        font-weight: 700 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+    }
+    html[data-theme="dark"] #calendarModal .fc .fc-today-button,
+    html[data-theme="dark"] #calendarModal .fc .fc-prev-button,
+    html[data-theme="dark"] #calendarModal .fc .fc-next-button,
+    [data-theme="dark"] #calendarModal .fc .fc-today-button,
+    [data-theme="dark"] #calendarModal .fc .fc-prev-button,
+    [data-theme="dark"] #calendarModal .fc .fc-next-button {
+        background: #0f172a !important;
+        border: 1px solid #334155 !important;
+        color: #cbd5e1 !important;
+    }
+    html[data-theme="dark"] #calendarModal .fc .fc-today-button:hover,
+    html[data-theme="dark"] #calendarModal .fc .fc-prev-button:hover,
+    html[data-theme="dark"] #calendarModal .fc .fc-next-button:hover,
+    [data-theme="dark"] #calendarModal .fc .fc-today-button:hover,
+    [data-theme="dark"] #calendarModal .fc .fc-prev-button:hover,
+    [data-theme="dark"] #calendarModal .fc .fc-next-button:hover {
+        background: #334155 !important;
+        color: #ffffff !important;
+    }
+</style>
 
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css' rel='stylesheet' />
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
@@ -197,7 +445,7 @@
         $('#enquiry_list').DataTable({
             scrollY: "600px",
             scrollX: true,
-            order: [0, 'desc'],
+            order: [[0, 'desc']],
             dom: 'lBfrtip',
             buttons: [
                 'copy', 'csv', 'excel', 'print'
@@ -205,34 +453,37 @@
         });
 
         var calendarEl = document.getElementById('calendar');
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            },
-            events: '{% url "mc_tours_calendar_events" %}',
-            eventClick: function(info) {
-                if (info.event.url) {
-                    window.open(info.event.url, "_blank");
-                    return false;
+        if (calendarEl) {
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: '{% url "mc_tours_calendar_events" %}',
+                eventClick: function(info) {
+                    if (info.event.url) {
+                        window.open(info.event.url, "_blank");
+                        return false;
+                    }
+                },
+                eventMouseEnter: function(info) {
+                    $(info.el).tooltip({
+                        title: info.event.extendedProps.description,
+                        placement: 'top',
+                        trigger: 'hover',
+                        container: 'body',
+                        html: true
+                    });
                 }
-            },
-            eventMouseEnter: function(info) {
-                $(info.el).tooltip({
-                    title: info.event.extendedProps.description,
-                    placement: 'top',
-                    trigger: 'hover',
-                    container: 'body',
-                    html: true
-                });
-            }
-        });
+            });
 
-        $('#calendarModal').on('shown.bs.modal', function () {
-            calendar.render();
-        });
+            $('#calendarModal').on('shown.bs.modal', function () {
+                calendar.render();
+                calendar.updateSize();
+            });
+        }
     });
 </script>
 {% endblock content %}

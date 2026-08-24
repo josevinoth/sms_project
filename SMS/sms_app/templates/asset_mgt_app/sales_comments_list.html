@@ -1,143 +1,184 @@
-{% extends "asset_mgt_app/base.html" %}
-
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block title %}Sales Comments List{% endblock %}
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>Sales Comments List</h3>
-        </div>
-        <div class="col-5"></div>
-    </div>
-</div>
 
-<div class="container-fluid row">
-    <div class="col-md-1">
-        <a href="{% url 'sales_search' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
+<div class="container-fluid py-3">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-3 flex-wrap" style="gap: 12px;">
+        <div class="modern-list-title d-flex align-items-center" style="gap: 10px;">
+            <i class="fas fa-comments text-white"></i>
+            <h3 class="mb-0 text-white" style="font-size:1.35rem; font-weight:700; letter-spacing:0.5px;">Sales Comments List</h3>
+        </div>
+        <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+            <a href="{% url 'sales_search' %}" class="btn-modern btn-cancel py-1 px-3" style="text-decoration:none;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Sales
+            </a>
+            <a href="{% url 'sales_comments_list' %}" class="btn-modern btn-highlight py-1 px-3" style="text-decoration:none;">
+                <i class="fas fa-eye mr-1"></i> Show All
+            </a>
+        </div>
     </div>
-    <div class="col-md-1">
-        <a href="{% url 'sales_comments_list' %}" class="btn btn-warning btn-block btn-lg">
-            <i class="fa fa-eye" aria-hidden="true"></i> Show All
-        </a>
-    </div>
-    <div class="col-md-1">
-        <form class="navbar-search navbar-search-dark form-inline mr-3 d-none d-md-flex ml-lg-auto" action="{% url 'sales_comments_search' %}" method="get">
-            <div class="form-group">
-                <input type="search" class="form-control" id="sales_number" placeholder="Sales Number" name="sales_number">
-                <button class="btn btn-primary" type="submit"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
-            <div class="form-group mx-1 ml-5">
-                    <label for="from-date" class="mr-1"><b>From:</b></label>
-                    <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+
+    <!-- ══ Filter & Search Bar ══ -->
+    <div class="form-section p-3 mb-3">
+        <form class="d-flex flex-wrap align-items-center justify-content-between" action="{% url 'sales_comments_search' %}" method="get" style="gap: 12px;">
+            <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+                <div class="input-group" style="width: auto;">
+                    <input type="search" class="form-control form-control-modern" id="sales_number" placeholder="Sales Number" name="sales_number" value="{{ request.GET.sales_number|default:'' }}" style="height: 38px; min-width: 200px;">
                 </div>
-                <div class="form-group mx-1 ml-3">
-                    <label for="to-date" class="mr-1"><b>To:</b></label>
-                    <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
+                <button class="btn-modern btn-submit py-1 px-3" type="submit" style="height: 38px;">
+                    <i class="fa fa-search mr-1" aria-hidden="true"></i> Search
+                </button>
+            </div>
+            
+            <div class="d-flex align-items-center flex-wrap ml-auto" style="gap: 10px;">
+                <div class="d-flex align-items-center" style="gap: 6px;">
+                    <label for="from-date" class="mb-0 font-weight-bold form-label-modern" style="letter-spacing: 0.5px;">From:</label>
+                    <input type="date" id="from-date" name="from_date" value="{{ from_date|default:'' }}" class="form-control form-control-modern" style="height: 38px; width: auto;">
+                </div>
+                <div class="d-flex align-items-center" style="gap: 6px;">
+                    <label for="to-date" class="mb-0 font-weight-bold form-label-modern" style="letter-spacing: 0.5px;">To:</label>
+                    <input type="date" id="to-date" name="to_date" value="{{ to_date|default:'' }}" class="form-control form-control-modern" style="height: 38px; width: auto;">
                 </div>
             </div>
         </form>
     </div>
-</div>
 
-<hr>
-
-<div class="container-fluid">
-    <table id="sales_comments_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-            <!-- Filter Row (Above Header) -->
-            <tr class="filter-row">
-                <th><input type="text" class="column-search form-control" placeholder="Search ID"></th>
-                <th><input type="text" class="column-search form-control" placeholder="Search Added On"></th>
-                <th><input type="text" class="column-search form-control" placeholder="Search Date"></th>
-                <th><input type="text" class="column-search form-control" placeholder="Search Sales No"></th>
-                <th><input type="text" class="column-search form-control" placeholder="Search Type"></th>
-                <th><input type="text" class="column-search form-control" placeholder="Search Existing"></th>
-                <th><input type="text" class="column-search form-control" placeholder="Search New"></th>
-                <th><input type="text" class="column-search form-control" placeholder="Search Call Type"></th>
-                <th><input type="text" class="column-search form-control" placeholder="Search Call Nature"></th>
-                <th><input type="text" class="column-search form-control" placeholder="Search Purpose"></th>
-                <th><input type="text" class="column-search form-control" placeholder="Search Participants"></th>
-                <th><input type="text" class="column-search form-control" placeholder="Search Comments"></th>
-                <th><input type="text" class="column-search form-control" placeholder="Search Updated By"></th>
-                <th><input type="text" class="column-search form-control" placeholder="Search Updated On"></th>
-            </tr>
-
-            <!-- Table Headers -->
-            <tr>
-                <th>ID</th>
-                <th>Added On</th>
-                <th>Date of Call</th>
-                <th>Sales Number</th>
-                <th>Customer Type</th>
-                <th>Existing Customer Name</th>
-                <th>New Customer Name</th>
-                <th>Type of Call</th>
-                <th>Nature of Call</th>
-                <th>Purpose of Call</th>
-                <th>Joint Call Participant</th>
-                <th>Comments</th>
-                <th>Updated By</th>
-                <th>Updated On</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for commentsinfo in page_obj %}
-            <tr>
-                <td>{{ commentsinfo.id }}</td>
-                <td>{{ commentsinfo.sc_created_at }}</td>
-                <td>{{ commentsinfo.sc_date_of_call }}</td>
-                <td>{{ commentsinfo.sc_sales_number }}</td>
-                <td>{{ commentsinfo.sc_sales_number.s_customer_new }}</td>
-                <td>{{ commentsinfo.sc_sales_number.s_customer_name }}</td>
-                <td>{{ commentsinfo.sc_sales_number.s_customer_new_name }}</td>
-                <td>{{ commentsinfo.sc_call_type }}</td>
-                <td>{{ commentsinfo.sc_call_nature }}</td>
-                <td>{{ commentsinfo.sc_call_purpose }}</td>
-                <td>
-                    {% if commentsinfo.sc_joint_call_name.exists %}
-                    <ul>
-                        {% for category in commentsinfo.sc_joint_call_name.all %}
-                        <li>{{ category }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% else %}
-                    No categories
-                    {% endif %}
-                </td>
-                <td>{{ commentsinfo.sc_comments }}</td>
-                <td>{{ commentsinfo.sc_updated_by }}</td>
-                <td>{{ commentsinfo.sc_updated_at }}</td>
-            </tr>
+    <!-- ══ Messages ══ -->
+    {% if messages %}
+    <div class="row mb-3">
+        <div class="col-12 message text-center">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
             {% endfor %}
-        </tbody>
-    </table>
+        </div>
+    </div>
+    {% endif %}
 
-    <!-- Pagination -->
-    <div class="pagination">
-        <span class="step-links">
-            {% if page_obj.has_previous %}
-                <a class="btn btn-warning" href="?page=1">First</a>
-                <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-            {% endif %}
+    <!-- ══ Table Container ══ -->
+    <div class="table-container-modern p-3">
+        <div class="table-responsive">
+            <table id="sales_comments_list" class="table table-striped table-bordered modern-table w-100">
+                <thead>
+                    <!-- Filter Row (Above Header) -->
+                    <tr class="filter-row">
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search ID"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Added On"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Date"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Sales No"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Type"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Existing"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search New"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Call Type"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Call Nature"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Purpose"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Participants"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Comments"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Updated By"></th>
+                        <th><input type="text" class="column-search form-control form-control-modern filter-input" placeholder="Search Updated On"></th>
+                    </tr>
 
-            <span class="current">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-            </span>
+                    <!-- Table Headers -->
+                    <tr style="white-space: nowrap;">
+                        <th>ID</th>
+                        <th>Added On</th>
+                        <th>Date of Call</th>
+                        <th>Sales Number</th>
+                        <th>Customer Type</th>
+                        <th>Existing Customer Name</th>
+                        <th>New Customer Name</th>
+                        <th>Type of Call</th>
+                        <th>Nature of Call</th>
+                        <th>Purpose of Call</th>
+                        <th>Joint Call Participant</th>
+                        <th>Comments</th>
+                        <th>Updated By</th>
+                        <th>Updated On</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for commentsinfo in page_obj %}
+                    <tr>
+                        <td class="font-weight-bold align-middle">{{ commentsinfo.id }}</td>
+                        <td class="align-middle" style="white-space: nowrap;">
+                            <div>{{ commentsinfo.sc_created_at|date:"M. d, Y"|default:commentsinfo.sc_created_at }}</div>
+                            {% if commentsinfo.sc_created_at %}<small class="text-muted font-weight-bold">{{ commentsinfo.sc_created_at|date:"h:i A" }}</small>{% endif %}
+                        </td>
+                        <td class="align-middle" style="white-space: nowrap;">{{ commentsinfo.sc_date_of_call|default:"-" }}</td>
+                        <td class="align-middle font-weight-bold text-primary" style="white-space: nowrap;">{{ commentsinfo.sc_sales_number|default:"-" }}</td>
+                        <td class="align-middle">{{ commentsinfo.sc_sales_number.s_customer_new|default:"-" }}</td>
+                        <td class="align-middle">{{ commentsinfo.sc_sales_number.s_customer_name|default:"-" }}</td>
+                        <td class="align-middle">{{ commentsinfo.sc_sales_number.s_customer_new_name|default:"-" }}</td>
+                        <td class="align-middle">{{ commentsinfo.sc_call_type|default:"-" }}</td>
+                        <td class="align-middle">{{ commentsinfo.sc_call_nature|default:"-" }}</td>
+                        <td class="align-middle">{{ commentsinfo.sc_call_purpose|default:"-" }}</td>
+                        <td class="align-middle">
+                            {% if commentsinfo.sc_joint_call_name.exists %}
+                            <ul class="mb-0 pl-3">
+                                {% for category in commentsinfo.sc_joint_call_name.all %}
+                                <li>{{ category }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <span class="text-muted">No categories</span>
+                            {% endif %}
+                        </td>
+                        <td class="align-middle">{{ commentsinfo.sc_comments|default:"-" }}</td>
+                        <td class="align-middle" style="white-space: nowrap;">{{ commentsinfo.sc_updated_by|default:"-" }}</td>
+                        <td class="align-middle" style="white-space: nowrap;">
+                            <div>{{ commentsinfo.sc_updated_at|date:"M. d, Y"|default:commentsinfo.sc_updated_at }}</div>
+                            {% if commentsinfo.sc_updated_at %}<small class="text-muted font-weight-bold">{{ commentsinfo.sc_updated_at|date:"h:i A" }}</small>{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-            {% if page_obj.has_next %}
-                <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
-                <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
-            {% endif %}
-        </span>
+        <!-- ══ Modern Pagination ══ -->
+        <div class="d-flex justify-content-between align-items-center flex-wrap mt-3 pt-3" style="border-top: 1px solid var(--border-light, #e2e8f0); gap: 10px;">
+            <div class="text-muted font-weight-bold">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </div>
+            <div class="d-flex" style="gap: 6px;">
+                {% if page_obj.has_previous %}
+                    <a class="btn-modern btn-cancel py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page=1{% if request.GET.sales_number %}&sales_number={{ request.GET.sales_number }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}">First</a>
+                    <a class="btn-modern btn-submit py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ page_obj.previous_page_number }}{% if request.GET.sales_number %}&sales_number={{ request.GET.sales_number }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}">Previous</a>
+                {% endif %}
+                <span class="btn-modern py-1 px-3" style="font-size:0.85rem; background: var(--bg-card); border: 1px solid var(--border-light); color: var(--text-main); font-weight: 700;">
+                    {{ page_obj.number }}
+                </span>
+                {% if page_obj.has_next %}
+                    <a class="btn-modern btn-submit py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ page_obj.next_page_number }}{% if request.GET.sales_number %}&sales_number={{ request.GET.sales_number }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}">Next</a>
+                    <a class="btn-modern btn-cancel py-1 px-3" style="font-size:0.85rem; text-decoration:none;" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.sales_number %}&sales_number={{ request.GET.sales_number }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}">Last</a>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+    .filter-input {
+        min-width: 100px;
+        height: 30px !important;
+        font-size: 0.8rem !important;
+        padding: 2px 8px !important;
+        border-radius: 6px !important;
+    }
+</style>
 
 <script>
     $(document).ready(function() {
         // Initialize DataTable
         var table = $('#sales_comments_list').DataTable({
-            order: [0, 'desc'], // Sorting by "Date of Call"
+            scrollY: "600px",
+            scrollX: true,
+            order: [[0, 'desc']],
             dom: 'lBfrtip',
             buttons: ['copy', 'csv', 'excel', 'print'],
             initComplete: function() {
@@ -148,15 +189,19 @@
                 });
             }
         });
+
+        // Prevent sorting when clicking inside filter inputs
+        $('.filter-row input').on('click', function(e) {
+            e.stopPropagation();
+        });
     });
 </script>
-<script>
 
+<script>
     document.getElementById('from-date').addEventListener('change', updateFilters);
     document.getElementById('to-date').addEventListener('change', updateFilters);
 
     function updateFilters() {
-
         const fromDate = document.getElementById('from-date').value;
         const toDate = document.getElementById('to-date').value;
         const url = new URL(window.location.href);
