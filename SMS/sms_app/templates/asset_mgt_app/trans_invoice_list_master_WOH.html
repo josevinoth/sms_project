@@ -232,7 +232,9 @@
 
                 <!-- No of Pcs -->
                 <td>
-                    {% if goods %}
+                    {% if inv.total_goods_qty is not None %}
+                    {{ inv.total_goods_qty }}
+                    {% elif goods %}
                     {{ goods.cg_qty }}
                     {% else %}
                     <span class="text-muted">0</span>
@@ -241,7 +243,9 @@
 
                 <!-- Weight -->
                 <td>
-                    {% if goods %}
+                    {% if inv.total_goods_weight is not None %}
+                    {{ inv.total_goods_weight }}
+                    {% elif goods %}
                     {{ goods.cg_weight }}
                     {% else %}
                     <span class="text-muted">0.0</span>

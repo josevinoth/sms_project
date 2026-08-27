@@ -436,6 +436,58 @@ def attach_invoice_veh_type_to_trips(trips):
     return trips
 
 
+def attach_goods_totals(items, is_trip=False):
+    """
+    Attaches total_goods_qty and total_goods_weight to a list of TransInvoiceInfo or TripdetailInfo objects.
+    Aggregates SUM(cg_qty) and SUM(cg_weight) across all ConsignmentgoodsInfo records for the associated consignment.
+    """
+    cons_ids = []
+    for item in items:
+        if is_trip:
+            cid = item.tr_consignmentnumber_id if item.tr_consignmentnumber else None
+        else:
+            cid = item.ti_consignment_id or (item.ti_trip.tr_consignmentnumber_id if item.ti_trip else None)
+        if cid:
+            cons_ids.append(cid)
+
+    if not cons_ids:
+        for item in items:
+            item.total_goods_qty = getattr(item.ti_goods, 'cg_qty', 0) if hasattr(item, 'ti_goods') and item.ti_goods else 0
+            item.total_goods_weight = getattr(item.ti_goods, 'cg_weight', 0.0) if hasattr(item, 'ti_goods') and item.ti_goods else 0.0
+        return items
+
+    goods_agg = (
+        ConsignmentgoodsInfo.objects
+        .filter(cg_consignmentnumber_id__in=cons_ids)
+        .values('cg_consignmentnumber_id')
+        .annotate(
+            total_qty=Sum('cg_qty'),
+            total_weight=Sum('cg_weight')
+        )
+    )
+    goods_map = {
+        row['cg_consignmentnumber_id']: (row['total_qty'] or 0, row['total_weight'] or 0.0)
+        for row in goods_agg
+    }
+
+    for item in items:
+        if is_trip:
+            cid = item.tr_consignmentnumber_id if item.tr_consignmentnumber else None
+        else:
+            cid = item.ti_consignment_id or (item.ti_trip.tr_consignmentnumber_id if item.ti_trip else None)
+
+        if cid and cid in goods_map:
+            item.total_goods_qty, item.total_goods_weight = goods_map[cid]
+        elif hasattr(item, 'ti_goods') and item.ti_goods:
+            item.total_goods_qty = item.ti_goods.cg_qty or 0
+            item.total_goods_weight = item.ti_goods.cg_weight or 0.0
+        else:
+            item.total_goods_qty = 0
+            item.total_goods_weight = 0.0
+
+    return items
+
+
 @login_required(login_url='login_page')
 def trans_invoice_edit(request, invoice_id):
     first_name = request.session.get('first_name')
@@ -553,11 +605,13 @@ def trans_invoice_edit(request, invoice_id):
         'invoice_list': invoice_list.select_related("ti_customer", "ti_trip", "ti_consignment", "ti_goods").order_by("-id"),
     }
 
-    # Attach individual trip PDF links and vehicle categories for display on edit page
-    woh_items = context['invoice_list']
+    # Attach individual trip PDF links, vehicle categories, and goods totals for display on edit page
+    woh_items = list(context['invoice_list'])
+    context['invoice_list'] = woh_items
     trips = [item.ti_trip for item in woh_items if item.ti_trip]
     attach_vehicle_category_to_trips(trips)
     attach_invoice_veh_type_to_trips(trips)
+    attach_goods_totals(woh_items, is_trip=False)
     trip_numbers = [item.ti_trip.tr_tripnumber for item in woh_items if item.ti_trip and item.ti_trip.tr_tripnumber]
     pdf_docs = InvoiceDocumentInfo.objects.filter(id_tripnumber__in=trip_numbers)
     pdf_map = {doc.id_tripnumber: doc.id_merged_pdf.url if doc.id_merged_pdf else None for doc in pdf_docs}
@@ -964,6 +1018,7 @@ def trans_invoice_list_woh(request, customer_id):
     trans_invoice_list = list(trans_invoice_list)
     attach_vehicle_category_to_trips(trans_invoice_list)
     attach_invoice_veh_type_to_trips(trans_invoice_list)
+    attach_goods_totals(trans_invoice_list, is_trip=True)
 
     # Attach PDF links to Current Invoice trips (Top Table)
     curr_trip_numbers = [t.tr_tripnumber for t in trans_invoice_list if t.tr_tripnumber]
@@ -1006,6 +1061,7 @@ def trans_invoice_list_woh(request, customer_id):
     invoice_list_master = list(invoice_list_master)
     attach_vehicle_category_to_trips(invoice_list_master)
     attach_invoice_veh_type_to_trips(invoice_list_master)
+    attach_goods_totals(invoice_list_master, is_trip=True)
 
     # Attach PDF links to master list trips
     master_trip_numbers = [t.tr_tripnumber for t in invoice_list_master if t.tr_tripnumber]
@@ -1213,20 +1269,35 @@ def trans_invoice_excel(request, invoice_no):
 
     def safe(val): return val if val is not None else ""
 
+    qs = list(qs)
+    attach_goods_totals(qs, is_trip=False)
+
     for obj in qs:
         # Use charges directly from TripdetailInfo if available, otherwise fallback to TransInvoiceInfo snapshot
         trip = obj.ti_trip
         goods = obj.ti_goods
 
-        transport = trip.tc_tripcost if trip else obj.ti_transportation_charges
-        toll = trip.tc_tollcost if trip else obj.ti_toll_charges
-        parking = trip.tc_parkingcost if trip else obj.ti_parking_charges
-        loading = trip.tc_loadingcost if trip else obj.ti_loading_charges
-        unloading = trip.tc_unloadingcost if trip else obj.ti_unloading_charges
-        halting = get_trip_halting_charge(trip) if trip else (obj.ti_halting_charges or 0.0)
-        weighment = trip.tc_weighmentcost if trip else obj.ti_weighment_charges
-        handling = trip.tc_handlingcost if trip else obj.ti_handling_charges
-        cancellation = trip.tc_cancellation if trip else obj.ti_cancellation_charges
+        if trip:
+            transport = trip.tc_tripcost if trip.tc_tripcost_check else 0
+            toll = trip.tc_tollcost if trip.tc_tollcost_check else 0
+            parking = trip.tc_parkingcost if trip.tc_parkingcost_check else 0
+            loading = trip.tc_loadingcost if trip.tc_loadingcost_check else 0
+            unloading = trip.tc_unloadingcost if trip.tc_unloadingcost_check else 0
+            halting = get_trip_halting_charge(trip)
+            weighment = trip.tc_weighmentcost if trip.tc_weighmentcost_check else 0
+            handling = ((trip.tc_handlingcost or 0) if trip.tc_handlingcost_check else 0) + \
+                       ((trip.tc_supervisorcost or 0) if trip.tc_supervisorcost_check else 0)
+            cancellation = trip.tc_cancellation if trip.tc_cancellation_check else 0
+        else:
+            transport = obj.ti_transportation_charges or 0
+            toll = obj.ti_toll_charges or 0
+            parking = obj.ti_parking_charges or 0
+            loading = obj.ti_loading_charges or 0
+            unloading = obj.ti_unloading_charges or 0
+            halting = obj.ti_halting_charges or 0.0
+            weighment = obj.ti_weighment_charges or 0
+            handling = obj.ti_handling_charges or 0
+            cancellation = obj.ti_cancellation_charges or 0
 
         total_val = (
             (transport or 0) + (toll or 0) + (parking or 0) +
@@ -1250,8 +1321,8 @@ def trans_invoice_excel(request, invoice_no):
             safe(str(obj.ti_goods.cg_consignee) if obj.ti_goods else ""),
             safe(str(obj.ti_consignment.co_cusrefnum) if obj.ti_consignment else ""),
             safe(str(obj.ti_goods.cg_hawbno) if obj.ti_goods else ""),
-            safe(str(obj.ti_goods.cg_qty) if obj.ti_goods else ""),
-            safe(str(obj.ti_goods.cg_weight) if obj.ti_goods else ""),
+            safe(str(obj.total_goods_qty if hasattr(obj, 'total_goods_qty') and obj.total_goods_qty is not None else (obj.ti_goods.cg_qty if obj.ti_goods else ""))),
+            safe(str(obj.total_goods_weight if hasattr(obj, 'total_goods_weight') and obj.total_goods_weight is not None else (obj.ti_goods.cg_weight if obj.ti_goods else ""))),
             safe(transport or 0),
             safe(toll or 0),
             safe(parking or 0),
@@ -1341,15 +1412,27 @@ def trans_invoice_tally_excel(request, invoice_no):
         trip = obj.ti_trip
         cons = obj.ti_consignment
         
-        transport = trip.tc_tripcost if trip else obj.ti_transportation_charges
-        toll = trip.tc_tollcost if trip else obj.ti_toll_charges
-        parking = trip.tc_parkingcost if trip else obj.ti_parking_charges
-        loading = trip.tc_loadingcost if trip else obj.ti_loading_charges
-        unloading = trip.tc_unloadingcost if trip else obj.ti_unloading_charges
-        halting = get_trip_halting_charge(trip) if trip else (obj.ti_halting_charges or 0.0)
-        weighment = trip.tc_weighmentcost if trip else obj.ti_weighment_charges
-        handling = trip.tc_handlingcost if trip else obj.ti_handling_charges
-        cancellation = trip.tc_cancellation if trip else obj.ti_cancellation_charges
+        if trip:
+            transport = trip.tc_tripcost if trip.tc_tripcost_check else 0
+            toll = trip.tc_tollcost if trip.tc_tollcost_check else 0
+            parking = trip.tc_parkingcost if trip.tc_parkingcost_check else 0
+            loading = trip.tc_loadingcost if trip.tc_loadingcost_check else 0
+            unloading = trip.tc_unloadingcost if trip.tc_unloadingcost_check else 0
+            halting = get_trip_halting_charge(trip)
+            weighment = trip.tc_weighmentcost if trip.tc_weighmentcost_check else 0
+            handling = ((trip.tc_handlingcost or 0) if trip.tc_handlingcost_check else 0) + \
+                       ((trip.tc_supervisorcost or 0) if trip.tc_supervisorcost_check else 0)
+            cancellation = trip.tc_cancellation if trip.tc_cancellation_check else 0
+        else:
+            transport = obj.ti_transportation_charges or 0
+            toll = obj.ti_toll_charges or 0
+            parking = obj.ti_parking_charges or 0
+            loading = obj.ti_loading_charges or 0
+            unloading = obj.ti_unloading_charges or 0
+            halting = obj.ti_halting_charges or 0.0
+            weighment = obj.ti_weighment_charges or 0
+            handling = obj.ti_handling_charges or 0
+            cancellation = obj.ti_cancellation_charges or 0
 
         total_val = (
             (transport or 0) + (toll or 0) + (parking or 0) +
