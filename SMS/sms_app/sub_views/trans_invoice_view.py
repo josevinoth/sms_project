@@ -381,8 +381,8 @@ def attach_vehicle_category_to_trips(trips):
 def attach_invoice_veh_type_to_trips(trips):
     """
     For each TripdetailInfo in `trips`, look up the linked Vehicle_allotmentInfo
-    and read its checkbox flags to determine whether to show
-    'Vehicle Type Placed' or 'Vehicle Type Requested'.
+    (matched by enquiry ID and vehicle registration number) and read its checkbox
+    flags to determine whether to show 'Vehicle Type Placed' or 'Vehicle Type Requested'.
     Attaches the result as trip.invoice_veh_type (a plain string attribute).
     No model property changes needed.
     """
@@ -396,28 +396,59 @@ def attach_invoice_veh_type_to_trips(trips):
     }
     if not enq_ids:
         for t in trips:
-            t.invoice_veh_type = str(t.tr_vehicletype) if t.tr_vehicletype else ""
+            t.invoice_veh_type = str(getattr(t, 'tr_vehicletype_placed', None) or getattr(t, 'tr_vehicletype', None) or "")
         return trips
 
-    # Fetch latest allotment per enquiry in one DB query
+    # Fetch allotments for all linked enquiries
     allotments = (
         Vehicle_allotmentInfo.objects
         .filter(va_enquirynumber_id__in=enq_ids)
-        .select_related('va_vehicletype', 'va_vehicletype_placed')
+        .select_related('va_vehicletype', 'va_vehicletype_placed', 'va_vehiclenumber')
         .order_by('va_enquirynumber_id', '-va_updated_at')
     )
 
-    # Build map: enquiry_id -> best allotment (prefer active status 1)
+    def normalize_reg(num):
+        if not num:
+            return ""
+        return str(num).strip().upper().replace(" ", "").replace("-", "")
+
+    # Build lookup maps:
+    # 1. (enquiry_id, normalized_vehicle_number) -> allotment (for exact vehicle match in multi-vehicle enquiries)
+    # 2. enquiry_id -> fallback allotment (prefers active status 1)
+    enq_veh_va_map = {}
     enq_va_map = {}
+
     for va in allotments:
         eid = va.va_enquirynumber_id
-        if eid not in enq_va_map:
-            enq_va_map[eid] = va
-        elif va.va_status_id == 1:  # prefer Vehicle Assigned status
+
+        # Resolve vehicle number from own/attached or market vehicle field
+        va_reg = ""
+        if va.va_vehiclenumber and getattr(va.va_vehiclenumber, 'vm_registrationnumber', None):
+            va_reg = normalize_reg(va.va_vehiclenumber.vm_registrationnumber)
+        elif va.va_vehiclenumber_mkt:
+            va_reg = normalize_reg(va.va_vehiclenumber_mkt)
+        elif va.va_vehiclenumber:
+            va_reg = normalize_reg(str(va.va_vehiclenumber))
+
+        if va_reg:
+            veh_key = (eid, va_reg)
+            if veh_key not in enq_veh_va_map or getattr(va, 'va_status_id', None) == 1:
+                enq_veh_va_map[veh_key] = va
+
+        if eid not in enq_va_map or getattr(va, 'va_status_id', None) == 1:
             enq_va_map[eid] = va
 
     for t in trips:
-        va = enq_va_map.get(t.tr_enquirynumber_id)
+        eid = getattr(t, 'tr_enquirynumber_id', None)
+        t_veh = normalize_reg(getattr(t, 'tr_vehiclenumber', None))
+
+        # First try exact match by enquiry + vehicle number; fall back to enquiry-level match
+        va = None
+        if eid and t_veh:
+            va = enq_veh_va_map.get((eid, t_veh))
+        if not va and eid:
+            va = enq_va_map.get(eid)
+
         veh_type = ""
         if va:
             if va.va_vehicletype_selection_placed and va.va_vehicletype_placed:
@@ -428,9 +459,11 @@ def attach_invoice_veh_type_to_trips(trips):
                 veh_type = str(va.va_vehicletype_placed)
             elif va.va_vehicletype:
                 veh_type = str(va.va_vehicletype)
+
         if not veh_type:
             # Fallback: use trip's own vehicletype fields
-            veh_type = str(t.tr_vehicletype_placed or t.tr_vehicletype or "")
+            veh_type = str(getattr(t, 'tr_vehicletype_placed', None) or getattr(t, 'tr_vehicletype', None) or "")
+
         t.invoice_veh_type = veh_type
 
     return trips
@@ -1209,6 +1242,7 @@ def trans_invoice_excel(request, invoice_no):
 
     trips = [obj.ti_trip for obj in qs if obj.ti_trip]
     attach_vehicle_category_to_trips(trips)
+    attach_invoice_veh_type_to_trips(trips)
 
     wb = Workbook()
     ws = wb.active
