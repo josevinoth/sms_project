@@ -100,13 +100,17 @@ def audit_post_save(sender, instance, created, **kwargs):
     except Exception:
         changed_data_json = changed_data
 
+    current_user = get_current_user()
+    if not current_user or not getattr(current_user, 'is_authenticated', False):
+        current_user = None
+
     SystemAuditLog.objects.create(
         module_name=instance._meta.app_label.upper(),
         model_name=instance.__class__.__name__,
         record_id=str(instance.pk),
         action=action,
         changed_data=changed_data_json,
-        changed_by=get_current_user()
+        changed_by=current_user
     )
 
 @receiver(post_delete)

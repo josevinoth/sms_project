@@ -113,6 +113,7 @@
                         <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Updated By"></th>
                         <th></th>
                         <th></th>
+                        <th></th>
                     </tr>
                     <tr>
                         <th>Created On</th>
@@ -125,6 +126,7 @@
                         <th>Rate</th>
                         <th>Updated On</th>
                         <th>Updated By</th>
+                        <th class="text-center">History</th>
                         <th class="text-center">Edit</th>
                         <th class="text-center">Delete</th>
                     </tr>
@@ -142,6 +144,16 @@
                             <td><span class="badge badge-success p-2" style="font-size: 0.95rem;">₹ {{rtratemasterinfo.ro_rate}}</span></td>
                             <td>{{rtratemasterinfo.ro_updated_at|date:"d-m-Y"}}<br><span class="small text-muted font-weight-bold">{{rtratemasterinfo.ro_updated_at|date:"h:i A"}}</span></td>
                             <td>{{rtratemasterinfo.ro_updated_by}}</td>
+                            <td class="text-center">
+                                {% if request.session.ses_role == 'Admin' or request.session.ses_role == 'Super User' or request.session.ses_role == 'Superuser' or request.user.is_superuser %}
+                                <button type="button" class="btn btn-sm btn-info btn-history" data-id="{{rtratemasterinfo.id}}" style="border-radius: 8px; padding: 5px 10px;" title="View Rate Audit History">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
                             <td class="text-center">
                                 <a class="btn-modern btn-submit py-1 px-3" href="{% url 'rtratemaster_update' rtratemasterinfo.id %}" style="font-size: 0.8rem; text-decoration: none; border-radius: 8px;">
                                     <i class="far fa-edit"></i>
@@ -192,17 +204,66 @@
     </div>
 </div>
 
+<!-- Audit History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1" role="dialog" aria-labelledby="historyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 16px; border: none; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); padding: 18px 24px;">
+                <h5 class="modal-title font-weight-bold" id="historyModalLabel">
+                    <i class="fas fa-history mr-2"></i> Audit Rate History
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.9;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4" style="background-color: #f8fafc;">
+                <div id="historyLoading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Fetching audit logs...</p>
+                </div>
+                <div id="historyContent" style="display: none;">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="background: #fff; border-radius: 8px; overflow: hidden;">
+                            <thead style="background: #111827; color: #ffffff;">
+                                <tr>
+                                    <th>TIMESTAMP</th>
+                                    <th>USER</th>
+                                    <th>ACTION</th>
+                                    <th>OLD DATA</th>
+                                    <th>NEW DATA</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="historyTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="historyEmpty" class="text-center py-4 text-muted" style="display: none;">
+                    <i class="fas fa-info-circle fa-2x mb-2 text-secondary"></i>
+                    <p class="mb-0">No history records available for this item yet.</p>
+                </div>
+            </div>
+            <div class="modal-footer bg-white border-top-0 py-3">
+                <button type="button" class="btn btn-secondary px-4" data-dismiss="modal" style="border-radius: 8px;">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock content %}
 
 {% block extra_js %}
 <script>
 $(document).ready(function() {
     var table = $('#rtratemaster_list').DataTable({
-        paging: false,       // disable DataTables pagination since we use server-side (if applicable) or all at once
+        paging: false,       
         info: false,         
         scrollX: true,
-        order: [[0, 'desc']], // Show last created first
-        dom: 'lBrtip',        // Removed 'f' to hide the default search box
+        order: [[0, 'desc']], 
+        dom: 'lBrtip',        
         buttons: [
             'copy', 'csv', 'excel', 'print'
         ]
@@ -233,6 +294,97 @@ $(document).ready(function() {
     $('#rtratemaster_list thead input').on('click', function (e) {
         e.stopPropagation();
     });
+
+    // Audit History Modal Trigger
+    $(document).on('click', '.btn-history', function() {
+        var masterId = $(this).data('id');
+        $('#historyModal').modal('show');
+        $('#historyLoading').show();
+        $('#historyContent').hide();
+        $('#historyEmpty').hide();
+        $('#historyTableBody').empty();
+
+        $.ajax({
+            url: '/audit/api/history/',
+            type: 'GET',
+            data: {
+                module: 'SMS_APP',
+                model: 'RtratemasterInfo',
+                id: masterId
+            },
+            success: function(response) {
+                $('#historyLoading').hide();
+                if (response.history && response.history.length > 0) {
+                    var rows = '';
+                    response.history.forEach(function(log) {
+                        var actionClass = 'badge-secondary';
+                        if(log.action.includes('CREATE')) actionClass = 'badge-success';
+                        if(log.action.includes('UPDATE')) actionClass = 'badge-info';
+                        if(log.action.includes('DELETE')) actionClass = 'badge-danger';
+                        
+                        var oldDataHtml = '<div style="font-size: 0.85rem;">';
+                        var newDataHtml = '<div style="font-size: 0.85rem;">';
+                        if (typeof log.changed_data === 'object' && log.changed_data !== null) {
+                            $.each(log.changed_data, function(key, value) {
+                                if (value !== null && typeof value === 'object' && 'from' in value && 'to' in value) {
+                                    var fromVal = (value.from === null || value.from === '') ? '<em class="text-muted">Empty</em>' : value.from;
+                                    var toVal = (value.to === null || value.to === '') ? '<em class="text-muted">Empty</em>' : value.to;
+                                    oldDataHtml += '<div><strong>' + key + ':</strong> <span class="text-danger">' + fromVal + '</span></div>';
+                                    newDataHtml += '<div><strong>' + key + ':</strong> <span class="text-success">' + toVal + '</span></div>';
+                                } else {
+                                    if (log.action.includes('DELETE')) {
+                                        oldDataHtml += '<div><strong>' + key + ':</strong> ' + value + '</div>';
+                                        newDataHtml += '<div><strong>' + key + ':</strong> <span class="text-danger"><em>Deleted</em></span></div>';
+                                    } else {
+                                        oldDataHtml += '<div><strong>' + key + ':</strong> <span class="text-muted">-</span></div>';
+                                        newDataHtml += '<div><strong>' + key + ':</strong> ' + value + '</div>';
+                                    }
+                                }
+                            });
+                            if (log.action.includes('CREATE')) {
+                                oldDataHtml = '<div><span class="text-muted">-</span></div>';
+                                newDataHtml = '<div><span class="text-success font-weight-bold"><i class="fas fa-magic"></i> Record Created</span></div>';
+                            }
+                        } else {
+                            if (log.action.includes('DELETE')) {
+                                oldDataHtml += '<pre class="bg-light p-2 rounded text-wrap" style="max-height:100px; overflow-y:auto; font-size:0.75rem; border: 1px solid #e2e8f0; word-break: break-all;">' + String(log.changed_data) + '</pre>';
+                                newDataHtml += '<span class="text-danger"><em>Deleted</em></span>';
+                            } else if (log.action.includes('CREATE')) {
+                                oldDataHtml += '<span class="text-muted">-</span>';
+                                newDataHtml += '<span class="text-success font-weight-bold"><i class="fas fa-magic"></i> Record Created</span>';
+                            } else {
+                                oldDataHtml += '<span class="text-muted">-</span>';
+                                newDataHtml += '<pre class="bg-light p-2 rounded text-wrap" style="max-height:100px; overflow-y:auto; font-size:0.75rem; border: 1px solid #e2e8f0; word-break: break-all;">' + String(log.changed_data) + '</pre>';
+                            }
+                        }
+                        oldDataHtml += '</div>';
+                        newDataHtml += '</div>';
+
+                        rows += '<tr>' +
+                            '<td><span class="small font-weight-bold">' + log.timestamp + '</span></td>' +
+                            '<td><span class="badge badge-light border">' + log.changed_by + '</span></td>' +
+                            '<td><span class="badge ' + actionClass + ' px-2 py-1">' + log.action + '</span></td>' +
+                            '<td>' + oldDataHtml + '</td>' +
+                            '<td>' + newDataHtml + '</td>' +
+                            '</tr>';
+                    });
+                    $('#historyTableBody').html(rows);
+                    $('#historyContent').show();
+                } else {
+                    $('#historyEmpty').show();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Audit History AJAX Error:", xhr.status, xhr.responseText);
+                $('#historyLoading').hide();
+                $('#historyEmpty').find('p').text('Error loading audit history (' + xhr.status + '). Please try again.');
+                $('#historyEmpty').show();
+            }
+        });
+    });
+
+
 });
 </script>
 {% endblock extra_js %}
+

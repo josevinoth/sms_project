@@ -1,7 +1,9 @@
 from django.http import JsonResponse
 from django.views import View
 from django.db.models import Q
+from django.utils import timezone
 from .models import SystemAuditLog
+
 import json
 from django.apps import apps
 
@@ -42,19 +44,63 @@ class HistoryAPIView(View):
                     enq = EnquirynoteInfo.objects.filter(id=record_id).first()
                     enquiry_str = str(enq) if enq else ''
 
-                if enquiry_str:
-                    historical_ids = SystemAuditLog.objects.filter(
-                        Q(model_name='Enquirynotevehicle', changed_data__env_enquirynumber=enquiry_str) |
-                        Q(model_name='ConsignmentdetailInfo', changed_data__co_enquirynumber=enquiry_str) |
-                        Q(model_name='TripdetailInfo', changed_data__tr_enquirynumber=enquiry_str) |
-                        Q(model_name='Vehicle_allotmentInfo', changed_data__va_enquirynumber=enquiry_str)
-                    ).values_list('model_name', 'record_id')
-                    
-                    for m_name, r_id in historical_ids:
-                        if m_name == 'Enquirynotevehicle' and int(r_id) not in env_ids: env_ids.append(int(r_id))
-                        if m_name == 'ConsignmentdetailInfo' and int(r_id) not in cons_ids: cons_ids.append(int(r_id))
-                        if m_name == 'TripdetailInfo' and int(r_id) not in trip_ids: trip_ids.append(int(r_id))
-                        if m_name == 'Vehicle_allotmentInfo' and int(r_id) not in va_ids: va_ids.append(int(r_id))
+                rec_id_int = int(record_id) if str(record_id).isdigit() else None
+                if enquiry_str or rec_id_int:
+                    historical_logs = SystemAuditLog.objects.filter(
+                        Q(model_name='Enquirynotevehicle') |
+                        Q(model_name='ConsignmentdetailInfo') |
+                        Q(model_name='TripdetailInfo') |
+                        Q(model_name='Vehicle_allotmentInfo') |
+                        Q(model_name='ConsignmentgoodsInfo')
+                    ).values_list('model_name', 'record_id', 'changed_data')
+
+                    for m_name, r_id, c_data in historical_logs:
+                        if not isinstance(c_data, dict):
+                            continue
+                        
+                        # Match Enquirynotevehicle
+                        if m_name == 'Enquirynotevehicle':
+                            env_val = c_data.get('env_enquirynumber')
+                            if env_val in [rec_id_int, str(rec_id_int), enquiry_str] or (isinstance(env_val, dict) and (env_val.get('from') in [rec_id_int, str(rec_id_int), enquiry_str] or env_val.get('to') in [rec_id_int, str(rec_id_int), enquiry_str])):
+                                try:
+                                    if int(r_id) not in env_ids: env_ids.append(int(r_id))
+                                except ValueError: pass
+
+                        # Match ConsignmentdetailInfo
+                        elif m_name == 'ConsignmentdetailInfo':
+                            co_val = c_data.get('co_enquirynumber')
+                            if co_val in [rec_id_int, str(rec_id_int), enquiry_str] or (isinstance(co_val, dict) and (co_val.get('from') in [rec_id_int, str(rec_id_int), enquiry_str] or co_val.get('to') in [rec_id_int, str(rec_id_int), enquiry_str])):
+                                try:
+                                    if int(r_id) not in cons_ids: cons_ids.append(int(r_id))
+                                except ValueError: pass
+
+                        # Match TripdetailInfo
+                        elif m_name == 'TripdetailInfo':
+                            tr_val = c_data.get('tr_enquirynumber')
+                            if tr_val in [rec_id_int, str(rec_id_int), enquiry_str] or (isinstance(tr_val, dict) and (tr_val.get('from') in [rec_id_int, str(rec_id_int), enquiry_str] or tr_val.get('to') in [rec_id_int, str(rec_id_int), enquiry_str])):
+                                try:
+                                    if int(r_id) not in trip_ids: trip_ids.append(int(r_id))
+                                except ValueError: pass
+
+                        # Match Vehicle_allotmentInfo
+                        elif m_name == 'Vehicle_allotmentInfo':
+                            va_val = c_data.get('va_enquirynumber')
+                            if va_val in [rec_id_int, str(rec_id_int), enquiry_str] or (isinstance(va_val, dict) and (va_val.get('from') in [rec_id_int, str(rec_id_int), enquiry_str] or va_val.get('to') in [rec_id_int, str(rec_id_int), enquiry_str])):
+                                try:
+                                    if int(r_id) not in va_ids: va_ids.append(int(r_id))
+                                except ValueError: pass
+
+                        # Match ConsignmentgoodsInfo
+                        elif m_name == 'ConsignmentgoodsInfo' and cons_ids:
+                            cg_val = c_data.get('cg_consignmentnumber')
+                            cons_match_list = cons_ids + [str(c) for c in cons_ids]
+                            if cg_val in cons_match_list or (isinstance(cg_val, dict) and (cg_val.get('from') in cons_match_list or cg_val.get('to') in cons_match_list)):
+                                try:
+                                    if int(r_id) not in goods_ids: goods_ids.append(int(r_id))
+                                except ValueError: pass
+
+
+
 
                 if env_ids:
                     query |= Q(module_name='SMS_APP', model_name='Enquirynotevehicle', record_id__in=[str(i) for i in env_ids])
@@ -97,6 +143,26 @@ class HistoryAPIView(View):
             model_field_maps[m_name] = f_map
             return f_map
 
+        def clean_label_name(field_name, field_map):
+            if field_name in field_map:
+                v_name = field_map[field_name]
+                if v_name.lower().replace(' ', '') == field_name.lower().replace('_', ''):
+                    clean_name = field_name
+                    for prefix in ['vr1_', 'ro_', 'en_', 'co_', 'tr_', 'va_', 'env_', 'cg_', 'id_']:
+                        if clean_name.startswith(prefix):
+                            clean_name = clean_name[len(prefix):]
+                            break
+                    return clean_name.replace('_', ' ').title()
+                return v_name
+            
+            clean_name = field_name
+            for prefix in ['vr1_', 'ro_', 'en_', 'co_', 'tr_', 'va_', 'env_', 'cg_', 'id_']:
+                if clean_name.startswith(prefix):
+                    clean_name = clean_name[len(prefix):]
+                    break
+            return clean_name.replace('_', ' ').title()
+
+
         data = []
         for log in logs:
             field_map = get_field_map(log.model_name)
@@ -104,10 +170,11 @@ class HistoryAPIView(View):
             if isinstance(log.changed_data, dict):
                 for k, v in log.changed_data.items():
                     if k == 'id': continue
-                    new_key = field_map.get(k, k.replace('_', ' ').title())
+                    new_key = clean_label_name(k, field_map)
                     mapped_data[new_key] = v
             else:
                 mapped_data = log.changed_data
+
 
             # Add context to action so user knows which sub-module was changed along with its primary key identifier
             action_text = log.action
@@ -138,11 +205,13 @@ class HistoryAPIView(View):
                 else:
                     action_text = f"{log.action} - {friendly_name}"
                 
+            local_timestamp = timezone.localtime(log.timestamp) if log.timestamp else None
             data.append({
                 'action': action_text,
                 'changed_by': (log.changed_by.get_full_name() or log.changed_by.username) if log.changed_by else 'System',
-                'timestamp': log.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                'timestamp': local_timestamp.strftime('%Y-%m-%d %H:%M:%S') if local_timestamp else '',
                 'changed_data': mapped_data
             })
 
         return JsonResponse({'history': data})
+

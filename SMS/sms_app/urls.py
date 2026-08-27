@@ -50,6 +50,9 @@ urlpatterns = [
     path('asset_delete/<int:asset_id>/', views.asset_delete, name='asset_delete'),  # Delete asset
     path('asset_list/', views.asset_list, name='asset_list'),  # List Asset
     path('user_list/', views.user_list, name='user_list'),  # List user,
+    path('user_approval_list/', views.user_approval_list, name='user_approval_list'),  # User approval list
+    path('user_approve/<int:user_id>/', views.user_approve, name='user_approve'),  # Approve user
+    path('user_reject/<int:user_id>/', views.user_reject, name='user_reject'),  # Reject user
     path('user_insert', views.user_add, name='user_insert'),  # Add user
     path('user_update/<int:user_id>/', views.user_add, name='user_update'),  # Update User
     path('user_delete/<int:user_id>/', views.user_delete, name='user_delete'),  # Delete User
@@ -311,7 +314,8 @@ urlpatterns = [
     path('rtratemaster_list/', views.rtratemaster_list, name='rtratemaster_list'),  # List rtratemaster,
     path('rtratemaster_insert', views.rtratemaster_add, name='rtratemaster_insert'),  # Add rtratemaster
     path('rtratemaster_update/<int:rtratemaster_id>/', views.rtratemaster_add, name='rtratemaster_update'),
-    # Update rtratemaster
+    path('rtratemaster_history/<int:rtratemaster_id>/', views.rtratemaster_history, name='rtratemaster_history'),
+    path('rtratemaster_history/<int:rtratemaster_id>', views.rtratemaster_history),
     path('rtratemaster_delete/<int:rtratemaster_id>/', views.rtratemaster_delete, name='rtratemaster_delete'),
     # Delete rtratemaster
     path('gstexcepmtion_list/', views.gstexcepmtion_list, name='gstexcepmtion_list'),  # List gstexcepmtion,
@@ -1230,4 +1234,9 @@ urlpatterns = [
     path('packing_delivery_delete/<int:delivery_id>/', views.delivery_challan_delete, name='packing_delivery_delete'),
     path('packing_delivery_pdf/<int:delivery_id>/', views.delivery_challan_pdf, name='packing_delivery_pdf'),
     path('deletion_log_list/', views.deletion_log_list, name='deletion_log_list'),
+
+    # PMS Manpower Consumption
+    path('add_manpower_consumption/', views.add_manpower_consumption, name='add_manpower_consumption'),
+    path('delete_manpower_consumption/', views.delete_manpower_consumption, name='delete_manpower_consumption'),
+    path('get_manpower_consumption_logs/', views.get_manpower_consumption_logs, name='get_manpower_consumption_logs'),
 ]
