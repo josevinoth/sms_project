@@ -1,8 +1,15 @@
-<hr>
 
-<div class="table-responsive">
-    <table id="dg_cargo_list" class="table table-striped table-bordered nowrap">
-        <thead class="thead-dark">
+<div class="table-responsive" style="padding: 10px;">
+    <table id="dg_cargo_list" class="table table-bordered modern-table w-100">
+        <thead>
+        <tr class="d-none d-sm-table-row">
+            <th></th>
+            <th></th>
+            <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Search WH Job Number"></th>
+            <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Search Location"></th>
+            <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Search Approval Status"></th>
+            <th></th>
+        </tr>
         <tr>
             <th>ID</th>
             <th>Edit</th>
@@ -17,17 +24,27 @@
         <tr>
             <td>{{ cargo.id }}</td>
             <td>
-                <a class="btn btn-primary" href="{% url 'dg_cargo_add' cargo.id %}">
-                    <i class="far fa-edit"></i>
-                </a>
+                <div class="d-flex justify-content-center gap-1">
+                    <a href="{% url 'dg_cargo_add' cargo.id %}" style="background: #f5a623; color: white; border: none; border-radius: 20px; width: 44px; min-width: 44px; height: 34px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(245, 166, 35, 0.2); text-decoration: none;" title="Edit">
+                        <i class="far fa-edit"></i>
+                    </a>
+                </div>
             </td>
             <td>{{ cargo.DG_wh_job_no }}</td>
             <td>{{ cargo.DG_wh_location }}</td>
-            <td>{{ cargo.DG_wh_approval_status }}</td>
             <td>
-                <form action="{% url 'dg_cargo_delete' cargo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                {% if cargo.DG_wh_approval_status|lower == 'approved' %}
+                    <span class="badge" style="background: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 20px; font-weight: 600;">{{ cargo.DG_wh_approval_status }}</span>
+                {% elif cargo.DG_wh_approval_status|lower == 'rejected' %}
+                    <span class="badge" style="background: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 20px; font-weight: 600;">{{ cargo.DG_wh_approval_status }}</span>
+                {% else %}
+                    <span class="badge" style="background: #f3f4f6; color: #374151; padding: 6px 12px; border-radius: 20px; font-weight: 600;">{{ cargo.DG_wh_approval_status }}</span>
+                {% endif %}
+            </td>
+            <td>
+                <form action="{% url 'dg_cargo_delete' cargo.id %}" method="post" onsubmit="return confirm('Are you sure?');">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">
+                    <button type="submit" style="background: #fee2e2; color: #ef4444; border: none; border-radius: 20px; width: 44px; min-width: 44px; height: 34px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.1); transition: all 0.2s ease;" title="Delete">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </form>
@@ -40,16 +57,128 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        $('#dg_cargo_list').DataTable({
-            scrollY: "600px",
-            scrollX: false,
-            scrollCollapse: true,
-            responsive: true,
-            dom: 'lBfrtip',
-            order: [0, 'desc'],
-            buttons: [
-                'copy', 'csv', 'excel', 'print'
-            ]
-        });
+        if (!$.fn.DataTable.isDataTable('#dg_cargo_list')) {
+            var table = $('#dg_cargo_list').DataTable({
+                scrollX: false,
+                responsive: true,
+                dom: '<"d-flex flex-wrap justify-content-between align-items-center mb-3"lBf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
+                order: [0, 'desc'],
+                buttons: [
+                    'copy', 'csv', 'excel', 'print'
+                ],
+                language: {
+                    search: "Search: ",
+                    lengthMenu: "Show _MENU_ entries"
+                }
+            });
+            
+            // Apply search functionality to columns
+            table.columns().every(function () {
+                var that = this;
+                $('input.filter-input', this.header()).on('keyup change clear', function () {
+                    if (that.search() !== this.value) {
+                        that.search(this.value).draw();
+                    }
+                });
+            });
+        }
     });
 </script>
+<style>
+/* Modern Table Styling - similar to what was applied to gatein_list */
+.modern-table {
+    border-collapse: separate !important;
+    border-spacing: 0 8px !important;
+    background: transparent !important;
+    border: none !important;
+}
+.modern-table thead th {
+    background: #111827 !important;
+    color: #f3f4f6 !important;
+    border: none !important;
+    padding: 12px 15px !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    vertical-align: middle !important;
+    text-align: center;
+}
+.modern-table thead th:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+.modern-table thead th:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+.modern-table tbody tr {
+    background: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03) !important;
+    border-radius: 12px !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.modern-table tbody tr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+    z-index: 1;
+    position: relative;
+}
+.modern-table tbody td {
+    border: none !important;
+    padding: 15px 12px !important;
+    vertical-align: middle !important;
+    color: #374151 !important;
+    font-size: 0.85rem !important;
+    font-weight: 500;
+    text-align: center;
+    border-top: 1px solid transparent !important;
+    border-bottom: 1px solid transparent !important;
+}
+.modern-table tbody td:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; border-left: 1px solid transparent !important; }
+.modern-table tbody td:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; border-right: 1px solid transparent !important; }
+
+/* Filter inputs */
+.filter-input-modern {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    font-size: 0.75rem !important;
+    height: 28px !important;
+    width: 100% !important;
+    min-width: 80px;
+}
+.filter-input-modern::placeholder { color: rgba(255, 255, 255, 0.5) !important; }
+.filter-input-modern:focus {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.3) !important;
+    outline: none !important;
+}
+
+/* DT Buttons Styling */
+.dt-buttons .btn {
+    border-radius: 20px !important;
+    padding: 5px 15px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    background: white !important;
+    color: #374151 !important;
+    border: none !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important;
+    margin-right: 8px !important;
+    transition: all 0.2s ease;
+}
+.dt-buttons .btn:hover {
+    background: #f3f4f6 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+}
+.dataTables_filter input {
+    border-radius: 20px !important;
+    border: 1px solid #d1d5db !important;
+    padding: 5px 15px !important;
+    outline: none !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.03) !important;
+}
+.dataTables_filter input:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+</style>

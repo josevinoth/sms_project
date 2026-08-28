@@ -25,3 +25,17 @@ class PregateintruckForm(forms.ModelForm):
         self.fields['pregatein_approval_status'].empty_label = "--Select--"
         self.fields['pregatein_invoice_ref'].required = True
 
+        # OPTIMIZATION: Do not load 33,000 records into the select dropdown
+        pregatein_id = None
+        if self.instance and self.instance.pk:
+            pregatein_id = self.instance.pregatein_number_id
+        elif self.data and self.data.get('pregatein_number'):
+            pregatein_id = self.data.get('pregatein_number')
+        elif self.initial and self.initial.get('pregatein_number'):
+            pregatein_id = self.initial.get('pregatein_number')
+            
+        if pregatein_id:
+            self.fields['pregatein_number'].queryset = self.fields['pregatein_number'].queryset.filter(pk=pregatein_id)
+        else:
+            self.fields['pregatein_number'].queryset = self.fields['pregatein_number'].queryset.none()
+

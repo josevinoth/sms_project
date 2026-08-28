@@ -1,450 +1,404 @@
-{% extends "asset_mgt_app/base.html" %}
+﻿{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<div class="d-flex justify-content-center align-items-center flex-wrap gap-4">
+<style>
+/* Make inputs compact only on this page to fit in single screen view */
+.bvm-modern-layout .form-control-modern {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0.1rem 0.5rem !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+    color: #212529 !important;
+    font-weight: 600 !important;
+}
+.bvm-modern-layout .select2-container--default .select2-selection--single {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+    display: flex;
+    align-items: center;
+}
+.bvm-modern-layout .select2-selection__rendered {
+    line-height: normal !important;
+    padding-left: 0.5rem !important;
+    margin: 0 !important;
+    color: #212529 !important;
+    font-weight: 600 !important;
+}
+.bvm-modern-layout .select2-selection__arrow {
+    height: 30px !important;
+}
+.bvm-modern-layout .field-label {
+    margin-bottom: 2px !important;
+    font-size: 0.75rem !important;
+    color: #212529 !important;
+    font-weight: 700 !important;
+}
+.bvm-modern-layout .form-group-modern {
+    margin-bottom: 8px !important;
+}
 
-	{% if gatein_no_of_pkg_val != goods_checkin_count %}
-	<div class="alert alert-danger text-center fw-bold mr-2" role="alert">
-		 Quantity Deviation :
-		Invoice = {{ gatein_no_of_pkg_val }},
-		Check-In = {{ goods_checkin_count }}
-	</div>
-	{% endif %}
+.bvm-modern-layout .form-control-modern[readonly],
+.bvm-modern-layout .form-control-modern:disabled {
+    opacity: 1 !important;
+}
 
-	{% if gatein_weight_val != goods_checkin_weight %}
-	<div class="alert alert-danger text-center fw-bold mr-2" role="alert">
-		 Weight Deviation :
-		Invoice = {{ gatein_weight_val }},
-		Check-In = {{ goods_checkin_weight }}
-	</div>
-	{% endif %}
+/* ── Dark Theme Overrides ── */
+[data-theme="dark"] .bvm-modern-layout .form-control-modern {
+    color: #ffffff !important;
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+}
+[data-theme="dark"] .bvm-modern-layout .field-label {
+    color: #e2e8f0 !important;
+}
+[data-theme="dark"] .bvm-modern-layout .select2-selection__rendered {
+    color: #ffffff !important;
+}
+[data-theme="dark"] .bvm-modern-layout .form-control-modern[readonly],
+[data-theme="dark"] .bvm-modern-layout .form-control-modern:disabled {
+    background-color: var(--input-disabled-bg) !important;
+    color: var(--input-disabled-text) !important;
+    opacity: 1 !important;
+}
+[data-theme="dark"] .bvm-modern-layout .form-section {
+    background: var(--bg-card) !important;
+    border-color: var(--border-light) !important;
+}
+[data-theme="dark"] .bvm-modern-layout .text-muted {
+    color: #cbd5e1 !important;
+}
+</style>
 
-</div>
+<div class="container-fluid py-2 bvm-modern-layout">
 
 
-<div class="col-5 col-md-2 p-2 col-lg-1">
-	<a href="{% url 'search' %}" class="btn btn-primary">
-		<i class="fas fa-arrow-left"></i> Back
-	</a>
-</div>
-<div class="col-12 col-md-10 col-lg-12 p-2">
-	<div class="gap-2 d-md-flex justify-content-md-center flex-wrap">
+
+    <!-- Navigation Steps -->
+    <div class="nav-pills-modern d-flex flex-wrap justify-content-center mb-3">
 		{% if gatein_list %}
 		{% for gateininfo in gatein_list %}
-		<a class="btn  border border-dark mb-2 disable_a_href" id="gatein_btn" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
+		<a id="gatein_btn" class="btn disable_a_href" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn  border border-dark mb-2 disable_a_href" id="gatein_btn1" href="{% url 'gatein_insert' %}">Gate-In</a>
+		<a id="gatein_btn1" class="btn disable_a_href" href="{% url 'gatein_insert' %}">Gate-In</a>
 		{% endif %}
 
 		{% if loadingbay_list %}
 		{% for loadingbayinfo in loadingbay_list %}
-		<a class="btn  border border-dark mb-2 disable_a_href" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
+		<a id="loadingbay_btn" class="btn disable_a_href" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn  border border-dark mb-2 disable_a_href" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
+		<a id="loadingbay_btn1" class="btn disable_a_href" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
 		{% endif %}
 
-		<a class="btn  border focus border-dark mb-2 disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
+		<a id="damagecheck_after_btn" class="btn btn-warning active-step disable_a_href" href="{% url 'goods_insert' %}">Inspection</a>
 
 		{% if damagereport_list %}
 		{% for damagecheckinfo in damagereport_list %}
-		<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage/Deviation</a>
+		<a id="damagecheck_before_btn" class="btn disable_a_href" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage/Deviation</a>
 		{% endfor %}
 		{% else %}
-		<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage/Deviation</a>
+		<a id="damagecheck_before_btn1" class="btn disable_a_href" href="{% url 'damagereport_insert' %}">Damage/Deviation</a>
 		{% endif %}
 
-		<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>-->
-		<a class="btn  border border-dark mb-2 disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
-	</div>
-</div>
+		<a id="storage_btn" class="btn disable_a_href" href="{% url 'storage_list' %}">Storage</a>
+    </div>
 
-<hr>
-<div class="container-fluid">
-	<div class="row justify-content-center mb-3">
-		<div class="col-6 col-md-auto mb-2">
-			<button type="button" class="btn btn-info w-100">
-				Goods Qty (Invoice)
-				<h4><span class="badge bg-light text-dark ms-2">{{gatein_no_of_pkg_val}}</span></h4>
-			</button>
-		</div>
-		<div class="col-6 col-md-auto mb-2">
-			<button type="button" class="btn btn-info w-100">
-				Goods Qty (Check-In)
-				<h4><span class="badge bg-light text-dark ms-2">{{goods_checkin_count}}</span></h4>
-			</button>
-		</div>
-		<div class="col-6 col-md-auto mb-2">
-			<button type="button" class="btn btn-info w-100">
-				Goods Weight (Invoice)
-				<h4><span class="badge bg-light text-dark ms-2">{{gatein_weight_val}}</span></h4>
-			</button>
-		</div>
-		<div class="col-6 col-md-auto mb-2">
-			<button type="button" class="btn btn-info w-100">
-				Goods Weight (Check-In)
-				<h4><span class="badge bg-light text-dark ms-2">{{goods_checkin_weight}}</span></h4>
-			</button>
-		</div>
-	</div>
-</div>
-<div class="row">
-	<div class="col">
-		<div class="container-fluid">
-			<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-				<div class="card-header text-center">
-					<div class="row align-items-center text-center">
-						<div class="col-12 col-md-3 mb-2 mb-md-0">
-							<button type="button" onclick="email_message_fn()" class="btn btn-warning w-100" data-toggle="modal" data-target=".bd-example-modal-lg">
-								<i class="fas fa-envelope-square"></i> Email To Customer
-								<span class="badge badge-danger">{{email_count}}</span>
-							</button>
-							<!-- Modal Structure -->
-							<div class="modal fade bd-example-modal-lg" id="sendEmailModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
-								<div class="modal-dialog modal-lg" role="document">
-									<div class="modal-content">
-										<div class="modal-header bg-info">
-											<h5 class="modal-title" id="sendEmailModalLabel">Send Email</h5>											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-												<span aria-hidden="true">&times;</span>
-											</button>
-										</div>
-										<div class="modal-body text-dark">
-											<!-- Email Form -->
-											<form method="post" action="{% url 'warehouse_send_email' %}">
-												{% csrf_token %}
-												<div class="input-group mb-3">
-													<div class="input-group-prepend">
-														<span class="input-group-text" id="to_emails">To</span>
-													</div>
-													{{ form_warehouse_email.recipient|add_class:"form-control" }}
-												</div>
-												<div class="input-group mb-3">
-													<div class="input-group-prepend">
-														<span class="input-group-text">Subject</span>
-													</div>
-{% render_field form_warehouse_email.subject id="subject" class="form-control" %}
-												</div>
-												<div class="input-group mb-3">
-													<div class="input-group-prepend">
-														<span class="input-group-text">Message</span>
-													</div>
-{% render_field form_warehouse_email.message id="message" class="form-control" rows="8" %}
-												</div>
+    <div class="d-flex justify-content-center mb-3">
+        <div class="alert alert-warning text-center fw-bold py-2 px-4 mr-3" role="alert" style="border-radius: 30px; display: inline-block; margin-bottom: 0;">
+             <i class="fas fa-exclamation-triangle text-warning mr-2"></i>
+             Quantity Deviation &mdash; Invoice: {{ gatein_no_of_pkg_val|default:"0" }} | Check-In: {{ goods_checkin_count|default:"0" }}
+        </div>
 
-												<div class="form-group">
-													<button type="submit" class="btn btn-primary"><i class="fas fa-envelope-square"></i> Send Email</button>
-												</div>
-											</form>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="col-12 col-md-5">
-							<h4 class="mb-2">Add/Update Damage Check/After</h4>
-						</div>
-						<!--						<div class="col-6 col-md-2 mb-2">-->
-						<!--							<a href="#" class="btn btn-warning btn-block w-100" id="delivery_chalan_btn">-->
-						<!--								Delivery <i class="fa fa-download"></i>-->
-						<!--							</a>-->
-						<!--						</div>-->
-						<!--						<div class="col-6 col-md-2 mb-2">-->
-						<!--							<a href="#" class="btn btn-warning btn-block w-100" id="damage_report_btn">-->
-						<!--								Report <i class="fa fa-download"></i>-->
-						<!--							</a>-->
-						<!--						</div>-->
-					</div>
-				</div>
-				<!--					<p>Invoice Number is  {{ request.session.invoice_num_stock }}</p>-->
-				<div class="card-body bg-light" >
-					<form method="POST" action="" onload="chargeable_weight_fn()" id="goods_add" >
-						{% csrf_token %}
-						<div class="row">
-							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >WH Job Number</span>
-									</div>
-									{% render_field goods_form.wh_job_no value=request.session.ses_gatein_id_nam class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3 ">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Stock Number</span>
-									</div>
-									{% render_field goods_form.wh_qr_rand_num id="wh_qr_rand_num" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Shipper Invoice Number</span>
-									</div>
-									{% render_field goods_form.wh_goods_invoice id="wh_goods_invoice" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >PO Number</span>
-									</div>
-									{% render_field goods_form.wh_po_num value=request.session.ses_po_num class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Customer Name</span>
-									</div>
-									{% render_field goods_form.wh_customer_name id="wh_customer_name" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" id="">Customer Type</span>
-									</div>
-									{% render_field goods_form.wh_customer_type id="wh_customer_type" class="form-control disable_a_href" %}
-								</div>
-							</div>
-							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Consigner</span>
-									</div>
-									{% render_field goods_form.wh_consigner id="wh_consigner" value=request.session.ses_consigner class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Consignee</span>
-									</div>
-									{% render_field goods_form.wh_consignee id="wh_consignee" value=request.session.ses_consignee class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Required Area (Sq.Ft)</span>
-									</div>
-									{% render_field goods_form.wh_goods_area id="req_area"  class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Required Volume (Cu.Ft)</span>
-									</div>
-									{% render_field goods_form.wh_goods_volume_weight id="volume_weight" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Volume Weight</span>
-									</div>
-									{% render_field goods_form.wh_chargeable_weight id="chargeable_weight" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >CBM</span>
-									</div>
-									{% render_field goods_form.wh_cbm class="form-control disable_a_href" id="cbm"  %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Fumigation Done?</span>
-									</div>
-									{% render_field goods_form.wh_fumigation_process id="wh_fumigation_process" class="form-control disable_a_href" onchange="fumigation_process_chng()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Fumigation Action?</span>
-									</div>
-									{% render_field goods_form.wh_fumigation_action id="wh_fumigation_action" class="form-control disable_a_href" onchange="fumigation_action_chng()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Fumigation Date</span>
-									</div>
-									{% render_field goods_form.wh_fumigation_date type="datetime-local" id="wh_fumigation_date" class="form-control disable_a_href"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Fumigation Cost</span>
-									</div>
-									{% render_field goods_form.wh_fumigation_cost id="wh_fumigation_cost" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" > Damages/Deviation?</span>
-									</div>
-									{% render_field goods_form.wh_damage_check id="wh_damage_check" class="form-control" onchange="challan_damage_btn_active()"%}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Comments</span>
-									</div>
-									{% render_field goods_form.wh_comments id="wh_comments" class="form-control" %}
-								</div>
-							</div>
-							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text " >Warehouse Branch</span>
-									</div>
-									{% render_field goods_form.wh_branch id="wh_branch" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Warehouse Unit</span>
-									</div>
-									{% render_field goods_form.wh_unit id="wh_unit" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Warehouse Bay</span>
-									</div>
-									{% render_field goods_form.wh_bay id="wh_bay" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Stacking Layer</span>
-									</div>
-									{% render_field goods_form.wh_stack_layer id="wh_stack_layer" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Available Area (Sq.ft)</span>
-									</div>
-									{% render_field goods_form.wh_available_area id="wh_available_area" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Available Volume (Cu.ft)</span>
-									</div>
-									{% render_field goods_form.wh_available_volume id="wh_available_volume" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3" >
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Goods Status</span>
-									</div>
-									{% render_field goods_form.wh_check_in_out id="wh_check_in_out" class="form-control disable_a_href"%}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Checked-In Time</span>
-									</div>
-									{% render_field goods_form.wh_checkin_time id="wh_checkin_time" type="datetime-local" class="form-control" %}
-								</div>
+        <div class="alert alert-warning text-center fw-bold py-2 px-4" role="alert" style="border-radius: 30px; display: inline-block; margin-bottom: 0;">
+             <i class="fas fa-exclamation-triangle text-warning mr-2"></i>
+             Weight Deviation &mdash; Invoice: {{ gatein_weight_val|default:"0.0" }} | Check-In: {{ goods_checkin_weight|default:"0.0" }}
+        </div>
+    </div><!-- Page Header -->
+    <div class="modern-list-header mb-3" style="display: block !important; overflow: hidden;">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-6 text-center text-md-left mb-3 mb-md-0">
+                <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;">
+                    <i class="fas fa-boxes mr-2"></i> ADD/UPDATE INSPECTION
+                </h3>
+            </div>
+            <div class="col-12 col-md-6 text-center text-md-right">
+                <button type="button" onclick="email_message_fn()" class="btn btn-warning btn-sm font-weight-bold mr-2" data-toggle="modal" data-target=".bd-example-modal-lg" style="border-radius:20px; padding:6px 15px;">
+                    <i class="fas fa-envelope-square mr-1"></i> Email To Customer
+                    <span class="badge badge-danger ml-1">{{email_count}}</span>
+                </button>
+                <!-- Modal Structure -->
+                <div class="modal fade bd-example-modal-lg" id="sendEmailModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-info text-white">
+                                <h5 class="modal-title" id="exampleModalLabel"><i class="fas fa-envelope-open-text mr-2"></i>Send Email</h5>
+                                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body text-left">
+                                <form>
+                                    <div class="form-group">
+                                        <label for="recipient-name" class="font-weight-bold text-dark mb-1">To:</label>
+                                        <input type="text" class="form-control" id="recipient-name" value="{{email_to}}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="subject" class="font-weight-bold text-dark mb-1">Subject:</label>
+                                        <input type="text" class="form-control" id="subject">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="message" class="font-weight-bold text-dark mb-1">Message:</label>
+                                        <textarea class="form-control" id="message" style="height: 200px;"></textarea>
+                                    </div>
+                                    <div class="form-group text-right">
+                                        <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Close</button>
+                                        <button type="button" onclick="send_email()" class="btn btn-primary"><i class="fas fa-paper-plane mr-1"></i>Send Email</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a href="{% url 'search' %}" class="btn btn-light btn-sm font-weight-bold" style="border-radius:20px; padding:6px 15px;">
+                    <i class="fas fa-arrow-left mr-1"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
 
-							</div>
-						</div>
-						<hr>
-						<div class="row g-0">
-							<div class="col-6 col-md-auto mb-3">
-								<label for="wh_goods_package_type" class="form-label bg-info text-white rounded d-block w-100 text-center">Package Type</label>
-								{% render_field goods_form.wh_goods_package_type id="wh_goods_package_type" onchange="package_type_chng()" class="form-control form-control-sm" %}
-							</div>
-							<div class="col-6 col-md-auto mb-3">
-								<label for="uom" class="form-label bg-info text-white  rounded d-block w-100 text-center">Unit Of Measure</label>
-								{% render_field goods_form.wh_uom id="uom" class="form-control form-control-sm" onchange="chargeable_weight_fn()" %}
-							</div>
-							<div class="col-6 col-md-auto mb-3">
-								<label for="no_of_piece" class="form-label bg-info text-white rounded d-block w-100 text-center">Number of Pieces</label>
-								{% render_field goods_form.wh_goods_pieces id="no_of_piece" class="form-control form-control-sm" onchange="chargeable_weight_fn()" %}
-							</div>
-							<div class="col-6 col-md-auto mb-3">
-								<label for="length" class="form-label bg-info text-white rounded d-block w-100 text-center">Length</label>
-								{% render_field goods_form.wh_goods_length id="length" class="form-control form-control-sm" onchange="chargeable_weight_fn()" %}
-							</div>
-							<div class="col-6 col-md-auto mb-3">
-								<label for="width" class="form-label bg-info text-white rounded d-block w-100 text-center">Width</label>
-								{% render_field goods_form.wh_goods_width id="width" class="form-control form-control-sm" onchange="chargeable_weight_fn()" %}
-							</div>
-							<div class="col-6 col-md-auto mb-3">
-								<label for="height" class="form-label bg-info text-white rounded d-block w-100 text-center">Height</label>
-								{% render_field goods_form.wh_goods_height id="height" class="form-control form-control-sm" onchange="chargeable_weight_fn()" %}
-							</div>
-							<div class="col-6 col-md-auto mb-3">
-								<label for="weight" class="form-label bg-info text-white rounded d-block w-100 text-center">Weight (Physical)</label>
-								{% render_field goods_form.wh_goods_weight id="weight" class="form-control form-control-sm" %}
-							</div>
-							<div class="col-6 col-md-auto mb-3">
-								<label for="wh_goods_status" class="form-label bg-info text-white rounded d-block w-100 text-center">Job Status</label>
-								{% render_field goods_form.wh_goods_status id="wh_goods_status" class="form-control" %}
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<br>
-						<!--<input class="btn btn-success" type="submit" name="Create User">-->
-						<button type="submit" class="btn btn-success float-right"><i class="fas fa-save"></i> Save</button>
-						<!--						<a href="{% url 'stock_list' %}" class="btn btn-danger float-right">-->
-						<!--							<i class="fas fa-times"></i> Cancel</a>-->
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<br>
-					</form>
-				</div>
-			</div>
-		</div>
-		{% include "asset_mgt_app/goods_list_woh.html" %}
-	</div>
-</div>
-<br>
+<form method="POST" action="" onload="chargeable_weight_fn()" id="goods_add" >
+    {% csrf_token %}
+    <div class="row mb-4">
+        <!-- Section 1 -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-info-circle mr-2 text-primary"></i>SECTION 1</div>
+
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">WH JOB NUMBER</label>
+                    {% render_field goods_form.wh_job_no value=request.session.ses_gatein_id_nam class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">STOCK NUMBER</label>
+                    {% render_field goods_form.wh_qr_rand_num id="wh_qr_rand_num" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">SHIPPER INVOICE NUMBER</label>
+                    {% render_field goods_form.wh_goods_invoice id="wh_goods_invoice" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">PO NUMBER</label>
+                    {% render_field goods_form.wh_po_num value=request.session.ses_po_num class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">CUSTOMER NAME</label>
+                    {% render_field goods_form.wh_customer_name id="wh_customer_name" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">CUSTOMER TYPE</label>
+                    {% render_field goods_form.wh_customer_type id="wh_customer_type" class="form-control form-control-modern disable_a_href" %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2 -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-truck-loading mr-2 text-primary"></i>SECTION 2</div>
+
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">CONSIGNER</label>
+                    {% render_field goods_form.wh_consigner id="wh_consigner" value=request.session.ses_consigner class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">CONSIGNEE</label>
+                    {% render_field goods_form.wh_consignee id="wh_consignee" value=request.session.ses_consignee class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">REQUIRED AREA (SQ.FT)</label>
+                    {% render_field goods_form.wh_goods_area id="req_area" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">REQUIRED VOLUME (CU.FT)</label>
+                    {% render_field goods_form.wh_goods_volume_weight id="volume_weight" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">VOLUME WEIGHT</label>
+                    {% render_field goods_form.wh_chargeable_weight id="chargeable_weight" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">CBM</label>
+                    {% render_field goods_form.wh_cbm class="form-control form-control-modern disable_a_href" id="cbm" %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3 -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-spray-can mr-2 text-primary"></i>SECTION 3</div>
+
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">FUMIGATION DONE?</label>
+                    {% render_field goods_form.wh_fumigation_process id="wh_fumigation_process" class="form-control form-control-modern disable_a_href" onchange="fumigation_process_chng()" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">FUMIGATION ACTION?</label>
+                    {% render_field goods_form.wh_fumigation_action id="wh_fumigation_action" class="form-control form-control-modern disable_a_href" onchange="fumigation_action_chng()" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">FUMIGATION DATE</label>
+                    {% render_field goods_form.wh_fumigation_date type="datetime-local" id="wh_fumigation_date" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">FUMIGATION COST</label>
+                    {% render_field goods_form.wh_fumigation_cost id="wh_fumigation_cost" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">DAMAGES/DEVIATION?</label>
+                    {% render_field goods_form.wh_damage_check id="wh_damage_check" class="form-control form-control-modern" onchange="challan_damage_btn_active()" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">COMMENTS</label>
+                    {% render_field goods_form.wh_comments id="wh_comments" class="form-control form-control-modern" %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4 -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-warehouse mr-2 text-primary"></i>SECTION 4</div>
+
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">WAREHOUSE BRANCH</label>
+                    {% render_field goods_form.wh_branch id="wh_branch" class="form-control form-control-modern" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">WAREHOUSE UNIT</label>
+                    {% render_field goods_form.wh_unit id="wh_unit" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">WAREHOUSE BAY</label>
+                    {% render_field goods_form.wh_bay id="wh_bay" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">STACKING LAYER</label>
+                    {% render_field goods_form.wh_stack_layer id="wh_stack_layer" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">AVAILABLE AREA (SQ.FT)</label>
+                    {% render_field goods_form.wh_available_area id="wh_available_area" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">AVAILABLE VOLUME (CU.FT)</label>
+                    {% render_field goods_form.wh_available_volume id="wh_available_volume" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">GOODS STATUS</label>
+                    {% render_field goods_form.wh_check_in_out id="wh_check_in_out" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block text-muted">CHECKED-IN TIME</label>
+                    {% render_field goods_form.wh_checkin_time id="wh_checkin_time" type="datetime-local" class="form-control form-control-modern" %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Package & Dimensions -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-box mr-2 text-primary"></i>PACKAGE & DIMENSIONS</div>
+                <div class="row">
+                    <div class="col-md-2 form-group form-group-modern">
+                        <label class="form-label-modern field-label d-block text-muted">PACKAGE TYPE</label>
+                        {% render_field goods_form.wh_goods_package_type id="wh_goods_package_type" onchange="package_type_chng()" class="form-control form-control-modern form-control-sm" %}
+                    </div>
+                    <div class="col-md-1 form-group form-group-modern">
+                        <label class="form-label-modern field-label d-block text-muted" style="white-space: nowrap;">UNIT OF MEASURE</label>
+                        {% render_field goods_form.wh_uom id="uom" class="form-control form-control-modern form-control-sm" onchange="chargeable_weight_fn()" %}
+                    </div>
+                    <div class="col-md-2 form-group form-group-modern">
+                        <label class="form-label-modern field-label d-block text-muted" style="white-space: nowrap;">NUMBER OF PIECES</label>
+                        {% render_field goods_form.wh_goods_pieces id="no_of_piece" class="form-control form-control-modern form-control-sm" onchange="chargeable_weight_fn()" %}
+                    </div>
+                    <div class="col-md-1 form-group form-group-modern">
+                        <label class="form-label-modern field-label d-block text-muted">LENGTH</label>
+                        {% render_field goods_form.wh_goods_length id="length" class="form-control form-control-modern form-control-sm" onchange="chargeable_weight_fn()" %}
+                    </div>
+                    <div class="col-md-1 form-group form-group-modern">
+                        <label class="form-label-modern field-label d-block text-muted">WIDTH</label>
+                        {% render_field goods_form.wh_goods_width id="width" class="form-control form-control-modern form-control-sm" onchange="chargeable_weight_fn()" %}
+                    </div>
+                    <div class="col-md-1 form-group form-group-modern">
+                        <label class="form-label-modern field-label d-block text-muted">HEIGHT</label>
+                        {% render_field goods_form.wh_goods_height id="height" class="form-control form-control-modern form-control-sm" onchange="chargeable_weight_fn()" %}
+                    </div>
+                    <div class="col-md-2 form-group form-group-modern">
+                        <label class="form-label-modern field-label d-block text-muted" style="white-space: nowrap;">WEIGHT (PHYSICAL)</label>
+                        {% render_field goods_form.wh_goods_weight id="weight" class="form-control form-control-modern form-control-sm" %}
+                    </div>
+                    <div class="col-md-2 form-group form-group-modern">
+                        <label class="form-label-modern field-label d-block text-muted" style="white-space: nowrap;">JOB STATUS</label>
+                        {% render_field goods_form.wh_goods_status id="wh_goods_status" class="form-control form-control-modern form-control-sm" %}
+                    </div>
+                </div>
+
+                <div class="row mt-3 mb-2">
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-warning w-100 btn-submit font-weight-bold" style="color:white; border-radius:6px; background-color: #f59e0b; border-color: #f59e0b;" id="save_btn">
+                            <i class="fa fa-check-circle mr-1"></i> SAVE
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            {% include "asset_mgt_app/goods_list_woh.html" %}
+        </div>
+    </div>
+</form>
+
 {% block scripts %}
 <script>
 	function chargeable_weight_fn() {
       var width_val=document.getElementById("width").value;
       var length_val=document.getElementById("length").value;
       var height_val=document.getElementById("height").value;
-      var no_of_piece=document.getElementById("no_of_piece").value
-      selectElement = document.querySelector('#uom');
-      uom_val = selectElement.options[selectElement.selectedIndex].value;
+      var no_of_piece=document.getElementById("no_of_piece").value;
+      var selectElement = document.querySelector('#uom');
+      var uom_val = selectElement.options[selectElement.selectedIndex].value;
+
       if (uom_val==1)
         {
-            var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/6000).toFixed(3)
+            var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/6000).toFixed(3);
             document.getElementById("chargeable_weight").value =chargeable_weight_val;
             document.getElementById("cbm").value=((length_val*width_val*height_val/6000)*chargeable_weight_val).toFixed(3);
             var volume_val=((width_val*length_val*height_val*no_of_piece)*0.0000353147).toFixed(3);
             document.getElementById("volume_weight").value =volume_val;
-            var req_area_val=((length_val*width_val*no_of_piece)*0.00107639).toFixed(3)
+            var req_area_val=((length_val*width_val*no_of_piece)*0.00107639).toFixed(3);
             document.getElementById("req_area").value =req_area_val;
         }
       else
         {
-            var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/366).toFixed(3)
-              document.getElementById("chargeable_weight").value =chargeable_weight_val;
-              document.getElementById("cbm").value=((length_val*width_val*height_val/6000)*chargeable_weight_val).toFixed(3);
-              var volume_val=((width_val*length_val*height_val*no_of_piece)*0.000578704).toFixed(3);
+            var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/366).toFixed(3);
+            document.getElementById("chargeable_weight").value =chargeable_weight_val;
+            document.getElementById("cbm").value=((length_val*width_val*height_val/6000)*chargeable_weight_val).toFixed(3);
+            var volume_val=((width_val*length_val*height_val*no_of_piece)*0.000578704).toFixed(3);
             document.getElementById("volume_weight").value =volume_val;
-            var req_area_val=((length_val*width_val*no_of_piece)*0.00694444).toFixed(3)
+            var req_area_val=((length_val*width_val*no_of_piece)*0.00694444).toFixed(3);
             document.getElementById("req_area").value =req_area_val;
-          }
-      endif
-
+        }
     }
 </script>
 <script>
@@ -748,39 +702,6 @@
      });
 </script>
 
-<!--calculate Area, Volume and Weight-->
-<script>
-	function chargeable_weight_fn() {
-      var width_val=document.getElementById("width").value
-      var length_val=document.getElementById("length").value
-      var height_val=document.getElementById("height").value
-      var no_of_piece=document.getElementById("no_of_piece").value
-      selectElement = document.querySelector('#uom');
-      uom_val = selectElement.options[selectElement.selectedIndex].value;
-      if (uom_val=="cm")
-        {
-            var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece)/6000).toFixed(3)
-            document.getElementById("chargeable_weight").value =chargeable_weight_val;
-            document.getElementById("cbm").value=((length_val*width_val*height_val/6000)*chargeable_weight_val).toFixed(3);
-            var volume_val=(width_val*length_val*height_val*no_of_piece).toFixed(3);
-            document.getElementById("volume_weight").value =volume_val;
-            var req_area_val=(length_val*width_val*no_of_piece).toFixed(3)
-            document.getElementById("req_area").value =req_area_val;
-        }
-      else
-        {
-            var chargeable_weight_val=((length_val*width_val*height_val*no_of_piece/366).toFixed(3)
-              document.getElementById("chargeable_weight").value =chargeable_weight_val;
-              document.getElementById("cbm").value=((length_val*width_val*height_val/6000)*chargeable_weight_val).toFixed(3);
-              var volume_val=((width_val*length_val*height_val*no_of_piece)*16.3871).toFixed(3);
-            document.getElementById("volume_weight").value =volume_val;
-            var req_area_val=((length_val*width_val*no_of_piece)*6.4516).toFixed(3)
-            document.getElementById("req_area").value =req_area_val;
-          }
-      endif
-    }
-</script>
-
 <!--Enable Forms-->
 <script>
 	$(document).ready(function() {
@@ -864,61 +785,109 @@ function email_message_fn() {
     let damage_section = "";
 
     if (!wh_damage_check) {
-        damage_section = `
-            <div style="color:green;margin:0;padding:0;">
-                <b>Damages Observed:</b> NO<br>
-                <b>Deviations Observed:</b> NO
-            </div>
-        `;
+        damage_section = `Damages Observed: NO
+Deviations Observed: NO`;
     }
     else if (wh_damage_check && !damage_report_exists) {
-        damage_section = `
-            <div style="color:red;margin:0;padding:0;">
-                <b>Damages Observed:</b> YES<br>
-                Detailed inspection report will follow.
-            </div>
-        `;
+        damage_section = `Damages Observed: YES
+Detailed inspection report will follow.`;
     }
     else {
-        damage_section = `
-            <div style="color:red;margin:0;padding:0;">
-                <b>Damages Observed:</b><br>
-                ${damage_list.map(d => '• ' + d).join('<br>')}
-                <br>
-                <b>Deviations Observed:</b><br>
-                ${deviation_list.map(d => '• ' + d).join('<br>')}
-            </div>
-        `;
+        damage_section = `Damages Observed:
+${damage_list.map(d => '• ' + d).join('\n')}
+
+Deviations Observed:
+${deviation_list.map(d => '• ' + d).join('\n')}`;
     }
 
-    var message = `
-        <div style="margin:0;padding:0;">
-            Dear Customer,
+    var message = `Dear Customer,
 
-            Please be advised that the following goods have arrived at our warehouse
-            and have been stored.
+Please be advised that the following goods have arrived at our warehouse and have been stored.
 
-            <b>Shipper Invoice:</b> ${shipper_invoice}<br>
-            <b>Consigner:</b> ${consigner}<br>
-            <b>Consignee:</b> ${consignee}<br>
-            <b>Invoice Qty:</b> ${invoice_count}<br>
-            <b>Invoice Weight:</b> ${invoice_weight}<br>
-            <b>Check-in Qty:</b> ${checkin_count}<br>
-            <b>Check-in Weight:</b> ${checkin_weight}<br>
-            ${damage_section}
-            <br>
+Shipper Invoice: ${shipper_invoice}
+Consigner: ${consigner}
+Consignee: ${consignee}
+Invoice Qty: ${invoice_count}
+Invoice Weight: ${invoice_weight}
+Check-in Qty: ${checkin_count}
+Check-in Weight: ${checkin_weight}
 
-            Regards,<br>
-            <b>BVM Warehouse Team</b>
-        </div>
-    `;
+${damage_section}
+
+Regards,
+BVM Warehouse Team`;
 
     document.getElementById("message").value = message;
     document.getElementById("subject").value = "Goods Received: " + shipper_invoice;
 }
 </script>
 
+<script>
+$(document).ready(function() {
+    // Enable seamless multi-add on the Insert page without reloading the entire page
+    if (window.location.href.indexOf('goods_insert') !== -1) {
+        $('#goods_add').on('submit', function(e) {
+            e.preventDefault(); // Prevent standard full-page submit
+            var form = $(this);
+            var submitBtn = $('#save_btn');
+            var originalBtnHtml = submitBtn.html();
 
-{% endblock %}
+            submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> SAVING...');
+
+            $.ajax({
+                type: "POST",
+                url: form.attr('action'),
+                data: form.serialize(),
+                success: function(response) {
+                    // Update the table dynamically from the returned page HTML
+                    var newTableHtml = $(response).find('.table-responsive').html();
+                    if(newTableHtml) {
+                        $('.table-responsive').html(newTableHtml);
+                        // Re-initialize DataTable with the exact same config
+                        $('#goods_list').DataTable({
+                            scrollY: "600px",
+                            scrollX: true,
+                            responsive: false,
+                            dom: "<'row mb-3 align-items-center'<'col-sm-12 col-md-3'l><'col-sm-12 col-md-6 d-flex justify-content-center'B><'col-sm-12 col-md-3'f>>" +
+                                 "<'row'<'col-sm-12'tr>>" +
+                                 "<'row mt-3'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                            order: [0, 'desc'],
+                            buttons: ['copy', 'csv', 'excel', 'print']
+                        });
+                    }
+
+                    // Show success toast floating on screen
+                    var successToast = $('<div style="position:fixed; top:20px; right:20px; background:#f59e0b; color:white; padding:12px 24px; border-radius:8px; z-index:9999; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-weight:bold; font-size:1.1rem;"><i class="fas fa-check-circle mr-2"></i> Dimension Saved Successfully!</div>');
+                    $('body').append(successToast);
+                    setTimeout(function(){ successToast.fadeOut(400, function(){ $(this).remove(); }); }, 3000);
+
+                    // Reset ONLY the package dimension fields so they can add the next one instantly
+                    $('#wh_goods_package_type').val('');
+                    $('#uom').val('');
+                    $('#no_of_piece').val('');
+                    $('#length').val('');
+                    $('#width').val('');
+                    $('#height').val('');
+                    $('#weight').val('');
+                    $('#chargeable_weight').val('');
+                    $('#cbm').val('');
+                    $('#volume_weight').val('');
+                    $('#req_area').val('');
+                    $('#wh_goods_status').val(''); // Also reset Job Status
+
+                    submitBtn.prop('disabled', false).html(originalBtnHtml);
+                },
+                error: function() {
+                    alert('An error occurred while saving the dimension. Please try again.');
+                    submitBtn.prop('disabled', false).html(originalBtnHtml);
+                }
+            });
+        });
+    }
+});
+</script>
+
+</div>
+{% endblock scripts %}
 {% endblock content %}
 

@@ -1,177 +1,143 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<form method="POST" action="" id="wrong_labelling_add" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="row">
-        <div class="col">
-            <div class="container-fluid">
-                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="card-header text-center"><h3>Add/Update Wrong Labelling</h3></div>
-                    <div class="card-body bg-light">
+
+
+<style>
+.bvm-modern-layout .form-section { padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.bvm-modern-layout .input-group-text { background-color: #f8fafc; color: #1e293b; font-weight: 600; border: 1px solid #cbd5e1; border-right: none; }
+</style>
+
+<div class="container-fluid py-4 bvm-modern-layout">
+    <div class="modern-list-header mb-4" style="display: block !important; overflow: hidden;">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-8 text-center text-md-left mb-3 mb-md-0">
+                <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;">
+                    <i class="fas fa-edit mr-2"></i> Add/Update Wrong Labelling
+                </h3>
+            </div>
+            <div class="col-12 col-md-4 d-flex justify-content-center justify-content-md-end align-items-center">
+                <a href="{% url 'wrong_labelling_list' %}" class="btn btn-light shadow-sm" style="border-radius:10px; display:inline-flex; align-items:center; font-weight:600; text-transform:uppercase; color: #333 !important;">
+                    <i class="fas fa-arrow-left mr-1"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" action="" id="wrong_labelling_add" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-section mb-4 mx-auto" style="padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); ">
                         <div class="row">
                             <div class="col-4">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Branch</span>
-                                    </div>
-                                    {% render_field form.wl_branch id="wl_branch"  class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Unit</span>
-                                    </div>
-                                    {% render_field form.wl_unit id="wl_unit" class="form-control disable_a_href" id="wl_unit" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Customer Name</span>
-                                    </div>
-                                    {% render_field form.wl_customer id="wl_customer"  class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Supervisor Name</span>
-                                    </div>
-                                    {% render_field form.wl_supervisor id="wl_supervisor"  class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Date Of Shipment</span>
-                                    </div>
-                                    {% render_field form.wl_shipment_date type="Datetime-local" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">CCTV Footage Available</span>
-                                    </div>
-                                    {% render_field form.wl_cctvfootage_available id="wl_cctvfootage_available" class="form-control"  %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Is BVM Fault?</span>
-                                    </div>
-                                    {% render_field form.wl_bvm_fault id="wl_bvm_fault" class="form-control"  %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Root Cause Analysis</span>
-                                    </div>
-                                    {% render_field form.wl_rootcause_analysis id="wl_rootcause_analysis" class="form-control"  %}
-                                </div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Branch</label>
+    {% render_field form.wl_branch id="wl_branch"  class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Unit</label>
+    {% render_field form.wl_unit id="wl_unit" class="form-control form-control-modern disable_a_href" id="wl_unit" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Customer Name</label>
+    {% render_field form.wl_customer id="wl_customer"  class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Supervisor Name</label>
+    {% render_field form.wl_supervisor id="wl_supervisor"  class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Date Of Shipment</label>
+    {% render_field form.wl_shipment_date type="Datetime-local" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">CCTV Footage Available</label>
+    {% render_field form.wl_cctvfootage_available id="wl_cctvfootage_available" class="form-control form-control-modern"  %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Is BVM Fault?</label>
+    {% render_field form.wl_bvm_fault id="wl_bvm_fault" class="form-control form-control-modern"  %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Root Cause Analysis</label>
+    {% render_field form.wl_rootcause_analysis id="wl_rootcause_analysis" class="form-control form-control-modern"  %}
+</div>
                             </div>
                             <div class="col-4">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Cross Labelling Details</span>
-                                    </div>
-                                    {% render_field form.wl_crosslabelling_details id="wl_crosslabelling_details" class="form-control"  %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">No of Shipments</span>
-                                    </div>
-                                    {% render_field form.wl_noof_shipments id="wl_noof_shipments" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Shipment 1</span>
-                                    </div>
-                                    {% render_field form.wl_shipment1 id="wl_shipment1" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Correct Destination</span>
-                                    </div>
-                                    {% render_field form.wl_correct_shipment1 id="wl_correct_shipment1" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Wrong Destination</span>
-                                    </div>
-                                    {% render_field form.wl_wrong_shipment1 id="wl_wrong_shipment1" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Weight</span>
-                                    </div>
-                                    {% render_field form.wl_weight_shipment1 id="wl_weight_shipment1" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Dims</span>
-                                    </div>
-                                    {% render_field form.wl_dims_shipment1 id="wl_dims_shipment1" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Dispatch Reference</span>
-                                    </div>
-                                    {% render_field form.wl_dispatch_num_shipment1 id="wl_dispatch_num_shipment1" class="form-control" %}
-                                </div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Cross Labelling Details</label>
+    {% render_field form.wl_crosslabelling_details id="wl_crosslabelling_details" class="form-control form-control-modern"  %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">No of Shipments</label>
+    {% render_field form.wl_noof_shipments id="wl_noof_shipments" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Shipment 1</label>
+    {% render_field form.wl_shipment1 id="wl_shipment1" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Correct Destination</label>
+    {% render_field form.wl_correct_shipment1 id="wl_correct_shipment1" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Wrong Destination</label>
+    {% render_field form.wl_wrong_shipment1 id="wl_wrong_shipment1" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Weight</label>
+    {% render_field form.wl_weight_shipment1 id="wl_weight_shipment1" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Dims</label>
+    {% render_field form.wl_dims_shipment1 id="wl_dims_shipment1" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Dispatch Reference</label>
+    {% render_field form.wl_dispatch_num_shipment1 id="wl_dispatch_num_shipment1" class="form-control form-control-modern" %}
+</div>
                             </div>
                             <div class="col-4">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Shipment 2</span>
-                                    </div>
-                                    {% render_field form.wl_shipment2 id="wl_shipment2" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Correct Destination</span>
-                                    </div>
-                                    {% render_field form.wl_correct_shipment2 id="wl_correct_shipment2" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Wrong Destination</span>
-                                    </div>
-                                    {% render_field form.wl_wrong_shipment2 id="wl_wrong_shipment2" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Weight</span>
-                                    </div>
-                                    {% render_field form.wl_weight_shipment2 id="wl_weight_shipment2" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Dims</span>
-                                    </div>
-                                    {% render_field form.wl_dims_shipment2 id="wl_dims_shipment2" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Dispatch Reference</span>
-                                    </div>
-                                    {% render_field form.wl_dispatch_num_shipment2 id="wl_dispatch_num_shipment2" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Amount</span>
-                                    </div>
-                                    {% render_field form.wl_amount id="wl_amount" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">CAPA Issued Date</span>
-                                    </div>
-                                    {% render_field form.wl_CAPA_issueddate type="Date" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">CAPA Closed Date</span>
-                                    </div>
-                                    {% render_field form.wl_CAPA_closeddate type="Date" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Management Approval</span>
-                                    </div>
-                                    {% render_field form.wl_approval_status id="wl_approval_status" class="form-control" %}
-                                </div>
-                                {% render_field form.wl_updated_by id="wl_updated_by" hidden="True" class="form-control" %}
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Shipment 2</label>
+    {% render_field form.wl_shipment2 id="wl_shipment2" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Correct Destination</label>
+    {% render_field form.wl_correct_shipment2 id="wl_correct_shipment2" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Wrong Destination</label>
+    {% render_field form.wl_wrong_shipment2 id="wl_wrong_shipment2" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Weight</label>
+    {% render_field form.wl_weight_shipment2 id="wl_weight_shipment2" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Dims</label>
+    {% render_field form.wl_dims_shipment2 id="wl_dims_shipment2" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Dispatch Reference</label>
+    {% render_field form.wl_dispatch_num_shipment2 id="wl_dispatch_num_shipment2" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Amount</label>
+    {% render_field form.wl_amount id="wl_amount" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">CAPA Issued Date</label>
+    {% render_field form.wl_CAPA_issueddate type="Date" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">CAPA Closed Date</label>
+    {% render_field form.wl_CAPA_closeddate type="Date" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Management Approval</label>
+    {% render_field form.wl_approval_status id="wl_approval_status" class="form-control form-control-modern" %}
+</div>
+                                {% render_field form.wl_updated_by id="wl_updated_by" hidden="True" class="form-control form-control-modern" %}
                             </div>
                         </div>
                         <div class="row">
@@ -185,18 +151,19 @@
                             </div>
                             <div class="col-1"></div>
                         </div>
-                        <button type="submit" class="btn btn-success" id="save-btn">
-                            <i class="fas fa-check"></i> Submit
-                        </button>
-                        <a href="{% url 'wrong_labelling_list'  %}" class="btn btn-danger float-right">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                    </div>
+                        <div class="row mt-4 pt-4 border-top">
+                <div class="col-12 d-flex justify-content-between">
+                    <button type="submit" class="btn shadow-sm" style="background-color: #f5a623; color: #fff; border-radius:10px; font-weight:600; text-transform:uppercase; padding: 0.5rem 2rem;" id="save-btn">
+                        <i class="fas fa-check mr-2"></i> Submit
+                    </button>
+                    <a href="{% url 'wrong_labelling_list' %}" class="btn shadow-sm" style="background-color: #ef4444; color: #fff; border-radius:10px; font-weight:600; text-transform:uppercase; padding: 0.5rem 2rem;">
+                        <i class="fas fa-times mr-2"></i> Cancel
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
-</form>
+    </form>
+</div> <!-- Close bvm-modern-layout -->
 
 <script>
     $(document).ready(function() {
@@ -239,6 +206,17 @@
          }
        });
      });
+</script>
+
+
+<script>
+    $(document).ready(function() {
+        $('#wl_customer').select2({
+            width: '100%',
+            placeholder: "--Select--",
+            allowClear: true
+        });
+    });
 </script>
 
 {% endblock content %}

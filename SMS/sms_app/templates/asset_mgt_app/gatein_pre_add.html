@@ -1,142 +1,124 @@
-{% extends "asset_mgt_app/base_1.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<style>
-.disabled-colour {
-     pointer-events: none;
-    background:#CCFFCC !important;
-    color:#000000 !important;
-}
-</style>
 
-<div class="row">
-	<div class="col">
-		<div class="container-fluid">
-			<div class="card shadow text-white bg-info mb-2" style="max-width: 100%;">
-				<div class="col-12 card-header text-center">
-					<div class="row align-items-center">
-						<div class="col-12 col-md-8 col-lg-10 text-center">
-							<h3>Add/Update Gate-In</h3>
-						</div>
-<!--						<div class="col-12 col-md-4 col-lg-2 text-md-right text-center">-->
-<!--							<button id="email_alert" type="button" onclick="email_message_fn()"-->
-<!--									class="btn btn-warning btn-sm d-inline-flex align-items-center"-->
-<!--									data-toggle="modal" data-target="#sendEmailModal">-->
-<!--								<i class="fas fa-envelope-square mr-2"></i>-->
-<!--								Email Alert-->
-<!--								<span class="badge badge-danger ml-2">{{ gatein_pre_email_count }}</span>-->
-<!--							</button>-->
-<!--						</div>-->
-					</div>
-				</div>
-				<!-- Email Modal (outside card-header) -->
-				<div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
-					<div class="modal-dialog modal-lg">
-						<div class="modal-content">
-							<div class="modal-header bg-info">
-								<h5 class="modal-title" id="sendEmailModalLabel">Email Alert</h5>
-								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-									<span aria-hidden="true">&times;</span>
-								</button>
-							</div>
-							<div class="modal-body text-dark">
-								{% include "asset_mgt_app/gate_in_send_email.html" %}
-							</div>
-						</div>
-					</div>
-				</div>
+<div class="container-fluid py-4 bvm-modern-layout">
+    <!-- ══ Centralized Page Header ══ -->
+    <div class="modern-list-header mb-4" style="display: block !important; overflow: hidden;">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-6 text-center text-md-left mb-3 mb-md-0">
+                <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;">
+                    <i class="fas fa-edit mr-2"></i> Add/Update Gate-In
+                </h3>
+            </div>
+            <div class="col-12 col-md-6 d-flex flex-column flex-md-row justify-content-center justify-content-md-end">
+                <a href="{% url 'pre_gatein_search' %}" class="btn btn-cancel mb-2 mb-md-0 mr-md-2" style="border-radius:10px; display:inline-flex; align-items:center; justify-content:center; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                    <i class="fas fa-arrow-left mr-1"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
 
+    <!-- Email Modal (outside card-header) -->
+    <div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-light);">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title font-weight-bold" id="sendEmailModalLabel" style="color: var(--text-main);">Email Alert</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: var(--text-muted);">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-dark p-4">
+                    {% include "asset_mgt_app/gate_in_send_email.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-				<div class="card-body bg-light" >
-					<form method="POST" action="" enctype="multipart/form-data">
-						{% csrf_token %}
-						<div class="row">
-							<div class="col-12 col-md-6 col-lg-6 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm  mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Pre Gate-In ID</span>
-									</div>
-									{% render_field gatein_pre_form.gatein_pre_number id="gatein_pre_number" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm  mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Branch</span>
-									</div>
-									{% render_field gatein_pre_form.gatein_pre_branch class="form-control" id="gatein_pre_branch" %}
-								</div>
-								{% render_field gatein_pre_form.gatein_pre_updated_by id="gatein_pre_updated_by" hidden="True" class="form-control" %}
-								{% render_field gatein_pre_form.gatein_pre_truck_number id="gatein_pre_truck_number" hidden="True" class="form-control" %}
-								{% render_field gatein_pre_form.gatein_pre_driver_name id="gatein_pre_driver_name" hidden="True" class="form-control" %}
-								<div class="input-group input-group-sm  mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Shipment Details</span>
-									</div>
-									{% render_field gatein_pre_form.gatein_pre_shipment_att id="gatein_pre_shipment_att" class="form-control text-wrap" %}
-								</div>
-							</div>
-							<div class=" col-12 col-md-6 col-lg-6 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm  mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Approval</span>
-									</div>
-									{% render_field gatein_pre_form.gatein_pre_cust_appr_att id="gatein_pre_cust_appr_att" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm  mb-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Status</span>
-									</div>
-									{% render_field gatein_pre_form.gatein_pre_status class="form-control" %}
-								</div>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1 p-2"></div>
-						</div>
-						<button type="submit" class="btn btn-success btn-sm" ><i class="fas fa-check"></i> Save</button>
-						<a href="{% url 'pre_gatein_search' %}" class="btn btn-danger btn-sm float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</form>
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
+                    <form method="POST" action="" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="row">
+                <!-- Hidden fields -->
+                {% render_field gatein_pre_form.gatein_pre_updated_by id="gatein_pre_updated_by" hidden="True" class="form-control" %}
+                {% render_field gatein_pre_form.gatein_pre_truck_number id="gatein_pre_truck_number" hidden="True" class="form-control" %}
+                {% render_field gatein_pre_form.gatein_pre_driver_name id="gatein_pre_driver_name" hidden="True" class="form-control" %}
 
-<div id="gatein_list_block">
-    {% include "asset_mgt_app/gateintruck_list_woh.html" %}
+                <!-- Left Section -->
+                <div class="col-12 col-md-6 mb-3">
+                    <div class="form-section h-100 py-3 px-4">
+                        <div class="form-section-title mb-3">
+                            <div><i class="fas fa-building text-primary mr-2"></i> GATE-IN BRANCH</div>
+                        </div>
+                        <div class="form-group form-group-modern mb-3">
+                            <label class="form-label-modern field-label d-block">Pre Gate-In ID</label>
+                            {% render_field gatein_pre_form.gatein_pre_number id="gatein_pre_number" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                        <div class="form-group form-group-modern mb-3">
+                            <label class="form-label-modern field-label d-block">Branch</label>
+                            {% render_field gatein_pre_form.gatein_pre_branch class="form-control form-control-modern" id="gatein_pre_branch" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Section -->
+                <div class="col-12 col-md-6 mb-3">
+                    <div class="form-section h-100 py-3 px-4">
+                        <div class="form-section-title mb-3">
+                            <div><i class="fas fa-list-alt text-primary mr-2"></i> OTHER FIELDS</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 col-md-6">
+                                <div class="form-group form-group-modern file-field-group mb-3">
+                                    <label class="form-label-modern field-label d-block">Shipment Details</label>
+                                    {% render_field gatein_pre_form.gatein_pre_shipment_att id="gatein_pre_shipment_att" class="form-control form-control-modern" style="min-height: 28px; padding-top: 2px;" %}
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="form-group form-group-modern file-field-group mb-3">
+                                    <label class="form-label-modern field-label d-block">Customer Approval</label>
+                                    {% render_field gatein_pre_form.gatein_pre_cust_appr_att id="gatein_pre_cust_appr_att" class="form-control form-control-modern" style="min-height: 28px; padding-top: 2px;" %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-modern mb-2">
+                            <label class="form-label-modern field-label d-block">Status</label>
+                            {% render_field gatein_pre_form.gatein_pre_status class="form-control form-control-modern" id="id_gatein_pre_status" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row align-items-center mt-1 mb-3 px-3 position-relative">
+                <div class="col-12 d-flex justify-content-between align-items-center">
+                    <button type="submit" class="btn btn-submit" style="border-radius:10px; display:inline-flex; align-items:center; justify-content:center; padding:0.4rem 1.5rem; font-size:0.85rem; text-decoration:none; background: #f59e0b; border: none; color: white;">
+                        <i class="fas fa-check mr-2"></i> Save Changes
+                    </button>
+                    
+                    <div class="message position-absolute w-100 d-flex justify-content-center" style="left: 0; pointer-events: none;">
+                        {% for message in messages %}
+                        <a {% if message.tags %} class="{{ message.tags }}"{% endif %} style="font-weight:bold; font-size: 1.1rem; color: #155724; pointer-events: auto; background-color: #d4edda; padding: 8px 16px; border-radius: 8px; text-decoration: none; border: 1px solid #c3e6cb;">
+                            {{ message }}
+                        </a>
+                        {% endfor %}
+                    </div>
+
+                    <a href="{% url 'pre_gatein_search' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; justify-content:center; padding:0.4rem 1.5rem; font-size:0.85rem; text-decoration:none; background: #f3f4f6; border: 1px solid #d1d5db; color: #374151;">
+                        <i class="fas fa-times mr-2"></i> Cancel
+                    </a>
+                </div>
+            </div>
+        </form>
+
+    <div id="gatein_list_block">
+        {% include "asset_mgt_app/gateintruck_list_woh.html" %}
+    </div>
 </div>
 
 {% block scripts %}
 <script>
 	document.addEventListener("DOMContentLoaded", function() {
-		// init datatable
-		$('#gatein_list').DataTable({
-			order: [1, 'desc' ],
-			responsive: true,
-			scrollX: false,
-			dom: 'lBfrtip',
-			buttons: [
-				'copy', 'csv', 'excel','print'
-			]
-		});
-
-		// disable add button if pre number empty
-		var gateinpre_num = document.getElementById("gatein_pre_number").value;
-		if (gateinpre_num =="") {
-			$('#add_gateinpre').addClass('disable_a_href');
-		} else {
-			$('#add_gateinpre').removeClass('disable_a_href');
-		}
-
 		// auto-fill hidden fields
 		document.getElementById("gatein_pre_updated_by").value ='{{user_id}}';
 		document.getElementById("gatein_pre_branch").value ='{{user_branch_id}}';
@@ -151,8 +133,8 @@
 			// disable gatein list block
 			$('#gatein_list_block').addClass('disable_a_href disabled-colour');
 
-			// disable Add button
-			$('#add_gateinpre').addClass('disable_a_href');
+			// Add Truck button remains enabled regardless of completed status
+			// $('#add_gateinpre').addClass('disable_a_href');
 
 			// disable Save button
 			$('button[type="submit"]').addClass('disable_a_href disabled-colour');
@@ -188,7 +170,51 @@
 			statusDropdown.title = 'Status is locked until all ' + truckCount + ' truck job(s) are created. Currently ' + jobCount + ' job(s) exist.';
 		}
 	});
-</script>
+
+
+
+
+<style>
+.disabled-colour {
+     pointer-events: none;
+    background:#CCFFCC !important;
+    color:#000000 !important;
+}
+.bvm-modern-layout {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+.bvm-modern-layout .form-section {
+    padding: 1.5rem !important;
+    border-radius: 12px !important;
+    background: var(--bg-card);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+.bvm-modern-layout .form-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid var(--border-light);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.file-field-group label.field-label {
+    font-size: 0.75rem !important;
+    display: inline-block !important;
+    margin-bottom: 5px !important;
+}
+.file-field-group a { display: none !important; }
+.file-field-group input[type="file"] {
+    font-size: 0.85rem !important;
+    display: block;
+    margin-top: 5px;
+    width: 100%;
+}
+</style>
+
 {% endblock scripts %}
 
 {% endblock content %}

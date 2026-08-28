@@ -1,85 +1,81 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<form method="POST" action="" id="customer_claim_add" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="row">
-        <div class="col">
-            <div class="container-fluid">
-                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="card-header text-center"><h3>Add/Update Customer Claims</h3></div>
-                    <div class="card-body bg-light">
+
+
+<style>
+.bvm-modern-layout .form-section { padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.bvm-modern-layout .input-group-text { background-color: #f8fafc; color: #1e293b; font-weight: 600; border: 1px solid #cbd5e1; border-right: none; }
+</style>
+
+<div class="container-fluid py-4 bvm-modern-layout">
+    <div class="modern-list-header mb-4" style="display: block !important; overflow: hidden;">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-8 text-center text-md-left mb-3 mb-md-0">
+                <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;">
+                    <i class="fas fa-edit mr-2"></i> Add/Update Customer Claims
+                </h3>
+            </div>
+            <div class="col-12 col-md-4 d-flex justify-content-center justify-content-md-end align-items-center">
+                <a href="{% url 'customer_claims_list' %}" class="btn btn-light shadow-sm" style="border-radius:10px; display:inline-flex; align-items:center; font-weight:600; text-transform:uppercase; color: #333 !important;">
+                    <i class="fas fa-arrow-left mr-1"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" action="" id="customer_claim_add" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-section mb-4 mx-auto" style="padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); ">
                         <div class="row">
                             <div class="col">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Branch</span>
-                                    </div>
-                                    {% render_field form.cc_branch id="cc_branch"  class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Unit</span>
-                                    </div>
-                                    {% render_field form.cc_unit id="cc_unit" class="form-control disable_a_href" id="cc_unit" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Customer</span>
-                                    </div>
-                                    {% render_field form.cc_customer id="cc_customer" class="form-control"  %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">WH Job Number</span>
-                                    </div>
-                                    {% render_field form.cc_job_ref id="cc_job_ref" class="form-control"  %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Supervisor Name</span>
-                                    </div>
-                                    {% render_field form.cc_supervisor id="icc_supervisor" class="form-control"  %}
-                                </div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Branch</label>
+    {% render_field form.cc_branch id="cc_branch"  class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Unit</label>
+    {% render_field form.cc_unit id="cc_unit" class="form-control form-control-modern disable_a_href" id="cc_unit" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Customer</label>
+    {% render_field form.cc_customer id="cc_customer" class="form-control form-control-modern"  %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">WH Job Number</label>
+    {% render_field form.cc_job_ref id="cc_job_ref" class="form-control form-control-modern"  %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Supervisor Name</label>
+    {% render_field form.cc_supervisor id="icc_supervisor" class="form-control form-control-modern"  %}
+</div>
                             </div>
                             <div class="col-6">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Reason For Claims</span>
-                                    </div>
-                                    {% render_field form.cc_claim_reason id="cc_claim_reason" class="form-control"  %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Amount</span>
-                                    </div>
-                                    {% render_field form.cc_amount id="cc_amount" class="form-control"  %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">CAPA Issued Date</span>
-									</div>
-									{% render_field form.cc_CAPA_issueddate type="Date" class="form-control" %}
-								</div>
-                                <div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">CAPA Closed Date</span>
-									</div>
-									{% render_field form.cc_CAPA_closeddate type="Date" class="form-control" %}
-								</div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Management Approval</span>
-                                    </div>
-                                    {% render_field form.cc_approval_status id="cc_approval_status" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Current Status</span>
-                                    </div>
-                                    {% render_field form.cc_status id="cc_status" class="form-control" %}
-                                </div>
-                                {% render_field form.cc_updated_by id="cc_updated_by" hidden="True" class="form-control" %}
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Reason For Claims</label>
+    {% render_field form.cc_claim_reason id="cc_claim_reason" class="form-control form-control-modern"  %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Amount</label>
+    {% render_field form.cc_amount id="cc_amount" class="form-control form-control-modern"  %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">CAPA Issued Date</label>
+    {% render_field form.cc_CAPA_issueddate type="Date" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">CAPA Closed Date</label>
+    {% render_field form.cc_CAPA_closeddate type="Date" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Management Approval</label>
+    {% render_field form.cc_approval_status id="cc_approval_status" class="form-control form-control-modern" %}
+</div>
+                                <div class="form-group form-group-modern mb-4">
+    <label class="form-label-modern field-label d-block text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Current Status</label>
+    {% render_field form.cc_status id="cc_status" class="form-control form-control-modern" %}
+</div>
+                                {% render_field form.cc_updated_by id="cc_updated_by" hidden="True" class="form-control form-control-modern" %}
                             </div>
                         </div>
                         <div class="row">
@@ -93,21 +89,22 @@
                             </div>
                             <div class="col-1"></div>
                         </div>
-                        <button type="submit" class="btn btn-success" id="save-btn">
-                            <i class="fas fa-check"></i> Submit
-                        </button>
-                        <a href="{% url 'customer_claims_list'  %}" class="btn btn-danger float-right">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                    </div>
+                                    <div class="row mt-4 pt-4 border-top">
+                <div class="col-12 d-flex justify-content-between">
+                    <button type="submit" class="btn shadow-sm" style="background-color: #f5a623; color: #fff; border-radius:10px; font-weight:600; text-transform:uppercase; padding: 0.5rem 2rem;" id="save-btn">
+                        <i class="fas fa-check mr-2"></i> Submit
+                    </button>
+                    <a href="{% url 'customer_claims_list' %}" class="btn shadow-sm" style="background-color: #ef4444; color: #fff; border-radius:10px; font-weight:600; text-transform:uppercase; padding: 0.5rem 2rem;">
+                        <i class="fas fa-times mr-2"></i> Cancel
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
-</form>
+    </form>
+</div> <!-- Close bvm-modern-layout -->
 
 <script>
-	$(document).ready(function() {
+    $(document).ready(function() {
 
             {
                 var updated_by = document.getElementById("cc_updated_by").value
@@ -124,7 +121,7 @@
 </script>
 
 <script>
-	$("#cc_branch").change(function () {
+    $("#cc_branch").change(function () {
        var branchId = $(this).val();
        $.ajax({
          url: '{% url 'load_units' %}',
@@ -147,6 +144,17 @@
          }
        });
      });
+</script>
+
+
+<script>
+    $(document).ready(function() {
+        $('#cc_customer').select2({
+            width: '100%',
+            placeholder: "--Select--",
+            allowClear: true
+        });
+    });
 </script>
 
 {% endblock content %}

@@ -195,46 +195,59 @@ def dispatch_goods_list(request):
 
     request.session['ses_dispatch_num_val'] = dispatch_num_val
     request.session['ses_dispatch_id_val'] = dispatch_id
-    dispatch_master_list = Warehouse_goods_info.objects.filter(
+    dispatch_master_list = list(Warehouse_goods_info.objects.filter(
         wh_customer_name=dispatch_customer,
         wh_check_in_out__in=[1, 4]
-    )
+    ).select_related('wh_customer_name'))
 
+    goods_ids = [g.id for g in dispatch_master_list]
+    dispatch_aggregates = GoodsPartialDispatchInfo.objects.filter(
+        pd_goods_id__in=goods_ids
+    ).values('pd_goods_id').annotate(
+        total=Sum('pd_dispatch_qty'),
+        total_wt=Sum('pd_goods_weight')
+    )
+    dispatch_dict = {item['pd_goods_id']: item for item in dispatch_aggregates}
+
+    partial_goods = GoodsPartialDispatchInfo.objects.filter(
+        pd_dispatch_info=dispatch_info
+    ).select_related('pd_goods')
+
+    all_job_nos = set([g.wh_job_no for g in dispatch_master_list if g.wh_job_no])
+    all_job_nos.update([entry.pd_goods.wh_job_no for entry in partial_goods if entry.pd_goods.wh_job_no])
+    loadingbay_dict = {lb.lb_job_no: lb for lb in Loadingbay_Info.objects.filter(lb_job_no__in=all_job_nos)}
+
+    filtered_master_list = []
     for goods in dispatch_master_list:
-        total_dispatched = GoodsPartialDispatchInfo.objects.filter(
-            pd_goods=goods
-        ).aggregate(total=Sum('pd_dispatch_qty'))['total'] or 0
-        total_dispatched_weight = GoodsPartialDispatchInfo.objects.filter(
-            pd_goods=goods
-        ).aggregate(total_wt=Sum('pd_goods_weight'))['total_wt'] or 0
+        aggs = dispatch_dict.get(goods.id, {'total': 0, 'total_wt': 0})
+        total_dispatched = aggs['total'] or 0
+        total_dispatched_weight = aggs['total_wt'] or 0
 
         goods.dispatched_total = total_dispatched
         goods.remaining_qty = goods.wh_goods_pieces - total_dispatched
         goods.dispatched_total_weight = total_dispatched_weight
         goods.remaining_weight = goods.wh_goods_weight - total_dispatched_weight
-        goods.loadingbay = Loadingbay_Info.objects.filter(lb_job_no=goods.wh_job_no).first()  # ✅ attach here
+        goods.loadingbay = loadingbay_dict.get(goods.wh_job_no)
 
-    # Only show goods with remaining quantity
-    dispatch_master_list = [g for g in dispatch_master_list if g.remaining_qty > 0]
-    partial_goods = GoodsPartialDispatchInfo.objects.filter(
-        pd_dispatch_info=dispatch_info
-    ).select_related('pd_goods')
+        if goods.remaining_qty > 0:
+            filtered_master_list.append(goods)
+
+    dispatch_master_list = filtered_master_list
 
     goods_list = []
     for entry in partial_goods:
         goods = entry.pd_goods
         goods.dispatched_total = entry.pd_dispatch_qty
         goods.all_dispatch_nums = dispatch_num_val
-        goods.loadingbay = Loadingbay_Info.objects.filter(lb_job_no=goods.wh_job_no).first()
+        goods.loadingbay = loadingbay_dict.get(goods.wh_job_no)
         goods_list.append(goods)
-    print()
+        
     context = {
         'goods_list': goods_list,
         'dispatch_master_list': dispatch_master_list,
         'first_name': first_name,
         'dispatch_num_val': dispatch_num_val,
-        "now": timezone.now().date()  # ✅ pass only date
-
+        "now": timezone.now().date()
     }
 
     return render(request, "asset_mgt_app/dispatch_goods_list_woh.html", context)
@@ -281,12 +294,8 @@ def dispatch_remove_goods(request):
 
     dispatch_invoice_job_update(dispatch_num_val)
     warehousevolme_area_calc(request)
-    context = {
-        'first_name': first_name,
-    }
-    # return redirect(request.META['HTTP_REFERER'])
-    # return redirect('/SMS/dispatch_goods_list')
-    return redirect('/SMS/dispatch_goods_list/' + str(dispatch_id_val))
+    
+    return JsonResponse({'status': 'success'})
 
 
 @csrf_exempt
@@ -308,6 +317,7 @@ def dispatch_add_goods(request):
     selected_stocks = request.POST.getlist('myList[]') or request.GET.getlist('myList[]')
     current_date = now()
     print('selected', selected_stocks)
+    
     try:
         dispatch_info = Dispatch_info.objects.get(dispatch_num=dispatch_num_val)
         vehicle_type = dispatch_info.dispatch_truck_type
@@ -315,34 +325,38 @@ def dispatch_add_goods(request):
         messages.error(request, 'Dispatch information not found.')
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
-    # Get the Check_in_out instance for value 2
     try:
         check_in_out_instance = Check_in_out.objects.get(id=2)
     except Check_in_out.DoesNotExist:
         messages.error(request, 'Check_in_out instance with id=2 not found.')
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
-    goods_to_update = []
-    for stock in selected_stocks:
-        try:
-            goods_info = Warehouse_goods_info.objects.get(wh_qr_rand_num=stock)
-        except Warehouse_goods_info.DoesNotExist:
-            messages.error(request, f'Stock with QR {stock} not found.')
-            continue
+    # Bulk fetch all goods in one go
+    goods_queryset = list(Warehouse_goods_info.objects.filter(wh_qr_rand_num__in=selected_stocks))
+    goods_ids = [g.id for g in goods_queryset]
+    
+    # Bulk fetch aggregates
+    dispatch_aggregates = GoodsPartialDispatchInfo.objects.filter(
+        pd_goods_id__in=goods_ids
+    ).values('pd_goods_id').annotate(
+        total=Sum('pd_dispatch_qty'),
+        total_wt=Sum('pd_goods_weight')
+    )
+    dispatch_dict = {item['pd_goods_id']: item for item in dispatch_aggregates}
 
+    goods_to_update = []
+    
+    for goods_info in goods_queryset:
         fumigation_action = goods_info.wh_fumigation_action
         fumigation_date = goods_info.wh_fumigation_date
 
         if str(fumigation_action) == 'BVM' and not fumigation_date:
-            messages.error(request, f'Fumigation Date not entered for stock {stock}.')
-            return redirect(request.META.get('HTTP_REFERER', '/'))
+            messages.error(request, f'Fumigation Date not entered for stock {goods_info.wh_qr_rand_num}.')
+            continue # Instead of redirecting entirely, just skip this one
 
-        total_dispatched = GoodsPartialDispatchInfo.objects.filter(
-            pd_goods=goods_info
-        ).aggregate(total=Sum('pd_dispatch_qty'))['total'] or 0
-        total_dispatched_weight = GoodsPartialDispatchInfo.objects.filter(
-            pd_goods=goods_info
-        ).aggregate(total_wt=Sum('pd_goods_weight'))['total_wt'] or 0
+        aggs = dispatch_dict.get(goods_info.id, {'total': 0, 'total_wt': 0})
+        total_dispatched = aggs['total'] or 0
+        total_dispatched_weight = aggs['total_wt'] or 0
 
         remaining_weight = goods_info.wh_goods_weight - total_dispatched_weight
         remaining_qty = goods_info.wh_goods_pieces - total_dispatched
@@ -380,8 +394,8 @@ def dispatch_add_goods(request):
     # Bulk update all modified goods
     Warehouse_goods_info.objects.bulk_update(
         goods_to_update,
-        ['wh_check_in_out', 'wh_dispatch_num', 'wh_checkout_time', 'wh_truck_type', 'wh_storage_time',
-         'wh_dispatch_qty', 'wh_goods_pieces']
+        ['wh_check_in_out', 'wh_dispatch_num', 'wh_dispatch_id', 'wh_checkout_time', 'wh_truck_type', 'wh_storage_time',
+         'wh_dispatch_qty']
     )
 
     Warehouse_goods_info.objects.filter(wh_dispatch_num=dispatch_num_val).update(wh_dispatch_id=dispatch_info.id)
@@ -391,8 +405,7 @@ def dispatch_add_goods(request):
     warehousevolme_area_calc(request)
 
     print("Inside dispatch_add_goods end")
-    # return HttpResponseRedirect(f'/SMS/dispatch_goods_list/{dispatch_id_val}?refresh=1')
-    return redirect('/SMS/dispatch_goods_list/' + str(dispatch_id_val))
+    return JsonResponse({'status': 'success'})
 
 
 def dispatch_invoice_job_update(dispatch_num_val):
@@ -753,3 +766,108 @@ def dispatch_delete_attachment(request, pk, att_type):
         messages.success(request, 'Attachment deleted successfully.')
 
     return redirect(request.META.get('HTTP_REFERER', 'gatein_list'))
+
+from django.http import JsonResponse
+from django.urls import reverse
+from django.db.models import Q
+
+@login_required(login_url='login_page')
+def dispatch_list_ajax(request):
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '')
+
+    queryset = Dispatch_info.objects.select_related(
+        'dispatch_customer', 'dispatch_status', 'dispatch_updated_by'
+    ).all()
+
+    if search_value:
+        queryset = queryset.filter(
+            Q(dispatch_num__icontains=search_value) |
+            Q(dispatch_customer__cu_name__icontains=search_value) |
+            Q(dispatch_transporter__icontains=search_value) |
+            Q(dispatch_truck_number__icontains=search_value) |
+            Q(dispatch_invoice_list__icontains=search_value) |
+            Q(dispatch_job_num_list__icontains=search_value)
+        )
+
+    total_records = Dispatch_info.objects.count()
+    filtered_records = queryset.count()
+    
+    # Ordering
+    order_column_index = request.GET.get('order[0][column]', 0)
+    order_dir = request.GET.get('order[0][dir]', 'desc')
+    
+    columns = [
+        'id', 'dispatch_created_at', 'dispatch_num', 'id', 'dispatch_customer__cu_name',
+        'dispatch_transporter', 'dispatch_truck_number', 'dispatch_truck_type',
+        'dispatch_cargo_picked', 'dispatch_sticker_pasted_bvm', 'dispatch_invoice_list',
+        'dispatch_job_num_list', 'dispatch_status__status_title', 'dispatch_updated_by__username',
+        'dispatch_updated_at', 'id'
+    ]
+    if int(order_column_index) < len(columns):
+        order_by = columns[int(order_column_index)]
+        if order_dir == 'desc':
+            order_by = f"-{order_by}"
+        queryset = queryset.order_by(order_by)
+
+    data = []
+    for item in queryset[start:start+length]:
+        update_url = reverse('dispatch_update', args=[item.id])
+        delete_url = reverse('dispatch_delete', args=[item.id])
+        gatepass_url = reverse('dispatch_gatepass_pdf_download', args=[item.id])
+        csrf_token = request.COOKIES.get('csrftoken', '')
+        
+        edit_btn = f'''<div class="d-flex justify-content-center gap-1">
+            <a class="btn btn-submit" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; color: white; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px;" href="{update_url}" >
+                <i class="far fa-edit"></i>
+            </a>
+        </div>'''
+        
+        delete_btn = f'''<form action="{delete_url}" method="post" onclick="return confirm('Are you sure you want to delete this Dispatch record?');" style="margin:0; display:inline;">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
+            <button type="submit" class="btn btn-outline-danger" style="border-radius: 8px; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; padding: 0;">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </form>'''
+
+        gatepass = ''
+        if item.dispatch_driver_signature and item.dispatch_supervisor_signature:
+            gatepass = f'''<div class="d-flex justify-content-center gap-1">
+                <a class="btn" style="background: #fbbf24; color: white; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px;" href="{gatepass_url}">
+                    <i class="fas fa-luggage-cart"></i>
+                </a>
+            </div>'''
+        else:
+            gatepass = f'''<div class="d-flex justify-content-center gap-1">
+                <button class="btn" style="background: #d1d5db; color: white; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: none;" disabled>
+                    <i class="fas fa-luggage-cart"></i>
+                </button>
+            </div>'''
+
+        data.append({
+            'edit': edit_btn,
+            'dispatch_created_at': item.dispatch_created_at.strftime('%Y-%m-%d %H:%M:%S') if item.dispatch_created_at else '',
+            'dispatch_num': item.dispatch_num or '',
+            'gatepass': gatepass,
+            'dispatch_customer': str(item.dispatch_customer.cu_name) if hasattr(item, 'dispatch_customer') and item.dispatch_customer else 'None',
+            'dispatch_transporter': str(item.dispatch_transporter) if item.dispatch_transporter else 'None',
+            'dispatch_truck_number': item.dispatch_truck_number or '',
+            'dispatch_truck_type': str(item.dispatch_truck_type) if item.dispatch_truck_type else '',
+            'dispatch_cargo_picked': str(item.dispatch_cargo_picked) if item.dispatch_cargo_picked else '',
+            'dispatch_sticker_pasted_bvm': str(item.dispatch_sticker_pasted_bvm) if item.dispatch_sticker_pasted_bvm else '',
+            'dispatch_invoice_list': f'<div class="scrollable-cell">{item.dispatch_invoice_list or ""}</div>',
+            'dispatch_job_num_list': f'<div class="scrollable-cell">{item.dispatch_job_num_list or ""}</div>',
+            'dispatch_status': str(item.dispatch_status.status_title) if hasattr(item, 'dispatch_status') and item.dispatch_status else 'None',
+            'dispatch_updated_by': str(item.dispatch_updated_by) if item.dispatch_updated_by else 'None',
+            'dispatch_updated_at': item.dispatch_updated_at.strftime('%b %d, %Y') if item.dispatch_updated_at else '',
+            'delete': delete_btn
+        })
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': total_records,
+        'recordsFiltered': filtered_records,
+        'data': data
+    })

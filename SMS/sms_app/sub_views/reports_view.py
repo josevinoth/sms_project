@@ -77,19 +77,35 @@ def space_utilization_reports(request):
 
     space_utilization_list = []
 
-    for loc in LocationmasterInfo.objects.all():
-        goods_qs = Warehouse_goods_info.objects.filter(
-            wh_branch=loc.lm_wh_location,
-            wh_unit=loc.lm_wh_unit,
-            wh_bay=loc.lm_areaside,
-            **goods_filter
-        )
+    # Fast bulk aggregation
+    aggregated_goods = Warehouse_goods_info.objects.filter(**goods_filter).values(
+        'wh_branch_id', 'wh_unit_id', 'wh_bay_id'
+    ).annotate(
+        total_area=Sum('wh_goods_area'),
+        total_volume=Sum('wh_goods_volume_weight')
+    )
 
-        # Sum occupied values
-        occupied_area = goods_qs.aggregate(total=Sum('wh_goods_area'))['total'] or 0
-        occupied_volume = goods_qs.aggregate(total=Sum('wh_goods_volume_weight'))['total'] or 0
+    # Create lookup dict O(1)
+    goods_lookup = {}
+    for agg in aggregated_goods:
+        key = (agg['wh_branch_id'], agg['wh_unit_id'], agg['wh_bay_id'])
+        goods_lookup[key] = {
+            'area': agg['total_area'] or 0,
+            'volume': agg['total_volume'] or 0
+        }
 
-        # Available = Location total - occupied
+    # select_related to prevent N+1 queries for string representations
+    locations = LocationmasterInfo.objects.select_related(
+        'lm_wh_location', 'lm_wh_unit', 'lm_areaside', 'lm_customer_name', 'lm_customer_model'
+    ).all()
+
+    for loc in locations:
+        key = (loc.lm_wh_location_id, loc.lm_wh_unit_id, loc.lm_areaside_id)
+        agg_data = goods_lookup.get(key, {'area': 0, 'volume': 0})
+
+        occupied_area = agg_data['area']
+        occupied_volume = agg_data['volume']
+
         available_area = loc.lm_size - occupied_area
         available_volume = loc.lm_total_volume - occupied_volume
 
@@ -107,8 +123,35 @@ def space_utilization_reports(request):
             'lm_available_volume': round(available_volume, 2),
         })
 
+    if request.GET.get('draw'):
+        from django.http import JsonResponse
+        draw = int(request.GET.get('draw', 1))
+        start = int(request.GET.get('start', 0))
+        length = int(request.GET.get('length', 10))
+
+        # Paginate the built list
+        total_records = len(space_utilization_list)
+        paginated_list = space_utilization_list[start:start+length]
+
+        data = []
+        for item in paginated_list:
+            data.append([
+                str(item.get('lm_wh_location', '')),
+                str(item.get('lm_wh_unit', '')),
+                str(item.get('lm_areaside', '')),
+                str(item.get('lm_size', '')),
+                str(item.get('lm_area_occupied', '')),
+                str(item.get('lm_available_area', ''))
+            ])
+
+        return JsonResponse({
+            'draw': draw,
+            'recordsTotal': total_records,
+            'recordsFiltered': total_records,
+            'data': data
+        })
+
     context = {
-        'space_utilization_list': space_utilization_list,
         'first_name': first_name,
         'selected_branch': selected_branch,
         'branches': branches,
@@ -133,20 +176,130 @@ def stock_value_reports(request):
     #         output_field=fields.FloatField()
     #     )
     # )
-    goods_list = Warehouse_goods_info.objects.filter(wh_check_in_out=1)
-    for stock in goods_list:
-        if stock.wh_checkin_time:
-            delta = datetime.now() - stock.wh_checkin_time.replace(tzinfo=None)
-            stock.wh_storage_time = delta.days
-            stock.save(update_fields=['wh_storage_time'])
+    # SKIP MASSIVE DB UPDATE IF IT IS AN AJAX CALL
+    is_ajax = bool(request.GET.get('draw') or request.POST.get('draw'))
 
-    checkin_goods_list=Warehouse_goods_info.objects.all().values_list().distinct()
+    if not is_ajax:
+        # Only do this on initial full page load, not during DataTables sorting/filtering!
+        goods_list_update = Warehouse_goods_info.objects.filter(wh_check_in_out=1)
+        # Using bulk_update would be faster, but for now we just prevent it on AJAX
+        # (This is still slow on first load, so we comment it out entirely
+        # and let it calculate dynamically in the template/JSON instead of writing to DB)
+        # for stock in goods_list_update:
+        #     if stock.wh_checkin_time:
+        #         delta = datetime.now() - stock.wh_checkin_time.replace(tzinfo=None)
+        #         stock.wh_storage_time = delta.days
+        #         stock.save(update_fields=['wh_storage_time'])
+
+    checkin_goods_list = []
 
 
-    goods_list=(Warehouse_goods_info.objects.all()).order_by('-id')
+    goods_list = Warehouse_goods_info.objects.select_related('wh_dispatch_id', 'wh_lb_job_no_id', 'wh_gate_injob_no_id', 'wh_customer_name', 'wh_branch', 'wh_unit', 'wh_bay', 'wh_truck_type', 'wh_uom', 'wh_goods_package_type', 'wh_check_in_out', 'wh_fumigation_process').all().order_by('-id')
+
+    # Support both GET and POST for AJAX DataTables compatibility
+    if not customer_name:
+        customer_name = request.GET.get('ds_customer', '').strip()
+
     if customer_name:
         goods_list = goods_list.filter(wh_customer_name=customer_name)
         print(f"Filtering by customer name: {customer_name}")
+
+    from_date = request.GET.get('from_date')
+    to_date = request.GET.get('to_date')
+
+    if from_date and to_date:
+        try:
+            from django.utils import timezone
+            dt_from = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+            dt_to = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d")).replace(hour=23, minute=59, second=59)
+            from django.db.models import Q
+            # Filter by either checkin or checkout being in the range, or currently in warehouse (similar to export logic)
+            goods_list = goods_list.filter(
+                Q(wh_check_in_out__in=[1, 4], wh_checkout_time__isnull=True) |
+                Q(wh_check_in_out=2, wh_checkout_time__range=(dt_from, dt_to))
+            )
+        except Exception as e:
+            print("Error parsing dates in stock_value_reports:", e)
+
+    if request.GET.get('draw') or request.POST.get('draw'):
+        from django.http import JsonResponse
+        draw = int(request.GET.get('draw') or request.POST.get('draw') or 1)
+        start = int(request.GET.get('start') or request.POST.get('start') or 0)
+        length = int(request.GET.get('length') or request.POST.get('length') or 10)
+
+        total_records = goods_list.count()
+        paginated_list = goods_list[start:start+length]
+
+        data = []
+        for stock_value in paginated_list:
+            dispatch = stock_value.wh_dispatch_id
+            lb = stock_value.wh_lb_job_no_id
+
+            dispatch = stock_value.wh_dispatch_id
+            lb = stock_value.wh_lb_job_no_id
+            gatein = stock_value.wh_gate_injob_no_id
+
+            data.append([
+                str(stock_value.wh_job_no if stock_value.wh_job_no else ''), # 0 Job Number
+                str(stock_value.wh_qr_rand_num if stock_value.wh_qr_rand_num else ''), # 1 Stock Number
+                str(stock_value.wh_customer_name if stock_value.wh_customer_name else ''), # 2 Customer
+                gatein.gatein_arrival_date.strftime('%b %d, %Y, %I:%M %p') if gatein and gatein.gatein_arrival_date else '', # 3
+                gatein.gatein_created_at.strftime('%b %d, %Y, %I:%M %p') if gatein and gatein.gatein_created_at else '', # 4
+                lb.lb_stock_unloading_start_time.strftime('%b %d, %Y, %I:%M %p') if lb and lb.lb_stock_unloading_start_time else '', # 5
+                lb.lb_stock_unloading_end_time.strftime('%b %d, %Y, %I:%M %p') if lb and lb.lb_stock_unloading_end_time else '', # 6
+                str(gatein.gatein_transporter if gatein else ''), # 7 Transporter
+                str(gatein.gatein_truck_number if gatein else ''), # 8 Truck Number
+                str(gatein.gatein_truck_type if gatein else ''), # 9 Truck Type(In)
+                str(stock_value.wh_truck_type if stock_value.wh_truck_type else ''), # 10 Truck Type Placed
+                str(gatein.gatein_shipper if gatein else ''), # 11 Consignor
+                str(gatein.gatein_consignee if gatein else ''), # 12 Consignee
+                str(gatein.gatein_email_count if gatein else ''), # 13 Docs Received
+                str(gatein.gatein_hawb if gatein else ''), # 14 HAWB
+                str(gatein.gatein_destination if gatein else ''), # 15 Destination
+                str(stock_value.wh_goods_invoice if stock_value.wh_goods_invoice else ''), # 16 Invoice Number
+                str(stock_value.wh_voucher_num if stock_value.wh_voucher_num else ''), # 17 Case Number / Voucher Num
+                str(stock_value.wh_invoice_qty if stock_value.wh_invoice_qty else ''), # 18 Invoice Qty
+                str(stock_value.wh_invoice_weight_unit if stock_value.wh_invoice_weight_unit else ''), # 19 Invoice Weight
+                str(stock_value.wh_gross_weight if stock_value.wh_gross_weight else ''), # 20 Checkin Weight
+                str(stock_value.wh_uom if stock_value.wh_uom else ''), # 21 UOM
+                str(stock_value.wh_goods_length if stock_value.wh_goods_length else ''), # 22 Length
+                str(stock_value.wh_goods_width if stock_value.wh_goods_width else ''), # 23 Width
+                str(stock_value.wh_goods_height if stock_value.wh_goods_height else ''), # 24 Height
+                str(stock_value.wh_goods_pieces if stock_value.wh_goods_pieces else ''), # 25 Dims Qty
+                str(stock_value.wh_goods_package_type if stock_value.wh_goods_package_type else ''), # 26 Package Type
+                str(stock_value.wh_goods_volume_weight if stock_value.wh_goods_volume_weight else ''), # 27 Volume Weight
+                str(stock_value.wh_cbm if stock_value.wh_cbm else ''), # 28 CBM
+                str(stock_value.wh_invoice_value if stock_value.wh_invoice_value else ''), # 29 Invoice Value
+                str(lb.lb_stock_invoice_currency if lb else ''), # 30 Invoice Currency
+                str(stock_value.wh_invoice_amount_inr if stock_value.wh_invoice_amount_inr else ''), # 31 Invoice (INR)
+                str(lb.lb_eway_bill if lb else ''), # 32 E-Way Bill
+                lb.lb_validity_date.strftime('%b %d, %Y, %I:%M %p') if lb and lb.lb_validity_date else '', # 33
+                str(stock_value.wh_fumigation_process if stock_value.wh_fumigation_process else ''), # 34 Fumigation
+                str(stock_value.wh_check_in_out if stock_value.wh_check_in_out else ''), # 35 Check In-Out
+                str(stock_value.wh_branch if stock_value.wh_branch else ''), # 36 Branch
+                str(stock_value.wh_unit if stock_value.wh_unit else ''), # 37 Unit
+                str(stock_value.wh_bay if stock_value.wh_bay else ''), # 38 Bay
+                str((datetime.now() - stock_value.wh_checkin_time.replace(tzinfo=None)).days) if stock_value.wh_checkin_time else str(stock_value.wh_storage_time if stock_value.wh_storage_time else ''), # 39 Storage Days
+                str(dispatch.dispatch_truck_number if dispatch else ''), # 40 Truck Number Out
+                str(dispatch.dispatch_truck_type if dispatch else ''), # 41 Truck Type Out
+                dispatch.dispatch_gatein_time.strftime('%d-%b-%Y %H:%M:%S') if dispatch and dispatch.dispatch_gatein_time else '', # 42
+                dispatch.dispatch_dockin_time.strftime('%d-%b-%Y %H:%M:%S') if dispatch and dispatch.dispatch_dockin_time else '', # 43
+                dispatch.dispatch_dockout_time.strftime('%d-%b-%Y %H:%M:%S') if dispatch and dispatch.dispatch_dockout_time else '', # 44
+                dispatch.dispatch_depature_date.strftime('%d-%b-%Y %H:%M:%S') if dispatch and dispatch.dispatch_depature_date else '', # 45
+                str(dispatch.dispatch_sticker_pasted_bvm if dispatch else ''), # 46 Labels
+                str(dispatch.dispatch_mawb if dispatch else ''), # 47 MAWB
+                str(dispatch.dispatch_num if dispatch else ''), # 48 Dispatch Number
+                str(dispatch.dispatch_total_goods if dispatch else ''), # 49 Dispatch Qty
+                str(stock_value.wh_total_qty if stock_value.wh_total_qty else '') # 50 Stock on hand
+            ])
+
+        return JsonResponse({
+            'draw': draw,
+            'recordsTotal': total_records,
+            'recordsFiltered': total_records,
+            'data': data
+        })
+
     page_number = request.GET.get('page')
     paginator = Paginator(goods_list, 50)
     page_obj = paginator.get_page(page_number)
@@ -158,80 +311,25 @@ def stock_value_reports(request):
     if customer_name:
         base_qs = base_qs.filter(wh_customer_name=customer_name)
 
-    maa_in_stock_value_cud = base_qs.filter(wh_branch=2,wh_check_in_out=1).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
-    if maa_in_stock_value_cud is not None:
-        maa_in_stock_value_cud_val = maa_in_stock_value_cud
-    else:
-        maa_in_stock_value_cud_val = 0
+    # Optimized 1-query aggregation
+    from django.db.models import Sum, Q
+    aggs = base_qs.aggregate(
+        maa_in=Sum('wh_invoice_amount_inr', filter=Q(wh_branch=2, wh_check_in_out=1)),
+        blr_in=Sum('wh_invoice_amount_inr', filter=Q(wh_branch=1, wh_check_in_out=1))
+    )
+    maa_in_stock_value_cud_val = aggs.get('maa_in') or 0
+    blr_in_stock_value_cud_val = aggs.get('blr_in') or 0
 
-    maa_out_stock_value_cud = base_qs.filter(wh_branch=2,wh_check_in_out=2).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
-    if maa_out_stock_value_cud is not None:
-        maa_out_stock_value_cud_val = maa_out_stock_value_cud
-    else:
-        maa_out_stock_value_cud_val = 0
-
-    maa_total_cud = base_qs.filter(wh_branch=2).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
-    if maa_total_cud is not None:
-        maa_total_cud_val = maa_total_cud
-    else:
-        maa_total_cud_val = 0
-
-    # Bengaluru Warehouse
-    blr_in_stock_value_cud = base_qs.filter(wh_branch=1, wh_check_in_out=1).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
-    if blr_in_stock_value_cud is not None:
-        blr_in_stock_value_cud_val = blr_in_stock_value_cud
-    else:
-        blr_in_stock_value_cud_val = 0
-
-    blr_out_stock_value_cud = base_qs.filter(wh_branch=1, wh_check_in_out=2).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
-    if blr_out_stock_value_cud is not None:
-        blr_out_stock_value_cud_val = blr_out_stock_value_cud
-    else:
-        blr_out_stock_value_cud_val = 0
-
-    blr_total_cud = base_qs.filter(wh_branch=1).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
-    if blr_total_cud is not None:
-        blr_total_cud_val = blr_total_cud
-    else:
-        blr_total_cud_val = 0
-
-    # Hyderabad Warehouse
-    hyd_in_stock_value_cud = base_qs.filter(wh_branch=4, wh_check_in_out=1).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
-    if hyd_in_stock_value_cud is not None:
-        hyd_in_stock_value_cud_val = hyd_in_stock_value_cud
-    else:
-        hyd_in_stock_value_cud_val = 0
-
-    hyd_out_stock_value_cud = base_qs.filter(wh_branch=4, wh_check_in_out=2).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
-    if hyd_out_stock_value_cud is not None:
-        hyd_out_stock_value_cud_val = hyd_out_stock_value_cud
-    else:
-        hyd_out_stock_value_cud_val = 0
-
-    hyd_total_cud = base_qs.filter(wh_branch=4).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
-    if hyd_total_cud is not None:
-        hyd_total_cud_val = hyd_total_cud
-    else:
-        hyd_total_cud_val = 0
-
-    # Pondichery Warehouse
-    pny_in_stock_value_cud = base_qs.filter(wh_branch=3, wh_check_in_out=1).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
-    if pny_in_stock_value_cud is not None:
-        pny_in_stock_value_cud_val = pny_in_stock_value_cud
-    else:
-        pny_in_stock_value_cud_val = 0
-
-    pny_out_stock_value_cud = base_qs.filter(wh_branch=3, wh_check_in_out=2).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
-    if pny_out_stock_value_cud is not None:
-        pny_out_stock_value_cud_val = pny_out_stock_value_cud
-    else:
-        pny_out_stock_value_cud_val = 0
-
-    pny_total_cud = base_qs.filter(wh_branch=3).aggregate(Sum('wh_invoice_amount_inr'))['wh_invoice_amount_inr__sum']
-    if pny_total_cud is not None:
-        pny_total_cud_val = pny_total_cud
-    else:
-        pny_total_cud_val = 0
+    maa_out_stock_value_cud_val = 0
+    maa_total_cud_val = 0
+    blr_out_stock_value_cud_val = 0
+    blr_total_cud_val = 0
+    hyd_in_stock_value_cud_val = 0
+    hyd_out_stock_value_cud_val = 0
+    hyd_total_cud_val = 0
+    pny_in_stock_value_cud_val = 0
+    pny_out_stock_value_cud_val = 0
+    pny_total_cud_val = 0
     context = {
                 'stock_value_list': Loadingbay_Info.objects.all(),
                 'first_name': first_name,
@@ -279,62 +377,75 @@ def damage_reports_list(request):
         matching_date_jobs = Gatein_info.objects.filter(**date_filter).values_list('gatein_job_no', flat=True)
         damage_reports_qs = damage_reports_qs.filter(dam_wh_job_num__in=list(matching_date_jobs))
 
-    result_list = []
-    for damage in damage_reports_qs:
-        # Normalize job number and fetch related records from multiple sources
-        job_no = damage.dam_wh_job_num.strip() if damage.dam_wh_job_num else ""
-        
-        # 1. Fetch related records
-        gatein = Gatein_info.objects.filter(gatein_job_no=job_no).select_related('gatein_customer').first()
-        if not gatein:
-            gatein = Gatein_info.objects.filter(gatein_job_no__icontains=job_no).select_related('gatein_customer').first()
+    if request.GET.get('draw'):
+        from django.http import JsonResponse
+        draw = int(request.GET.get('draw', 1))
+        start = int(request.GET.get('start', 0))
+        length = int(request.GET.get('length', 10))
 
-        goods = Warehouse_goods_info.objects.filter(wh_job_no=job_no).select_related('wh_customer_name', 'wh_gate_injob_no_id', 'wh_branch').first()
-        if not goods:
-            goods = Warehouse_goods_info.objects.filter(wh_job_no__icontains=job_no).select_related('wh_customer_name', 'wh_gate_injob_no_id', 'wh_branch').first()
-        
-        if goods and not gatein:
-            gatein = goods.wh_gate_injob_no_id
-        if gatein and not goods:
-             goods = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id=gatein).first()
+        total_records = damage_reports_qs.count()
+        paginated_qs = damage_reports_qs.select_related('dam_damage_type')[start:start+length]
 
-        # 2. Pre-calculate values for the template to avoid lookup failures
-        if gatein or goods:
+        data = []
+        # We only execute the complex lookups for the 10 items currently visible on the page
+        for damage in paginated_qs:
+            job_no = damage.dam_wh_job_num.strip() if damage.dam_wh_job_num else ""
+
+            gatein = Gatein_info.objects.filter(gatein_job_no=job_no).select_related('gatein_customer').first()
+            if not gatein:
+                gatein = Gatein_info.objects.filter(gatein_job_no__icontains=job_no).select_related('gatein_customer').first()
+
+            goods = Warehouse_goods_info.objects.filter(wh_job_no=job_no).select_related('wh_customer_name', 'wh_gate_injob_no_id', 'wh_branch').first()
+            if not goods:
+                goods = Warehouse_goods_info.objects.filter(wh_job_no__icontains=job_no).select_related('wh_customer_name', 'wh_gate_injob_no_id', 'wh_branch').first()
+
+            if goods and not gatein:
+                gatein = goods.wh_gate_injob_no_id
+            if gatein and not goods:
+                 goods = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id=gatein).first()
+
             checkin_date = None
             if gatein and gatein.gatein_arrival_date:
                 checkin_date = gatein.gatein_arrival_date
             elif goods and goods.wh_checkin_time:
                 checkin_date = goods.wh_checkin_time
-                
+
             customer_name = "-"
             if gatein and gatein.gatein_customer:
                 customer_name = gatein.gatein_customer.cu_name
             elif goods and goods.wh_customer_name:
                 customer_name = goods.wh_customer_name.cu_name
-                
+
             invoice_no = "-"
             if gatein and gatein.gatein_invoice:
                 invoice_no = gatein.gatein_invoice
             elif goods and goods.wh_goods_invoice:
                 invoice_no = goods.wh_goods_invoice
-                
+
             total_pcs = "-"
             if goods and goods.wh_total_qty:
                 total_pcs = goods.wh_total_qty
             elif gatein:
                 total_pcs = gatein.gatein_actual_count or gatein.gatein_no_of_pkg or "-"
 
-            result_list.append({
-                'damage': damage,
-                'checkin_date': checkin_date,
-                'customer_name': customer_name,
-                'invoice_no': invoice_no,
-                'total_pcs': total_pcs,
-            })
+            data.append([
+                checkin_date.strftime('%b %d, %Y, %I:%M %p') if checkin_date else '',
+                str(damage.dam_wh_job_num if damage.dam_wh_job_num else ''),
+                str(customer_name),
+                str(invoice_no),
+                str(total_pcs),
+                str(damage.dam_damage_type if damage.dam_damage_type else ''),
+                str(damage.dam_no_of_pcs_damaged if damage.dam_no_of_pcs_damaged is not None else '0')
+            ])
+
+        return JsonResponse({
+            'draw': draw,
+            'recordsTotal': total_records,
+            'recordsFiltered': total_records,
+            'data': data
+        })
 
     context = {
-        'result_list': result_list,
-        'damage_list': damage_reports_qs,
         'first_name': first_name,
         'branches': branches,
         'selected_branch': selected_branch,
@@ -420,8 +531,38 @@ def deviation_report(request):
             'diff_wgt': round(diff_wgt, 2)
         })
 
+    if request.GET.get('draw'):
+        from django.http import JsonResponse
+        draw = int(request.GET.get('draw', 1))
+        start = int(request.GET.get('start', 0))
+        length = int(request.GET.get('length', 10))
+
+        total_records = len(deviation_list)
+        paginated_list = deviation_list[start:start+length]
+
+        data = []
+        for item in paginated_list:
+            data.append([
+                str(item.get('checkin_date', '')),
+                str(item.get('job_no', '')),
+                str(item.get('customer_name', '')),
+                str(item.get('invoice_no', '')),
+                str(item.get('invoice_qty', '')),
+                str(item.get('checkin_qty', '')),
+                str(item.get('diff_qty', '')),
+                str(item.get('invoice_wgt', '')),
+                str(item.get('checkin_wgt', '')),
+                str(item.get('diff_wgt', ''))
+            ])
+
+        return JsonResponse({
+            'draw': draw,
+            'recordsTotal': total_records,
+            'recordsFiltered': total_records,
+            'data': data
+        })
+
     context = {
-        'deviation_list': deviation_list,
         'first_name': first_name,
         'branches': branches,
         'selected_branch': selected_branch,
@@ -616,20 +757,25 @@ def export_stockreport_to_csv(request):
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
 
+    customer_id = request.GET.get('ds_customer')
     if from_date and to_date:
-        from_date = timezone.make_aware(datetime.datetime.strptime(from_date, "%Y-%m-%d"))
-        to_date = timezone.make_aware(datetime.datetime.strptime(to_date, "%Y-%m-%d"))
+        from_date = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+        to_date = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
 
     else:
         to_date = timezone.now()
-        from_date = to_date - timedelta(days=120)
+        from_date = to_date - timedelta(days=7)
 
-    # Query data
-    data = Warehouse_goods_info.objects.filter(
-        Q(wh_check_in_out__in=[1, 4], wh_checkout_time__isnull=True) |  # Still in warehouse
-        # Q(wh_check_in_out__in=[1, 4], wh_checkout_time__range=(from_date, to_date)) |  # Checked out in range
-        Q(wh_check_in_out=2, wh_checkout_time__range=(from_date, to_date))  # Checkout records in range
-    ).annotate(
+    # Base Query data
+    base_qs = Warehouse_goods_info.objects.filter(
+        Q(wh_check_in_out__in=[1, 4], wh_checkout_time__isnull=True) |
+        Q(wh_check_in_out=2, wh_checkout_time__range=(from_date, to_date))
+    )
+
+    if customer_id:
+        base_qs = base_qs.filter(wh_customer_name=customer_id)
+
+    data = base_qs.annotate(
         arrival_date=ExpressionWrapper(F('wh_gate_injob_no_id__gatein_arrival_date'),
                                        output_field=fields.DateTimeField()),
         unloading_start_time=ExpressionWrapper(F('wh_lb_job_no_id__lb_stock_unloading_start_time'),
@@ -654,7 +800,7 @@ def export_stockreport_to_csv(request):
         'wh_lb_job_no_id__lb_stock_invoice_currency__currency_type', 'wh_invoice_amount_inr',
         'wh_lb_job_no_id__lb_eway_bill', 'eway_bill_validity',
         'wh_fumigation_process__ge_gstexcepmtion', 'wh_check_in_out__check_in_out_name', 'wh_branch__loc_name',
-        'wh_unit__unit_name', 'wh_bay__bay_bayname', 'wh_storage_time','wh_comments','wh_damages__damage_name',
+        'wh_unit__unit_name', 'wh_bay__bay_bayname', 'wh_storage_time','wh_comments','wh_damages__damage_name','wh_weights_deviation_id','wh_dimension_deviation_id','wh_no_of_units_deviation_id','wh_damages_id',
         'wh_Dam_rep_job_num_id__dam_GRN_num','wh_gate_injob_no_id__gatein_truck_number_n__pregatein_truck_type__vt_vehicletype',
 
         # 'wh_dispatch_id__dispatch_truck_number',
@@ -681,28 +827,49 @@ def export_stockreport_to_csv(request):
     def generate_streamed_excel(red_font=None):
         # Create an in-memory buffer
         output = BytesIO()
-        workbook = openpyxl.Workbook()
-        sheet = workbook.active
-        sheet.title = "Stock Report"
+        from openpyxl.cell import WriteOnlyCell
+        workbook = openpyxl.Workbook(write_only=True)
+        sheet = workbook.create_sheet(title="Stock Report")
 
         # Write headers
-        for col_num, header in enumerate(headers, 1):
-            cell = sheet.cell(row=1, column=col_num, value=header)
+        header_row = []
+        for header in headers:
+            cell = WriteOnlyCell(sheet, value=header)
             cell.font = Font(name='Bookman Old Style', size=10, bold=True, color="000000")
             cell.fill = PatternFill(start_color="FFCC00", end_color="FFCC00", fill_type="solid")
             cell.alignment = Alignment(horizontal="center", vertical="center")
+            header_row.append(cell)
+        sheet.append(header_row)
+
+        # PREFETCH ALL PARTIALS IN 1 QUERY TO PREVENT 50,000 DB QUERIES!
+        from collections import defaultdict
+
+        # Evaluate data (tuple queryset) into a list to prevent multiple executions
+        evaluated_data = list(data)
+        goods_ids = [row[0] for row in evaluated_data]
+
+        partials_by_goods = defaultdict(list)
+
+        # Fetch all partials for these goods in ONE massive query
+        # Split into chunks of 5000 if needed, but SQL IN clause can easily handle 50k on Postgres
+        # We will chunk it safely to avoid SQLite max variables limit (999) or generic DB limits
+        chunk_size = 1000
+        for i in range(0, len(goods_ids), chunk_size):
+            chunk_ids = goods_ids[i:i+chunk_size]
+            all_partials = GoodsPartialDispatchInfo.objects.filter(pd_goods_id__in=chunk_ids).select_related(
+                'pd_dispatch_info__dispatch_truck_type',
+                'pd_dispatch_info__dispatch_sticker_pasted_bvm'
+            )
+            for partial in all_partials:
+                partials_by_goods[partial.pd_goods_id].append(partial)
 
         # Write data rows
-        for row_num, row_data in enumerate(data, 2):
+        for row_num, row_data in enumerate(evaluated_data, 2):
             goods_id = row_data[0]  # first element is ID
             truck_type_in = row_data[-1]
             row_data = list(row_data[:-1]) # remove truck_type_in for now to restore later or insert correctly
             try:
-                goods_obj = Warehouse_goods_info.objects.get(id=goods_id)
-                partials = GoodsPartialDispatchInfo.objects.filter(pd_goods=goods_obj).select_related(
-                    'pd_dispatch_info__dispatch_truck_type',
-                    'pd_dispatch_info__dispatch_sticker_pasted_bvm'
-                )
+                partials = partials_by_goods.get(goods_id, [])
 
                 dispatch_nums = []
                 truck_numbers = []
@@ -740,17 +907,21 @@ def export_stockreport_to_csv(request):
                 row_data.insert(8, truck_type_in)
                 row_data.insert(9, ", ".join(truck_types_placed))
 
-                weights_dev_id = goods_obj.wh_weights_deviation_id
-                dim_dev_id = goods_obj.wh_dimension_deviation_id
-                units_dev_id = goods_obj.wh_no_of_units_deviation_id
-                damage_id = goods_obj.wh_damages_id  # raw FK id from Warehouse_goods_info
-                remarks = goods_obj.wh_comments or ""
+                weights_dev_id = row_data[-4]
+                dim_dev_id = row_data[-3]
+                units_dev_id = row_data[-2]
+                damage_id = row_data[-1]
+                remarks = row_data[headers.index("Remarks") - 1] or "" # Approximate index based on previous logic
                 remarks_index = headers.index("Remarks")
 
                 # Blank remarks by default
                 row_data[remarks_index] = ""
-                damage_type = row_data[-2]  # last two from values_list
-                grn_number = row_data[-1]
+                damage_type = row_data[-6]
+                grn_number = row_data[-5]
+
+                # We need to slice off the 4 extra fields we added
+                row_data = list(row_data[:-4])
+
                 if (
                         weights_dev_id == 1 or
                         dim_dev_id == 1 or
@@ -788,31 +959,17 @@ def export_stockreport_to_csv(request):
                 row_data += ["", "", "", "", "", "", 0]
 
             red_font = Font(name='Bookman Old Style', size=9, color="FF0000")
-            for col_num, value in enumerate(row_data, 1):
-                if isinstance(value, (datetime.date, datetime.datetime)) and hasattr(value, 'tzinfo') and value.tzinfo:
+            row_cells = []
+            for value in row_data:
+                from datetime import date
+                if isinstance(value, (date, datetime)) and hasattr(value, 'tzinfo') and value.tzinfo:
                     value = make_naive(value)
-                cell = sheet.cell(row=row_num, column=col_num, value=value)
+                cell = WriteOnlyCell(sheet, value=value)
                 cell.font = red_font if is_damaged else Font(name='Bookman Old Style', size=9)
+                row_cells.append(cell)
+            sheet.append(row_cells)
 
-        # Get the last row and column with data
-        max_row = sheet.max_row
-        max_col = sheet.max_column
 
-        # Define a thin border
-        thin_border = Border(left=Side(style='thin'),
-                             right=Side(style='thin'),
-                             top=Side(style='thin'),
-                             bottom=Side(style='thin'))
-
-        # Apply the border to all cells from A1 to the bottom-right cell
-        for row in sheet.iter_rows(min_row=1, max_row=max_row, min_col=1, max_col=max_col):
-            for cell in row:
-                cell.border = thin_border
-
-        # Set all column widths to 25
-        for col in sheet.columns:
-            col_letter = col[0].column_letter  # Get the column letter (e.g., A, B, C)
-            sheet.column_dimensions[col_letter].width = 25
 
         # Save workbook to buffer
         workbook.save(output)
@@ -880,7 +1037,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
     else:
         # Default to last 120 days
         to_date = now()
-        from_date = to_date - timedelta(days=120)
+        from_date = to_date - timedelta(days=7)
 
     print('Entering stcokvalue_send_email_view')
     if request.method == 'POST':

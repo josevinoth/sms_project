@@ -1,306 +1,287 @@
-{% extends "asset_mgt_app/base_1.html" %}
+
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<div class="col-5 col-md-2 col-lg-1" >
-	<a href="{% url 'search' %}" class="btn btn-primary">
-		<i class="fas fa-arrow-left"></i> Back
-	</a>
-</div>
-<div class="col-12 col-md-10 col-lg-12 p-2">
-	<div class="gap-2 d-md-flex justify-content-md-center flex-wrap">
-		{% if gatein_list %}
-		{% for gateininfo in gatein_list %}
-		<a class="btn  border focus border-dark mb-2" id="gatein_btn" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
-		{% endfor %}
-		{% else %}
-		<a class="btn  border focus border-dark mb-2" id="gatein_btn1" href="{% url 'gatein_insert' %}">Gate-In</a>
-		{% endif %}
+<style>
+/* Make inputs compact only on this page to fit in single screen view */
+.bvm-modern-layout .form-control-modern {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0.1rem 0.5rem !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+}
+.bvm-modern-layout .select2-container--default .select2-selection--single {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+    display: flex;
+    align-items: center;
+}
+.bvm-modern-layout .select2-selection__rendered {
+    line-height: normal !important;
+    padding-left: 0.5rem !important;
+    margin: 0 !important;
+}
+.bvm-modern-layout .select2-selection__arrow {
+    height: 30px !important;
+}
+.bvm-modern-layout .field-label {
+    margin-bottom: 2px !important;
+    font-size: 0.75rem !important;
+}
+.bvm-modern-layout .form-group-modern {
+    margin-bottom: 8px !important;
+}
 
-		{% if loadingbay_list %}
-		{% for loadingbayinfo in loadingbay_list %}
-		<a class="btn  border focus border-dark mb-2" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
-		{% endfor %}
-		{% else %}
-		<a class="btn  border focus border-dark mb-2" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
-		{% endif %}
+.bvm-modern-layout .form-control-modern[readonly],
+.bvm-modern-layout .form-control-modern:disabled {
+    opacity: 1 !important;
+}
+</style>
 
-		<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
+<div class="container-fluid py-2 bvm-modern-layout">
+    <!-- Navigation Steps -->
+    <div class="nav-pills-modern d-flex flex-wrap justify-content-center mb-3">
+        {% if gatein_list %}
+            {% for gateininfo in gatein_list %}
+            <a id="gatein_btn" class="btn disable_a_href" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
+            {% endfor %}
+        {% else %}
+            <a id="gatein_btn1" class="btn disable_a_href" href="{% url 'gatein_insert' %}">Gate-In</a>
+        {% endif %}
 
-		{% if damagereport_list %}
-		{% for damagecheckinfo in damagereport_list %}
-		<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage/Deviation</a>
-		{% endfor %}
-		{% else %}
-		<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage/Deviation</a>
-		{% endif %}
+        {% if loadingbay_list %}
+            {% for loadingbayinfo in loadingbay_list %}
+            <a id="loadingbay_btn" class="btn btn-warning active-step disable_a_href" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
+            {% endfor %}
+        {% else %}
+            <a id="loadingbay_btn1" class="btn btn-warning active-step disable_a_href" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
+        {% endif %}
 
-		<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}">Warehouse In</a>-->
-		<a class="btn  border border-dark mb-2 disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
-	</div>
-</div>
+        <a id="damagecheck_before_btn1" class="btn disable_a_href" href="{% url 'goods_insert' %}">Inspection</a>
 
-<hr>
+        {% if damagereport_list %}
+            {% for damagecheckinfo in damagereport_list %}
+            <a id="damage_after_btn" class="btn disable_a_href" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage/Deviation</a>
+            {% endfor %}
+        {% else %}
+            <a id="damage_after_btn1" class="btn disable_a_href" href="{% url 'damagereport_insert' %}">Damage/Deviation</a>
+        {% endif %}
+
+        <a id="warehousein_btn1" class="btn disable_a_href" href="{% url 'storage_list' %}">Storage</a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="modern-list-header mb-3" style="display: block !important; overflow: hidden;">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-6 text-center text-md-left mb-3 mb-md-0">
+                <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;">
+                    <i class="fas fa-truck-loading mr-2"></i> Add/Update Loading Bay
+                </h3>
+            </div>
+            <div class="col-12 col-md-6 text-center text-md-right">
+                <a href="{% url 'search' %}" class="btn btn-light btn-sm font-weight-bold" style="border-radius:20px; padding:6px 15px;">
+                    <i class="fas fa-arrow-left mr-1"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section mb-4" style="">
 <form method="POST" action="" enctype="multipart/form-data" id="loadingbay_add" data-currency_value-url="{% url 'load_currency_value' %}">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="col-12 col-md-8 col-lg-12 card-header text-center">
-						<div class="card-header text-center">
-							<div class="row text-center text-md-left align-items-center">
-								<div class="col-12 col-md-5 offset-md-3 mb-2">
-									<h3>Add/Update Loading Bay</h3>
-								</div>
-								<!--<div class="col-12 col-md-4">
-									<div class="row">
-										<div class="col-6">
-											<a href="#" class="btn btn-warning btn-block disable_a_href" id="delivery_chalan_btn">
-												Delivery Chelan <i class="fa fa-download" aria-hidden="true"></i>
-											</a>
-										</div>
-										<div class="col-6">
-											<a href="{% url 'damage_report' %}" class="btn btn-warning btn-block disable_a_href" id="damage_report_btn">
-												Damage Report <i class="fa fa-download" aria-hidden="true"></i>
-											</a>
-										</div>
-									</div>
-								</div>!-->
-							</div>
-						</div>
-					</div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">WH Job Number</span>
-									</div>
-									{% render_field loadingbay_form.lb_job_no id="lb_job_no" value=request.session.ses_gatein_id_nam class="form-control disable_a_href"  %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Shipper Invoice</span>
-									</div>
-									{% render_field loadingbay_form.lb_invoice id="lb_invoice"  class="form-control disable_a_href" %}
-								</div>
-								{% with gatein_list.0.gatein_customer.cu_name|upper as cname %}
-								{% if "GEODIS(H&M)" in cname %}
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Shipper Invoice Date</span>
-									</div>
-									{% render_field loadingbay_form.lb_invoice_date id="lb_invoice_date"  type="datetime-local" class="form-control" %}
-								</div>
-								{% endif %}
-								{% endwith %}
+        {% csrf_token %}
+        <div class="row">
+            <!-- Section 1: Invoice Details -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-file-invoice mr-2 text-primary"></i>Section 1</div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">WH Job Number</label>
+                    {% render_field loadingbay_form.lb_job_no id="lb_job_no" value=request.session.ses_gatein_id_nam class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Shipper Invoice</label>
+                    {% render_field loadingbay_form.lb_invoice id="lb_invoice" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                {% with gatein_list.0.gatein_customer.cu_name|upper as cname %}
+                {% if "GEODIS(H&M)" in cname %}
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Shipper Invoice Date</label>
+                    {% render_field loadingbay_form.lb_invoice_date id="lb_invoice_date" type="datetime-local" class="form-control form-control-modern" %}
+                </div>
+                {% endif %}
+                {% endwith %}
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Shipper Invoice Value</label>
+                    {% render_field loadingbay_form.lb_stock_invoice_value id="lb_stock_invoice_value" onchange="updateCurrencyConversion()" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Shipper Invoice Currency</label>
+                    {% render_field loadingbay_form.lb_stock_invoice_currency id="lb_stock_invoice_currency" class="form-control form-control-modern" onchange="updateCurrencyConversion()" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Conversion Rate</label>
+                    {% render_field loadingbay_form.lb_stock_currency_con id="lb_stock_currency_con" class="form-control form-control-modern disable_a_href" onchange="updateCurrencyConversion()" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Amount In (INR)</label>
+                    {% render_field loadingbay_form.lb_stock_amount_in id="lb_stock_amount_in" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Unloading Start Time</label>
+                    {% render_field loadingbay_form.lb_stock_unloading_start_time type="datetime-local" class="form-control form-control-modern" id="lb_stock_unloading_start_time" %}
+                </div>
+                </div>
+            </div>
 
+            <!-- Section 2: Pouch & E-way -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-box-open mr-2 text-primary"></i>Section 2</div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Unloading End Time</label>
+                    {% render_field loadingbay_form.lb_stock_unloading_end_time class="form-control form-control-modern" type="datetime-local" id="lb_stock_unloading_end_time" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Original Documents Pouch</label>
+                    {% render_field loadingbay_form.lb_packing_list id="lb_packing_list" onchange="change_pouch()" class="form-control form-control-modern" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">If Pouch Yes</label>
+                    {% render_field loadingbay_form.lb_pouch_yes id="lb_pouch_yes" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Inward POD</label>
+                    {% render_field loadingbayimg_form.lbimg_inward_pod id="lbimg_inward_pod" class="form-control form-control-modern" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">E-way Bill#</label>
+                    {% render_field loadingbay_form.lb_eway class="form-control form-control-modern" id="id_lb_eway" %}
+                </div>
+                <div id="eway-extra-fields">
+                    <div class="form-group form-group-modern">
+                        <label class="form-label-modern field-label d-block">E-way Bill Number#</label>
+                        {% render_field loadingbay_form.lb_eway_bill class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern">
+                        <label class="form-label-modern field-label d-block">E-way Bill Validity</label>
+                        {% render_field loadingbay_form.lb_validity_date type="datetime-local" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Manual Handling?</label>
+                    {% render_field loadingbay_form.lb_mh_manual class="form-control form-control-modern" %}
+                </div>
+                <div class="d-none">
+                    {% render_field loadingbayimg_form.lbimg_job_no id="lbimg_job_no" value=request.session.ses_gatein_id_nam class="form-control form-control-modern" %}
+                </div>
+                </div>
+            </div>
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Shipper Invoice Value</span>
-									</div>
-									{% render_field loadingbay_form.lb_stock_invoice_value id="lb_stock_invoice_value" onchange="updateCurrencyConversion()" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Shipper Invoice Currency</span>
-									</div>
-									{% render_field loadingbay_form.lb_stock_invoice_currency id="lb_stock_invoice_currency" class="form-control" onchange="updateCurrencyConversion()" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Conversion Rate</span>
-									</div>
-									{% render_field loadingbay_form.lb_stock_currency_con id="lb_stock_currency_con" class="form-control disable_a_href" onchange="updateCurrencyConversion()"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Amount In (INR)</span>
-									</div>
-									{% render_field loadingbay_form.lb_stock_amount_in id="lb_stock_amount_in" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Unloading Start Time</span>
-									</div>
-									{% render_field loadingbay_form.lb_stock_unloading_start_time type="datetime-local" class="form-control" id="lb_stock_unloading_start_time" %}
-								</div>
-							</div>
-							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Unloading End Time</span>
-									</div>
-									{% render_field loadingbay_form.lb_stock_unloading_end_time class="form-control" type="datetime-local" id="lb_stock_unloading_end_time" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Original Documents Pouch</span>
-									</div>
-									{% render_field loadingbay_form.lb_packing_list id="lb_packing_list" onchange="change_pouch()" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">If Pouch Yes</span>
-									</div>
-									{% render_field loadingbay_form.lb_pouch_yes id="lb_pouch_yes" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Inward POD</span>
-									</div>
-									{% render_field loadingbayimg_form.lbimg_inward_pod id="lbimg_inward_pod" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">E-way Bill#</span>
-									</div>
-									{% render_field loadingbay_form.lb_eway class="form-control" %}
-								</div>
-								<div id="eway-extra-fields">
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">E-way Bill Number#</span>
-										</div>
-										{% render_field loadingbay_form.lb_eway_bill class="form-control" %}
-									</div>
-									<div class="input-group input-group-sm mb-3">
-										<div class="input-group-prepend">
-											<span class="input-group-text">E-way Bill Validity</span>
-										</div>
-										{% render_field loadingbay_form.lb_validity_date type="datetime-local" class="form-control" %}
-									</div>
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Manual Handling?</span>
-									</div>
-									{% render_field loadingbay_form.lb_mh_manual class="form-control" %}
-								</div>
-								{% render_field loadingbayimg_form.lbimg_job_no id="lbimg_job_no" value=request.session.ses_gatein_id_nam class="form-control" %}
-							</div>
-							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Forklift?</span>
-									</div>
-									{% render_field loadingbay_form.lb_mh_forklift id="lb_mh_forklift" onchange="lb_crane_forklift_change()" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Forklift Hours</span>
-									</div>
-									{% render_field loadingbay_form.lb_forklift_time id="lb_forklift_time" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">No Of Forklifts</span>
-									</div>
-									{% render_field loadingbay_form.lb_no_of_forklift id="lb_no_of_forklift" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Forklift Charges<2hr</span>
-									</div>
-									{% render_field loadingbay_form.lb_forklift_charges_std_l2hr id="lb_forklift_charges_std_l2hr" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Forklift Charges<2hr (Mod)</span>
-									</div>
-									{% render_field loadingbay_form.lb_forklift_charges_mod_l2h id="lb_forklift_charges_mod_l2h" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Forklift Charges>2hr</span>
-									</div>
-									{% render_field loadingbay_form.lb_forklift_charges_std_g2hr id="lb_forklift_charges_std_g2hr" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Forklift Charges>2hr (Mod)</span>
-									</div>
-									{% render_field loadingbay_form.lb_forklift_charges_mod_g2hr id="lb_forklift_charges_mod_g2hr" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Crane?</span>
-									</div>
-									{% render_field loadingbay_form.lb_mh_crane id="lb_mh_crane" onchange="lb_crane_forklift_change()" class="form-control" %}
-								</div>
-							</div>
-							<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">No Of Cranes</span>
-									</div>
-									{% render_field loadingbay_form.lb_no_of_crane id="lb_no_of_crane" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Crane Hours</span>
-									</div>
-									{% render_field loadingbay_form.lb_crane_time id="lb_crane_time" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Crane Charges<2hr</span>
-									</div>
-									{% render_field loadingbay_form.lb_crane_charges_std_l2hr id="lb_crane_charges_std_l2hr" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Crane Charges<2hr (Mod)</span>
-									</div>
-									{% render_field loadingbay_form.lb_crane_charges_mod_l2h id="lb_crane_charges_mod_l2h" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Crane Charges>2hr</span>
-									</div>
-									{% render_field loadingbay_form.lb_crane_charges_std_g2hr id="lb_crane_charges_std_g2hr" class="form-control disable_a_href" %}
-								</div>
+            <!-- Section 3: Forklift -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-truck mr-2 text-primary"></i>Section 3</div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Forklift?</label>
+                    {% render_field loadingbay_form.lb_mh_forklift id="lb_mh_forklift" onchange="lb_crane_forklift_change()" class="form-control form-control-modern" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Forklift Hours</label>
+                    {% render_field loadingbay_form.lb_forklift_time id="lb_forklift_time" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">No Of Forklifts</label>
+                    {% render_field loadingbay_form.lb_no_of_forklift id="lb_no_of_forklift" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Forklift Charges &lt;2hr</label>
+                    {% render_field loadingbay_form.lb_forklift_charges_std_l2hr id="lb_forklift_charges_std_l2hr" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Forklift Charges &lt;2hr (Mod)</label>
+                    {% render_field loadingbay_form.lb_forklift_charges_mod_l2h id="lb_forklift_charges_mod_l2h" class="form-control form-control-modern" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Forklift Charges &gt;2hr</label>
+                    {% render_field loadingbay_form.lb_forklift_charges_std_g2hr id="lb_forklift_charges_std_g2hr" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Forklift Charges &gt;2hr (Mod)</label>
+                    {% render_field loadingbay_form.lb_forklift_charges_mod_g2hr id="lb_forklift_charges_mod_g2hr" class="form-control form-control-modern" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Crane?</label>
+                    {% render_field loadingbay_form.lb_mh_crane id="lb_mh_crane" onchange="lb_crane_forklift_change()" class="form-control form-control-modern" %}
+                </div>
+                </div>
+            </div>
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Crane Charges>2hr (Mod)</span>
-									</div>
-									{% render_field loadingbay_form.lb_crane_charges_mod_g2hr id="lb_crane_charges_mod_g2hr" class="form-control " %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Hand Trolley</span>
-									</div>
-									{% render_field loadingbay_form.lb_mh_handtrolley class="form-control" %}
-								</div>
+            <!-- Section 4: Crane & Status -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-truck-pickup mr-2 text-primary"></i>Section 4</div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">No Of Cranes</label>
+                    {% render_field loadingbay_form.lb_no_of_crane id="lb_no_of_crane" class="form-control form-control-modern" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Crane Hours</label>
+                    {% render_field loadingbay_form.lb_crane_time id="lb_crane_time" class="form-control form-control-modern" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Crane Charges &lt;2hr</label>
+                    {% render_field loadingbay_form.lb_crane_charges_std_l2hr id="lb_crane_charges_std_l2hr" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Crane Charges &lt;2hr (Mod)</label>
+                    {% render_field loadingbay_form.lb_crane_charges_mod_l2h id="lb_crane_charges_mod_l2h" class="form-control form-control-modern" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Crane Charges &gt;2hr</label>
+                    {% render_field loadingbay_form.lb_crane_charges_std_g2hr id="lb_crane_charges_std_g2hr" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Crane Charges &gt;2hr (Mod)</label>
+                    {% render_field loadingbay_form.lb_crane_charges_mod_g2hr id="lb_crane_charges_mod_g2hr" class="form-control form-control-modern" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Hand Trolley</label>
+                    {% render_field loadingbay_form.lb_mh_handtrolley class="form-control form-control-modern" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Status</label>
+                    {% render_field loadingbay_form.lb_status class="form-control form-control-modern" id="lb_status" onchange="lb_status_change()" %}
+                </div>
+                </div>
+            </div>
+        </div>
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Status</span>
-									</div>
-									{% render_field loadingbay_form.lb_status class="form-control" id="lb_status" onchange="lb_status_change()" %}
-								</div>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1 p-1"></div>
-						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Save</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</form>
+        <div class="row mt-4 pt-3 mb-5 pb-4" style="border-top: 1px solid var(--border-light);">
+            <div class="col-12 d-flex align-items-center">
+                <button type="submit" class="btn btn-submit" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: white; padding: 0.8rem 3rem !important; height: auto !important; border-radius: 8px; font-size: 1.2rem; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex-shrink: 0;">
+                    <i class="fas fa-check-circle mr-2"></i> Save
+                </button>
+                {% if messages %}
+                <div class="flex-grow-1 text-center">
+                    {% for message in messages %}
+                    {% if forloop.first %}
+                    <span class="shadow-sm px-4 py-2 d-inline-flex align-items-center" style="background-color: white; color: #000; border-radius: 8px; font-size: 1.3rem; font-weight: 600; border: 1px solid #e2e8f0;">
+                        <i class="fas fa-info-circle mr-2 text-dark" style="font-size: 1.4rem;"></i> {{ message }}
+                    </span>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+</div>
+
 {% block scripts %}
 <script>
 	$(document).ready(function() {
@@ -325,8 +306,6 @@
         {
             $('#gatein_btn').removeClass('disable_a_href');
             $('#gatein_btn1').removeClass('disable_a_href');
-            $('#gatein_btn').addClass('btn-success');
-            $('#gatein_btn1').addClass('btn-success');
             $('#loadingbay_btn').removeClass('disable_a_href');
             $('#loadingbay_btn1').removeClass('disable_a_href');
         }
@@ -334,73 +313,52 @@
         {
             $('#gatein_btn').removeClass('disable_a_href');
             $('#gatein_btn1').removeClass('disable_a_href');
-            $('#gatein_btn').addClass('btn-warning');
-            $('#gatein_btn1').addClass('btn-warning');
         }
 
         if (loadingbay_status_id =="Completed")
         {
             $('#loadingbay_btn').removeClass('disable_a_href');
             $('#loadingbay_btn1').removeClass('disable_a_href');
-            $('#loadingbay_btn').addClass('btn-success');
-            $('#loadingbay_btn1').addClass('btn-success');
-            $('#damagecheck_before_btn').removeClass('disable_a_href');
             $('#damagecheck_before_btn1').removeClass('disable_a_href');
         }
         else if (loadingbay_status_id =="Work In Progress")
         {
             $('#loadingbay_btn').removeClass('disable_a_href');
             $('#loadingbay_btn1').removeClass('disable_a_href');
-            $('#loadingbay_btn').addClass('btn-warning');
-            $('#loadingbay_btn1').addClass('btn-warning');
         }
 
-        if (damage_status!=6)
-		{
-			if (damage_before_status_id =="Completed")
-			{
-				$('#damagecheck_before_btn').removeClass('disable_a_href');
-				$('#damagecheck_before_btn1').removeClass('disable_a_href');
-				$('#damagecheck_before_btn').addClass('btn-success');
-				$('#damagecheck_before_btn1').addClass('btn-success');
-				$('#damagecheck_after_btn').removeClass('disable_a_href');
-			}
-			else if (damage_before_status_id =="Work In Progress")
-			{
-				$('#damagecheck_before_btn').removeClass('disable_a_href');
-				$('#damagecheck_before_btn1').removeClass('disable_a_href');
-				$('#damagecheck_before_btn').addClass('btn-warning');
-				$('#damagecheck_before_btn1').addClass('btn-warning');
-			}
-		}
-		else
-		{
-			$('#damagecheck_before_btn').addClass('disable_a_href');
-			$('#damagecheck_before_btn1').addClass('disable_a_href');
-			$('#damagecheck_before_btn').addClass('btn-danger');
-			$('#damagecheck_before_btn1').addClass('btn-danger');
-			$('#damagecheck_after_btn').removeClass('disable_a_href');
+        if (damage_status == 1) { // 1 = YES (Damage exists)
+            if (damage_before_status_id == "Completed") {
+                $('#damagecheck_before_btn1').removeClass('disable_a_href');
+                $('#damage_after_btn').removeClass('disable_a_href');
+                $('#damage_after_btn1').removeClass('disable_a_href');
+            } else if (damage_before_status_id == "Work In Progress") {
+                $('#damagecheck_before_btn1').removeClass('disable_a_href');
+            }
 
-		}
-
-        if (damage_after_status_id =="Completed")
-        {
-            $('#damagecheck_after_btn').removeClass('disable_a_href');
-            $('#damagecheck_after_btn').addClass('btn-success');
-            $('#warehousein_btn').removeClass('disable_a_href');
-        }
-        else if (damage_after_status_id =="No Status")
-        {
-            $('#damagecheck_after_btn').removeClass('disable_a_href');
-            $('#damagecheck_after_btn').addClass('btn-warning');
+            if (damage_after_status_id == "Completed") {
+                $('#damage_after_btn').removeClass('disable_a_href');
+                $('#damage_after_btn1').removeClass('disable_a_href');
+                $('#warehousein_btn1').removeClass('disable_a_href');
+            } else if (damage_after_status_id == "No Status") {
+                $('#damage_after_btn').removeClass('disable_a_href');
+                $('#damage_after_btn1').removeClass('disable_a_href');
+            }
+        } else if (damage_status == 2 || damage_status == 3) { // 2 = NO, 3 = Not Applicable
+            if (damage_before_status_id == "Completed") {
+                $('#damagecheck_before_btn1').removeClass('disable_a_href');
+            }
+            $('#warehousein_btn1').removeClass('disable_a_href');
+        } else { // 6 = No Status (Inspection not submitted)
+            if (loadingbay_status_id != "Completed") {
+                $('#damagecheck_before_btn1').addClass('disable_a_href');
+            }
         }
 
         if (warehousein_status_id =="Completed")
         {
             $('#warehousein_btn').removeClass('disable_a_href');
-            $('#warehousein_btn').addClass('btn-success');
             $('#storage_btn').removeClass('disable_a_href');
-            $('#storage_btn').addClass('btn-success');
         }
         else if (warehousein_status_id =="None")
         {
@@ -409,7 +367,6 @@
         else if (warehousein_status_id =="No Status")
         {
             $('#warehousein_btn').removeClass('disable_a_href');
-            $('#warehousein_btn').addClass('btn-warning');
         }
         lb_crane_forklift_change();
         lb_status_change();

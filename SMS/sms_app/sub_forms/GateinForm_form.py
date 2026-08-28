@@ -22,12 +22,14 @@ class GateinaddForm(forms.ModelForm):
         self.fields['gatein_customer_type'].empty_label = "--Select--"
         self.fields['gatein_pre_id'].empty_label = "--Select--"
         three_days_ago = now() - timedelta(days=3)
-        Gatein_pre_info.objects.filter(
-            gatein_pre_created_at__lte=three_days_ago,
-            gatein_pre_status__id__lt=5  # Only update if not already completed
-        ).update(gatein_pre_status_id=5)
+        # Note: The status update logic has been moved out of the form initialization 
+        # to prevent slow page loads and database locking issues.
         current_pre_id = self.instance.gatein_pre_id_id if self.instance.pk else None
         self.fields['gatein_pre_id'].queryset = Gatein_pre_info.objects.filter(Q(gatein_pre_created_at__gte=three_days_ago) | Q(pk=current_pre_id))
+        
+        current_truck_id = self.instance.gatein_truck_number_n_id if self.instance.pk else None
+        self.fields['gatein_truck_number_n'].queryset = Pregateintruckinfo.objects.filter(Q(pregatein_created_at__gte=three_days_ago) | Q(pk=current_truck_id))
+        
         self.fields['gatein_updated_by'].empty_label = "--Select--"
         self.fields['gatein_comodity'].empty_label = "--Select--"
         self.fields['gatein_cargo'].empty_label = "--Select--"

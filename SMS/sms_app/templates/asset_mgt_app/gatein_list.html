@@ -1,165 +1,106 @@
-{% extends "asset_mgt_app/base_1.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-12 col-md-12 col-lg-2 rounded text-center bg-info">
-            <h3>Warehouse Job List</h3>
-        </div>
-        <div class="col-5"></div>
-    </div>
-</div>
-<div class="container-fluid">
-    <div class="row g-2 flex-wrap">
-        <div class="col-12 col-md-4 col-lg-5 mb-2">
-            <div class="flex-wrap gap-2">
-                <a href="{% url 'home_page' %}" class="btn btn-primary ">
-                    <i class="fas fa-arrow-left"></i> Back
+<div class="container-fluid py-4 bvm-modern-layout">
+    <!-- ══ Centralized Page Header ══ -->
+    <div class="modern-list-header mb-4" style="display: block !important; overflow: hidden;">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-6 text-center text-md-left mb-3 mb-md-0">
+                <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;">
+                    <i class="fas fa-boxes mr-2"></i> Warehouse Job List
+                </h3>
+            </div>
+            <div class="col-12 col-md-6 d-flex flex-column flex-md-row justify-content-center justify-content-md-end">
+                <a href="{% url 'home_page' %}" class="btn btn-cancel mb-2 mb-md-0 mr-md-2" style="border-radius:10px; display:inline-flex; align-items:center; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                    <i class="fas fa-arrow-left mr-1"></i> Back
                 </a>
-                <a href="{% url 'gatein_insert' %}" class="btn btn-success">
-                    <i class="fas fa-plus"></i> Add
-                </a>
-                <a href="{% url 'gatein_list' %}" class="btn btn-warning">
-                    <i class="fa fa-eye" aria-hidden="true"></i> Show All
+                <a href="{% url 'gatein_insert' %}" class="btn btn-submit" style="border-radius:10px; display:inline-flex; align-items:center; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none; background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; color: white;">
+                    <i class="fas fa-plus mr-1"></i> Add New
                 </a>
             </div>
         </div>
-        <div class="col-12 col-md-6 col-lg-4 ms-md-3">
-            <form class="d-flex flex-column flex-md-row gap-2" action="{% url 'search' %}" method="get">
-                <input type="search" class="form-control" id="pre_gate_in" placeholder="Pre Gate-In" name="pre_gate_in">
-                <input type="search" class="form-control" id="job_number" placeholder="Job Number" name="job_number">
-                <input type="search" class="form-control" id="invoice_number" placeholder="Invoice Number" name="invoice_number">
-                <button class="btn btn-primary d-inline-flex align-items-center justify-content-center" type="submit">
-                    <i class="fa fa-search me-1"></i> Search</button>
-            </form>
-        </div>
     </div>
-</div>
-<div class="table-responsive shadow-box-table p-3">
-    <table id="gatein_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-        <tr class="d-none d-sm-table-row">
-            <th></th>
-            <th></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search ID"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Created On"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Pre-Gate-In"></th>
-            <th></th> <!-- Gate pass column: no search box -->
-            <th></th> <!-- Gate pass column: no search box -->
-            <th><input type="text" class="form-control filter-input" placeholder="Search Job Number"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Shipper Inovice Number"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Customer Name"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Updated On"></th>
-            <th><input type="text" class="form-control filter-input" placeholder="Search Updated By"></th>
-            <th></th>
-        </tr>
-        <tr>
-            <th></th>
-            <th>Edit</th>
-            <th>ID</th>
-            <th>Created On</th>
-            <th>Pre-Gate_In</th>
-            <th>Inward POD</th>
-            <th>Gate pass</th>
-            <th>Job Number</th>
-            <th class="shipper-invoice-col">Shipper Invoice Number</th>
-            <th>Customer Name</th>
-            <th>Updated ON</th>
-            <th>Updated By</th>
-            <th>Delete</th>
-        </tr>
+
+    <!-- ══ Filter Form Section ══ -->
+    <div class="form-section mb-4 p-4" style="background: var(--bg-card); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <form action="{% url 'search' %}" method="get">
+            <!-- Section Header -->
+            <div class="form-section-title mb-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                <div class="mb-2 mb-md-0"><i class="fas fa-filter text-primary"></i> FILTER OPTIONS</div>
+            </div>
+
+            <!-- Controls Row -->
+            <div class="d-flex flex-wrap align-items-end" style="gap: 15px;">
+                <div class="form-group-modern mb-0" style="flex: 1 1 200px;">
+                    <label class="form-label-modern">Pre Gate-In</label>
+                    <input type="search" class="form-control form-control-modern" id="pre_gate_in" placeholder="Pre Gate-In" name="pre_gate_in" value="{{ pre_gate_in }}">
+                </div>
+
+                <div class="form-group-modern mb-0" style="flex: 1 1 200px;">
+                    <label class="form-label-modern">Job Number</label>
+                    <input type="search" class="form-control form-control-modern" id="job_number" placeholder="Job Number" name="job_number" value="{{ job_number }}">
+                </div>
+
+                <div class="form-group-modern mb-0" style="flex: 1 1 200px;">
+                    <label class="form-label-modern">Invoice Number</label>
+                    <input type="search" class="form-control form-control-modern" id="invoice_number" placeholder="Invoice Number" name="invoice_number" value="{{ invoice_number }}">
+                </div>
+
+                <div class="d-flex align-items-center flex-wrap" style="gap: 10px; flex: 0 0 auto;">
+                    <button type="submit" class="btn btn-submit" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; color: white;">
+                        <i class="fas fa-filter mr-1"></i> Filter
+                    </button>
+                    <a href="{% url 'gatein_list' %}" class="btn btn-cancel d-inline-flex align-items-center justify-content-center" style="text-decoration:none;">
+                        <i class="fas fa-times mr-1"></i> Clear
+                    </a>
+                    <a href="{% url 'gatein_list' %}" class="btn btn-submit" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); border: none; color: white; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
+                        <i class="fas fa-eye mr-1"></i> Show All
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+<div class="table-container-modern p-4 mb-5">
+<div class="table-responsive">
+    <table id="gatein_list" class="table table-bordered modern-table w-100">
+                <thead>
+            <!-- Filter Row -->
+            <tr>
+                <th></th>
+                <th></th>
+                <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Search ID"></th>
+                <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Search Created On"></th>
+                <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Search Pre-Gate-In"></th>
+                <th></th> <!-- Inward POD column: no search box -->
+                <th></th> <!-- Gate pass column: no search box -->
+                <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Search Job Number"></th>
+                <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Search Shipper Invoice Number"></th>
+                <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Search Customer Name"></th>
+                <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Search Updated On"></th>
+                <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Search Updated By"></th>
+                <th></th> <!-- Delete -->
+            </tr>
+            <!-- Header Row -->
+            <tr>
+                <th></th>
+                <th>ACTION</th>
+                <th>ID</th>
+                <th>CREATED ON</th>
+                <th>PRE-GATE_IN</th>
+                <th>INWARD POD</th>
+                <th>GATE PASS</th>
+                <th>JOB NUMBER</th>
+                <th>SHIPPER INVOICE NUMBER</th>
+                <th>CUSTOMER NAME</th>
+                <th>UPDATED ON</th>
+                <th>UPDATED BY</th>
+                <th>DELETE</th>
+            </tr>
         </thead>
         <tbody>
-        {% for gateininfo in page_obj %}
-        <tr>
-            <td></td>
-            <td>
-                <div class="d-flex justify-content-center gap-1">
-                    <a class="btn btn-primary" href="{% url 'gatein_update' gateininfo.id %}">
-                        <i class="far fa-edit"></i>
-                    </a>
-                </div>
-            </td>
-            <td>{{ gateininfo.id }}</td>
-            <td>{{ gateininfo.gatein_created_at }}</td>
-            <td>{{ gateininfo.gatein_pre_id }}</td>
-<!-- Invoice Attachment -->
-                <td style="min-width: 200px;">
-                    <div class="mb-2">
-                        {% if gateininfo.gatein_invoice_att %}
-                            <a href="{{ gateininfo.gatein_invoice_att.url }}" class="btn btn-sm btn-info mb-1" target="_blank">View</a>
-
-                            <!-- Re-attach -->
-                            <form method="post" action="{% url 'gatein_upload_attachment' gateininfo.id 'invoice' %}" enctype="multipart/form-data" class="d-inline">
-                                {% csrf_token %}
-                                <label class="btn btn-sm btn-warning mb-0">
-                                    Re-attach
-                                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-                                </label>
-                            </form>
-
-                            <!-- Delete -->
-                            <form method="post" action="{% url 'gatein_delete_attachment' gateininfo.id 'invoice' %}" class="d-inline" onsubmit="return confirm('Delete invoice attachment?');">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
-                            </form>
-                        {% else %}
-                            <form method="post" action="{% url 'gatein_upload_attachment' gateininfo.id 'invoice' %}" enctype="multipart/form-data" class="d-inline">
-                                {% csrf_token %}
-                                <label class="btn btn-sm btn-primary mb-0">
-                                    Upload
-                                    <input type="file" name="attachment" class="d-none" onchange="this.form.submit()" />
-                                </label>
-                            </form>
-                        {% endif %}
-                    </div>
-                </td>
-            <!-- Gate pass download icon -->
-            <td class="text-center">
-                <div class="d-flex justify-content-center gap-1">
-                    <a class="btn btn-warning" href="{% url 'gatein_pdf_download' gateininfo.id %}" target="_blank" title="Download Gate Pass">
-                        <i class="fas fa-luggage-cart"></i>
-                    </a>
-                </div>
-            </td>
-
-            <td>{{ gateininfo.gatein_job_no }}</td>
-            <td style="width:400px">{{ gateininfo.gatein_invoice }}</td>
-            <td>{{ gateininfo.gatein_customer }}</td>
-            <td>{{ gateininfo.gatein_updated_at }}</td>
-            <td>{{ gateininfo.gatein_updated_by }}</td>
-            <td>
-                <div class="d-flex justify-content-center gap-1">
-                    <form action="{% url 'gatein_delete' gateininfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
-                </div>
-            </td>
-        </tr>
-        {% endfor %}
         </tbody>
 
     </table>
-    <div class="pagination">
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-            <a class="btn btn-warning" href="?page=1">First</a>
-            <a class="btn btn-primary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-        {% endif %}
 
-        <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
-
-        {% if page_obj.has_next %}
-            <a class="btn btn-primary" href="?page={{ page_obj.next_page_number }}">Next</a>
-            <a class="btn btn-warning" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
-        {% endif %}
-    </span>
-    </div>
 </div>
 <style>
     th.shipper-invoice-col,
@@ -169,20 +110,84 @@
         word-break: break-word;
         white-space: normal;
     }
+
+    /* Increase the size of the column filter inputs (DataTables) */
+    .filter-input-modern {
+        min-width: 150px !important;
+        height: 36px !important;
+        font-size: 0.85rem !important;
+        padding: 4px 10px !important;
+        border-radius: 6px !important;
+    }
+
+    /* Increase the size of the top FILTER OPTIONS inputs to match reference design */
+    .form-section .form-control-modern {
+        height: 46px !important;
+        min-height: 46px !important;
+        font-size: 0.95rem !important;
+        padding: 0.5rem 1rem !important;
+        border-radius: 8px !important;
+        border: 1px solid #94a3b8 !important;
+        color: #334155 !important;
+        box-shadow: none !important;
+        font-weight: 700 !important; /* Thick font for text */
+    }
+
+    .form-section .form-control-modern::placeholder {
+        color: #64748b !important;
+        font-weight: 700 !important; /* Thick font for placeholder */
+    }
+
+    .form-section .form-label-modern {
+        font-size: 0.75rem !important;
+        font-weight: 800 !important;
+        color: #0f172a !important;
+        margin-bottom: 8px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+    }
 </style>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         var table = $('#gatein_list').DataTable({
-            order: [[0, 'desc']],
-            responsive: true,
+            order: [[2, 'desc']],
+            scrollX: true,
             dom: 'lBfrtip',
             buttons: ['copy', 'csv', 'excel', 'print'],
+            serverSide: true,
+            processing: true,
+            ajax: {
+                url: "{% url 'gatein_list_ajax' %}",
+                type: "GET",
+                data: function(d) {
+                    d.pre_gate_in = '{{ request.GET.pre_gate_in|default:"" }}';
+                    d.job_number = '{{ request.GET.job_number|default:"" }}';
+                    d.invoice_number = '{{ request.GET.invoice_number|default:"" }}';
+                }
+            },
+            columns: [
+                { data: null, defaultContent: '', orderable: false, searchable: false }, // Spacer
+                { data: 'edit', orderable: false, searchable: false },
+                { data: 'id' },
+                { data: 'gatein_created_at' },
+                { data: 'gatein_pre_id' },
+                { data: 'inward_pod', orderable: false, searchable: false },
+                { data: 'gatepass', orderable: false, searchable: false },
+                { data: 'gatein_job_no' },
+                { data: 'gatein_invoice' },
+                { data: 'gatein_customer' },
+                { data: 'gatein_updated_at' },
+                { data: 'gatein_updated_by' },
+                { data: 'delete', orderable: false, searchable: false }
+            ]
         });
 
         // Apply search to each column
         $('.filter-input').on('keyup change', function () {
-            var columnIndex = $(this).parent().index(); // Get correct column index
+            var columnIndex = $(this).parent().index(); 
+            // In DataTables, the column index matches the headers. Since the first row has the inputs,
+            // we use that index.
             table.column(columnIndex).search(this.value).draw();
         });
 
@@ -194,4 +199,5 @@
 </script>
 
 
+</div>
 {% endblock content %}
