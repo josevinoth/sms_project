@@ -32,7 +32,10 @@
 
     <!-- Custom CSS -->
     {% load static %}
-    <link rel="stylesheet" href="{% static 'all.css' %}?v=20260435">
+    <link rel="stylesheet" href="{% static 'all.css' %}?v=20260818_1745">
+    <link rel="stylesheet" href="{% static 'modern_css.css' %}?v=20260818_1745">
+
+
     <script src="{% static 'common-chart-config.js' %}"></script>    <style>
         /* Force Select2 Clear Button Visibility (Bypass Cache & Bootstrap4) */
         .select2-container--default .select2-selection--single,
@@ -84,17 +87,15 @@
                 <img src="/media/Company_Logo.png" alt="Logo" style="width:40px;height:50px;" class="mr-2">
                 <h1 class="mb-0" style="font-size:2rem; font-weight:bold;">BVM Management System</h1>
             </div>
-            <div class="col-2 text-left header-icon-panel">
+            <div class="col-4 d-flex align-items-center justify-content-end header-user-panel" style="gap:15px;">
                 <div class="header-extra-wrap">
                     {% block header_right_extras %}{% endblock %}
                 </div>
-            </div>
-            <div class="col-2 text-right header-user-panel">
                 <div class="header-user-meta">
                     <div class="header-user-row">
-                        <div class="header-user-text">
-                            <div class="header-user-name">Hi, {{ request.session.first_name }}</div>
-                            <small class="header-user-role">{{ request.session.ses_role }} {{ request.session.ses_unit_name }}</small>
+                        <div style="display: flex !important; flex-direction: column !important; align-items: flex-end !important; justify-content: center !important; text-align: right !important; height: auto !important; margin: 0 !important; padding: 0 4px !important;">
+                            <span style="font-size: 13px !important; font-weight: 600 !important; color: #ffffff !important; display: block !important; line-height: 14px !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; text-align: right !important;">Hi, {{ request.session.first_name }}</span>
+                            <span style="font-size: 11px !important; font-weight: 600 !important; color: #ff4d4f !important; display: block !important; line-height: 13px !important; margin: 2px 0 0 0 !important; padding: 0 !important; white-space: nowrap !important; text-align: right !important;">{{ request.session.ses_role }} {{ request.session.ses_unit_name }}</span>
                         </div>
                         <a href="{% url 'logout_page' %}" class="btn btn-dark p-1 header-logout-btn">
                             <i class="fas fa-sign-out-alt fa-lg"></i>
@@ -159,6 +160,10 @@
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
+<script src="{% static 'table-scroll-helper.js' %}?v=202608170939"></script>
+
+
 {% block scripts %}{% endblock scripts %}
 </body>
 </html>
+

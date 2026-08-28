@@ -1,136 +1,118 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% load static %}
 {% block content %}
 
-<!-- Standardized Select2 pattern -->
-<script>
-    var $jq = jQuery.noConflict(true);
-</script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"
-    rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<!-- PAGE LEVEL DATATABLE -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
-
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-<div class="container-fluid d-flex justify-content-center py-3">
-    <div class="rounded text-center bg-info shadow-box px-4 py-2">
-        <h3>POD Pending Report</h3>
+<div class="modern-list-header">
+    <div class="modern-list-title">
+        <i class="fas fa-file-signature"></i>
+        <h2>POD Pending Report</h2>
+    </div>
+    <div class="modern-list-actions">
+        <a href="{% url 'transport_reports' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left mr-1"></i> Back to Reports
+        </a>
     </div>
 </div>
 
+{% if messages %}
 <div class="row">
-    <div class="col-12 message text-center">
+    <div class="col-12 message text-center my-2">
         {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        <div class="alert alert-{{ message.tags }} py-2 mb-2">{{ message }}</div>
         {% endfor %}
     </div>
 </div>
+{% endif %}
 
-<div class="row mb-3 px-3">
-    <div class="col-12">
-        <a href="{% url 'transport_reports' %}" class="btn btn-primary shadow-sm">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-</div>
-<form id="filter_form" class="row g-3 align-items-end px-3">
-    <!-- From Date -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">From Date</label>
-        <input type="date" id="from_date" name="from_date" class="form-control" value="{{ from_date }}">
-    </div>
+<!-- Modern Filter Form -->
+<div class="form-section">
+    <form id="filter_form" class="row g-3 align-items-end">
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">From Date</label>
+            <input type="date" id="from_date" name="from_date" class="form-control form-control-modern" value="{{ from_date }}">
+        </div>
 
-    <!-- To Date -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">To Date</label>
-        <input type="date" id="to_date" name="to_date" class="form-control" value="{{ to_date }}">
-    </div>
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">To Date</label>
+            <input type="date" id="to_date" name="to_date" class="form-control form-control-modern" value="{{ to_date }}">
+        </div>
 
-    <!-- Branch -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Branch</label>
-        <select id="branch" name="branch" class="form-control select2">
-            <option value="">-- All Branches --</option>
-            {% for branch in all_branches %}
-            <option value="{{ branch.id }}" {% if branch_id == branch.id %}selected{% endif %}>{{ branch.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <!-- Vehicle Source -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Vehicle Source</label>
-        <select id="vehiclesource" name="vehiclesource" class="form-control select2">
-            <option value="">-- All Sources --</option>
-            {% for src in all_vehiclesources %}
-            <option value="{{ src.id }}" {% if selected_vehiclesource == src.id %}selected{% endif %}>{{ src.ow_ownership }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <!-- Trip Type -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Trip Type</label>
-        <select id="triptype" name="triptype" class="form-control select2">
-            <option value="">-- All Types --</option>
-            {% for ttype in all_triptypes %}
-            <option value="{{ ttype.id }}" {% if selected_triptype == ttype.id %}selected{% endif %}>{{ ttype.tr_trip_type }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <div class="col-md-2 d-flex gap-2">
-        <button type="button" id="btn_filter" class="btn btn-primary flex-grow-1 shadow-sm">
-            <i class="fas fa-filter"></i> Filter
-        </button>
-        <a href="{{ request.path }}" class="btn btn-secondary shadow-sm">
-            <i class="fas fa-sync"></i> Clear
-        </a>
-    </div>
-</form>
-
-
-
-<div class="container-fluid mt-4 shadow-box-table">
-    <table id="pod_pending_table" class="table table-striped table-bordered display nowrap" style="width:100%">
-        <thead class="thead-dark">
-            <tr>
-                {% for h in headers %}
-                <th>{{ h }}</th>
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">Branch</label>
+            <select id="branch" name="branch" class="form-control form-control-modern select2">
+                <option value="">-- All Branches --</option>
+                {% for branch in all_branches %}
+                <option value="{{ branch.id }}" {% if branch_id == branch.id %}selected{% endif %}>{{ branch.name }}</option>
                 {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Loaded via AJAX -->
-        </tbody>
-    </table>
+            </select>
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">Vehicle Source</label>
+            <select id="vehiclesource" name="vehiclesource" class="form-control form-control-modern select2">
+                <option value="">-- All Sources --</option>
+                {% for src in all_vehiclesources %}
+                <option value="{{ src.id }}" {% if selected_vehiclesource == src.id %}selected{% endif %}>{{ src.ow_ownership }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">Trip Type</label>
+            <select id="triptype" name="triptype" class="form-control form-control-modern select2">
+                <option value="">-- All Types --</option>
+                {% for ttype in all_triptypes %}
+                <option value="{{ ttype.id }}" {% if selected_triptype == ttype.id %}selected{% endif %}>{{ ttype.tr_trip_type }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 mb-2 d-flex gap-2">
+            <button type="button" id="btn_filter" class="btn btn-primary btn-block mr-1">
+                <i class="fas fa-filter mr-1"></i> Filter
+            </button>
+            <a href="{{ request.path }}" class="btn btn-outline-secondary">
+                <i class="fas fa-undo"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Modern Table Card -->
+<div class="modern-card">
+    <div class="table-responsive">
+        <table id="pod_pending_table" class="table modern-table table-hover display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    {% for h in headers %}
+                    <th>{{ h }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-    $jq(document).ready(function () {
-        $jq('.select2').select2({
+    $(document).ready(function () {
+        $('.select2').select2({
             width: '100%',
-            theme: 'bootstrap4',
+            placeholder: 'Select...',
             allowClear: true
         });
-    });
 
-    $(document).ready(function () {
         var table = $('#pod_pending_table').DataTable({
             "processing": true,
             "serverSide": true,
             "scrollX": true,
+            "scrollY": "58vh",
+            "scrollCollapse": true,
             "ajax": {
                 "url": "{% url 'pod_pending_report_ajax' %}",
                 "type": "GET",
@@ -142,46 +124,27 @@
                     d.triptype = $('#triptype').val();
                 }
             },
-            "dom": 'lBfrtip',
+            "dom": "<'row mb-2'<'col-sm-12 col-md-6 d-flex align-items-center'lB><'col-sm-12 col-md-6 d-flex justify-content-end'f>>" +
+                   "<'row'<'col-sm-12'tr>>" +
+                   "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
             "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
             "pageLength": 50,
             "buttons": [
-                'copy', 'csv',
-                {
-                    extend: 'excelHtml5',
-                    text: 'Excel',
-                    title: 'POD Pending Report',
-                    filename: 'POD_Pending_Report_' + new Date().toISOString().slice(0,10)
-                },
-                {
-                    extend: 'pdfHtml5',
-                    orientation: 'landscape',
-                    pageSize: 'A3',
-                    title: 'POD Pending Report',
-                    customize: function (doc) {
-                        doc.styles.tableHeader.fillColor = '#0A3278';
-                        doc.styles.tableHeader.color = 'white';
-                        doc.styles.tableHeader.bold = true;
-                        doc.defaultStyle.fontSize = 8;
-                    }
-                },
-                {
-                    extend: 'print',
-                    title: 'POD Pending Report',
-                    customize: function (win) {
-                        $(win.document.body).find('thead th')
-                            .css('background-color', '#0A3278')
-                            .css('color', 'white')
-                            .css('font-weight', 'bold');
-                    }
-                }
+                { extend: 'copy', className: 'btn btn-outline-secondary btn-sm mr-1' },
+                { extend: 'csv', className: 'btn btn-outline-secondary btn-sm mr-1' },
+                { extend: 'excelHtml5', className: 'btn btn-outline-success btn-sm mr-1', text: 'Excel', title: 'POD Pending Report' },
+                { extend: 'pdfHtml5', className: 'btn btn-outline-danger btn-sm mr-1', orientation: 'landscape', pageSize: 'A3', title: 'POD Pending Report' },
+                { extend: 'print', className: 'btn btn-outline-dark btn-sm', title: 'POD Pending Report' }
             ]
         });
 
         $('#btn_filter').click(function() {
             table.draw();
         });
+
+        $(window).on('resize', function () {
+            table.columns.adjust();
+        });
     });
 </script>
-
 {% endblock content %}

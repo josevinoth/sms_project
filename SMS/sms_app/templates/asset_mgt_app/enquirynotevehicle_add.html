@@ -19,9 +19,17 @@
                 <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Vehicle Category</label>
                 {% render_field enquiryvechicle_form.env_vehiclecategory id="env_vehiclecategory" class="form-control form-control-modern disable_a_href" style="height: 45px; padding: 0.5rem 1rem;" %}
             </div>
-            <div class="col-md-2 col-sm-6 mb-2 mb-md-0">
+            <div class="col-md-1 col-sm-6 mb-2 mb-md-0">
                 <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Quantity</label>
-                {% render_field enquiryvechicle_form.env_quantity id="env_quantity" class="form-control form-control-modern disable_a_href" placeholder="Quantity" style="height: 45px; padding: 0.5rem 1rem;" %}
+                {% render_field enquiryvechicle_form.env_quantity id="env_quantity" class="form-control form-control-modern disable_a_href" placeholder="0" style="height: 45px; padding: 0.5rem 1rem;" %}
+            </div>
+            <div class="col-md-2 col-sm-6 mb-2 mb-md-0">
+                <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Standard Sell</label>
+                {% render_field enquiryvechicle_form.env_sale id="env_sale" class="form-control form-control-modern disable_a_href modern-readonly" readonly="readonly" placeholder="Standard Sell" style="height: 45px; padding: 0.5rem 1rem;" %}
+            </div>
+            <div class="col-md-2 col-sm-6 mb-2 mb-md-0">
+                <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Special Sell</label>
+                {% render_field enquiryvechicle_form.env_special_sale id="env_special_sale" class="form-control form-control-modern disable_a_href" placeholder="Special Sell" style="height: 45px; padding: 0.5rem 1rem;" %}
             </div>
             {% render_field enquiryvechicle_form.env_updated_by id="env_updated_by" hidden="True" class="form-control" %}
             <div class="col-md-auto col-sm-12 text-md-right text-center mt-3 mt-md-0">
@@ -56,6 +64,8 @@
                     <th>Vehicle Type</th>
                     <th>Vehicle Category</th>
                     <th>Quantity</th>
+                    <th>Standard Sell</th>
+                    <th>Special Sell</th>
                     <th>Updated at</th>
                     <th>Updated By</th>
                     <th class="text-center">Edit</th>
@@ -63,7 +73,7 @@
                 </tr>
             </thead>
             <tbody>
-            {% for enquirynotevehicleinfo in enquirynotevehicle_list %}
+            {% for enquirynotevehicleinfo, can_delete in enquirynotevehicle_list_with_flags %}
             <tr>
                 <td class="font-weight-bold">{{ enquirynotevehicleinfo.id }}</td>
                 <td>
@@ -74,6 +84,8 @@
                 <td>{{ enquirynotevehicleinfo.env_vehicletype }}</td>
                 <td>{{ enquirynotevehicleinfo.env_vehiclecategory }}</td>
                 <td><span class="badge badge-info px-3 py-1 font-weight-bold" style="font-size: 0.85rem; background-color: #0ea5e9;">{{ enquirynotevehicleinfo.env_quantity }}</span></td>
+                <td><span class="font-weight-bold">{{ enquirynotevehicleinfo.env_sale|default:"-" }}</span></td>
+                <td><span class="font-weight-bold text-success">{{ enquirynotevehicleinfo.env_special_sale|default:"-" }}</span></td>
                 <td>
                     {{ enquirynotevehicleinfo.env_updated_at|date:"d-m-Y"|default:enquirynotevehicleinfo.env_updated_at }}<br>
                     <span class="small text-muted font-weight-bold">{{ enquirynotevehicleinfo.env_updated_at|date:"h:i A" }}</span>
@@ -85,21 +97,77 @@
                     </a>
                 </td>
                 <td class="text-center">
-                    <form action="{% url 'enquirynotevehicle_delete' enquirynotevehicleinfo.id %}" method="post" onclick="return confirm('Are you sure?');" style="margin: 0;">
+                    {% if can_delete %}
+                    <form action="{% url 'enquirynotevehicle_delete' enquirynotevehicleinfo.id %}" method="post"
+                          onsubmit="return confirm('Are you sure?');" style="margin: 0;">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px; padding: 6px 12px;">
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                style="border-radius: 8px; padding: 6px 12px;">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </form>
+                    {% else %}
+                    <span title="Cannot delete: vehicles already allotted for this type">
+                        <button class="btn btn-sm btn-outline-secondary" disabled
+                                style="border-radius: 8px; padding: 6px 12px; cursor: not-allowed; opacity: 0.5;">
+                            <i class="fas fa-lock"></i>
+                        </button>
+                    </span>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
+
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
+    function loadEnquiryVehicleSaleRate(isAutoLoad = false) {
+        var enquiryId = $('#env_enquirynumber').val() || '{{ enquiry_num_id }}' || '{{ enquirynote_id }}';
+        var vehicleTypeId = $('#env_vehicletype').val();
+        var vehicleCategoryId = $('#env_vehiclecategory').val();
+
+        if (!enquiryId || !vehicleTypeId) {
+            return;
+        }
+
+        $.ajax({
+            url: '{% url "get_vendor_sale_rate" %}',
+            type: 'GET',
+            data: {
+                enquiry_id: enquiryId,
+                checkbox_id: 'chk_requested',
+                vehicle_requested: vehicleTypeId,
+                vehicle_category_id: vehicleCategoryId
+            },
+            dataType: 'json',
+            success: function(data) {
+                const saleRate = data.sale_rate;
+                if (!saleRate || saleRate === "0" || saleRate === "0.0") {
+                    if (!isAutoLoad) {
+                        alert("Rate not assigned for this customer");
+                        $('#env_sale').val('');
+                        $('#env_special_sale').val('');
+                    }
+                } else {
+                    if (!isAutoLoad || !$('#env_sale').val() || $('#env_sale').val() === "0" || $('#env_sale').val() === "0.0") {
+                        $('#env_sale').val(saleRate);
+                    }
+                    if (!isAutoLoad || !$('#env_special_sale').val() || $('#env_special_sale').val() === "0" || $('#env_special_sale').val() === "0.0") {
+                        $('#env_special_sale').val(saleRate);
+                    }
+                }
+            },
+            error: function() {
+                if (!isAutoLoad) {
+                    alert('Error fetching vendor sale rate.');
+                }
+            }
+        });
+    }
+
 	$(document).ready(function() {
         document.getElementById("env_updated_by").value ='{{user_id}}';
         var enquiry_num_id_val = document.getElementById("env_enquirynumber").value;
@@ -112,31 +180,48 @@
             document.getElementById("env_enquirynumber").value =enquiry_num_id_val;
         }
 
-        // Enable env_enquirynumber on form submit so it is submitted with the form
+        // Enable env_enquirynumber, env_sale, env_special_sale on form submit
         $('#enquirynotevehicle_add').on('submit', function() {
             $('#env_enquirynumber').prop('disabled', false);
+            $('#env_sale').prop('disabled', false);
+            $('#env_special_sale').prop('disabled', false);
         });
+
+        // Event listeners for vehicle type & category change
+        $('#env_vehicletype').on('change', function() {
+            if ($(this).val()) {
+                loadEnquiryVehicleSaleRate(false);
+            } else {
+                $('#env_sale').val('');
+                $('#env_special_sale').val('');
+            }
+        });
+
+        $('#env_vehiclecategory').on('change', function() {
+            if ($('#env_vehicletype').val()) {
+                loadEnquiryVehicleSaleRate(false);
+            }
+        });
+
+        // If vehicle type is already selected on load (e.g. edit mode), auto-load if needed
+        if ($('#env_vehicletype').val()) {
+            loadEnquiryVehicleSaleRate(true);
+        }
     });
 </script>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-      // Check if the current URL contains 'enquirynotevehicle_insert'
-      if (window.location.href.includes("enquirynotevehicle_insert")) {
-          // Enable fields
-          $('#env_vehicletype, #env_vehiclecategory, #env_quantity')
-              .removeClass('disable_a_href')
-              .prop('disabled', false);
-      }
-      else if (window.location.href.includes("enquirynotevehicle_update")) {
-          // Enable fields
-          $('#env_vehicletype, #env_vehiclecategory, #env_quantity')
+      // Check if the current URL contains 'enquirynotevehicle_insert' or 'enquirynotevehicle_update'
+      if (window.location.href.includes("enquirynotevehicle_insert") || window.location.href.includes("enquirynotevehicle_update")) {
+          // Enable editable fields
+          $('#env_vehicletype, #env_vehiclecategory, #env_quantity, #env_special_sale')
               .removeClass('disable_a_href')
               .prop('disabled', false);
       }
       else {
           // Disable fields if on any other page
-          $('#env_vehicletype, #env_enquirynumber, #env_vehiclecategory, #env_quantity')
+          $('#env_vehicletype, #env_enquirynumber, #env_vehiclecategory, #env_quantity, #env_sale, #env_special_sale')
               .addClass('disable_a_href')
               .prop('disabled', true);
       }

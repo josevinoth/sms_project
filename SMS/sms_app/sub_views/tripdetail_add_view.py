@@ -1584,7 +1584,7 @@ def get_last_reported_km(request):
                     "reported_km": None,
                     "reported_date": None
                 })
-        elif v_obj and v_obj.vm_vehiclesource_id == 3:
+        elif v_obj and getattr(v_obj, 'vm_ownership_id', None) == 3:
             return JsonResponse({
                 "reported_km": None,
                 "reported_date": None

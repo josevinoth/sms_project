@@ -584,43 +584,8 @@
                 </tbody>
             </table>
     </div>
-
-    <!-- Pagination Bottom Controls -->
-    {% if page_obj and page_obj.paginator.num_pages > 1 %}
-    <div class="pagination-modern-container mt-3">
-        <div class="pagination-modern-info">
-            <i class="fas fa-list-ol text-info mr-1"></i> Showing <strong>{{ page_obj.start_index }}</strong> to <strong>{{ page_obj.end_index }}</strong> of <strong>{{ page_obj.paginator.count }}</strong> records (Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }})
-        </div>
-        <div class="pagination-modern-nav">
-            {% if page_obj.has_previous %}
-                <a href="?page=1{% if query_params %}&{{ query_params }}{% endif %}" class="pagination-modern-link" title="First Page"><i class="fas fa-angle-double-left"></i></a>
-                <a href="?page={{ page_obj.previous_page_number }}{% if query_params %}&{{ query_params }}{% endif %}" class="pagination-modern-link" title="Previous Page"><i class="fas fa-angle-left"></i> Previous</a>
-            {% else %}
-                <span class="pagination-modern-link disabled"><i class="fas fa-angle-double-left"></i></span>
-                <span class="pagination-modern-link disabled"><i class="fas fa-angle-left"></i> Previous</span>
-            {% endif %}
-
-            {% for p in page_obj.paginator.page_range %}
-                {% if p >= page_obj.number|add:"-2" and p <= page_obj.number|add:"2" %}
-                    {% if p == page_obj.number %}
-                        <span class="pagination-modern-link active">{{ p }}</span>
-                    {% else %}
-                        <a href="?page={{ p }}{% if query_params %}&{{ query_params }}{% endif %}" class="pagination-modern-link">{{ p }}</a>
-                    {% endif %}
-                {% endif %}
-            {% endfor %}
-
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% if query_params %}&{{ query_params }}{% endif %}" class="pagination-modern-link" title="Next Page">Next <i class="fas fa-angle-right"></i></a>
-                <a href="?page={{ page_obj.paginator.num_pages }}{% if query_params %}&{{ query_params }}{% endif %}" class="pagination-modern-link" title="Last Page"><i class="fas fa-angle-double-right"></i></a>
-            {% else %}
-                <span class="pagination-modern-link disabled">Next <i class="fas fa-angle-right"></i></span>
-                <span class="pagination-modern-link disabled"><i class="fas fa-angle-double-right"></i></span>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
 </div>
+
 
 <!-- Vehicle Summary Modal -->
 <div class="modal fade" id="vehicleSummaryModal" tabindex="-1">

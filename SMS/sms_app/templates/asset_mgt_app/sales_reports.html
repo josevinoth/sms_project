@@ -1,90 +1,202 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block title %}Sales Report{% endblock %}
 {% block content %}
 
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>Sales Report</h3>
-        </div>
-        <div class="col-5"></div>
-    </div>
-</div>
-<hr>
-<div class="row">
-    <div class="col-2"></div>
-    <div class="col-2">
-        <div class="card text-white bg-light mb-3 text-center">
-            <div class="card-header" style="background:grey">Sales Call Report</div>
-            <div class="card-body text-center">
-                <h2><a href="{% url 'sales_call_report' %}">
-                    <i class="fas fa-arrows-alt" style="color:black"></i></a></h2>
-            </div>
+<style>
+    .reports-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 20px;
+        width: 100%;
+    }
+
+    .report-card-modern {
+        background: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-light, #e2e8f0);
+        border-radius: 18px;
+        padding: 24px 18px;
+        text-decoration: none !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
+        box-shadow: 0 4px 12px var(--shadow-main, rgba(0, 0, 0, 0.05));
+    }
+
+    .report-card-modern:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+        border-color: var(--accent-blue, #3b82f6);
+    }
+
+    .report-icon-wrapper {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        margin-bottom: 14px;
+        transition: transform 0.3s ease;
+    }
+
+    .report-card-modern:hover .report-icon-wrapper {
+        transform: scale(1.1) rotate(4deg);
+    }
+
+    .icon-blue { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
+    .icon-teal { background: rgba(20, 184, 166, 0.12); color: #14b8a6; }
+    .icon-purple { background: rgba(168, 85, 247, 0.12); color: #a855f7; }
+    .icon-orange { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+    .icon-emerald { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+    .icon-indigo { background: rgba(99, 102, 241, 0.12); color: #6366f1; }
+    .icon-rose { background: rgba(244, 63, 94, 0.12); color: #f43f5e; }
+
+    .report-card-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-main, #0f172a);
+        margin-bottom: 16px;
+        letter-spacing: 0.3px;
+    }
+
+    .report-btn-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--accent-blue, #3b82f6);
+        padding: 6px 14px;
+        border-radius: 20px;
+        background: rgba(59, 130, 246, 0.08);
+        transition: all 0.2s ease;
+    }
+
+    .report-card-modern:hover .report-btn-pill {
+        background: var(--accent-blue, #3b82f6);
+        color: #ffffff;
+    }
+
+    [data-theme="dark"] .report-card-modern {
+        background: var(--bg-card, rgba(255, 255, 255, 0.05));
+        border-color: var(--border-light, rgba(255, 255, 255, 0.1));
+    }
+    [data-theme="dark"] .report-card-modern:hover {
+        border-color: #38bdf8;
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+    }
+    [data-theme="dark"] .report-btn-pill {
+        background: rgba(56, 189, 248, 0.12);
+        color: #38bdf8;
+    }
+    [data-theme="dark"] .report-card-modern:hover .report-btn-pill {
+        background: #38bdf8;
+        color: #0f172a;
+    }
+</style>
+
+<div class="container-fluid px-3 py-2">
+    <!-- ══ Header Banner ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+            <i class="fas fa-chart-pie mr-2"></i> Sales Report
+        </h3>
+        <div>
+            <a href="{% url 'sales_search' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Sales
+            </a>
         </div>
     </div>
 
-    <div class="col-2">
-        <div class="card text-white bg-light mb-3 text-center" >
-            <div class="card-header" style="background:grey">Target vs Actuals</div>
-            <div class="card-body text-center">
-                <h2><a href="{% url 'targets_actuals' %}">
-                    <i class="fas fa-user-secret" style="color:black"></i></a></h2>
-            </div>
-        </div>
-    </div>
+    <!-- ══ Reports Cards Grid ══ -->
+    <div class="modern-card p-4">
+        <div class="reports-grid">
+            <!-- 1. Sales Call Report -->
+            <a href="{% url 'sales_call_report' %}" class="report-card-modern">
+                <div class="report-icon-wrapper icon-blue">
+                    <i class="fas fa-phone-volume"></i>
+                </div>
+                <div class="report-card-title">Sales Call Report</div>
+                <span class="report-btn-pill">
+                    View Report <i class="fas fa-arrow-right"></i>
+                </span>
+            </a>
 
-    <div class="col-2">
-        <div class="card text-white bg-light mb-3 text-center" >
-            <div class="card-header" style="background:grey">Sales Call Details</div>
-            <div class="card-body text-center">
-                <h2><a href="{% url 'salescalls_details' %}">
-                    <i class="fas fa-tags" style="color:black"></i></a></h2>
-            </div>
-        </div>
-    </div>
+            <!-- 2. Target vs Actuals -->
+            <a href="{% url 'targets_actuals' %}" class="report-card-modern">
+                <div class="report-icon-wrapper icon-teal">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+                <div class="report-card-title">Target vs Actuals</div>
+                <span class="report-btn-pill">
+                    View Report <i class="fas fa-arrow-right"></i>
+                </span>
+            </a>
 
-    <div class="col-2">
-        <div class="card text-white bg-light mb-3 text-center" >
-            <div class="card-header" style="background:grey">Sales person wise</div>
-            <div class="card-body text-center">
-                <h2><a href="{% url 'salesperson_wise_table' %}">
-                    <i class="fas fa-map-marker-alt" style="color:black"></i></a></h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-2"></div>
-</div>
-<div class="row">
-    <div class="col-2"></div>
-    <div class="col-2">
-        <div class="card text-white bg-light mb-3 text-center" >
-            <div class="card-header" style="background:grey">Business Won/Lost </div>
-            <div class="card-body text-center">
-                <h2><a href="{% url 'businesswon_chart' %}">
-                    <i class="fas fa-rupee-sign" style="color:black"></i></a></h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-2">
-        <div class="card text-white bg-light mb-3 text-center" >
-            <div class="card-header" style="background:grey">Monthly Summary</div>
-            <div class="card-body text-center">
-                <h2><a href="{% url 'monthly_summary' %}" >
-                    <i class="fas fa-wallet" style="color:black"></i></a></h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-2">
-        <div class="card text-white bg-light mb-3 text-center">
-            <div class="card-header" style="background:grey">Productivity</div>
-            <div class="card-body text-center">
-                <h2><a href="{% url 'salesperson_productivity_performance' %}">
-                    <i class="fas fa-arrows-alt" style="color:black"></i></a></h2>
-            </div>
-        </div>
-    </div>
+            <!-- 3. Sales Call Details -->
+            <a href="{% url 'salescalls_details' %}" class="report-card-modern">
+                <div class="report-icon-wrapper icon-purple">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <div class="report-card-title">Sales Call Details</div>
+                <span class="report-btn-pill">
+                    View Report <i class="fas fa-arrow-right"></i>
+                </span>
+            </a>
 
-    <div class="col-2"></div>
+            <!-- 4. Sales Person Wise -->
+            <a href="{% url 'salesperson_wise_table' %}" class="report-card-modern">
+                <div class="report-icon-wrapper icon-orange">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="report-card-title">Sales Person Wise</div>
+                <span class="report-btn-pill">
+                    View Report <i class="fas fa-arrow-right"></i>
+                </span>
+            </a>
+
+            <!-- 5. Business Won / Lost -->
+            <a href="{% url 'businesswon_chart' %}" class="report-card-modern">
+                <div class="report-icon-wrapper icon-emerald">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="report-card-title">Business Won / Lost</div>
+                <span class="report-btn-pill">
+                    View Report <i class="fas fa-arrow-right"></i>
+                </span>
+            </a>
+
+            <!-- 6. Monthly Summary -->
+            <a href="{% url 'monthly_summary' %}" class="report-card-modern">
+                <div class="report-icon-wrapper icon-indigo">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div class="report-card-title">Monthly Summary</div>
+                <span class="report-btn-pill">
+                    View Report <i class="fas fa-arrow-right"></i>
+                </span>
+            </a>
+
+            <!-- 7. Productivity -->
+            <a href="{% url 'salesperson_productivity_performance' %}" class="report-card-modern">
+                <div class="report-icon-wrapper icon-rose">
+                    <i class="fas fa-tachometer-alt"></i>
+                </div>
+                <div class="report-card-title">Productivity</div>
+                <span class="report-btn-pill">
+                    View Report <i class="fas fa-arrow-right"></i>
+                </span>
+            </a>
+        </div>
+    </div>
 </div>
 
 {% endblock content %}

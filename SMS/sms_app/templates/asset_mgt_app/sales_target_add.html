@@ -1,103 +1,152 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+{% block title %}Add/Update Sales Target{% endblock %}
 {% block content %}
 
-<form method="POST" action="">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Sales Target</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Sales Executive</span>
-									</div>
-									{% render_field sales_target_form.st_sales_person class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Target Start Date</span>
-									</div>
-									{% render_field sales_target_form.st_start_date type="Date" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Target End Date</span>
-									</div>
-									{% render_field sales_target_form.st_end_date type="Date" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Target Revenue (INR)</span>
-									</div>
-									{% render_field sales_target_form.st_target_revenue class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Target Customer</span>
-									</div>
-									{% render_field sales_target_form.st_target_customer class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" style="width:230px">Target Calls (New Customer)</span>
-									</div>
-									{% render_field sales_target_form.st_target_calls_new_customer id="st_target_calls_new_customer" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" style="width:230px">Target Calls (Existing Customer)</span>
-									</div>
-									{% render_field sales_target_form.st_target_calls_existing_customer id="st_target_calls_existing_customer" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Target Calls (Review)</span>
-									</div>
-									{% render_field sales_target_form.st_target_calls_review id="st_target_calls_review" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Remarks</span>
-								</div>
-								{% render_field sales_target_form.st_remarks class="form-control" %}
-								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							{% render_field sales_target_form.st_updated_by id="st_updated_by" hidden="True" class="form-control" %}
-						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'sales_target_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-					</div>
-				</div>
-			</div>
+<div class="container-fluid px-3 py-2 compact-form">
+	<!-- ══ Page Header ══ -->
+	<div class="modern-header d-flex justify-content-between align-items-center mb-3">
+		<h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+			<i class="fas fa-bullseye mr-2"></i> Add / Update Sales Target
+		</h3>
+		<div>
+			<a href="{% url 'sales_target_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+				<i class="fas fa-arrow-left mr-1"></i> Back to List
+			</a>
 		</div>
 	</div>
-</form>
+
+	<!-- ══ Form Card ══ -->
+	<div class="modern-card p-3 mb-0 w-100">
+		<form method="POST" action="">
+			{% csrf_token %}
+			<div class="form-section p-3 mb-3">
+				<div class="form-section-title mb-3">
+					<i class="fas fa-edit text-primary mr-1"></i> Target Information
+				</div>
+				<div class="row">
+					<div class="col-12 col-md-3">
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Sales Executive</label>
+							{% render_field sales_target_form.st_sales_person class="form-control form-control-modern" %}
+						</div>
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Target Start Date</label>
+							{% render_field sales_target_form.st_start_date type="Date" class="form-control form-control-modern" %}
+						</div>
+					</div>
+					<div class="col-12 col-md-3">
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Target End Date</label>
+							{% render_field sales_target_form.st_end_date type="Date" class="form-control form-control-modern" %}
+						</div>
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Target Revenue (INR)</label>
+							{% render_field sales_target_form.st_target_revenue class="form-control form-control-modern" %}
+						</div>
+					</div>
+					<div class="col-12 col-md-3">
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Target Customer</label>
+							{% render_field sales_target_form.st_target_customer class="form-control form-control-modern" %}
+						</div>
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Target Calls (New)</label>
+							{% render_field sales_target_form.st_target_calls_new_customer id="st_target_calls_new_customer" class="form-control form-control-modern" %}
+						</div>
+					</div>
+					<div class="col-12 col-md-3">
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Target Calls (Existing)</label>
+							{% render_field sales_target_form.st_target_calls_existing_customer id="st_target_calls_existing_customer" class="form-control form-control-modern" %}
+						</div>
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Target Calls (Review)</label>
+							{% render_field sales_target_form.st_target_calls_review id="st_target_calls_review" class="form-control form-control-modern" %}
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-12">
+						<div class="form-group-modern mb-2">
+							<label class="form-label-modern font-weight-bold">Remarks</label>
+							{% render_field sales_target_form.st_remarks class="form-control form-control-modern" rows="2" %}
+						</div>
+					</div>
+				</div>
+				{% render_field sales_target_form.st_updated_by id="st_updated_by" hidden="True" class="form-control" %}
+			</div>
+
+			<!-- Messages -->
+			{% if messages %}
+			<div class="row my-2">
+				<div class="col-12 message text-center">
+					{% for message in messages %}
+					<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+						{{ message }}
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					{% endfor %}
+				</div>
+			</div>
+			{% endif %}
+
+			<!-- Form Actions -->
+			<div class="d-flex justify-content-between align-items-center pt-3 mt-2" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+				<button type="submit" class="btn-modern btn-submit py-1 px-4">
+					<i class="fas fa-check mr-1"></i> Submit
+				</button>
+				<a href="{% url 'sales_target_list' %}" class="btn-modern btn-cancel py-1 px-4" style="text-decoration:none;">
+					<i class="fas fa-times mr-1"></i> Cancel
+				</a>
+			</div>
+		</form>
+	</div>
+</div>
+
+<style>
+    .compact-form .form-group-modern {
+        margin-bottom: 0.55rem !important;
+    }
+    .compact-form .form-label-modern {
+        font-size: 0.76rem !important;
+        margin-bottom: 3px !important;
+        letter-spacing: 0.5px !important;
+    }
+    .compact-form .form-control-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        font-size: 0.84rem !important;
+        padding: 4px 10px !important;
+        border-radius: 8px !important;
+    }
+    .compact-form textarea.form-control-modern {
+        height: 70px !important;
+        min-height: 70px !important;
+    }
+    .compact-form .modern-card {
+        padding: 1rem 1.4rem !important;
+        border-radius: 16px !important;
+    }
+    .compact-form .form-section-title {
+        font-size: 0.84rem !important;
+        margin-bottom: 0.6rem !important;
+        letter-spacing: 1px !important;
+    }
+    .compact-form .btn-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0.25rem 1.3rem !important;
+        font-size: 0.84rem !important;
+        border-radius: 10px !important;
+    }
+</style>
+
 <script>
 $(document).ready(function() {
 	document.getElementById("st_updated_by").value ='{{user_id}}';
-  });
+});
 </script>
 {% endblock content %}

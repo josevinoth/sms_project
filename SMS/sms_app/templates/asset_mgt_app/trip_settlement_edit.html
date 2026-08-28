@@ -444,7 +444,10 @@ function getRoRate(force=false) {
                     $("#tc_tripcost").val("{{ va_sale }}");
                 }
             } else {
-                $("#tc_tripcost").val(data.ro_rate);
+                var current_val = $("#tc_tripcost").val();
+                if (!current_val || current_val == "0" || current_val == "0.0" || current_val == "") {
+                    $("#tc_tripcost").val(data.ro_rate);
+                }
             }
             autoTickCheckboxes();
         }

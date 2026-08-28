@@ -544,7 +544,7 @@
             <li><a href="{% url 'customer_documents' %}"><i class="fas fa-file-alt"></i> Documents</a></li>
             <li><a href="{% url 'customer_support' %}"><i class="fas fa-headset"></i> Support</a></li>
             <li><a href="{% url 'customer_profile' %}"><i class="fas fa-user-circle"></i> Profile</a></li>
-            <li><a href="{% url 'logout_page' %}?business_id={{ customer.cu_business_sol.id }}"
+            <li><a href="{% url 'logout_page' %}?is_customer=1&business_id={{ customer.cu_business_sol.id|default:'2' }}"
                     style="color: #ef4444;"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
         </ul>
     </div>
@@ -568,7 +568,7 @@
                 <i class="fas fa-sync-alt"></i>
             </a>
             <div class="user-avatar">{{ request.user.username|make_list|first|upper }}</div>
-            <a href="{% url 'logout_page' %}?business_id={{ customer.cu_business_sol.id }}" class="logout-btn"
+            <a href="{% url 'logout_page' %}?is_customer=1&business_id={{ customer.cu_business_sol.id|default:'2' }}" class="logout-btn"
                 title="Logout">
                 <i class="fas fa-sign-out-alt"></i>
             </a>
@@ -578,7 +578,7 @@
     <div class="container">
         <header>
             <div class="welcome">
-                <h1>Welcome back, {{ customer.cu_name }}</h1>
+                <h1>Welcome back, {{ customer.cu_nameshort|default:customer.cu_name|default:request.user.username }}</h1>
                 {% if department %}
                 <p
                     style="font-size: 1.1rem; color: #4facfe; margin-top: -0.5rem; margin-bottom: 0.5rem; font-weight: 600;">
@@ -653,7 +653,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Trip #</th>
+                        <th style="white-space: nowrap;">Trip #</th>
                         <th>Vehicle</th>
                         <th>Driver</th>
                         <th>Origin</th>
@@ -665,7 +665,7 @@
                 <tbody>
                     {% for trip in recent_shipments %}
                     <tr>
-                        <td style="font-weight: 600;">{{ trip.tr_tripnumber }}</td>
+                        <td style="font-weight: 600; white-space: nowrap;">{{ trip.tr_tripnumber }}</td>
                         <td>{{ trip.tr_vehiclenumber|default:"-" }}<br>
                             <small style="color:#94a3b8;">{{ trip.tr_vehicletype }}</small>
                         </td>

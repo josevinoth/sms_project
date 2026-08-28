@@ -6,6 +6,8 @@ class Enquirynotevehicle(models.Model):
     env_vehicletype = models.ForeignKey(VehicletypeInfo,on_delete=models.CASCADE, default='')
     env_quantity = models.IntegerField(blank=True, null=True, default=0)
     env_vehiclecategory = models.ForeignKey(VehiclecategoryInfo,on_delete=models.CASCADE, default='')
+    env_sale = models.FloatField(max_length=100, null=True, blank=True)
+    env_special_sale = models.FloatField(max_length=100, null=True, blank=True)
     env_created_at = models.DateTimeField(null=True, auto_now_add=True)
     env_updated_at = models.DateTimeField(null=True, auto_now=True)
     env_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='env_updated_by',db_column='env_updated_by', null=True)

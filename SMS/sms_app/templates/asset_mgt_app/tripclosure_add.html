@@ -637,12 +637,15 @@
         {
             document.getElementById("tr_enquirynumber").value =tr_enquirynumber_val;
         }
-        getRoRate();
-
-        // Default Trip Charges to Sell value if currently zero
-        var tc_tripcost_val = $("#tc_tripcost").val();
-        if (tc_tripcost_val == "0" || tc_tripcost_val == "0.0" || tc_tripcost_val == "") {
-            $("#tc_tripcost").val("{{ va_sale }}");
+        var vaSaleRate = parseFloat("{{ va_sale|default:'0' }}") || 0;
+        if (vaSaleRate > 0) {
+            $("#tc_tripcost").val(vaSaleRate);
+        } else {
+            getRoRate();
+            var tc_tripcost_val = $("#tc_tripcost").val();
+            if (tc_tripcost_val == "0" || tc_tripcost_val == "0.0" || tc_tripcost_val == "") {
+                $("#tc_tripcost").val("{{ va_sale }}");
+            }
         }
 
      });
@@ -676,7 +679,10 @@
                 else
                 {
                     // Update the ro_rate field with the retrieved value
-                    $("#tc_tripcost").val(data.ro_rate);
+                    var current_val = $("#tc_tripcost").val();
+                    if (!current_val || current_val == "0" || current_val == "0.0" || current_val == "") {
+                        $("#tc_tripcost").val(data.ro_rate);
+                    }
                 }
             },
             error: function(xhr, status, error) {
@@ -1027,12 +1033,15 @@
         {
             document.getElementById("tr_enquirynumber").value =tr_enquirynumber_val;
         }
-        getRoRate();
-
-        // Default Trip Charges to Sell value if currently zero
-        var tc_tripcost_val = $("#tc_tripcost").val();
-        if (tc_tripcost_val == "0" || tc_tripcost_val == "0.0" || tc_tripcost_val == "") {
-            $("#tc_tripcost").val("{{ va_sale }}");
+        var vaSaleRate = parseFloat("{{ va_sale|default:'0' }}") || 0;
+        if (vaSaleRate > 0) {
+            $("#tc_tripcost").val(vaSaleRate);
+        } else {
+            getRoRate();
+            var tc_tripcost_val = $("#tc_tripcost").val();
+            if (tc_tripcost_val == "0" || tc_tripcost_val == "0.0" || tc_tripcost_val == "") {
+                $("#tc_tripcost").val("{{ va_sale }}");
+            }
         }
 
      });
@@ -1066,7 +1075,10 @@
                 else
                 {
                     // Update the ro_rate field with the retrieved value
-                    $("#tc_tripcost").val(data.ro_rate);
+                    var current_val = $("#tc_tripcost").val();
+                    if (!current_val || current_val == "0" || current_val == "0.0" || current_val == "") {
+                        $("#tc_tripcost").val(data.ro_rate);
+                    }
                 }
             },
             error: function(xhr, status, error) {

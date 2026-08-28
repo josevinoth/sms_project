@@ -27,6 +27,8 @@
                     <th>Vehicle Type</th>
                     <th>Vehicle Category</th>
                     <th>Quantity</th>
+                    <th>Standard Sell</th>
+                    <th>Special Sell</th>
                     <th>Updated at</th>
                     <th>Updated By</th>
                     <th class="text-center">Edit</th>
@@ -41,6 +43,8 @@
                     <td>{{ enquirynotevehicleinfo.env_vehicletype }}</td>
                     <td>{{ enquirynotevehicleinfo.env_vehiclecategory }}</td>
                     <td><span class="badge badge-info px-3 py-1 font-weight-bold" style="font-size: 0.85rem; background-color: #0ea5e9;">{{ enquirynotevehicleinfo.env_quantity }}</span></td>
+                    <td><span class="font-weight-bold">{{ enquirynotevehicleinfo.env_sale|default:"-" }}</span></td>
+                    <td><span class="font-weight-bold text-success">{{ enquirynotevehicleinfo.env_special_sale|default:"-" }}</span></td>
                     <td>{{ enquirynotevehicleinfo.env_updated_at|date:"d-m-Y H:i"|default:enquirynotevehicleinfo.env_updated_at }}</td>
                     <td>{{ enquirynotevehicleinfo.env_updated_by }}</td>
                     <td class="text-center">

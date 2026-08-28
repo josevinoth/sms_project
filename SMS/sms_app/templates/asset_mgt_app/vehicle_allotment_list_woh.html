@@ -82,7 +82,8 @@
             <th>Vendor Name</th>
             <th>Driver Name</th>
             <th>Driver Number</th>
-            <th>Sell Rate</th>
+            <th>Standard Sell</th>
+            <th>Special Sell</th>
             <th>Standard Buy</th>
             <th>Special Buy</th>
             <th>Profit %</th>
@@ -113,6 +114,7 @@
             <td> {{vehicle_allot_info.va_drivername}}</td>
             <td> {{vehicle_allot_info.va_drivernumber}}</td>
             <td> {{vehicle_allot_info.va_sale|default:"0"}}</td>
+            <td> {{vehicle_allot_info.va_special_sale|default:"0"}}</td>
             <td> {{vehicle_allot_info.va_standardbuy|default:"0"}}</td>
             <td> {{vehicle_allot_info.va_specialbuy|default:"0"}}</td>
             <td> {{vehicle_allot_info.va_profit_percentage|floatformat:2}}%</td>

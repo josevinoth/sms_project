@@ -8,8 +8,10 @@ from django.http import HttpResponse, JsonResponse
 from django.template.loader import get_template, render_to_string
 from xhtml2pdf import pisa
 
-from ..forms import ConsignmentdetailaddForm,ConsignmentgoodsaddForm
-from ..models import VehiclemasterInfo,User_extInfo,Location_info,Vehicle_allotmentInfo,ConsignmentgoodsInfo,ConsignmentdetailInfo,CustomerInfo,EnquirynoteInfo, MyUser, DeletionLog, TripdetailInfo, OwnershipInfo, VehicletypeInfo, Trip_category_info
+from ..forms import ConsignmentdetailaddForm, ConsignmentgoodsaddForm
+from ..models import VehiclemasterInfo, User_extInfo, Location_info, Vehicle_allotmentInfo, ConsignmentgoodsInfo, \
+    ConsignmentdetailInfo, CustomerInfo, EnquirynoteInfo, MyUser, DeletionLog, TripdetailInfo, OwnershipInfo, \
+    VehicletypeInfo, Trip_category_info
 from django.urls import reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
@@ -19,6 +21,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from django.contrib.auth.decorators import login_required
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 @login_required(login_url='login_page')
 def consignmentdetail_enquiry(request, enquiry_id, consignment_number):
@@ -37,7 +40,7 @@ def consignmentdetail_enquiry(request, enquiry_id, consignment_number):
 
 
 @login_required(login_url='login_page')
-def consignmentdetail_nav(request,consignmentdetail_id=0):
+def consignmentdetail_nav(request, consignmentdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     user_branch = User_extInfo.objects.get(user_id=user_id).emp_branch
@@ -49,8 +52,8 @@ def consignmentdetail_nav(request,consignmentdetail_id=0):
     request.session['enquiry_num_id'] = enquiry_num_id
     request.session['ses_enqiury_id'] = enquiry_num_id
     request.session['ses_enqiury_num_id'] = enquiry_num_id
-    consignmentdetail_list=ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
-    print('enquiry_num',enquiry_num)
+    consignmentdetail_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num_id)
+    print('enquiry_num', enquiry_num)
     context = {
         'first_name': first_name,
         'user_id': user_id,
@@ -62,6 +65,7 @@ def consignmentdetail_nav(request,consignmentdetail_id=0):
     }
     return render(request, "asset_mgt_app/consignmentdetail_nav.html", context)
 
+
 @login_required(login_url='login_page')
 def consignmentdetail_add(request, consignmentdetail_id=0):
     first_name = request.session.get('first_name')
@@ -70,7 +74,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     user_branch_id = Location_info.objects.get(loc_name=user_branch).id
     enquiry_num = request.session.get('ses_enqiury_num')
     enquiry_num_id = None
-    
+
     selected_trip_id_param = request.GET.get('trip_id')
     selected_trip_id = None
     if selected_trip_id_param:
@@ -106,7 +110,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             enquiry_num = enquiry.en_enquirynumber
         except (ValueError, TypeError, ObjectDoesNotExist):
             pass
-    
+
     if not enquiry_num_id:
         # Prioritize 'enquiry_num_id' over the misspelled session key
         enquiry_num_id = request.session.get('enquiry_num_id') or request.session.get('ses_enqiury_id')
@@ -148,7 +152,8 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
     if request.method == "GET":
         existing_cancellation_charge = 0.0
         if consignmentdetail_id == 0:
-            con_det_form = ConsignmentdetailaddForm(initial={'co_enquirynumber': enquiry_num_id, 'co_customer': customer_id})
+            con_det_form = ConsignmentdetailaddForm(
+                initial={'co_enquirynumber': enquiry_num_id, 'co_customer': customer_id})
             form = ConsignmentgoodsaddForm(initial={'cg_consignmentnumber': 0})
             vehicle_type = ""
         else:
@@ -158,7 +163,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             con_det_form = ConsignmentdetailaddForm(instance=consignmentdetail)
             form = ConsignmentgoodsaddForm(initial={'cg_consignmentnumber': consignmentdetail_id})
             vehicle_type = consignmentdetail.co_vehicletype
-            
+
             existing_dummy = TripdetailInfo.objects.filter(tr_consignmentnumber=consignmentdetail).first()
             if existing_dummy and existing_dummy.tc_cancellation:
                 existing_cancellation_charge = existing_dummy.tc_cancellation
@@ -218,37 +223,43 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             vehicle_type = request.POST.get('vehicle_type_field')
             if consignmentdetail_id == 0:
                 consignment_detail = con_det_form.save(commit=False)
-                
+
                 # Enforce Consignment Limit based on requested vehicle quantity
                 from django.db.models import Sum
                 from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
-                
+
                 enq_id = consignment_detail.co_enquirynumber.id
-                vehicle_limit_agg = Enquirynotevehicle.objects.filter(env_enquirynumber=enq_id).aggregate(total_allowed=Sum('env_quantity'))
+                vehicle_limit_agg = Enquirynotevehicle.objects.filter(env_enquirynumber=enq_id).aggregate(
+                    total_allowed=Sum('env_quantity'))
                 total_allowed = vehicle_limit_agg.get('total_allowed') or 0
                 current_count = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enq_id).count()
-                
+
                 if total_allowed > 0 and current_count >= total_allowed:
-                    messages.error(request, f"Cannot add more consignments. The limit of {total_allowed} consignments has been reached for this enquiry.")
+                    messages.error(request,
+                                   f"Cannot add more consignments. The limit of {total_allowed} consignments has been reached for this enquiry.")
                     return redirect('enquirynote_list')
 
                 # Determine branch name using centralized utility
                 branch_id = get_session_branch_id(request)
-                
+
                 # Robust fallback for Consignment: Try to derive branch from Enquiry number prefix
                 if branch_id == 1 and consignment_detail.co_enquirynumber and consignment_detail.co_enquirynumber.en_enquirynumber:
                     en_num = consignment_detail.co_enquirynumber.en_enquirynumber
-                    if "_MAA_" in en_num: branch_id = 2
-                    elif "_BLR_" in en_num: branch_id = 1
-                    elif "_HYD_" in en_num: branch_id = 4
-                
+                    if "_MAA_" in en_num:
+                        branch_id = 2
+                    elif "_BLR_" in en_num:
+                        branch_id = 1
+                    elif "_HYD_" in en_num:
+                        branch_id = 4
+
                 branch_code = get_branch_code(branch_id)
-                
+
                 # Generate consignment number
                 current_fy = get_financial_year()
                 prefix = f"{current_fy}_{branch_code}_T_"
-                consignment_detail.co_consignmentnumber = generate_next_number(ConsignmentdetailInfo, 'co_consignmentnumber', prefix, 5)
-                
+                consignment_detail.co_consignmentnumber = generate_next_number(ConsignmentdetailInfo,
+                                                                               'co_consignmentnumber', prefix, 5)
+
                 consignment_detail.co_vehicletype = vehicle_type
                 consignment_detail.co_createdby = request.user
                 consignment_detail.save()
@@ -274,7 +285,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                 if status_id in [9, 10]:
                     cancellation_charge = float(request.POST.get('consignment_cancellation_charge', '0.0'))
                     trip_status_id = 10 if status_id == 9 else 11
-                    
+
                     existing_dummy = TripdetailInfo.objects.filter(tr_consignmentnumber=consignment_detail).first()
                     if not existing_dummy:
                         branch_id = get_session_branch_id(request)
@@ -282,7 +293,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                         current_fy = get_financial_year()
                         prefix = f"{current_fy}_{branch_code}_TN_"
                         trip_num_next = generate_next_number(TripdetailInfo, 'tr_tripnumber', prefix, 7)
-                        
+
                         default_ownership = OwnershipInfo.objects.first()
                         default_vehicletype = VehicletypeInfo.objects.first()
                         default_category = Trip_category_info.objects.first()
@@ -337,7 +348,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                     if status_id in [9, 10]:
                         cancellation_charge = float(request.POST.get('consignment_cancellation_charge', '0.0'))
                         trip_status_id = 10 if status_id == 9 else 11
-                        
+
                         existing_dummy = TripdetailInfo.objects.filter(tr_consignmentnumber=consignment_detail).first()
                         if not existing_dummy:
                             branch_id = get_session_branch_id(request)
@@ -345,7 +356,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                             current_fy = get_financial_year()
                             prefix = f"{current_fy}_{branch_code}_TN_"
                             trip_num_next = generate_next_number(TripdetailInfo, 'tr_tripnumber', prefix, 7)
-                            
+
                             default_ownership = OwnershipInfo.objects.first()
                             default_vehicletype = VehicletypeInfo.objects.first()
                             default_category = Trip_category_info.objects.first()
@@ -398,6 +409,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                     messages.error(request, f"Error in {field}: {error}")
             messages.error(request, 'Record Not Saved. Please Enter All Required Fields')
             return redirect(request.META['HTTP_REFERER'])
+
 
 # List consignmentdetail
 
@@ -454,11 +466,14 @@ def consignmentdetail_list_ajax(request):
         'co_enquirynumber', 'co_customer', 'co_status', 'co_lastmodifiedby', 'co_createdby',
         'co_fromlocaion', 'co_tolocation', 'co_enquirynumber__en_fromlocaion',
         'co_enquirynumber__en_tolocation', 'co_enquirynumber__en_movement_type'
-    ).prefetch_related('cg_consignmentnumber', 'cg_consignmentnumber__cg_consigner', 'cg_consignmentnumber__cg_consignee').all()
+    ).prefetch_related('cg_consignmentnumber', 'cg_consignmentnumber__cg_consigner',
+                       'cg_consignmentnumber__cg_consignee').all()
 
     # Apply Filters
     if customer_id:
-        qs = qs.filter(co_customer_id=customer_id)
+        qs = qs.filter(
+            Q(co_customer_id=customer_id) | Q(co_enquirynumber__en_customername_id=customer_id)
+        )
     if updated_by_id:
         qs = qs.filter(co_lastmodifiedby_id=updated_by_id)
     if date_from:
@@ -538,7 +553,7 @@ def consignmentdetail_list_ajax(request):
     page_cons_ids = [obj.id for obj in page_qs]
     invoice_map = {}  # consignment_id -> (inv_no, ti_total)
     for inv in TransInvoiceInfo.objects.filter(
-        ti_consignment_id__in=page_cons_ids
+            ti_consignment_id__in=page_cons_ids
     ).values('ti_consignment_id', 'ti_inv_no', 'ti_total'):
         invoice_map[inv['ti_consignment_id']] = (
             inv['ti_inv_no'] or '',
@@ -551,64 +566,68 @@ def consignmentdetail_list_ajax(request):
         related_goods = obj.cg_consignmentnumber.all()
         # For multiple goods, we sum up totals and take the first one for individual fields
         goods = related_goods[0] if related_goods else None
-        
+
         consigner = str(goods.cg_consigner) if (goods and goods.cg_consigner) else ''
         consignee = str(goods.cg_consignee) if (goods and goods.cg_consignee) else ''
         invoice = goods.cg_consignerinvoice if goods else ''
-        
+
         total_qty = 0
         total_weight = 0
         total_value = 0
         total_value_inr = 0
-        
+
         for g in related_goods:
             total_qty += g.cg_qty or 0
             total_weight += g.cg_weight or 0
             total_value += g.cg_consignervalue or 0
             total_value_inr += g.cg_valueininr or 0
-        
+
         ebill = goods.cg_ebillno if goods else ''
-        issue_date = goods.cg_consignerinvoice_date.strftime('%Y-%m-%d') if (goods and goods.cg_consignerinvoice_date) else ''
+        issue_date = goods.cg_consignerinvoice_date.strftime('%Y-%m-%d') if (
+                    goods and goods.cg_consignerinvoice_date) else ''
         validity_date = goods.cg_dateofvalidity.strftime('%Y-%m-%d') if (goods and goods.cg_dateofvalidity) else ''
         dimension = f"{goods.cg_length}x{goods.cg_width}x{goods.cg_height}" if goods else ''
-        
-        display_from = str(obj.co_fromlocaion) if obj.co_fromlocaion else (str(obj.co_enquirynumber.en_fromlocaion) if obj.co_enquirynumber else '')
-        display_to = str(obj.co_tolocation) if obj.co_tolocation else (str(obj.co_enquirynumber.en_tolocation) if obj.co_enquirynumber else '')
-        movement = str(obj.co_enquirynumber.en_movement_type) if (obj.co_enquirynumber and obj.co_enquirynumber.en_movement_type) else ''
+
+        display_from = str(obj.co_fromlocaion) if obj.co_fromlocaion else (
+            str(obj.co_enquirynumber.en_fromlocaion) if obj.co_enquirynumber else '')
+        display_to = str(obj.co_tolocation) if obj.co_tolocation else (
+            str(obj.co_enquirynumber.en_tolocation) if obj.co_enquirynumber else '')
+        movement = str(obj.co_enquirynumber.en_movement_type) if (
+                    obj.co_enquirynumber and obj.co_enquirynumber.en_movement_type) else ''
 
         inv_no, inv_total = invoice_map.get(obj.id, ('', 0))
 
         data.append([
-            obj.id,                                     # 0: ID
-            obj.co_created_at.strftime('%Y-%m-%d') if obj.co_created_at else '', # 1: Created On
+            obj.id,  # 0: ID
+            obj.co_created_at.strftime('%Y-%m-%d') if obj.co_created_at else '',  # 1: Created On
             str(obj.co_customer) if obj.co_customer else '',  # 2: Customer Name
-            str(obj.co_enquirynumber) if obj.co_enquirynumber else '', # 3: Enquiry Number
-            obj.co_consignmentnumber or '',             # 4: Consignment Number
-            obj.co_consignmentdate.strftime('%Y-%m-%d') if obj.co_consignmentdate else '', # 5: Consignment Date
-            obj.co_vehicelnumber or '',                 # 6: Vehicle Number
-            display_from,                               # 7: From Location
-            display_to,                                 # 8: To Location
-            consigner,                                  # 9: Consigner
-            consignee,                                  # 10: Consignee
-            invoice,                                    # 11: Consigner Invoice
-            str(total_value),                           # 12: Value
-            str(total_value_inr),                       # 13: Value in INR
-            str(total_qty),                             # 14: No. of Pieces
-            str(total_weight),                          # 15: Weight
-            ebill,                                      # 16: Eway-Bill No.
-            issue_date,                                 # 17: Date of Issue
-            validity_date,                              # 18: Date of Validity
-            obj.co_containerdescription or '',          # 19: Container Description
-            dimension,                                  # 20: Dimension
-            movement,                                   # 21: Movement
-            str(obj.co_status) if obj.co_status else '', # 22: Status
-            obj.co_updated_at.strftime('%Y-%m-%d') if obj.co_updated_at else '', # 23: Updated On
-            str(obj.co_lastmodifiedby) if obj.co_lastmodifiedby else '', # 24: Updated By
-            str(obj.co_createdby) if hasattr(obj, 'co_createdby') and obj.co_createdby else '', # 25: Created By
-            inv_no,                                     # 26: Invoice Number
-            inv_total,                                  # 27: Invoice Amount
-            obj.id,                                     # 28: Edit
-            obj.id,                                     # 29: Delete
+            str(obj.co_enquirynumber) if obj.co_enquirynumber else '',  # 3: Enquiry Number
+            obj.co_consignmentnumber or '',  # 4: Consignment Number
+            obj.co_consignmentdate.strftime('%Y-%m-%d') if obj.co_consignmentdate else '',  # 5: Consignment Date
+            obj.co_vehicelnumber or '',  # 6: Vehicle Number
+            display_from,  # 7: From Location
+            display_to,  # 8: To Location
+            consigner,  # 9: Consigner
+            consignee,  # 10: Consignee
+            invoice,  # 11: Consigner Invoice
+            str(total_value),  # 12: Value
+            str(total_value_inr),  # 13: Value in INR
+            str(total_qty),  # 14: No. of Pieces
+            str(total_weight),  # 15: Weight
+            ebill,  # 16: Eway-Bill No.
+            issue_date,  # 17: Date of Issue
+            validity_date,  # 18: Date of Validity
+            obj.co_containerdescription or '',  # 19: Container Description
+            dimension,  # 20: Dimension
+            movement,  # 21: Movement
+            str(obj.co_status) if obj.co_status else '',  # 22: Status
+            obj.co_updated_at.strftime('%Y-%m-%d') if obj.co_updated_at else '',  # 23: Updated On
+            str(obj.co_lastmodifiedby) if obj.co_lastmodifiedby else '',  # 24: Updated By
+            str(obj.co_createdby) if hasattr(obj, 'co_createdby') and obj.co_createdby else '',  # 25: Created By
+            inv_no,  # 26: Invoice Number
+            inv_total,  # 27: Invoice Amount
+            obj.id,  # 28: Edit
+            obj.id,  # 29: Delete
         ])
 
     return JsonResponse({
@@ -619,16 +638,16 @@ def consignmentdetail_list_ajax(request):
     })
 
 
-#Delete consignmentdetail
+# Delete consignmentdetail
 @login_required(login_url='login_page')
-def consignmentdetail_delete(request,consignmentdetail_id):
+def consignmentdetail_delete(request, consignmentdetail_id):
     print("Inside Delete")
     consignmentdetail = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id)
     enquiry_num = consignmentdetail.co_enquirynumber
-    
+
     reason = request.POST.get('deletion_reason', 'No reason provided')
     identifier = consignmentdetail.co_consignmentnumber
-    
+
     DeletionLog.objects.create(
         dl_model_name='ConsignmentdetailInfo',
         dl_record_id=consignmentdetail_id,
@@ -636,15 +655,19 @@ def consignmentdetail_delete(request,consignmentdetail_id):
         dl_deleted_by=request.user,
         dl_reason=reason
     )
-    
+
     consignmentdetail.delete()
     try:
-        consignmentdetail_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num).values_list('co_consignmentnumber', flat=True)
-        EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num.en_enquirynumber).update(en_consignmentdetails=list(consignmentdetail_list))
+        consignmentdetail_list = ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_num).values_list(
+            'co_consignmentnumber', flat=True)
+        EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num.en_enquirynumber).update(
+            en_consignmentdetails=list(consignmentdetail_list))
     except ObjectDoesNotExist:
-        consignmentdetail_list=[]
-        EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num.en_enquirynumber).update(en_consignmentdetails=list(consignmentdetail_list))
+        consignmentdetail_list = []
+        EnquirynoteInfo.objects.filter(en_enquirynumber=enquiry_num.en_enquirynumber).update(
+            en_consignmentdetails=list(consignmentdetail_list))
     return redirect(request.META.get('HTTP_REFERER', '/SMS/consignmentdetail_list'))
+
 
 @login_required(login_url='login_page')
 @xframe_options_exempt
@@ -747,6 +770,7 @@ def consignment_note_pdf(request, consignment_note_id=0):
     except ConsignmentdetailInfo.DoesNotExist:
         return HttpResponse("Invalid consignment note ID.")
 
+
 @login_required(login_url='login_page')
 def vehicle_allotted(request):
     enquiry_number = request.GET.get('enquiry_number')
@@ -765,27 +789,27 @@ def vehicle_allotted(request):
     )
 
     final_vehicle_list = [v for v in (requested_vehicles + requested_vehicles_market) if v]
-    print('final_vehicle_list',final_vehicle_list)
+    print('final_vehicle_list', final_vehicle_list)
     used_vehicles = list(
         ConsignmentdetailInfo.objects.filter(co_enquirynumber=enquiry_number)
         .values_list('co_vehicelnumber', flat=True)
     )
-    print('used_vehicles',used_vehicles)
+    print('used_vehicles', used_vehicles)
     available_vehicle_list = [v for v in final_vehicle_list if v not in used_vehicles]
     try:
         selected_vehicles = ConsignmentdetailInfo.objects.get(pk=consignmentdetail_id_val).co_vehicelnumber
     except ConsignmentdetailInfo.DoesNotExist:
         selected_vehicles = None  # Or set a default value
-    print('selected_vehicles',selected_vehicles)
-    print('available_vehicle_list',available_vehicle_list)
-    return JsonResponse({'final_vehicle_list': available_vehicle_list,'selected_vehicles':selected_vehicles})
+    print('selected_vehicles', selected_vehicles)
+    print('available_vehicle_list', available_vehicle_list)
+    return JsonResponse({'final_vehicle_list': available_vehicle_list, 'selected_vehicles': selected_vehicles})
 
 
 @login_required(login_url='login_page')
 def consignmentdetail_cancel(request):
     first_name = request.session.get('first_name')
     enquiry_num_id = request.session.get('ses_enqiury_num_id')
-    return redirect('/SMS/consignmentdetail_nav/'+ str(enquiry_num_id))
+    return redirect('/SMS/consignmentdetail_nav/' + str(enquiry_num_id))
 
 
 @login_required(login_url='login_page')
@@ -803,6 +827,7 @@ def get_vehicle_type(request, vehicle_id):
         vehicle_type = None
 
     return JsonResponse({'vehicle_type': vehicle_type})
+
 
 @login_required(login_url='login_page')
 def consignment_pdf_download(request):
@@ -844,10 +869,12 @@ def consignment_pdf_download(request):
     if pisa_status.err:
         return HttpResponse('Error generating PDF <pre>' + html + '</pre>')
 
+
 @login_required(login_url='login_page')
 def get_trip_info(request, trip_id):
     try:
-        trip = TripdetailInfo.objects.select_related('tr_enquirynumber', 'tr_enquirynumber__en_customername', 'tr_vehicletype').get(pk=trip_id)
+        trip = TripdetailInfo.objects.select_related('tr_enquirynumber', 'tr_enquirynumber__en_customername',
+                                                     'tr_vehicletype').get(pk=trip_id)
         enquiry = trip.tr_enquirynumber
         customer_obj = enquiry.en_customername if enquiry else None
 

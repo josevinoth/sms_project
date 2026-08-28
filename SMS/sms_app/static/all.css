@@ -609,10 +609,9 @@ z-index: 1200;
 
 .header-user-panel {
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  align-items: center;
+  justify-content: flex-end;
   height: 100%;
-  text-align: left !important;
 }
 
 .header-extra-wrap {
@@ -620,14 +619,13 @@ z-index: 1200;
 }
 
 .header-user-meta {
-  font-size: 0.95rem;
-  line-height: 1.1;
-  text-align: left;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  text-align: right;
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  transform: translateX(-20px);
+  justify-content: flex-end;
 }
 
 .header-user-row {
@@ -639,18 +637,25 @@ z-index: 1200;
 .header-user-text {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: flex-end;
+  justify-content: center;
+  line-height: 1.2;
 }
 
 .header-user-name {
-  line-height: 1.1;
-  font-size: 1.35rem;
+  line-height: 1.2;
+  font-size: 0.95rem;
   font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
 }
 
 .header-user-role {
   color: #ff4d4f;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: block;
+  margin-top: 1px;
 }
 
 .header-user-top {

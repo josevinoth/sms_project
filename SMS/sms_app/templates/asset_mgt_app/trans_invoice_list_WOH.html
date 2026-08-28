@@ -142,8 +142,8 @@
                 <td>{{ goods.cg_consignee|default:"-" }}</td>
                 <td>{{ trip.tr_consignmentnumber.co_cusrefnum|default:"-" }}</td>
                 <td>{{ goods.cg_hawbno|default:"-" }}</td>
-                <td>{{ goods.cg_qty|default:"-" }}</td>
-                <td>{{ goods.cg_weight|default:"-" }}</td>
+                <td>{% if trip.total_goods_qty is not None %}{{ trip.total_goods_qty }}{% elif goods %}{{ goods.cg_qty }}{% else %}-{% endif %}</td>
+                <td>{% if trip.total_goods_weight is not None %}{{ trip.total_goods_weight }}{% elif goods %}{{ goods.cg_weight }}{% else %}-{% endif %}</td>
                 {% endwith %}
 
                 <!-- ================= CHARGES ================= -->

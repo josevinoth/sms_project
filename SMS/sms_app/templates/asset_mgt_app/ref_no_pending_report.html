@@ -1,96 +1,100 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% load static %}
 {% block content %}
 
-<div class="container-fluid d-flex justify-content-center py-3">
-    <div class="rounded text-center bg-info shadow-box px-4 py-2">
-        <h3>Ref No Pending Report</h3>
-    </div>
-</div>
-<br>
-<div class="row">
-    <div class="col-2"></div>
-    <div class="col-8 message text-center">
-        {% for message in messages %}
-        <a {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</a>
-        {% endfor %}
-    </div>
-    <div class="col-2"></div>
-</div>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<form method="POST" action="{% url 'ref_no_pending_report' %}" class="row g-3 align-items-end">
-    {% csrf_token %}
-
-    <!-- Customer -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">Customer Name</label>
-        {% render_field form.dmr_customer class="form-control" value=customer_id %}
+<div class="modern-list-header">
+    <div class="modern-list-title">
+        <i class="fas fa-tasks"></i>
+        <h2>Ref No Pending Report</h2>
     </div>
-
-
-    <!-- From Date -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">From Date</label>
-        {% render_field form.from_date class="form-control" %}
-    </div>
-
-    <!-- To Date -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">To Date</label>
-        {% render_field form.to_date class="form-control" %}
-    </div>
-    <!-- From Location -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">From Location</label>
-        {% render_field form.from_location class="form-control" value=from_location %}
-    </div>
-
-    <!-- To Location -->
-    <div class="col-md-2">
-        <label class="form-label fw-bold">To Location</label>
-        {% render_field form.to_location class="form-control" value=to_location %}
-    </div>
-
-    <div class="col-md-2">
-        <button type="submit" class="btn btn-primary mt-3">Filter</button>
-        <a href="{{ request.path }}" class="btn btn-secondary mt-3">Clear</a>
-    </div>
-</form>
-<br>
-<br>
-
-<div class="row">
-    <div class="col-auto">
-        <a href="{% url 'transport_reports' %}" class="btn btn-primary">
-            <i class="fas fa-arrow-left"></i> Back
+    <div class="modern-list-actions">
+        <a href="{% url 'transport_reports' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left mr-1"></i> Back to Reports
         </a>
     </div>
 </div>
 
-<br>
+{% if messages %}
+<div class="row">
+    <div class="col-12 message text-center my-2">
+        {% for message in messages %}
+        <div class="alert alert-info py-2 mb-2">{{ message }}</div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 
-<div class="container-fluid shadow-box-table">
-    <table id="ref_no_pending_report_table" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-            <tr>
-                <!-- DYNAMIC HEADERS -->
-                {% for h in headers %}
-                <th>{{ h }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
+<!-- Modern Filter Form -->
+<div class="form-section">
+    <form method="POST" action="{% url 'ref_no_pending_report' %}" class="row g-3 align-items-end" id="filterForm">
+        {% csrf_token %}
 
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">Customer Name</label>
+            {% render_field form.dmr_customer class="form-control form-control-modern select2" value=customer_id %}
+        </div>
 
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">From Date</label>
+            {% render_field form.from_date class="form-control form-control-modern" %}
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">To Date</label>
+            {% render_field form.to_date class="form-control form-control-modern" %}
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">From Location</label>
+            {% render_field form.from_location class="form-control form-control-modern select2" value=from_location %}
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <label class="form-label font-weight-bold">To Location</label>
+            {% render_field form.to_location class="form-control form-control-modern select2" value=to_location %}
+        </div>
+
+        <div class="col-md-2 mb-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-block mr-1">
+                <i class="fas fa-filter mr-1"></i> Filter
+            </button>
+            <a href="{{ request.path }}" class="btn btn-outline-secondary">
+                <i class="fas fa-undo"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Modern Table Card -->
+<div class="modern-card">
+    <div class="table-responsive">
+        <table id="ref_no_pending_report_table" class="table modern-table table-hover display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    {% for h in headers %}
+                    <th>{{ h }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
 $(document).ready(function () {
+    $('.select2').select2({
+        width: '100%',
+        placeholder: 'Select...',
+        allowClear: true
+    });
 
-    $('#ref_no_pending_report_table').DataTable({
+    const table = $('#ref_no_pending_report_table').DataTable({
         serverSide: true,
         processing: true,
         ajax: {
@@ -105,111 +109,30 @@ $(document).ready(function () {
             }
         },
         scrollX: true,
-        dom: 'lBfrtip',
-
+        scrollY: "58vh",
+        scrollCollapse: true,
+        autoWidth: false,
+        dom: "<'row mb-2'<'col-sm-12 col-md-6 d-flex align-items-center'lB><'col-sm-12 col-md-6 d-flex justify-content-end'f>>" +
+             "<'row'<'col-sm-12'tr>>" +
+             "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
         lengthMenu: [
             [10, 25, 50, 100, -1],
             [10, 25, 50, 100, "All"]
         ],
-
         pageLength: 10,
-
         buttons: [
-            'copy',
-            'csv',
-
-            // =========================
-            // EXCEL EXPORT
-            // =========================
-            {
-                extend: 'excelHtml5',
-                text: 'Excel',
-                title: 'Ref No Pending Report',
-
-                customize: function (xlsx) {
-
-                    let sheet = xlsx.xl.worksheets['sheet1.xml'];
-                    let styles = xlsx.xl['styles.xml'];
-
-                    // FONT
-                    let fonts = $('fonts', styles);
-                    fonts.append(`
-                        <font>
-                            <sz val="11"/>
-                            <color rgb="FFFFFFFF"/>
-                            <name val="Calibri"/>
-                            <b/>
-                        </font>
-                    `);
-                    let fontId = fonts.children().length - 1;
-
-                    // FILL (BLUE)
-                    let fills = $('fills', styles);
-                    fills.append(`
-                        <fill>
-                            <patternFill patternType="solid">
-                                <fgColor rgb="FF0A3278"/>
-                                <bgColor indexed="64"/>
-                            </patternFill>
-                        </fill>
-                    `);
-                    let fillId = fills.children().length - 1;
-
-                    // STYLE
-                    let cellXfs = $('cellXfs', styles);
-                    cellXfs.append(`
-                        <xf xfId="0" fontId="${fontId}" fillId="${fillId}"
-                            borderId="0" applyFont="1" applyFill="1"/>
-                    `);
-                    let styleId = cellXfs.children().length - 1;
-
-                    // APPLY STYLE TO HEADER ROW
-                    $('row:eq(1) c', sheet).attr('s', styleId);
-                }
-            },
-
-            // =========================
-            // PDF EXPORT
-            // =========================
-            {
-                extend: 'pdfHtml5',
-                orientation: 'landscape',
-                pageSize: 'A4',
-                title: 'Ref No Pending Report',
-
-                customize: function (doc) {
-                    doc.styles.tableHeader.fillColor = '#0A3278';
-                    doc.styles.tableHeader.color = 'white';
-                    doc.styles.tableHeader.bold = true;
-                }
-            },
-
-            // =========================
-            // PRINT
-            // =========================
-            {
-                extend: 'print',
-                title: 'Ref No Pending Report',
-
-                customize: function (win) {
-                    $(win.document.body).find('thead th')
-                        .css('background-color', '#0A3278')
-                        .css('color', 'white')
-                        .css('font-weight', 'bold');
-                }
-            }
+            { extend: 'copy', className: 'btn btn-outline-secondary btn-sm mr-1' },
+            { extend: 'csv', className: 'btn btn-outline-secondary btn-sm mr-1' },
+            { extend: 'excelHtml5', className: 'btn btn-outline-success btn-sm mr-1', text: 'Excel', title: 'Ref No Pending Report' },
+            { extend: 'pdfHtml5', className: 'btn btn-outline-danger btn-sm mr-1', orientation: 'landscape', pageSize: 'A4', title: 'Ref No Pending Report' },
+            { extend: 'print', className: 'btn btn-outline-dark btn-sm', title: 'Ref No Pending Report' }
         ],
-
         order: [[0, 'asc']]
     });
 
-});
-
-    $('form').on('submit', function(e) {
-        e.preventDefault();
-        $('#ref_no_pending_report_table').DataTable().ajax.reload();
+    $(window).on('resize', function () {
+        table.columns.adjust();
     });
-
+});
 </script>
-
-{% endblock content %}
+{% endblock %}

@@ -269,7 +269,7 @@
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Special Sell</label>
-										{% render_field vehicle_allotment_form.va_special_sale id="va_special_sale" class="form-control form-control-modern" %}
+										{% render_field vehicle_allotment_form.va_special_sale id="va_special_sale" class="form-control form-control-modern disable_a_href" readonly="readonly" %}
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Profit %</label>
@@ -544,10 +544,11 @@ function setDateFieldValue(selector, value) {
 			// ✅ Own/Attached
 			$('#va_vehiclenumber_mkt').addClass('disable_a_href').prop('disabled', true);
 			$('#va_vendor').addClass('disable_a_href').prop('disabled', true);
-			$('#va_specialbuy').removeClass('disable_a_href').prop('disabled', false);
+			$('#va_specialbuy').addClass('disable_a_href').prop('disabled', true).val('');
 			$('#va_sale').addClass('disable_a_href').prop('disabled', true);
-			$('#va_standardbuy').addClass('disable_a_href'); //  Restore Green
+			$('#va_standardbuy').addClass('disable_a_href').prop('disabled', true).val('');
 			$('#vendor_required_star').hide();
+			calculateProfit();
 		}
 	}
 </script>
@@ -601,6 +602,15 @@ function setDateFieldValue(selector, value) {
 </script>
 <script>
 function loadVendorBuyRate(isAutoLoad=false) {
+    var vehicleSource = $('#va_vehiclesource').val();
+    if (vehicleSource != 3) {
+        if (!isAutoLoad) {
+            $("#va_standardbuy").val("");
+            $("#va_specialbuy").val("");
+            calculateProfit();
+        }
+        return;
+    }
     var vehicleRequested = $('#va_vehicletype').val();
     var vehiclePlaced = $('#va_vehicletype_placed').val();
     var selectedType = $('#chk_requested').is(':checked') ? vehicleRequested : vehiclePlaced;
@@ -681,6 +691,7 @@ function loadVendorSaleRate(checkboxId, isAutoLoad=false) {
         success: function(data) {
         var x = {{ enquiry_num_id }};
             const saleRate = data.sale_rate;
+            const specialSaleRate = data.special_sale_rate || data.sale_rate;
             if (!saleRate || saleRate === "0") {
                 if (!isAutoLoad) {
                     alert("Rate not assigned for this customer");
@@ -692,7 +703,7 @@ function loadVendorSaleRate(checkboxId, isAutoLoad=false) {
                     $('#va_sale').val(saleRate);
                 }
                 if (!isAutoLoad || !$('#va_special_sale').val() || $('#va_special_sale').val() === "0" || $('#va_special_sale').val() === "0.0") {
-                    $('#va_special_sale').val(saleRate);
+                    $('#va_special_sale').val(specialSaleRate);
                 }
             }
             calculateProfit();
@@ -855,6 +866,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 alert("Vendor Name is required for Market Vehicles.");
                 return false;
             }
+        }   // ← close vehicleSource === 3 block
         // -----------------------------------------
         // 5️⃣ DOUBLE SUBMIT PREVENTION
         // -----------------------------------------
@@ -1234,7 +1246,7 @@ $("#va_vehiclesource").on("change", function () {
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label>Special Sell</label>
-                                <input type="number" name="va_special_sale" id="modal_va_special_sale" class="form-control" value="{{ va.va_special_sale }}">
+                                <input type="number" name="va_special_sale" id="modal_va_special_sale" class="form-control disable_a_href" readonly value="{{ va.va_special_sale }}">
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -1433,6 +1445,7 @@ $("#va_vehiclesource").on("change", function () {
         var checkboxId = $('#modal_chk_requested').is(':checked') ? 'chk_requested' : 'chk_placed';
         var selectedType = $('#modal_chk_requested').is(':checked') ? vehicleRequested : vehiclePlaced;
         var vendorId = $('#modal_va_vendor').val();
+        var vehicleSource = $('#modal_va_vehiclesource').val();
 
         if (selectedType) {
             // Fetch Sale Rate
@@ -1447,13 +1460,16 @@ $("#va_vehiclesource").on("change", function () {
                 success: function(data) {
                     if (data.sale_rate) {
                         $('#modal_va_sale').val(data.sale_rate);
+                        if (data.special_sale_rate) {
+                            $('#modal_va_special_sale').val(data.special_sale_rate);
+                        }
                         calculateModalProfit();
                     }
                 }
             });
 
-            // Fetch Buy Rates
-            if (vendorId) {
+            // Fetch Buy Rates only for Market (3)
+            if (vehicleSource == 3 && vendorId) {
                 $.ajax({
                     url: '{% url "get_vendor_buy_rate" %}',
                     data: {
@@ -1468,8 +1484,8 @@ $("#va_vehiclesource").on("change", function () {
                     }
                 });
             } else {
-                $("#modal_va_standardbuy").val(0);
-                $("#modal_va_specialbuy").val(0);
+                $("#modal_va_standardbuy").val("");
+                $("#modal_va_specialbuy").val("");
                 calculateModalProfit();
             }
         }
@@ -1482,7 +1498,7 @@ $("#va_vehiclesource").on("change", function () {
         loadModalRates();
     });
 
-    $("#modal_va_vehicletype, #modal_va_vehicletype_placed, #modal_va_vendor").on("change", loadModalRates);
+    $("#modal_va_vehicletype, #modal_va_vehicletype_placed, #modal_va_vendor, #modal_va_vehiclesource").on("change", loadModalRates);
 
     $("#modal_va_vehiclesource").on("change", function() {
         var source = $(this).val();
@@ -1491,13 +1507,17 @@ $("#va_vehiclesource").on("change", function () {
             $("#modal_va_vendor").prop('required', true).prop('disabled', false).removeClass('disable_a_href').trigger('change.select2');
             $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
         } else if (source == "2") { // Attached
-            $("#modal_vendor_star").show();
-            $("#modal_va_vendor").prop('required', false).prop('disabled', false).removeClass('disable_a_href').trigger('change.select2');
-            $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
+            $("#modal_vendor_star").hide();
+            $("#modal_va_vendor").prop('required', false).prop('disabled', true).addClass('disable_a_href').trigger('change.select2');
+            $("#modal_va_specialbuy").prop('disabled', true).addClass('disable_a_href').val("");
+            $("#modal_va_standardbuy").val("");
+            calculateModalProfit();
         } else { // Own
             $("#modal_vendor_star").hide();
             $("#modal_va_vendor").val("").prop('required', false).prop('disabled', true).addClass('disable_a_href').trigger('change.select2');
-            $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
+            $("#modal_va_specialbuy").prop('disabled', true).addClass('disable_a_href').val("");
+            $("#modal_va_standardbuy").val("");
+            calculateModalProfit();
         }
     });
 

@@ -27,6 +27,40 @@ from ..sub_models.vehicle_replacement_status_mod import Replacementstatus
 
 VEHICLE_NUMBER_REGEX = re.compile(r'^[A-Za-z]{2}[0-9]{2}[A-Za-z]{0,2}[0-9]{4}$')
 
+def sync_allotment_rate_to_trips(allotment_obj):
+    """
+    Syncs the effective sell rate from Vehicle_allotmentInfo to related TripdetailInfo records.
+    Special Sell takes priority if > 0, otherwise falls back to Standard Sell.
+    """
+    if not allotment_obj or not allotment_obj.va_enquirynumber_id:
+        return
+
+    effective_rate = 0.0
+    if allotment_obj.va_special_sale is not None and float(allotment_obj.va_special_sale) > 0:
+        effective_rate = float(allotment_obj.va_special_sale)
+    elif allotment_obj.va_sale is not None and float(allotment_obj.va_sale) > 0:
+        effective_rate = float(allotment_obj.va_sale)
+
+    if effective_rate <= 0:
+        return
+
+    veh_no = ''
+    if allotment_obj.va_vehiclenumber and getattr(allotment_obj.va_vehiclenumber, 'vm_registrationnumber', None):
+        veh_no = allotment_obj.va_vehiclenumber.vm_registrationnumber.strip()
+    elif allotment_obj.va_vehiclenumber_mkt:
+        veh_no = allotment_obj.va_vehiclenumber_mkt.strip()
+
+    trips = TripdetailInfo.objects.filter(tr_enquirynumber_id=allotment_obj.va_enquirynumber_id)
+    if veh_no:
+        clean_veh = veh_no.replace(' ', '').replace('-', '').upper()
+        for t in trips:
+            t_veh = (t.tr_vehiclenumber or '').replace(' ', '').replace('-', '').upper()
+            if not t_veh or t_veh == clean_veh or trips.count() == 1:
+                t.tc_tripcost = effective_rate
+                t.save(update_fields=['tc_tripcost'])
+    else:
+        trips.update(tc_tripcost=effective_rate)
+
 def validate_vehicle_number_format(veh_num):
     """
     Validates strict vehicle registration format:
@@ -470,6 +504,11 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
 
+            # Reset Buy Rates for non-market vehicles (Own & Attached)
+            if vehicle_source in [1, 2]:
+                obj.va_standardbuy = None
+                obj.va_specialbuy = None
+
             # Auto-fill va_sale from RtratemasterInfo if left blank or 0
             if not obj.va_sale or float(obj.va_sale) == 0:
                 enquiry_obj = obj.va_enquirynumber
@@ -492,6 +531,11 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                     if rm and rm.ro_rate:
                         obj.va_sale = float(rm.ro_rate)
 
+            # Auto-fill va_special_sale from va_sale if left blank or 0
+            if not obj.va_special_sale or float(obj.va_special_sale) == 0:
+                if obj.va_sale and float(obj.va_sale) > 0:
+                    obj.va_special_sale = float(obj.va_sale)
+
             # Check for rate approval
             if float(obj.va_special_sale or 0) < float(obj.va_sale or 0):
                 rate_approval_status = Replacementstatus.objects.filter(id=6).first()
@@ -500,6 +544,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             
             # ✅ SAVE
             obj.save()
+            sync_allotment_rate_to_trips(obj)
 
 
             # ===== AUTO EMAIL TRIGGER (only if Submit & Email clicked) =====
@@ -620,6 +665,16 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
 
+            # Reset Buy Rates for non-market vehicles (Own & Attached)
+            if vehicle_source in [1, 2]:
+                obj.va_standardbuy = None
+                obj.va_specialbuy = None
+
+            # Auto-fill va_special_sale from va_sale if left blank or 0
+            if not obj.va_special_sale or float(obj.va_special_sale) == 0:
+                if obj.va_sale and float(obj.va_sale) > 0:
+                    obj.va_special_sale = float(obj.va_sale)
+
             # Check for rate approval
             if float(obj.va_special_sale or 0) < float(obj.va_sale or 0):
                 rate_approval_status = Replacementstatus.objects.filter(id=6).first()
@@ -627,6 +682,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                     obj.va_status = rate_approval_status
 
             obj.save()
+            sync_allotment_rate_to_trips(obj)
 
             # Touch the parent enquiry's updated timestamp
             from django.utils import timezone
@@ -1240,9 +1296,12 @@ def get_vendor_sale_rate(request):
     vehicle_category_id = request.GET.get('vehicle_category_id')
 
     if not enquiry_id:
-        return JsonResponse({'sale_rate': "0"})
+        return JsonResponse({'sale_rate': "0", 'special_sale_rate': "0"})
 
-    enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)
+    try:
+        enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)
+    except EnquirynoteInfo.DoesNotExist:
+        return JsonResponse({'sale_rate': "0", 'special_sale_rate': "0"})
 
     # Determine which vehicle type to use based on the checkbox
     if checkbox_id == 'chk_requested':
@@ -1250,10 +1309,10 @@ def get_vendor_sale_rate(request):
     elif checkbox_id == 'chk_placed':
         vehicle_id = vehicle_placed
     else:
-        return JsonResponse({'sale_rate': "0"})
+        vehicle_id = vehicle_requested or vehicle_placed or request.GET.get('vehicle_id') or request.GET.get('vehicle_type_id')
 
     if not vehicle_id:
-        return JsonResponse({'sale_rate': "0"})
+        return JsonResponse({'sale_rate': "0", 'special_sale_rate': "0"})
 
     # Filter for the matching vendor rate
     filter_kwargs = {
@@ -1270,10 +1329,33 @@ def get_vendor_sale_rate(request):
         filter_kwargs['ro_vehiclecategory_id'] = vehicle_category_id
 
     rate = RtratemasterInfo.objects.filter(**filter_kwargs).first()
+    master_rate = str(rate.ro_rate) if rate else "0"
 
-    sale_rate = str(rate.ro_rate) if rate else "0"
+    # Check if Enquirynotevehicle has standard sell & special sale configured for this enquiry
+    env_match = Enquirynotevehicle.objects.filter(
+        env_enquirynumber=enquiry,
+        env_vehicletype_id=vehicle_id
+    )
+    if vehicle_category_id:
+        env_match_cat = env_match.filter(env_vehiclecategory_id=vehicle_category_id)
+        if env_match_cat.exists():
+            env_match = env_match_cat
+    env_obj = env_match.first()
 
-    return JsonResponse({'sale_rate': sale_rate})
+    if env_obj and env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+        sale_rate = str(env_obj.env_sale)
+    else:
+        sale_rate = master_rate
+
+    if env_obj and env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
+        special_sale_rate = str(env_obj.env_special_sale)
+    else:
+        special_sale_rate = sale_rate
+
+    return JsonResponse({
+        'sale_rate': sale_rate,
+        'special_sale_rate': special_sale_rate
+    })
 
 
 @login_required(login_url='login_page')
@@ -1574,8 +1656,9 @@ def vehicle_allotment_replace(request, allotment_id):
                     va_updated_by_id=request.session.get('ses_userID'),
                     va_vendor_id=new_vendor_id if new_vendor_id else old_va.va_vendor_id,
                     va_sale=get_decimal(request.POST.get('va_sale'), old_va.va_sale),
-                    va_standardbuy=get_decimal(request.POST.get('va_standardbuy'), old_va.va_standardbuy),
-                    va_specialbuy=get_decimal(request.POST.get('va_specialbuy'), old_va.va_specialbuy),
+                    va_special_sale=get_decimal(request.POST.get('va_special_sale'), getattr(old_va, 'va_special_sale', None)) or get_decimal(request.POST.get('va_sale'), old_va.va_sale),
+                    va_standardbuy=get_decimal(request.POST.get('va_standardbuy'), old_va.va_standardbuy) if new_source_id == 3 else None,
+                    va_specialbuy=get_decimal(request.POST.get('va_specialbuy'), old_va.va_specialbuy) if new_source_id == 3 else None,
                     va_profit_percentage=get_decimal(request.POST.get('va_profit_percentage'), old_va.va_profit_percentage)
                 )
 
@@ -1601,6 +1684,7 @@ def vehicle_allotment_replace(request, allotment_id):
                 replacement_note = f"\n[AUTO-NOTE] Vehicle replaced from {old_vehicle_num} to {new_vehicle_num} on {timezone.now().strftime('%Y-%m-%d %H:%M')} due to: {reason}"
                 active_trip.tr_remarks = (current_remarks + replacement_note)[:250]
                 active_trip.save()
+            sync_allotment_rate_to_trips(new_va)
 
             # Step 4: Update Consignment Details if exists & check for E-Way Bill numbers
             consignments = ConsignmentdetailInfo.objects.filter(

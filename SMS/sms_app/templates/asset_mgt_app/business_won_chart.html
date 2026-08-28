@@ -1,150 +1,220 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
-{% load crispy_forms_tags %}
+{% block title %}Business Won / Lost Report{% endblock %}
 {% block content %}
 
-<body>
-<div class="col-md-1">
-    <a href="{% url 'sales_reports' %}" class="btn btn-primary">
-        <i class="fas fa-arrow-left"></i> Back
-    </a>
-</div>
-<br>
-<h2 style="color:black;">Business Won/Loss </h2>
-<hr>
+<style>
+    .column-filter {
+        width: 100%;
+        min-width: 90px;
+        height: 32px;
+        font-size: 0.8rem;
+        padding: 2px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--border-light, #cbd5e1);
+        background: var(--bg-card, #ffffff);
+        color: var(--text-main, #1e293b);
+    }
+    [data-theme="dark"] .column-filter {
+        background: #1e293b;
+        color: #f8fafc;
+        border-color: #334155;
+    }
+</style>
 
-<div class="container-fluid">
-    <div class="row align-items-center">
-        <div class="col-md-2">
-            <label for="salesperson-filter"><b>Salesperson:</b></label>
-            <select id="salesperson-filter" name="salesperson" class="form-control box-shadow rounded">
-                <option value="">All</option>
-                {% for salesperson in salespersons %}
-                <option value="{{ salesperson }}" {% if salesperson == selected_salesperson %} selected {% endif %}>
-                    {{ salesperson }}
-                </option>
-                {% endfor %}
-            </select>
+<div class="container-fluid px-3 py-2">
+    <!-- ══ Header Banner ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+            <i class="fas fa-trophy mr-2"></i> Business Won / Lost Report
+        </h3>
+        <div>
+            <a href="{% url 'sales_reports' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Reports
+            </a>
         </div>
-        <div class="col-md-2">
-            <label for="company-filter"><b>Company:</b></label>
-            <select id="company-filter" name="company" class="form-control box-shadow rounded">
-                <option value="">All</option>
-                {% for company in company_name %}
-                <option value="{{ company }}" {% if company == selected_company %} selected {% endif %}>
-                    {{ company }}
-                </option>
-                {% endfor %}
-            </select>
+    </div>
+
+    <!-- ══ Filter Section ══ -->
+    <div class="modern-card p-3 mb-3">
+        <div class="form-section p-3 mb-0">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="form-section-title mb-0" style="font-size: 0.85rem; letter-spacing: 1px;">
+                    <i class="fas fa-filter text-primary mr-1"></i> Filter Business Won / Lost
+                </div>
+                <button id="clear-filters" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.8rem; height: 32px; min-height: 32px;">
+                    <i class="fas fa-undo mr-1"></i> Clear Filters
+                </button>
+            </div>
+            <div class="row align-items-end">
+                <div class="col-12 col-sm-6 col-md-4 col-lg-2 mb-2">
+                    <label class="form-label-modern font-weight-bold" for="salesperson-filter">Salesperson</label>
+                    <select id="salesperson-filter" name="salesperson" class="form-control form-control-modern">
+                        <option value="">All Salespersons</option>
+                        {% for salesperson in salespersons %}
+                        <option value="{{ salesperson }}" {% if salesperson == selected_salesperson %} selected {% endif %}>
+                            {{ salesperson }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 col-lg-2 mb-2">
+                    <label class="form-label-modern font-weight-bold" for="company-filter">Company</label>
+                    <select id="company-filter" name="company" class="form-control form-control-modern">
+                        <option value="">All Companies</option>
+                        {% for company in company_name %}
+                        <option value="{{ company }}" {% if company == selected_company %} selected {% endif %}>
+                            {{ company }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 col-lg-2 mb-2">
+                    <label class="form-label-modern font-weight-bold" for="branch-filter">Branch</label>
+                    <select id="branch-filter" name="branch" class="form-control form-control-modern">
+                        <option value="">All Branches</option>
+                        {% for branch in branch_name %}
+                        <option value="{{ branch }}" {% if branch == selected_branch %} selected {% endif %}>
+                            {{ branch }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
+                    <label class="form-label-modern font-weight-bold" for="from-date">From Date</label>
+                    <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control form-control-modern">
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-2">
+                    <label class="form-label-modern font-weight-bold" for="to-date">To Date</label>
+                    <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control form-control-modern">
+                </div>
+            </div>
         </div>
-        <div class="col-md-2">
-            <label for="branch-filter"><b>Branch:</b></label>
-            <select id="branch-filter" name="branch" class="form-control box-shadow rounded">
-                <option value="">All</option>
-                {% for branch in branch_name %}
-                <option value="{{ branch }}" {% if branch == selected_branch %} selected {% endif %}>
-                    {{ branch }}
-                </option>
-                {% endfor %}
-            </select>
+    </div>
+
+    <!-- ══ Analytics Charts (3 Columns) ══ -->
+    <div class="row mb-3">
+        <!-- 1. Bar Chart -->
+        <div class="col-12 col-lg-4 mb-3">
+            <div class="modern-card p-3 h-100 d-flex flex-column">
+                <h6 class="font-weight-bold text-primary mb-2">
+                    <i class="fas fa-chart-bar mr-1"></i> Customer Won / Lost
+                </h6>
+                <div style="height: 240px; position: relative; width: 100%;">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
         </div>
-        <div class="col-md-2">
-            <label for="from-date"><b>From:</b></label>
-            <input type="date" id="from-date" name="from_date" value="{{ from_date }}" class="form-control box-shadow">
+
+        <!-- 2. Donut Chart (Yes / No %) -->
+        <div class="col-12 col-lg-4 mb-3">
+            <div class="modern-card p-3 h-100 d-flex flex-column">
+                <h6 class="font-weight-bold text-info mb-2">
+                    <i class="fas fa-chart-pie mr-1"></i> Business Won / Lost %
+                </h6>
+                <div style="height: 240px; position: relative; width: 100%;">
+                    <canvas id="donutChart"></canvas>
+                </div>
+            </div>
         </div>
-        <div class="col-md-3">
-            <label for="to-date"><b>To:</b></label>
-            <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
+
+        <!-- 3. Donut Chart (Salesperson Won) -->
+        <div class="col-12 col-lg-4 mb-3">
+            <div class="modern-card p-3 h-100 d-flex flex-column">
+                <h6 class="font-weight-bold text-success mb-2">
+                    <i class="fas fa-trophy mr-1"></i> Business Won by Rep
+                </h6>
+                <div style="height: 240px; position: relative; width: 100%;">
+                    <canvas id="donutChartSalesperson"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Table Container ══ -->
+    <div class="modern-card p-3 mb-4">
+        <div class="table-container-modern">
+            <table id="business_won_loss_table" class="table table-striped table-bordered modern-table w-100">
+                <thead>
+                    <tr class="filter">
+                        <th><input type="text" placeholder="Salesperson" class="column-filter"></th>
+                        <th><input type="text" placeholder="Customer Name" class="column-filter"></th>
+                        <th><input type="text" placeholder="New Customer" class="column-filter"></th>
+                        <th><input type="text" placeholder="Yes/No" class="column-filter"></th>
+                        <th><input type="text" placeholder="Remarks" class="column-filter"></th>
+                    </tr>
+                    <tr style="white-space: nowrap;">
+                        <th>Salesperson Name</th>
+                        <th>Customer Name</th>
+                        <th>New Customer Name</th>
+                        <th class="text-center" style="width: 120px;">Business Won?</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in table_data %}
+                    <tr>
+                        <td class="font-weight-bold text-primary">{{ entry.s_updated_by__first_name|default:"-" }}</td>
+                        <td>{{ entry.s_customer_name__cu_nameshort|default:"-" }}</td>
+                        <td>{{ entry.s_customer_new_name|default:"-" }}</td>
+                        <td class="text-center">
+                            {% if entry.s_bus_won_not__yesno_name == 'Yes' %}
+                            <span class="badge badge-pill badge-success px-3 py-1" style="font-size:0.82rem;"><i class="fas fa-check mr-1"></i> Yes</span>
+                            {% elif entry.s_bus_won_not__yesno_name == 'No' %}
+                            <span class="badge badge-pill badge-danger px-3 py-1" style="font-size:0.82rem;"><i class="fas fa-times mr-1"></i> No</span>
+                            {% else %}
+                            <span class="badge badge-pill badge-secondary px-2 py-1">{{ entry.s_bus_won_not__yesno_name|default:"-" }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ entry.s_noreason_cp__pc_no_name|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
-<br>
-<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px;">
-    <!-- Bar Chart -->
-    <div style="flex: 1; margin-right: 10px;">
-        <h3 style="color:black;">Customer wise Business Won/Loss</h3>
-        <canvas id="barChart" width="80" height="80" class="bg-white box-shadow rounded"></canvas>
-    </div>
-
-
-    <div style="flex: 1; margin-right: 10px;">
-        <h3 style="color:black;"> Business Won/Loss%</h3>
-        <canvas id="donutChart" width="80" height="80" class="bg-white box-shadow rounded"></canvas>
-    </div>
-
-    <div style="flex: 1;">
-
-        <h3 style="color:black;"> Business Won</h3>
-        <canvas id="donutChartSalesperson" width="200" height="200" class="bg-white box-shadow rounded"></canvas>
-    </div>
-</div>
-<br>
-<hr>
-<button id="clear-filters" class="btn btn-secondary mb-3">Clear All Filters</button>
-<table id="business_won_loss_table" class="table table-striped table-bordered">
-
-    <thead class="thead-dark">
-    <tr class="filter">
-        <th><input type="text" placeholder="Salesperson" class="column-filter"></th>
-        <th><input type="text" placeholder="Customer Name" class="column-filter"></th>
-        <th><input type="text" placeholder="New Customer" class="column-filter"></th>
-        <th><input type="text" placeholder=" Yes/No" class="column-filter"></th>
-        <th><input type="text" placeholder="Remarks" class="column-filter"></th>
-    </tr>
-    <tr>
-        <th>Salesperson Name</th>
-        <th>Customer Name</th>
-        <th>New Customer Name</th>
-        <th>Business Won?</th>
-        <th>Remarks</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for entry in table_data %}
-    <tr>
-        <td>{{ entry.s_updated_by__first_name }}</td>
-        <td>{{ entry.s_customer_name__cu_nameshort }}</td>
-        <td>{{ entry.s_customer_new_name }}</td>
-        <td style="background-color: {% if entry.s_bus_won_not__yesno_name == 'Yes' %}green{% elif entry.s_bus_won_not__yesno_name == 'No' %}red{% else %}transparent{% endif %};">
-            {{ entry.s_bus_won_not__yesno_name }}
-        </td>
-        <td>{{ entry.s_noreason_cp__pc_no_name }}</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
-
 
 <script>
     $(document).ready(function() {
-    var table = $('#business_won_loss_table').DataTable({  // Add var table
-        scrollY: "600px",
-        scrollCollapse: true,
-        order: [[1, 'desc']],
-        dom: 'lBfrtip',
-        buttons: ['copy', 'csv', 'excel', 'print']
+        var table = $('#business_won_loss_table').DataTable({
+            scrollY: "500px",
+            scrollX: true,
+            scrollCollapse: true,
+            order: [[0, 'asc']],
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print']
+        });
+
+        $('.filter .column-filter').on('keyup change', function () {
+            var columnIndex = $(this).closest('th').index();
+            table.column(columnIndex).search(this.value).draw();
+        });
+
+        $('#clear-filters').on('click', function () {
+            $('.filter .column-filter').val('');
+            table.columns().search('').draw();
+
+            $('#salesperson-filter').val('');
+            $('#company-filter').val('');
+            $('#branch-filter').val('');
+            $('#from-date').val('');
+            $('#to-date').val('');
+            updateFilters();
+        });
+
+        $('#business_won_loss_table thead input').on('click', function (e) {
+            e.stopPropagation();
+        });
     });
 
-    $('.filter .column-filter').on('keyup change', function () {
-        var columnIndex = $(this).closest('th').index();
-        table.column(columnIndex).search(this.value).draw();
-    });
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const textColor = isDark ? '#f8fafc' : '#1e293b';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
 
-    $('#clear-filters').on('click', function () {
-        $('.filter .column-filter').val('');
-        table.columns().search('').draw();
-    });
-
-    $('#business_won_loss_table thead input').on('click', function (e) {
-        e.stopPropagation();
-    });
-});
-
-</script>
-<script>
     // Bar Chart
     const barChartCtx = document.getElementById('barChart').getContext('2d');
-    const barChart = new Chart(barChartCtx, {
+    new Chart(barChartCtx, {
         type: 'bar',
         data: {
             labels: {{ yesno_labels|safe }},
@@ -152,214 +222,157 @@
                 {
                     label: 'New Customers',
                     data: {{ new_customer_counts|safe }},
-                    backgroundColor: 'rgba(243, 165, 78, 0.8)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1
+                    backgroundColor: 'rgba(245, 158, 11, 0.75)',
+                    borderColor: '#f59e0b',
+                    borderWidth: 1.5,
+                    borderRadius: 6
                 },
                 {
                     label: 'Existing Customers',
                     data: {{ existing_customer_counts|safe }},
-                    backgroundColor: 'rgba(132, 129, 126, 0.8)',
-                    borderWidth: 1
+                    backgroundColor: 'rgba(99, 102, 241, 0.75)',
+                    borderColor: '#6366f1',
+                    borderWidth: 1.5,
+                    borderRadius: 6
                 }
             ]
         },
-         options: {
-    responsive: true,
-    plugins: {
-        legend: {
-            ...commonChartStyles.legendStyle
-        },
-        datalabels: {
-            anchor: 'end',
-            align: 'top',
-            formatter: (value) => value,
-            font: {
-                size: 12,
-                weight: 'bold',
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: textColor, font: { weight: 'bold' } } },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    formatter: (value) => value,
+                    font: { size: 10, weight: 'bold' },
+                    color: textColor
+                }
             },
-            color: '#000',
-            backgroundColor: 'rgba(235, 233, 234, 0.8)',
-            borderRadius: 4,
-            padding: 5,
-            borderWidth: 1,
-            borderColor: '#000',
-        }
-    },
-    scales: {
-        y: {
-            beginAtZero: true,
-            suggestedMax: Math.max(...{{ new_customer_counts|safe }}, ...{{ existing_customer_counts|safe }}) * 1.2,
-        }
-    }
-},
-plugins: [ChartDataLabels]
-});
-
-
-const donutChartCtx = document.getElementById('donutChart').getContext('2d');
-const donutChart = new Chart(donutChartCtx, {
-    type: 'doughnut',
-    data: {
-        labels: {{ donut_chart_labels|safe }}, // Labels like "New Customers (Yes)"
-        datasets: [
-            {
-                data: {{ donut_chart_data|safe }}, // Data for new and existing customers grouped by Yes/No
-                 backgroundColor: [
-            '#FF6384', '#36A2EB', '#FFCE56', '#9966FF', '#4CE9B9'
-
-        ], // Unique colors for each salesperson
-        borderColor: '#ffffff',
-        borderWidth: 1,
-            }
-        ]
-    },
-    options: {
-    responsive: true,
-    plugins: {
-        legend: {
-            position: 'right',
-            labels: {
-                font: { size: 14, weight: 'bold' },
-                color: '#000',
-    },
-
-        },
-        tooltip: {
-            callbacks: {
-                label: function(tooltipItem) {
-                    return tooltipItem.label + ': ' + tooltipItem.raw;
+            scales: {
+                x: { ticks: { color: textColor, font: { weight: 'bold' } }, grid: { display: false } },
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: textColor },
+                    grid: { color: gridColor },
+                    suggestedMax: Math.max(...{{ new_customer_counts|safe }}, ...{{ existing_customer_counts|safe }}) * 1.2
                 }
             }
         },
-        datalabels: {
-            formatter: (value, ctx) => {
-                let total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                let percentage = ((value / total) * 100).toFixed(1) + "%";
-                return percentage;
-            },
-            color: '#000',
-            font: {
-                size: 12,
-                weight: 'bold',
+        plugins: typeof ChartDataLabels !== 'undefined' ? [ChartDataLabels] : []
+    });
+
+    // Donut Chart 1
+    const donutChartCtx = document.getElementById('donutChart').getContext('2d');
+    new Chart(donutChartCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ donut_chart_labels|safe }},
+            datasets: [{
+                data: {{ donut_chart_data|safe }},
+                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                borderColor: isDark ? '#1e293b' : '#ffffff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: textColor, font: { size: 11, weight: 'bold' }, boxWidth: 12 }
+                },
+                datalabels: {
+                    formatter: (value, ctx) => {
+                        let total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        return total ? ((value / total) * 100).toFixed(0) + "%" : "0%";
+                    },
+                    color: '#ffffff',
+                    font: { size: 11, weight: 'bold' }
+                }
             }
-        }
-    }
-},
-plugins: [ChartDataLabels]
-});
-     // Donut Chart for Salesperson-wise Business Won
-const donutChartSalespersonCtx = document.getElementById('donutChartSalesperson').getContext('2d');
-const donutChartSalesperson = new Chart(donutChartSalespersonCtx, {
-    type: 'doughnut',
-    data: {
-        labels: {{ salesperson_labels|safe }},
-        datasets: [
-            {
+        },
+        plugins: typeof ChartDataLabels !== 'undefined' ? [ChartDataLabels] : []
+    });
+
+    // Donut Chart 2
+    const donutChartSalespersonCtx = document.getElementById('donutChartSalesperson').getContext('2d');
+    new Chart(donutChartSalespersonCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ salesperson_labels|safe }},
+            datasets: [{
                 data: {{ salesperson_counts|safe }},
-                 backgroundColor: [
-            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#4CE9B9',
-            '#FF9F40', '#BFBFBF', '#AA64B1', '#8AC926', '#FF595E', '#FFA500', '#4C2447'
-        ],
-        borderColor: '#ffffff',
-        borderWidth: 1,
-            }
-        ]
-    },
-    options: {
-    responsive: true,
-    plugins: {
-        legend: {
-            position: 'right',
-            labels: {
-                   font: { size: 14, weight: 'bold' },
-                   color: '#000',
-    },
+                backgroundColor: ['#38bdf8', '#34d399', '#fbbf24', '#f87171', '#a78bfa', '#f472b6', '#fb923c', '#94a3b8'],
+                borderColor: isDark ? '#1e293b' : '#ffffff',
+                borderWidth: 2
+            }]
         },
-        tooltip: {
-            callbacks: {
-                label: function(tooltipItem) {
-                    return tooltipItem.label + ': ' + tooltipItem.raw;
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: textColor, font: { size: 11, weight: 'bold' }, boxWidth: 12 }
+                },
+                datalabels: {
+                    formatter: (value, ctx) => {
+                        let total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        return total ? ((value / total) * 100).toFixed(0) + "%" : "0%";
+                    },
+                    color: '#ffffff',
+                    font: { size: 11, weight: 'bold' }
                 }
             }
         },
-        datalabels: {
-            formatter: (value, ctx) => {
-                let total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                let percentage = ((value / total) * 100).toFixed(1) + "%";
-                return percentage;
-            },
-            color: '#000',
-            font: {
-                size: 12,
-                weight: 'bold',
-            }
-        }
-    }
-},
-plugins: [ChartDataLabels]
-});
+        plugins: typeof ChartDataLabels !== 'undefined' ? [ChartDataLabels] : []
+    });
 
-
-     document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
-     document.getElementById('from-date').addEventListener('change', updateFilters);
+    document.getElementById('salesperson-filter').addEventListener('change', updateFilters);
+    document.getElementById('from-date').addEventListener('change', updateFilters);
     document.getElementById('to-date').addEventListener('change', updateFilters);
-        document.getElementById('company-filter').addEventListener('change', updateFilters);
-document.getElementById('branch-filter').addEventListener('change', updateFilters);
+    document.getElementById('company-filter').addEventListener('change', updateFilters);
+    document.getElementById('branch-filter').addEventListener('change', updateFilters);
 
-function updateFilters() {
-const salesperson = document.getElementById('salesperson-filter').value;
-const fromDate = document.getElementById('from-date').value;
-const toDate = document.getElementById('to-date').value;
-const company = document.getElementById('company-filter').value;
-const branch = document.getElementById('branch-filter').value;
-const url = new URL(window.location.href);
+    function updateFilters() {
+        const salesperson = document.getElementById('salesperson-filter').value;
+        const fromDate = document.getElementById('from-date').value;
+        const toDate = document.getElementById('to-date').value;
+        const company = document.getElementById('company-filter').value;
+        const branch = document.getElementById('branch-filter').value;
+        const url = new URL(window.location.href);
 
-if (salesperson) {
-    url.searchParams.set('salesperson', salesperson);
-} else {
-    url.searchParams.delete('salesperson');
-}
+        if (salesperson) {
+            url.searchParams.set('salesperson', salesperson);
+        } else {
+            url.searchParams.delete('salesperson');
+        }
+        if (fromDate) {
+            url.searchParams.set('from_date', fromDate);
+        } else {
+            url.searchParams.delete('from_date');
+        }
+        if (toDate) {
+            url.searchParams.set('to_date', toDate);
+        } else {
+            url.searchParams.delete('to_date');
+        }
+        if (company) {
+            url.searchParams.set('company', company);
+        } else {
+            url.searchParams.delete('company');
+        }
+        if (branch) {
+            url.searchParams.set('branch', branch);
+        } else {
+            url.searchParams.delete('branch');
+        }
 
-if (fromDate) {
-    url.searchParams.set('from_date', fromDate);
-} else {
-    url.searchParams.delete('from_date');
-}
-
-if (toDate) {
-    url.searchParams.set('to_date', toDate);
-} else {
-    url.searchParams.delete('to_date');
-}
-
-if (company) {
-    url.searchParams.set('company', company);
-} else {
-    url.searchParams.delete('company');
-}
-
-if (branch) {
-    url.searchParams.set('branch', branch);
-} else {
-    url.searchParams.delete('branch');
-}
-
-window.location.href = url.toString();
-}
-
+        window.location.href = url.toString();
+    }
 </script>
 
-</body>
-<style>
-    .column-filter {
-        width: 120px;
-        height: 30px;
-        font-size: 12px;
-    }
-
-    #clear-filters {
-        float: right;
-    }
-</style>
-{% endblock %}
+{% endblock content %}

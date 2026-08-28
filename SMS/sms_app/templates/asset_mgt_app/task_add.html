@@ -1,93 +1,159 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+
 {% block content %}
-<form method="POST" action="" id="task_add" >
-	{% csrf_token %}
-	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Task</h3></div>
-					<div class="card-body bg-light" >
-						<div id='task_add_page' class="row">
-							<div class="col">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Application</span>
-									</div>
-									{% render_field form.application id="application" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Main Task</span>
-									</div>
-									{% render_field form.main_task id="main_task" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Sub Task</span>
-									</div>
-									{% render_field form.sub_task id="sub_task" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Tag Requirement ID</span>
-									</div>
-									{% render_field form.t_requirement_id id="t_requirement_id" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Requirement Description</span>
-									</div>
-									{% render_field form.t_requirement_description id="t_requirement_description" class="form-control disable_a_href" %}
-								</div>
-								{% render_field form.task_id id="task_id" hidden="True" class="form-control" %}
-								{% render_field form.t_updated_by id="t_updated_by" hidden="True" class="form-control" %}
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-1"></div>
-							<div class="col-10">
-								<div class="message text-center">
-									{% for message in messages %}
-									<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-									{% endfor %}
-								</div>
-							</div>
-							<div class="col-1"></div>
-						</div>
-						<button id='submit_btn' type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'task_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-3"></div>
-	</div>
-</form>
+<div class="container-fluid px-3 py-1 task-add-page-wrapper">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 text-white" style="font-size: 1.35rem; font-weight: 700; letter-spacing: 0.5px;">
+            <i class="fas fa-tasks mr-2"></i> Task – Add / Update
+        </h3>
+        <div>
+            <a href="{% url 'task_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.88rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ Form Card (Full Width & Fits Screen) ══ -->
+    <div class="modern-card p-3 mb-0 w-100 task-card-container">
+        <div class="form-section-title mb-2">
+            <i class="fas fa-edit text-primary"></i> Task Information
+        </div>
+
+        <form method="POST" action="" id="task_add">
+            {% csrf_token %}
+            <div id="task_add_page">
+                <!-- Row 1: Application & Tag Requirement ID -->
+                <div class="row">
+                    <div class="col-lg-6 pr-lg-3">
+                        <div class="form-group-modern mb-2">
+                            <label for="application" class="form-label-modern font-weight-bold">Application</label>
+                            {% render_field form.application id="application" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                    <div class="col-lg-6 pl-lg-3">
+                        <div class="form-group-modern mb-2">
+                            <label for="t_requirement_id" class="form-label-modern font-weight-bold">Tag Requirement ID</label>
+                            {% render_field form.t_requirement_id id="t_requirement_id" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Main Task & Sub Task opposite to each other -->
+                <div class="row">
+                    <div class="col-lg-6 pr-lg-3">
+                        <div class="form-group-modern mb-2">
+                            <label for="main_task" class="form-label-modern font-weight-bold">Main Task</label>
+                            {% render_field form.main_task id="main_task" class="form-control form-control-modern task-textarea" rows="3" %}
+                        </div>
+                    </div>
+                    <div class="col-lg-6 pl-lg-3">
+                        <div class="form-group-modern mb-2">
+                            <label for="sub_task" class="form-label-modern font-weight-bold">Sub Task</label>
+                            {% render_field form.sub_task id="sub_task" class="form-control form-control-modern task-textarea" rows="3" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 3: Requirement Description below Main & Sub Task across full width -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group-modern mb-2">
+                            <label for="t_requirement_description" class="form-label-modern font-weight-bold">Requirement Description</label>
+                            {% render_field form.t_requirement_description id="t_requirement_description" class="form-control form-control-modern task-textarea disable_a_href" rows="3" %}
+                        </div>
+                    </div>
+                </div>
+
+                {% render_field form.task_id id="task_id" hidden="True" class="form-control" %}
+                {% render_field form.t_updated_by id="t_updated_by" hidden="True" class="form-control" %}
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="message text-center my-2">
+                {% for message in messages %}
+                <a class="{% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'info' %}alert-info{% else %}{{ message.tags }}{% endif %}">{{ message }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between align-items-center pt-2 mt-1" style="border-top: 1px solid var(--border-light, #e2e8f0);">
+                <button id="submit_btn" type="submit" class="btn-modern btn-submit py-1 px-4">
+                    <i class="fas fa-check mr-1"></i> Submit
+                </button>
+                <a href="{% url 'task_list' %}" class="btn-modern btn-cancel py-1 px-4" style="text-decoration:none;">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .task-card-container {
+        border-radius: 16px !important;
+        padding: 0.85rem 1.4rem !important;
+        margin-bottom: 0 !important;
+    }
+    .task-add-page-wrapper .form-group-modern {
+        margin-bottom: 0.45rem !important;
+    }
+    .task-add-page-wrapper .form-label-modern {
+        font-size: 0.76rem !important;
+        margin-bottom: 2px !important;
+        letter-spacing: 0.6px !important;
+    }
+    .task-add-page-wrapper input.form-control-modern,
+    .task-add-page-wrapper select.form-control-modern {
+        height: 32px !important;
+        min-height: 32px !important;
+        font-size: 0.84rem !important;
+        padding: 3px 8px !important;
+        border-radius: 8px !important;
+    }
+    .task-add-page-wrapper textarea.task-textarea {
+        font-size: 0.84rem !important;
+        padding: 6px 10px !important;
+        border-radius: 8px !important;
+        line-height: 1.4 !important;
+        height: 80px !important;
+        min-height: 80px !important;
+        resize: vertical;
+    }
+    #t_requirement_description {
+        height: 75px !important;
+        min-height: 75px !important;
+    .task-add-page-wrapper .form-section-title {
+        font-size: 0.82rem !important;
+        margin-bottom: 0.45rem !important;
+        letter-spacing: 1px !important;
+    }
+    .task-add-page-wrapper .btn-modern {
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0.25rem 1.4rem !important;
+        font-size: 0.84rem !important;
+        border-radius: 10px !important;
+    }
+</style>
+
 <script>
-	$(document).ready(function() {
+    $(document).ready(function() {
         document.getElementById("t_updated_by").value ='{{user_id}}';
         var requirement_status ='{{requirement_status}}';
-		if (requirement_status == 5)
-		{
-			$("#task_add_page").addClass('disable_a_href');
-			$("#submit_btn").addClass('disable_a_href');
-		}
-		else
-		{
-			$("#task_add_page").removeClass('disable_a_href');
-			$("#submit_btn").removeClass('disable_a_href');
-		}
+        if (requirement_status == 5) {
+            $("#task_add_page").addClass('disable_a_href');
+            $("#submit_btn").addClass('disable_a_href');
+        } else {
+            $("#task_add_page").removeClass('disable_a_href');
+            $("#submit_btn").removeClass('disable_a_href');
+        }
+    });
 
-        });
-</script>
-
-<script>
-	$('#t_requirement_id').on('change', function() {
+    $('#t_requirement_id').on('change', function() {
         var requirementID = $(this).val();
         if(requirementID) {
             $.ajax({
