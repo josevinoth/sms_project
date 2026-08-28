@@ -6,6 +6,7 @@ from sms_app.sub_models.packing_jobs_mod import Packingjobs
 from sms_app.sub_models.pk_quality_check_mod import PkQualityCheck
 from sms_app.sub_models.pk_delivery_challan_mod import Pkdeliverychallan
 from sms_app.sub_models.pk_gate_pass_returnable_mod import PackingGateReturn
+from sms_app.sub_models.pk_manpower_consumption_mod import PkManpowerConsumption
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -33,23 +34,28 @@ def pk_production_dashboard(request):
     for job in costing_jobs:
         job_no = job.cs_job_no.strip() if job.cs_job_no else ''
 
-        # Get or create a status record for this job_no (auto-seed with Pending)
+        # Get or create a status record for this job_no (auto-seed with Started as requested)
         if job_no not in status_map:
             status_tracker = Packingjobs.objects.create(
                 pj_job_no=job_no,
                 pj_customer=job.cs_customer_name.cu_name if job.cs_customer_name else job.cs_customer_new_name or '',
                 pj_pack_type=job.cs_pack_type or 'In-House',
-                pj_production_completed_flag='Pending',
+                pj_production_completed_flag='Started',
                 pj_material_returned_flag='Pending',
                 pj_qc_completed_flag='Pending',
             )
         else:
             status_tracker = status_map[job_no]
+            # Automatically start production for older pending jobs
+            if status_tracker.pj_production_completed_flag == 'Pending':
+                status_tracker.pj_production_completed_flag = 'Started'
+                status_tracker.save()
 
         # Find QC, DC, or GP records for PDF links
         qc_record = PkQualityCheck.objects.filter(qc_job_no=job_no).first()
         dc_record = Pkdeliverychallan.objects.filter(dc_customer_po=job.cs_customer_po, dc_assessment_num=job.cs_assessment_num).first()
         gp_record = PackingGateReturn.objects.filter(gp_job_no=job_no).first()
+        manpower_count = PkManpowerConsumption.objects.filter(mc_job_no__iexact=job_no).count()
 
         dashboard_rows.append({
             'costing': job,
@@ -57,6 +63,7 @@ def pk_production_dashboard(request):
             'qc_record': qc_record,
             'dc_record': dc_record,
             'gp_record': gp_record,
+            'manpower_count': manpower_count,
             'is_onsite': 'On-Site' in status_tracker.pj_pack_type if status_tracker.pj_pack_type else False
         })
 

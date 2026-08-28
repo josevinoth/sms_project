@@ -39,6 +39,11 @@ def login_page(request):
                     'units': units,
                 })
 
+        # Check for approval status
+        if getattr(user_ext, 'is_approved', True) is False or user_obj.is_active is False:
+            messages.error(request, "Your account registration is pending Admin review and approval. Please contact your administrator.")
+            return render(request, "asset_mgt_app/login.html", {'username': username})
+
         user = authenticate(request, username=username, password=password)
         if user is not None:
             print(f"[login_page] Authentication successful for user '{username}'")  # Debug print

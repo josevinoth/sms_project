@@ -14,6 +14,7 @@ from.sub_models.prespective_customer_no_info_mod import Prespectivec_customer_No
 from.sub_models.business_won_no_info_mod import Business_won_NoInfo
 from.sub_models.faciltiy_requirement_mod import faciltiyrequirementinfo
 from.sub_models.manpower_requirement_mod import manpowerrequirementinfo
+from .sub_models.pk_manpower_consumption_mod import PkManpowerConsumption
 from .sub_models.cus_new_exist_mod import Cusnewexist
 from .sub_models.industry_type_mod import Industrytype
 from .sub_models.wh_requirement_mod import Whrequirementinfo
@@ -269,3 +270,5 @@ from .sub_models.prime_trip_mod import PrimeTripInfo
 from .sub_models.credit_ledger_mod import CreditLedgerInfo
 from .sub_models.tms_petty_cash_mod import TMSPettyCashInfo
 from .sub_models.tms_expense_type_mod import TMSExpenseTypeInfo
+from .sub_models.rtratemaster_history_mod import RtratemasterHistory
+
