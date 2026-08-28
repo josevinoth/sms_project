@@ -140,11 +140,12 @@
                 enquiry_id: enquiryId,
                 checkbox_id: 'chk_requested',
                 vehicle_requested: vehicleTypeId,
-                vehicle_category_id: vehicleCategoryId
+                vehicle_category_id: vehicleCategoryId,
+                fetch_master_rate: '1'
             },
             dataType: 'json',
             success: function(data) {
-                const saleRate = data.sale_rate;
+                const saleRate = data.master_rate || data.sale_rate;
                 if (!saleRate || saleRate === "0" || saleRate === "0.0") {
                     if (!isAutoLoad) {
                         alert("Rate not assigned for this customer");
@@ -152,9 +153,7 @@
                         $('#env_special_sale').val('');
                     }
                 } else {
-                    if (!isAutoLoad || !$('#env_sale').val() || $('#env_sale').val() === "0" || $('#env_sale').val() === "0.0") {
-                        $('#env_sale').val(saleRate);
-                    }
+                    $('#env_sale').val(saleRate);
                     if (!isAutoLoad || !$('#env_special_sale').val() || $('#env_special_sale').val() === "0" || $('#env_special_sale').val() === "0.0") {
                         $('#env_special_sale').val(saleRate);
                     }

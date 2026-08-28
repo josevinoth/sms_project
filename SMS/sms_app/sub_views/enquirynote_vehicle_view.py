@@ -2,10 +2,37 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from ..forms import EnquirynotevehicleForm, EnquirynoteaddForm
-from ..models import Costdescription, Enquirynotevehicle, EnquirynoteInfo, Vehicle_allotmentInfo
+from ..models import Costdescription, Enquirynotevehicle, EnquirynoteInfo, Vehicle_allotmentInfo, RtratemasterInfo
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib import messages
+
+
+def _get_master_sale_rate(enquiry, vehicletype_id, vehiclecategory_id=None):
+    """Fetches the standard sale rate from Route Rate Master (RtratemasterInfo)."""
+    if not enquiry or not vehicletype_id:
+        return None
+    filter_kwargs = {
+        'ro_customer': enquiry.en_customername,
+        'ro_fromlocation': enquiry.en_fromlocaion,
+        'ro_tolocation': enquiry.en_tolocation,
+        'ro_vehicletype_id': vehicletype_id,
+        'ro_touchpoint': enquiry.en_touchpoint,
+        'ro_touchpoint2': enquiry.en_touchpoint2,
+        'ro_touchpoint3': enquiry.en_touchpoint3,
+        'ro_touchpoint4': enquiry.en_touchpoint4,
+    }
+    if enquiry.en_customerdepartment:
+        filter_kwargs['ro_customerdepartment'] = enquiry.en_customerdepartment
+    if vehiclecategory_id:
+        filter_kwargs['ro_vehiclecategory_id'] = vehiclecategory_id
+
+    rate = RtratemasterInfo.objects.filter(**filter_kwargs).first()
+    if not rate and enquiry.en_customerdepartment:
+        filter_without_dept = {k: v for k, v in filter_kwargs.items() if k != 'ro_customerdepartment'}
+        rate = RtratemasterInfo.objects.filter(**filter_without_dept).first()
+
+    return float(rate.ro_rate) if rate and rate.ro_rate else None
 
 
 def _get_allotted_count(enquiry_id, vehicletype_id):
@@ -100,6 +127,11 @@ def enquirynotevehicle_add(request, enquirynotevehicle_id=0):
             form = EnquirynotevehicleForm(request.POST)
             if form.is_valid():
                 instance = form.save(commit=False)
+                # Auto-fetch master rate for env_sale from Route Rate Master
+                master_rate = _get_master_sale_rate(enquirynote, instance.env_vehicletype_id, instance.env_vehiclecategory_id)
+                if master_rate is not None:
+                    instance.env_sale = master_rate
+
                 # Auto-fill env_special_sale from env_sale if left blank or 0
                 if not instance.env_special_sale or float(instance.env_special_sale) == 0:
                     if instance.env_sale and float(instance.env_sale) > 0:
@@ -121,6 +153,8 @@ def enquirynotevehicle_add(request, enquirynotevehicle_id=0):
             try:
                 enquirynotevehicle = Enquirynotevehicle.objects.get(pk=enquirynotevehicle_id)
                 old_vehicletype_id = enquirynotevehicle.env_vehicletype_id
+                old_sale = enquirynotevehicle.env_sale
+                old_special_sale = enquirynotevehicle.env_special_sale
                 form = EnquirynotevehicleForm(request.POST, instance=enquirynotevehicle)
                 if form.is_valid():
                     updated_instance = form.save(commit=False)
@@ -150,10 +184,18 @@ def enquirynotevehicle_add(request, enquirynotevehicle_id=0):
                         )
                         return redirect(request.META.get('HTTP_REFERER', f'/SMS/enquirynote_update/{enquiry_num_id}'))
 
-                    # Auto-fill env_special_sale from env_sale if left blank or 0
-                    if not updated_instance.env_special_sale or float(updated_instance.env_special_sale) == 0:
-                        if updated_instance.env_sale and float(updated_instance.env_sale) > 0:
-                            updated_instance.env_special_sale = float(updated_instance.env_sale)
+                    # Auto-sync env_sale with latest Route Rate Master rate
+                    master_rate = _get_master_sale_rate(enquirynote, new_vehicletype_id, updated_instance.env_vehiclecategory_id)
+                    if master_rate is not None:
+                        updated_instance.env_sale = master_rate
+                        # If special sale was left blank/0 or matched previous standard sale, sync it too
+                        if not updated_instance.env_special_sale or float(updated_instance.env_special_sale) == 0 or (old_sale is not None and old_special_sale == old_sale):
+                            updated_instance.env_special_sale = master_rate
+                    else:
+                        # Auto-fill env_special_sale from env_sale if left blank or 0
+                        if not updated_instance.env_special_sale or float(updated_instance.env_special_sale) == 0:
+                            if updated_instance.env_sale and float(updated_instance.env_sale) > 0:
+                                updated_instance.env_special_sale = float(updated_instance.env_sale)
 
                     updated_instance.save()
                     form.save_m2m()

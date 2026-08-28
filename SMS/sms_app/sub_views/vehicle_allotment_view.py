@@ -1325,11 +1325,18 @@ def get_vendor_sale_rate(request):
         'ro_touchpoint3': enquiry.en_touchpoint3,
         'ro_touchpoint4': enquiry.en_touchpoint4
     }
+    if enquiry.en_customerdepartment:
+        filter_kwargs['ro_customerdepartment'] = enquiry.en_customerdepartment
     if vehicle_category_id:
         filter_kwargs['ro_vehiclecategory_id'] = vehicle_category_id
 
     rate = RtratemasterInfo.objects.filter(**filter_kwargs).first()
-    master_rate = str(rate.ro_rate) if rate else "0"
+    if not rate and enquiry.en_customerdepartment:
+        filter_without_dept = {k: v for k, v in filter_kwargs.items() if k != 'ro_customerdepartment'}
+        rate = RtratemasterInfo.objects.filter(**filter_without_dept).first()
+    master_rate = str(rate.ro_rate) if rate and rate.ro_rate else "0"
+
+    fetch_master_rate = request.GET.get('fetch_master_rate') == '1'
 
     # Check if Enquirynotevehicle has standard sell & special sale configured for this enquiry
     env_match = Enquirynotevehicle.objects.filter(
@@ -1342,17 +1349,18 @@ def get_vendor_sale_rate(request):
             env_match = env_match_cat
     env_obj = env_match.first()
 
-    if env_obj and env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+    if not fetch_master_rate and env_obj and env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
         sale_rate = str(env_obj.env_sale)
     else:
         sale_rate = master_rate
 
-    if env_obj and env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
+    if not fetch_master_rate and env_obj and env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
         special_sale_rate = str(env_obj.env_special_sale)
     else:
         special_sale_rate = sale_rate
 
     return JsonResponse({
+        'master_rate': master_rate,
         'sale_rate': sale_rate,
         'special_sale_rate': special_sale_rate
     })
