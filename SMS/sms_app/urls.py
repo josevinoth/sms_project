@@ -102,7 +102,8 @@ urlpatterns = [
     path('service_insert', views.service_add, name='service_insert'),  # Add service
     path('service_update/<int:service_id>/', views.service_add, name='service_update'),  # Update service
     path('service_delete/<int:service_id>/', views.service_delete, name='service_delete'),  # Delete service
-    path('goods_list/', views.goods_list, name='goods_list'),  # List goods,
+    path('goods_list/', views.goods_list, name='goods_list'),
+    # path('goods_list_ajax/', views.goods_list_ajax, name='goods_list_ajax'),  # List goods,
     path('goods_insert', views.goods_add, name='goods_insert'),  # Add goods
     path('goods_update/<int:goods_id>/', views.goods_add, name='goods_update'),  # Update goods
     path('goods_delete/<int:goods_id>/', views.goods_delete, name='goods_delete'),  # Delete goods
@@ -134,11 +135,14 @@ urlpatterns = [
     path('damage_insert', views.damage_add, name='damage_insert'),  # Add damage
     path('damage_update/<int:damage_id>/', views.damage_add, name='damage_update'),  # Update damage
     path('damage_delete/<int:damage_id>/', views.damage_delete, name='damage_delete'),  # Delete damage
-    path('damagereport_list/', views.damagereport_list, name='damagereport_list'),  # List damagereport,
+    path('damagereport_list/', views.damagereport_list, name='damagereport_list'),
+    path('damagereport_list_ajax/', views.damagereport_list_ajax, name='damagereport_list_ajax'),
     path('damagereport_insert', views.damagereport_add, name='damagereport_insert'),  # Add damagereport
     path('damagereport_update/<int:damagereport_id>/', views.damagereport_add, name='damagereport_update'),
+    path('damagereport_delete/<int:damagereport_id>/', views.damagereport_delete, name='damagereport_delete'),
     # Update damagereport
     path('locationmaster_list/', views.locationmaster_list, name='locationmaster_list'),  # List locationmaster,
+    path('locationmaster_list_ajax/', views.locationmaster_list_ajax, name='locationmaster_list_ajax'),
     path('locationmaster_insert', views.locationmaster_add, name='locationmaster_insert'),  # Add locationmaster
     path('locationmaster_update/<int:locationmaster_id>/', views.locationmaster_add, name='locationmaster_update'),
     # Update locationmaster
@@ -167,6 +171,7 @@ urlpatterns = [
     path('customertype_delete/<int:customertype_id>/', views.customertype_delete, name='customertype_delete'),
     # Delete customertype
     path('whratemaster_list/', views.whratemaster_list, name='whratemaster_list'),  # List whratemaster,
+    path('whratemaster_list_ajax/', views.whratemaster_list_ajax, name='whratemaster_list_ajax'),
     path('whratemaster_insert', views.whratemaster_add, name='whratemaster_insert'),  # Add whratemaster
     path('whratemaster_update/<int:whratemaster_id>/', views.whratemaster_add, name='whratemaster_update'),
     # Update whratemaster
@@ -197,7 +202,8 @@ urlpatterns = [
         name='password_reset_complete',
     ),
     path('gatein_insert', views.gatein_add, name='gatein_insert'),  # gatein add
-    path('gatein_list/', views.gatein_list, name='gatein_list'),  # List gatein,
+    path('gatein_list/', views.gatein_list, name='gatein_list'),
+    path('gatein_list_ajax/', views.gatein_list_ajax, name='gatein_list_ajax'),  # List gatein,
     path('gatein_update/<int:gatein_id>/', views.gatein_add, name='gatein_update'),  # Update gatein
     path('gatein_delete/<int:gatein_id>/', views.gatein_delete, name='gatein_delete'),  # Delete gatein
     path('gatein_pre_insert', views.gatein_pre_add, name='gatein_pre_insert'),  # gatein Pre add
@@ -380,7 +386,8 @@ urlpatterns = [
     path('warehouseout_cancel/', views.warehouseout_cancel, name='warehouseout_cancel'),  # Cancel warehouseout
     path('storage_list/', views.storage_list, name='storage_list'),  # List Storage
     path('load_customer_model/', views.load_customer_model, name='load_customer_model'),
-    path('dispatch_list/', views.dispatch_list, name='dispatch_list'),  # List currencytype ,
+    path('dispatch_list/', views.dispatch_list, name='dispatch_list'),
+    path('dispatch_list_ajax/', views.dispatch_list_ajax, name='dispatch_list_ajax'),  # List currencytype ,
     path('dispatch_insert', views.dispatch_add, name='dispatch_insert'),  # Add dispatch
     path('dispatch_update/<int:dispatch_id>/', views.dispatch_add, name='dispatch_update'),  # Update dispatch
     path('dispatch_delete/<int:dispatch_id>/', views.dispatch_delete, name='dispatch_delete'),  # Delete dispatch
@@ -662,7 +669,8 @@ urlpatterns = [
     path('wh_e_way_bill_list/', views.wh_e_way_bill_list, name='wh_e_way_bill_list'),  # wh_e_way_bill_list
     path('edit_wh_e_way_bill_list/<int:wh_job_id>', views.edit_wh_e_way_bill_list, name='edit_wh_e_way_bill_list'),
     # edit_wh_e_way_bill_list
-    path('pregateintruck_list/', views.pregateintruck_list, name='pregateintruck_list'),  # List pregateintruck
+    path('pregateintruck_list/', views.pregateintruck_list, name='pregateintruck_list'),
+    path('pregateintruck_list_ajax/', views.pregateintruck_list_ajax, name='pregateintruck_list_ajax'),  # List pregateintruck
     path('pregateintruck_insert/', views.pregateintruck_add, name='pregateintruck_insert'),  # Add pregateintruck
     path('pregateintruck_update/<int:pregateintruck_id>', views.pregateintruck_add, name='pregateintruck_update'),
     # update pregateintruck
@@ -980,7 +988,7 @@ urlpatterns = [
          name='wrong_labelling_delete'),
     path('add_transporter/', views.add_transporter, name='add_transporter'),
     path('pregatein_gatepass/<int:pregatein_id>/', views.pregatein_gatepass_pdf, name='pregatein_gatepass_pdf'),
-    path('pregatein_gatepass_pdf_download/<int:pregatein_id>/', views.pregatein_gatepass_pdf_download,
+        path('pregatein_gatepass_pdf_download/<int:pregatein_id>/', views.pregatein_gatepass_pdf_download,
          name='pregatein_gatepass_pdf_download'),
     path('get_units/', views.get_units_for_user, name='get_units_for_user'),
     path("get_shippers/", views.get_shippers, name="get_shippers"),

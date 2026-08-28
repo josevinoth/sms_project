@@ -374,3 +374,99 @@ def truck_send_email_view(request, pre_gatein_id=None):
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
+
+from django.http import JsonResponse
+from django.db.models import Q
+from django.core.paginator import Paginator
+from sms_app.models import Pregateintruckinfo
+
+def pregateintruck_list_ajax(request):
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '')
+
+    pregatein_number = request.GET.get('pregatein_number', '')
+
+    queryset = Pregateintruckinfo.objects.select_related(
+        'pregatein_number', 'pregatein_updated_by'
+    ).all()
+
+    if pregatein_number:
+        queryset = queryset.filter(pregatein_number__gatein_pre_number__icontains=pregatein_number)
+
+    if search_value:
+        queryset = queryset.filter(
+            Q(id__icontains=search_value) |
+            Q(pregatein_number__gatein_pre_number__icontains=search_value) |
+            Q(pregatein_truck_number__icontains=search_value) |
+            Q(pregatein_driver__icontains=search_value)
+        )
+
+    total_records = Pregateintruckinfo.objects.count()
+    filtered_records = queryset.count()
+
+    # Ordering
+    order_column_index = request.GET.get('order[0][column]', 1)
+    order_dir = request.GET.get('order[0][dir]', 'desc')
+
+    columns = [
+        'id', 'id', 'pregatein_created_at', 'pregatein_number__gatein_pre_number',
+        'pregatein_number__gatein_pre_branch__loc_name',
+        'pregatein_truck_number', 'pregatein_driver', 'pregatein_updated_at',
+        'pregatein_updated_by__username'
+    ]
+
+    if int(order_column_index) < len(columns):
+        order_by = columns[int(order_column_index)]
+        if order_by:
+            if order_dir == 'desc':
+                order_by = f"-{order_by}"
+            queryset = queryset.order_by(order_by)
+    else:
+        queryset = queryset.order_by('-id')
+
+    data = []
+    for item in queryset[start:start+length]:
+        edit_btn = f'''
+        <div class="d-flex justify-content-center gap-1">
+            <a class="btn btn-submit" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; color: white;" href="/SMS/pregateintruck_update/{item.id}" >
+                <i class="far fa-edit"></i>
+            </a>
+        </div>'''
+        delete_btn = f'''
+        <div class="d-flex justify-content-center gap-1">
+            <form action="/SMS/pregateintruck_delete/{item.id}" method="post" onclick="return confirm('Are you sure?');">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{request.META.get('CSRF_COOKIE', '')}">
+                <button type="submit" class="btn shadow-sm" style="background: white; color: #dc3545; border-radius: 20px; border: 1px solid #f1f3f5; padding: 6px 16px; display: inline-flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </form>
+        </div>'''
+
+        pre_gatein = item.pregatein_number  # FK to Gatein_pre_info
+        branch_name = ''
+        if pre_gatein and hasattr(pre_gatein, 'gatein_pre_branch') and pre_gatein.gatein_pre_branch:
+            branch_name = str(pre_gatein.gatein_pre_branch.loc_name)
+
+        data.append({
+            'edit': edit_btn,
+            'id': item.id,
+            'gatein_pre_created_at': item.pregatein_created_at.strftime('%d-%m-%Y %I:%M %p') if item.pregatein_created_at else '',
+            'gatein_pre_number': str(pre_gatein.gatein_pre_number) if pre_gatein else '',
+            'gatein_pre_branch': branch_name,
+            'gatein_pre_truck_number': item.pregatein_truck_number or '',
+            'gatein_pre_driver_name': item.pregatein_driver or '',
+            'gatein_pre_updated_at': item.pregatein_updated_at.strftime('%d-%m-%Y %I:%M %p') if item.pregatein_updated_at else '',
+            'gatein_pre_updated_by': str(item.pregatein_updated_by) if item.pregatein_updated_by else '',
+            'delete': delete_btn
+        })
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': total_records,
+        'recordsFiltered': filtered_records,
+        'data': data
+    })
+
+

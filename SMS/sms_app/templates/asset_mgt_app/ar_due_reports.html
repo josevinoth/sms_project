@@ -50,6 +50,15 @@
             <input type="date" id="to-date" name="to_date" value="{{ to_date }}" class="form-control box-shadow">
         </div>
 
+        <div class="col-md-2 d-flex align-items-end mt-3 mt-md-0">
+            <button type="button" onclick="updateFilters()" class="btn btn-primary mr-2" style="border-radius:8px; padding:0.4rem 1.2rem; font-weight:600;">
+                <i class="fas fa-filter mr-1"></i> FILTER
+            </button>
+            <button type="button" onclick="clearFilters()" class="btn btn-secondary" style="border-radius:8px; padding:0.4rem 1.2rem; font-weight:600;">
+                <i class="fas fa-times mr-1"></i> CLEAR
+            </button>
+        </div>
+
     </div>
 </div>
 <br>
@@ -229,6 +238,14 @@ function updateFilters() {
 
     console.log(url.toString());
     window.location.href = url.toString();
+}
+
+function clearFilters() {
+    document.getElementById('branch-filter').value = '';
+    if (document.getElementById('company-filter')) document.getElementById('company-filter').value = '';
+    document.getElementById('from-date').value = '';
+    document.getElementById('to-date').value = '';
+    updateFilters();
 }
 
 </script>

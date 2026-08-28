@@ -1,234 +1,282 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<div class="col-5 col-md-2 col-lg-1">
-	<a href="{% url 'search' %}" class="btn btn-primary btn-block">
-		<i class="fas fa-arrow-left"></i> Back
-	</a>
+<style>
+/* Make inputs compact only on this page to fit in single screen view */
+.bvm-modern-layout .form-control-modern {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0.1rem 0.5rem !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+}
+/* Textarea should NOT have fixed height - override the 32px above */
+.bvm-modern-layout textarea.form-control-modern {
+    height: auto !important;
+    min-height: 80px !important;
+    padding: 0.5rem !important;
+    resize: vertical;
+}
+.bvm-modern-layout .select2-container--default .select2-selection--single {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+    display: flex;
+    align-items: center;
+}
+.bvm-modern-layout .select2-selection__rendered {
+    line-height: normal !important;
+    padding-left: 0.5rem !important;
+    margin: 0 !important;
+}
+.bvm-modern-layout .select2-selection__arrow {
+    height: 30px !important;
+}
+.bvm-modern-layout .field-label {
+    margin-bottom: 2px !important;
+    font-size: 0.75rem !important;
+}
+.bvm-modern-layout .form-group-modern {
+    margin-bottom: 8px !important;
+}
+
+.bvm-modern-layout .form-control-modern[readonly],
+.bvm-modern-layout .form-control-modern:disabled {
+    background-color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+/* ── Dark Theme Overrides ── */
+[data-theme="dark"] .bvm-modern-layout .form-control-modern {
+    color: #ffffff !important;
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+}
+[data-theme="dark"] .bvm-modern-layout .field-label,
+[data-theme="dark"] .bvm-modern-layout .form-label-modern,
+[data-theme="dark"] .bvm-modern-layout label {
+    color: #e2e8f0 !important;
+}
+[data-theme="dark"] .bvm-modern-layout .select2-selection__rendered {
+    color: #ffffff !important;
+}
+[data-theme="dark"] .bvm-modern-layout .form-control-modern[readonly],
+[data-theme="dark"] .bvm-modern-layout .form-control-modern:disabled {
+    background-color: var(--input-disabled-bg) !important;
+    color: var(--input-disabled-text) !important;
+    opacity: 1 !important;
+}
+[data-theme="dark"] .bvm-modern-layout .form-section-modern,
+[data-theme="dark"] .bvm-modern-layout .card,
+[data-theme="dark"] .bvm-modern-layout .bg-white {
+    background: var(--bg-card) !important;
+    border-color: var(--border-light) !important;
+    color: var(--text-main) !important;
+}
+</style>
+
+<div class="container-fluid py-2 bvm-modern-layout">
+    <!-- Navigation Steps -->
+    <div class="nav-pills-modern d-flex flex-wrap justify-content-center mb-3">
+        {% if gatein_list %}
+            {% for gateininfo in gatein_list %}
+            <a id="gatein_btn" class="btn disable_a_href" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
+            {% endfor %}
+        {% else %}
+            <a id="gatein_btn1" class="btn disable_a_href" href="{% url 'gatein_insert' %}">Gate-In</a>
+        {% endif %}
+
+        {% if loadingbay_list %}
+            {% for loadingbayinfo in loadingbay_list %}
+            <a id="loadingbay_btn" class="btn disable_a_href" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
+            {% endfor %}
+        {% else %}
+            <a id="loadingbay_btn1" class="btn disable_a_href" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
+        {% endif %}
+
+        <a id="damagecheck_before_btn1" class="btn disable_a_href" href="{% url 'goods_insert' %}">Inspection</a>
+
+        {% if damagereport_list %}
+            {% for damagecheckinfo in damagereport_list %}
+            <a id="damage_after_btn" class="btn btn-warning active-step disable_a_href" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage/Deviation</a>
+            {% endfor %}
+        {% else %}
+            <a id="damage_after_btn1" class="btn btn-warning active-step disable_a_href" href="{% url 'damagereport_insert' %}">Damage/Deviation</a>
+        {% endif %}
+
+        <a id="warehousein_btn1" class="btn disable_a_href" href="{% url 'storage_list' %}">Storage</a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="modern-list-header mb-3" style="display: block !important; overflow: hidden;">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-6 text-center text-md-left mb-3 mb-md-0">
+                <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> Add/Update Damage Check/After
+                </h3>
+            </div>
+            <div class="col-12 col-md-6 d-flex justify-content-center justify-content-md-end">
+                <a href="{% url 'damage_report' %}" class="btn mr-2" style="background: #f59e0b; color: white; border: 2px solid white; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; padding:0.5rem 1.2rem; font-size:0.9rem; font-weight:600;" id="damage_report_btn">
+                    <i class="fas fa-download mr-1"></i> Damage/Deviation Report
+                </a>
+                <a href="{% url 'search' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; justify-content:center; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                    <i class="fas fa-arrow-left mr-1"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section mb-4" style="background-color: #ffffff;">
+        <form method="POST" action="" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+                <!-- Section 1 -->
+                <div class="col-12 col-lg-3 mb-4">
+                    <div class="form-section">
+                        <div class="form-section-title"><div><i class="fas fa-info-circle mr-2 text-primary"></i> SECTION 1</div></div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">WH Job Number</label>
+                            {% render_field damagereport_form.dam_wh_job_num id="dam_wh_job_num" value=request.session.ses_gatein_id_nam class="form-control form-control-modern" readonly=True %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">GRN Number</label>
+                            {% render_field damagereport_form.dam_GRN_num id="grn_num" class="form-control form-control-modern" readonly="True"%}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Deviation</label>
+                            {% render_field damagereport_form.dam_deviation1 id="dam_deviation1" class="form-control form-control-modern"%}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Damages?</label>
+                            {% render_field damagereport_form.dam_damages1 id="dam_damages1" class="form-control form-control-modern"%}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">No. of Pcs Damaged</label>
+                            {% render_field damagereport_form.dam_no_of_pcs_damaged id="dam_no_of_pcs_damaged" class="form-control form-control-modern" oninput="updateQuantities()" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2 -->
+                <div class="col-12 col-lg-3 mb-4">
+                    <div class="form-section">
+                        <div class="form-section-title"><div><i class="fas fa-list-alt mr-2 text-primary"></i> SECTION 2</div></div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Ratification Process?</label>
+                            {% render_field damagereport_form.dam_ratification_process id="dam_ratification_process" class="form-control form-control-modern"%}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Marks & Numbers?</label>
+                            {% render_field damagereport_form.dam_marks_numbers id="dam_marks_numbers" onchange="challan_damage_btn_active()" class="form-control form-control-modern"%}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Invoice Quantity</label>
+                            {% render_field damagereport_form.dam_invoice_qty id="dam_invoice_qty" class="form-control form-control-modern" readonly="True" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Check-in Quantity</label>
+                            {% render_field damagereport_form.dam_checkin_qty id="dam_checkin_qty" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Invoice Weight</label>
+                            {% render_field damagereport_form.dam_invoice_weight id="dam_invoice_weight" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Check-in Weight</label>
+                            {% render_field damagereport_form.dam_checkin_weight id="dam_checkin_weight" class="form-control form-control-modern" %}
+                        </div>
+                        <div style="display:none;">
+                            {% render_field damagereportimg_form.damimage_wh_job_num name="damimage_wh_job_num" id="damimage_wh_job_num" value=request.session.ses_gatein_id_nam class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3 -->
+                <div class="col-12 col-lg-3 mb-4">
+                    <div class="form-section">
+                        <div class="form-section-title"><div><i class="fas fa-images mr-2 text-primary"></i> SECTION 3</div></div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">OTL Pic</label>
+                            {% render_field damagereportimg_form.dam_OTL_pic class="form-control form-control-modern p-1" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Documents</label>
+                            {% render_field damagereportimg_form.dam_document name="dam_document" id="dam_document" class="form-control form-control-modern p-1" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Closed Door Pic</label>
+                            {% render_field damagereportimg_form.dam_closed_door_pic class="form-control form-control-modern p-1" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Opened Door Pic</label>
+                            {% render_field damagereportimg_form.dam_open_door_pic class="form-control form-control-modern p-1" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">50% offload Pics</label>
+                            {% render_field damagereportimg_form.dam_50_offload_pic class="form-control form-control-modern p-1" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Empty Pics</label>
+                            {% render_field damagereportimg_form.dam_empty_vehicle class="form-control form-control-modern p-1" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4 -->
+                <div class="col-12 col-lg-3 mb-4">
+                    <div class="form-section">
+                        <div class="form-section-title"><div><i class="fas fa-clipboard-check mr-2 text-primary"></i> SECTION 4</div></div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer Approval</label>
+                            {% render_field damagereportimg_form.dam_customer_approval name="dam_customer_approval" id="dam_customer_approval" class="form-control form-control-modern disable_a_href p-1" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Status</label>
+                            {% render_field damagereport_form.dam_status id="dam_status" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments & Submit -->
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <div class="form-section-modern p-4 border rounded shadow-sm bg-white">
+                        <div class="form-group-modern mb-0">
+                            <label class="form-label-modern">Comments</label>
+                            {% render_field damagereport_form.dam_comments id="dam_comments" class="form-control form-control-modern" rows="8" style="width:100%; resize:vertical;" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="text-center w-100">
+                        {% for message in messages %}
+                        <span class="shadow-sm px-4 py-2 d-inline-flex align-items-center" style="background-color: white; color: #000; border-radius: 8px; font-size: 1.3rem; font-weight: 600; border: 1px solid #e2e8f0;">
+                            <i class="fas fa-info-circle mr-2 text-dark" style="font-size: 1.4rem;"></i> {{ message }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-12 text-left">
+                    <button type="submit" class="btn btn-submit" style="min-width: 150px; font-weight: bold; border-radius: 8px;">
+                        <i class="fas fa-check mr-1"></i> Save
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
-<div class="row">
-	<div class="col-2"></div>
-	<div class="col-12 col-md-10 col-lg-12 p-2">
-		<div class="gap-2 d-md-flex justify-content-md-center flex-wrap">
-			{% if gatein_list %}
-			{% for gateininfo in gatein_list %}
-			<a class="btn  border border-dark mb-2" id="gatein_btn" href="{% url 'gatein_update' gateininfo.id %}">Gate-In</a>
-			{% endfor %}
-			{% else %}
-			<a class="btn  border border-dark mb-2" id="gatein_btn1" href="{% url 'gatein_insert' %}">Gate-In</a>
-			{% endif %}
-
-			{% if loadingbay_list %}
-			{% for loadingbayinfo in loadingbay_list %}
-			<a class="btn  border border-dark mb-2" id="loadingbay_btn" href="{% url 'loadingbay_update' loadingbayinfo.id %}">Goods Receipt</a>
-			{% endfor %}
-			{% else %}
-			<a class="btn  border border-dark mb-2" id="loadingbay_btn1" href="{% url 'loadingbay_insert' %}">Goods Receipt</a>
-			{% endif %}
-
-			<a class="btn  border border-dark mb-2 disable_a_href" id="damagecheck_after_btn" href="{% url 'goods_insert' %}">Inspection</a>
-
-			{% if damagereport_list %}
-			{% for damagecheckinfo in damagereport_list %}
-			<a class="btn  border focus border-dark mb-2" id="damagecheck_before_btn" href="{% url 'damagereport_update' damagecheckinfo.id %}">Damage/Deviation</a>
-			{% endfor %}
-			{% else %}
-			<a class="btn  border focus border-dark mb-2" id="damagecheck_before_btn1" href="{% url 'damagereport_insert' %}">Damage/Deviation</a>
-			{% endif %}
-
-			<!--		<a class="btn  border border-dark disable_a_href" id="warehousein_btn" href="{% url 'warehousein_insert' %}" >Warehouse In</a>-->
-			<a class="btn  border border-dark mb-2 disable_a_href" id="storage_btn" href="{% url 'storage_list' %}">Storage</a>
-		</div>
-	</div>
-	<div class="col-2"></div>
-</div>
-
-<hr>
-
-<form method="POST" action="" enctype="multipart/form-data">
-	{% csrf_token %}
-	<!--{{form.as_p}}-->
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="col-12 col-md-8 col-lg-12 card-header text-center">
-						<div class="card-header text-center">
-							<div class="row text-center text-md-left align-items-center">
-								<div class="col-12 col-md-5 offset-md-3 mb-2">
-									<h3>Add/Update Damage Check/Before</h3>
-								</div>
-								<div class="col-12 col-md-4">
-									<div class="row">
-										<!--										<div class="col-6">-->
-										<!--								<a href="#" class="btn btn-warning btn-block " id="delivery_chalan_btn">-->
-										<!--									Delivery Chelan          <i class="fa fa-download " aria-hidden="true"></i>-->
-										<!--								</a>-->
-										<!--							</div>-->
-										<div class="col-6">
-											<a href="{% url 'damage_report' %}" class="btn btn-warning btn-block " id="damage_report_btn">
-												Damage/Deviation Report          <i class="fa fa-download" aria-hidden="true"></i>
-											</a>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="card-body bg-light" >
-					<div class="row">
-						<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">WH Job Number</span>
-								</div>
-								{% render_field damagereport_form.dam_wh_job_num id="dam_wh_job_num" value=request.session.ses_gatein_id_nam class="form-control" readonly=True %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">GRN Number</span>
-								</div>
-								{% render_field damagereport_form.dam_GRN_num id="grn_num" class="form-control" readonly="True"%}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text"> Deviation </span>
-								</div>
-								{% render_field damagereport_form.dam_deviation1 id="dam_deviation1" class="form-control"%}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text"> Damages? </span>
-								</div>
-								{% render_field damagereport_form.dam_damages1 id="dam_damages1" class="form-control"%}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">No. of Pcs Damaged</span>
-								</div>
-								{% render_field damagereport_form.dam_no_of_pcs_damaged id="dam_no_of_pcs_damaged" class="form-control" oninput="updateQuantities()" %}
-							</div>
-						</div>
-						<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text" >Ratification Process?</span>
-								</div>
-								{% render_field damagereport_form.dam_ratification_process id="dam_ratification_process" class="form-control"%}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text" >Marks & Numbers?</span>
-								</div>
-								{% render_field damagereport_form.dam_marks_numbers id="dam_marks_numbers" onchange="challan_damage_btn_active()" class="form-control"%}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Invoice Quantity</span>
-								</div>
-								{% render_field damagereport_form.dam_invoice_qty id="dam_invoice_qty" class="form-control" readonly="True" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Check-in Quantity</span>
-								</div>
-								{% render_field damagereport_form.dam_checkin_qty id="dam_checkin_qty" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Invoice Weight</span>
-								</div>
-								{% render_field damagereport_form.dam_invoice_weight id="dam_invoice_weight" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Check-in Weight</span>
-								</div>
-								{% render_field damagereport_form.dam_checkin_weight id="dam_checkin_weight" class="form-control" %}
-							</div>
-							{% render_field damagereportimg_form.damimage_wh_job_num name="damimage_wh_job_num" id="damimage_wh_job_num" value=request.session.ses_gatein_id_nam class="form-control" %}
-
-						</div>
-						<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-							<div class="input-group input-group mb-3 bg-dark">
-								<div class="input-group-prepend">
-									<span class="input-group-text">OTL Pic</span>
-								</div>
-								{% render_field damagereportimg_form.dam_OTL_pic class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3 bg-dark block">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Documents</span>
-								</div>
-								{% render_field damagereportimg_form.dam_document name="dam_document" id="dam_document" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3 bg-dark block">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Closed Door Pic</span>
-								</div>
-								{% render_field damagereportimg_form.dam_closed_door_pic class="form-control" %}
-							</div>
-
-							<div class="input-group input-group-sm mb-3 bg-dark block">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Opened Door Pic</span>
-								</div>
-								{% render_field damagereportimg_form.dam_open_door_pic class="form-control"%}
-							</div>
-							<div class="input-group input-group-sm mb-3 bg-dark block">
-								<div class="input-group-prepend">
-									<span class="input-group-text">50% offload Pics</span>
-								</div>
-								{% render_field damagereportimg_form.dam_50_offload_pic class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-3 bg-dark block">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Empty Pics</span>
-								</div>
-								{% render_field damagereportimg_form.dam_empty_vehicle class="form-control" %}
-							</div>
-						</div>
-						<div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-							<div class="input-group input-group-sm mb-3 bg-dark block">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Customer Approval</span>
-								</div>
-								{% render_field damagereportimg_form.dam_customer_approval name="dam_customer_approval" id="dam_customer_approval" class="form-control disable_a_href" %}
-							</div>
-							<div class="input-group input-group-sm mb-3">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Status</span>
-								</div>
-								{% render_field damagereport_form.dam_status id="dam_status" class="form-control" %}
-							</div>
-						</div>
-
-						<div class="input-group input-group-sm mb-3 container-fluid">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Comments</span>
-							</div>
-							{% render_field damagereport_form.dam_comments id="dam_comments" class="form-control"%}
-						</div>
-					</div>
-					<div class="row">
-						<div class="col-1"></div>
-						<div class="col-10">
-							<div class="message text-center">
-								{% for message in messages %}
-								<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-								{% endfor %}
-							</div>
-						</div>
-						<div class="col-1"></div>
-					</div>
-					<button type="submit" class="btn btn-success " ><i class="fas fa-check"></i> Save</button>
-				</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</form>
 
 
 <script>
@@ -273,8 +321,8 @@
         {
             $('#gatein_btn').removeClass('disable_a_href');
             $('#gatein_btn1').removeClass('disable_a_href');
-            $('#gatein_btn').addClass('btn-success');
-            $('#gatein_btn1').addClass('btn-success');
+            $('#gatein_btn');
+            $('#gatein_btn1');
             $('#loadingbay_btn').removeClass('disable_a_href');
             $('#loadingbay_btn1').removeClass('disable_a_href');
         }
@@ -282,16 +330,16 @@
         {
             $('#gatein_btn').removeClass('disable_a_href');
             $('#gatein_btn1').removeClass('disable_a_href');
-            $('#gatein_btn').addClass('btn-warning');
-            $('#gatein_btn1').addClass('btn-warning');
+            $('#gatein_btn');
+            $('#gatein_btn1');
         }
 
         if (loadingbay_status_id =="Completed")
         {
             $('#loadingbay_btn').removeClass('disable_a_href');
             $('#loadingbay_btn1').removeClass('disable_a_href');
-            $('#loadingbay_btn').addClass('btn-success');
-            $('#loadingbay_btn1').addClass('btn-success');
+            $('#loadingbay_btn');
+            $('#loadingbay_btn1');
             $('#damagecheck_before_btn').removeClass('disable_a_href');
             $('#damagecheck_before_btn1').removeClass('disable_a_href');
         }
@@ -299,8 +347,8 @@
         {
             $('#loadingbay_btn').removeClass('disable_a_href');
             $('#loadingbay_btn1').removeClass('disable_a_href');
-            $('#loadingbay_btn').addClass('btn-warning');
-            $('#loadingbay_btn1').addClass('btn-warning');
+            $('#loadingbay_btn');
+            $('#loadingbay_btn1');
         }
 
         if (damage_status!=6)
@@ -309,23 +357,24 @@
 			{
 				$('#damagecheck_before_btn').removeClass('disable_a_href');
 				$('#damagecheck_before_btn1').removeClass('disable_a_href');
-				$('#damagecheck_before_btn').addClass('btn-success');
-				$('#damagecheck_before_btn1').addClass('btn-success');
-				$('#damagecheck_after_btn').removeClass('disable_a_href');
+				$('#damagecheck_before_btn');
+				$('#damagecheck_before_btn1');
+				$('#damage_after_btn').removeClass('disable_a_href');
+				$('#damage_after_btn');
+				$('#warehousein_btn1').removeClass('disable_a_href');
 			}
 			else if (damage_before_status_id =="Work In Progress")
 			{
 				$('#damagecheck_before_btn').removeClass('disable_a_href');
 				$('#damagecheck_before_btn1').removeClass('disable_a_href');
-				$('#damagecheck_before_btn').addClass('btn-warning');
-				$('#damagecheck_before_btn1').addClass('btn-warning');
-				('#damagecheck_after_btn').removeClass('disable_a_href');
-
+				$('#damagecheck_before_btn');
+				$('#damagecheck_before_btn1');
+				$('#damage_after_btn').removeClass('disable_a_href');
+				$('#damage_after_btn');
 			}
 			else if (damage_before_status_id =="No Status")
 			{
-				('#damagecheck_after_btn').removeClass('disable_a_href');
-
+				$('#damage_after_btn').removeClass('disable_a_href');
 			}
 		}
 		else
@@ -338,31 +387,31 @@
 
         if (damage_after_status_id =="Completed")
         {
-            $('#damagecheck_after_btn').removeClass('disable_a_href');
-            $('#damagecheck_after_btn').addClass('btn-success');
-            $('#warehousein_btn').removeClass('disable_a_href');
+            $('#damage_after_btn').removeClass('disable_a_href');
+            $('#damage_after_btn');
+            $('#warehousein_btn1').removeClass('disable_a_href');
         }
         else if (damage_after_status_id =="No Status")
         {
-            $('#damagecheck_after_btn').removeClass('disable_a_href');
-            $('#damagecheck_after_btn').addClass('btn-warning');
+            $('#damage_after_btn').removeClass('disable_a_href');
+            $('#damage_after_btn');
         }
 
         if (warehousein_status_id =="Completed")
         {
-            $('#warehousein_btn').removeClass('disable_a_href');
-            $('#warehousein_btn').addClass('btn-success');
-            $('#storage_btn').removeClass('disable_a_href');
-            $('#storage_btn').addClass('btn-success');
+            $('#warehousein_btn1').removeClass('disable_a_href');
+            $('#warehousein_btn1');
+            $('#warehousein_btn1').removeClass('disable_a_href');
+            $('#warehousein_btn1');
         }
         else if (warehousein_status_id =="None")
         {
-            $('#warehousein_btn').removeClass('disable_a_href');
+            $('#warehousein_btn1').removeClass('disable_a_href');
         }
         else if (warehousein_status_id =="No Status")
         {
-            $('#warehousein_btn').removeClass('disable_a_href');
-            $('#warehousein_btn').addClass('btn-warning');
+            $('#warehousein_btn1').removeClass('disable_a_href');
+            $('#warehousein_btn1');
         }
     <!--	grnnum()-->
     challan_damage_btn_active()
@@ -392,4 +441,75 @@
     });
 });
 </script>
+
+<script>
+    function challan_damage_btn_active() {
+        var damage_type_val = document.getElementById("dam_damage_type") ? document.getElementById("dam_damage_type").value : "6";
+        var marks_numbers_val = document.getElementById("dam_marks_numbers") ? document.getElementById("dam_marks_numbers").value : "2";
+        var damage_status_val = document.getElementById("dam_status") ? document.getElementById("dam_status").value : "6";
+        if ((damage_type_val != 6) || (marks_numbers_val == 1)) {
+            $('#dam_customer_approval').removeClass('disable_a_href');
+        } else {
+            $('#dam_customer_approval').addClass('disable_a_href');
+        }
+    }
+</script>
+<script>
+    function updateQuantities() {
+        var originalInvoiceQty = parseInt('{{ invoice_qty_from_inspection|default:"0" }}') || 0;
+        var pcs_damaged_el = document.getElementById('dam_no_of_pcs_damaged');
+        var pcs_damaged = pcs_damaged_el ? (parseInt(pcs_damaged_el.value) || 0) : 0;
+        var currentCheckinQty = originalInvoiceQty - pcs_damaged;
+        if (currentCheckinQty < 0) currentCheckinQty = 0;
+        if(document.getElementById('dam_invoice_qty')) document.getElementById('dam_invoice_qty').value = originalInvoiceQty;
+        if(document.getElementById('dam_checkin_qty')) document.getElementById('dam_checkin_qty').value = currentCheckinQty;
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        updateQuantities();
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        $('#dam_damages1').multiselect({
+            includeSelectAllOption: true,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
+            buttonWidth: '100%',
+            nonSelectedText: 'Select Types of Damages',
+            buttonClass: 'custom-multiselect-button',
+            maxHeight: 250
+        });
+
+        $('#dam_deviation1').multiselect({
+            includeSelectAllOption: true,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
+            buttonWidth: '100%',
+            nonSelectedText: 'Select Types of Deviation',
+            buttonClass: 'custom-multiselect-button',
+            maxHeight: 250
+        });
+    });
+</script>
+
+<script>
+    // Make all Django ClearableFileInput "Currently: [link]" anchors open in a new tab
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.form-control-modern ~ a, p > a[href*="/media/"], .clearablefileinput ~ a, a[href*="DamagereportImages"], a[href*="DamageImages"]').forEach(function(a) {
+            a.setAttribute('target', '_blank');
+            a.setAttribute('rel', 'noopener noreferrer');
+        });
+        // Also catch Django's standard "Currently: <a>" links inside field wrappers
+        document.querySelectorAll('input[type="file"]').forEach(function(input) {
+            var parent = input.closest('.form-group-modern') || input.parentElement;
+            if (parent) {
+                parent.querySelectorAll('a[href*="/media/"]').forEach(function(a) {
+                    a.setAttribute('target', '_blank');
+                    a.setAttribute('rel', 'noopener noreferrer');
+                });
+            }
+        });
+    });
+</script>
+
 {% endblock content %}

@@ -1,4 +1,4 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
 
@@ -7,38 +7,46 @@
 
 	<!--{{form.as_p}}-->
 
-<div class="row">
-	<div class="col-3"></div>
-		<div class="col-6">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Damage Type</h3></div>
-						<div class="card-body bg-light" >
-							<div class="row">
-							<div class="col">
-							<div class="input-group input-group-sm mb-3">
-  								<div class="input-group-prepend">
-    								<span class="input-group-text">Damage Name</span>
-  								</div>
-								{% render_field form.damage_name class="form-control" %}
-  								<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-							</div>
-							</div>
-							<div class="message">
-								{{form.errors}}
-							</div>
-							<!--<input class="btn btn-success" type="submit" name="Create User">-->
-						</div>
-							<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-							 <a href="{% url 'damage_list' %}" class="btn btn-danger float-right">
-                    <i class="fas fa-times"></i> Cancel
+
+<div class="container-fluid py-4 bvm-modern-layout" style="max-width: 600px;">
+    <!-- Header -->
+    <div class="modern-list-header mb-4" style="display: block !important; overflow: hidden; border-radius: 12px;">
+        <div class="row align-items-center">
+            <div class="col-12 text-center">
+                <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;">
+                    <i class="fas fa-edit mr-2"></i> Add/Update Damage Type
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="form-section p-4" style="background-color: #ffffff !important; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+        
+        <div class="form-group-modern mb-4">
+            <label class="form-label-modern text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Damage Name</label>
+            {% render_field form.damage_name class="form-control form-control-modern" %}
+        </div>
+
+        
+        <div class="message text-center mb-3">
+            {% for message in messages %}
+            <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
+            {% endfor %}
+        </div>
+
+        <!-- Bottom Action Buttons -->
+        <div class="row mt-4 pt-4 border-top">
+            <div class="col-12 d-flex justify-content-between">
+                <button type="submit" class="btn shadow-sm" style="background-color: #f5a623; color: #fff; border-radius:10px; font-weight:600; text-transform:uppercase; padding: 0.5rem 2rem;" id="save-btn">
+                    <i class="fas fa-check mr-2"></i> Submit
+                </button>
+                <a href="{% url 'damage_list' %}" class="btn shadow-sm" style="background-color: #ef4444; color: #fff; border-radius:10px; font-weight:600; text-transform:uppercase; padding: 0.5rem 2rem;">
+                    <i class="fas fa-times mr-2"></i> Cancel
                 </a>
-				</div>
-			</div>
-		</div>
-		</div>
-	<div class="col-3"></div>
-</div>
+            </div>
+        </div>
+    </div>
 </form>
 
 {% endblock content %}

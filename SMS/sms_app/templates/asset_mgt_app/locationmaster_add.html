@@ -1,141 +1,170 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
 
-<form method="POST" id="location_master" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" >
-	{% csrf_token %}
+<style>
+/* Make inputs compact only on this page to fit in single screen view */
+.bvm-modern-layout .form-control-modern {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0.1rem 0.5rem !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+}
+.bvm-modern-layout .select2-container--default .select2-selection--single {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+    display: flex;
+    align-items: center;
+}
+.bvm-modern-layout .select2-selection__rendered {
+    line-height: normal !important;
+    padding-left: 0.5rem !important;
+    margin: 0 !important;
+}
+.bvm-modern-layout .select2-selection__arrow {
+    height: 30px !important;
+}
+.bvm-modern-layout .field-label {
+    margin-bottom: 2px !important;
+    font-size: 0.75rem !important;
+}
+.bvm-modern-layout .form-group-modern {
+    margin-bottom: 8px !important;
+}
 
-	<!--{{form.as_p}}-->
+.bvm-modern-layout .form-control-modern[readonly],
+.bvm-modern-layout .form-control-modern:disabled {
+    background-color: #ffffff !important;
+    opacity: 1 !important;
+}
+</style>
 
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Warehouse Master</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" id="">Warehouse Branch</span>
-									</div>
-									{% render_field form.lm_wh_location id="lm_branch" class="form-control" %}
-								</div>
+<div class="container-fluid py-2 bvm-modern-layout">
+    <!-- Page Header -->
+    <div class="modern-list-header mb-3" style="display: block !important; overflow: hidden;">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-6 text-center text-md-left mb-3 mb-md-0">
+                <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;">
+                    <i class="fas fa-warehouse mr-2"></i> Add/Update Warehouse Master
+                </h3>
+            </div>
+            <div class="col-12 col-md-6 text-center text-md-right">
+                <a href="{% url 'locationmaster_list' %}" class="btn btn-light btn-sm font-weight-bold" style="border-radius:20px; padding:6px 15px;">
+                    <i class="fas fa-arrow-left mr-1"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Warehouse Unit</span>
-									</div>
-									{% render_field form.lm_wh_unit id="lm_unit" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
+    <form method="POST" id="location_master" action="" data-load_customer_model-url="{% url 'load_customer_model' %}" >
+        {% csrf_token %}
+        <div class="row">
+            <!-- Section 1: Location Details -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-map-marker-alt mr-2 text-primary"></i>Location Info</div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Warehouse Branch</label>
+                    {% render_field form.lm_wh_location id="lm_branch" class="form-control form-control-modern" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Warehouse Unit</label>
+                    {% render_field form.lm_wh_unit id="lm_unit" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Bay</label>
+                    {% render_field form.lm_areaside id="lm_bay" onchange="area_volume_fn()" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                </div>
+            </div>
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Bay</span>
-									</div>
-									{% render_field form.lm_areaside id="lm_bay" onchange="area_volume_fn()" class="form-control disable_a_href" %}
-								</div>
-								<!--<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Name</span>
-									</div>
-									{% render_field form.lm_customer_name id="lm_customer_name" class="form-control" %}
-								</div>!-->
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Model</span>
-									</div>
-									{% render_field form.lm_customer_model id="lm_customer_model" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Length (ft)</span>
-									</div>
-									{% render_field form.lm_length id="lm_length" onchange="area_volume_fn()" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Width (ft)</span>
-									</div>
-									{% render_field form.lm_width id="lm_width" onchange="area_volume_fn()" class="form-control" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Heigth (ft)</span>
-									</div>
-									{% render_field form.lm_height id="lm_height" onchange="area_volume_fn()" class="form-control" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Total Area (Sq.ft)</span>
-									</div>
-									{% render_field form.lm_size id="lm_size" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Area Occupied (Sq.ft)</span>
-									</div>
-									{% render_field form.lm_area_occupied id="lm_area_occupied"  onchange="area_volume_fn()" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Available Area (Sq.ft)</span>
-									</div>
-									{% render_field form.lm_available_area id="lm_available_area" class="form-control disable_a_href" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Total Volume (Cu.ft)</span>
-									</div>
-									{% render_field form.lm_total_volume id="lm_total_volume" class="form-control disable_a_href" %}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Volume Occupied (Cu.ft)</span>
-									</div>
-									{% render_field form.lm_volume_occupied id="lm_volume_occupied" onchange="area_volume_fn()" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Available Volume (Cu.ft)</span>
-									</div>
-									{% render_field form.lm_available_volume id="lm_available_volume" class="form-control disable_a_href" %}
-								</div>
-								{% render_field form.lm_concatenate  type="hidden" id="lm_concatenate" class="form-control" %}
-								<div class="row">
-									<div class="col-1"></div>
-									<div class="col-10">
-										<div class="message text-center">
-											{% for message in messages %}
-											<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-											{% endfor %}
-										</div>
-									</div>
-									<div class="col-1"></div>
-								</div>
-							</div>
-						</div>
-						<!--<input class="btn btn-success" type="submit" name="Create User">-->
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'locationmaster_list' %}" class="btn btn-danger float-right" >
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</form>
+            <!-- Section 2: Dimensions -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-ruler-combined mr-2 text-primary"></i>Dimensions</div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Customer Model</label>
+                    {% render_field form.lm_customer_model id="lm_customer_model" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Length (ft)</label>
+                    {% render_field form.lm_length id="lm_length" onchange="area_volume_fn()" class="form-control form-control-modern" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Width (ft)</label>
+                    {% render_field form.lm_width id="lm_width" onchange="area_volume_fn()" class="form-control form-control-modern" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Height (ft)</label>
+                    {% render_field form.lm_height id="lm_height" onchange="area_volume_fn()" class="form-control form-control-modern" %}
+                </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Area Data -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-vector-square mr-2 text-primary"></i>Area Data</div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Total Area (Sq.ft)</label>
+                    {% render_field form.lm_size id="lm_size" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Area Occupied (Sq.ft)</label>
+                    {% render_field form.lm_area_occupied id="lm_area_occupied" onchange="area_volume_fn()" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Available Area (Sq.ft)</label>
+                    {% render_field form.lm_available_area id="lm_available_area" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Total Volume (Cu.ft)</label>
+                    {% render_field form.lm_total_volume id="lm_total_volume" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Volume Data -->
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-cube mr-2 text-primary"></i>Volume Data</div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Volume Occupied (Cu.ft)</label>
+                    {% render_field form.lm_volume_occupied id="lm_volume_occupied" onchange="area_volume_fn()" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                <div class="form-group form-group-modern">
+                    <label class="form-label-modern field-label d-block">Available Volume (Cu.ft)</label>
+                    {% render_field form.lm_available_volume id="lm_available_volume" class="form-control form-control-modern disable_a_href" %}
+                </div>
+                {% render_field form.lm_concatenate type="hidden" id="lm_concatenate" class="form-control form-control-modern" %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4 pt-3 mb-5 pb-4" style="border-top: 1px solid var(--border-light);">
+            <div class="col-12 d-flex align-items-center">
+                <button type="submit" class="btn btn-submit" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: white; padding: 0.8rem 3rem !important; height: auto !important; border-radius: 8px; font-size: 1.2rem; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex-shrink: 0;">
+                    <i class="fas fa-check-circle mr-2"></i> Save
+                </button>
+                {% if messages %}
+                <div class="flex-grow-1 text-center">
+                    {% for message in messages %}
+                    {% if forloop.first %}
+                    <span class="shadow-sm px-4 py-2 d-inline-flex align-items-center" style="background-color: white; color: #000; border-radius: 8px; font-size: 1.3rem; font-weight: 600; border: 1px solid #e2e8f0;">
+                        <i class="fas fa-info-circle mr-2 text-dark" style="font-size: 1.4rem;"></i> {{ message }}
+                    </span>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
 <script>
 	$(document).ready(function() {
 	 	area_volume_fn()

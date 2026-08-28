@@ -1,130 +1,151 @@
-{% extends "asset_mgt_app/base_1.html" %}
-
+{% extends "asset_mgt_app/base_modern.html" %}
 
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>Goods Report</h3>
+<div class="container-fluid py-4 bvm-modern-layout">
+    <!-- ?? Centralized Page Header ?? -->
+    <div class="modern-list-header mb-4" style="background: linear-gradient(135deg, #2dd4bf 0%, #3b82f6 100%); border-radius: 12px; padding: 20px 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-6 text-center text-md-left mb-3 mb-md-0">
+                <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;">
+                    <i class="fas fa-boxes mr-2"></i> WAREHOUSE GOODS REPORT
+                </h3>
+            </div>
+            <div class="col-12 col-md-6 d-flex justify-content-center justify-content-md-end gap-2">
+                <a href="{% url 'home_page' %}" class="btn" style="background: #ffffff; color: #3b82f6; font-weight: 700; border-radius: 8px; padding: 8px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <i class="fas fa-arrow-left"></i> BACK
+                </a>
+            </div>
         </div>
-        <div class="col-5"></div>
     </div>
-</div>
-<div class="container-fluid row">
-    <div class="col-md-1">
-        <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
+
+    <!-- ?? Table Section ?? -->
+    <div class="table-responsive bg-white rounded-lg shadow-sm p-3" style="border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;">
+        <table id="goods_list" class="table modern-table w-100 text-center">
+            <thead>
+                <!-- Filter Row -->
+                <tr>
+                    <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Stock #"></th>
+                    <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Invoice"></th>
+                    <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Customer"></th>
+                    <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Type"></th>
+                    <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Pcs"></th>
+                    <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Pkg Type"></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Branch"></th>
+                    <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Unit"></th>
+                    <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Bay"></th>
+                    <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Stack"></th>
+                    <th></th>
+                    <th></th>
+                    <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Status"></th>
+                </tr>
+                <!-- Header Row -->
+                <tr>
+                    <th>STOCK NUMBER</th>
+                    <th>SHIPPER INVOICE</th>
+                    <th>CUSTOMER NAME</th>
+                    <th>CUSTOMER TYPE</th>
+                    <th>PIECES</th>
+                    <th>PACKAGE TYPE</th>
+                    <th>LENGTH</th>
+                    <th>WIDTH</th>
+                    <th>HEIGHT</th>
+                    <th>WEIGHT</th>
+                    <th>BRANCH</th>
+                    <th>UNIT</th>
+                    <th>BAY</th>
+                    <th>STACK LAYER</th>
+                    <th>AREA (Sq.ft)</th>
+                    <th>VOL (Cu.ft)</th>
+                    <th>STATUS</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
     </div>
-    <!--    <div class="col-md-1">-->
-    <!--      <a href="{% url 'goods_insert' %}" class="btn btn-success btn-block btn-lg">-->
-    <!--        <i class="fas fa-plus"></i>-->
-    <!--      </a>-->
-    <!--    </div>-->
+
 </div>
-<hr>
-<div class="container-fluid">
-    <table  id="goods_list" class="table table-striped table-bordered nowrap">
-        <thead class="thead-dark">
-        <tr>
-            <th>Stock Number </th>
-            <th>Shipper Invoice</th>
-            <th>Customer Name</th>
-            <th>Customer Type</th>
-            <th>Number of Pieces</th>
-            <th>Package Type</th>
-            <th>Length</th>
-            <th>Width</th>
-            <th>Height</th>
-            <th>Weight (Physical)</th>
-            <th>Branch</th>
-            <th>Unit</th>
-            <th>Bay</th>
-            <th>Stack Layer</th>
-            <th>Area Occupied(Sq.ft)</th>
-            <th>Volume Occupied(Cu.ft)</th>
-            <th>Check-In/Out</th>
-        </tr>
-        <tr>
-            <th>Stock Number </th>
-            <th>Shipper Invoice</th>
-            <th>Customer Name</th>
-            <th>Customer Type</th>
-            <th>Number of Pieces</th>
-            <th>Package Type</th>
-            <th>Length</th>
-            <th>Width</th>
-            <th>Height</th>
-            <th>Weight (Physical)</th>
-            <th>Branch</th>
-            <th>Unit</th>
-            <th>Bay</th>
-            <th>Stack Layer</th>
-            <th>Area Occupied(Sq.ft)</th>
-            <th>Volume Occupied(Cu.ft)</th>
-            <th>Check-In/Out</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for goodsinfo in goods_list %}
-        <tr>
-            <td> {{goodsinfo.wh_qr_rand_num}}</td>
-            <td> {{goodsinfo.wh_goods_invoice}}</td>
-            <td> {{goodsinfo.wh_customer_name}}</td>
-            <td> {{goodsinfo.wh_customer_type}}</td>
-            <td> {{goodsinfo.wh_goods_pieces}}</td>
-            <td> {{goodsinfo.wh_goods_package_type}}</td>
-            <td> {{goodsinfo.wh_goods_length}}</td>
-            <td> {{goodsinfo.wh_goods_width}}</td>
-            <td> {{goodsinfo.wh_goods_height}}</td>
-            <td> {{goodsinfo.wh_goods_weight}}</td>
-            <td> {{goodsinfo.wh_branch}}</td>
-            <td> {{goodsinfo.wh_unit}}</td>
-            <td> {{goodsinfo.wh_bay}}</td>
-            <td> {{goodsinfo.wh_stack_layer}}</td>
-            <td> {{goodsinfo.wh_goods_area}}</td>
-            <td> {{goodsinfo.wh_goods_volume_weight}}</td>
-            <td> {{goodsinfo.wh_check_in_out}}</td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
+
+<style>
+    .bvm-modern-layout {
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+    }
+    
+    .filter-input-modern {
+        min-width: 100px !important;
+        height: 36px !important;
+        font-size: 0.85rem !important;
+        padding: 4px 10px !important;
+        border-radius: 6px !important;
+    }
+    
+    .modern-table thead tr:last-child th {
+        background-color: #0f172a !important;
+        color: #f8fafc !important;
+        font-size: 0.75rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.5px;
+        padding: 12px 15px !important;
+        border: none !important;
+        white-space: nowrap;
+    }
+    .modern-table tbody td {
+        vertical-align: middle !important;
+        padding: 12px 15px !important;
+        font-size: 0.85rem;
+        color: #334155;
+        border-bottom: 1px solid #e2e8f0;
+        white-space: nowrap;
+    }
+</style>
+
 <script>
-    $(document).ready(function() {
-    $('#goods_list').DataTable({
-        initComplete: function () {
-            this.api()
-                .columns()
-                .every(function () {
-                    var column = this;
-                    var select = $('<select><option value=""></option></select>')
-                        .appendTo($(column.header()).empty())
-                        .on('change', function () {
-                            var val = $.fn.dataTable.util.escapeRegex($(this).val());
+    document.addEventListener("DOMContentLoaded", function() {
+        var table = $('#goods_list').DataTable({
+            scrollX: true,
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print'],
+            serverSide: true,
+            processing: true,
+            ajax: {
+                url: "{% url 'goods_list_ajax' %}",
+                type: "GET"
+            },
+            columns: [
+                { data: 'wh_qr_rand_num' },
+                { data: 'wh_goods_invoice' },
+                { data: 'wh_customer_name' },
+                { data: 'wh_customer_type' },
+                { data: 'wh_goods_pieces' },
+                { data: 'wh_goods_package_type' },
+                { data: 'wh_goods_length', orderable: false, searchable: false },
+                { data: 'wh_goods_width', orderable: false, searchable: false },
+                { data: 'wh_goods_height', orderable: false, searchable: false },
+                { data: 'wh_goods_weight', orderable: false, searchable: false },
+                { data: 'wh_branch' },
+                { data: 'wh_unit' },
+                { data: 'wh_bay' },
+                { data: 'wh_stack_layer' },
+                { data: 'wh_goods_area', orderable: false, searchable: false },
+                { data: 'wh_goods_volume_weight', orderable: false, searchable: false },
+                { data: 'wh_check_in_out', orderable: false, searchable: false }
+            ]
+        });
 
-                            column.search(val ? '^' + val + '$' : '', true, false).draw();
-                        });
+        // Apply search to each column
+        $('.filter-input').on('keyup change', function () {
+            var columnIndex = $(this).parent().index();
+            table.column(columnIndex).search(this.value).draw();
+        });
 
-                    column
-                        .data()
-                        .unique()
-                        .sort()
-                        .each(function (d, j) {
-                            select.append('<option value="' + d + '">' + d + '</option>');
-                        });
-                });
-        },
-        scrollY: "600px",
-<!--        scrollX: true,-->
-        scrollCollapse: true,
-        responsive: true,
-        dom: 'lBfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'print'
-        ],
+        // Prevent sorting when clicking inside the filter input
+        $('#goods_list thead input').on('click', function(e) {
+            e.stopPropagation();
+        });
     });
-} );
 </script>
 {% endblock content %}

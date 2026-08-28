@@ -5,55 +5,53 @@
   Damage/Deviation Report ({{ damage_list.dam_wh_job_num }})
 </div>
 
-<div class="report_details">
-  <table>
+<div style="padding:5px; text-align:left;">
+  <table width="100%" border="1" cellspacing="0" cellpadding="5" style="border-collapse:collapse; text-align:left;">
     <tr>
-      <th>Job Number</th>
-      <td>{{ damage_list.dam_wh_job_num }}</td>
+      <td width="40%" style="font-weight:bold; background-color:#f0f0f0; text-align:center;">Job Number</td>
+      <td width="60%" style="text-align:left; word-wrap:break-word;">{{ damage_list.dam_wh_job_num }}</td>
     </tr>
     <tr>
-      <th>GRN Number</th>
-      <td>{{ damage_list.dam_GRN_num }}</td>
+      <td width="40%" style="font-weight:bold; background-color:#f0f0f0; text-align:center;">GRN Number</td>
+      <td width="60%" style="text-align:left; word-wrap:break-word;">{{ damage_list.dam_GRN_num }}</td>
     </tr>
     <tr>
-      <th>Damage Type</th>
-      <td>{{ damage_names }}</td>
+      <td width="40%" style="font-weight:bold; background-color:#f0f0f0; text-align:center;">Damage Type</td>
+      <td width="60%" style="text-align:left; word-wrap:break-word;">{{ damage_names }}</td>
     </tr>
     <tr>
-      <th>Deviation Type</th>
-      <td>{{ deviation_names }}</td>
+      <td width="40%" style="font-weight:bold; background-color:#f0f0f0; text-align:center;">Deviation Type</td>
+      <td width="60%" style="text-align:left; word-wrap:break-word;">{{ deviation_names }}</td>
     </tr>
     <tr>
-      <th>No. of Units Deviating</th>
-      <td>{{ damage_list.dam_no_of_units_deviation }}</td>
+      <td width="40%" style="font-weight:bold; background-color:#f0f0f0; text-align:center;">No. of Pcs Damaged</td>
+      <td width="60%" style="text-align:left; word-wrap:break-word;">{{ damage_list.dam_no_of_pcs_damaged }}</td>
     </tr>
     <tr>
-      <th>Ratification Process</th>
-      <td>{{ damage_list.dam_ratification_process }}</td>
+      <td width="40%" style="font-weight:bold; background-color:#f0f0f0; text-align:center;">Ratification Process</td>
+      <td width="60%" style="text-align:left; word-wrap:break-word;">{{ damage_list.dam_ratification_process }}</td>
     </tr>
     <tr>
-      <th>Marks & Number Deviation?</th>
-      <td>{{ damage_list.dam_marks_numbers }}</td>
+      <td width="40%" style="font-weight:bold; background-color:#f0f0f0; text-align:center;">Marks &amp; Number Deviation?</td>
+      <td width="60%" style="text-align:left; word-wrap:break-word;">{{ damage_list.dam_marks_numbers }}</td>
     </tr>
-
-    {%              if warehouse_goods_list %}
-  <tr>
-    <th>Shipper Invoice</th>
-    <td>{{ warehouse_goods_list.0.wh_goods_invoice }}</td>
-  </tr>
-  <tr>
-    <th>Shipper Name</th>
-    <td>{{ warehouse_goods_list.0.wh_consigner }}</td>
-  </tr>
-{% else %}
-  <tr>
-    <td colspan="2">No warehouse goods found.</td>
-  </tr>
-{% endif %}
-
+    {% if warehouse_goods_list %}
     <tr>
-      <th>Comments</th>
-      <td>{{ damage_list.dam_comments }}</td>
+      <td width="40%" style="font-weight:bold; background-color:#f0f0f0; text-align:center;">Shipper Invoice</td>
+      <td width="60%" style="text-align:left; word-wrap:break-word;">{{ warehouse_goods_list.0.wh_goods_invoice }}</td>
+    </tr>
+    <tr>
+      <td width="40%" style="font-weight:bold; background-color:#f0f0f0; text-align:center;">Shipper Name</td>
+      <td width="60%" style="text-align:left; word-wrap:break-word;">{{ warehouse_goods_list.0.wh_consigner }}</td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="2" style="padding:6px;">No warehouse goods found.</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td width="40%" style="font-weight:bold; background-color:#f0f0f0; text-align:center;">Comments</td>
+      <td width="60%" style="text-align:left; word-wrap:break-word;">{{ damage_list.dam_comments }}</td>
     </tr>
   </table>
 </div>

@@ -47,7 +47,6 @@ def gatein_add(request, gatein_id=0):
                 'loadingbay_list': Loadingbay_Info.objects.filter(lb_job_no=wh_job_id),
                 'damagereport_list': DamagereportInfo.objects.filter(dam_wh_job_num=wh_job_id),
                 'gatein_list': Gatein_info.objects.filter(gatein_job_no=wh_job_id),
-                'pre_gatein_list': Gatein_pre_info.objects.all(),
                 'wh_job_id': wh_job_id,
                 'goods_list': Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id),
                 'user_branch':user_branch,
@@ -77,7 +76,7 @@ def gatein_add(request, gatein_id=0):
             request.session['ses_po_num'] = wh_po_num
             request.session['ses_wh_gatein_id'] = gatein_id
             try:
-                damage_status = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id=gatein_id).exclude(wh_damages_id=6).values_list('wh_damages_id', flat=True).first()
+                damage_status = Warehouse_goods_info.objects.filter(wh_gate_injob_no_id=gatein_id).exclude(wh_damage_check_id=6).values_list('wh_damage_check_id', flat=True).first()
                 # If no non-6 values are found, default to 6
                 damage_status = damage_status if damage_status is not None else 6
             except ObjectDoesNotExist:
@@ -152,7 +151,6 @@ def gatein_add(request, gatein_id=0):
                 'damagereport_list':damagereport_list,
                 'loadingbay_list': loadingbay_list,
                 'gatein_list':gatein_list,
-                'pre_gatein_list': Gatein_pre_info.objects.all(),
                 'goods_list': goods_list,
                 'gatein_status':gatein_status,
                 'loadingbay_status':loadingbay_status,
@@ -192,7 +190,15 @@ def gatein_add(request, gatein_id=0):
             gatein_form = GateinaddForm(request.POST, instance=gatein_info)
             if gatein_form.is_valid():
                 print("Form is Valid")
-                gatein_form.save()
+                instance = gatein_form.save(commit=False)
+                if not instance.gatein_job_no or str(instance.gatein_job_no).lower() == 'none':
+                    fy = get_financial_year()
+                    branch_id = get_session_branch_id(request)
+                    branch_code = get_branch_code(branch_id)
+                    prefix = f"{fy}_{branch_code}_WH_"
+                    wh_job_num_next = generate_next_number(Gatein_info, 'gatein_job_no', prefix, 6)
+                    instance.gatein_job_no = wh_job_num_next
+                instance.save()
                 messages.success(request, 'Record Updated Successfully')
             else:
                 print("Form is In-Valid")
@@ -234,6 +240,9 @@ def get_queryset(request):
         'Gatein_list': Gatein_list,
         'first_name': first_name,
         'page_obj': page_obj,
+        'pre_gate_in': pre_gate_in,
+        'job_number': job_number,
+        'invoice_number': invoice_number,
         }
     return render(request, "asset_mgt_app/gatein_list.html", context)
 
@@ -431,3 +440,121 @@ def gatein_delete_attachment(request, pk, att_type):
         messages.success(request, 'Attachment deleted successfully.')
 
     return redirect(request.META.get('HTTP_REFERER', 'gatein_list'))
+
+
+
+from django.http import JsonResponse
+from django.urls import reverse
+
+@login_required(login_url='login_page')
+def gatein_list_ajax(request):
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '')
+    
+    # Custom form filters from /SMS/search/
+    pre_gate_in = request.GET.get('pre_gate_in', '')
+    job_number = request.GET.get('job_number', '')
+    invoice_number = request.GET.get('invoice_number', '')
+
+    queryset = Gatein_info.objects.select_related('gatein_pre_id', 'gatein_customer', 'gatein_updated_by', 'gatein_status').all()
+
+    # Apply form filters
+    if pre_gate_in:
+        queryset = queryset.filter(gatein_pre_id__gatein_pre_number__icontains=pre_gate_in)
+    if job_number:
+        queryset = queryset.filter(gatein_job_no__icontains=job_number)
+    if invoice_number:
+        queryset = queryset.filter(gatein_invoice__icontains=invoice_number)
+
+    if search_value:
+        queryset = queryset.filter(
+            Q(id__icontains=search_value) |
+            Q(gatein_pre_id__gatein_pre_number__icontains=search_value) |
+            Q(gatein_job_no__icontains=search_value) |
+            Q(gatein_invoice__icontains=search_value) |
+            Q(gatein_customer__cu_name__icontains=search_value)
+        )
+
+    total_records = Gatein_info.objects.count()
+    filtered_records = queryset.count()
+    
+    # Ordering
+    order_column_index = request.GET.get('order[0][column]', 0)
+    order_dir = request.GET.get('order[0][dir]', 'desc')
+    
+    # These match the columns configured in DataTables JS (from 0 to 11)
+    columns = [
+        'id', 'id', 'gatein_created_at', 'gatein_pre_id__gatein_pre_number', 
+        'id', 'id', 'gatein_job_no', 'gatein_invoice', 
+        'gatein_customer__cu_name', 'gatein_updated_at', 'gatein_updated_by__username', 'id'
+    ]
+    if int(order_column_index) < len(columns):
+        order_by = columns[int(order_column_index)]
+        if order_dir == 'desc':
+            order_by = f"-{order_by}"
+        queryset = queryset.order_by(order_by)
+
+    data = []
+    for item in queryset[start:start+length]:
+        update_url = reverse('gatein_update', args=[item.id])
+        delete_url = reverse('gatein_delete', args=[item.id])
+        csrf_token = request.COOKIES.get('csrftoken', '')
+        
+        edit_btn = f'<a href="{update_url}" style="background: #f5a623; color: white; border: none; border-radius: 20px; width: 44px; min-width: 44px; height: 34px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(245, 166, 35, 0.2); text-decoration: none;" title="Edit"><i class="far fa-edit"></i></a>'
+        
+        delete_btn = f'''<form action="{delete_url}" method="post" onclick="return confirm('Are you sure?');" style="margin:0; display:inline;">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
+            <button type="submit" class="btn btn-outline-danger" style="border-radius: 20px; padding: 4px 15px;">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </form>'''
+        
+        # Attachments
+        inward_pod = ''
+        if item.gatein_invoice_att:
+            url = item.gatein_invoice_att.url
+            upload_url = reverse('gatein_upload_attachment', args=[item.id, 'invoice'])
+            inward_pod = f'''<div style="width: 100px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; background: transparent;">
+                <a href="{url}" target="_blank" style="background: #38bdf8; color: #ffffff; border: none; padding: 7px 0; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; text-decoration: none; text-align: center; display: block; width: 100%; line-height: 1.2;">VIEW</a>
+                <form method="post" action="{upload_url}" enctype="multipart/form-data" style="margin: 0; padding: 0; width: 100%;">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
+                    <label style="background: #fbbf24; color: #ffffff; border: none; border-top: 1px solid rgba(255,255,255,0.3); padding: 7px 0; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; text-align: center; cursor: pointer; display: block; width: 100%; margin: 0; line-height: 1.2;">RE-ATTACH<input type="file" name="gatein_invoice_att" style="display: none;" onchange="this.form.submit()"></label>
+                </form>
+            </div>'''
+        else:
+            upload_url = reverse('gatein_upload_attachment', args=[item.id, 'invoice'])
+            inward_pod = f'''<form method="post" action="{upload_url}" enctype="multipart/form-data" style="margin: 0; padding: 0; width: 100px;">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
+                <label style="background: #fbbf24; color: #ffffff; border: none; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 7px 0; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; text-align: center; cursor: pointer; display: block; width: 100%; margin: 0; line-height: 1.2;">UPLOAD<input type="file" name="gatein_invoice_att" style="display: none;" onchange="this.form.submit()"></label>
+            </form>'''
+
+        gatepass_url = reverse('gatein_pdf_download', args=[item.id])
+        gatepass = f'''<div class="d-flex justify-content-center gap-1">
+            <a class="btn" style="background: #fbbf24; color: white; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px;" href="{gatepass_url}" target="_blank" title="Download Gate Pass">
+                <i class="fas fa-luggage-cart"></i>
+            </a>
+        </div>'''
+
+        data.append({
+            'edit': edit_btn,
+            'id': item.id,
+            'gatein_created_at': item.gatein_created_at.strftime('%Y-%m-%d %H:%M:%S') if item.gatein_created_at else '',
+            'gatein_pre_id': str(item.gatein_pre_id) if item.gatein_pre_id else 'None',
+            'inward_pod': inward_pod,
+            'gatepass': gatepass,
+            'gatein_job_no': item.gatein_job_no or '',
+            'gatein_invoice': item.gatein_invoice or '',
+            'gatein_customer': str(item.gatein_customer) if item.gatein_customer else 'None',
+            'gatein_updated_at': item.gatein_updated_at.strftime('%Y-%m-%d %H:%M:%S') if item.gatein_updated_at else '',
+            'gatein_updated_by': str(item.gatein_updated_by) if item.gatein_updated_by else 'None',
+            'delete': delete_btn
+        })
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': total_records,
+        'recordsFiltered': filtered_records,
+        'data': data
+    })

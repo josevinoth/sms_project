@@ -2,7 +2,10 @@
 <div class="container-fluid shadow-box-table">
     <div class="container-fluid row">
 	<div class="col-5 col-md-6 col-lg-2">
-		<a href="{% url 'pregateintruck_insert' %}" id= "add_gateinpre" class="btn btn-primary btn-sm m-2">
+		<a {% if gatein_pre_form.instance.pk %}href="{% url 'pregateintruck_insert' %}"{% else %}href="#" disabled{% endif %} 
+		   id="add_gateinpre" 
+		   class="btn btn-primary btn-sm m-2"
+		   {% if not gatein_pre_form.instance.pk %}style="pointer-events: none; opacity: 0.6;"{% endif %}>
 			<i class="fas fa-plus"></i> Add
 		</a>
 	</div>

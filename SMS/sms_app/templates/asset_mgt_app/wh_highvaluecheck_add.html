@@ -1,228 +1,263 @@
-{% extends "asset_mgt_app/base_1.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="row">
-        <div class="col">
-            <div class="container-fluid">
-                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="card-header text-center">
-                        <div class="col-12 col-md-10 text-center">
-                            <h3>Add/Update High Value Check</h3>
-                        </div>
+
+<div class="container-fluid py-3 bvm-modern-layout">
+    <!-- ══ Page Header ══ -->
+    <div class="modern-list-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-12 text-center text-md-left">
+                <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    <i class="fas fa-edit mr-2"></i> Add/Update High Value Check
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Form ══ -->
+    <form method="POST" enctype="multipart/form-data" id="highvalueForm">
+        {% csrf_token %}
+        <div class="row">
+            <!-- Section 1 -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="form-section modern-card p-3 h-100 shadow-sm" style="background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div class="form-section-title mb-3 pb-2" style="border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #0ea5e9;">
+                        <i class="fas fa-info-circle mr-2 text-primary"></i>SECTION 1
                     </div>
-                    <div class="card-body bg-light">
-                        <div class="row">
-                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Pre-Gatein Number</span>
-                                    </div>
-                                    {% render_field form.hc_pregatein_number id="hc_pregatein_number" class="form-control disable_a_href" value=gatein_num_id %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Location</span>
-                                    </div>
-                                    {% render_field form.hc_location id="hc_location" class="form-control " %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Unit Reference</span>
-                                    </div>
-                                    {% render_field form.hc_unit_reference id="hc_unit_reference" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Date</span>
-                                    </div>
-                                    {% render_field form.hc_date id="hc_date" type="date" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Customer</span>
-                                    </div>
-                                    {% render_field form.hc_customer id="hc_customer" class="form-control" onchange="validateEndDate()" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Shipper</span>
-                                    </div>
-                                    {% render_field form.hc_shipper id="hc_shipper" class="form-control" %}
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Customer Reference Number</span>
-                                    </div>
-                                    {% render_field form.hc_customer_reference_number id="hc_customer_reference_number" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Invoice Ref</span>
-                                    </div>
-                                    {% render_field form.hc_invoice_ref id="hc_invoice_ref" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Commodity</span>
-                                    </div>
-                                    {% render_field form.hc_commodity id="hc_commodity" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Value</span>
-                                    </div>
-                                    {% render_field form.hc_value id="hc_value" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">No Of Pcs</span>
-                                    </div>
-                                    {% render_field form.hc_no_of_pcs id="hc_no_of_pcs" class="form-control" %}
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend" style="width:35%;">
-                                        <span class="input-group-text" style="width:100%;">Condition Of Cargo Received</span>
-                                    </div>
-                                    {% render_field form.hc_condition_cargo_received id="hc_condition_cargo_received" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend" style="width:37%;">
-                                        <span class="input-group-text" style="width:100%;">Watch Sensor Available Or Not</span>
-                                    </div>
-                                    {% render_field form.hc_tilt_watch_sensor_available id="hc_tilt_watch_sensor_available" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">CCTV Coverage</span>
-                                    </div>
-                                    {% render_field form.hc_cctv_coverage id="hc_cctv_coverage" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Driver Validation Received</span>
-                                    </div>
-                                    {% render_field form.hc_driver_validation_received id="hc_driver_validation_received" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Truck Validation Received</span>
-                                    </div>
-                                    {% render_field form.hc_truck_validation id="hc_truck_validation" class="form-control" %}
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6 col-lg-3 p-2  shadow bg-white rounded border">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend" style="width:40%;">
-                                        <span class="input-group-text" style="width:100%;">Shipment Information Received</span>
-                                    </div>
-                                    {% render_field form.hc_shipment_information id="hc_shipment_information" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend" style="width:50%;">
-                                        <span class="input-group-text" style="width:100%;">Customer Information On Receipt Of Cargo</span>
-                                    </div>
-                                    {% render_field form.hc_customer_informed id="hc_customer_informed" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Handling Instruction If Any</span>
-                                    </div>
-                                    {% render_field form.hc_handling_instruction id="hc_handling_instruction" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Expected Days Of Storage</span>
-                                    </div>
-                                    {% render_field form.hc_expected_days id="hc_expected_days" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Approval Status</span>
-                                    </div>
-                                    {% render_field form.hc_approval_status id="hc_approval_status" class="form-control disable_a_href" %}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="input-group input-group-sm mb-3 p-2">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Remarks</span>
-                            </div>
-                            {% render_field form.hc_bvm_scope_work id="hc_bvm_scope_work" class="form-control" %}
-                        </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Pre-Gatein Number</label>
+                        {% render_field form.hc_pregatein_number id="hc_pregatein_number" class="form-control form-control-modern disable_a_href" value=gatein_num_id %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Location</label>
+                        {% render_field form.hc_location id="hc_location" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Unit Reference</label>
+                        {% render_field form.hc_unit_reference id="hc_unit_reference" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Date</label>
+                        {% render_field form.hc_date id="hc_date" type="date" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Customer</label>
+                        {% render_field form.hc_customer id="hc_customer" class="form-control form-control-modern" onchange="validateEndDate()" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Shipper</label>
+                        {% render_field form.hc_shipper id="hc_shipper" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
 
-                        <div class="row">
-                            <div class="col-1"></div>
-                            <div class="col-10">
-                                <div class="message text-center">
-                                    {% for message in messages %}
-                                    <a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="col-1"></div>
-                        </div>
+            <!-- Section 2 -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="form-section modern-card p-3 h-100 shadow-sm" style="background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div class="form-section-title mb-3 pb-2" style="border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #0ea5e9;">
+                        <i class="fas fa-box-open mr-2 text-primary"></i>SECTION 2
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Customer Reference Number</label>
+                        {% render_field form.hc_customer_reference_number id="hc_customer_reference_number" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Invoice Ref</label>
+                        {% render_field form.hc_invoice_ref id="hc_invoice_ref" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Commodity</label>
+                        {% render_field form.hc_commodity id="hc_commodity" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Value</label>
+                        {% render_field form.hc_value id="hc_value" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">No Of Pcs</label>
+                        {% render_field form.hc_no_of_pcs id="hc_no_of_pcs" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Condition Of Cargo</label>
+                        {% render_field form.hc_condition_cargo_received id="hc_condition_cargo_received" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
 
-                        <!-- Submit and Cancel Buttons -->
-                        <button type="submit" class="btn btn-success" id="save-btn">
-                            <i class="fas fa-check"></i> Submit
-                        </button>
-                        <a href="{% url 'high_value_cancel' %}" class="btn btn-danger float-right">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
+            <!-- Section 3 -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="form-section modern-card p-3 h-100 shadow-sm" style="background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div class="form-section-title mb-3 pb-2" style="border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #0ea5e9;">
+                        <i class="fas fa-shield-alt mr-2 text-primary"></i>SECTION 3
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Watch Sensor Available</label>
+                        {% render_field form.hc_tilt_watch_sensor_available id="hc_tilt_watch_sensor_available" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">CCTV Coverage</label>
+                        {% render_field form.hc_cctv_coverage id="hc_cctv_coverage" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Driver Validation</label>
+                        {% render_field form.hc_driver_validation_received id="hc_driver_validation_received" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Truck Validation</label>
+                        {% render_field form.hc_truck_validation id="hc_truck_validation" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Shipment Info Received</label>
+                        {% render_field form.hc_shipment_information id="hc_shipment_information" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Customer Info On Receipt</label>
+                        {% render_field form.hc_customer_informed id="hc_customer_informed" class="form-control form-control-modern" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4 -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="form-section modern-card p-3 h-100 shadow-sm" style="background: white; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div class="form-section-title mb-3 pb-2" style="border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #0ea5e9;">
+                        <i class="fas fa-clipboard-check mr-2 text-primary"></i>SECTION 4
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Handling Instruction</label>
+                        {% render_field form.hc_handling_instruction id="hc_handling_instruction" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Expected Days Of Storage</label>
+                        {% render_field form.hc_expected_days id="hc_expected_days" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Approval Status</label>
+                        {% render_field form.hc_approval_status id="hc_approval_status" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-3">
+                        <label class="form-label-modern field-label d-block text-dark text-uppercase" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Remarks</label>
+                        {% render_field form.hc_bvm_scope_work id="hc_bvm_scope_work" class="form-control form-control-modern" style="min-height: 120px;" %}
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</form>
+
+        <!-- Messages block to prevent spamming -->
+        <div class="row mt-2">
+            <div class="col-12 text-center">
+                {% if messages %}
+                    {% for message in messages %}
+                        {% if forloop.first %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} shadow-sm mb-3 font-weight-bold">
+                            {{ message }}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row mt-3 mb-2">
+            <div class="col-6 text-left pl-3">
+                <button type="submit" form="highvalueForm" class="btn shadow-sm text-white" id="save-btn" style="background-color: #f59e0b; border-color: #f59e0b; padding: 0.6rem 2.5rem; font-weight: 700; font-size: 1.1rem; border-radius: 8px; letter-spacing: 0.5px;">
+                    <i class="fas fa-check mr-2"></i> SUBMIT
+                </button>
+            </div>
+            <div class="col-6 text-right pr-3">
+                <a href="{% url 'high_value_cancel' %}" class="btn shadow-sm text-dark" style="background-color: #ffffff; border: 1px solid #cbd5e1; padding: 0.6rem 2.5rem; font-weight: 700; font-size: 1.1rem; border-radius: 8px; letter-spacing: 0.5px;">
+                    <i class="fas fa-times mr-2" style="color: #64748b;"></i> CANCEL
+                </a>
+            </div>
+        </div>
+        
+    </form>
+</div>
+
+<style>
+/* Match Select2 height to other fields */
+.bvm-modern-layout .select2-container .select2-selection--single {
+    height: 36px !important;
+    min-height: 36px !important;
+    border-radius: 6px !important;
+    border: 1px solid #ced4da !important;
+    display: flex !important;
+    align-items: center !important;
+}
+.bvm-modern-layout .select2-container .select2-selection--single .select2-selection__rendered {
+    line-height: 36px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    color: #212529 !important;
+    padding-left: 10px !important;
+}
+.bvm-modern-layout .select2-container .select2-selection--single .select2-selection__arrow {
+    height: 34px !important;
+}
+.bvm-modern-layout .select2-container .select2-selection--single .select2-selection__clear {
+    line-height: 36px !important;
+}
+[data-theme="dark"] .bvm-modern-layout .select2-container .select2-selection--single {
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+}
+[data-theme="dark"] .bvm-modern-layout .select2-container .select2-selection--single .select2-selection__rendered {
+    color: #ffffff !important;
+}
+</style>
+
 <script>
-    $(document).ready(function() {
+$(document).ready(function() {
+    // Initialize Select2 for Customer and Commodity
+    $('#hc_customer').select2({
+        placeholder: '--Select Customer--',
+        allowClear: true,
+        width: '100%',
+    });
+    
+    $('#hc_commodity').select2({
+        placeholder: '--Select Commodity--',
+        allowClear: true,
+        width: '100%',
+    });
+
     var pregateinField = document.getElementById("hc_pregatein_number");
     if (pregateinField.value == "") {
         pregateinField.value = '{{ gatein_num_id }}'; // Set Gatein number
     }
 });
 
-</script>
-<script>
-    $("#hc_location").change(function () {
-       var branchId = $(this).val();
-       $.ajax({
-         url: '{% url 'load_units' %}',
-         data: {
-           'branchId': branchId,
-         },
-         success: function (data) {
-             console.log(data);
-             $('#hc_unit_reference').removeClass('disable_a_href');
-             $("#hc_unit_reference").empty();
-             var unit_name=JSON.parse(data)["unit_name_list"];
-             var unit_id=JSON.parse(data)["unit_id"];
-             var len = (unit_name).length;
-             $('#hc_unit_reference').empty().append("<option value='0'>--Select--</option>");
-             for( var i = 0; i<len; i++){
-                 $("#hc_unit_reference").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
-             }
+$("#hc_location").change(function () {
+   var branchId = $(this).val();
+   $.ajax({
+     url: '{% url 'load_units' %}',
+     data: {
+       'branchId': branchId,
+     },
+     success: function (data) {
+         $('#hc_unit_reference').removeClass('disable_a_href');
+         $("#hc_unit_reference").empty();
+         var unit_name=JSON.parse(data)["unit_name_list"];
+         var unit_id=JSON.parse(data)["unit_id"];
+         var len = (unit_name).length;
+         $('#hc_unit_reference').empty().append("<option value='0'>--Select--</option>");
+         for( var i = 0; i<len; i++){
+             $("#hc_unit_reference").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
          }
-       });
-     });
-</script>
-<script>
+     }
+   });
+});
+
 document.addEventListener("DOMContentLoaded", function () {
-    var user_role = {{ role_id }};  // inject as number, no quotes
+    var user_role = {{ role_id|default:0 }}; 
     var approvalField = document.getElementById("hc_approval_status");
 
     if (user_role === 57) {  // role 2 -> disable
-    	$('#hc_approval_status').addClass('disable_a_href');
+        $('#hc_approval_status').addClass('disable_a_href');
     } else {
-   		$('#hc_approval_status').removeClass('disable_a_href');
+        $('#hc_approval_status').removeClass('disable_a_href');
     }
 });
 </script>
+
 {% endblock content %}

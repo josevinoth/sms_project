@@ -5,7 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.db.models.aggregates import Sum
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.urls import reverse
 from ..forms import LocationmasteraddForm
 from ..models import LocationmasterInfo,CustomerInfo,TrbusinesstypeInfo,Warehouse_goods_info
 from django.shortcuts import render, redirect
@@ -127,9 +128,8 @@ def locationmaster_add(request,locationmaster_id=0):
 @login_required(login_url='login_page')
 def locationmaster_list(request):
     first_name = request.session.get('first_name')
-    warehousevolme_area_calc(request)
+    # warehousevolme_area_calc(request) # Removed to speed up page load!
     context =   {
-                    'locationmaster_list' : LocationmasterInfo.objects.all(),
                     'first_name': first_name
                 }
     return render(request,"asset_mgt_app/locationmaster_list.html",context)
@@ -139,27 +139,30 @@ def locationmaster_list(request):
 def warehousevolme_area_calc(request):
     print("Inside warehousevolme_area_calc")
     # Fetch all LocationmasterInfo objects once
-    warehouse_objects = LocationmasterInfo.objects.all()
+    warehouse_objects = list(LocationmasterInfo.objects.all())
+    
+    # Bulk aggregate occupied volume for all locations
+    volume_stats = Warehouse_goods_info.objects.filter(
+        wh_check_in_out=1
+    ).values('wh_branch_id', 'wh_unit_id', 'wh_bay_id').annotate(
+        total_vol=Sum('wh_goods_volume_weight')
+    )
+    
+    # Bulk aggregate occupied area for all locations
+    area_stats = Warehouse_goods_info.objects.filter(
+        wh_check_in_out=1,
+        wh_stack_layer__in=[1, 2]
+    ).values('wh_branch_id', 'wh_unit_id', 'wh_bay_id').annotate(
+        total_area=Sum('wh_goods_area')
+    )
+    
+    vol_dict = {(s['wh_branch_id'], s['wh_unit_id'], s['wh_bay_id']): s['total_vol'] or 0 for s in volume_stats}
+    area_dict = {(s['wh_branch_id'], s['wh_unit_id'], s['wh_bay_id']): s['total_area'] or 0 for s in area_stats}
     
     for loc in warehouse_objects:
-        branch = loc.lm_wh_location
-        unit = loc.lm_wh_unit
-        bay = loc.lm_areaside
-        
-        # Calculate occupied volume and area
-        volume_occupied = Warehouse_goods_info.objects.filter(
-            wh_branch=branch, 
-            wh_unit=unit, 
-            wh_bay=bay,
-            wh_check_in_out=1
-        ).aggregate(Sum('wh_goods_volume_weight'))['wh_goods_volume_weight__sum'] or 0
-        
-        area_occupied = Warehouse_goods_info.objects.filter(
-            wh_branch=branch,
-            wh_unit=unit,
-            wh_bay=bay,
-            wh_check_in_out=1
-        ).filter(Q(wh_stack_layer=1) | Q(wh_stack_layer=2)).aggregate(Sum('wh_goods_area'))['wh_goods_area__sum'] or 0
+        key = (loc.lm_wh_location_id, loc.lm_wh_unit_id, loc.lm_areaside_id)
+        volume_occupied = vol_dict.get(key, 0)
+        area_occupied = area_dict.get(key, 0)
 
         # Use attributes from the 'loc' object directly
         total_volume = loc.lm_total_volume or 0
@@ -186,7 +189,12 @@ def warehousevolme_area_calc(request):
         loc.lm_available_volume = round(available_volume, 2)
         loc.lm_volume_occupied = round(volume_occupied, 2)
         loc.lm_area_occupied = round(area_occupied, 2)
-        loc.save()
+        
+    # Bulk update all locations in one query
+    LocationmasterInfo.objects.bulk_update(
+        warehouse_objects, 
+        ['lm_available_area', 'lm_available_volume', 'lm_volume_occupied', 'lm_area_occupied', 'lm_size', 'lm_total_volume', 'lm_height']
+    )
     
     return
 #Delete locationmaster
@@ -246,3 +254,83 @@ def load_customer_model(request):
     }
     return HttpResponse(json.dumps(data))
     # return JsonResponse((data))
+
+
+@login_required(login_url='login_page')
+def locationmaster_list_ajax(request):
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '')
+
+    queryset = LocationmasterInfo.objects.select_related('lm_wh_location', 'lm_wh_unit', 'lm_areaside').all()
+
+    if search_value:
+        queryset = queryset.filter(
+            Q(lm_wh_location__loc_name__icontains=search_value) |
+            Q(lm_wh_unit__unit_name__icontains=search_value) |
+            Q(lm_areaside__bay_bayname__icontains=search_value)
+        )
+
+    total_records = LocationmasterInfo.objects.count()
+    filtered_records = queryset.count()
+
+    order_column_index = request.GET.get('order[0][column]', 1)
+    order_dir = request.GET.get('order[0][dir]', 'desc')
+
+    columns = [
+        'edit', 'lm_wh_location__loc_name', 'lm_wh_unit__unit_name', 'lm_areaside__bay_bayname',
+        'lm_size', 'lm_area_occupied', 'lm_available_area',
+        'lm_total_volume', 'lm_volume_occupied', 'lm_available_volume', 'id'
+    ]
+
+    if int(order_column_index) < len(columns):
+        order_by = columns[int(order_column_index)]
+        if order_by and order_by not in ['id', 'edit']:
+            if order_dir == 'desc':
+                order_by = f"-{order_by}"
+            queryset = queryset.order_by(order_by)
+    else:
+        queryset = queryset.order_by('-id')
+
+    data = []
+    for item in queryset[start:start+length]:
+        update_url = reverse('locationmaster_update', args=[item.id])
+        delete_url = reverse('locationmaster_delete', args=[item.id])
+        csrf_token = request.COOKIES.get('csrftoken', '')
+        
+        edit_btn = f'''<div class="d-flex justify-content-center">
+            <a class="btn btn-submit" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; color: white;" href="{update_url}" >
+                <i class="far fa-edit"></i>
+            </a>
+        </div>'''
+        
+        delete_btn = f'''<div class="d-flex justify-content-center">
+            <form action="{delete_url}" method="post" onsubmit="return confirm('Are you sure you want to delete this record?');">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
+                <button type="submit" class="btn shadow-sm" style="background: white; color: #dc3545; border-radius: 20px; border: 1px solid #f1f3f5; padding: 6px 16px; display: inline-flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </form>
+        </div>'''
+
+        data.append({
+            'edit': edit_btn,
+            'lm_wh_location': str(item.lm_wh_location.loc_name) if hasattr(item, 'lm_wh_location') and item.lm_wh_location else '',
+            'lm_wh_unit': str(item.lm_wh_unit.unit_name) if hasattr(item, 'lm_wh_unit') and item.lm_wh_unit else '',
+            'lm_areaside': str(item.lm_areaside.bay_bayname) if hasattr(item, 'lm_areaside') and item.lm_areaside else '',
+            'lm_size': item.lm_size or 0,
+            'lm_area_occupied': item.lm_area_occupied or 0,
+            'lm_available_area': item.lm_available_area or 0,
+            'lm_total_volume': item.lm_total_volume or 0,
+            'lm_volume_occupied': item.lm_volume_occupied or 0,
+            'lm_available_volume': item.lm_available_volume or 0,
+            'delete': delete_btn
+        })
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': total_records,
+        'recordsFiltered': filtered_records,
+        'data': data
+    })

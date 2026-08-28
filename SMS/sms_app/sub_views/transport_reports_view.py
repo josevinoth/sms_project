@@ -8502,8 +8502,13 @@ def trip_status_count_report_view(request):
         'first_name': first_name,
         'headers': headers,
         'form': form,
+        'dmr_customer': request.GET.get('dmr_customer', ''),
+        'from_date': request.GET.get('from_date', ''),
+        'to_date': request.GET.get('to_date', ''),
     }
     return render(request, 'asset_mgt_app/trip_status_count_report.html', context)
+
+
 @login_required(login_url='login')
 def trip_status_count_report_ajax_view(request):
     draw = int(request.GET.get('draw', 1))
@@ -8513,6 +8518,7 @@ def trip_status_count_report_ajax_view(request):
     from_date = request.GET.get('from_date', '')
     to_date = request.GET.get('to_date', '')
     branch = request.GET.get('branch', '')
+    dmr_customer = request.GET.get('dmr_customer', '')
     
     from ..models import TripdetailInfo, Tripstatusinfo, ConsignmentdetailInfo, TransInvoiceInfo
     from django.db.models import Count, Q, F
@@ -8520,12 +8526,18 @@ def trip_status_count_report_ajax_view(request):
     # Base query is now Cnotes (ConsignmentdetailInfo)
     qs = ConsignmentdetailInfo.objects.all()
     
+    # Role-based filtering
+    if not request.user.is_superuser:
+        qs = qs.filter(co_createdby=request.user)
+    elif branch:
+        qs = qs.filter(co_consignmentnumber__icontains=branch)
+    
     if from_date:
         qs = qs.filter(co_consignmentdate__gte=from_date)
     if to_date:
         qs = qs.filter(co_consignmentdate__lte=to_date)
-    if branch:
-        qs = qs.filter(co_consignmentnumber__icontains=branch)
+    if dmr_customer:
+        qs = qs.filter(co_customer_id=dmr_customer)
         
     order_col = request.GET.get('order[0][column]')
     order_dir = request.GET.get('order[0][dir]')

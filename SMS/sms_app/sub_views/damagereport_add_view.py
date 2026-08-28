@@ -9,7 +9,7 @@ from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from ..models import User_extInfo
 from random import randint
-from ..views import picture_add
+# from ..views import picture_add
 
 @login_required(login_url='login_page')
 def damagereport_add(request,damagereport_id=0):
@@ -82,7 +82,6 @@ def damagereport_add(request,damagereport_id=0):
                 'dam_checkin_qty': invoice_qty_from_inspection,
             })
             damagereportimg_form = DamagereportImagesForm()
-            picture_add(request)
             context = {
                 'first_name': first_name,
                 'damagereport_form': damagereport_form,
@@ -138,7 +137,6 @@ def damagereport_add(request,damagereport_id=0):
             print("I am inside post add damagereport")
             damagereport_form = DamagereportaddForm(request.POST)
             damagereportimg_form=DamagereportImagesForm(request.POST,request.FILES)
-            picture_add(request)
             if damagereport_form.is_valid():
                 print("Main Form Saved")
 
@@ -202,11 +200,79 @@ def damagereport_list(request):
     context = {'damagereport_list' : DamagereportInfo.objects.all(),'first_name': first_name}
     return render(request,"asset_mgt_app/damagereport_list.html",context)
 
-# #Delete damagereport
-# @login_required(login_url='login_page')
-# def damagereport_delete(request,damagereport_id):
-#     damagereport = DamagereportInfo.objects.get(pk=damagereport_id)
-#
-#     damagereport.delete()
-#     return redirect('/SMS/damagereport_list')
+#Delete damagereport
+@login_required(login_url='login_page')
+def damagereport_delete(request,damagereport_id):
+    damagereport = DamagereportInfo.objects.get(pk=damagereport_id)
+    damagereport.delete()
+    return redirect('/SMS/damagereport_list')
 
+
+
+from django.http import JsonResponse
+from django.db.models import Q
+from django.urls import reverse
+
+@login_required(login_url='login_page')
+def damagereport_list_ajax(request):
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '')
+
+    queryset = DamagereportInfo.objects.all()
+
+    if search_value:
+        queryset = queryset.filter(
+            Q(dam_wh_job_num__icontains=search_value) |
+            Q(dam_damage_type__damage_name__icontains=search_value) |
+            Q(dam_GRN_num__icontains=search_value)
+        )
+
+    total_records = DamagereportInfo.objects.count()
+    filtered_records = queryset.count()
+    
+    # Ordering
+    order_column_index = request.GET.get('order[0][column]', 0)
+    order_dir = request.GET.get('order[0][dir]', 'asc')
+    
+    columns = ['dam_wh_job_num', 'dam_damage_type', 'dam_GRN_num']
+    if int(order_column_index) < len(columns):
+        order_by = columns[int(order_column_index)]
+        if order_dir == 'desc':
+            order_by = f"-{order_by}"
+        queryset = queryset.order_by(order_by)
+
+    data = []
+    for item in queryset[start:start+length]:
+        update_url = reverse('damagereport_update', args=[item.id])
+        delete_url = reverse('damagereport_delete', args=[item.id])
+        csrf_token = request.COOKIES.get('csrftoken', '')
+        
+        edit_btn = f'<a href="{update_url}" class="btn btn-outline-primary" style="border-radius: 20px; padding: 4px 15px;"><i class="far fa-edit"></i></a>'
+        
+        # We need a small form for delete, but Datatables usually expects raw html
+        delete_btn = f'''<form action="{delete_url}" method="post" onclick="return confirm('Are you sure?');" style="margin:0; display:inline;">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
+            <button type="submit" class="btn btn-outline-danger" style="border-radius: 20px; padding: 4px 15px;">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </form>'''
+        
+        report_btn = '<a href="#" class="btn btn-outline-info" style="border-radius: 20px; padding: 4px 15px;"><i class="fa fa-book"></i></a>'
+
+        data.append({
+            'dam_wh_job_num': item.dam_wh_job_num or '',
+            'dam_damage_type': str(item.dam_damage_type.damage_name) if item.dam_damage_type else 'None',
+            'dam_GRN_num': item.dam_GRN_num or '',
+            'report': report_btn,
+            'edit': edit_btn,
+            'delete': delete_btn
+        })
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': total_records,
+        'recordsFiltered': filtered_records,
+        'data': data
+    })

@@ -10,6 +10,7 @@
 </div>
 <br>
 <div class="row">
+
     <div class="col-2"></div>
     <div class="col-8 message text-center">
         {% for message in messages %}
@@ -189,7 +190,203 @@ function initTripTable() {
         buttons: [
             { extend: 'copy', className: 'btn btn-sm btn-info' },
             { extend: 'csv', className: 'btn btn-sm btn-info' },
-            { extend: 'excelHtml5', className: 'btn btn-sm btn-info', text: 'Excel', title: 'DMR Report' },
+            { 
+                extend: 'excelHtml5', 
+                className: 'btn btn-sm btn-info', 
+                text: 'Excel', 
+                title: 'DMR Report',
+                customize: function (xlsx) {
+                    var custName = $('#id_dmr_customer option:selected').text().trim().toUpperCase();
+                    if (custName.indexOf('EIPL') === -1) {
+                        return;
+                    }
+
+                    try {
+                        var sheet = xlsx.xl.worksheets['sheet1.xml'];
+
+                        // --- Helper: get all data rows (skip header rows 1 & 2) ---
+                        var allRows = sheet.getElementsByTagName('row');
+                        var dataRows = [];
+                        for (var r = 0; r < allRows.length; r++) {
+                            if (parseInt(allRows[r].getAttribute('r')) > 2) {
+                                dataRows.push(allRows[r]);
+                            }
+                        }
+                        if (dataRows.length <= 1) return;
+
+                        // --- Helper: convert 0-based col index to Excel col letter (A, B, ..., Z, AA ...) ---
+                        function colLetter(n) {
+                            var s = '';
+                            while (n >= 0) {
+                                s = String.fromCharCode(n % 26 + 65) + s;
+                                n = Math.floor(n / 26) - 1;
+                            }
+                            return s;
+                        }
+
+                        // --- Helper: get cell value from a row element by cell reference ---
+                        function getCellVal(rowEl, cellRef) {
+                            var cells = rowEl.getElementsByTagName('c');
+                            for (var ci = 0; ci < cells.length; ci++) {
+                                if (cells[ci].getAttribute('r') === cellRef) {
+                                    var t = cells[ci].getAttribute('t');
+                                    if (t === 'inlineStr') {
+                                        var is = cells[ci].getElementsByTagName('t');
+                                        return is.length ? is[0].textContent : '';
+                                    } else if (t === 's') {
+                                        var vEls = cells[ci].getElementsByTagName('v');
+                                        if (!vEls.length) return '';
+                                        var idx = parseInt(vEls[0].textContent);
+                                        var siEls = xlsx.xl['sharedStrings.xml'].getElementsByTagName('si');
+                                        if (siEls[idx]) {
+                                            var tEls = siEls[idx].getElementsByTagName('t');
+                                            return tEls.length ? tEls[0].textContent : '';
+                                        }
+                                        return '';
+                                    } else {
+                                        var vEls2 = cells[ci].getElementsByTagName('v');
+                                        return vEls2.length ? vEls2[0].textContent : '';
+                                    }
+                                }
+                            }
+                            return '';
+                        }
+
+                        // --- Get headers from DataTables API ---
+                        var dtApi = $('#trip_report_table').DataTable();
+                        var headers = dtApi.settings()[0].aoColumns.map(function(c) {
+                            return (c.sTitle || '').replace(/<[^>]*>?/gm, '').trim().toUpperCase();
+                        });
+
+                        // Find the grouping key column (C Note) dynamically based on common header names
+                        var jobNoColIdx = 1; // Default fallback
+                        var possibleKeys = ['C NOTE', 'LLR NO', 'JOB NO', 'BVM JOB NO', 'REF NUM'];
+                        for (var p = 0; p < possibleKeys.length; p++) {
+                            var found = false;
+                            for (var h = 0; h < headers.length; h++) {
+                                if (headers[h] === possibleKeys[p]) { 
+                                    jobNoColIdx = h; 
+                                    found = true; 
+                                    break; 
+                                }
+                            }
+                            if (found) break;
+                        }
+
+                        var numCols = headers.length;
+                        var mergeArr = [];
+
+                        // Columns that should NEVER be merged - cargo details that are unique per row
+                        var neverMergeCols = [
+                            'NO OF PIECES', 'ACTUAL WEIGHT', 'ACTUAL WEIGHT (KGS)', 'CHARGEABLE WEIGHT', 
+                            'CAPACITY', 'CBM', 'SHIPPER SEAL #', 'PKG', 'SHIPPER PKG', 'REFERENCE NO'
+                        ];
+
+
+
+
+
+                        for (var col = 0; col < numCols; col++) {
+                            var headerText = headers[col] || '';
+                            var isCharge = headerText.indexOf('CHARGE') !== -1;
+                            var isNeverMerge = neverMergeCols.indexOf(headerText) !== -1;
+
+                            if (isNeverMerge) continue;
+
+                            var startIdx = 0;
+                            var firstRowNum = parseInt(dataRows[0].getAttribute('r'));
+                            var lastVal = getCellVal(dataRows[0], colLetter(col) + firstRowNum);
+                            var lastKey = getCellVal(dataRows[0], colLetter(jobNoColIdx) + firstRowNum);
+
+                            for (var i = 1; i < dataRows.length; i++) {
+                                var rowNum = parseInt(dataRows[i].getAttribute('r'));
+                                var curVal = getCellVal(dataRows[i], colLetter(col) + rowNum);
+                                var curKey = getCellVal(dataRows[i], colLetter(jobNoColIdx) + rowNum);
+
+                                var merge = false;
+                                if (col === jobNoColIdx || col === 0) {
+                                    // S.NO and JOB NO: merge if identical value
+                                    merge = (curVal === lastVal && curVal !== '');
+                                } else if (isCharge) {
+                                    // CHARGE columns: force merge entire C Note group
+                                    merge = (curKey === lastKey && curKey !== '');
+                                } else {
+                                    // All others: merge only if same value within same C Note
+                                    merge = (curVal === lastVal && curKey === lastKey && curKey !== '');
+                                }
+
+                                if (!merge) {
+                                    if (i - 1 > startIdx) {
+                                        mergeArr.push({
+                                            col: colLetter(col),
+                                            startRow: parseInt(dataRows[startIdx].getAttribute('r')),
+                                            endRow: parseInt(dataRows[i - 1].getAttribute('r'))
+                                        });
+                                    }
+                                    startIdx = i;
+                                    lastVal = curVal;
+                                    lastKey = curKey;
+                                }
+                            }
+                            var lastRowNum = parseInt(dataRows[dataRows.length - 1].getAttribute('r'));
+                            if (dataRows.length - 1 > startIdx) {
+                                mergeArr.push({
+                                    col: colLetter(col),
+                                    startRow: parseInt(dataRows[startIdx].getAttribute('r')),
+                                    endRow: lastRowNum
+                                });
+                            }
+                        }
+
+                        // === Add bottom border line between C Note groups ===
+                        var prevKey = getCellVal(dataRows[0], colLetter(jobNoColIdx) + parseInt(dataRows[0].getAttribute('r')));
+                        for (var bi = 1; bi < dataRows.length; bi++) {
+                            var biRn = parseInt(dataRows[bi].getAttribute('r'));
+                            var biKey = getCellVal(dataRows[bi], colLetter(jobNoColIdx) + biRn);
+                            if (biKey !== prevKey && prevKey !== '') {
+                                // Add thick bottom border to all cells in last row of previous group
+                                var prevRow = dataRows[bi - 1];
+                                var prevCells = prevRow.getElementsByTagName('c');
+                                for (var pc = 0; pc < prevCells.length; pc++) {
+                                    var curStyle = prevCells[pc].getAttribute('s') || '0';
+                                    // We use s=55 which in most DataTables xlsx output has a bottom border
+                                    prevCells[pc].setAttribute('s', '55');
+                                }
+                            }
+                            prevKey = biKey;
+                        }
+
+                        if (mergeArr.length === 0) return;
+
+                        // --- Insert mergeCells node in correct position ---
+                        var mergeCellsNode = sheet.getElementsByTagName('mergeCells')[0];
+                        if (!mergeCellsNode) {
+                            mergeCellsNode = sheet.createElement('mergeCells');
+                            var sheetData = sheet.getElementsByTagName('sheetData')[0];
+                            if (sheetData && sheetData.nextSibling) {
+                                sheetData.parentNode.insertBefore(mergeCellsNode, sheetData.nextSibling);
+                            } else {
+                                sheet.documentElement.appendChild(mergeCellsNode);
+                            }
+                        }
+                        mergeCellsNode.setAttribute('count', mergeArr.length);
+
+                        // Clear existing merges if any
+                        while (mergeCellsNode.firstChild) {
+                            mergeCellsNode.removeChild(mergeCellsNode.firstChild);
+                        }
+
+                        mergeArr.forEach(function (m) {
+                            var node = sheet.createElement('mergeCell');
+                            node.setAttribute('ref', m.col + m.startRow + ':' + m.col + m.endRow);
+                            mergeCellsNode.appendChild(node);
+                        });
+
+                    } catch (e) {
+                        alert('Excel merge error: ' + e.message);
+                    }
+                }
+            },
             { extend: 'print', className: 'btn btn-sm btn-info', title: 'DMR Report' }
         ],
         order: [[1, 'desc']]

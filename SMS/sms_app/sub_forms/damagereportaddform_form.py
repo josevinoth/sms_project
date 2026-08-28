@@ -36,6 +36,7 @@ class DamagereportaddForm(forms.ModelForm):
         widgets = {
             'dam_damages1': forms.SelectMultiple(attrs={'id': 'dam_damages1', 'class': 'form-control'}),
             'dam_deviation1': forms.SelectMultiple(attrs={'id': 'dam_deviation1', 'class': 'form-control'}),
+            'dam_comments': forms.Textarea(attrs={'id': 'dam_comments', 'class': 'form-control form-control-modern', 'rows': 8, 'style': 'width:100%; resize:vertical;'}),
         }
 
     def __init__(self, *args, **kwargs):

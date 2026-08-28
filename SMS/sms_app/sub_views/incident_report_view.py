@@ -60,7 +60,7 @@ def incident_list(request):
     first_name = request.session.get('first_name')
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
-    incident_list = IncidentReportInfo.objects.all()
+    incident_list = IncidentReportInfo.objects.select_related('inc_branch', 'inc_unit', 'inc_customer', 'inc_details', 'inc_status', 'inc_approval_status').all()
     if from_date:
         incident_list = incident_list.filter(inc_updated_on__date__gte=from_date)
 
@@ -89,15 +89,46 @@ def incident_report(request):
     first_name = request.session.get('first_name')
     from_date = request.GET.get('from_date', None)
     to_date = request.GET.get('to_date', None)
-    incident_list = IncidentReportInfo.objects.all()
+    incident_list = IncidentReportInfo.objects.select_related('inc_branch', 'inc_unit', 'inc_customer', 'inc_details', 'inc_status', 'inc_approval_status').all()
     if from_date:
         incident_list = incident_list.filter(inc_incident_date__date__gte=from_date)
 
     if to_date:
         incident_list = incident_list.filter(inc_incident_date__date__lte=to_date)
 
+    if request.GET.get('draw'):
+        from django.http import JsonResponse
+        draw = int(request.GET.get('draw', 1))
+        start = int(request.GET.get('start', 0))
+        length = int(request.GET.get('length', 10))
+
+        total_records = incident_list.count()
+        paginated_list = incident_list[start:start+length]
+
+        data = []
+        for item in paginated_list:
+            data.append([
+                str(item.id),
+                item.inc_incident_date.strftime('%b %d, %Y, %I:%M %p') if item.inc_incident_date else '',
+                str(item.inc_branch if item.inc_branch else ''),
+                str(item.inc_unit if item.inc_unit else ''),
+                str(item.inc_customer if item.inc_customer else ''),
+                str(item.inc_details if item.inc_details else ''),
+                str(item.inc_analysis if item.inc_analysis else ''),
+                item.inc_CAPA_issueddate.strftime('%b. %d, %Y') if item.inc_CAPA_issueddate else 'None',
+                item.inc_CAPA_closeddate.strftime('%b. %d, %Y') if item.inc_CAPA_closeddate else 'None',
+                str(item.inc_status if item.inc_status else ''),
+                str(item.inc_approval_status if item.inc_approval_status else '')
+            ])
+
+        return JsonResponse({
+            'draw': draw,
+            'recordsTotal': total_records,
+            'recordsFiltered': total_records,
+            'data': data
+        })
+
     context = {
-        'incident_list': incident_list,
         'first_name': first_name,
         'from_date': from_date,
         'to_date': to_date,

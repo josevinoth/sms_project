@@ -150,9 +150,13 @@
         $('#petty_cash_table').DataTable({
             scrollX: true,
             ordering: false, // Turn off sorting to prevent conflicts with Django backend ordering
-            paging: false,   // Use Django's built-in pagination below the table
-            info: false,     // Hide "Showing 1 to X" info since we use Django's
-            dom: '<"d-flex justify-content-between align-items-center mb-2"l><"d-flex justify-content-between align-items-center mb-2"B>rt',
+            paging: true,   
+            info: true,     
+            lengthMenu: [
+                [10, 25, 50, 100, -1],
+                [10, 25, 50, 100, 'All']
+            ],
+            dom: '<"d-flex justify-content-between align-items-center mb-2"l><"d-flex justify-content-between align-items-center mb-2"B>rtip',
             buttons: ['copy', 'csv', 'excel', 'print']
         });
     });

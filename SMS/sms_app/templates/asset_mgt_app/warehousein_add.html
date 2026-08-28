@@ -1,6 +1,46 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<style>
+/* Make inputs compact only on this page to fit in single screen view */
+.bvm-modern-layout .form-control-modern {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0.1rem 0.5rem !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+}
+.bvm-modern-layout .select2-container--default .select2-selection--single {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+    display: flex;
+    align-items: center;
+}
+.bvm-modern-layout .select2-selection__rendered {
+    line-height: normal !important;
+    padding-left: 0.5rem !important;
+    margin: 0 !important;
+}
+.bvm-modern-layout .select2-selection__arrow {
+    height: 30px !important;
+}
+.bvm-modern-layout .field-label {
+    margin-bottom: 2px !important;
+    font-size: 0.75rem !important;
+}
+.bvm-modern-layout .form-group-modern {
+    margin-bottom: 8px !important;
+}
+
+.bvm-modern-layout .form-control-modern[readonly],
+.bvm-modern-layout .form-control-modern:disabled {
+    background-color: #ffffff !important;
+    opacity: 1 !important;
+}
+</style>
 <div class="col-md-1">
 	<a href="{% url 'search' %}" class="btn btn-primary btn-block btn-lg">
 		<i class="fas fa-arrow-left"></i> Back
@@ -39,6 +79,7 @@
 </div>
 
 <hr>
+<div class="container-fluid py-2 bvm-modern-layout">
 <form method="POST" action="" onload="chargeable_weight_fn()" id="goods_add" data-branches-url="{% url 'load_units' %}">
 	{% csrf_token %}
 	<div class="row">
@@ -46,7 +87,7 @@
 		<div class="col-8">
 			<div class="container-fluid">
 				<div class="card text-white bg-info mb-3 " style="max-width: 100%;">
-					<div class="card-header text-center">
+					<div class="modern-list-header mb-4" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); border-radius: 12px; padding: 20px 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
 						<div class="row">
 							<div class="col-3"></div>
 							<div class="col-6">
@@ -68,233 +109,162 @@
 					<div class="card-body bg-light " >
 						<div class="row">
 							<div class="col-4">
-								<div class="input-group input-group-sm mb-3 ">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >WH Job Number</span>
-									</div>
-									{% render_field warehousein_form.wh_job_no value=request.session.ses_gatein_id_nam class="form-control disable_a_href" %}
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">WH JOB NUMBER</label>
+									{% render_field warehousein_form.wh_job_no value=request.session.ses_gatein_id_nam class="form-control disable_a_href form-control-modern" %}
 								</div>
-								<div class="input-group input-group-sm mb-3 ">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Stock Number</span>
-									</div>
-									{% render_field warehousein_form.wh_qr_rand_num id="wh_qr_rand_num" class="form-control disable_a_href" %}
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">STOCK NUMBER</label>
+									{% render_field warehousein_form.wh_qr_rand_num id="wh_qr_rand_num" class="form-control disable_a_href form-control-modern" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Shipper Invoice Number</span>
-									</div>
-									{% render_field warehousein_form.wh_goods_invoice value=request.session.ses_wh_invoice class="form-control disable_a_href" %}
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">SHIPPER INVOICE NUMBER</label>
+									{% render_field warehousein_form.wh_goods_invoice value=request.session.ses_wh_invoice class="form-control disable_a_href form-control-modern" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >PO Number</span>
-									</div>
-									{% render_field warehousein_form.wh_po_num value=request.session.ses_po_num class="form-control disable_a_href" %}
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">PO NUMBER</label>
+									{% render_field warehousein_form.wh_po_num value=request.session.ses_po_num class="form-control disable_a_href form-control-modern" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Customer Name</span>
-									</div>
-									{% render_field warehousein_form.wh_customer_name value=request.session.ses_customer_name class="form-control disable_a_href" %}
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">CUSTOMER NAME</label>
+									{% render_field warehousein_form.wh_customer_name value=request.session.ses_customer_name class="form-control disable_a_href form-control-modern" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Customer Type</span>
-									</div>
-									{% render_field warehousein_form.wh_customer_type value=request.session.ses_customer_type class="form-control disable_a_href" %}
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">CUSTOMER TYPE</label>
+									{% render_field warehousein_form.wh_customer_type value=request.session.ses_customer_type class="form-control disable_a_href form-control-modern" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Consigner</span>
-									</div>
-									{% render_field warehousein_form.wh_consigner value=request.session.ses_consigner class="form-control disable_a_href" %}
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">CONSIGNER</label>
+									{% render_field warehousein_form.wh_consigner value=request.session.ses_consigner class="form-control disable_a_href form-control-modern" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Consignee</span>
-									</div>
-									{% render_field warehousein_form.wh_consignee value=request.session.ses_consignee class="form-control disable_a_href" %}
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">CONSIGNEE</label>
+									{% render_field warehousein_form.wh_consignee value=request.session.ses_consignee class="form-control disable_a_href form-control-modern" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Unit Of Measure</span>
-									</div>
-									{% render_field warehousein_form.wh_uom id="uom" class="form-control disable_a_href" onchange="chargeable_weight_fn()" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">UNIT OF MEASURE</label>
+									{% render_field warehousein_form.wh_uom id="uom" class="form-control disable_a_href form-control-modern" onchange="chargeable_weight_fn()" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Number of Pieces</span>
-									</div>
-									{% render_field warehousein_form.wh_goods_pieces id="no_of_piece" class="form-control disable_a_href" onchange="chargeable_weight_fn()" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">NUMBER OF PIECES</label>
+									{% render_field warehousein_form.wh_goods_pieces id="no_of_piece" class="form-control disable_a_href form-control-modern" onchange="chargeable_weight_fn()" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Length</span>
-									</div>
-									{% render_field warehousein_form.wh_goods_length id="length" class="form-control disable_a_href" onchange="chargeable_weight_fn()" %}
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">LENGTH</label>
+									{% render_field warehousein_form.wh_goods_length id="length" class="form-control disable_a_href form-control-modern" onchange="chargeable_weight_fn()" %}
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Width</span>
-									</div>
-									{% render_field warehousein_form.wh_goods_width id="width"  class="form-control disable_a_href" onchange="chargeable_weight_fn()" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">WIDTH</label>
+									{% render_field warehousein_form.wh_goods_width id="width"  class="form-control disable_a_href form-control-modern" onchange="chargeable_weight_fn()" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Height</span>
-									</div>
-									{% render_field warehousein_form.wh_goods_height id="height" class="form-control disable_a_href" onchange="chargeable_weight_fn()" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">HEIGHT</label>
+									{% render_field warehousein_form.wh_goods_height id="height" class="form-control disable_a_href form-control-modern" onchange="chargeable_weight_fn()" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
 							<div class="col-4">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Package Type</span>
-									</div>
-									{% render_field warehousein_form.wh_goods_package_type class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">PACKAGE TYPE</label>
+									{% render_field warehousein_form.wh_goods_package_type class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Weight (Physical)</span>
-									</div>
-									{% render_field warehousein_form.wh_goods_weight id="weight" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">WEIGHT (PHYSICAL)</label>
+									{% render_field warehousein_form.wh_goods_weight id="weight" class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Required Area(Sq.ft)</span>
-									</div>
-									{% render_field warehousein_form.wh_goods_area id="req_area" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">REQUIRED AREA(SQ.FT)</label>
+									{% render_field warehousein_form.wh_goods_area id="req_area" class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Required Volume(Cu.ft)</span>
-									</div>
-									{% render_field warehousein_form.wh_goods_volume_weight id="volume_weight" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">REQUIRED VOLUME(CU.FT)</label>
+									{% render_field warehousein_form.wh_goods_volume_weight id="volume_weight" class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Volume Weight</span>
-									</div>
-									{% render_field warehousein_form.wh_chargeable_weight id="chargeable_weight" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">VOLUME WEIGHT</label>
+									{% render_field warehousein_form.wh_chargeable_weight id="chargeable_weight" class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >CBM</span>
-									</div>
-									{% render_field warehousein_form.wh_cbm class="form-control disable_a_href" id="cbm" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">CBM</label>
+									{% render_field warehousein_form.wh_cbm class="form-control disable_a_href form-control-modern" id="cbm" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Weight Deviation</span>
-									</div>
-									{% render_field warehousein_form.wh_weights_deviation class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">WEIGHT DEVIATION</label>
+									{% render_field warehousein_form.wh_weights_deviation class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Dimension Deviation</span>
-									</div>
-									{% render_field warehousein_form.wh_dimension_deviation class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">DIMENSION DEVIATION</label>
+									{% render_field warehousein_form.wh_dimension_deviation class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >No of Units Deviation</span>
-									</div>
-									{% render_field warehousein_form.wh_no_of_units_deviation class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">NO OF UNITS DEVIATION</label>
+									{% render_field warehousein_form.wh_no_of_units_deviation class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Damages</span>
-									</div>
-									{% render_field warehousein_form.wh_damages class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">DAMAGES</label>
+									{% render_field warehousein_form.wh_damages class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Mismatches</span>
-									</div>
-									{% render_field warehousein_form.wh_mismatches class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">MISMATCHES</label>
+									{% render_field warehousein_form.wh_mismatches class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
 							</div>
 							<div class="col-4">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text " >Warehouse Branch</span>
-									</div>
-									{% render_field warehousein_form.wh_branch id="wh_branch" class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">WAREHOUSE BRANCH</label>
+									{% render_field warehousein_form.wh_branch id="wh_branch" class="form-control form-control-modern" %}
+									<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Warehouse Unit</span>
-									</div>
-									{% render_field warehousein_form.wh_unit id="wh_unit" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">WAREHOUSE UNIT</label>
+									{% render_field warehousein_form.wh_unit id="wh_unit" class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Warehouse Bay</span>
-									</div>
-									{% render_field warehousein_form.wh_bay id="wh_bay" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">WAREHOUSE BAY</label>
+									{% render_field warehousein_form.wh_bay id="wh_bay" class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Stacking Layer</span>
-									</div>
-									{% render_field warehousein_form.wh_stack_layer id="wh_stack_layer" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">STACKING LAYER</label>
+									{% render_field warehousein_form.wh_stack_layer id="wh_stack_layer" class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Available Area (Sq.ft)</span>
-									</div>
-									{% render_field warehousein_form.wh_available_area id="wh_available_area" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">AVAILABLE AREA (SQ.FT)</label>
+									{% render_field warehousein_form.wh_available_area id="wh_available_area" class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Available Volume (Cu.ft)</span>
-									</div>
-									{% render_field warehousein_form.wh_available_volume id="wh_available_volume" class="form-control disable_a_href" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">AVAILABLE VOLUME (CU.FT)</label>
+									{% render_field warehousein_form.wh_available_volume id="wh_available_volume" class="form-control disable_a_href form-control-modern" %}
+									<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3" >
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Check-In Time</span>
-									</div>
-									{% render_field warehousein_form.wh_checkin_time id="wh_checkin_time" type="datetime-local" class="form-control"%}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">GOODS STATUS</label>
+									{% render_field warehousein_form.wh_check_in_out id="wh_check_in_out" class="form-control disable_a_href form-control-modern"%}
+									<!--<input type="text" class="form-control disable_a_href form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 								</div>
-								<div class="input-group input-group-sm mb-3" >
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Goods Status</span>
-									</div>
-									{% render_field warehousein_form.wh_check_in_out id="wh_check_in_out" class="form-control disable_a_href"%}
-									<!--<input type="text" class="form-control disable_a_href" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<!--								<div class="input-group input-group-sm mb-3">-->
-								<!--									<div class="input-group-prepend">-->
-								<!--										<span class="input-group-text" >Status</span>-->
-								<!--									</div>-->
-								<!--									{% render_field warehousein_form.wh_goods_status class="form-control" %}-->
-								<!--									&lt;!&ndash;<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
+								<!--								<div class="form-group form-group-modern">
+									<label class="form-label-modern field-label d-block text-muted">STATUS</label>-->
+								<!--									{% render_field warehousein_form.wh_goods_status class="form-control form-control-modern" %}-->
+								<!--									&lt;!&ndash;<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">&ndash;&gt;-->
 								<!--								</div>-->
 							</div>
 						</div>

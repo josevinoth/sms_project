@@ -16,7 +16,7 @@ from ..models import Warehouse_goods_info
 from ..views import send_department_email
 from num2words import num2words  # Import the num2words library to convert numbers to words
 from django.utils.timezone import now
-
+import threading
 # List goods
 @login_required(login_url='login_page')
 def goods_list(request):
@@ -299,7 +299,7 @@ def goods_add(request, goods_id=0):
                 last_id = (Warehouse_goods_info.objects.values_list('id', flat=True)).last()
                 Warehouse_goods_info.objects.filter(id=last_id).update(wh_qr_rand_num=wh_stock_num)
                 goods_update(request)
-                wh_excess_stock_email(request)
+                threading.Thread(target=wh_excess_stock_email, args=(None,)).start()
             else:
                 print("Goods Form not saved")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
@@ -354,7 +354,7 @@ def goods_add(request, goods_id=0):
                     # transaction.set_rollback(True)
                 else:
                     messages.success(request, 'Record Updated Successfully')
-                wh_excess_stock_email(request)
+                threading.Thread(target=wh_excess_stock_email, args=(None,)).start()
             else:
                 print("Form is not Valid")
                 messages.error(request, 'Record Not Saved.Please Enter All Required Fields')
@@ -398,18 +398,21 @@ def goods_update(request):
     # Update all records for this job
     invoice_ids = list(Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).order_by('id').values_list('id', flat=True))
     
-    for i, pk in enumerate(invoice_ids):
-        if i == 0:
-            Warehouse_goods_info.objects.filter(pk=pk).update(
-                wh_invoice_amount_inr=invoice_amount_inr,
-                wh_invoice_weight_unit=invoice_weight,
-                wh_invoice_value=invoice_value,
-                wh_invoice_qty=invoice_package,
-                wh_gross_weight=gross_wt,
-                wh_total_qty=total_qty
-            )
-        else:
-            Warehouse_goods_info.objects.filter(pk=pk).update(
+    if invoice_ids:
+        # Update the first record
+        first_pk = invoice_ids[0]
+        Warehouse_goods_info.objects.filter(pk=first_pk).update(
+            wh_invoice_amount_inr=invoice_amount_inr,
+            wh_invoice_weight_unit=invoice_weight,
+            wh_invoice_value=invoice_value,
+            wh_invoice_qty=invoice_package,
+            wh_gross_weight=gross_wt,
+            wh_total_qty=total_qty
+        )
+
+        # Update all remaining records in a SINGLE query instead of a loop
+        if len(invoice_ids) > 1:
+            Warehouse_goods_info.objects.filter(pk__in=invoice_ids[1:]).update(
                 wh_invoice_amount_inr=0.0,
                 wh_invoice_weight_unit=0.0,
                 wh_invoice_value=0.0,
@@ -438,7 +441,7 @@ def goods_update(request):
         Warehouse_goods_info.objects.filter(wh_job_no=wh_job_id).update(wh_Dam_rep_job_num_id=dr_job_num_id)
     except ObjectDoesNotExist:
         pass
-    warehousevolme_area_calc(request)
+    threading.Thread(target=warehousevolme_area_calc, args=(None,)).start()
 
 
 def to_camel_case(text):
@@ -542,3 +545,76 @@ def wh_excess_stock_email(self, *args, **kwargs):
             if email_status and email_status.email_sent:
                 email_status.email_sent = False
                 email_status.save()
+from django.http import JsonResponse
+from django.urls import reverse
+from django.db.models import Q
+
+@login_required(login_url='login_page')
+def goods_list_ajax(request):
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '')
+
+    queryset = Warehouse_goods_info.objects.select_related(
+        'wh_customer_name', 'wh_customer_type', 'wh_branch', 'wh_unit', 'wh_bay', 'wh_stack_layer'
+    ).all()
+
+    if search_value:
+        queryset = queryset.filter(
+            Q(wh_qr_rand_num__icontains=search_value) |
+            Q(wh_goods_invoice__icontains=search_value) |
+            Q(wh_customer_name__cu_name__icontains=search_value)
+        )
+
+    total_records = Warehouse_goods_info.objects.count()
+    filtered_records = queryset.count()
+
+    # Ordering
+    order_column_index = request.GET.get('order[0][column]', 0)
+    order_dir = request.GET.get('order[0][dir]', 'desc')
+
+    # Matching the 17 headers in goods_list.html
+    columns = [
+        'edit', 'wh_check_in_out',
+        'wh_qr_rand_num', 'wh_goods_invoice', 'wh_customer_name__cu_name', 'wh_customer_type__tb_trbusinesstype',
+        'wh_goods_pieces', 'wh_goods_package_type', 'wh_goods_length', 'wh_goods_width',
+        'wh_goods_height', 'wh_goods_weight', 'wh_branch__loc_name', 'wh_unit__unit_name',
+        'wh_bay__bay_bayname', 'wh_stack_layer__stack_layer', 'wh_goods_area', 'wh_goods_volume_weight',
+        'wh_check_in_out'
+    ]
+    if int(order_column_index) < len(columns):
+        order_by = columns[int(order_column_index)]
+        if order_by and order_by not in ['edit', 'wh_check_in_out']:
+            if order_dir == 'desc':
+                order_by = f"-{order_by}"
+            queryset = queryset.order_by(order_by)
+
+    data = []
+    for item in queryset[start:start+length]:
+        data.append({
+            'wh_qr_rand_num': item.wh_qr_rand_num or '',
+            'wh_goods_invoice': item.wh_goods_invoice or '',
+            'wh_customer_name': str(item.wh_customer_name.cu_name) if item.wh_customer_name else 'None',
+            'wh_customer_type': str(item.wh_customer_type.tb_trbusinesstype) if item.wh_customer_type else 'None',
+            'wh_goods_pieces': item.wh_goods_pieces or 0,
+            'wh_goods_package_type': item.wh_goods_package_type or '',
+            'wh_goods_length': item.wh_goods_length or 0,
+            'wh_goods_width': item.wh_goods_width or 0,
+            'wh_goods_height': item.wh_goods_height or 0,
+            'wh_goods_weight': item.wh_goods_weight or 0,
+            'wh_branch': str(item.wh_branch.loc_name) if item.wh_branch else 'None',
+            'wh_unit': str(item.wh_unit.unit_name) if item.wh_unit else 'None',
+            'wh_bay': str(item.wh_bay.bay_bayname) if item.wh_bay else 'None',
+            'wh_stack_layer': str(item.wh_stack_layer.stack_layer) if item.wh_stack_layer else 'None',
+            'wh_goods_area': item.wh_goods_area or 0,
+            'wh_goods_volume_weight': item.wh_goods_volume_weight or 0,
+            'wh_check_in_out': item.wh_check_in_out or 0
+        })
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': total_records,
+        'recordsFiltered': filtered_records,
+        'data': data
+    })

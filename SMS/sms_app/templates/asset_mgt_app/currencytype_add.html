@@ -1,51 +1,48 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-
-<form method="POST" action="">
-	{% csrf_token %}
-
-	<!--{{form.as_p}}-->
-
-	<div class="row">
-		<div class="col-3"></div>
-		<div class="col-6">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Currency Type</h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Currency</span>
-									</div>
-									{% render_field Currencytype_form.currency_type class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Conversion Value</span>
-									</div>
-									{% render_field Currencytype_form.converision_value class="form-control" %}
-									<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
-								</div>
-							</div>
-							<div class="message">
-								{{form.errors}}
-							</div>
-							<!--<input class="btn btn-success" type="submit" name="Create User">-->
-						</div>
-						<button type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'currencytype_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-3"></div>
-	</div>
-</form>
-
+<div class="container-fluid py-4 bvm-modern-layout">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-8">
+            <div class="modern-list-header mb-4" style="display: block !important; overflow: hidden;">
+                <div class="row align-items-center">
+                    <div class="col-12 text-center text-md-left">
+                        <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;">
+                            <i class="fas fa-money-bill-wave mr-2"></i> Add/Update Currency Type
+                        </h3>
+                    </div>
+                </div>
+            </div>
+            <form method="POST" action="" class="modern-card p-4 p-md-5 mb-5" style="background: var(--bg-card); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                {% csrf_token %}
+                <div class="form-section mb-4">
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <label class="form-label font-weight-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px; color: #0f172a;">Currency Type</label>
+                            {% render_field Currencytype_form.currency_type class="form-control form-control-modern" placeholder="Enter currency type (e.g., USD)" %}
+                            <div class="message text-danger">{{ Currencytype_form.currency_type.errors }}</div>
+                        </div>
+                        <div class="col-12 mb-4">
+                            <label class="form-label font-weight-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px; color: #0f172a;">Conversion Value</label>
+                            {% render_field Currencytype_form.converision_value class="form-control form-control-modern" placeholder="Enter conversion value" %}
+                            <div class="message text-danger">{{ Currencytype_form.converision_value.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-4 pt-3" style="border-top: 1px solid #e2e8f0;">
+                    <div class="col-6 text-left">
+                        <button type="submit" class="btn px-4 py-2" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; color: white; border-radius: 10px; font-weight: 600; text-transform: uppercase;">
+                            <i class="fas fa-save mr-2"></i> Submit
+                        </button>
+                    </div>
+                    <div class="col-6 text-right">
+                        <a href="{% url 'currencytype_list' %}" class="btn btn-cancel px-4 py-2" style="border-radius: 10px; font-weight: 600; text-transform: uppercase;">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock content %}

@@ -13,6 +13,64 @@ from ..models import VehicletypeInfo, Loadingbay_Info, TrbusinesstypeInfo, Custo
     WhratemasterInfo, BilingInfo
 from django.shortcuts import render, redirect
 from datetime import date, datetime
+
+from django.http import JsonResponse
+from django.db.models import Q
+
+def invoice_list_ajax_response(request, queryset):
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '')
+    
+    order_column_index = int(request.GET.get('order[0][column]', 0))
+    order_dir = request.GET.get('order[0][dir]', 'asc')
+    
+    columns = [
+        'wh_job_no', 'wh_voucher_num', 'wh_goods_invoice',
+        'wh_customer_name__cu_name',
+        'wh_customer_type__tb_trbusinesstype',
+        'wh_checkin_time', 'wh_checkout_time', 'wh_total_invoice_cost'
+    ]
+    
+    recordsTotal = queryset.count()
+    
+    if search_value:
+        queryset = queryset.filter(
+            Q(wh_job_no__icontains=search_value) |
+            Q(wh_voucher_num__icontains=search_value) |
+            Q(wh_goods_invoice__icontains=search_value) |
+            Q(wh_customer_name__cu_name__icontains=search_value)
+        )
+        
+    recordsFiltered = queryset.count()
+    
+    if order_column_index < len(columns):
+        order_col = columns[order_column_index]
+        if order_dir == 'desc':
+            order_col = '-' + order_col
+        queryset = queryset.order_by(order_col)
+        
+    data = []
+    for obj in queryset[start:start+length]:
+        data.append({
+            'wh_job_no': obj.wh_job_no or '',
+            'wh_voucher_num': obj.wh_voucher_num or 'None',
+            'wh_goods_invoice': obj.wh_goods_invoice or '',
+            'wh_customer_name': str(obj.wh_customer_name) if obj.wh_customer_name else '',
+            'wh_customer_type': str(obj.wh_customer_type) if obj.wh_customer_type else '',
+            'wh_checkin_time': obj.wh_checkin_time.strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if obj.wh_checkin_time else 'None',
+            'wh_checkout_time': obj.wh_checkout_time.strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if obj.wh_checkout_time else 'None',
+            'wh_total_invoice_cost': str(obj.wh_total_invoice_cost) if obj.wh_total_invoice_cost else '0.0',
+        })
+        
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': recordsTotal,
+        'recordsFiltered': recordsFiltered,
+        'data': data
+    })
+
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
@@ -698,10 +756,88 @@ def invoice_add(request, invoice_id=0):
 @login_required(login_url='login_page')
 def invoice_report(request):
     first_name = request.session.get('first_name')
-    goods_list = Warehouse_goods_info.objects.exclude(wh_voucher_num=None)
+    
+    # Handle DataTables AJAX
+    if request.GET.get('draw'):
+        import traceback
+        from django.http import JsonResponse
+        from django.db.models import Q
+        try:
+            draw = int(request.GET.get('draw', 1))
+            start = int(request.GET.get('start', 0))
+            length = int(request.GET.get('length', 10))
+            search_value = request.GET.get('search[value]', '')
+            
+            queryset = Warehouse_goods_info.objects.exclude(wh_voucher_num=None).select_related(
+                'wh_customer_name', 'wh_customer_type'
+            )
+            
+            recordsTotal = queryset.count()
+            
+            if search_value:
+                queryset = queryset.filter(
+                    Q(wh_job_no__icontains=search_value) |
+                    Q(wh_voucher_num__icontains=search_value) |
+                    Q(wh_goods_invoice__icontains=search_value) |
+                    Q(wh_customer_name__cu_name__icontains=search_value) |
+                    Q(wh_qr_rand_num__icontains=search_value)
+                )
+                
+            recordsFiltered = queryset.count()
+            queryset = queryset.order_by('-id')
+            
+            data = []
+            if length == -1:
+                sliced_qs = queryset[start:]
+            else:
+                sliced_qs = queryset[start:start+length]
+
+            for obj in sliced_qs:
+                checkin = obj.wh_checkin_time.strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if hasattr(obj.wh_checkin_time, 'strftime') else str(obj.wh_checkin_time or '')
+                checkout = obj.wh_checkout_time.strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if hasattr(obj.wh_checkout_time, 'strftime') else str(obj.wh_checkout_time or '')
+                
+                data.append([
+                    obj.wh_job_no or '',
+                    obj.wh_goods_invoice or '',
+                    obj.wh_consigner or '',
+                    obj.wh_voucher_num or '',
+                    obj.wh_qr_rand_num or '',
+                    str(obj.wh_customer_name) if obj.wh_customer_name else '',
+                    str(obj.wh_customer_type) if obj.wh_customer_type else '',
+                    str(obj.wh_truck_type) if obj.wh_truck_type else '',
+                    str(obj.wh_goods_pieces) if obj.wh_goods_pieces is not None else '',
+                    str(obj.wh_loading_charge_unit) if obj.wh_loading_charge_unit is not None else '',
+                    str(obj.wh_total_loading_cost) if obj.wh_total_loading_cost is not None else '',
+                    str(obj.wh_total_loading_cost) if obj.wh_total_loading_cost is not None else '',
+                    str(obj.wh_storage_cost_per_day) if obj.wh_storage_cost_per_day is not None else '',
+                    str(obj.wh_storage_cost_total) if obj.wh_storage_cost_total is not None else '',
+                    str(obj.wh_crane_cost_l2h) if obj.wh_crane_cost_l2h is not None else '',
+                    str(obj.wh_crane_cost_g2h) if obj.wh_crane_cost_g2h is not None else '',
+                    str(obj.wh_crane_cost) if obj.wh_crane_cost is not None else '',
+                    str(obj.wh_forklift_cost_l2hr) if obj.wh_forklift_cost_l2hr is not None else '',
+                    str(obj.wh_forklift_cost_g2hr) if obj.wh_forklift_cost_g2hr is not None else '',
+                    str(obj.wh_forklift_cost) if obj.wh_forklift_cost is not None else '',
+                    str(obj.wh_goods_weight) if obj.wh_goods_weight is not None else '',
+                    checkin,
+                    checkout,
+                    str(obj.wh_storage_time) if obj.wh_storage_time is not None else '',
+                    str(obj.wh_check_in_out) if obj.wh_check_in_out else '',
+                    f'<span class="badge" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.4rem 0.6rem; border-radius: 6px;">{obj.wh_total_invoice_cost}</span>'
+                ])
+                
+            return JsonResponse({
+                'draw': draw,
+                'recordsTotal': recordsTotal,
+                'recordsFiltered': recordsFiltered,
+                'data': data
+            })
+        except Exception as e:
+            # DataTables natively displays the 'error' key if present in JSON
+            return JsonResponse({'error': f"Server Error: {str(e)}"}, status=200)
+
+    # Normal Page Load
     context = {
         'first_name': first_name,
-        'goods_list': goods_list,
     }
     return render(request, "asset_mgt_app/invoice_report.html", context)
 
@@ -748,10 +884,11 @@ def shipper_invoice_list(request, voucher_id):
     billing_end_date = invoice.bill_end_date
     request.session['ses_voucher_num_val'] = voucher_num_val
     request.session['ses_voucher_id'] = voucher_id
-    shipper_invoice_list = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
+    shipper_invoice_list = Warehouse_goods_info.objects.select_related('wh_gate_injob_no_id', 'wh_dispatch_id', 'wh_customer_name', 'wh_customer_type').filter(wh_voucher_num=voucher_num_val)
     if customer_type_id > 1:
         try:
-            invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,
+            invoice_list_master = Warehouse_goods_info.objects.select_related('wh_gate_injob_no_id', 'wh_dispatch_id', 'wh_customer_name', 'wh_customer_type').filter(
+                                                                      wh_customer_name=customer_name_val,
                                                                       wh_checkin_time__gte=billing_start_date,
                                                                       wh_check_in_out=2,
                                                                       wh_checkin_time__lte=billing_end_date,
@@ -762,7 +899,8 @@ def shipper_invoice_list(request, voucher_id):
             return redirect(request.META['HTTP_REFERER'])
     else:
         try:
-            invoice_list_master = Warehouse_goods_info.objects.filter(wh_customer_name=customer_name_val,
+            invoice_list_master = Warehouse_goods_info.objects.select_related('wh_gate_injob_no_id', 'wh_dispatch_id', 'wh_customer_name', 'wh_customer_type').filter(
+                                                                      wh_customer_name=customer_name_val,
                                                                       wh_check_in_out=2, wh_voucher_num=None)
         except ValueError:
             messages.error(request, 'Check Billing Start & End Date!')
@@ -919,12 +1057,14 @@ def load_whrate_model(request):
 def case_to_case_invoice_list_open(request):
     first_name = request.session.get('first_name')
     case_to_case = str(TrbusinesstypeInfo.objects.get(id=1))
-    open_invoice_list = Warehouse_goods_info.objects.filter(wh_voucher_num=None, wh_check_in_out=2, wh_customer_type=1)
+    open_invoice_list = Warehouse_goods_info.objects.select_related('wh_customer_name', 'wh_customer_type').filter(wh_voucher_num=None, wh_check_in_out=2, wh_customer_type=1)
     context = {
         'open_invoice_list': open_invoice_list,
         'first_name': first_name,
-        'invoice_type': str('Cast-To-Case Customer Open Invoice List'),
+        'invoice_type': str('Case-To-Case Customer Open Invoice List'),
     }
+    if request.GET.get('draw'):
+        return invoice_list_ajax_response(request, open_invoice_list)
     return render(request, "asset_mgt_app/invoice_list_open.html", context)
 
 
@@ -932,12 +1072,14 @@ def case_to_case_invoice_list_open(request):
 def dedicated_invoice_list_open(request):
     first_name = request.session.get('first_name')
     dedicated = str(TrbusinesstypeInfo.objects.get(id=3))
-    open_invoice_list = Warehouse_goods_info.objects.filter(wh_voucher_num=None, wh_check_in_out=2, wh_customer_type=3)
+    open_invoice_list = Warehouse_goods_info.objects.select_related('wh_customer_name', 'wh_customer_type').filter(wh_voucher_num=None, wh_check_in_out=2, wh_customer_type=3)
     context = {
         'open_invoice_list': open_invoice_list,
         'first_name': first_name,
         'invoice_type': str('Dedicated Customer  Open Invoice List'),
     }
+    if request.GET.get('draw'):
+        return invoice_list_ajax_response(request, open_invoice_list)
     return render(request, "asset_mgt_app/invoice_list_open.html", context)
 
 
@@ -945,12 +1087,14 @@ def dedicated_invoice_list_open(request):
 def exclusive_invoice_list_open(request):
     first_name = request.session.get('first_name')
     exlcusive = str(TrbusinesstypeInfo.objects.get(id=2))
-    open_invoice_list = Warehouse_goods_info.objects.filter(wh_voucher_num=None, wh_check_in_out=1, wh_customer_type=2)
+    open_invoice_list = Warehouse_goods_info.objects.select_related('wh_customer_name', 'wh_customer_type').filter(wh_voucher_num=None, wh_check_in_out=1, wh_customer_type=2)
     context = {
         'open_invoice_list': open_invoice_list,
         'first_name': first_name,
         'invoice_type': str('Exclusive Customer Open Invoice List'),
     }
+    if request.GET.get('draw'):
+        return invoice_list_ajax_response(request, open_invoice_list)
     return render(request, "asset_mgt_app/invoice_list_open.html", context)
 
 
