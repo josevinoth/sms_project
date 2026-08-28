@@ -44,7 +44,7 @@ def pregateintruck_add(request, pregateintruck_id=0):
 
     if request.method == "GET":
         if pregateintruck_id == 0:
-            form = PregateintruckForm()
+            form = PregateintruckForm(initial={'pregatein_number': gatein_num_id})
             truck = None
             high_value_check = None
             email_enable = False

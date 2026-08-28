@@ -409,6 +409,7 @@ urlpatterns = [
     path('load_pre_gate_in_truck_details/', views.load_pre_gate_in_truck_details,
          name='load_pre_gate_in_truck_details'),
     path('invoice_list/', views.invoice_list, name='invoice_list'),  # List invoice
+    path('invoice_list_ajax/', views.invoice_list_ajax, name='invoice_list_ajax'),
     path('invoice_report/', views.invoice_report, name='invoice_report'),  # List invoice report
     path('invoice_insert/', views.invoice_add, name='invoice_insert'),  # Add invoice
     path('invoice_update/<int:invoice_id>', views.invoice_add, name='invoice_update'),  # update invoice

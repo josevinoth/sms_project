@@ -842,16 +842,89 @@ def invoice_report(request):
     return render(request, "asset_mgt_app/invoice_report.html", context)
 
 
+def invoice_list_ajax(request):
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '')
+
+    order_column_index = int(request.GET.get('order[0][column]', 1))
+    order_dir = request.GET.get('order[0][dir]', 'desc')
+
+    queryset = BilingInfo.objects.select_related('bill_customer_name', 'bill_customer_type', 'bill_updated_by').all()
+    recordsTotal = queryset.count()
+
+    if search_value:
+        queryset = queryset.filter(
+            Q(bill_invoice_ref__icontains=search_value) |
+            Q(bill_customer_name__cu_name__icontains=search_value) |
+            Q(bill_customer_type__tb_trbusinesstype__icontains=search_value) |
+            Q(bill_status__icontains=search_value)
+        )
+
+    recordsFiltered = queryset.count()
+
+    columns = [
+        'bill_created_on',
+        'bill_invoice_ref',
+        'bill_invoice_date',
+        'bill_customer_name__cu_name',
+        'bill_customer_type__tb_trbusinesstype',
+        'bill_e_invoice',
+        'bill_total_post_gst',
+        'bill_updated_by__username',
+        'bill_updated_at',
+        'bill_status',
+    ]
+
+    if order_column_index < len(columns):
+        order_by = columns[order_column_index]
+        if order_by:
+            if order_dir == 'desc':
+                order_by = f"-{order_by}"
+            queryset = queryset.order_by(order_by)
+
+    data = []
+    from django.urls import reverse
+    
+    for invoiceinfo in queryset[start:start+length]:
+        excel_btn = f'<a href="{reverse("invoice_export_excel", args=[invoiceinfo.id])}" class="btn btn-sm btn-outline-success" style="border-radius: 6px;" title="Excel"><i class="fas fa-file-excel"></i></a>'
+        tally_btn = f'<a href="{reverse("shipper_invoice_export_excel", args=[invoiceinfo.id])}" class="btn btn-sm btn-outline-info" style="border-radius: 6px;" title="Tally"><i class="fas fa-file-invoice"></i></a>'
+        shipper_btn = f'<a class="btn btn-sm btn-outline-warning" href="{reverse("shipperinvoice_list", args=[invoiceinfo.id])}" style="border-radius: 6px;" title="Shipper Invoice List"><i class="fas fa-anchor"></i></a>'
+        edit_btn = f'<a class="btn btn-sm btn-outline-primary" href="{reverse("invoice_update", args=[invoiceinfo.id])}" style="border-radius: 6px;" title="Edit"><i class="fas fa-edit"></i></a>'
+        del_btn = f'<a class="btn btn-sm btn-outline-danger" href="{reverse("invoice_delete", args=[invoiceinfo.id])}" style="border-radius: 6px;" title="Delete" onclick="return confirm(\'Are you sure you want to delete this invoice?\');"><i class="fas fa-trash-alt"></i></a>'
+        
+        amount_badge = f'<span class="badge" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.4rem 0.6rem; border-radius: 6px;">{invoiceinfo.bill_total_post_gst or 0.0}</span>'
+        
+        data.append({
+            'bill_created_on': invoiceinfo.bill_created_on.strftime('%b %d, %Y, %I:%M %p') if invoiceinfo.bill_created_on else '',
+            'bill_invoice_ref': f'<span class="font-weight-bold">{invoiceinfo.bill_invoice_ref or ""}</span>',
+            'bill_invoice_date': invoiceinfo.bill_invoice_date.strftime('%b %d, %Y') if invoiceinfo.bill_invoice_date else '',
+            'bill_customer_name': f'<span class="font-weight-bold">{invoiceinfo.bill_customer_name.cu_name if invoiceinfo.bill_customer_name else ""}</span>',
+            'bill_customer_type': str(invoiceinfo.bill_customer_type) if invoiceinfo.bill_customer_type else '',
+            'bill_e_invoice': invoiceinfo.bill_e_invoice or 'None',
+            'bill_total_post_gst': amount_badge,
+            'bill_updated_by': invoiceinfo.bill_updated_by.username if invoiceinfo.bill_updated_by else '',
+            'bill_updated_at': invoiceinfo.bill_updated_at.strftime('%b %d, %Y, %I:%M %p') if invoiceinfo.bill_updated_at else '',
+            'bill_status': str(invoiceinfo.bill_status) if invoiceinfo.bill_status else '',
+            'excel_btn': excel_btn,
+            'tally_btn': tally_btn,
+            'shipper_btn': shipper_btn,
+            'edit_btn': edit_btn,
+            'del_btn': del_btn,
+        })
+
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': recordsTotal,
+        'recordsFiltered': recordsFiltered,
+        'data': data
+    })
+
 @login_required(login_url='login_page')
 def invoice_list(request):
     first_name = request.session.get('first_name')
-    invoice_list_val = (BilingInfo.objects.all()).order_by('-id')
-    page_number = request.GET.get('page')
-    paginator = Paginator(invoice_list_val, 50)
-    page_obj = paginator.get_page(page_number)
     context = {
-        'invoice_list_val': invoice_list_val,
-        'page_obj': page_obj,
         'first_name': first_name,
     }
     return render(request, "asset_mgt_app/invoice_list.html", context)
