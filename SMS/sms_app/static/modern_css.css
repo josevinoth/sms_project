@@ -2075,6 +2075,11 @@ body, .modern-card, .form-section, .form-control-modern, .modern-table td, .tabl
 .bvm-modern-layout .nav-pills-modern .btn:hover {
     background: var(--bg-section);
 }
+.bvm-modern-layout .nav-pills-modern .btn.disable_a_href {
+    background: var(--bg-card) !important;
+    color: var(--text-muted) !important;
+    border: 1px solid var(--border-light) !important;
+}
 .bvm-modern-layout .nav-pills-modern .btn.active-step {
     background: linear-gradient(135deg, #f59e0b, #d97706) !important;
     color: white !important;
