@@ -1697,10 +1697,21 @@ def vehicle_allotment_replace(request, allotment_id):
                 
                 consignments.update(co_vehicelnumber=new_vehicle_num)
 
+                # Reset approval status for linked trips so trip MUST be re-approved after vehicle replacement
+                from ..models import TripdetailInfo, Trip_approval_info, approval_status_info
+                linked_trips = TripdetailInfo.objects.filter(tr_consignmentnumber__in=consignments)
+                if linked_trips.exists():
+                    pending_status = approval_status_info.objects.filter(pk=2).first() or approval_status_info.objects.first()
+                    for t in linked_trips:
+                        if t.tr_approval:
+                            t.tr_approval.ta_approval_status = pending_status
+                            t.tr_approval.save()
+                        t.tc_financestatus_id = 8  # Reset finance status to pending approval
+
             alert_msg = ""
             if ewaybill_alert:
                 cons_str = ", ".join(affected_consignments)
-                alert_msg = f"⚠️ VEHICLE REPLACED SUCCESSFULLY!\n\nIMPORTANT NOTICE: Consignment(s) [{cons_str}] have existing E-Way Bill details.\nSince the vehicle number changed from {old_vehicle_num} to {new_vehicle_num}, please update/cancel Part-B of the E-Way Bill in Consignment Details to reflect the new vehicle number!"
+                alert_msg = f"⚠️ VEHICLE REPLACED SUCCESSFULLY!\n\nIMPORTANT NOTICE: Consignment(s) [{cons_str}] have existing E-Way Bill details.\nSince the vehicle number changed from {old_vehicle_num} to {new_vehicle_num}, Part-B of the E-Way Bill MUST be updated and re-approved with the revised PDF before departure!"
 
             return JsonResponse({'success': True, 'new_id': new_va.id, 'ewaybill_alert': ewaybill_alert, 'alert_msg': alert_msg})
 
