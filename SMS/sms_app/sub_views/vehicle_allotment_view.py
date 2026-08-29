@@ -504,6 +504,11 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
 
+            # Reset Buy Rates for non-market vehicles (Own & Attached)
+            if vehicle_source in [1, 2]:
+                obj.va_standardbuy = None
+                obj.va_specialbuy = None
+
             # Auto-fill va_sale from RtratemasterInfo if left blank or 0
             if not obj.va_sale or float(obj.va_sale) == 0:
                 enquiry_obj = obj.va_enquirynumber
@@ -659,6 +664,11 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 )
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
+
+            # Reset Buy Rates for non-market vehicles (Own & Attached)
+            if vehicle_source in [1, 2]:
+                obj.va_standardbuy = None
+                obj.va_specialbuy = None
 
             # Auto-fill va_special_sale from va_sale if left blank or 0
             if not obj.va_special_sale or float(obj.va_special_sale) == 0:
@@ -1647,8 +1657,8 @@ def vehicle_allotment_replace(request, allotment_id):
                     va_vendor_id=new_vendor_id if new_vendor_id else old_va.va_vendor_id,
                     va_sale=get_decimal(request.POST.get('va_sale'), old_va.va_sale),
                     va_special_sale=get_decimal(request.POST.get('va_special_sale'), getattr(old_va, 'va_special_sale', None)) or get_decimal(request.POST.get('va_sale'), old_va.va_sale),
-                    va_standardbuy=get_decimal(request.POST.get('va_standardbuy'), old_va.va_standardbuy),
-                    va_specialbuy=get_decimal(request.POST.get('va_specialbuy'), old_va.va_specialbuy),
+                    va_standardbuy=get_decimal(request.POST.get('va_standardbuy'), old_va.va_standardbuy) if new_source_id == 3 else None,
+                    va_specialbuy=get_decimal(request.POST.get('va_specialbuy'), old_va.va_specialbuy) if new_source_id == 3 else None,
                     va_profit_percentage=get_decimal(request.POST.get('va_profit_percentage'), old_va.va_profit_percentage)
                 )
 

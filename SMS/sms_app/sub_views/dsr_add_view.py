@@ -17,29 +17,99 @@ from ..sub_models.na_dimension_mod import Nadimension
 from django.core.exceptions import ObjectDoesNotExist
 
 
+from django.http import JsonResponse
+from django.db.models import Q
+
 @login_required(login_url='login_page')
 def dsr_reports(request):
     first_name = request.session.get('first_name')
-    form = DsrForm(request.POST or None)
-    customer_name = request.POST.get('ds_customer', '')
+
+    # Note: Using request.GET or request.POST for customer_name so it works with AJAX
+    customer_name = request.GET.get('ds_customer', request.POST.get('ds_customer', ''))
+    form = DsrForm(initial={'ds_customer': customer_name})
+
     goods_list = Warehouse_goods_info.objects.select_related(
-        'wh_gate_injob_no_id'
-    )
+        'wh_gate_injob_no_id', 'wh_lb_job_no_id'
+    ).order_by('-wh_gate_injob_no_id__gatein_arrival_date')
 
     if customer_name:
         goods_list = goods_list.filter(wh_customer_name=customer_name)
 
-    goods_list = goods_list.order_by('-wh_gate_injob_no_id__gatein_arrival_date')
+    # Check if this is a DataTables AJAX request
+    if request.GET.get('draw') or request.POST.get('draw'):
+        draw = int(request.GET.get('draw') or request.POST.get('draw') or 1)
+        start = int(request.GET.get('start', 0))
+        length = int(request.GET.get('length', 10))
+        search_value = request.GET.get('search[value]', '')
 
-    print(f"Filtering by customer name: {customer_name}")
-    paginator = Paginator(goods_list, 50)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+        if search_value:
+            goods_list = goods_list.filter(
+                Q(wh_job_no__icontains=search_value) |
+                Q(wh_qr_rand_num__icontains=search_value) |
+                Q(wh_customer_name__cu_name__icontains=search_value)
+            )
+
+        total_records_filtered = goods_list.count()
+        total_records_unfiltered = Warehouse_goods_info.objects.count()
+        paginator = Paginator(goods_list, length if length > 0 else total_records_filtered)
+        page_number = (start // length) + 1 if length > 0 else 1
+        page_obj = paginator.get_page(page_number)
+
+        data = []
+        for stock_value in page_obj:
+            gatein = stock_value.wh_gate_injob_no_id
+            lb = stock_value.wh_lb_job_no_id
+
+            data.append([
+                str(stock_value.wh_job_no or 'None'),
+                str(stock_value.wh_qr_rand_num or 'None'),
+                str(stock_value.wh_customer_name or 'None'),
+                format_dt_str(gatein.gatein_arrival_date) if gatein else 'None',
+                format_dt_str(lb.lb_stock_unloading_start_time) if lb else 'None',
+                format_dt_str(lb.lb_stock_unloading_end_time) if lb else 'None',
+                str(gatein.gatein_transporter if gatein else 'None'),
+                str(gatein.gatein_truck_number if gatein else 'None'),
+                str(stock_value.wh_consigner or 'None'),
+                str(stock_value.wh_consignee or 'None'),
+                str(lb.lb_packing_list if lb else 'None'),
+                str(gatein.gatein_hawb if gatein else 'None'),
+                str(gatein.gatein_destination if gatein else 'None'),
+                str(gatein.gatein_invoice if gatein else 'None'),
+                str(stock_value.wh_po_num or 'None'),
+                str(stock_value.wh_total_qty or 'None'),
+                str(stock_value.wh_gross_weight or 'None'),
+                str(stock_value.wh_invoice_weight_unit or 'None'),
+                str(stock_value.wh_uom or 'None'),
+                str(stock_value.wh_goods_length or 'None'),
+                str(stock_value.wh_goods_width or 'None'),
+                str(stock_value.wh_goods_height or 'None'),
+                str(stock_value.wh_goods_pieces or 'None'),
+                str(stock_value.wh_goods_package_type or 'None'),
+                str(stock_value.wh_chargeable_weight or 'None'),
+                str(stock_value.wh_cbm or 'None'),
+                str(stock_value.wh_invoice_value or 'None'),
+                str(lb.lb_stock_invoice_currency if lb else 'None'),
+                str(stock_value.wh_invoice_amount_inr or 'None'),
+                str(lb.lb_eway_bill if lb else 'None'),
+                format_dt_str(lb.lb_validity_date) if lb else 'None',
+                str(stock_value.wh_fumigation_process or 'None'),
+                str(stock_value.wh_check_in_out or 'None'),
+                str(stock_value.wh_branch or 'None'),
+                str(stock_value.wh_unit or 'None'),
+                str(stock_value.wh_bay or 'None'),
+                str(stock_value.wh_storage_time or 'None')
+            ])
+
+        return JsonResponse({
+            'draw': draw,
+            'recordsTotal': total_records_unfiltered,
+            'recordsFiltered': total_records_filtered,
+            'data': data
+        })
 
     context = {
         'first_name': first_name,
         'form': form,
-        'page_obj': page_obj,
         'customer_name': customer_name,
     }
     return render(request, "asset_mgt_app/dsr_report.html", context)
@@ -47,7 +117,7 @@ def dsr_reports(request):
 
 def format_dt_str(dt):
     if not dt:
-        return ""
+        return "None"
     dt = timezone.localtime(dt)
     return dt.strftime("%d-%m-%Y %I:%M %p")
 
@@ -344,13 +414,13 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         stock_value.wh_invoice_amount_inr,
                         getattr(stock_value.wh_lb_job_no_id, 'lb_eway_bill', ''),
                         str(getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', "") or ""),
-                        str(stock_value.wh_fumigation_process or ''),
+                        str(stock_value.wh_fumigation_process or 'None'),
                         str(stock_value.wh_branch),
                         stock_value.wh_storage_time,
                         stock_value.wh_job_no,
                         stock_value.wh_qr_rand_num,
                         stock_value.wh_comments,
-                        str(getattr(stock_value.wh_fumigation_action, 'action_taken_by', '') or '')
+                        str(getattr(stock_value.wh_fumigation_action, 'action_taken_by', '') or 'None')
 
                     ]
                 elif "EIPL" in customer_name_str:
@@ -385,7 +455,7 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         stock_value.wh_invoice_amount_inr,
                         getattr(stock_value.wh_lb_job_no_id, 'lb_eway_bill', ''),
                         str(getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', "") or ""),
-                        str(stock_value.wh_fumigation_process or ''),
+                        str(stock_value.wh_fumigation_process or 'None'),
                         str(stock_value.wh_branch),
                         stock_value.wh_storage_time,
                         stock_value.wh_job_no,
@@ -752,7 +822,7 @@ def dsr_send_email_view(request, pre_gatein_id=None, customer_name=None, subject
                         stock_value.wh_invoice_amount_inr,
                         getattr(stock_value.wh_lb_job_no_id, 'lb_eway_bill', ''),
                         str(getattr(stock_value.wh_lb_job_no_id, 'lb_validity_date', "") or ""),
-                        str(stock_value.wh_fumigation_process or ''),
+                        str(stock_value.wh_fumigation_process or 'None'),
                         "Stock on Hand" if str(stock_value.wh_check_in_out) == "Checked-In" else "Checked-In",
                         str(stock_value.wh_branch),
                         str(stock_value.wh_unit),

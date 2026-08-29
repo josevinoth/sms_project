@@ -544,10 +544,11 @@ function setDateFieldValue(selector, value) {
 			// ✅ Own/Attached
 			$('#va_vehiclenumber_mkt').addClass('disable_a_href').prop('disabled', true);
 			$('#va_vendor').addClass('disable_a_href').prop('disabled', true);
-			$('#va_specialbuy').removeClass('disable_a_href').prop('disabled', false);
+			$('#va_specialbuy').addClass('disable_a_href').prop('disabled', true).val('');
 			$('#va_sale').addClass('disable_a_href').prop('disabled', true);
-			$('#va_standardbuy').addClass('disable_a_href'); //  Restore Green
+			$('#va_standardbuy').addClass('disable_a_href').prop('disabled', true).val('');
 			$('#vendor_required_star').hide();
+			calculateProfit();
 		}
 	}
 </script>
@@ -601,6 +602,15 @@ function setDateFieldValue(selector, value) {
 </script>
 <script>
 function loadVendorBuyRate(isAutoLoad=false) {
+    var vehicleSource = $('#va_vehiclesource').val();
+    if (vehicleSource != 3) {
+        if (!isAutoLoad) {
+            $("#va_standardbuy").val("");
+            $("#va_specialbuy").val("");
+            calculateProfit();
+        }
+        return;
+    }
     var vehicleRequested = $('#va_vehicletype').val();
     var vehiclePlaced = $('#va_vehicletype_placed').val();
     var selectedType = $('#chk_requested').is(':checked') ? vehicleRequested : vehiclePlaced;
@@ -1435,6 +1445,7 @@ $("#va_vehiclesource").on("change", function () {
         var checkboxId = $('#modal_chk_requested').is(':checked') ? 'chk_requested' : 'chk_placed';
         var selectedType = $('#modal_chk_requested').is(':checked') ? vehicleRequested : vehiclePlaced;
         var vendorId = $('#modal_va_vendor').val();
+        var vehicleSource = $('#modal_va_vehiclesource').val();
 
         if (selectedType) {
             // Fetch Sale Rate
@@ -1457,8 +1468,8 @@ $("#va_vehiclesource").on("change", function () {
                 }
             });
 
-            // Fetch Buy Rates
-            if (vendorId) {
+            // Fetch Buy Rates only for Market (3)
+            if (vehicleSource == 3 && vendorId) {
                 $.ajax({
                     url: '{% url "get_vendor_buy_rate" %}',
                     data: {
@@ -1473,8 +1484,8 @@ $("#va_vehiclesource").on("change", function () {
                     }
                 });
             } else {
-                $("#modal_va_standardbuy").val(0);
-                $("#modal_va_specialbuy").val(0);
+                $("#modal_va_standardbuy").val("");
+                $("#modal_va_specialbuy").val("");
                 calculateModalProfit();
             }
         }
@@ -1487,7 +1498,7 @@ $("#va_vehiclesource").on("change", function () {
         loadModalRates();
     });
 
-    $("#modal_va_vehicletype, #modal_va_vehicletype_placed, #modal_va_vendor").on("change", loadModalRates);
+    $("#modal_va_vehicletype, #modal_va_vehicletype_placed, #modal_va_vendor, #modal_va_vehiclesource").on("change", loadModalRates);
 
     $("#modal_va_vehiclesource").on("change", function() {
         var source = $(this).val();
@@ -1496,13 +1507,17 @@ $("#va_vehiclesource").on("change", function () {
             $("#modal_va_vendor").prop('required', true).prop('disabled', false).removeClass('disable_a_href').trigger('change.select2');
             $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
         } else if (source == "2") { // Attached
-            $("#modal_vendor_star").show();
-            $("#modal_va_vendor").prop('required', false).prop('disabled', false).removeClass('disable_a_href').trigger('change.select2');
-            $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
+            $("#modal_vendor_star").hide();
+            $("#modal_va_vendor").prop('required', false).prop('disabled', true).addClass('disable_a_href').trigger('change.select2');
+            $("#modal_va_specialbuy").prop('disabled', true).addClass('disable_a_href').val("");
+            $("#modal_va_standardbuy").val("");
+            calculateModalProfit();
         } else { // Own
             $("#modal_vendor_star").hide();
             $("#modal_va_vendor").val("").prop('required', false).prop('disabled', true).addClass('disable_a_href').trigger('change.select2');
-            $("#modal_va_specialbuy").prop('disabled', false).removeClass('disable_a_href');
+            $("#modal_va_specialbuy").prop('disabled', true).addClass('disable_a_href').val("");
+            $("#modal_va_standardbuy").val("");
+            calculateModalProfit();
         }
     });
 

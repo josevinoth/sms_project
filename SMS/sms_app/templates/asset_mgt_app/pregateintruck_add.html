@@ -1,38 +1,7 @@
-{% extends "asset_mgt_app/base_1.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
-<style>
-	@media (max-width: 767.98px) {
-      .input-group {
-        display: block !important;
-      }
 
-      .input-group .input-group-prepend,
-      .input-group .input-group-append {
-        display: block;
-        width: 100%;
-        margin-bottom: 0.25rem;
-      }
-
-      .input-group .input-group-text {
-        display: block;
-        width: 100%;
-        text-align: center;          /* center text */
-        font-size: 1rem;             /* increase font size */
-        font-weight: 500;            /* optional: make it semi-bold */
-        border-radius: 0.2rem;
-      }
-
-      .input-group .form-control {
-        width: 100%;
-        display: block;
-      }
-
-      .input-group .btn {
-        width: 100%;
-      }
-    }
-</style>
 {% if highvalue_instance %}
 <div class="d-flex flex-row gap-2 my-3">
 
@@ -80,399 +49,320 @@
 </div>
 {% endif %}
 
-<div class="container-fluid">
-	<div class="card text-white bg-info mb-2" style="max-width: 100%;">
-		<div class=" col-12 card-header text-center">
-			<div class="row align-items-center">
-				<div class="col-12 col-md-4 col-lg-2 text-md-right text-center mt-2">
-					<button type="button"
-							class="btn btn-warning btn-block d-inline-flex align-items-center justify-content-center {% if not email_enable %}disabled{% endif %}"
-							{% if email_enable %}onclick="email_message_fn()" data-toggle="modal" data-target="#sendEmailModal"{% endif %}>
-						<i class="fas fa-envelope-square mr-2"></i>
-						Email Alert
-					</button>
+<div class="container-fluid py-4 bvm-modern-layout">
+    <!-- ══ Centralized Page Header ══ -->
+    <div class="modern-list-header mb-4" style="display: block !important; overflow: hidden;">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-6 text-center text-md-left mb-3 mb-md-0">
+                <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;">
+                    <i class="fas fa-truck mr-2"></i> Add/Update Truck Details
+                </h3>
+            </div>
+            <div class="col-12 col-md-6 d-flex flex-column flex-md-row justify-content-center justify-content-md-end">
+                <button type="button" class="btn btn-warning mb-2 mb-md-0 mr-md-2" style="border-radius:10px; display:inline-flex; align-items:center; justify-content:center; padding:0.5rem 1.2rem; font-size:0.9rem; font-weight:600; {% if not email_enable %}opacity:0.6; cursor:not-allowed;{% endif %}" {% if email_enable %}onclick="email_message_fn()" data-toggle="modal" data-target="#sendEmailModal"{% else %}disabled{% endif %}>
+                    <i class="fas fa-envelope-square mr-2"></i> Email Alert
+                </button>
+                {% if truck and truck.pregatein_driver_signature and truck.pregatein_supervisor_signature %}
+                    {% if truck.pregatein_job_category.id == 2 or truck.pregatein_job_category.id == 3 %}
+                        {% if approval_status_id == 1 or truck.pregatein_high_value.id == 2 %}
+                        <a href="{% url 'pregatein_gatepass_pdf_download' truck.id %}" target="_blank" class="btn btn-submit mb-2 mb-md-0 mr-md-2" style="border-radius:10px; display:inline-flex; align-items:center; justify-content:center; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none; background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; color: white;">
+                            <i class="fas fa-file-pdf mr-1"></i> Gate Pass
+                        </a>
+                        {% else %}
+                        <button type="button" class="btn btn-submit mb-2 mb-md-0 mr-md-2" style="border-radius:10px; display:inline-flex; align-items:center; justify-content:center; padding:0.5rem 1.2rem; font-size:0.9rem; background: #9ca3af; border: none; color: white; cursor:not-allowed;" disabled>
+                            Gate Pass (Waiting for Approval)
+                        </button>
+                        {% endif %}
+                    {% else %}
+                        <button type="button" class="btn btn-submit mb-2 mb-md-0 mr-md-2" style="border-radius:10px; display:inline-flex; align-items:center; justify-content:center; padding:0.5rem 1.2rem; font-size:0.9rem; background: #9ca3af; border: none; color: white; cursor:not-allowed;" disabled>
+                            Gate Pass
+                        </button>
+                    {% endif %}
+                {% else %}
+                    <button type="button" class="btn btn-submit mb-2 mb-md-0 mr-md-2" style="border-radius:10px; display:inline-flex; align-items:center; justify-content:center; padding:0.5rem 1.2rem; font-size:0.9rem; background: #9ca3af; border: none; color: white; cursor:not-allowed;" id="gatepass-btn" disabled>
+                        Gate Pass (Signature Pending)
+                    </button>
+                {% endif %}
+                <a href="{% url 'home_page' %}" class="btn btn-cancel mb-2 mb-md-0" style="border-radius:10px; display:inline-flex; align-items:center; justify-content:center; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                    <i class="fas fa-arrow-left mr-1"></i> Back
+                </a>
+            </div>
+        </div>
+        {% if not email_enable %}
+        <div class="row mt-2">
+            <div class="col-12 text-center text-md-left">
+                <span class="badge badge-warning text-dark p-2" style="font-size:0.8rem; border-radius:8px;">Invoice Count: {{ invoice_count }} | Created Jobs: {{ job_count }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
 
-					{% if not email_enable %}
-					<p class="text-danger small mb-0">
-						Invoice Count: {{ invoice_count }} | Created Jobs: {{ job_count }}
-					</p>
-					{% endif %}
-				</div>
+    <!-- Email Modal (outside card-header) -->
+    <div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-light);">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title font-weight-bold" id="sendEmailModalLabel" style="color: var(--text-main);">Email Alert</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: var(--text-muted);">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-dark p-4">
+                    {% include "asset_mgt_app/pregatein_truck_send_email.html" %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="form-section py-3 px-4 mb-4">
+        <form method="POST" action="" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="row">
+                <!-- Column 1 -->
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="form-section-title d-flex justify-content-between align-items-center mb-3">
+                        <div><i class="fas fa-truck text-primary mr-2"></i> Section 1</div>
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Pre Gate-In ID</label>
+                        {% render_field form.pregatein_number id="pregatein_number" class="form-control form-control-modern disable_a_href" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Transporter</label>
+                        <div class="d-flex gap-2">
+                            <div class="flex-grow-1" style="width: 100%;">
+                                {% render_field form.pregatein_transporter_name class="form-control form-control-modern w-100" id="gatein_pre_transporter" %}
+                            </div>
+                            <button type="button" class="btn btn-submit ml-2" data-toggle="modal" data-target="#addTransporterModal" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; color: white; border-radius: 8px;">
+                                Add
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Truck Number</label>
+                        {% render_field form.pregatein_truck_number class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Truck Type</label>
+                        {% render_field form.pregatein_truck_type id="pregatein_truck_type" class="form-control form-control-modern" %}
+                    </div>
+                </div>
 
-				<!-- Email Modal (outside card-header) -->
-				<div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
-					<div class="modal-dialog modal-lg">
-						<div class="modal-content">
-							<div class="modal-header bg-info">
-								<h5 class="modal-title" id="sendEmailModalLabel">Email Alert</h5>
-								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-									<span aria-hidden="true">&times;</span>
-								</button>
-							</div>
-							<div class="modal-body text-dark">
-								{% include "asset_mgt_app/pregatein_truck_send_email.html" %}
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="col-12 col-md-4 col-lg-8 text-center">
-					<h3>Add/Update Truck Details</h3>
-				</div>
+                <!-- Column 2 -->
+                <div class="col-12 col-md-6 col-lg-3 mt-4 mt-md-0">
+                    <div class="form-section-title d-flex justify-content-between align-items-center mb-3">
+                        <div><i class="fas fa-id-card text-primary mr-2"></i> Section 2</div>
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Driver Name</label>
+                        {% render_field form.pregatein_driver id="pregatein_driver" class="form-control form-control-modern"%}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Driver Number</label>
+                        {% render_field form.pregatein_contact_number class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Driver DL Number</label>
+                        {% render_field form.pregatein_dl_number class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Driver DL Expiry Date</label>
+                        {% render_field form.pregatein_dl_exp_date type="date" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Quantity</label>
+                        {% render_field form.pregatein_qty id="pregatein_qty" class="form-control form-control-modern" %}
+                    </div>
+                </div>
 
-				<div class="col-12 col-md-4 col-lg-2 text-md-left text-center">
-					{% if truck and truck.pregatein_driver_signature and truck.pregatein_supervisor_signature %}
-					{% if truck.pregatein_job_category.id == 2 or truck.pregatein_job_category.id == 3 %}
-					{% if approval_status_id == 1 or truck.pregatein_high_value.id == 2 %}
-					<a href="{% url 'pregatein_gatepass_pdf_download' truck.id %}"
-					   target="_blank"
-					   class="btn btn-warning">
-						Gate Pass
-					</a>
-					{% else %}
-					<button type="button" class="btn btn-warning" disabled>
-						Gate Pass (Waiting for Approval)
-					</button>
-					{% endif %}
-					{% else %}
-					<button type="button" class="btn btn-warning" disabled>
-						Gate Pass
-					</button>
-					{% endif %}
-					{% else %}
-					<button type="button" class="btn btn-warning" disabled>
-						Gate Pass (Signature Pending)
-					</button>
-					{% endif %}
-				</div>
-			</div>
-		</div>
-		<div class="card-body bg-light" >
-			<form method="POST" action="" enctype="multipart/form-data">
-				{% csrf_token %}
-				<div class="row">
-					<div class=" col-12 col-md-6 col-lg-3 p-1 border  ">
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Pre Gate-In ID</span>
-							</div>
-							{% render_field form.pregatein_number id="pregatein_number" class="form-control disable_a_href" %}
-						</div>
-						<!-- Transporter Input + Add Button -->
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Transporter</span>
-							</div>
-							{% render_field form.pregatein_transporter_name class="form-control" id="gatein_pre_transporter" %}
-							<div class="input-group-append">
-								<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addTransporterModal">
-									Add
-								</button>
-							</div>
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Truck Number</span>
-							</div>
-							{% render_field form.pregatein_truck_number class="form-control" %}
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Truck Type</span>
-							</div>
-							{% render_field form.pregatein_truck_type id="pregatein_truck_type" class="form-control" %}
-						</div>
-					</div>
-					<div class=" col-12 col-md-6 col-lg-3 p-1 border  ">
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Driver Name</span>
-							</div>
-							{% render_field form.pregatein_driver id="pregatein_driver" class="form-control"%}
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Driver Number</span>
-							</div>
-							{% render_field form.pregatein_contact_number class="form-control" %}
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Driver DL Number</span>
-							</div>
-							{% render_field form.pregatein_dl_number class="form-control" %}
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Driver DL Expiry Date</span>
-							</div>
-							{% render_field form.pregatein_dl_exp_date type="date" class="form-control" %}
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Quantity</span>
-							</div>
-							{% render_field form.pregatein_qty id="pregatein_qty" class="form-control " %}
-						</div>
-					</div>
-					<div class=" col-12 col-md-6 col-lg-3 p-1 border  ">
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Arrival Date & Time</span>
-							</div>
-							{% render_field form.pregatein_arrival_date_time type="datetime-local" class="form-control" %}
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Dock-In Date & Time</span>
-							</div>
-							{% render_field form.pregatein_dock_in_date_time id="pregatein_dock_in_date_time" type="datetime-local" class="form-control" %}
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Commodity</span>
-							</div>
-							{% render_field form.pregatein_commodity id="pregatein_commodity" class="form-control"  %}
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">OTL Type</span>
-							</div>
-							{% render_field form.pregatein_otl_type id="pregatein_otl_type"  onchange="No_locks();" class="form-control" %}
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">OTL Number</span>
-							</div>
-							{% render_field form.pregatein_otl id="pregatein_otl" class="form-control" %}
-						</div>
-					</div>
-					<div class=" col-12 col-md-6 col-lg-3 p-1 border  ">
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">OTL Check Acceptance</span>
-							</div>
-							{% render_field form.pregatein_otl_check id="pregatein_otl_check" class="form-control" %}
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Offload Acceptance</span>
-							</div>
-							{% render_field form.pregatein_offload_acceptance id="pregatein_offload_acceptance" class="form-control" %}
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Invoice Count</span>
-							</div>
-							{% render_field form.pregatein_invoice_ref id="pregatein_invoice_ref" class="form-control" %}
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Invoice Value</span>
-							</div>
-							{% render_field form.pregatein_invoice_value id="pregatein_invoice_value" class="form-control" %}
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">High Value Check List</span>
-							</div>
-							{% render_field form.pregatein_high_value id="pregatein_high_value" class="form-control"  %}
-						</div>
-						<div class="input-group input-group-sm mb-2">
-							<div class="input-group-prepend">
-								<span class="input-group-text">Job Category</span>
-							</div>
-							{% render_field form.pregatein_job_category id="pregatein_job_category" class="form-control" onchange="highvalue_enabler(); toggleHighvalueFields();" %}
-						</div>
-						<div id="highvalue_fields" style="display:none;">
-							<div class="input-group input-group-sm mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Shipper</span>
-								</div>
-								{% render_field form.pregatein_consigner id="pregatein_consigner" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Consignee</span>
-								</div>
-								{% render_field form.pregatein_consignee id="pregatein_consignee" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">OTL Out</span>
-								</div>
-								{% render_field form.pregatein_otl_out id="pregatein_otl_out" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">No of pkgs</span>
-								</div>
-								{% render_field form.pregatein_no_of_pcs id="pregatein_no_of_pcs" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Invoice Weight</span>
-								</div>
-								{% render_field form.pregatein_total_weight id="pregatein_total_weight" class="form-control" %}
-							</div>
-						</div>
-						<div id="crossdocking_fields" style="display:none;">
-							<div class="input-group input-group-sm mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Truck Number</span>
-								</div>
-								{% render_field form.pregatein_truck_number_CD id="pregatein_truck_number_CD" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Truck Type</span>
-								</div>
-								{% render_field form.pregatein_truck_type_CD id="pregatein_truck_type_CD" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Driver Name</span>
-								</div>
-								{% render_field form.pregatein_driver_CD id="pregatein_driver_CD" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Driver Number</span>
-								</div>
-								{% render_field form.pregatein_contact_number_CD id="pregatein_contact_number_CD" class="form-control" %}
-							</div>
-							<div class="input-group input-group-sm mb-2">
-								<div class="input-group-prepend">
-									<span class="input-group-text">Driver DL</span>
-								</div>
-								{% render_field form.pregatein_dl_number_CD id="pregatein_dl_number_CD" class="form-control" %}
-							</div>
-						</div>
-						{% render_field form.pregatein_updated_by id="pregatein_updated_by" hidden="True" class="form-control" %}
-					</div>
-					<div class="container-fluid">
-						<div class="row">
+                <!-- Column 3 -->
+                <div class="col-12 col-md-6 col-lg-3 mt-4 mt-lg-0">
+                    <div class="form-section-title d-flex justify-content-between align-items-center mb-3">
+                        <div><i class="fas fa-warehouse text-primary mr-2"></i> Section 3</div>
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Arrival Date & Time</label>
+                        {% render_field form.pregatein_arrival_date_time type="datetime-local" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Dock-In Date & Time</label>
+                        {% render_field form.pregatein_dock_in_date_time id="pregatein_dock_in_date_time" type="datetime-local" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Commodity</label>
+                        {% render_field form.pregatein_commodity id="pregatein_commodity" class="form-control form-control-modern"  %}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">OTL Type</label>
+                        {% render_field form.pregatein_otl_type id="pregatein_otl_type"  onchange="No_locks();" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">OTL Number</label>
+                        {% render_field form.pregatein_otl id="pregatein_otl" class="form-control form-control-modern" %}
+                    </div>
+                </div>
 
-							<!-- Left Column: Comments -->
-							<div class="col-md-6">
-								<div class="input-group input-group-sm mb-2 mt-2">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Comments</span>
-									</div>
-									{% render_field form.pregatein_remarks class="form-control" rows="3" %}
-								</div>
-							</div>
-							<div class="col-md-6 mt-3">
-								<div class="row">
-									<div class="col-md-6 d-flex flex-column align-items-center justify-content-center">
-										<!-- Driver Signature -->
-										<button type="button" class="btn btn-primary btn-sm mt-2" data-toggle="modal" data-target="#driverSignatureModal" id="driver-sign-btn" disabled>
-											Driver Signature
-										</button>
-										<div id="driver-signature-preview">
-											{% if form.instance.pregatein_driver_signature %}
-											<img src="{{ form.instance.pregatein_driver_signature.url }}" alt="Driver Signature" class="img-fluid" style="max-height: 80px;">
-											{% endif %}
-										</div>
-										<input type="hidden" name="driver_signature_data" id="driver-signature-data">
-									</div>
-									<div class="col-md-6 d-flex flex-column align-items-center justify-content-center">
-										<!-- Supervisor Signature -->
-										<button type="button" class="btn btn-primary btn-sm mt-2" data-toggle="modal" data-target="#supervisorSignatureModal" id="supervisor-sign-btn" disabled>
-											Supervisor Signature
-										</button>
-										<div id="supervisor-signature-preview">
-											{% if form.instance.pregatein_supervisor_signature %}
-											<img src="{{ form.instance.pregatein_supervisor_signature.url }}" alt="Supervisor Signature" class="img-fluid" style="max-height: 80px;">
-											{% endif %}
-										</div>
-										<input type="hidden" name="supervisor_signature_data" id="supervisor-signature-data">
-									</div>
+                <!-- Column 4 -->
+                <div class="col-12 col-md-6 col-lg-3 mt-4 mt-lg-0">
+                    <div class="form-section-title d-flex justify-content-between align-items-center mb-3">
+                        <div><i class="fas fa-file-invoice-dollar text-primary mr-2"></i> Section 4</div>
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">OTL Check Acceptance</label>
+                        {% render_field form.pregatein_otl_check id="pregatein_otl_check" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Offload Acceptance</label>
+                        {% render_field form.pregatein_offload_acceptance id="pregatein_offload_acceptance" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Invoice Count</label>
+                        {% render_field form.pregatein_invoice_ref id="pregatein_invoice_ref" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Invoice Value</label>
+                        {% render_field form.pregatein_invoice_value id="pregatein_invoice_value" class="form-control form-control-modern" %}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">High Value Check List</label>
+                        {% render_field form.pregatein_high_value id="pregatein_high_value" class="form-control form-control-modern"  %}
+                    </div>
+                    <div class="form-group form-group-modern mb-2">
+                        <label class="form-label-modern field-label d-block">Job Category</label>
+                        {% render_field form.pregatein_job_category id="pregatein_job_category" class="form-control form-control-modern" onchange="highvalue_enabler(); toggleHighvalueFields();" %}
+                    </div>
+                    {% render_field form.pregatein_updated_by id="pregatein_updated_by" hidden="True" class="form-control" %}
+                </div>
+            </div>
 
-									<!-- Driver Signature Modal -->
-									<div class="modal fade" id="driverSignatureModal" tabindex="-1" role="dialog" aria-labelledby="driverSignatureModalLabel" aria-hidden="true">
-										<div class="modal-dialog modal-lg" role="document">
-											<div class="modal-content">
-												<div class="modal-header">
-													<h5 class="modal-title text-dark" id="driverSignatureModalLabel">Driver Signature</h5>
-													<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-														<span aria-hidden="true">&times;</span>
-													</button>
-												</div>
-												<div class="modal-body">
-													<canvas id="driver-pad" width="800" height="150" style="border:1px solid #ccc; width:100%;"></canvas>
-												</div>
-												<div class="modal-footer d-flex justify-content-between">
-													<button type="button" id="clear-driver" class="btn btn-warning btn-sm">Clear</button>
-													<button type="button" id="save-driver" class="btn btn-success btn-sm">Save</button>
-												</div>
-											</div>
-										</div>
-									</div>
+            <!-- Dynamic Horizontal Sections -->
+            <div class="row mt-3 justify-content-end">
+                <!-- High Value Section -->
+                <div class="col-12 col-lg-3 col-md-6" id="highvalue_fields" style="display:none;">
+                    <div class="p-3 shadow-sm h-100" style="background: transparent; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <h6 class="form-label-modern font-weight-bold mb-3" style="color: var(--accent-blue); border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">High Value Info</h6>
+                        <div class="form-group form-group-modern mb-2">
+                            <label class="form-label-modern field-label d-block">Shipper</label>
+                            {% render_field form.pregatein_consigner id="pregatein_consigner" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group form-group-modern mb-2">
+                            <label class="form-label-modern field-label d-block">Consignee</label>
+                            {% render_field form.pregatein_consignee id="pregatein_consignee" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group form-group-modern mb-2">
+                            <label class="form-label-modern field-label d-block">OTL Out</label>
+                            {% render_field form.pregatein_otl_out id="pregatein_otl_out" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group form-group-modern mb-2">
+                            <label class="form-label-modern field-label d-block">No of pkgs</label>
+                            {% render_field form.pregatein_no_of_pcs id="pregatein_no_of_pcs" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group form-group-modern mb-2">
+                            <label class="form-label-modern field-label d-block">Invoice Weight</label>
+                            {% render_field form.pregatein_total_weight id="pregatein_total_weight" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
 
-									<!-- Supervisor Signature Modal -->
-									<div class="modal fade" id="supervisorSignatureModal" tabindex="-1" role="dialog" aria-labelledby="supervisorSignatureModalLabel" aria-hidden="true">
-										<div class="modal-dialog modal-lg" role="document">
-											<div class="modal-content">
-												<div class="modal-header">
-													<h5 class="modal-title text-dark" id="supervisorSignatureModalLabel">Supervisor Signature</h5>
-													<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-														<span aria-hidden="true">&times;</span>
-													</button>
-												</div>
-												<div class="modal-body">
-													<canvas id="supervisor-pad" width="800" height="150" style="border:1px solid #ccc; width:100%;"></canvas>
-												</div>
-												<div class="modal-footer d-flex justify-content-between">
-													<button type="button" id="clear-supervisor" class="btn btn-warning btn-sm">Clear</button>
-													<button type="button" id="save-supervisor" class="btn btn-success btn-sm">Save</button>
-												</div>
-											</div>
-										</div>
-									</div>
+                <!-- Cross Docking Section -->
+                <div class="col-12 col-lg-3 col-md-6" id="crossdocking_fields" style="display:none;">
+                    <div class="p-3 shadow-sm h-100" style="background: transparent; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <h6 class="form-label-modern font-weight-bold mb-3" style="color: var(--accent-emerald); border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">Cross Docking Info</h6>
+                        <div class="form-group form-group-modern mb-2">
+                            <label class="form-label-modern field-label d-block">Truck Number</label>
+                            {% render_field form.pregatein_truck_number_CD id="pregatein_truck_number_CD" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group form-group-modern mb-2">
+                            <label class="form-label-modern field-label d-block">Truck Type</label>
+                            {% render_field form.pregatein_truck_type_CD id="pregatein_truck_type_CD" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group form-group-modern mb-2">
+                            <label class="form-label-modern field-label d-block">Driver Name</label>
+                            {% render_field form.pregatein_driver_CD id="pregatein_driver_CD" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group form-group-modern mb-2">
+                            <label class="form-label-modern field-label d-block">Driver Number</label>
+                            {% render_field form.pregatein_contact_number_CD id="pregatein_contact_number_CD" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group form-group-modern mb-2">
+                            <label class="form-label-modern field-label d-block">Driver DL</label>
+                            {% render_field form.pregatein_dl_number_CD id="pregatein_dl_number_CD" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+            </div>        
 
-								</div>
-							</div>
+            <div class="form-section-title d-flex justify-content-between align-items-center mb-3 mt-4">
+                <div><i class="fas fa-pencil-alt text-primary mr-2"></i> Signatures & Comments</div>
+            </div>
+            
+            <div class="row">
+                <!-- Comments -->
+                <div class="col-12 col-md-4">
+                    <div class="form-group form-group-modern mb-2 mt-2">
+                        <label class="form-label-modern field-label d-block">Comments</label>
+                        {% render_field form.pregatein_remarks class="form-control form-control-modern" rows="4" style="height: 120px;" %}
+                    </div>
+                </div>
+                
+                <!-- Signatures -->
+                <div class="col-12 col-md-8 mt-3 mt-md-0">
+                    <div class="row h-100">
+                        <div class="col-md-6 d-flex flex-column align-items-center justify-content-center">
+                            <button type="button" class="btn btn-submit btn-sm mb-3" data-toggle="modal" data-target="#driverSignatureModal" id="driver-sign-btn" disabled style="border-radius:10px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border: none; color: white;">
+                                <i class="fas fa-signature mr-2"></i> Driver Signature
+                            </button>
+                            <div id="driver-signature-preview" class="border rounded p-2" style="background: #fff; min-width: 200px; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+                                {% if form.instance.pregatein_driver_signature %}
+                                <img src="{{ form.instance.pregatein_driver_signature.url }}" alt="Driver Signature" class="img-fluid" style="max-height: 70px;">
+                                {% else %}
+                                <span class="text-muted small">No signature</span>
+                                {% endif %}
+                            </div>
+                            <input type="hidden" name="driver_signature_data" id="driver-signature-data">
+                        </div>
+                        <div class="col-md-6 d-flex flex-column align-items-center justify-content-center mt-4 mt-md-0">
+                            <button type="button" class="btn btn-submit btn-sm mb-3" data-toggle="modal" data-target="#supervisorSignatureModal" id="supervisor-sign-btn" disabled style="border-radius:10px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border: none; color: white;">
+                                <i class="fas fa-signature mr-2"></i> Supervisor Signature
+                            </button>
+                            <div id="supervisor-signature-preview" class="border rounded p-2" style="background: #fff; min-width: 200px; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+                                {% if form.instance.pregatein_supervisor_signature %}
+                                <img src="{{ form.instance.pregatein_supervisor_signature.url }}" alt="Supervisor Signature" class="img-fluid" style="max-height: 70px;">
+                                {% else %}
+                                <span class="text-muted small">No signature</span>
+                                {% endif %}
+                            </div>
+                            <input type="hidden" name="supervisor_signature_data" id="supervisor-signature-data">
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-						</div>
-					</div>
-
-				</div>
-				<div class="row">
-					<div class="col-1"></div>
-					<div class="col-10">
-						<div class="message text-center">
-							{% for message in messages %}
-							<a {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</a>
-							{% endfor %}
-						</div>
-					</div>
-					<div class="col-1 p-2"></div>
-				</div>
-				<button type="submit" class="btn btn-success" ><i class="fas fa-check"></i> Save</button>
-				<a href="{% url 'pregateintruck_cancel' %}" class="btn btn-danger float-right">
-					<i class="fas fa-times"></i> Cancel
-				</a>
-		</div>
-	</div>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="message text-center mb-3">
+                        {% for message in messages %}
+                        <a {% if message.tags %} class="{{ message.tags }}"{% endif %} style="color: var(--accent-blue); font-weight: 500;">{{ message }}</a>
+                        {% endfor %}
+                    </div>
+                    <div class="d-flex flex-column flex-md-row justify-content-between">
+                        <button type="submit" class="btn btn-submit mb-2 mb-md-0" style="border-radius:10px; display:inline-flex; align-items:center; justify-content:center; padding:0.5rem 1.8rem; font-size:0.95rem; text-decoration:none; background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; color: white;">
+                            <i class="fas fa-check mr-2"></i> Save Changes
+                        </button>
+                        <a href="{% url 'pregateintruck_cancel' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; justify-content:center; padding:0.5rem 1.8rem; font-size:0.95rem; text-decoration:none;">
+                            <i class="fas fa-times mr-2"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
-</form>
-<!-- Modal -->
-<div class="modal fade" id="addTransporterModal" tabindex="-1" role="dialog" aria-labelledby="addTransporterModalLabel" aria-hidden="true">
-	<div class="modal-dialog" role="document">
-		<form id="addTransporterForm">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title">Add New Transporter</h5>
-					<button type="button" class="close" data-dismiss="modal">&times;</button>
-				</div>
-				<div class="modal-body">
-					<input type="text" class="form-control" name="name" placeholder="Enter new transporter name" required>
-				</div>
-				<div class="modal-footer">
-					<button type="submit" class="btn btn-primary">Save</button>
-				</div>
-			</div>
-		</form>
+
+    </div>
+</div>
+
 	</div>
 </div>
 
@@ -484,6 +374,69 @@
 		</div>
 	</div>
 </div>
+
+            <!-- Driver Signature Modal -->
+            <div class="modal fade" id="driverSignatureModal" tabindex="-1" role="dialog" aria-labelledby="driverSignatureModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content" style="border-radius: 16px;">
+                        <div class="modal-header border-bottom-0">
+                            <h5 class="modal-title font-weight-bold" id="driverSignatureModalLabel" style="color: var(--text-main);">Driver Signature</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: var(--text-muted);">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <canvas id="driver-pad" width="800" height="150" style="border:1px solid #cbd5e1; border-radius:8px; width:100%;"></canvas>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-between border-top-0">
+                            <button type="button" id="clear-driver" class="btn btn-warning btn-sm" style="border-radius: 8px;">Clear</button>
+                            <button type="button" id="save-driver" class="btn btn-success btn-sm" style="border-radius: 8px;">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supervisor Signature Modal -->
+            <div class="modal fade" id="supervisorSignatureModal" tabindex="-1" role="dialog" aria-labelledby="supervisorSignatureModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content" style="border-radius: 16px;">
+                        <div class="modal-header border-bottom-0">
+                            <h5 class="modal-title font-weight-bold" id="supervisorSignatureModalLabel" style="color: var(--text-main);">Supervisor Signature</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: var(--text-muted);">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <canvas id="supervisor-pad" width="800" height="150" style="border:1px solid #cbd5e1; border-radius:8px; width:100%;"></canvas>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-between border-top-0">
+                            <button type="button" id="clear-supervisor" class="btn btn-warning btn-sm" style="border-radius: 8px;">Clear</button>
+                            <button type="button" id="save-supervisor" class="btn btn-success btn-sm" style="border-radius: 8px;">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+<!-- Add Transporter Modal -->
+<div class="modal fade" id="addTransporterModal" tabindex="-1" role="dialog" aria-labelledby="addTransporterModalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<form id="addTransporterForm">
+			<div class="modal-content" style="background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-light);">
+				<div class="modal-header border-bottom-0">
+					<h5 class="modal-title font-weight-bold" style="color: var(--text-main);">Add New Transporter</h5>
+					<button type="button" class="close" data-dismiss="modal" style="color: var(--text-muted);">&times;</button>
+				</div>
+				<div class="modal-body p-4">
+					<input type="text" class="form-control form-control-modern" name="name" placeholder="Enter new transporter name" required>
+				</div>
+				<div class="modal-footer border-top-0">
+					<button type="submit" class="btn btn-submit" style="border-radius:10px; padding:0.4rem 1.5rem; font-size:0.85rem; background: #f59e0b; border: none; color: white;">Save</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
 {% block scripts %}
 <script>
 	$(document).ready(function() {
@@ -752,5 +705,55 @@ document.getElementById("pregatein_invoice_value").addEventListener("input", che
 }
 
 </script>
+<style>
+.disabled-colour {
+     pointer-events: none;
+    background:#CCFFCC !important;
+    color:#000000 !important;
+}
+.bvm-modern-layout {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+.bvm-modern-layout .form-section {
+    padding: 0.75rem 1rem !important;
+    border-radius: 12px !important;
+    background: var(--bg-card);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+.bvm-modern-layout .form-section-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Compact Form Styles to prevent scrolling */
+.form-group-modern {
+    margin-bottom: 0.4rem !important;
+}
+.form-label-modern {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.1rem !important;
+    font-weight: 700;
+}
+.form-control-modern {
+    padding: 0.25rem 0.5rem !important;
+    height: 32px !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+}
+.btn-submit {
+    height: 32px !important;
+    padding: 0 1rem !important;
+    font-size: 0.8rem !important;
+    display: inline-flex;
+    align-items: center;
+}
+</style>
 {% endblock scripts %}
 {% endblock content %}

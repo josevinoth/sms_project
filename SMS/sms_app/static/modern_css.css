@@ -819,13 +819,13 @@ div.dataTables_scrollBody thead th {
     transform: none !important;
 }
 
-.modern-table tbody td:first-child { 
+    .modern-table tbody td:first-child {
     border-left: 1px solid rgba(var(--border-light-rgb), 0.06) !important;
-    border-radius: 12px 0 0 12px; 
+    border-radius: 12px 0 0 12px;
 }
-.modern-table tbody td:last-child { 
+.modern-table tbody td:last-child {
     border-right: 1px solid rgba(var(--border-light-rgb), 0.06) !important;
-    border-radius: 0 12px 12px 0; 
+    border-radius: 0 12px 12px 0;
 }
 
 /* Dark mode: remove left/right borders — only bottom border like customer portal */
@@ -984,7 +984,7 @@ div.dataTables_scrollBody thead th {
     .modern-card { padding: 1.5rem; }
     .form-section { padding: 1.5rem; }
     .form-row-modern { grid-template-columns: 1fr; gap: 1rem; }
-    
+
     /* Ensure sidebar drops below correctly */
     .col-lg-3 { margin-top: 2rem; }
 }
@@ -995,7 +995,7 @@ div.dataTables_scrollBody thead th {
     .pms-progress-container { padding: 1rem; border-radius: 12px; }
     .pms-step-label { font-size: 0.6rem; }
     .pms-step-icon { width: 32px; height: 32px; font-size: 0.75rem; border-radius: 10px; }
-    
+
     /* Mobile: full-width buttons, same height/font */
     .btn,
     .btn-modern,
@@ -1010,7 +1010,7 @@ div.dataTables_scrollBody thead th {
         padding: var(--btn-padding) !important;
         font-size: var(--btn-font-size) !important;
     }
-    
+
     .btn-group-modern {
         flex-direction: column;
         gap: 0.75rem;
@@ -1027,7 +1027,7 @@ div.dataTables_scrollBody thead th {
         margin-left: 0 !important;
         margin-top: 10px !important;
     }
-    
+
     .modern-list-header {
         font-size: 1rem;
         padding: 0.8rem 1.5rem;
@@ -1516,100 +1516,9 @@ body, .modern-card, .form-section, .form-control-modern, .modern-table td, .tabl
 
 /* Compact Form Section */
 .form-section-compact {
-    padding: 0.65rem 0.85rem !important;
-    margin-bottom: 0.5rem !important;
-    border-radius: 12px !important;
+    padding: 1rem !important;
+    margin-bottom: 0.75rem !important;
 }
-
-.form-section-compact .form-section-title {
-    font-size: 0.82rem !important;
-    font-weight: 700 !important;
-    padding-bottom: 0.35rem !important;
-    margin-bottom: 0.5rem !important;
-    letter-spacing: 0.5px !important;
-}
-
-.form-section-compact .form-group-modern {
-    margin-bottom: 0.35rem !important;
-}
-
-.form-section-compact .form-label-modern {
-    font-size: 0.72rem !important;
-    margin-bottom: 0.1rem !important;
-    letter-spacing: 0.5px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-
-.form-section-compact .form-control-modern {
-    height: 32px !important;
-    padding: 0.25rem 0.5rem !important;
-    font-size: 0.8rem !important;
-    font-weight: 600 !important;
-    border-radius: 8px !important;
-}
-
-.form-section-compact textarea.form-control-modern {
-    height: 48px !important;
-    min-height: 48px !important;
-}
-
-/* Custom Status Highlights for Dropdowns & Verification Badges */
-.input-error, select.form-control-modern.status-no {
-    background-color: #fef2f2 !important;
-    border-color: #f87171 !important;
-    color: #991b1b !important;
-    font-weight: 700 !important;
-}
-
-select.form-control-modern.status-yes {
-    background-color: #f0fdf4 !important;
-    border-color: #4ade80 !important;
-    color: #166534 !important;
-    font-weight: 700 !important;
-}
-
-.doc-stat-box {
-    background: var(--bg-page, #f8fafc);
-    border: 1px solid var(--border-light, #e2e8f0);
-    border-radius: 10px;
-    padding: 0.4rem 0.65rem;
-    height: 100%;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.doc-stat-box:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-.badge-status-valid {
-    background-color: #dcfce7;
-    color: #15803d;
-    border: 1px solid #bbf7d0;
-    font-weight: 600;
-    padding: 0.15rem 0.5rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-.badge-status-invalid {
-    background-color: #fee2e2;
-    color: #b91c1c;
-    border: 1px solid #fca5a5;
-    font-weight: 600;
-    padding: 0.15rem 0.5rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
 
 /* Sidebar Calculation Card (Global Standard) */
 .calculation-card {
@@ -2078,6 +1987,104 @@ select.form-control-modern.status-yes {
 .badge-info {
     background-color: #0ea5e9 !important;
     color: #ffffff !important;
+}
+
+
+/* ── Wizard Navigation Pills (Milkish White Inactive State) ── */
+.nav-pills-modern .btn {
+    background-color: #f8fbfd !important; /* Milkish white */
+    color: #0f172a !important; /* Dark text */
+    border: 1px solid rgba(0,0,0,0.03) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+    font-weight: 800 !important;
+    border-radius: 14px !important; /* Pill shape matching other buttons */
+    letter-spacing: 0.5px !important;
+}
+
+[data-theme="dark"] .nav-pills-modern .btn {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    color: #e2e8f0 !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* The active step should be bright orange/yellow */
+.nav-pills-modern .btn.btn-warning {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 6px 15px rgba(245, 158, 11, 0.3) !important;
+}
+
+
+/* Tightly Scoped WMS Modern Layout */
+.bvm-modern-layout {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+.bvm-modern-layout .form-section {
+    padding: 0.75rem 1rem !important;
+    border-radius: 12px !important;
+    background: var(--bg-card);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+.bvm-modern-layout .form-section-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+.bvm-modern-layout .form-group-modern {
+    margin-bottom: 0.4rem !important;
+}
+.bvm-modern-layout .form-label-modern {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.1rem !important;
+    font-weight: 700;
+}
+.bvm-modern-layout .form-control-modern {
+    padding: 0.25rem 0.5rem !important;
+    height: 32px !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+}
+.bvm-modern-layout .btn-submit {
+    height: 32px !important;
+    padding: 0 1rem !important;
+    font-size: 0.8rem !important;
+    display: inline-flex;
+    align-items: center;
+}
+/* Navigation Pills */
+.bvm-modern-layout .nav-pills-modern .btn {
+    border-radius: 20px;
+    padding: 0.3rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--border-light);
+    background: var(--bg-card);
+    color: var(--text-main);
+    transition: all 0.2s ease;
+}
+.bvm-modern-layout .nav-pills-modern .btn:hover {
+    background: var(--bg-section);
+}
+.bvm-modern-layout .nav-pills-modern .btn.disable_a_href {
+    background: var(--bg-card) !important;
+    color: var(--text-muted) !important;
+    border: 1px solid var(--border-light) !important;
+}
+.bvm-modern-layout .nav-pills-modern .btn.active-step {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    color: white !important;
+    border-color: transparent !important;
+    box-shadow: 0 2px 5px rgba(245,158,11,0.3) !important;
 }
 
 /* ── Sticky Floating Horizontal Scrollbar ── */

@@ -1,105 +1,87 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
+
+
 
 <!-- Main Incident Form -->
 <form method="POST" action="" id="incident_add" enctype="multipart/form-data">
     {% csrf_token %}
-    <div class="row">
-        <div class="col">
-            <div class="container-fluid">
-                <div class="card text-white bg-info mb-3" style="max-width: 100%;">
-                    <div class="col-12 card-header text-center">
-                        <div class="row align-items-center">
-                            <div class="col-12 col-md-8 col-lg-10 text-center">
-                                <h3>Add/Update Incident Report</h3>
-                            </div>
-                            <div class="col-12 col-md-4 col-lg-2 text-md-right text-center">
-                                <!-- Email Modal Trigger -->
-<button type="button" class="btn btn-warning w-100" data-toggle="modal" data-target="#sendEmailModal" onclick="email_message_fn()">
-    <i class="fas fa-envelope-square"></i> Email To Customer
-</button>
+    <div class="container-fluid py-4 bvm-modern-layout">
+    <!-- Header -->
+    <div class="modern-list-header mb-4" style="display: block !important; overflow: hidden;">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-6 text-center text-md-left mb-3 mb-md-0">
+                <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;">
+                    <i class="fas fa-edit mr-2"></i> Add/Update Incident Report
+                </h3>
+            </div>
+            <div class="col-12 col-md-6 d-flex justify-content-center justify-content-md-end">
+                <button type="button" class="btn shadow-sm mr-2" data-toggle="modal" data-target="#sendEmailModal" onclick="email_message_fn()" style="background-color: #3b82f6; color: #fff; border-radius:10px; display:inline-flex; align-items:center; padding:0.4rem 1.2rem; font-weight:600; text-transform:uppercase;">
+                    <i class="fas fa-envelope-square mr-2"></i> Email To Customer
+                </button>
+                <a href="{% url 'incident_list' %}" class="btn btn-light shadow-sm" style="border-radius:10px; display:inline-flex; align-items:center; padding:0.4rem 1.2rem; font-weight:600; text-transform:uppercase; color: #333 !important;">
+                    <i class="fas fa-arrow-left mr-2"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
 
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body bg-light">
-                        <div class="row">
-                            <!-- Left Column -->
-                            <div class="col">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Branch</span>
-                                    </div>
-                                    {% render_field form.inc_branch id="inc_branch"  class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Unit</span>
-                                    </div>
-                                    {% render_field form.inc_unit id="inc_unit" class="form-control disable_a_href" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Customer</span>
-                                    </div>
-                                    {% render_field form.inc_customer id="inc_customer" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Date Of Incident</span>
-                                    </div>
-                                    {% render_field form.inc_incident_date type="Datetime-local" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Details Of Incident</span>
-                                    </div>
-                                    {% render_field form.inc_details id="inc_details" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3 row-2">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Root Cause Analysis</span>
-                                    </div>
-                                    {% render_field form.inc_analysis id="inc_analysis" class="form-control" rows="2" %}
-                                </div>
-                            </div>
-
-                            <!-- Right Column -->
-                            <div class="col-6">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Action Taken</span>
-                                    </div>
-                                    {% render_field form.inc_action_taken id="inc_action_taken" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">CAPA Issued Date</span>
-                                    </div>
-                                    {% render_field form.inc_CAPA_issueddate type="Date" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">CAPA Closed Date</span>
-                                    </div>
-                                    {% render_field form.inc_CAPA_closeddate type="Date" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Current Status</span>
-                                    </div>
-                                    {% render_field form.inc_status id="inc_status" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Management Approval</span>
-                                    </div>
-                                    {% render_field form.inc_approval_status id="inc_approval_status" class="form-control" %}
-                                </div>
-                                {% render_field form.inc_updated_by id="inc_updated_by" hidden="True" class="form-control" %}
-                            </div>
-                        </div>
+    <!-- Form Container -->
+    <div class="form-section mx-auto" style="padding: 2rem; style=" style="border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+        <div class="row">
+    <div class="col-12 col-md-4">
+<div class="form-group-modern mb-4">
+    <label class="form-label-modern text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Branch</label>
+    {% render_field form.inc_branch id="inc_branch"  class="form-control form-control-modern" %}
+</div>
+<div class="form-group-modern mb-4">
+    <label class="form-label-modern text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Unit</label>
+    {% render_field form.inc_unit id="inc_unit" class="form-control disable_a_href" %}
+</div>
+<div class="form-group-modern mb-4">
+    <label class="form-label-modern text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Customer</label>
+    {% render_field form.inc_customer id="inc_customer" class="form-control form-control-modern" %}
+</div>
+<div class="form-group-modern mb-4">
+    <label class="form-label-modern text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Date Of Incident</label>
+    {% render_field form.inc_incident_date type="Datetime-local" class="form-control form-control-modern" %}
+</div>
+    </div>
+    <div class="col-12 col-md-4">
+<div class="form-group-modern mb-4">
+    <label class="form-label-modern text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Details Of Incident</label>
+    {% render_field form.inc_details id="inc_details" class="form-control form-control-modern" %}
+</div>
+<div class="form-group-modern mb-4">
+    <label class="form-label-modern text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Root Cause Analysis</label>
+    {% render_field form.inc_analysis id="inc_analysis" class="form-control form-control-modern" rows="2" %}
+</div>
+<div class="form-group-modern mb-4">
+    <label class="form-label-modern text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Action Taken</label>
+    {% render_field form.inc_action_taken id="inc_action_taken" class="form-control form-control-modern" %}
+</div>
+<div class="form-group-modern mb-4">
+    <label class="form-label-modern text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">CAPA Issued Date</label>
+    {% render_field form.inc_CAPA_issueddate type="Date" class="form-control form-control-modern" %}
+</div>
+    </div>
+    <div class="col-12 col-md-4">
+<div class="form-group-modern mb-4">
+    <label class="form-label-modern text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">CAPA Closed Date</label>
+    {% render_field form.inc_CAPA_closeddate type="Date" class="form-control form-control-modern" %}
+</div>
+<div class="form-group-modern mb-4">
+    <label class="form-label-modern text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Current Status</label>
+    {% render_field form.inc_status id="inc_status" class="form-control form-control-modern" %}
+</div>
+<div class="form-group-modern mb-4">
+    <label class="form-label-modern text-uppercase font-weight-bold" style="font-size: 0.75rem; color: #1e293b; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Management Approval</label>
+    {% render_field form.inc_approval_status id="inc_approval_status" class="form-control form-control-modern" %}
+</div>
+    {% render_field form.inc_updated_by id="inc_updated_by" hidden="True" class="form-control" %}
+    </div>
+</div>
 
                         <!-- Messages -->
                         <div class="row">
@@ -115,17 +97,18 @@
                         </div>
 
                         <!-- Submit & Cancel Buttons -->
-                        <button type="submit" class="btn btn-success" id="save-btn">
-                            <i class="fas fa-check"></i> Submit
-                        </button>
-                        <a href="{% url 'incident_list' %}" class="btn btn-danger float-right">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        <div class="row mt-4 pt-4 border-top">
+    <div class="col-12 d-flex justify-content-between">
+        <button type="submit" class="btn shadow-sm" style="background-color: #f5a623; color: #fff; border-radius:10px; font-weight:600; text-transform:uppercase; padding: 0.5rem 2rem;" id="save-btn">
+            <i class="fas fa-check mr-2"></i> Submit
+        </button>
+        <a href="{% url 'incident_list' %}" class="btn shadow-sm" style="background-color: #ef4444; color: #fff; border-radius:10px; font-weight:600; text-transform:uppercase; padding: 0.5rem 2rem;">
+            <i class="fas fa-times mr-2"></i> Cancel
+        </a>
     </div>
+</div>
+</div>
+</div>
 </form>
 
 <!-- Email Modal (outside the main form!) -->
@@ -232,5 +215,16 @@
 
 </script>
 
+
+
+<script>
+    $(document).ready(function() {
+        $('#inc_customer').select2({
+            width: '100%',
+            placeholder: "--Select--",
+            allowClear: true
+        });
+    });
+</script>
 
 {% endblock content %}

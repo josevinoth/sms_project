@@ -1,6 +1,7 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 {% block content %}
+<div class="container-fluid py-4 bvm-modern-layout">
 <div class="container-fluid row">
 	<div class="col-md-1">
 		<a href="{% url 'wh_job_list' %}" class="btn btn-primary btn-block btn-lg">
@@ -32,66 +33,70 @@
 			<div class="col-2"></div>
 			<div class="col-8">
 				<div class="container-fluid">
-					<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-						<div class="card-header text-center"><h3>Add/Update Gatein</h3></div>
-						<div class="card-body bg-light" >
+					<div class="mt-4 form-section">
+    <div class="modern-list-header mb-4" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); border-radius: 12px; padding: 20px 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <h3 class="mb-0 text-white text-center" style="font-size:1.4rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;">
+            Add/Update Gatein
+        </h3>
+    </div>
+    <div class="form-container-modern p-4" style="background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
 							<div class="row">
 								<div class="col-6">
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Job Number</span>
 										</div>
-										{% render_field gatein_form.gatein_job_no class="form-control" id="job_num" readonly=True %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_job_no class="form-control form-control-modern" id="job_num" readonly=True %}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Shipper Invoice</span>
 										</div>
-										{% render_field gatein_form.gatein_invoice class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_invoice class="form-control form-control-modern" %}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Customer</span>
 										</div>
-										{% render_field gatein_form.gatein_customer class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_customer class="form-control form-control-modern" %}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Arrival Date</span>
 										</div>
-										{% render_field gatein_form.gatein_arrival_date class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_arrival_date class="form-control form-control-modern" %}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Department</span>
 										</div>
-										{% render_field gatein_form.gatein_department class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_department class="form-control form-control-modern" %}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Shipper</span>
 										</div>
-										{% render_field gatein_form.gatein_shipper class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_shipper class="form-control form-control-modern" %}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">No Of Packages</span>
 										</div>
-										{% render_field gatein_form.gatein_no_of_pkg class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_no_of_pkg class="form-control form-control-modern" %}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Weight</span>
 										</div>
-										{% render_field gatein_form.gatein_weight class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_weight class="form-control form-control-modern" %}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 								</div>
 								<div class="col-6">
@@ -99,50 +104,50 @@
 										<div class="input-group-prepend">
 											<span class="input-group-text">Driver Name</span>
 										</div>
-										{% render_field gatein_form.gatein_driver class="form-control"%}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_driver class="form-control form-control-modern"%}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Driver Contact</span>
 										</div>
-										{% render_field gatein_form.gatein_contact_number class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_contact_number class="form-control form-control-modern" %}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Driver License</span>
 										</div>
-										{% render_field gatein_form.gatein_DL_number class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_DL_number class="form-control form-control-modern" %}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">OTL</span>
 										</div>
-										{% render_field gatein_form.gatein_otl class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_otl class="form-control form-control-modern" %}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Transporter</span>
 										</div>
-										{% render_field gatein_form.gatein_transporter class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_transporter class="form-control form-control-modern" %}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Truck Number</span>
 										</div>
-										{% render_field gatein_form.gatein_truck_number class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_truck_number class="form-control form-control-modern" %}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 									<div class="input-group input-group-sm mb-3">
 										<div class="input-group-prepend">
 											<span class="input-group-text">Truck Type</span>
 										</div>
-										{% render_field gatein_form.gatein_truck_type class="form-control" %}
-										<!--<input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
+										{% render_field gatein_form.gatein_truck_type class="form-control form-control-modern" %}
+										<!--<input type="text" class="form-control form-control-modern" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">-->
 									</div>
 								</div>
 								<div class="message">
@@ -177,4 +182,5 @@ function myjobnum() {
 }
 </script>
 <!-- Steps form -->
+</div>
 {% endblock content %}

@@ -322,8 +322,8 @@
             <td>{% if inv.ti_consignment %}{{ inv.ti_consignment.co_cusrefnum }}{% else %}<span
                 class="text-muted">—</span>{% endif %}</td>
             <td>{% if goods %}{{ goods.cg_hawbno }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
-            <td>{% if goods %}{{ goods.cg_qty }}{% else %}<span class="text-muted">0</span>{% endif %}</td>
-            <td>{% if goods %}{{ goods.cg_weight }}{% else %}<span class="text-muted">0.0</span>{% endif %}</td>
+            <td>{% if inv.total_goods_qty is not None %}{{ inv.total_goods_qty }}{% elif goods %}{{ goods.cg_qty }}{% else %}<span class="text-muted">0</span>{% endif %}</td>
+            <td>{% if inv.total_goods_weight is not None %}{{ inv.total_goods_weight }}{% elif goods %}{{ goods.cg_weight }}{% else %}<span class="text-muted">0.0</span>{% endif %}</td>
             {% endwith %}
             <td>{{ inv.ti_transportation_charges }}</td>
             <td>{{ inv.ti_toll_charges }}</td>
