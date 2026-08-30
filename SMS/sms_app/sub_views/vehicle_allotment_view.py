@@ -383,16 +383,16 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
 
-            # 🚫 VEHICLE REGISTRATION FORMAT CHECK FOR MARKET VEHICLES
-            if vehicle_source == 3 and obj.va_vehiclenumber_mkt:
-                mkt_num = str(obj.va_vehiclenumber_mkt).strip()
-                if not validate_vehicle_number_format(mkt_num):
-                    messages.error(
-                        request,
-                        f"Invalid vehicle number format '{mkt_num}'. Format must strictly follow e.g. TN22AB4916 (First 2 letters, next 2 digits, optional 1-2 letters, and final 4 digits)."
-                    )
-                    referer = request.META.get('HTTP_REFERER')
-                    return redirect(referer if referer else request.path)
+            # 🚫 VEHICLE REGISTRATION FORMAT CHECK FOR MARKET VEHICLES (Temporarily commented out)
+            # if vehicle_source == 3 and obj.va_vehiclenumber_mkt:
+            #     mkt_num = str(obj.va_vehiclenumber_mkt).strip()
+            #     if not validate_vehicle_number_format(mkt_num):
+            #         messages.error(
+            #             request,
+            #             f"Invalid vehicle number format '{mkt_num}'. Format must strictly follow e.g. TN22AB4916 (First 2 letters, next 2 digits, optional 1-2 letters, and final 4 digits)."
+            #         )
+            #         referer = request.META.get('HTTP_REFERER')
+            #         return redirect(referer if referer else request.path)
 
             # 🚫 VEHICLE TYPE & QUANTITY VALIDATION AGAINST ENQUIRY NOTE
             requested_entries = Enquirynotevehicle.objects.filter(env_enquirynumber_id=enquiry_id)
@@ -1325,11 +1325,18 @@ def get_vendor_sale_rate(request):
         'ro_touchpoint3': enquiry.en_touchpoint3,
         'ro_touchpoint4': enquiry.en_touchpoint4
     }
+    if enquiry.en_customerdepartment:
+        filter_kwargs['ro_customerdepartment'] = enquiry.en_customerdepartment
     if vehicle_category_id:
         filter_kwargs['ro_vehiclecategory_id'] = vehicle_category_id
 
     rate = RtratemasterInfo.objects.filter(**filter_kwargs).first()
-    master_rate = str(rate.ro_rate) if rate else "0"
+    if not rate and enquiry.en_customerdepartment:
+        filter_without_dept = {k: v for k, v in filter_kwargs.items() if k != 'ro_customerdepartment'}
+        rate = RtratemasterInfo.objects.filter(**filter_without_dept).first()
+    master_rate = str(rate.ro_rate) if rate and rate.ro_rate else "0"
+
+    fetch_master_rate = request.GET.get('fetch_master_rate') == '1'
 
     # Check if Enquirynotevehicle has standard sell & special sale configured for this enquiry
     env_match = Enquirynotevehicle.objects.filter(
@@ -1342,17 +1349,18 @@ def get_vendor_sale_rate(request):
             env_match = env_match_cat
     env_obj = env_match.first()
 
-    if env_obj and env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+    if not fetch_master_rate and env_obj and env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
         sale_rate = str(env_obj.env_sale)
     else:
         sale_rate = master_rate
 
-    if env_obj and env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
+    if not fetch_master_rate and env_obj and env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
         special_sale_rate = str(env_obj.env_special_sale)
     else:
         special_sale_rate = sale_rate
 
     return JsonResponse({
+        'master_rate': master_rate,
         'sale_rate': sale_rate,
         'special_sale_rate': special_sale_rate
     })
@@ -1624,13 +1632,13 @@ def vehicle_allotment_replace(request, allotment_id):
                         'message': f"🚫 Cannot complete replacement: Selected driver license expired on {new_driver_lic_expiry}! Please select a driver with a valid license."
                     })
 
-                # Validate vehicle registration format for market vehicles
-                if str(new_vehicle_source_id) == '3' or new_vehicle_mkt:
-                    if not validate_vehicle_number_format(new_vehicle_mkt):
-                        return JsonResponse({
-                            'success': False,
-                            'message': f"Invalid vehicle number format '{new_vehicle_mkt}'. Format must strictly follow e.g. TN22AB4916 (First 2 letters, next 2 digits, optional 1-2 letters, and final 4 digits)."
-                        })
+                # Validate vehicle registration format for market vehicles (Temporarily commented out)
+                # if str(new_vehicle_source_id) == '3' or new_vehicle_mkt:
+                #     if not validate_vehicle_number_format(new_vehicle_mkt):
+                #         return JsonResponse({
+                #             'success': False,
+                #             'message': f"Invalid vehicle number format '{new_vehicle_mkt}'. Format must strictly follow e.g. TN22AB4916 (First 2 letters, next 2 digits, optional 1-2 letters, and final 4 digits)."
+                #         })
 
                 # Step 1: Create New Allotment
                 new_va = Vehicle_allotmentInfo.objects.create(
@@ -1657,8 +1665,8 @@ def vehicle_allotment_replace(request, allotment_id):
                     va_vendor_id=new_vendor_id if new_vendor_id else old_va.va_vendor_id,
                     va_sale=get_decimal(request.POST.get('va_sale'), old_va.va_sale),
                     va_special_sale=get_decimal(request.POST.get('va_special_sale'), getattr(old_va, 'va_special_sale', None)) or get_decimal(request.POST.get('va_sale'), old_va.va_sale),
-                    va_standardbuy=get_decimal(request.POST.get('va_standardbuy'), old_va.va_standardbuy) if new_source_id == 3 else None,
-                    va_specialbuy=get_decimal(request.POST.get('va_specialbuy'), old_va.va_specialbuy) if new_source_id == 3 else None,
+                    va_standardbuy=get_decimal(request.POST.get('va_standardbuy'), old_va.va_standardbuy) if str(new_vehicle_source_id) == '3' else None,
+                    va_specialbuy=get_decimal(request.POST.get('va_specialbuy'), old_va.va_specialbuy) if str(new_vehicle_source_id) == '3' else None,
                     va_profit_percentage=get_decimal(request.POST.get('va_profit_percentage'), old_va.va_profit_percentage)
                 )
 
