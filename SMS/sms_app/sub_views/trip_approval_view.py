@@ -19,7 +19,13 @@ def format_email_date(dt):
 @login_required(login_url='login_page')
 def trip_approval_view(request):
     trip_list = TripdetailInfo.objects.select_related(
+        'tr_departedlocation',
+        'tr_reportedlocation',
+        'tr_enquirynumber',
+        'tr_enquirynumber__en_customername',
+        'tr_enquirynumber__en_tolocation',
         'tr_consignmentnumber',
+        'tr_consignmentnumber__co_tolocation',
         'tr_approval',
         'tr_approval__ta_approval_status'
     ).filter(
@@ -57,6 +63,15 @@ def update_trip_approval(request, trip_id):
         trip.tr_approval = approval
 
         if status_obj.approval_name == "Approved":
+            # Check E-Way Bill Part-A and Part-B PDF validity before approving
+            if trip.tr_consignmentnumber:
+                from .eway_partb_validator import validate_consignment_eway_bill
+                can_approve, blocking_reasons, _ = validate_consignment_eway_bill(trip.tr_consignmentnumber)
+                if not can_approve:
+                    error_msg = " | ".join(blocking_reasons)
+                    messages.error(request, f"APPROVAL REJECTED: {error_msg}")
+                    return redirect('trip_approval_view')
+
             trip.tc_financestatus_id = 1
             trip.tr_operational_status_id = 1
             

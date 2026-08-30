@@ -787,21 +787,41 @@ def tripdetail_add(request, tripdetail_id=0):
             if trip_det_form.is_valid():
                 trip = trip_det_form.save(commit=False)
 
-                # ✅ PROTECT already-saved fields from being wiped by disabled HTML inputs.
-                # Disabled fields are not submitted in POST, so Django sees them as blank/None
-                # and would overwrite the DB value. We restore from the DB instance instead.
+                # ✅ PROTECT already-saved fields from being wiped by disabled HTML inputs or fields absent from POST.
+                # Disabled fields or fields not rendered on tripdetail_add.html (like settlement costs/checkboxes/ref no)
+                # are not submitted in POST, so Django would overwrite the DB value with 0/blank/False.
+                # We restore from the DB instance instead.
                 protected_fields = [
                     'tr_reportedkm', 'tr_reporteddate', 'tr_unloading_time',
                     'tr_reporteddate_pickup', 'tr_reportedkm_delivery',
                     'tr_departeddate_delivery', 'tr_reportedkm_pickup',
                     'tr_departeddate', 'tr_departedkm',
                     'tr_loading_time', 'tr_dock_in_time', 'tr_dock_out_time',
+                    'tr_customerref',
+                    'tc_tripcost', 'tc_parkingcost', 'tc_tollcost', 'tc_loadingcost',
+                    'tc_unloadingcost', 'tc_weighmentcost', 'tc_handlingcost',
+                    'tc_handlingcost_reason', 'tc_haltingcost', 'tc_total_halting_cost',
+                    'tc_supervisorcost', 'tc_rtocost', 'tc_betacost', 'tc_cancellation',
+                    'tc_no_of_days_halting', 'tc_pod', 'tc_pod_attachment',
+                    'tc_tripcost_check', 'tc_parkingcost_check', 'tc_tollcost_check',
+                    'tc_loadingcost_check', 'tc_unloadingcost_check', 'tc_weighmentcost_check',
+                    'tc_supervisorcost_check', 'tc_handlingcost_check', 'tc_haltingcost_check',
+                    'tc_total_halting_cost_check', 'tc_rtocost_check', 'tc_betacost_check', 'tc_cancellation_check',
+                    'tc_tripcost_vendor_check', 'tc_parkingcost_vendor_check', 'tc_tollcost_vendor_check',
+                    'tc_loadingcost_vendor_check', 'tc_unloadingcost_vendor_check', 'tc_weighmentcost_vendor_check',
+                    'tc_supervisorcost_vendor_check', 'tc_handlingcost_vendor_check', 'tc_haltingcost_vendor_check',
+                    'tc_total_halting_cost_vendor_check', 'tc_rtocost_vendor_check', 'tc_betacost_vendor_check', 'tc_cancellation_vendor_check',
                 ]
                 for field in protected_fields:
-                    new_val = getattr(trip, field, None)
-                    old_val = getattr(tripdetail, field, None)
-                    if not new_val and old_val:
-                        setattr(trip, field, old_val)
+                    if field not in post_data:
+                        old_val = getattr(tripdetail, field, None)
+                        if old_val is not None:
+                            setattr(trip, field, old_val)
+                    else:
+                        new_val = getattr(trip, field, None)
+                        old_val = getattr(tripdetail, field, None)
+                        if (new_val is None or new_val == '') and (old_val is not None and old_val != ''):
+                            setattr(trip, field, old_val)
 
                 # ✅ Synchronize KM fields for reports
                 # tr_departedkm is the 'canonical' Starting KM used in reports.

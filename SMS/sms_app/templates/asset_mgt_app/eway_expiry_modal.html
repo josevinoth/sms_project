@@ -1,0 +1,189 @@
+<!-- Floating E-Way Bill Expiry Toast Notification (Top-Right / Floating Toast Popup) -->
+<div id="ewayToastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: none; width: 380px; max-width: 90vw;">
+    <div id="ewayToastNotification" style="
+        background: #1e293b;
+        color: #f8fafc;
+        border-left: 5px solid #f59e0b;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        padding: 14px 16px;
+        font-family: inherit;
+        position: relative;
+        overflow: hidden;
+        animation: slideInRight 0.4s ease forwards;
+    ">
+        <!-- Progress Bar at bottom (10s timer visual) -->
+        <div id="ewayToastProgressBar" style="
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+            width: 100%;
+            transition: width 0.1s linear;
+        "></div>
+
+        <!-- Header Row -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 1.1rem;"></i>
+                <strong style="font-size: 0.95rem; color: #ffffff; letter-spacing: 0.2px;">E-Way Bill Expiry Alert</strong>
+                <span id="ewayToastBadge" class="badge badge-warning text-dark" style="font-weight: 700; font-size: 0.75rem;">0</span>
+            </div>
+            <!-- Close symbol (x) -->
+            <button type="button" id="ewayToastCloseBtn" style="
+                background: transparent;
+                border: none;
+                color: #94a3b8;
+                font-size: 1.4rem;
+                line-height: 1;
+                cursor: pointer;
+                padding: 0;
+                margin-left: 10px;
+                transition: color 0.2s;
+            " onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#94a3b8'">&times;</button>
+        </div>
+
+        <!-- Message Body -->
+        <div id="ewayToastMessage" style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.4; margin-bottom: 10px;">
+            <!-- Dynamic alert summary populated by JS -->
+        </div>
+
+        <!-- Action Links Footer -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <small style="color: #64748b; font-size: 0.75rem;" id="ewayToastTimerText">Auto closing in 10s</small>
+            <a href="/SMS/consignmentdetail_list/?eway_alert=1" class="btn btn-warning btn-sm py-1 px-3" style="font-size: 0.78rem; font-weight: 700; color: #0f172a; border-radius: 5px;">
+                View Consignments <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+@keyframes fadeOutRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    // Only display alert popup on Homepage (e.g. /SMS/home_page or root /SMS/)
+    var path = window.location.pathname.toLowerCase();
+    var isHomePage = (path === '/sms/' || path === '/sms/home_page' || path === '/sms/home_page/' || path === '/');
+    
+    if (!isHomePage) {
+        return; // Do not fetch or show alert toast on inner transaction / detail pages
+    }
+
+    $.ajax({
+        url: "/SMS/api/eway_expiry_alerts/",
+        type: "GET",
+        dataType: "json",
+        success: function(response) {
+            if (response.success && response.count > 0) {
+                $('#ewayToastBadge').text(response.count);
+
+                var expiredCount = response.alerts.filter(a => a.is_expired).length;
+                var expiringCount = response.count - expiredCount;
+
+                // Format specific consignment numbers for display
+                var sampleAlerts = response.alerts.slice(0, 3);
+                var consListHtml = '<ul style="margin: 6px 0 0 0; padding-left: 18px; font-size: 0.8rem; color: #f1f5f9;">';
+                sampleAlerts.forEach(function(item) {
+                    var badgeClass = item.is_expired ? 'badge-danger' : 'badge-warning text-dark';
+                    var itemSuffix = (item.items_count > 1) ? ' (' + item.items_count + ' items)' : '';
+                    consListHtml += '<li style="margin-bottom: 3px;">' +
+                        'Consignment <strong style="color: #38bdf8;">' + item.ref_no + '</strong>' + itemSuffix + ' ' +
+                        '<span class="badge ' + badgeClass + '" style="font-size: 0.68rem; padding: 1px 4px;">' + item.status_text + '</span>' +
+                        '</li>';
+                });
+                consListHtml += '</ul>';
+
+                if (response.count > 3) {
+                    consListHtml += '<div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px; font-style: italic;">...and ' + (response.count - 3) + ' more consignment(s)</div>';
+                }
+
+                var msg = '<div style="font-weight: 600; color: #ffffff;">' +
+                    (expiredCount > 0 ? '⚠️ E-Way Bill(s) EXPIRED / Expiring:' : '⏳ E-Way Bill(s) Expiring Soon:') +
+                    '</div>' + consListHtml;
+
+                $('#ewayToastMessage').html(msg);
+                $('#ewayToastContainer').fadeIn(300);
+
+                // 10 Seconds Auto-Close Countdown Timer
+                var durationMs = 10000; // 10 seconds
+                var intervalMs = 100;
+                var elapsedMs = 0;
+
+                var timer = setInterval(function() {
+                    elapsedMs += intervalMs;
+                    var remainingSeconds = Math.ceil((durationMs - elapsedMs) / 1000);
+                    var progressPercent = 100 - ((elapsedMs / durationMs) * 100);
+
+                    $('#ewayToastProgressBar').css('width', progressPercent + '%');
+                    $('#ewayToastTimerText').text('Auto closing in ' + remainingSeconds + 's');
+
+                    if (elapsedMs >= durationMs) {
+                        clearInterval(timer);
+                        closeToast();
+                    }
+                }, intervalMs);
+
+                // Pause timer on hover if user wants to read/click
+                $('#ewayToastNotification').hover(
+                    function() { clearInterval(timer); $('#ewayToastTimerText').text('Paused'); },
+                    function() {
+                        timer = setInterval(function() {
+                            elapsedMs += intervalMs;
+                            var remainingSeconds = Math.ceil((durationMs - elapsedMs) / 1000);
+                            var progressPercent = 100 - ((elapsedMs / durationMs) * 100);
+
+                            $('#ewayToastProgressBar').css('width', progressPercent + '%');
+                            $('#ewayToastTimerText').text('Auto closing in ' + remainingSeconds + 's');
+
+                            if (elapsedMs >= durationMs) {
+                                clearInterval(timer);
+                                closeToast();
+                            }
+                        }, intervalMs);
+                    }
+                );
+
+                // Close Button Click (Close Symbol 'x')
+                $('#ewayToastCloseBtn').on('click', function() {
+                    clearInterval(timer);
+                    closeToast();
+                });
+
+                function closeToast() {
+                    $('#ewayToastNotification').css('animation', 'fadeOutRight 0.4s ease forwards');
+                    setTimeout(function() {
+                        $('#ewayToastContainer').hide();
+                        sessionStorage.setItem('eway_toast_dismissed', 'true');
+                    }, 400);
+                }
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Failed to check E-Way Bill expiry alerts:", error);
+        }
+    });
+});
+</script>

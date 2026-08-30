@@ -469,7 +469,32 @@ def consignmentdetail_list_ajax(request):
     ).prefetch_related('cg_consignmentnumber', 'cg_consignmentnumber__cg_consigner',
                        'cg_consignmentnumber__cg_consignee').all()
 
+    eway_alert = request.GET.get('eway_alert')
+
     # Apply Filters
+    if eway_alert == '1':
+        from datetime import timedelta
+        from django.utils import timezone
+        from ..models import TripdetailInfo, ConsignmentgoodsInfo
+
+        now = timezone.now()
+        min_date = now.date() - timedelta(days=3)
+        threshold_date = now.date() + timedelta(days=1)
+
+        active_trip_cons_ids = TripdetailInfo.objects.filter(
+            tc_financestatus_id=1,
+            tr_consignmentnumber__isnull=False
+        ).values_list('tr_consignmentnumber_id', flat=True)
+
+        expiring_cons_ids = ConsignmentgoodsInfo.objects.filter(
+            cg_consignmentnumber_id__in=active_trip_cons_ids,
+            cg_dateofvalidity__isnull=False,
+            cg_dateofvalidity__gte=min_date,
+            cg_dateofvalidity__lte=threshold_date
+        ).values_list('cg_consignmentnumber_id', flat=True).distinct()
+
+        qs = qs.filter(id__in=expiring_cons_ids)
+
     if customer_id:
         qs = qs.filter(
             Q(co_customer_id=customer_id) | Q(co_enquirynumber__en_customername_id=customer_id)
