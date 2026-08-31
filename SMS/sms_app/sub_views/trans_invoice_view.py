@@ -98,6 +98,26 @@ def get_trip_halting_charge(t):
     return halting
 
 
+def calculate_trip_invoice_total(t):
+    """
+    Calculates total transport invoice charges for a trip (TripdetailInfo)
+    matching the exact billing fields checked/billed to customer.
+    """
+    if not t:
+        return 0.0
+    transport = float(t.tc_tripcost or 0) if getattr(t, 'tc_tripcost_check', False) else 0.0
+    toll = float(t.tc_tollcost or 0) if getattr(t, 'tc_tollcost_check', False) else 0.0
+    parking = float(t.tc_parkingcost or 0) if getattr(t, 'tc_parkingcost_check', False) else 0.0
+    loading = float(t.tc_loadingcost or 0) if getattr(t, 'tc_loadingcost_check', False) else 0.0
+    unloading = float(t.tc_unloadingcost or 0) if getattr(t, 'tc_unloadingcost_check', False) else 0.0
+    halting = float(get_trip_halting_charge(t) or 0.0)
+    weighment = float(t.tc_weighmentcost or 0) if getattr(t, 'tc_weighmentcost_check', False) else 0.0
+    handling = ((float(t.tc_handlingcost or 0) if getattr(t, 'tc_handlingcost_check', False) else 0.0) +
+                (float(t.tc_supervisorcost or 0) if getattr(t, 'tc_supervisorcost_check', False) else 0.0))
+    cancellation = float(t.tc_cancellation or 0) if getattr(t, 'tc_cancellation_check', False) else 0.0
+    return transport + toll + parking + loading + unloading + halting + weighment + handling + cancellation
+
+
 # ==================================================
 # MASTER INVOICE TOTALS SYNC HELPER
 # ==================================================
@@ -958,18 +978,7 @@ def trans_invoice_list_woh(request, customer_id):
                         "ti_weighment_charges": trip.tc_weighmentcost if trip.tc_weighmentcost_check else 0,
                         "ti_handling_charges": (trip.tc_handlingcost if trip.tc_handlingcost_check else 0) + (trip.tc_supervisorcost if trip.tc_supervisorcost_check else 0),
                         "ti_cancellation_charges": trip.tc_cancellation if trip.tc_cancellation_check else 0,
-                        "ti_total": (
-                                (trip.tc_tripcost if trip.tc_tripcost_check else 0) +
-                                (trip.tc_tollcost if trip.tc_tollcost_check else 0) +
-                                (trip.tc_parkingcost if trip.tc_parkingcost_check else 0) +
-                                (trip.tc_loadingcost if trip.tc_loadingcost_check else 0) +
-                                (trip.tc_unloadingcost if trip.tc_unloadingcost_check else 0) +
-                                get_trip_halting_charge(trip) +
-                                (trip.tc_weighmentcost if trip.tc_weighmentcost_check else 0) +
-                                (trip.tc_handlingcost if trip.tc_handlingcost_check else 0) +
-                                (trip.tc_supervisorcost if trip.tc_supervisorcost_check else 0) +
-                                (trip.tc_cancellation if trip.tc_cancellation_check else 0)
-                        )
+                        "ti_total": calculate_trip_invoice_total(trip)
                     }
                 )
 
@@ -1028,23 +1037,6 @@ def trans_invoice_list_woh(request, customer_id):
         TripdetailInfo.objects
         .filter(id__in=current_woh_trip_ids)
         .select_related('tr_enquirynumber','tr_consignmentnumber','tr_vehicletype','tr_vehicletype_placed','tr_vehiclesource')
-
-        .annotate(
-            trip_total=(
-                Case(When(tc_tripcost_check=True, then=F('tc_tripcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_tollcost_check=True, then=F('tc_tollcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_parkingcost_check=True, then=F('tc_parkingcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_loadingcost_check=True, then=F('tc_loadingcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_unloadingcost_check=True, then=F('tc_unloadingcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_haltingcost_check=True, then=F('tc_haltingcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_weighmentcost_check=True, then=F('tc_weighmentcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_handlingcost_check=True, then=F('tc_handlingcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_supervisorcost_check=True, then=F('tc_supervisorcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_betacost_check=True, then=F('tc_betacost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_total_halting_cost_check=True, then=F('tc_total_halting_cost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_cancellation_check=True, then=F('tc_cancellation')), default=0.0, output_field=FloatField())
-            )
-        )
         .order_by('-tr_created_at')
     )
 
@@ -1059,6 +1051,9 @@ def trans_invoice_list_woh(request, customer_id):
     curr_pdf_map = {doc.id_tripnumber: doc.id_merged_pdf.url if doc.id_merged_pdf else None for doc in curr_pdf_docs}
     for trip in trans_invoice_list:
         trip.combined_pdf_url = curr_pdf_map.get(trip.tr_tripnumber)
+        trip.calculated_halting = get_trip_halting_charge(trip)
+        trip.trip_total = calculate_trip_invoice_total(trip)
+
     invoice_list_master = (
         TripdetailInfo.objects
         .filter(
@@ -1071,23 +1066,6 @@ def trans_invoice_list_woh(request, customer_id):
         .exclude(tr_consignmentnumber__co_consignmentnumber='')
         .exclude(id__in=all_assigned_trip_ids)
         .select_related('tr_enquirynumber','tr_consignmentnumber','tr_vehicletype','tr_vehicletype_placed','tr_vehiclesource')
-
-        .annotate(
-            trip_total=(
-                Case(When(tc_tripcost_check=True, then=F('tc_tripcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_tollcost_check=True, then=F('tc_tollcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_parkingcost_check=True, then=F('tc_parkingcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_loadingcost_check=True, then=F('tc_loadingcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_unloadingcost_check=True, then=F('tc_unloadingcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_haltingcost_check=True, then=F('tc_haltingcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_weighmentcost_check=True, then=F('tc_weighmentcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_handlingcost_check=True, then=F('tc_handlingcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_supervisorcost_check=True, then=F('tc_supervisorcost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_betacost_check=True, then=F('tc_betacost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_total_halting_cost_check=True, then=F('tc_total_halting_cost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_cancellation_check=True, then=F('tc_cancellation')), default=0.0, output_field=FloatField())
-            )
-        )
         .order_by('-tr_created_at')
     )
 
@@ -1102,11 +1080,8 @@ def trans_invoice_list_woh(request, customer_id):
     pdf_map = {doc.id_tripnumber: doc.id_merged_pdf.url if doc.id_merged_pdf else None for doc in invoice_docs}
     for trip in invoice_list_master:
         trip.combined_pdf_url = pdf_map.get(trip.tr_tripnumber)
-
-    for trip in trans_invoice_list:
         trip.calculated_halting = get_trip_halting_charge(trip)
-    for trip in invoice_list_master:
-        trip.calculated_halting = get_trip_halting_charge(trip)
+        trip.trip_total = calculate_trip_invoice_total(trip)
 
     invoice_qs = TransInvoiceInfo.objects.filter(ti_trip_id__in=current_woh_trip_ids, ti_customer_id=customer_id, is_woh=True)
     invoice_map = {inv.ti_trip_id: inv for inv in invoice_qs}
