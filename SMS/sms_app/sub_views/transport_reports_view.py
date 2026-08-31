@@ -1825,7 +1825,6 @@ def ref_no_pending_report_ajax_view(request):
                         (safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0) + \
                         (safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0) + \
                         (safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0) + \
-                        (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + \
                         (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0) + \
                         (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0) + \
                         (safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0) + \
@@ -1853,7 +1852,7 @@ def ref_no_pending_report_ajax_view(request):
             safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0,
             safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0,
             safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0,
-            (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0),
+            safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0,
             safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0,
             total_selling
         ])
@@ -2104,8 +2103,6 @@ def invoice_pending_report_ajax_view(request):
                      output_field=FloatField()) +
                 Case(When(tc_unloadingcost_check=True, then=F('tc_unloadingcost')), default=0.0,
                      output_field=FloatField()) +
-                Case(When(tc_haltingcost_check=True, then=F('tc_haltingcost')), default=0.0,
-                     output_field=FloatField()) +
                 Case(When(tc_rtocost_check=True, then=F('tc_rtocost')), default=0.0, output_field=FloatField()) +
                 Case(When(tc_weighmentcost_check=True, then=F('tc_weighmentcost')), default=0.0,
                      output_field=FloatField()) +
@@ -2318,8 +2315,7 @@ def invoice_pending_report_ajax_view(request):
             safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0,
             safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0,
             safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0,
-            (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) +
-            (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0),
+            safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0,
             safe_num(trip.tc_rtocost) if trip.tc_rtocost_check else 0,
             safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0,
             safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0,
@@ -5406,7 +5402,7 @@ def diesel_vs_revenue_report_ajax_view(request):
         rev_loading = (safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0.0))
         rev_unloading = (safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0.0))
         rev_weighment = (safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0.0))
-        rev_halting = (safe_num(inv.ti_halting_charges) if inv else ((safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0)))
+        rev_halting = (safe_num(inv.ti_halting_charges) if inv else (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0))
         rev_handling = (safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0.0))
         rev_parking = (safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0.0))
         rev_rto = safe_num(trip.tc_rtocost) if trip.tc_rtocost_check else 0.0
@@ -5612,7 +5608,6 @@ def own_vs_market_sales_report_view(request):
                   (safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0) + \
                   (safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0) + \
                   (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0) + \
-                  (safe_num(trip.tc_haltingcost) if trip.tc_haltingcost_check else 0) + \
                   (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0) + \
                   (safe_num(trip.tc_supervisorcost) if trip.tc_supervisorcost_check else 0) + \
                   (safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0)
