@@ -52,11 +52,11 @@ def pk_quotation_add(request, quotation_id=0):
 
             # form = PkquotationForm(initial=initial_data)
             form = PkquotationForm
-            # Calculate total_cft_display dynamically for the assessment
+            # Calculate total_cft_display dynamically for the assessment (Wood ONLY)
             aggregate_cft = PkquotationInfo.objects.filter(
                 pkqt_assessment_num=na_assessment_num_id,
                 pkqt_cost_type=8,
-                pkqt_stock_type__in=[1, 4, 5]
+                pkqt_stock_type=1
             ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
             project_total_cft = round(aggregate_cft, 3) if aggregate_cft is not None else 0.0
 
@@ -78,11 +78,11 @@ def pk_quotation_add(request, quotation_id=0):
             quotation = PkquotationInfo.objects.get(pk=quotation_id)
             form = PkquotationForm(instance=quotation)
             
-            # Calculate total_cft_display dynamically for the assessment
+            # Calculate total_cft_display dynamically for the assessment (Wood ONLY)
             aggregate_cft = PkquotationInfo.objects.filter(
                 pkqt_assessment_num=na_assessment_num_id,
                 pkqt_cost_type=8,
-                pkqt_stock_type__in=[1, 4, 5]
+                pkqt_stock_type=1
             ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
             project_total_cft = round(aggregate_cft, 3) if aggregate_cft is not None else 0.0
             
@@ -166,7 +166,7 @@ def pk_quotation_add(request, quotation_id=0):
                         stock_type = quotation.pkqt_stock_type.id
                         assessment_id = quotation.pkqt_assessment_num.id
 
-                        # ✅ Only for cost_type = 8 and stock_type = 1
+                        # ✅ Only for cost_type = 8 and Wood stock_type = 1
                         if cost_type == 8 and stock_type == 1:
                             total_cft = PkquotationInfo.objects.filter(
                                 pkqt_assessment_num=assessment_id,
@@ -191,7 +191,7 @@ def pk_quotation_add(request, quotation_id=0):
                     stock_type = quotation.pkqt_stock_type.id
                     assessment_id = quotation.pkqt_assessment_num.id
 
-                    # ✅ Only for cost_type = 8 and stock_type = 1
+                    # ✅ Only for cost_type = 8 and Wood stock_type = 1
                     if cost_type == 8 and stock_type == 1:
                         total_cft = PkquotationInfo.objects.filter(
                             pkqt_assessment_num=assessment_id,
@@ -199,7 +199,7 @@ def pk_quotation_add(request, quotation_id=0):
                             pkqt_stock_type=1
                         ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total'] or 0.0
                         print("total_cft", total_cft)
-                        request.session['total_cft_display'] = round(total_cft, 2)
+                        request.session['total_cft_display'] = round(total_cft, 3)
                     else:
                         request.session['total_cft_display'] = 0.0
 

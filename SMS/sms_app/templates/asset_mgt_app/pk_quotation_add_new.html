@@ -578,9 +578,14 @@
 
                 var jn1 = parseInt($('#pkqt_stock_type').val());
                 var total_sqft = parseFloat(document.getElementById("total_sqft").value) || 0;
+                let desc = (document.getElementById("hidden_pc_stock_description") ? document.getElementById("hidden_pc_stock_description").value : "") || "";
 
                 if (jn1 === 2) {
-                    document.getElementById("pkqt_sqrt_req").value = total_sqft.toFixed(2);
+                    if (desc.startsWith("Alu") || desc.startsWith("VC") || desc.startsWith("Air") || desc.startsWith("Foam")) {
+                        document.getElementById("pkqt_sqrt_req").value = total_sqft.toFixed(2);
+                    } else {
+                        document.getElementById("pkqt_sqrt_req").value = "0";
+                    }
                 }
             }
         });

@@ -62,39 +62,84 @@
                 {% for trip in trip_list %}
                 {% with consignments=trip.tr_consignmentnumber.cg_consignmentnumber.all %}
                 <tr>
-                    <td class="font-weight-bold" style="color: var(--accent-blue);">{{ trip.tr_tripnumber }}</td>
-                    <td>{{ trip.tr_enquirynumber.en_customername.cu_name }}</td>
-                    <td>{{ trip.tr_enquirynumber.en_fromlocaion.place_name }}</td>
-                    <td>{{ trip.tr_enquirynumber.en_tolocation.place_name }}</td>
-                    <td>{{ trip.tr_consignmentnumber.co_consignmentnumber|default:"-" }}</td>
-                    
-                    <!-- E-Waybill No -->
+                    <!-- Trip No -->
+                    <td><strong class="text-primary">{{ trip.tr_tripnumber }}</strong></td>
+
+                    <!-- Customer -->
+                    <td>{{ trip.tr_enquirynumber.en_customername.cu_name|default:"-" }}</td>
+
+                    <!-- From Location -->
+                    <td>{{ trip.tr_departedlocation.place_name|default:"-" }}</td>
+
+                    <!-- To Location -->
                     <td>
-                        {% for c in consignments %}
-                        <div class="doc-item-row">{{ c.cg_ebillno|default:"-" }}</div>
-                        {% empty %}-{% endfor %}
+                        {% if trip.tr_destinationlocation %}
+                            {{ trip.tr_destinationlocation.place_name }}
+                        {% elif trip.tr_reportedlocation %}
+                            {{ trip.tr_reportedlocation.place_name }}
+                        {% elif trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_tolocation %}
+                            {{ trip.tr_consignmentnumber.co_tolocation.place_name }}
+                        {% elif trip.tr_enquirynumber and trip.tr_enquirynumber.en_tolocation %}
+                            {{ trip.tr_enquirynumber.en_tolocation.place_name }}
+                        {% else %}
+                            -
+                        {% endif %}
                     </td>
 
-                    <!-- Issue Date -->
+                    <!-- Consignment No -->
                     <td>
-                        {% for c in consignments %}
-                        <div class="doc-item-row">{{ c.cg_dateofissue|date:"d-m-Y"|default:"-" }}</div>
-                        {% empty %}-{% endfor %}
+                        {% if trip.tr_consignmentnumber %}
+                        {{ trip.tr_consignmentnumber.co_consignmentnumber }}
+                        {% else %}
+                        -
+                        {% endif %}
                     </td>
 
-                    <!-- Validity Date -->
+                    <!-- Ewaybill No (List) -->
                     <td>
                         {% for c in consignments %}
                         <div class="doc-item-row">
-                            {{ c.cg_dateofvalidity|date:"d-m-Y"|default:"-" }}
-                            {% if c.cg_dateofvalidity and c.cg_dateofvalidity < today %}
-                            <span class="badge badge-danger ml-1" style="font-size:0.65rem; padding:2px 4px;" title="E-Waybill Expired!">⚠️ EXPIRED</span>
+                            {% if c.cg_ebillno %}
+                            <code>{{ c.cg_ebillno }}</code>
+                            {% else %}
+                            -
                             {% endif %}
                         </div>
-                        {% empty %}-{% endfor %}
+                        {% empty %}
+                        -
+                        {% endfor %}
                     </td>
 
-                    <!-- E-Waybill Attachments -->
+                    <!-- Ewaybill Issue Date (List) -->
+                    <td>
+                        {% for c in consignments %}
+                        <div class="doc-item-row">
+                            {{ c.cg_dateofissue|date:"d-m-Y"|default:"-" }}
+                        </div>
+                        {% empty %}
+                        -
+                        {% endfor %}
+                    </td>
+
+                    <!-- Ewaybill Validity Date (List) -->
+                    <td>
+                        {% for c in consignments %}
+                        <div class="doc-item-row">
+                            {% if c.cg_dateofvalidity %}
+                                {{ c.cg_dateofvalidity|date:"d-m-Y" }}
+                                {% if c.cg_dateofvalidity < today %}
+                                <span class="badge badge-danger ml-1" style="font-size:0.68rem; padding:2px 5px;"><i class="fas fa-exclamation-triangle"></i> EXPIRED</span>
+                                {% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </div>
+                        {% empty %}
+                        -
+                        {% endfor %}
+                    </td>
+
+                    <!-- Ewaybill Attachments -->
                     <td>
                         {% for c in consignments %}
                         <div class="doc-item-row">
@@ -111,11 +156,15 @@
                         {% endfor %}
                     </td>
 
-                    <!-- Invoice No -->
+                    <!-- Invoice No (List) -->
                     <td>
                         {% for c in consignments %}
-                        <div class="doc-item-row">{{ c.cg_consignerinvoice|default:"-" }}</div>
-                        {% empty %}-{% endfor %}
+                        <div class="doc-item-row">
+                            {{ c.cg_consignerinvoice|default:"-" }}
+                        </div>
+                        {% empty %}
+                        -
+                        {% endfor %}
                     </td>
 
                     <!-- Invoice Attachments -->
@@ -141,6 +190,7 @@
                         <form method="post" action="{% url 'update_trip_approval' trip.id %}"
                             class="approval-form d-flex align-items-center justify-content-center" style="gap:5px;"
                             data-c-type="{{ first_cons.cg_consignmenttype.consignment_type|default:'Normal' }}"
+                            data-trip-id="{{ trip.id }}"
                             data-trip-no="{{ trip.tr_tripnumber }}"
                             data-customer="{{ trip.tr_enquirynumber.en_customername.cu_name }}">
                             {% csrf_token %}
@@ -167,30 +217,78 @@
 </div>
 
 <!-- ══ Document Verification Checkpoint Modal ══ -->
-<div class="modal fade" id="documentVerificationModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width:440px;">
-        <div class="modal-content" style="border-radius:12px; overflow:hidden;">
-            <div class="modal-header text-white" style="background-color:#003366; padding:0.75rem 1.25rem;">
-                <h5 class="modal-title font-weight-bold" style="font-size:1.02rem; display:flex; align-items:center; gap:8px;">
-                    <i class="fas fa-shield-alt"></i> Confirm Approval
+<div class="modal fade" id="documentVerificationModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius:12px; overflow:hidden; border: 1px solid #0284c7;">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding:0.85rem 1.25rem;">
+                <h5 class="modal-title font-weight-bold mb-0" style="font-size:1.05rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-shield-alt text-info"></i> Document Verification Checkpoint
                 </h5>
                 <button type="button" class="close text-white" data-dismiss="modal" style="opacity:0.9;">&times;</button>
             </div>
-            <div class="modal-body p-3">
-                <p class="mb-2 text-dark font-weight-bold" style="font-size:0.9rem;">
-                    Approve trip <span id="modal_trip_no" class="text-primary"></span> (<span id="modal_customer"></span>)?
-                </p>
 
-                <div class="custom-control custom-checkbox p-2 pl-4 mt-2" style="background:#f8fafc; border-radius:8px; border:1px solid #cbd5e1;">
-                    <input type="checkbox" class="custom-control-input" id="chk_verify_document">
-                    <label class="custom-control-label font-weight-bold text-dark" for="chk_verify_document" style="font-size:0.88rem; cursor:pointer; user-select:none;">
-                        I have verified all documents
-                    </label>
+            <div class="modal-body p-3" style="background-color: #0f172a; color: #f8fafc;">
+                <!-- Header Info -->
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2" style="border-bottom: 1px solid #334155;">
+                    <div>
+                        <span class="text-muted small">Trip No:</span>
+                        <strong id="modal_trip_no" class="text-info ml-1" style="font-size: 1rem;">-</strong>
+                    </div>
+                    <div>
+                        <span class="text-muted small">Customer:</span>
+                        <strong id="modal_customer" class="text-white ml-1" style="font-size: 0.95rem;">-</strong>
+                    </div>
+                </div>
+
+                <!-- Verification Status Box -->
+                <div id="modalLoadingSpinner" class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin fa-2x text-info mb-2"></i>
+                    <p class="small text-muted mb-0">Scanning E-Way Bill PDF & comparing with software details...</p>
+                </div>
+
+                <div id="modalVerificationContent" style="display: none;">
+                    <p class="small text-muted mb-2 font-weight-bold">
+                        <i class="fas fa-search mr-1"></i> Software vs E-Way Bill PDF Verification Results:
+                    </p>
+
+                    <div class="table-responsive">
+                        <table class="table table-dark table-sm table-bordered align-middle mb-2" style="font-size: 0.84rem; border-color: #334155;">
+                            <thead style="background-color: #1e293b; color: #94a3b8;">
+                                <tr>
+                                    <th>Software E-Way Bill No</th>
+                                    <th>PDF E-Way Bill No</th>
+                                    <th>Invoice No</th>
+                                    <th>Software Value</th>
+                                    <th>PDF Goods Value</th>
+                                    <th>Software Vehicle</th>
+                                    <th>PDF Part-B Vehicle</th>
+                                    <th class="text-center">Verification Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalVerificationTableBody">
+                                <!-- Dynamic Comparison Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Match Summary Banner -->
+                    <div id="modalSummaryBanner" class="p-2 px-3 rounded mb-3" style="font-size: 0.85rem; font-weight: 600;">
+                        <!-- Match Result Text -->
+                    </div>
+
+                    <!-- Verified Checkbox -->
+                    <div class="custom-control custom-checkbox p-2 pl-4" style="background:#1e293b; border-radius:8px; border:1px solid #334155;">
+                        <input type="checkbox" class="custom-control-input" id="chk_verify_document">
+                        <label class="custom-control-label font-weight-bold text-white mb-0" for="chk_verify_document" style="font-size:0.88rem; cursor:pointer; user-select:none;">
+                            I have manually cross-verified all E-Way Bill PDF documents and software records
+                        </label>
+                    </div>
                 </div>
             </div>
-            <div class="modal-footer justify-content-between p-2 px-3" style="background:#f8fafc;">
+
+            <div class="modal-footer justify-content-between p-2 px-3" style="background:#1e293b; border-top: 1px solid #334155;">
                 <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal" style="border-radius:6px; padding:5px 14px;">Cancel</button>
-                <button type="button" id="btn_confirm_approve" class="btn btn-success btn-sm font-weight-bold" disabled style="border-radius:6px; padding:5px 16px;">
+                <button type="button" id="btn_confirm_approve" class="btn btn-success btn-sm font-weight-bold" disabled style="border-radius:6px; padding:6px 18px;">
                     <i class="fas fa-check-circle mr-1"></i> Confirm & Approve
                 </button>
             </div>
@@ -216,23 +314,90 @@
         $(document).on('submit', '.approval-form', function (e) {
             const form = $(this);
             const cType = form.data('c-type') || 'Normal';
+            const tripId = form.data('trip-id');
 
-            // For Normal consignment type, intercept and open verification modal
-            if (cType === 'Normal') {
-                e.preventDefault();
-                activeApprovalForm = this;
+            e.preventDefault();
+            activeApprovalForm = this;
 
-                // Populate modal text
-                $('#modal_trip_no').text(form.data('trip-no') || '-');
-                $('#modal_customer').text(form.data('customer') || '-');
+            // Populate modal text
+            $('#modal_trip_no').text(form.data('trip-no') || '-');
+            $('#modal_customer').text(form.data('customer') || '-');
 
-                // Reset verification checkbox
-                $('#chk_verify_document').prop('checked', false);
-                $('#btn_confirm_approve').prop('disabled', true);
+            // Reset modal state
+            $('#modalLoadingSpinner').show();
+            $('#modalVerificationContent').hide();
+            $('#chk_verify_document').prop('checked', false);
+            $('#btn_confirm_approve').prop('disabled', true);
 
-                // Show modal
-                $('#documentVerificationModal').modal('show');
-            }
+            // Show modal
+            $('#documentVerificationModal').modal('show');
+
+            // Fetch E-Way Bill Comparison via AJAX
+            $.ajax({
+                url: '/SMS/api/verify_trip_eway_details/' + tripId + '/',
+                type: 'GET',
+                dataType: 'json',
+                success: function(resp) {
+                    $('#modalLoadingSpinner').hide();
+                    $('#modalVerificationContent').show();
+
+                    var tbody = $('#modalVerificationTableBody');
+                    tbody.empty();
+
+                    if (resp.success && resp.items && resp.items.length > 0) {
+                        resp.items.forEach(function(item) {
+                            var statusBadge = item.is_match 
+                                ? '<span class="badge badge-success font-weight-bold py-1 px-2"><i class="fas fa-check-circle mr-1"></i>MATCHED</span>' 
+                                : '<span class="badge badge-danger font-weight-bold py-1 px-2"><i class="fas fa-times-circle mr-1"></i>' + item.status_message + '</span>';
+
+                            var ewayNoMatch = (item.ebill_no !== 'N/A' && item.pdf_eway_no !== 'N/A' && item.ebill_no === item.pdf_eway_no);
+                            var pdfEwayBadge = ewayNoMatch 
+                                ? '<code class="text-success font-weight-bold">' + item.pdf_eway_no + '</code>' 
+                                : '<code class="text-warning font-weight-bold">' + item.pdf_eway_no + '</code>';
+
+                            var invDisplay = (item.invoice_no && item.invoice_no !== 'N/A') 
+                                ? '<strong style="color: #38bdf8; font-weight: 700; font-size: 0.88rem;">' + item.invoice_no + '</strong>' 
+                                : '<span class="text-muted font-italic" style="font-size:0.8rem;">None</span>';
+
+                            var valMatch = item.value_matched;
+                            var pdfValBadge = valMatch 
+                                ? '<strong class="text-success" style="font-size:0.88rem;">' + item.pdf_value + '</strong>' 
+                                : '<strong class="text-danger" style="font-size:0.88rem;">' + item.pdf_value + '</strong>';
+
+                            var row = '<tr>' +
+                                '<td><code style="color: #f87171; font-weight: 700;">' + item.ebill_no + '</code></td>' +
+                                '<td>' + pdfEwayBadge + '</td>' +
+                                '<td>' + invDisplay + '</td>' +
+                                '<td class="font-weight-bold text-info">' + item.software_value + '</td>' +
+                                '<td>' + pdfValBadge + '</td>' +
+                                '<td class="font-weight-bold text-info">' + item.software_vehicle + '</td>' +
+                                '<td class="font-weight-bold text-warning">' + item.pdf_vehicle + '</td>' +
+                                '<td class="text-center">' + statusBadge + '</td>' +
+                                '</tr>';
+                            tbody.append(row);
+                        });
+
+                        if (resp.overall_match) {
+                            $('#modalSummaryBanner')
+                                .removeClass('bg-danger text-white')
+                                .addClass('bg-success text-white')
+                                .html('<i class="fas fa-check-circle mr-1"></i> PERFECT MATCH: All E-Way Bill PDF details match software assigned vehicle details!');
+                        } else {
+                            $('#modalSummaryBanner')
+                                .removeClass('bg-success text-white')
+                                .addClass('bg-danger text-white')
+                                .html('<i class="fas fa-exclamation-triangle mr-1"></i> MISMATCH DETECTED: Software assigned vehicle details do NOT match the uploaded E-Way Bill PDF!');
+                        }
+                    } else {
+                        $('#modalVerificationTableBody').html('<tr><td colspan="5" class="text-center text-muted">No consignment goods records found.</td></tr>');
+                    }
+                },
+                error: function(err) {
+                    $('#modalLoadingSpinner').hide();
+                    $('#modalVerificationContent').show();
+                    $('#modalVerificationTableBody').html('<tr><td colspan="5" class="text-center text-danger">Error loading verification details.</td></tr>');
+                }
+            });
         });
 
         // Toggle confirm button based on checkbox

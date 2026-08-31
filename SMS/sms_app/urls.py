@@ -7,6 +7,8 @@ from .sub_views.tms_dashboard_view import tms_dashboard, get_tms_dashboard_data
 
 urlpatterns = [
     path('pk_create_batch_job/', pk_create_batch_job, name='pk_create_batch_job'),
+    path('api/eway_expiry_alerts/', views.get_eway_expiry_alerts, name='get_eway_expiry_alerts'),
+    path('api/verify_trip_eway_details/<int:trip_id>/', views.verify_trip_eway_details, name='verify_trip_eway_details'),
     path('pk_get_po_items_for_job/', pk_get_po_items_for_job, name='pk_get_po_items_for_job'),
     path('print_pdf', views.print_pdf, name='print_pdf'),  # Print PDF
     path('asset_qr_id/<int:asset_qr_id>', views.qr_code_asset, name='asset_qr_id'),  # qr_code

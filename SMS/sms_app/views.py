@@ -5,6 +5,7 @@ from .sub_views.assign_asset_add_view import assign_asset_add,assign_asset_delet
 from .sub_views.department_add_view import department_add,department_delete,department_list
 from .sub_views.goods_check_view import goods_check
 from .sub_views.home_page_view import home_page,wh_e_way_bill_list,edit_wh_e_way_bill_list,open_requirements_list,customer_contract_rate_due_days,customer_contract_rate_dues_list
+from .sub_views.eway_alerts_api import get_eway_expiry_alerts, verify_trip_eway_details
 from .sub_views.insurance_add_view import insurance_add,insurance_delete,insurance_list
 from .sub_views.location_add_view import location_add,location_list,location_delete
 from .sub_views.login_page_view import login_page,get_units_for_user

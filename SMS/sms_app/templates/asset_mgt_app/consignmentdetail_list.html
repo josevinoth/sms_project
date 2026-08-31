@@ -129,6 +129,7 @@
                     d.updated_by = params.get('updated_by') || '';
                     d.date_from = params.get('date_from') || '';
                     d.date_to = params.get('date_to') || '';
+                    d.eway_alert = params.get('eway_alert') || '';
                 },
                 error: function (xhr, error, thrown) {
                     console.error("DataTables Ajax Error:", thrown);
