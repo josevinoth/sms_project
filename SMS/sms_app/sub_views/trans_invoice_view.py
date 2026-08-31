@@ -98,6 +98,26 @@ def get_trip_halting_charge(t):
     return halting
 
 
+def calculate_trip_invoice_total(t):
+    """
+    Calculates total transport invoice charges for a trip (TripdetailInfo)
+    matching the exact billing fields checked/billed to customer.
+    """
+    if not t:
+        return 0.0
+    transport = float(t.tc_tripcost or 0) if getattr(t, 'tc_tripcost_check', False) else 0.0
+    toll = float(t.tc_tollcost or 0) if getattr(t, 'tc_tollcost_check', False) else 0.0
+    parking = float(t.tc_parkingcost or 0) if getattr(t, 'tc_parkingcost_check', False) else 0.0
+    loading = float(t.tc_loadingcost or 0) if getattr(t, 'tc_loadingcost_check', False) else 0.0
+    unloading = float(t.tc_unloadingcost or 0) if getattr(t, 'tc_unloadingcost_check', False) else 0.0
+    halting = float(get_trip_halting_charge(t) or 0.0)
+    weighment = float(t.tc_weighmentcost or 0) if getattr(t, 'tc_weighmentcost_check', False) else 0.0
+    handling = ((float(t.tc_handlingcost or 0) if getattr(t, 'tc_handlingcost_check', False) else 0.0) +
+                (float(t.tc_supervisorcost or 0) if getattr(t, 'tc_supervisorcost_check', False) else 0.0))
+    cancellation = float(t.tc_cancellation or 0) if getattr(t, 'tc_cancellation_check', False) else 0.0
+    return transport + toll + parking + loading + unloading + halting + weighment + handling + cancellation
+
+
 # ==================================================
 # MASTER INVOICE TOTALS SYNC HELPER
 # ==================================================
