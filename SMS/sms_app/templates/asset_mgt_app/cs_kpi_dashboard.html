@@ -1,0 +1,1800 @@
+{% extends "asset_mgt_app/base_1.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'dashboard.css' %}?v=20260828-05">
+
+<style>
+    @media screen and (min-width: 992px) {
+        html, body {
+            overflow: hidden !important;
+            height: 100% !important;
+            background: #04081e !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        }
+        #main-content {
+            padding: 0 !important;
+        }
+        .container-fluid {
+            padding: 0 !important;
+        }
+    }
+
+    @media screen and (max-width: 991px) {
+        html, body {
+            overflow: auto !important;
+            height: auto !important;
+            background: #04081e !important;
+        }
+    }
+
+    /* Master Container Fitting 100% viewport */
+    .cs-dashboard-root {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: calc(100vh - 65px);
+        display: flex;
+        flex-direction: column;
+        padding: 0.35rem 0.6rem 0.4rem 0.6rem;
+        gap: 0.35rem;
+        box-sizing: border-box;
+        background: #04081e;
+        overflow: hidden;
+        position: relative;
+    }
+
+    /* Top Control Bar */
+    .cs-top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        width: 100%;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, rgba(14, 25, 71, 0.95) 0%, rgba(8, 14, 45, 0.98) 100%);
+        border: 1px solid rgba(54, 209, 255, 0.25);
+        border-radius: 6px;
+        padding: 0.3rem 0.6rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex-wrap: nowrap;
+    }
+
+    .filter-pill {
+        background: rgba(4, 9, 32, 0.9);
+        border: 1px solid rgba(54, 209, 255, 0.35);
+        border-radius: 5px;
+        padding: 0.15rem 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        height: 30px;
+        box-sizing: border-box;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .filter-pill:focus-within {
+        border-color: #36d1ff;
+        box-shadow: 0 0 8px rgba(54, 209, 255, 0.3);
+    }
+
+    .filter-branch-pill {
+        min-width: 160px;
+    }
+
+    .filter-emp-pill {
+        min-width: 210px;
+    }
+
+    .filter-date-field {
+        min-width: 145px;
+    }
+
+    .filter-pill label {
+        font-size: 0.62rem;
+        color: #36d1ff;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 0;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        letter-spacing: 0.4px;
+    }
+
+    .filter-pill select, .filter-pill input[type="date"] {
+        background: transparent !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-size: 0.74rem;
+        font-weight: 600;
+        outline: none;
+        cursor: pointer;
+        padding: 0 2px;
+        height: 22px;
+        line-height: 1;
+        flex: 1;
+    }
+
+    .filter-pill select option {
+        background: #091336;
+        color: #fff;
+    }
+
+    .filter-pill input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+        opacity: 0.85;
+    }
+
+    .btn-apply-filter {
+        background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+        color: #fff;
+        border: 1px solid #3b82f6;
+        border-radius: 5px;
+        padding: 0 0.8rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+        box-shadow: 0 0 8px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-apply-filter:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
+    }
+
+    /* Expanded Performance Scale Benchmark Bar */
+    .cs-legend-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: rgba(4, 9, 32, 0.92);
+        border: 1px solid rgba(54, 209, 255, 0.35);
+        border-radius: 6px;
+        padding: 0.15rem 0.65rem;
+        height: 32px;
+        box-sizing: border-box;
+        margin-left: auto;
+        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .legend-title {
+        font-size: 0.68rem;
+        color: #36d1ff;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        margin-right: 2px;
+    }
+
+    .cs-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        padding: 2.5px 7px;
+        border-radius: 4px;
+        white-space: nowrap;
+        letter-spacing: 0.2px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .cs-legend-item:hover {
+        transform: translateY(-1px);
+    }
+
+    .leg-red { 
+        background: rgba(239, 68, 68, 0.22); 
+        border: 1px solid #ef4444; 
+        color: #fca5a5; 
+        box-shadow: 0 0 6px rgba(239, 68, 68, 0.3);
+    }
+
+    .leg-orange { 
+        background: rgba(245, 158, 11, 0.22); 
+        border: 1px solid #f59e0b; 
+        color: #fde68a; 
+        box-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
+    }
+
+    .leg-green { 
+        background: rgba(16, 185, 129, 0.22); 
+        border: 1px solid #10b981; 
+        color: #86efac; 
+        box-shadow: 0 0 6px rgba(16, 185, 129, 0.3);
+    }
+
+    .leg-blue { 
+        background: rgba(59, 130, 246, 0.22); 
+        border: 1px solid #3b82f6; 
+        color: #93c5fd; 
+        box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
+    }
+
+    /* TOP 4 KPI HIGHLIGHT CARDS */
+    .cs-top-cards-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.4rem;
+        width: 100%;
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 991px) {
+        .cs-top-cards-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .top-kpi-card {
+        position: relative;
+        border-radius: 6px;
+        padding: 0.35rem 0.55rem;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 48px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .top-kpi-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .card-bg-demand {
+        background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%);
+        border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    .card-bg-cnote {
+        background: linear-gradient(135deg, #854d0e 0%, #451a03 100%);
+        border-color: rgba(234, 179, 8, 0.4);
+    }
+
+    .card-bg-transit {
+        background: linear-gradient(135deg, #065f46 0%, #022c22 100%);
+        border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .card-bg-billing {
+        background: linear-gradient(135deg, #0369a1 0%, #082f49 100%);
+        border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .top-kpi-content {
+        display: flex;
+        flex-direction: column;
+        z-index: 2;
+    }
+
+    .top-kpi-title {
+        font-size: 0.58rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.8);
+        letter-spacing: 0.3px;
+    }
+
+    .top-kpi-main-val {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #ffffff;
+        line-height: 1.15;
+        margin: 1px 0;
+    }
+
+    .top-kpi-subtext {
+        font-size: 0.58rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .top-kpi-subtext strong {
+        color: #ffffff;
+        font-weight: 800;
+    }
+
+    .top-kpi-icon {
+        font-size: 1.5rem;
+        opacity: 0.25;
+        position: absolute;
+        right: 0.5rem;
+        top: 0.5rem;
+    }
+
+    /* 3-Column Main Content Grid */
+    .cs-3col-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 0.95fr 1.25fr 0.8fr;
+        gap: 0.45rem;
+        min-height: 0;
+        min-width: 0;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    @media (max-width: 1200px) {
+        .cs-3col-grid {
+            grid-template-columns: 1fr 1.2fr;
+        }
+        .cs-calendar-panel {
+            grid-column: span 2;
+        }
+    }
+
+    @media (max-width: 991px) {
+        .cs-3col-grid {
+            grid-template-columns: 1fr;
+            overflow: auto;
+        }
+        .cs-calendar-panel {
+            grid-column: span 1;
+        }
+    }
+
+    /* Card Panels */
+    .cs-card-panel {
+        background: linear-gradient(180deg, #091238 0%, #060b24 100%);
+        border-radius: 7px;
+        border: 1px solid rgba(54, 209, 255, 0.2);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        min-width: 0;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .cs-card-header {
+        background: linear-gradient(90deg, rgba(16, 28, 80, 0.95) 0%, rgba(9, 16, 48, 0.95) 100%);
+        border-bottom: 1px solid rgba(54, 209, 255, 0.2);
+        padding: 0.3rem 0.55rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .cs-card-title {
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        letter-spacing: 0.3px;
+    }
+
+    .cs-card-title i {
+        color: #36d1ff;
+        font-size: 0.8rem;
+    }
+
+    .cs-card-badge {
+        font-size: 0.58rem;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 3px;
+        background: rgba(16, 185, 129, 0.15);
+        color: #86efac;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    /* Left Table Styling */
+    .cs-table-wrap {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 0;
+    }
+
+    /* Left & Center Table Styling */
+    .cs-table-wrap {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cs-table-wrap::-webkit-scrollbar {
+        width: 3px;
+    }
+    .cs-table-wrap::-webkit-scrollbar-thumb {
+        background: rgba(54, 209, 255, 0.3);
+        border-radius: 2px;
+    }
+
+    .cs-table {
+        width: 100%;
+        height: 100%;
+        border-collapse: collapse;
+        font-size: 0.78rem;
+        margin: 0;
+    }
+
+    .cs-table th {
+        background: #081132;
+        color: #8fa0c9;
+        font-weight: 700;
+        padding: 5px 8px;
+        border-bottom: 1px solid rgba(54, 209, 255, 0.25);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        font-size: 0.72rem;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+    }
+
+    .cs-table td {
+        padding: 4px 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: #d1dcfa;
+        vertical-align: middle;
+        line-height: 1.25;
+    }
+
+    .cs-table tbody tr:hover td {
+        background: rgba(54, 209, 255, 0.09);
+    }
+
+    .col-num {
+        text-align: right;
+        font-weight: 700;
+        font-size: 0.82rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .col-center {
+        text-align: center;
+    }
+
+    .metric-name-wrap {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .metric-icon {
+        width: 16px;
+        text-align: center;
+        font-size: 0.76rem;
+        color: #8fa0c9;
+    }
+
+    /* Glowing Amber / Gold Accent for C-Note Anchor */
+    .row-cnote-anchor td {
+        background: rgba(146, 120, 0, 0.38) !important;
+        color: #fff9d6 !important;
+        font-weight: 700 !important;
+        border-top: 1px solid rgba(234, 179, 8, 0.6) !important;
+        border-bottom: 1px solid rgba(234, 179, 8, 0.6) !important;
+    }
+
+    .gold-count-pill {
+        background: linear-gradient(135deg, #a18300 0%, #ca9b00 100%);
+        color: #ffffff;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-weight: 800;
+        font-size: 0.8rem;
+        display: inline-block;
+        min-width: 28px;
+        text-align: center;
+        box-shadow: 0 0 6px rgba(202, 155, 0, 0.6);
+        border: 1px solid #facc15;
+    }
+
+    /* Glowing Total Row */
+    .row-total-reconciled td {
+        background: rgba(146, 120, 0, 0.3) !important;
+        color: #fef08a !important;
+        font-weight: 700 !important;
+        border-top: 1px solid rgba(234, 179, 8, 0.5) !important;
+        border-bottom: 1px solid rgba(234, 179, 8, 0.5) !important;
+    }
+
+    .row-milestone-ribbon td {
+        background: linear-gradient(90deg, #0f2468 0%, #0a1744 100%) !important;
+        color: #36d1ff !important;
+        font-weight: 700 !important;
+        padding: 5px 8px !important;
+        font-size: 0.74rem;
+        border-top: 1px solid rgba(54, 209, 255, 0.3);
+        border-bottom: 1px solid rgba(54, 209, 255, 0.3);
+        letter-spacing: 0.3px;
+    }
+
+    /* KPI Target Cards Grid & Semicircular Arc Gauges */
+    .kpi-panel-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        gap: 6px;
+        padding: 4px;
+    }
+
+    /* KPI Target Cards Grid & Semicircular Arc Gauges */
+    .kpi-panel-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        gap: 10px;
+        padding: 6px;
+    }
+
+    .kpi-target-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        flex-shrink: 0;
+    }
+
+    .kpi-target-card {
+        background: linear-gradient(180deg, rgba(14, 28, 75, 0.95) 0%, rgba(8, 16, 48, 0.98) 100%);
+        border: 1px solid rgba(54, 209, 255, 0.32);
+        border-radius: 10px;
+        padding: 10px 12px 10px 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .kpi-target-card:hover {
+        border-color: rgba(54, 209, 255, 0.7);
+        box-shadow: 0 6px 20px rgba(54, 209, 255, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .kpi-target-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2px;
+    }
+
+    .kpi-target-card-title {
+        font-size: 0.85rem;
+        font-weight: 900;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: #f8fafc;
+        line-height: 1.2;
+    }
+
+    .kpi-target-card-check {
+        font-size: 1.25rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .kpi-target-card-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.14);
+        margin: 3px 0 5px 0;
+    }
+
+    .kpi-target-card-sub {
+        font-size: 0.78rem;
+        color: #94a3b8;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+    }
+
+    .kpi-target-card-sub strong {
+        color: #f8fafc;
+        font-size: 0.82rem;
+    }
+
+    .kpi-target-card-gauge {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 4px 0 2px 0;
+        flex: 1;
+    }
+
+    .kpi-gauge-svg {
+        display: block;
+        overflow: visible;
+    }
+
+    .kpi-sla-badge {
+        margin-top: 4px;
+        padding: 4px 6px;
+        border-radius: 6px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1px;
+        letter-spacing: 0.2px;
+        line-height: 1.25;
+    }
+
+    /* Secondary Display Section (Non-Target Parameters) */
+    .kpi-display-section {
+        background: rgba(8, 17, 50, 0.6);
+        border: 1px solid rgba(54, 209, 255, 0.18);
+        border-radius: 7px;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .kpi-display-header {
+        background: rgba(14, 28, 75, 0.85);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 8px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #8fa0c9;
+        border-bottom: 1px solid rgba(54, 209, 255, 0.2);
+        letter-spacing: 0.3px;
+        flex-shrink: 0;
+    }
+
+    .kpi-display-table {
+        margin: 0;
+        width: 100%;
+    }
+
+    .kpi-display-table td {
+        padding: 6px 8px;
+        font-size: 0.76rem;
+    }
+
+    /* Color Code Badges */
+    .status-pill {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-align: center;
+        min-width: 36px;
+    }
+
+    .pill-red { background: rgba(239, 68, 68, 0.25); border: 1px solid #ef4444; color: #fca5a5; }
+    .pill-orange { background: rgba(245, 158, 11, 0.25); border: 1px solid #f59e0b; color: #fde68a; }
+    .pill-green { background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #86efac; }
+    .pill-blue { background: rgba(59, 130, 246, 0.25); border: 1px solid #3b82f6; color: #93c5fd; }
+
+    /* RIGHT COLUMN: CALENDAR COMPONENT */
+    .cs-calendar-panel {
+        background: linear-gradient(180deg, #091238 0%, #060b24 100%);
+        border-radius: 7px;
+        border: 1px solid rgba(54, 209, 255, 0.2);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .cal-header-bar {
+        background: linear-gradient(90deg, rgba(16, 28, 80, 0.95) 0%, rgba(9, 16, 48, 0.95) 100%);
+        border-bottom: 1px solid rgba(54, 209, 255, 0.2);
+        padding: 0.3rem 0.55rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .cal-nav-btn {
+        background: rgba(54, 209, 255, 0.15);
+        border: 1px solid rgba(54, 209, 255, 0.3);
+        color: #36d1ff;
+        border-radius: 4px;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 0.65rem;
+        transition: all 0.15s;
+    }
+
+    .cal-nav-btn:hover {
+        background: #36d1ff;
+        color: #04081e;
+    }
+
+    .cal-current-month {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: 0.3px;
+    }
+
+    /* Calendar Grid */
+    .cal-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 0.35rem 0.45rem;
+        gap: 0.25rem;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .cal-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        font-size: 0.6rem;
+        font-weight: 700;
+        color: #8fa0c9;
+        text-transform: uppercase;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 2px;
+    }
+
+    .cal-days-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        grid-auto-rows: 1fr;
+        gap: 2px;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .cal-day {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #cbd5e1;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: all 0.15s;
+        user-select: none;
+        position: relative;
+        border: 1px solid transparent;
+    }
+
+    /* Green Day: All trips moved to Ready for Invoice */
+    .cal-day.day-green {
+        background: rgba(16, 185, 129, 0.22) !important;
+        border: 1px solid #10b981 !important;
+        color: #a7f3d0 !important;
+        font-weight: 700;
+    }
+    .cal-day.day-green:hover {
+        background: rgba(16, 185, 129, 0.45) !important;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+    }
+
+    /* Red Day: Trips exist but NOT completely ready for invoice */
+    .cal-day.day-red {
+        background: rgba(239, 68, 68, 0.22) !important;
+        border: 1px solid #ef4444 !important;
+        color: #fca5a5 !important;
+        font-weight: 700;
+    }
+    .cal-day.day-red:hover {
+        background: rgba(239, 68, 68, 0.45) !important;
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.7);
+    }
+
+    .cal-day.other-month {
+        color: #475569 !important;
+        opacity: 0.35;
+        border-color: transparent !important;
+        background: transparent !important;
+    }
+
+    .cal-day.today {
+        box-shadow: inset 0 0 0 1px #facc15;
+    }
+
+    .cal-day.selected {
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.9) !important;
+        border: 1.5px solid #38bdf8 !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+    }
+
+    /* Quick Preset Buttons */
+    .cal-presets-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.25rem;
+        padding-top: 0.2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-preset {
+        background: rgba(14, 25, 71, 0.8);
+        border: 1px solid rgba(54, 209, 255, 0.25);
+        color: #93c5fd;
+        font-size: 0.58rem;
+        font-weight: 700;
+        padding: 3px 2px;
+        border-radius: 3px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .btn-preset:hover {
+        background: rgba(54, 209, 255, 0.25);
+        color: #ffffff;
+    }
+
+    /* Selected Date Banner */
+    .cal-selected-info {
+        background: rgba(54, 209, 255, 0.08);
+        border: 1px solid rgba(54, 209, 255, 0.2);
+        border-radius: 4px;
+        padding: 0.25rem 0.4rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.64rem;
+        color: #d1dcfa;
+    }
+
+    .cal-selected-info strong {
+        color: #36d1ff;
+    }
+
+    /* Floating Calendar Tooltip */
+    #cal-hover-tooltip {
+        position: fixed;
+        display: none;
+        z-index: 99999;
+        background: rgba(6, 11, 38, 0.97);
+        border: 1px solid #36d1ff;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+        border-radius: 6px;
+        padding: 7px 10px;
+        font-size: 0.68rem;
+        color: #ffffff;
+        pointer-events: none;
+        min-width: 175px;
+        line-height: 1.4;
+    }
+</style>
+
+<div class="cs-dashboard-root">
+    <!-- Floating Hover Tooltip -->
+    <div id="cal-hover-tooltip">
+        <div id="tip-date" style="font-weight:800; color:#36d1ff; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:3px; margin-bottom:4px;"></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+            <span style="color:#9fb1d9;"><i class="fas fa-truck text-primary"></i> Trips Allotted:</span>
+            <strong id="tip-allotted" style="color:#ffffff;">0</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+            <span style="color:#9fb1d9;"><i class="fas fa-receipt text-warning"></i> Ready For Invoice:</span>
+            <strong id="tip-ready" style="color:#ffffff;">0</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+            <span style="color:#9fb1d9;"><i class="fas fa-file-invoice-dollar text-success"></i> Invoiced Completed:</span>
+            <strong id="tip-invoiced" style="color:#86efac;">0</strong>
+        </div>
+        <div id="tip-status-badge" style="margin-top:4px; font-weight:700; font-size:0.63rem; text-align:center; padding:2px; border-radius:3px;"></div>
+    </div>
+
+    <!-- Top Filter Bar -->
+    <div class="cs-top-bar">
+        <div class="filter-group">
+            <!-- 1. Branch -->
+            <div class="filter-pill filter-branch-pill">
+                <label><i class="fas fa-map-marker-alt"></i> Branch:</label>
+                <select id="filter-branch" {% if dropdown_disabled %}disabled{% endif %}>
+                    {% if not dropdown_disabled %}<option value="all">All Branches</option>{% endif %}
+                    {% for branch in branches %}
+                    <option value="{{ branch.id }}" {% if branch.id|stringformat:"s" == default_branch_id %}selected{% elif not default_branch_id and branch.loc_name == 'BVM MAA' %}selected{% endif %}>
+                        {{ branch.loc_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- 2. Representative -->
+            <div class="filter-pill filter-emp-pill">
+                <label><i class="fas fa-user-tie"></i> CS Rep:</label>
+                <select id="filter-employee" {% if dropdown_disabled %}disabled{% endif %}>
+                    {% if not dropdown_disabled %}
+                    <option value="all" {% if default_employee_id == 'all' %}selected{% endif %}>All Representatives</option>
+                    {% endif %}
+                    {% for emp in cs_employees %}
+                    <option value="{{ emp.id }}" data-branch="{{ emp.branch_id }}" {% if emp.id|stringformat:"s" == default_employee_id %}selected{% endif %}>
+                        {{ emp.name }} ({{ emp.branch_name }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- 3. From Date -->
+            <div class="filter-pill filter-date-field">
+                <label><i class="fas fa-calendar-alt"></i> From:</label>
+                <input type="date" id="filter-from-date" value="{{ today_date }}">
+            </div>
+
+            <!-- 4. To Date -->
+            <div class="filter-pill filter-date-field">
+                <label><i class="fas fa-calendar-alt"></i> To:</label>
+                <input type="date" id="filter-to-date" value="{{ today_date }}">
+            </div>
+        </div>
+
+        <!-- KPI Scale Legend -->
+        <div class="cs-legend-bar" title="Performance Scale Benchmark">
+            <span class="legend-title"><i class="fas fa-tachometer-alt"></i> Scale:</span>
+            <span class="cs-legend-item leg-red"><i class="fas fa-exclamation-circle"></i> 0 - 35%</span>
+            <span class="cs-legend-item leg-orange"><i class="fas fa-hourglass-half"></i> 36 - 70%</span>
+            <span class="cs-legend-item leg-green"><i class="fas fa-check-circle"></i> 71 - 100%</span>
+            <span class="cs-legend-item leg-blue"><i class="fas fa-bolt"></i> &gt; 100%</span>
+        </div>
+
+    </div>
+
+
+    <!-- 4 TOP KPI HIGHLIGHT CARDS (Moved to the Top) -->
+    <div class="cs-top-cards-row">
+        <!-- Card 1: Vehicle Demand & Allotment -->
+        <div class="top-kpi-card card-bg-demand">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title"><i class="fas fa-truck-pickup text-info"></i> Vehicle Demand & Allotment</span>
+                <div class="top-kpi-main-val">
+                    <span id="top-card-requested">35</span> <span style="font-size:0.65rem; font-weight:500; opacity:0.8;">Req</span> / 
+                    <span id="top-card-allotted" style="color:#93c5fd;">34</span> <span style="font-size:0.65rem; font-weight:500; opacity:0.8;">Allot</span>
+                </div>
+                <div class="top-kpi-subtext">Allotment Rate: <strong id="top-card-allot-rate" style="color:#86efac;">97.1%</strong></div>
+            </div>
+            <i class="fas fa-clipboard-list top-kpi-icon"></i>
+        </div>
+
+        <!-- Card 2: Consignment Notes -->
+        <div class="top-kpi-card card-bg-cnote">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title"><i class="fas fa-file-invoice" style="color:#facc15;"></i> C-Notes Created</span>
+                <div class="top-kpi-main-val">
+                    <span id="top-card-cnotes" style="color:#fef08a;">32</span> <span style="font-size:0.65rem; font-weight:500; opacity:0.8;">Generated</span>
+                </div>
+                <div class="top-kpi-subtext">C-Note Conversion: <strong id="top-card-cnote-rate" style="color:#fde68a;">94.1%</strong></div>
+            </div>
+            <i class="fas fa-file-signature top-kpi-icon"></i>
+        </div>
+
+        <!-- Card 3: Active Trips & In-Transit -->
+        <div class="top-kpi-card card-bg-transit">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title"><i class="fas fa-route text-success"></i> Active Trips In Transit</span>
+                <div class="top-kpi-main-val">
+                    <span id="top-card-started" style="color:#86efac;">15</span> <span style="font-size:0.65rem; font-weight:500; opacity:0.8;">Transit</span> / 
+                    <span id="top-card-closed">5</span> <span style="font-size:0.65rem; font-weight:500; opacity:0.8;">Closed</span>
+                </div>
+                <div class="top-kpi-subtext">In-Transit Rate: <strong id="top-card-transit-rate" style="color:#c4b5fd;">0.0%</strong></div>
+            </div>
+            <i class="fas fa-shipping-fast top-kpi-icon"></i>
+        </div>
+
+        <!-- Card 4: Billing & Ready For Invoice -->
+        <div class="top-kpi-card card-bg-billing">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title"><i class="fas fa-receipt text-warning"></i> Ready For Invoice & POD</span>
+                <div class="top-kpi-main-val">
+                    <span id="top-card-ready" style="color:#67e8f9;">0</span> <span style="font-size:0.65rem; font-weight:500; opacity:0.8;">Ready</span> / 
+                    <span id="top-card-pod">0</span> <span style="font-size:0.65rem; font-weight:500; opacity:0.8;">PODs</span>
+                </div>
+                <div class="top-kpi-subtext">POD Submission Rate: <strong id="top-card-pod-rate" style="color:#93c5fd;">0.0%</strong></div>
+            </div>
+            <i class="fas fa-file-invoice-dollar top-kpi-icon"></i>
+        </div>
+    </div>
+
+    <!-- 3-Column Layout: Left (Lifecycle), Center (KPIs), Right (Interactive Calendar) -->
+    <div class="cs-3col-grid">
+        <!-- 1. Left Table: Operational Funnel & Status Breakdown -->
+        <div class="cs-card-panel">
+            <div class="cs-card-header">
+                <div class="cs-card-title">
+                    <i class="fas fa-truck-loading"></i> Operational Trip & C-Note Lifecycle
+                </div>
+                <span class="cs-card-badge"><i class="fas fa-check-circle"></i> Reconciled</span>
+            </div>
+
+            <div class="cs-table-wrap">
+                <table class="cs-table" id="funnel-table">
+                    <thead>
+                        <tr>
+                            <th>Operational Metric / Status</th>
+                            <th class="col-num" style="width: 65px;">Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-clipboard-list metric-icon text-info"></i>
+                                    <span>Veh Requested</span>
+                                </div>
+                            </td>
+                            <td class="col-num" id="val-veh-requested">35</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-times-circle metric-icon" style="color: #f87171;"></i>
+                                    <span>Veh Not Allotted</span>
+                                </div>
+                            </td>
+                            <td class="col-num" style="color: #fca5a5;" id="val-veh-not-allotted">1</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-truck-pickup metric-icon text-primary"></i>
+                                    <span>Veh Allotted</span>
+                                </div>
+                            </td>
+                            <td class="col-num" id="val-veh-allotted">34</td>
+                        </tr>
+                        <tr class="row-cnote-anchor">
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-file-invoice metric-icon" style="color:#facc15;"></i>
+                                    <strong>C-Note Created</strong>
+                                </div>
+                            </td>
+                            <td class="col-num"><span class="gold-count-pill" id="val-cnotes-created">32</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-unlink metric-icon text-muted"></i>
+                                    <span>Not Associated with Trip</span>
+                                </div>
+                            </td>
+                            <td class="col-num" id="val-not-associated">2</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-user-clock metric-icon text-warning"></i>
+                                    <span>Awaiting Trip Approval</span>
+                                </div>
+                            </td>
+                            <td class="col-num" id="val-awaiting-approval">2</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-route metric-icon text-success"></i>
+                                    <span>Trip Started</span>
+                                </div>
+                            </td>
+                            <td class="col-num" style="color:#86efac;" id="val-trip-started">15</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-flag-checkered metric-icon text-info"></i>
+                                    <span>Trip Closed</span>
+                                </div>
+                            </td>
+                            <td class="col-num" id="val-trip-closed">5</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-hourglass-half metric-icon text-warning"></i>
+                                    <span>Awaiting Trip Settlement</span>
+                                </div>
+                            </td>
+                            <td class="col-num" id="val-awaiting-settlement">2</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-handshake metric-icon text-success"></i>
+                                    <span>Trip Settled</span>
+                                </div>
+                            </td>
+                            <td class="col-num" id="val-trip-settled">2</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-ban metric-icon text-secondary"></i>
+                                    <span>Cancellation without Billing</span>
+                                </div>
+                            </td>
+                            <td class="col-num" id="val-canc-no-bill">0</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-times-circle metric-icon text-danger"></i>
+                                    <span>Cancellation with Billing</span>
+                                </div>
+                            </td>
+                            <td class="col-num" id="val-canc-bill">0</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-receipt metric-icon text-primary"></i>
+                                    <span>Ready For Invoice</span>
+                                </div>
+                            </td>
+                            <td class="col-num" style="color:#93c5fd;" id="val-ready-invoice">4</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-file-invoice-dollar metric-icon text-success"></i>
+                                    <span>Invoice Completed</span>
+                                </div>
+                            </td>
+                            <td class="col-num" id="val-invoice-completed">0</td>
+                        </tr>
+                        <tr class="row-total-reconciled">
+                            <td>
+                                <div class="metric-name-wrap">
+                                    <i class="fas fa-check-double metric-icon" style="color:#facc15;"></i>
+                                    <strong>Total C-Note Sub-Statuses</strong>
+                                </div>
+                            </td>
+                            <td class="col-num"><span class="gold-count-pill" id="val-reconciliation-total">32</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 2. Center Column: KPI Targets & Operational Performance -->
+        <div class="cs-card-panel">
+            <div class="cs-card-header">
+                <div class="cs-card-title">
+                    <i class="fas fa-bullseye"></i> KPI Targets & Operational Performance
+                </div>
+                <span class="cs-card-badge" style="color:#36d1ff; border-color:rgba(54,209,255,0.4); background:rgba(54,209,255,0.15);">
+                    <i class="fas fa-tachometer-alt"></i> Scorecard
+                </span>
+            </div>
+
+            <div class="kpi-panel-body">
+                <!-- Top 3 Target Cards (Like 2nd attachment: C-Notes, Invoices, POD Scans) -->
+                <div class="kpi-target-cards-grid" id="kpi-target-cards-container">
+                    <!-- Populated dynamically via renderKpiTable() -->
+                </div>
+
+                <!-- Secondary Section: Display Metrics (Without Targets) -->
+                <div class="kpi-display-section">
+                    <div class="kpi-display-header">
+                        <span><i class="fas fa-clipboard-check text-info"></i> Additional Operational Tracking</span>
+                        <span style="font-size:0.63rem; opacity:0.75; text-transform:uppercase; letter-spacing:0.4px;">(Records & Documentation)</span>
+                    </div>
+                    <div class="cs-table-wrap" style="flex:1;">
+                        <table class="cs-table kpi-display-table">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th class="col-num" style="width: 100px;">Count / Log</th>
+                                    <th class="col-center" style="width: 100px;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="kpi-display-table-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Right Column: Live Interactive Operational Calendar -->
+        <div class="cs-calendar-panel">
+            <div class="cal-header-bar">
+                <div class="cal-nav-btn" id="cal-prev-month" title="Previous Month">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="cal-current-month" id="cal-month-year-label">August 2026</div>
+                <div class="cal-nav-btn" id="cal-next-month" title="Next Month">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+            <div class="cal-body">
+                <div class="cal-weekdays">
+                    <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                </div>
+
+                <div class="cal-days-grid" id="cal-days-container">
+                    <!-- Calendar days rendered via JavaScript -->
+                </div>
+
+                <div class="cal-selected-info">
+                    <span><i class="fas fa-calendar-check text-info"></i> Selected:</span>
+                    <strong id="cal-selected-date-text">28-08-2026</strong>
+                </div>
+
+                <div class="cal-presets-row">
+                    <div class="btn-preset" data-preset="today">Today</div>
+                    <div class="btn-preset" data-preset="yesterday">Yesterday</div>
+                    <div class="btn-preset" data-preset="week">This Week</div>
+                    <div class="btn-preset" data-preset="month">This Month</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    let currentDate = new Date();
+    let selectedDate = new Date();
+    let monthlyCalendarMap = {};
+
+    const initialDateStr = "{{ today_date }}";
+    if (initialDateStr) {
+        const parts = initialDateStr.split('-');
+        if (parts.length === 3) {
+            selectedDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            currentDate = new Date(selectedDate);
+        }
+    }
+
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+                        "July", "August", "September", "October", "November", "December"];
+
+    function formatDateForInput(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function formatDateDisplay(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${day}-${m}-${y}`;
+    }
+
+    function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        $('#cal-month-year-label').text(`${monthNames[month]} ${year}`);
+
+        const firstDayIndex = new Date(year, month, 1).getDay();
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        const prevLastDay = new Date(year, month, 0).getDate();
+
+        let daysHtml = '';
+
+        // Previous month filler days
+        for (let x = firstDayIndex; x > 0; x--) {
+            const dayNum = prevLastDay - x + 1;
+            daysHtml += `<div class="cal-day other-month" data-month="prev" data-day="${dayNum}">${dayNum}</div>`;
+        }
+
+        const today = new Date();
+
+        // Current month days with green/red status coloring
+        for (let i = 1; i <= lastDay; i++) {
+            const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            const isToday = (today.getFullYear() === year && today.getMonth() === month && today.getDate() === i);
+            const isSelected = (selectedDate.getFullYear() === year && selectedDate.getMonth() === month && selectedDate.getDate() === i);
+
+            let dayStatus = 'none';
+            let allotted = 0;
+            let ready = 0;
+            let invoiced = 0;
+
+            if (monthlyCalendarMap && monthlyCalendarMap[dateKey]) {
+                dayStatus = monthlyCalendarMap[dateKey].status;
+                allotted = monthlyCalendarMap[dateKey].allotted;
+                ready = monthlyCalendarMap[dateKey].ready;
+                invoiced = monthlyCalendarMap[dateKey].invoiced || 0;
+            }
+
+            let classes = 'cal-day';
+            if (dayStatus === 'green') classes += ' day-green';
+            else if (dayStatus === 'red') classes += ' day-red';
+
+            if (isToday) classes += ' today';
+            if (isSelected) classes += ' selected';
+
+            daysHtml += `
+                <div class="${classes}" 
+                     data-month="curr" 
+                     data-day="${i}" 
+                     data-date="${dateKey}"
+                     data-status="${dayStatus}"
+                     data-allotted="${allotted}"
+                     data-ready="${ready}"
+                     data-invoiced="${invoiced}">
+                    ${i}
+                </div>
+            `;
+        }
+
+        // Next month filler days
+        const totalRendered = firstDayIndex + lastDay;
+        const nextDays = (totalRendered <= 35) ? (35 - totalRendered) : (42 - totalRendered);
+        for (let j = 1; j <= nextDays; j++) {
+            daysHtml += `<div class="cal-day other-month" data-month="next" data-day="${j}">${j}</div>`;
+        }
+
+        $('#cal-days-container').html(daysHtml);
+        $('#cal-selected-date-text').text(formatDateDisplay(selectedDate));
+    }
+
+    // Floating Tooltip on Hover
+    $(document).on('mouseenter', '.cal-day[data-month="curr"]', function(e) {
+        const dateKey = $(this).data('date');
+        const allotted = $(this).data('allotted') || 0;
+        const ready = $(this).data('ready') || 0;
+        const invoiced = $(this).data('invoiced') || 0;
+        const status = $(this).data('status');
+
+        if (!dateKey) return;
+
+        const parts = dateKey.split('-');
+        const dateDisplay = `${parts[2]}-${parts[1]}-${parts[0]}`;
+
+        $('#tip-date').text(dateDisplay);
+        $('#tip-allotted').text(allotted);
+        $('#tip-ready').text(ready);
+        $('#tip-invoiced').text(invoiced);
+
+        let badgeHtml = '';
+        if (status === 'green') {
+            badgeHtml = '<span style="background:#10b981; color:#04081e; padding:2px 6px; border-radius:3px;">✓ 100% Invoiced (All Moved)</span>';
+        } else if (status === 'red') {
+            badgeHtml = '<span style="background:#ef4444; color:#fff; padding:2px 6px; border-radius:3px;">⚠ Pending Ready For Invoice</span>';
+        } else {
+            badgeHtml = '<span style="background:#374151; color:#9ca3af; padding:2px 6px; border-radius:3px;">No Trips Scheduled</span>';
+        }
+
+        $('#tip-status-badge').html(badgeHtml);
+        $('#cal-hover-tooltip').css({
+            top: (e.clientY - 95) + 'px',
+            left: (e.clientX - 90) + 'px'
+        }).fadeIn(100);
+    });
+
+    $(document).on('mousemove', '.cal-day[data-month="curr"]', function(e) {
+        $('#cal-hover-tooltip').css({
+            top: (e.clientY - 95) + 'px',
+            left: (e.clientX - 90) + 'px'
+        });
+    });
+
+    $(document).on('mouseleave', '.cal-day', function() {
+        $('#cal-hover-tooltip').hide();
+    });
+
+    // Calendar Navigation
+    $('#cal-prev-month').on('click', function() {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        updateDashboardData();
+    });
+
+    $('#cal-next-month').on('click', function() {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        updateDashboardData();
+    });
+
+    // Calendar Date Selection
+    $(document).on('click', '.cal-day', function() {
+        const monthType = $(this).data('month');
+        const day = parseInt($(this).data('day'));
+
+        if (monthType === 'prev') {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+        } else if (monthType === 'next') {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+        }
+
+        selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+        const formattedDate = formatDateForInput(selectedDate);
+
+        $('#filter-from-date').val(formattedDate);
+        $('#filter-to-date').val(formattedDate);
+
+        updateDashboardData();
+    });
+
+    // Quick Presets
+    $('.btn-preset').on('click', function() {
+        const preset = $(this).data('preset');
+        const now = new Date();
+
+        if (preset === 'today') {
+            selectedDate = new Date(now);
+            currentDate = new Date(now);
+            const d = formatDateForInput(now);
+            $('#filter-from-date').val(d);
+            $('#filter-to-date').val(d);
+        } else if (preset === 'yesterday') {
+            const yest = new Date(now);
+            yest.setDate(yest.getDate() - 1);
+            selectedDate = new Date(yest);
+            currentDate = new Date(yest);
+            const d = formatDateForInput(yest);
+            $('#filter-from-date').val(d);
+            $('#filter-to-date').val(d);
+        } else if (preset === 'week') {
+            const first = now.getDate() - now.getDay();
+            const firstDay = new Date(now.setDate(first));
+            const lastDay = new Date();
+            selectedDate = new Date();
+            currentDate = new Date();
+            $('#filter-from-date').val(formatDateForInput(firstDay));
+            $('#filter-to-date').val(formatDateForInput(lastDay));
+        } else if (preset === 'month') {
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date();
+            selectedDate = new Date();
+            currentDate = new Date();
+            $('#filter-from-date').val(formatDateForInput(firstDay));
+            $('#filter-to-date').val(formatDateForInput(lastDay));
+        }
+
+        updateDashboardData();
+    });
+
+    function renderKpiTable(kpiRows) {
+        if (!kpiRows || kpiRows.length === 0) return;
+
+        // Target KPIs are the first 3 items:
+        // 0: No. of C-Notes for the day
+        // 1: Invoice Submitted
+        // 2: POD SCAN
+        const targetKpis = kpiRows.slice(0, 3);
+        // Non-target display parameters are the remaining items:
+        // 3: SOW, SOP, Ratesheet
+        // 4: Customer -Appreciations
+        // 5: Customer -Complaints
+        const displayKpis = kpiRows.slice(3);
+
+        // 1. Render Top 3 Target Cards (Like 2nd attachment)
+        let cardsHtml = '';
+        const titles = [
+            'C-NOTES CREATED',
+            'INVOICE SUBMITTED',
+            'POD SCANS'
+        ];
+
+        targetKpis.forEach(function(row, idx) {
+            let fillColor = '#ef4444';
+            let pctInt = parseInt(row.pct.replace('%', '')) || 0;
+
+            if (row.code_color === '#10b981' || row.code_label === 'Green') {
+                fillColor = '#10b981';
+            } else if (row.code_color === '#f59e0b' || row.code_label === 'Orange') {
+                fillColor = '#f59e0b';
+            } else if (row.code_color === '#3b82f6' || row.code_label === 'Blue') {
+                fillColor = '#38bdf8';
+            }
+
+            // Arc calculations for larger prominent gauge:
+            // Arc path: M 12 56 A 48 48 0 0 1 108 56 (Radius = 48, Center = (60, 56))
+            // Circumference of semi-circle = Math.PI * 48 ≈ 150.8
+            const arcLength = 150.8;
+            const clampedPct = Math.min(Math.max(pctInt, 0), 100);
+            const dashoffset = (arcLength * (1 - clampedPct / 100)).toFixed(2);
+
+            let fontSize = '26';
+            if (pctInt > 999) {
+                fontSize = '18';
+            } else if (pctInt > 99) {
+                fontSize = '22';
+            }
+
+            // Checkmark or status indicator matching attachment 2
+            let checkIcon = '<i class="fas fa-check-circle" style="color:#10b981;"></i>';
+            if (pctInt < 36) {
+                checkIcon = '<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i>';
+            } else if (pctInt < 71) {
+                checkIcon = '<i class="fas fa-clock" style="color:#f59e0b;"></i>';
+            } else if (pctInt > 100) {
+                checkIcon = '<i class="fas fa-bolt" style="color:#38bdf8;"></i>';
+            }
+
+            // Subtitle text extracting clean targets and achieved values
+            let subtext = '';
+            if (idx === 0) {
+                subtext = `<span>Target: <strong>30</strong></span><span>Done: <strong>${row.achieved}</strong></span>`;
+            } else if (idx === 1) {
+                let totalCnotes = row.cnotes_count !== undefined ? row.cnotes_count : (row.target || '0');
+                let aVal = row.achieved !== undefined ? row.achieved : '0';
+                subtext = `<span>Total C-Notes: <strong>${totalCnotes}</strong></span><span>Ready: <strong>${aVal}</strong></span>`;
+            } else if (idx === 2) {
+                let matchAchieved = row.achieved.match(/\((\d+)\)/);
+                let aVal = matchAchieved ? matchAchieved[1] : row.achieved;
+                subtext = `<span>Target: <strong>30</strong></span><span>Scanned: <strong>${aVal}</strong></span>`;
+            }
+
+            let slaBadgeHtml = '';
+            if (idx === 0) {
+                slaBadgeHtml = `
+                    <div class="kpi-sla-badge" style="background:rgba(56, 189, 248, 0.12); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.4);" title="Daily Creation Target">
+                        ⚡ Daily Creation Target<br><span style="font-size:0.63rem; opacity:0.9;">(Target: 30 C-Notes)</span>
+                    </div>
+                `;
+            } else if (idx === 1 && row.sla_badge_text) {
+                let borderCol = row.sla_status === 'overdue' ? 'rgba(239, 68, 68, 0.5)' : (row.sla_status === 'met' ? 'rgba(16, 185, 129, 0.5)' : 'rgba(56, 189, 248, 0.4)');
+                let bgCol = row.sla_status === 'overdue' ? 'rgba(239, 68, 68, 0.15)' : (row.sla_status === 'met' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.12)');
+                slaBadgeHtml = `
+                    <div class="kpi-sla-badge" style="background:${bgCol}; color:${row.sla_badge_color}; border:1px solid ${borderCol};" title="Invoice SLA Policy: Trips must reach Ready for Invoice within 3 Working Days (excl. Sundays)">
+                        ${row.sla_badge_text}
+                    </div>
+                `;
+            } else if (idx === 2) {
+                slaBadgeHtml = `
+                    <div class="kpi-sla-badge" style="background:rgba(56, 189, 248, 0.12); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.4);" title="POD Submission Target">
+                        📑 POD Submission Target<br><span style="font-size:0.63rem; opacity:0.9;">(Target: 30 PODs)</span>
+                    </div>
+                `;
+            }
+
+            cardsHtml += `
+                <div class="kpi-target-card">
+                    <div class="kpi-target-card-header">
+                        <span class="kpi-target-card-title">${titles[idx] || row.name}</span>
+                        <span class="kpi-target-card-check">${checkIcon}</span>
+                    </div>
+                    <div class="kpi-target-card-divider"></div>
+                    <div class="kpi-target-card-sub">${subtext}</div>
+                    <div class="kpi-target-card-gauge">
+                        <svg class="kpi-gauge-svg" viewBox="0 0 120 62" width="120" height="62">
+                            <!-- Background Track Arc -->
+                            <path d="M 12 56 A 48 48 0 0 1 108 56" 
+                                  fill="none" 
+                                  stroke="rgba(255, 255, 255, 0.12)" 
+                                  stroke-width="8" 
+                                  stroke-linecap="round" />
+                            <!-- Active Colored Progress Arc -->
+                            <path d="M 12 56 A 48 48 0 0 1 108 56" 
+                                  fill="none" 
+                                  stroke="${fillColor}" 
+                                  stroke-width="8" 
+                                  stroke-linecap="round"
+                                  stroke-dasharray="150.8" 
+                                  stroke-dashoffset="${dashoffset}" 
+                                  style="transition: stroke-dashoffset 0.8s ease; filter: drop-shadow(0 0 4px ${fillColor}99);" />
+                            <!-- Percentage Text (e.g. 96%) -->
+                            <text x="60" y="52" text-anchor="middle" dominant-baseline="auto">
+                                <tspan fill="${fillColor}" font-size="${fontSize}" font-weight="900" font-family="'Segoe UI', Roboto, sans-serif">${pctInt}%</tspan>
+                            </text>
+                        </svg>
+                    </div>
+                    ${slaBadgeHtml}
+                </div>
+            `;
+        });
+        $('#kpi-target-cards-container').html(cardsHtml);
+
+        // 2. Render Secondary Display Section (Non-target parameters)
+        let displayHtml = '';
+        displayKpis.forEach(function(row, idx) {
+            let icon = 'fa-file-contract text-info';
+            let statusPill = '';
+            let val = parseInt(row.achieved) || 0;
+
+            if (row.name.toLowerCase().includes('sow') || row.name.toLowerCase().includes('sop')) {
+                icon = 'fa-file-alt text-info';
+                statusPill = `<span class="status-pill pill-blue"><i class="fas fa-check"></i> ${val} Logged</span>`;
+            } else if (row.name.toLowerCase().includes('appreciation')) {
+                icon = 'fa-smile text-success';
+                statusPill = val > 0 
+                    ? `<span class="status-pill pill-green"><i class="fas fa-star"></i> ${val} Received</span>`
+                    : `<span class="status-pill pill-orange"><i class="fas fa-minus"></i> 0 Logged</span>`;
+            } else if (row.name.toLowerCase().includes('complaint')) {
+                icon = 'fa-shield-alt text-warning';
+                statusPill = val === 0
+                    ? `<span class="status-pill pill-green"><i class="fas fa-check-circle"></i> Zero Claims</span>`
+                    : `<span class="status-pill pill-red"><i class="fas fa-exclamation-triangle"></i> ${val} Claims</span>`;
+            }
+
+            displayHtml += `
+                <tr>
+                    <td>
+                        <div class="metric-name-wrap">
+                            <i class="fas ${icon} metric-icon"></i>
+                            <span>${row.name}</span>
+                        </div>
+                    </td>
+                    <td class="col-num">${row.achieved}</td>
+                    <td class="col-center">${statusPill}</td>
+                </tr>
+            `;
+        });
+        $('#kpi-display-table-body').html(displayHtml);
+    }
+
+    function updateDashboardData() {
+        const employeeId = $('#filter-employee').val();
+        const fromDate = $('#filter-from-date').val();
+        const toDate = $('#filter-to-date').val();
+        const branchId = $('#filter-branch').val();
+
+        const calYear = currentDate.getFullYear();
+        const calMonth = currentDate.getMonth() + 1;
+
+        $.ajax({
+            url: "{% url 'get_cs_kpi_dashboard_data' %}",
+            type: "GET",
+            data: {
+                'employee_id': employeeId,
+                'from_date': fromDate,
+                'to_date': toDate,
+                'branch_id': branchId,
+                'cal_year': calYear,
+                'cal_month': calMonth
+            },
+            success: function(res) {
+                if (res.status === 'success') {
+                    const f = res.funnel;
+                    $('#val-veh-requested').text(f.veh_requested);
+                    $('#val-veh-not-allotted').text(f.veh_not_allotted);
+                    $('#val-veh-allotted').text(f.veh_allotted);
+                    $('#val-cnotes-created').text(f.cnotes_created);
+                    $('#val-not-associated').text(f.not_associated_with_trip);
+                    $('#val-awaiting-approval').text(f.awaiting_trip_approval);
+                    $('#val-trip-started').text(f.trip_started);
+                    $('#val-trip-closed').text(f.trip_closed);
+                    $('#val-awaiting-settlement').text(f.awaiting_trip_settlement);
+                    $('#val-trip-settled').text(f.trip_settled);
+                    $('#val-canc-no-bill').text(f.cancellation_without_billing);
+                    $('#val-canc-bill').text(f.cancellation_with_billing);
+                    $('#val-ready-invoice').text(f.ready_for_invoice);
+                    $('#val-invoice-completed').text(f.invoice_completed);
+                    $('#val-reconciliation-total').text(f.reconciliation_total);
+
+                    // Update Top 4 Highlight Cards
+                    $('#top-card-requested').text(f.veh_requested);
+                    $('#top-card-allotted').text(f.veh_allotted);
+                    $('#top-card-cnotes').text(f.cnotes_created);
+                    $('#top-card-started').text(f.trip_started);
+                    $('#top-card-closed').text(f.trip_closed);
+                    $('#top-card-ready').text(f.ready_for_invoice);
+                    $('#top-card-pod').text(f.pod_scanned || 0);
+
+                    if (res.conversion) {
+                        $('#top-card-allot-rate').text(res.conversion.allotment_pct);
+                        $('#top-card-cnote-rate').text(res.conversion.cnote_conv_pct);
+                        $('#top-card-transit-rate').text(res.conversion.trip_start_pct);
+                        $('#top-card-pod-rate').text(res.conversion.pod_comp_pct);
+                    }
+
+                    // Render KPI table
+                    renderKpiTable(res.kpi_rows);
+
+                    // Update calendar map and re-render
+                    if (res.calendar_data) {
+                        monthlyCalendarMap = res.calendar_data;
+                    }
+                    renderCalendar();
+                }
+            },
+            error: function(err) {
+                console.error("Failed to load CS KPI dashboard data", err);
+            }
+        });
+    }
+
+    function filterEmployeesByBranch(branchId) {
+        const $empSelect = $('#filter-employee');
+        const currentVal = $empSelect.val();
+        let currentStillVisible = false;
+
+        $empSelect.find('option').each(function() {
+            const $opt = $(this);
+            const optVal = $opt.val();
+            const optBranch = String($opt.data('branch') || '');
+
+            if (optVal === 'all') {
+                $opt.show();
+                if (currentVal === 'all') currentStillVisible = true;
+                return;
+            }
+
+            if (branchId === 'all' || !branchId || optBranch === String(branchId)) {
+                $opt.show();
+                if (optVal === currentVal) {
+                    currentStillVisible = true;
+                }
+            } else {
+                $opt.hide();
+            }
+        });
+
+        if (!currentStillVisible) {
+            if ($empSelect.find('option[value="all"]').length > 0) {
+                $empSelect.val('all');
+            } else {
+                const $firstVis = $empSelect.find('option').filter(function() {
+                    return $(this).css('display') !== 'none';
+                }).first();
+                if ($firstVis.length) {
+                    $empSelect.val($firstVis.val());
+                }
+            }
+        }
+    }
+
+    $('#filter-branch').on('change', function() {
+        filterEmployeesByBranch($(this).val());
+        updateDashboardData();
+    });
+
+    $('#filter-employee').on('change', function() {
+        updateDashboardData();
+    });
+
+    $('#filter-from-date, #filter-to-date').on('change', function() {
+        const fromVal = $(this).val();
+        if (fromVal) {
+            const parts = fromVal.split('-');
+            if (parts.length === 3) {
+                selectedDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                currentDate = new Date(selectedDate);
+            }
+        }
+        updateDashboardData();
+    });
+
+    // Initial setup & fetch
+    filterEmployeesByBranch($('#filter-branch').val());
+    renderCalendar();
+    updateDashboardData();
+});
+</script>
+{% endblock content %}

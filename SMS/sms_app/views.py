@@ -209,3 +209,4 @@ from .sub_views.prime_trip_view import prime_trip_add, prime_trip_list
 from .sub_views.pk_invoice_view import pk_invoice_list, pk_invoice_add, pk_invoice_pdf, pk_invoice_get_po_items
 from .sub_views.tms_petty_cash_view import tms_petty_cash_add,tms_petty_cash_delete,tms_petty_cash_list,generate_tms_petty_cash_number,get_tms_trips_by_date,tms_petty_cash_export_tally,get_ledger_balance
 from .sub_views.pk_manpower_view import add_manpower_consumption, get_manpower_consumption_logs, delete_manpower_consumption
+from .sub_views.cs_kpi_dashboard_view import cs_kpi_dashboard, get_cs_kpi_dashboard_data
