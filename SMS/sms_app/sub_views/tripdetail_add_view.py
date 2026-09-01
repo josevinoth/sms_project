@@ -593,11 +593,15 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 # ✅ Synchronize KM fields for reports
                 # tr_departedkm is the 'canonical' Starting KM used in reports.
-                if not trip.tr_departedkm and trip.tr_reportedkm_pickup:
+                if trip.tr_reportedkm_pickup is not None:
                     trip.tr_departedkm = trip.tr_reportedkm_pickup
+                elif trip.tr_departedkm is not None:
+                    trip.tr_reportedkm_pickup = trip.tr_departedkm
 
                 # tr_reportedkm is the 'canonical' Ending KM used in reports.
-                if not trip.tr_reportedkm and trip.tr_reportedkm_delivery:
+                if trip.tr_reportedkm is not None:
+                    trip.tr_reportedkm_delivery = trip.tr_reportedkm
+                elif trip.tr_reportedkm_delivery is not None:
                     trip.tr_reportedkm = trip.tr_reportedkm_delivery
 
                 # KM Validation: Ensure closing KM >= opening KM
@@ -825,11 +829,15 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 # ✅ Synchronize KM fields for reports
                 # tr_departedkm is the 'canonical' Starting KM used in reports.
-                if not trip.tr_departedkm and trip.tr_reportedkm_pickup:
+                if trip.tr_reportedkm_pickup is not None:
                     trip.tr_departedkm = trip.tr_reportedkm_pickup
+                elif trip.tr_departedkm is not None:
+                    trip.tr_reportedkm_pickup = trip.tr_departedkm
 
                 # tr_reportedkm is the 'canonical' Ending KM used in reports.
-                if not trip.tr_reportedkm and trip.tr_reportedkm_delivery:
+                if trip.tr_reportedkm is not None:
+                    trip.tr_reportedkm_delivery = trip.tr_reportedkm
+                elif trip.tr_reportedkm_delivery is not None:
                     trip.tr_reportedkm = trip.tr_reportedkm_delivery
 
                 # KM Validation: Ensure closing KM >= opening KM
@@ -1112,10 +1120,10 @@ def tripdetail_list_ajax(request):
             t.tr_tripnumber or '',
             t.tr_vehiclenumber or '',
             str(t.tr_departedlocation) if t.tr_departedlocation else '',
-            str(t.tr_departedkm) if t.tr_departedkm is not None else '0',
+            str(t.tr_reportedkm_pickup if t.tr_reportedkm_pickup is not None else (t.tr_departedkm if t.tr_departedkm is not None else '0')),
             departed_dt,
             str(t.tr_reportedlocation) if t.tr_reportedlocation else '',
-            str(t.tr_reportedkm) if t.tr_reportedkm is not None else '0',
+            str(t.tr_reportedkm if t.tr_reportedkm is not None else (t.tr_reportedkm_delivery if t.tr_reportedkm_delivery is not None else '0')),
             reported_dt,
             t.tr_track_link or '',
             str(t.tc_financestatus) if t.tc_financestatus else '',
@@ -1616,8 +1624,8 @@ def get_last_reported_km(request):
             last_trip = (
                 TripdetailInfo.objects
                 .filter(tr_enquirynumber_id=enquiry_id, tr_vehiclenumber=vehicle, tr_category_id__in=[2, 3])
-                .filter(Q(tr_reporteddate__isnull=False) | Q(tr_reportedkm__isnull=False))
-                .order_by('-tr_reporteddate', '-id')
+                .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
+                .order_by('-id')
                 .first()
             )
 
@@ -1625,8 +1633,8 @@ def get_last_reported_km(request):
             last_trip = (
                 TripdetailInfo.objects
                 .filter(tr_vehiclenumber=vehicle)
-                .filter(Q(tr_reporteddate__isnull=False) | Q(tr_reportedkm__isnull=False))
-                .order_by('-tr_reporteddate', '-id')
+                .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
+                .order_by('-id')
                 .first()
             )
 
@@ -1635,8 +1643,10 @@ def get_last_reported_km(request):
         local_dt = timezone.localtime(last_trip.tr_reporteddate)
         reported_dt_str = local_dt.strftime('%Y-%m-%dT%H:%M')
 
+    latest_km = (last_trip.tr_reportedkm or last_trip.tr_reportedkm_delivery) if last_trip else None
+
     return JsonResponse({
-        "reported_km": last_trip.tr_reportedkm if last_trip else None,
+        "reported_km": latest_km,
         "reported_date": reported_dt_str
     })
 

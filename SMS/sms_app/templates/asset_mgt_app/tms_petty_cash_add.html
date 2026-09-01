@@ -366,6 +366,69 @@
             }, 500);
         });
 
+        // Default Expenses Category and Credit Ledger based on selected Branch
+        function updateBranchDefaults() {
+            var branchText = $('#tpc_branch').find("option:selected").text().trim().toUpperCase();
+            
+            // 1. Default Expenses Category to Cash Expense if empty
+            if (!$('#tpc_category').val()) {
+                $('#tpc_category option').each(function() {
+                    if ($(this).text().toLowerCase().indexOf('cash') > -1) {
+                        $('#tpc_category').val($(this).val()).trigger('change');
+                        return false;
+                    }
+                });
+            }
+            
+            // 2. Default Credit Ledger based on branch name
+            if (branchText && branchText !== '---------' && branchText !== '--SELECT--') {
+                var branchParts = branchText.split(/\s+/);
+                var branchCode = branchParts[branchParts.length - 1]; // e.g. "MAA", "BLR"
+                
+                var matchedLedgerVal = null;
+                // Exact match: Trans Petty Cash - <BranchCode> (non-admin)
+                $('#tpc_credit_ledger option').each(function() {
+                    var optText = $(this).text().toUpperCase();
+                    if (optText.indexOf('TRANS PETTY CASH') > -1 && optText.indexOf(branchCode) > -1 && optText.indexOf('ADMIN') === -1) {
+                        matchedLedgerVal = $(this).val();
+                        return false;
+                    }
+                });
+                
+                // Fallback match: Any ledger containing the branch code
+                if (!matchedLedgerVal) {
+                    $('#tpc_credit_ledger option').each(function() {
+                        var optText = $(this).text().toUpperCase();
+                        if (optText.indexOf(branchCode) > -1) {
+                            matchedLedgerVal = $(this).val();
+                            return false;
+                        }
+                    });
+                }
+                
+                if (matchedLedgerVal && $('#tpc_credit_ledger').val() !== matchedLedgerVal) {
+                    $('#tpc_credit_ledger').val(matchedLedgerVal).trigger('change');
+                }
+            }
+        }
+
+        $('#tpc_branch').change(function() {
+            updateBranchDefaults();
+        });
+
+        // Initialize defaults on load
+        if (!$('#tpc_category').val()) {
+            $('#tpc_category option').each(function() {
+                if ($(this).text().toLowerCase().indexOf('cash') > -1) {
+                    $('#tpc_category').val($(this).val()).trigger('change');
+                    return false;
+                }
+            });
+        }
+        if ($('#tpc_branch').val() && !$('#tpc_credit_ledger').val()) {
+            updateBranchDefaults();
+        }
+
         // Fetch Credit Ledger balance on change
         $('#tpc_credit_ledger').change(function() {
             var ledgerId = $(this).val();

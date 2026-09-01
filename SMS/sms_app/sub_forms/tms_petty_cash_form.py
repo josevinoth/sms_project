@@ -26,23 +26,12 @@ class TMSPettyCashForm(forms.ModelForm):
         if 'tpc_to' in self.fields:
             self.fields['tpc_to'].queryset = self.fields['tpc_to'].queryset.filter(drivermasterinfo__isnull=False)
             
-        if self.request and 'tpc_credit_ledger' in self.fields:
-            try:
-                from sms_app.sub_views.general_utils import get_session_branch_id
-                from sms_app.models import Location_info
-                branch_id = get_session_branch_id(self.request)
-                branch_obj = Location_info.objects.filter(id=branch_id).first()
-                if branch_obj:
-                    branch_name = branch_obj.loc_name.split()[-1]
-                    self.fields['tpc_credit_ledger'].queryset = self.fields['tpc_credit_ledger'].queryset.filter(
-                        ledger_name__icontains='Trans'
-                    ).filter(
-                        ledger_name__icontains=branch_name
-                    ).exclude(
-                        ledger_name__icontains='Admin'
-                    )
-            except Exception:
-                pass
+        if 'tpc_credit_ledger' in self.fields:
+            self.fields['tpc_credit_ledger'].queryset = self.fields['tpc_credit_ledger'].queryset.filter(
+                ledger_name__icontains='Trans'
+            ).exclude(
+                ledger_name__icontains='Admin'
+            )
         
         # Add select2 class to some fields
         select2_fields = [

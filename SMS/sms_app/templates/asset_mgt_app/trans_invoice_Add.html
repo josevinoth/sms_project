@@ -265,14 +265,11 @@
 </form>
 
 <!--================ AFTER SAVE LIST =================-->
-<hr>
-<div class="container-fluid">
-  <div class="card">
-    <div class="card-body table-responsive">
-
-      <table id="trans_invoice_table" class="table table-bordered table-striped table-sm">
-
-        <thead class="thead-dark">
+<div class="container-fluid mt-4">
+  <div class="table-container-modern p-4">
+    <div class="table-responsive">
+      <table id="trans_invoice_table" class="table table-striped table-bordered modern-table w-100">
+        <thead>
           <tr>
             <th>Branch</th>
             <th>Customer Short Name</th>
@@ -298,7 +295,7 @@
             <th>Weighment Charges</th>
             <th>Handling Charges</th>
             <th>Cancellation Charges</th>
-            <th>Invoice Documents</th>
+            <th class="text-center">Invoice Documents</th>
             <th>TOTAL</th>
           </tr>
         </thead>
@@ -318,10 +315,22 @@
             <td>{{ inv.ti_trip.invoice_veh_type|default:"-" }}</td>
             <td>{{ inv.ti_trip.vehicle_category|default:"-" }}</td>
             {% with goods=inv.ti_goods %}
-            <td>{% if goods %}{{ goods.cg_consignee }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
-            <td>{% if inv.ti_consignment %}{{ inv.ti_consignment.co_cusrefnum }}{% else %}<span
+            <td>{% if inv.all_consignee %}{{ inv.all_consignee }}{% elif goods %}{{ goods.cg_consignee }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            <td style="white-space: nowrap;">{% if inv.ti_consignment %}{{ inv.ti_consignment.co_cusrefnum }}{% else %}<span
                 class="text-muted">—</span>{% endif %}</td>
-            <td>{% if goods %}{{ goods.cg_hawbno }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            <td>
+                {% if inv.hawb_items %}
+                    {% for h in inv.hawb_items %}
+                        <span style="white-space: nowrap; display: block;">{{ h }}{% if not forloop.last %},{% endif %}</span>
+                    {% endfor %}
+                {% elif inv.all_hawb_no %}
+                    <span style="white-space: nowrap;">{{ inv.all_hawb_no }}</span>
+                {% elif goods %}
+                    <span style="white-space: nowrap;">{{ goods.cg_hawbno }}</span>
+                {% else %}
+                    <span class="text-muted">—</span>
+                {% endif %}
+            </td>
             <td>{% if inv.total_goods_qty is not None %}{{ inv.total_goods_qty }}{% elif goods %}{{ goods.cg_qty }}{% else %}<span class="text-muted">0</span>{% endif %}</td>
             <td>{% if inv.total_goods_weight is not None %}{{ inv.total_goods_weight }}{% elif goods %}{{ goods.cg_weight }}{% else %}<span class="text-muted">0.0</span>{% endif %}</td>
             {% endwith %}
@@ -349,7 +358,6 @@
         </tbody>
 
       </table>
-
     </div>
   </div>
 </div>

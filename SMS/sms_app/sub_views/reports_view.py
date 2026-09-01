@@ -164,8 +164,9 @@ def space_utilization_reports(request):
 def stock_value_reports(request):
     print("Inside Stock Value Report")
     first_name = request.session.get('first_name')
-    form = DsrForm(request.POST or None)
-    customer_name = request.POST.get('ds_customer', '').strip()
+    customer_name = request.GET.get('ds_customer', request.POST.get('ds_customer', ''))
+    customer_name = str(customer_name).strip() if customer_name else ''
+    form = DsrForm(initial={'ds_customer': customer_name})
 
     # Warehouse_goods_info.objects.filter(wh_check_in_out=1).update(
     #     wh_storage_time=Cast(
@@ -410,11 +411,11 @@ def damage_reports_list(request):
             elif goods and goods.wh_checkin_time:
                 checkin_date = goods.wh_checkin_time
 
-            customer_name = "-"
+            customer_name_display = "-"
             if gatein and gatein.gatein_customer:
-                customer_name = gatein.gatein_customer.cu_name
+                customer_name_display = gatein.gatein_customer.cu_name
             elif goods and goods.wh_customer_name:
-                customer_name = goods.wh_customer_name.cu_name
+                customer_name_display = goods.wh_customer_name.cu_name
 
             invoice_no = "-"
             if gatein and gatein.gatein_invoice:
@@ -431,7 +432,7 @@ def damage_reports_list(request):
             data.append([
                 checkin_date.strftime('%b %d, %Y, %I:%M %p') if checkin_date else '',
                 str(damage.dam_wh_job_num if damage.dam_wh_job_num else ''),
-                str(customer_name),
+                str(customer_name_display),
                 str(invoice_no),
                 str(total_pcs),
                 str(damage.dam_damage_type if damage.dam_damage_type else ''),
@@ -764,7 +765,7 @@ def export_stockreport_to_csv(request):
 
     else:
         to_date = timezone.now()
-        from_date = to_date - timedelta(days=7)
+        from_date = to_date - timedelta(days=120)
 
     # Base Query data
     base_qs = Warehouse_goods_info.objects.filter(
@@ -1037,7 +1038,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
     else:
         # Default to last 120 days
         to_date = now()
-        from_date = to_date - timedelta(days=7)
+        from_date = to_date - timedelta(days=120)
 
     print('Entering stcokvalue_send_email_view')
     if request.method == 'POST':

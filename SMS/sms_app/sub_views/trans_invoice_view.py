@@ -491,8 +491,8 @@ def attach_invoice_veh_type_to_trips(trips):
 
 def attach_goods_totals(items, is_trip=False):
     """
-    Attaches total_goods_qty and total_goods_weight to a list of TransInvoiceInfo or TripdetailInfo objects.
-    Aggregates SUM(cg_qty) and SUM(cg_weight) across all ConsignmentgoodsInfo records for the associated consignment.
+    Attaches total_goods_qty, total_goods_weight, all_hawb_no, and all_consignee to a list of TransInvoiceInfo or TripdetailInfo objects.
+    Aggregates SUM(cg_qty), SUM(cg_weight), and joins all distinct cg_hawbno and cg_consignee across all ConsignmentgoodsInfo records for the associated consignment.
     """
     cons_ids = []
     for item in items:
@@ -507,21 +507,45 @@ def attach_goods_totals(items, is_trip=False):
         for item in items:
             item.total_goods_qty = getattr(item.ti_goods, 'cg_qty', 0) if hasattr(item, 'ti_goods') and item.ti_goods else 0
             item.total_goods_weight = getattr(item.ti_goods, 'cg_weight', 0.0) if hasattr(item, 'ti_goods') and item.ti_goods else 0.0
+            item.all_hawb_no = str(getattr(item.ti_goods, 'cg_hawbno', '') or '') if hasattr(item, 'ti_goods') and item.ti_goods else ''
+            item.all_consignee = str(getattr(item.ti_goods, 'cg_consignee', '') or '') if hasattr(item, 'ti_goods') and item.ti_goods else ''
+            item.hawb_items = [h.strip() for h in str(getattr(item.ti_goods, 'cg_hawbno', '') or '').replace('/', ',').split(',') if h.strip()]
         return items
 
-    goods_agg = (
+    goods_records = (
         ConsignmentgoodsInfo.objects
         .filter(cg_consignmentnumber_id__in=cons_ids)
-        .values('cg_consignmentnumber_id')
-        .annotate(
-            total_qty=Sum('cg_qty'),
-            total_weight=Sum('cg_weight')
-        )
+        .select_related('cg_consignee')
+        .order_by('id')
     )
-    goods_map = {
-        row['cg_consignmentnumber_id']: (row['total_qty'] or 0, row['total_weight'] or 0.0)
-        for row in goods_agg
-    }
+
+    goods_map = {}
+    for g in goods_records:
+        cid = g.cg_consignmentnumber_id
+        if cid not in goods_map:
+            goods_map[cid] = {
+                'total_qty': 0,
+                'total_weight': 0.0,
+                'hawb_list': [],
+                'consignee_list': [],
+            }
+        data = goods_map[cid]
+        data['total_qty'] += (g.cg_qty or 0)
+        data['total_weight'] += (g.cg_weight or 0.0)
+
+        # Collect HAWB numbers (clean and preserve unique tokens)
+        if g.cg_hawbno:
+            raw_hawbs = str(g.cg_hawbno).replace('/', ',').split(',')
+            for h in raw_hawbs:
+                h_clean = h.strip()
+                if h_clean and h_clean not in data['hawb_list']:
+                    data['hawb_list'].append(h_clean)
+
+        # Collect Consignee
+        if g.cg_consignee:
+            c_name = str(g.cg_consignee).strip()
+            if c_name and c_name not in data['consignee_list']:
+                data['consignee_list'].append(c_name)
 
     for item in items:
         if is_trip:
@@ -530,13 +554,24 @@ def attach_goods_totals(items, is_trip=False):
             cid = item.ti_consignment_id or (item.ti_trip.tr_consignmentnumber_id if item.ti_trip else None)
 
         if cid and cid in goods_map:
-            item.total_goods_qty, item.total_goods_weight = goods_map[cid]
+            d = goods_map[cid]
+            item.total_goods_qty = d['total_qty']
+            item.total_goods_weight = d['total_weight']
+            item.all_hawb_no = ", ".join(d['hawb_list'])
+            item.all_consignee = ", ".join(d['consignee_list'])
+            item.hawb_items = d['hawb_list']
         elif hasattr(item, 'ti_goods') and item.ti_goods:
             item.total_goods_qty = item.ti_goods.cg_qty or 0
             item.total_goods_weight = item.ti_goods.cg_weight or 0.0
+            item.all_hawb_no = str(item.ti_goods.cg_hawbno or '')
+            item.all_consignee = str(item.ti_goods.cg_consignee or '')
+            item.hawb_items = [h.strip() for h in str(item.ti_goods.cg_hawbno or '').replace('/', ',').split(',') if h.strip()]
         else:
             item.total_goods_qty = 0
             item.total_goods_weight = 0.0
+            item.all_hawb_no = ""
+            item.all_consignee = ""
+            item.hawb_items = []
 
     return items
 
@@ -1361,9 +1396,9 @@ def trans_invoice_excel(request, invoice_no):
             safe(obj.ti_trip.tr_departeddate.strftime('%d/%m/%Y %H:%M') if obj.ti_trip and obj.ti_trip.tr_departeddate else ""),
             safe(obj.ti_trip.tr_reporteddate.strftime('%d/%m/%Y %H:%M') if obj.ti_trip and obj.ti_trip.tr_reporteddate else ""),
             safe(obj.ti_trip.tr_reporteddate_pickup.strftime('%d/%m/%Y %H:%M') if obj.ti_trip and obj.ti_trip.tr_reporteddate_pickup else ""),
-            safe(str(obj.ti_goods.cg_consignee) if obj.ti_goods else ""),
+            safe(str(obj.all_consignee if hasattr(obj, 'all_consignee') and obj.all_consignee else (obj.ti_goods.cg_consignee if obj.ti_goods else ""))),
             safe(str(obj.ti_consignment.co_cusrefnum) if obj.ti_consignment else ""),
-            safe(str(obj.ti_goods.cg_hawbno) if obj.ti_goods else ""),
+            safe(str(obj.all_hawb_no if hasattr(obj, 'all_hawb_no') and obj.all_hawb_no else (obj.ti_goods.cg_hawbno if obj.ti_goods else ""))),
             safe(str(obj.total_goods_qty if hasattr(obj, 'total_goods_qty') and obj.total_goods_qty is not None else (obj.ti_goods.cg_qty if obj.ti_goods else ""))),
             safe(str(obj.total_goods_weight if hasattr(obj, 'total_goods_weight') and obj.total_goods_weight is not None else (obj.ti_goods.cg_weight if obj.ti_goods else ""))),
             safe(transport or 0),

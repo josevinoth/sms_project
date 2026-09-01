@@ -10,7 +10,8 @@ from django.db import transaction
 from django.db.models import Sum, Q, Count
 from ..forms import VehicleallotmentForm
 from ..models import Enquirynotevehicle, TripdetailInfo, OwnershipInfo, User_extInfo, ConsignmentdetailInfo, ConsignmentgoodsInfo, \
-    VehiclemasterInfo, EnquirynoteInfo, Vehicle_allotmentInfo, VendorratemasterInfo1, RtratemasterInfo, VehicletypeInfo, DeletionLog
+    VehiclemasterInfo, EnquirynoteInfo, Vehicle_allotmentInfo, VendorratemasterInfo1, RtratemasterInfo, VehicletypeInfo, DeletionLog, \
+    Trip_approval_info, approval_status_info
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import HttpResponse, JsonResponse
@@ -1716,7 +1717,6 @@ def vehicle_allotment_replace(request, allotment_id):
                 consignments.update(co_vehicelnumber=new_vehicle_num)
 
                 # Reset approval status for linked trips so trip MUST be re-approved after vehicle replacement
-                from ..models import TripdetailInfo, Trip_approval_info, approval_status_info
                 linked_trips = TripdetailInfo.objects.filter(tr_consignmentnumber__in=consignments)
                 if linked_trips.exists():
                     pending_status = approval_status_info.objects.filter(pk=2).first() or approval_status_info.objects.first()
