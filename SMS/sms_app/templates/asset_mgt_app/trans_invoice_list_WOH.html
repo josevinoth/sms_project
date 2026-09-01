@@ -128,7 +128,17 @@
                 <td data-order="{{ trip.tr_enquirynumber.en_pickupdatetime|date:'Y-m-d' }}">{{ trip.tr_enquirynumber.en_pickupdatetime|date:"d/m/Y" }}</td>
 
                 <!-- ================= CONSIGNMENT ================= -->
-                <td>{{ trip.tr_consignmentnumber.co_consignmentnumber|default:"-" }}</td>
+                <td>
+                    {% if trip.tr_consignmentnumber %}
+                    {{ trip.tr_consignmentnumber.co_consignmentnumber }}
+                    {% elif trip.tr_tripnumber %}
+                    {{ trip.tr_tripnumber }} (Cancelled)
+                    {% elif trip.tr_enquirynumber %}
+                    {{ trip.tr_enquirynumber.en_enquirynumber }} (Cancelled)
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
                 <td>{{ trip.tr_departedlocation|default:"-" }}</td>
                 <td>{{ trip.tr_reportedlocation|default:"-" }}</td>
                 <td>{{ trip.tr_enquirynumber.en_customerdepartment|default:"-" }}</td>
