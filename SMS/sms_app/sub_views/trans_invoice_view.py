@@ -1075,11 +1075,13 @@ def trans_invoice_list_woh(request, customer_id):
         .filter(
             tr_enquirynumber__en_customername_id=customer_id,
             tc_financestatus__in=Tripstatusinfo.objects.filter(
-                Q(id=9) | Q(status='Ready for Invoice')
+                Q(id__in=[9, 10]) | Q(status__in=['Ready for Invoice', 'Cancellation with Billing'])
             )
         )
-        .exclude(tr_consignmentnumber__co_consignmentnumber__isnull=True)
-        .exclude(tr_consignmentnumber__co_consignmentnumber='')
+        .exclude(
+            Q(tc_financestatus_id=9, tc_cancellation_check=False) &
+            (Q(tr_consignmentnumber__co_consignmentnumber__isnull=True) | Q(tr_consignmentnumber__co_consignmentnumber=''))
+        )
         .exclude(id__in=all_assigned_trip_ids)
         .select_related('tr_enquirynumber','tr_consignmentnumber','tr_vehicletype','tr_vehicletype_placed','tr_vehiclesource')
 
