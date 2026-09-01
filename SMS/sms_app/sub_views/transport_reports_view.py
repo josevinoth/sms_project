@@ -959,7 +959,7 @@ def vehicle_log_report_view(request):
     ).order_by('vm_registrationnumber')
     
     from ..models import OwnershipInfo
-    ownerships = OwnershipInfo.objects.all()
+    ownerships = OwnershipInfo.objects.filter(id__in=[1, 2])
 
     return render(request, "asset_mgt_app/vehicle_log_report.html", {
         'first_name': first_name,
@@ -1003,7 +1003,7 @@ def vehicle_log_report_ajax_view(request):
         'tr_consignmentnumber',
         'tr_departedlocation',
         'tr_reportedlocation'
-    )
+    ).filter(tr_vehiclesource_id__in=[1, 2])
     
     if vehicle_source:
         trips = trips.filter(tr_vehiclesource_id=vehicle_source)
