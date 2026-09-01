@@ -36,6 +36,11 @@ def expense_add(request, expense_id=0, is_petty_cash=False, petty_cash_type=None
                 if bvm_business:
                     initial_data['exp_business'] = bvm_business.id
                 
+                from ..models import ExpenseCategoryInfo
+                cash_cat = ExpenseCategoryInfo.objects.filter(exp_category_name__icontains='Cash').first()
+                if cash_cat:
+                    initial_data['exp_category'] = cash_cat.id
+                
                 branch_id = get_session_branch_id(request)
                 branch_code = get_branch_code(branch_id)
                 ledger = CreditLedgerInfo.objects.filter(ledger_name__icontains=f'{ledger_prefix} - {branch_code}').first()

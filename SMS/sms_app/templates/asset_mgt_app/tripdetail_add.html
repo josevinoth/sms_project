@@ -1228,8 +1228,9 @@ document.addEventListener("DOMContentLoaded", function () {
 		calculateUtilizedKM();
 	});
 
-	// Also recalculate when Loading Started KM changes
+	// Also recalculate and mirror when Loading Started KM changes
 	$(document).on("input change", "#tr_reportedkm_pickup", function () {
+		$("#tr_departedkm").val($(this).val());
 		calculateUtilizedKM();
 	});
 
@@ -1316,12 +1317,23 @@ document.addEventListener("DOMContentLoaded", function () {
 	});
 
 	// Validate on Form Submit
+		// Validate on Form Submit
 	$("#tripdetail_add").on("submit", function(e) {
 		if (!validateDateTimeSequence()) {
 			e.preventDefault();
-			alert("⚠️ Please correct the invalid Date & Time sequence errors before saving!");
+			alert("Please correct the invalid Date & Time sequence errors before saving!");
 			return false;
 		}
+        
+        // Prevent double submission
+        if ($(this).data('submitted') === true) {
+            e.preventDefault();
+            return false;
+        }
+        $(this).data('submitted', true);
+        
+        // Visual feedback on the submit button
+        $('#tripdetail_submit_id').html('<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...').css('opacity', '0.7');
 	});
 
 	// File Picker Preview for Multiple Attachments

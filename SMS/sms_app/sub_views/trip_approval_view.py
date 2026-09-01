@@ -63,15 +63,6 @@ def update_trip_approval(request, trip_id):
         trip.tr_approval = approval
 
         if status_obj.approval_name == "Approved":
-            # Check E-Way Bill Part-A and Part-B PDF validity before approving
-            if trip.tr_consignmentnumber:
-                from .eway_partb_validator import validate_consignment_eway_bill
-                can_approve, blocking_reasons, _ = validate_consignment_eway_bill(trip.tr_consignmentnumber)
-                if not can_approve:
-                    error_msg = " | ".join(blocking_reasons)
-                    messages.error(request, f"APPROVAL REJECTED: {error_msg}")
-                    return redirect('trip_approval_view')
-
             trip.tc_financestatus_id = 1
             trip.tr_operational_status_id = 1
             

@@ -959,7 +959,7 @@ def vehicle_log_report_view(request):
     ).order_by('vm_registrationnumber')
     
     from ..models import OwnershipInfo
-    ownerships = OwnershipInfo.objects.all()
+    ownerships = OwnershipInfo.objects.filter(id__in=[1, 2])
 
     return render(request, "asset_mgt_app/vehicle_log_report.html", {
         'first_name': first_name,
@@ -1003,7 +1003,7 @@ def vehicle_log_report_ajax_view(request):
         'tr_consignmentnumber',
         'tr_departedlocation',
         'tr_reportedlocation'
-    )
+    ).filter(tr_vehiclesource_id__in=[1, 2])
     
     if vehicle_source:
         trips = trips.filter(tr_vehiclesource_id=vehicle_source)
@@ -1819,13 +1819,30 @@ def ref_no_pending_report_ajax_view(request):
             except:
                 return 0.0
 
+        halting_days = safe_num(trip.tc_no_of_days_halting)
+        if halting_days <= 0:
+            halting_days = 1.0
+        tc_tot_cost = safe_num(trip.tc_total_halting_cost)
+        tc_day_cost = safe_num(trip.tc_haltingcost)
+        tc_total_check = getattr(trip, 'tc_total_halting_cost_check', False)
+        tc_day_check = getattr(trip, 'tc_haltingcost_check', False)
+        if tc_total_check or tc_day_check:
+            if tc_tot_cost > 0:
+                halting_val = tc_tot_cost
+            elif tc_day_cost > 0:
+                halting_val = tc_day_cost * halting_days
+            else:
+                halting_val = 0.0
+        else:
+            halting_val = 0.0
+
         total_selling = (safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0) + \
                         (safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0) + \
                         (safe_num(trip.tc_supervisorcost) if trip.tc_supervisorcost_check else 0) + \
                         (safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0) + \
                         (safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0) + \
                         (safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0) + \
-                        (safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0) + \
+                        halting_val + \
                         (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0) + \
                         (safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0) + \
                         (safe_num(trip.tc_rtocost) if trip.tc_rtocost_check else 0) + \
@@ -1852,7 +1869,7 @@ def ref_no_pending_report_ajax_view(request):
             safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0,
             safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0,
             safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0,
-            safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0,
+            halting_val,
             safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0,
             total_selling
         ])
@@ -2111,8 +2128,12 @@ def invoice_pending_report_ajax_view(request):
                 Case(When(tc_supervisorcost_check=True, then=F('tc_supervisorcost')), default=0.0,
                      output_field=FloatField()) +
                 Case(When(tc_betacost_check=True, then=F('tc_betacost')), default=0.0, output_field=FloatField()) +
-                Case(When(tc_total_halting_cost_check=True, then=F('tc_total_halting_cost')), default=0.0,
-                     output_field=FloatField()) +
+                Case(
+                    When(tc_total_halting_cost_check=True, tc_total_halting_cost__gt=0, then=F('tc_total_halting_cost')),
+                    When(Q(tc_haltingcost_check=True) | Q(tc_total_halting_cost_check=True), then=F('tc_haltingcost') * Case(When(tc_no_of_days_halting__gt=0, then=F('tc_no_of_days_halting')), default=1, output_field=FloatField())),
+                    default=0.0,
+                    output_field=FloatField()
+                ) +
                 Case(When(tc_cancellation_check=True, then=F('tc_cancellation')), default=0.0,
                      output_field=FloatField())
         )
@@ -2294,6 +2315,36 @@ def invoice_pending_report_ajax_view(request):
                 elif allotment.va_vehicletype_selection_requested:
                     veh_type_str = safe_str(allotment.va_vehicletype.vt_vehicletype) if allotment.va_vehicletype else veh_type_str
 
+        halting_days = safe_num(trip.tc_no_of_days_halting)
+        if halting_days <= 0:
+            halting_days = 1.0
+        tc_tot_cost = safe_num(trip.tc_total_halting_cost)
+        tc_day_cost = safe_num(trip.tc_haltingcost)
+        tc_total_check = getattr(trip, 'tc_total_halting_cost_check', False)
+        tc_day_check = getattr(trip, 'tc_haltingcost_check', False)
+        if tc_total_check or tc_day_check:
+            if tc_tot_cost > 0:
+                halting_val = tc_tot_cost
+            elif tc_day_cost > 0:
+                halting_val = tc_day_cost * halting_days
+            else:
+                halting_val = 0.0
+        else:
+            halting_val = 0.0
+
+        row_total = (
+            (safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0) +
+            (safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0) +
+            (safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0) +
+            (safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0) +
+            (safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0) +
+            halting_val +
+            (safe_num(trip.tc_rtocost) if trip.tc_rtocost_check else 0) +
+            (safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0) +
+            (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0) +
+            (safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0)
+        )
+
         data.append([
             idx,
             branch_name,
@@ -2315,12 +2366,12 @@ def invoice_pending_report_ajax_view(request):
             safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0,
             safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0,
             safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0,
-            safe_num(trip.tc_total_halting_cost) if trip.tc_total_halting_cost_check else 0,
+            halting_val,
             safe_num(trip.tc_rtocost) if trip.tc_rtocost_check else 0,
             safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0,
             safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0,
             safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0,
-            round(safe_num(trip.trip_total), 2),
+            round(safe_num(row_total), 2),
         ])
 
     return JsonResponse({
@@ -8518,13 +8569,10 @@ def trip_status_count_report_ajax_view(request):
     from ..models import TripdetailInfo, Tripstatusinfo, ConsignmentdetailInfo, TransInvoiceInfo
     from django.db.models import Count, Q, F
     
-    # Base query is now Cnotes (ConsignmentdetailInfo)
+    # Base query is Cnotes (ConsignmentdetailInfo)
     qs = ConsignmentdetailInfo.objects.all()
     
-    # Role-based filtering
-    if not request.user.is_superuser:
-        qs = qs.filter(co_createdby=request.user)
-    elif branch:
+    if branch:
         qs = qs.filter(co_consignmentnumber__icontains=branch)
     
     if from_date:

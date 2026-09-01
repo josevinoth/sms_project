@@ -593,11 +593,15 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 # ✅ Synchronize KM fields for reports
                 # tr_departedkm is the 'canonical' Starting KM used in reports.
-                if not trip.tr_departedkm and trip.tr_reportedkm_pickup:
+                if trip.tr_reportedkm_pickup is not None:
                     trip.tr_departedkm = trip.tr_reportedkm_pickup
+                elif trip.tr_departedkm is not None:
+                    trip.tr_reportedkm_pickup = trip.tr_departedkm
 
                 # tr_reportedkm is the 'canonical' Ending KM used in reports.
-                if not trip.tr_reportedkm and trip.tr_reportedkm_delivery:
+                if trip.tr_reportedkm is not None:
+                    trip.tr_reportedkm_delivery = trip.tr_reportedkm
+                elif trip.tr_reportedkm_delivery is not None:
                     trip.tr_reportedkm = trip.tr_reportedkm_delivery
 
                 # KM Validation: Ensure closing KM >= opening KM
@@ -825,11 +829,15 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 # ✅ Synchronize KM fields for reports
                 # tr_departedkm is the 'canonical' Starting KM used in reports.
-                if not trip.tr_departedkm and trip.tr_reportedkm_pickup:
+                if trip.tr_reportedkm_pickup is not None:
                     trip.tr_departedkm = trip.tr_reportedkm_pickup
+                elif trip.tr_departedkm is not None:
+                    trip.tr_reportedkm_pickup = trip.tr_departedkm
 
                 # tr_reportedkm is the 'canonical' Ending KM used in reports.
-                if not trip.tr_reportedkm and trip.tr_reportedkm_delivery:
+                if trip.tr_reportedkm is not None:
+                    trip.tr_reportedkm_delivery = trip.tr_reportedkm
+                elif trip.tr_reportedkm_delivery is not None:
                     trip.tr_reportedkm = trip.tr_reportedkm_delivery
 
                 # KM Validation: Ensure closing KM >= opening KM
@@ -1112,10 +1120,10 @@ def tripdetail_list_ajax(request):
             t.tr_tripnumber or '',
             t.tr_vehiclenumber or '',
             str(t.tr_departedlocation) if t.tr_departedlocation else '',
-            str(t.tr_departedkm) if t.tr_departedkm is not None else '0',
+            str(t.tr_reportedkm_pickup if t.tr_reportedkm_pickup is not None else (t.tr_departedkm if t.tr_departedkm is not None else '0')),
             departed_dt,
             str(t.tr_reportedlocation) if t.tr_reportedlocation else '',
-            str(t.tr_reportedkm) if t.tr_reportedkm is not None else '0',
+            str(t.tr_reportedkm if t.tr_reportedkm is not None else (t.tr_reportedkm_delivery if t.tr_reportedkm_delivery is not None else '0')),
             reported_dt,
             t.tr_track_link or '',
             str(t.tc_financestatus) if t.tc_financestatus else '',

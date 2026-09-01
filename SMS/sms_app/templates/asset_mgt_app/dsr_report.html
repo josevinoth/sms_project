@@ -36,15 +36,7 @@
         </div>
     </div>
 
-  {% if messages %}
-  <div class="row mb-3">
-    <div class="col-12 message text-center">
-      {% for message in messages %}
-      <div {% if message.tags %} class="alert alert-{{ message.tags }}"{% endif %}>{{ message }}</div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
+
 
     <!-- Filter Card -->
     <div class="modern-card p-4 shadow-sm mb-4" style="border-radius: 12px;">
@@ -53,7 +45,7 @@
             <div class="row align-items-end">
                 <div class="col-md-3 mb-3 mb-md-0">
                     <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted, #94a3b8); text-transform: uppercase; margin-bottom: 0.5rem;">Customer</label>
-                    {% render_field form.ds_customer id="ds_customer" class="form-control" style="border-radius:8px; border:1px solid #cbd5e1; height: 38px;" value=customer_name %}
+                    {% render_field form.ds_customer id="ds_customer" class="form-control" style="border-radius:8px; border:1px solid #cbd5e1; height: 38px;" %}
                 </div>
                 <div class="col-md-4 mb-3 mb-md-0 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary mr-2" style="border-radius:8px; padding:0.4rem 1.5rem; font-weight:600;">

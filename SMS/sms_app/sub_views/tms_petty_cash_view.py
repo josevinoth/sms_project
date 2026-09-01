@@ -51,6 +51,12 @@ def tms_petty_cash_add(request, tpc_id=0):
         if bvm_trans:
             initial_data['tpc_business'] = bvm_trans.id
             
+        # Default Expense Category to Cash Expense
+        from ..models import ExpenseCategoryInfo
+        cash_cat = ExpenseCategoryInfo.objects.filter(exp_category_name__icontains='Cash').first()
+        if cash_cat:
+            initial_data['tpc_category'] = cash_cat.id
+
         # Default Branch based on session
         branch_id = get_session_branch_id(request)
         if branch_id:
@@ -59,9 +65,20 @@ def tms_petty_cash_add(request, tpc_id=0):
             # Default Credit Ledger based on branch name
             branch_obj = Location_info.objects.filter(id=branch_id).first()
             if branch_obj:
-                branch_name = branch_obj.loc_name.split()[-1].lower() # e.g. "BVM MAA" -> "maa"
-                ledger_name = f"trans petty cash {branch_name}"
-                ledger = CreditLedgerInfo.objects.filter(ledger_name__icontains=ledger_name).first()
+                branch_code = branch_obj.loc_name.split()[-1] # e.g. "MAA" or "BLR"
+                ledger = CreditLedgerInfo.objects.filter(
+                    ledger_name__icontains='Trans Petty Cash'
+                ).filter(
+                    ledger_name__icontains=branch_code
+                ).exclude(
+                    ledger_name__icontains='Admin'
+                ).first()
+                if not ledger:
+                    ledger = CreditLedgerInfo.objects.filter(
+                        ledger_name__icontains='Trans'
+                    ).filter(
+                        ledger_name__icontains=branch_code
+                    ).first()
                 if ledger:
                     initial_data['tpc_credit_ledger'] = ledger.id
                     
