@@ -47,19 +47,19 @@
                     <span class="fw-bold d-md-none me-2">Departed Location :</span> {{ tripdetailinfo.tr_departedlocation }}
                 </td>
                 <td class="d-flex d-md-table-cell justify-content-between">
-                    <span class="fw-bold d-md-none me-2">Departed KM :</span> {{ tripdetailinfo.tr_departedkm }}
+                    <span class="fw-bold d-md-none me-2">Departed KM :</span> {{ tripdetailinfo.tr_reportedkm_pickup|default:tripdetailinfo.tr_departedkm }}
                 </td>
                 <td class="d-flex d-md-table-cell justify-content-between">
-                    <span class="fw-bold d-md-none me-2">Departed Date & Time :</span> {{ tripdetailinfo.tr_departeddate }}
+                    <span class="fw-bold d-md-none me-2">Departed Date & Time :</span> {{ tripdetailinfo.tr_departeddate|default:tripdetailinfo.tr_departeddate_pickup }}
                 </td>
                 <td class="d-flex d-md-table-cell justify-content-between">
                     <span class="fw-bold d-md-none me-2">Reported Location :</span> {{ tripdetailinfo.tr_reportedlocation }}
                 </td>
                 <td class="d-flex d-md-table-cell justify-content-between">
-                    <span class="fw-bold d-md-none me-2">Reported KM :</span> {{ tripdetailinfo.tr_reportedkm }}
+                    <span class="fw-bold d-md-none me-2">Reported KM :</span> {{ tripdetailinfo.tr_reportedkm|default:tripdetailinfo.tr_reportedkm_delivery }}
                 </td>
                 <td class="d-flex d-md-table-cell justify-content-between">
-                    <span class="fw-bold d-md-none me-2">Reported Date & Time :</span> {{ tripdetailinfo.tr_reporteddate }}
+                    <span class="fw-bold d-md-none me-2">Reported Date & Time :</span> {{ tripdetailinfo.tr_reporteddate|default:tripdetailinfo.tr_reporteddate_delivery }}
                 </td>
                 <td class="d-flex d-md-table-cell justify-content-between">
                     <span class="fw-bold d-md-none me-2">Trip Status :</span>

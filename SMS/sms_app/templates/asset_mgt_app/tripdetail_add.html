@@ -1228,8 +1228,9 @@ document.addEventListener("DOMContentLoaded", function () {
 		calculateUtilizedKM();
 	});
 
-	// Also recalculate when Loading Started KM changes
+	// Also recalculate and mirror when Loading Started KM changes
 	$(document).on("input change", "#tr_reportedkm_pickup", function () {
+		$("#tr_departedkm").val($(this).val());
 		calculateUtilizedKM();
 	});
 
