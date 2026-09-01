@@ -1624,8 +1624,8 @@ def get_last_reported_km(request):
             last_trip = (
                 TripdetailInfo.objects
                 .filter(tr_enquirynumber_id=enquiry_id, tr_vehiclenumber=vehicle, tr_category_id__in=[2, 3])
-                .filter(Q(tr_reporteddate__isnull=False) | Q(tr_reportedkm__isnull=False))
-                .order_by('-tr_reporteddate', '-id')
+                .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
+                .order_by('-id')
                 .first()
             )
 
@@ -1633,8 +1633,8 @@ def get_last_reported_km(request):
             last_trip = (
                 TripdetailInfo.objects
                 .filter(tr_vehiclenumber=vehicle)
-                .filter(Q(tr_reporteddate__isnull=False) | Q(tr_reportedkm__isnull=False))
-                .order_by('-tr_reporteddate', '-id')
+                .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
+                .order_by('-id')
                 .first()
             )
 
@@ -1643,8 +1643,10 @@ def get_last_reported_km(request):
         local_dt = timezone.localtime(last_trip.tr_reporteddate)
         reported_dt_str = local_dt.strftime('%Y-%m-%dT%H:%M')
 
+    latest_km = (last_trip.tr_reportedkm or last_trip.tr_reportedkm_delivery) if last_trip else None
+
     return JsonResponse({
-        "reported_km": last_trip.tr_reportedkm if last_trip else None,
+        "reported_km": latest_km,
         "reported_date": reported_dt_str
     })
 
