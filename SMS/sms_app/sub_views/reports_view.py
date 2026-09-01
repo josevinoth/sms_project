@@ -765,7 +765,7 @@ def export_stockreport_to_csv(request):
 
     else:
         to_date = timezone.now()
-        from_date = to_date - timedelta(days=7)
+        from_date = to_date - timedelta(days=120)
 
     # Base Query data
     base_qs = Warehouse_goods_info.objects.filter(
@@ -1038,7 +1038,7 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
     else:
         # Default to last 120 days
         to_date = now()
-        from_date = to_date - timedelta(days=7)
+        from_date = to_date - timedelta(days=120)
 
     print('Entering stcokvalue_send_email_view')
     if request.method == 'POST':
