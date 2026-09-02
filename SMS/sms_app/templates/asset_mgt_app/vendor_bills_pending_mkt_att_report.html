@@ -82,7 +82,7 @@
 <!-- Modern Table Card -->
 <div class="modern-card">
     <div class="table-responsive">
-        <table class="table modern-table table-hover" id="vendor_pending_bills_mkt_table">
+        <table class="table modern-table table-hover" id="vendor_pending_bills_mkt_table" style="width: 100%;">
             <thead>
                 <tr>
                     <th>S.No</th>
@@ -96,24 +96,11 @@
                     <th>Veh Source</th>
                     <th>Vendor Name</th>
                     <th>Buy Cost</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
-                {% for row in data_rows %}
-                <tr>
-                    <td>{{ row.s_no }}</td>
-                    <td>{{ row.trip_date|default:"-" }}</td>
-                    <td>{{ row.cnote|default:"-" }}</td>
-                    <td>{{ row.from_loc|default:"-" }}</td>
-                    <td>{{ row.to_loc|default:"-" }}</td>
-                    <td>{{ row.customer|default:"-" }}</td>
-                    <td>{{ row.veh_no|default:"-" }}</td>
-                    <td>{{ row.veh_type|default:"-" }}</td>
-                    <td>{{ row.veh_source|default:"-" }}</td>
-                    <td>{{ row.vendor_name|default:"-" }}</td>
-                    <td>{{ row.buy_cost|default:"0.0" }}</td>
-                </tr>
-                {% endfor %}
+                <!-- Loaded via Server-Side AJAX -->
             </tbody>
         </table>
     </div>
@@ -122,6 +109,19 @@
 <script>
     $(document).ready(function () {
         const table = $('#vendor_pending_bills_mkt_table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "{% url 'vendor_bills_pending_mkt_att_report_ajax' %}",
+                type: "GET",
+                data: function (d) {
+                    d.branch = $('#branch').val();
+                    d.veh_source = $('#veh_source').val();
+                    d.from_date = $('#from_date').val();
+                    d.to_date = $('#to_date').val();
+                    d.vendor_name = $('#vendor_name').val();
+                }
+            },
             scrollX: true,
             scrollY: "58vh",
             scrollCollapse: true,
@@ -130,8 +130,8 @@
                  "<'row'<'col-sm-12'tr>>" +
                  "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
             lengthMenu: [
-                [10, 25, 50, 100, -1],
-                [10, 25, 50, 100, "All"]
+                [10, 25, 50, 100, 250, -1],
+                [10, 25, 50, 100, 250, "All"]
             ],
             pageLength: 25,
             buttons: [
@@ -141,7 +141,27 @@
                 { extend: 'pdfHtml5', className: 'btn btn-outline-danger btn-sm mr-1', orientation: 'landscape', pageSize: 'A4', title: 'Vendor Bills Pending Report MKT/ATT' },
                 { extend: 'print', className: 'btn btn-outline-dark btn-sm', title: 'Vendor Bills Pending Report MKT/ATT' }
             ],
-            order: [[0, 'asc']]
+            ordering: false,
+            columns: [
+                { width: "50px", className: "text-center" }, // S.No
+                { width: "95px" },  // Trip Date
+                { width: "135px" }, // Cnote
+                { width: "120px" }, // From
+                { width: "120px" }, // To
+                { width: "130px" }, // Customer Name
+                { width: "100px" }, // Veh No
+                { width: "100px" }, // Veh Type
+                { width: "90px" },  // Veh Source
+                { width: "140px" }, // Vendor Name
+                { width: "85px", className: "text-right font-weight-bold" },  // Buy Cost
+                { width: "110px", className: "text-center" }  // Status
+            ]
+        });
+
+        // Instant filter on form submit without page reload
+        $('#filterForm').on('submit', function (e) {
+            e.preventDefault();
+            table.ajax.reload();
         });
 
         $(window).on('resize', function () {
