@@ -178,12 +178,22 @@
                 <td>{{ inv.tr_enquirynumber.en_customername }}</td>
 
                 <!-- Planning Date -->
-                <td data-order="{{ inv.tr_departeddate|date:'Y-m-d' }}">{{ inv.tr_departeddate|date:"d/m/Y"|default:"-" }}</td>
+                <td data-order="{% if inv.tr_departeddate %}{{ inv.tr_departeddate|date:'Y-m-d' }}{% elif inv.tr_enquirynumber.en_pickupdatetime %}{{ inv.tr_enquirynumber.en_pickupdatetime|date:'Y-m-d' }}{% else %}{{ inv.tr_created_at|date:'Y-m-d' }}{% endif %}">
+                    {% if inv.tr_departeddate %}
+                    {{ inv.tr_departeddate|date:"d/m/Y" }}
+                    {% elif inv.tr_enquirynumber.en_pickupdatetime %}
+                    {{ inv.tr_enquirynumber.en_pickupdatetime|date:"d/m/Y" }}
+                    {% else %}
+                    {{ inv.tr_created_at|date:"d/m/Y" }}
+                    {% endif %}
+                </td>
 
                 <!-- Cnote No -->
                 <td>
                     {% if inv.tr_consignmentnumber %}
                     {{ inv.tr_consignmentnumber.co_consignmentnumber }}
+                    {% elif inv.tr_enquirynumber %}
+                    {{ inv.tr_enquirynumber.en_enquirynumber }} (Cancelled)
                     {% endif %}
                 </td>
 
