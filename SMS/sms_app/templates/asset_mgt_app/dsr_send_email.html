@@ -1,6 +1,20 @@
 {% load widget_tweaks %}
 {% block content %}
 <!-- Email Form -->
+<style>
+    /* Fix Select2 alignment inside Bootstrap input-group */
+    .input-group > .select2-container--classic {
+        flex: 1 1 auto;
+        width: 1% !important;
+    }
+    .select2-container--classic .select2-selection--single {
+        height: 100% !important;
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+        display: flex;
+        align-items: center;
+    }
+</style>
 <form method="post" action="{% url 'dsr_send_email' %}">
     {% csrf_token %}
     <div class="input-group mb-2 mr-sm-2">
@@ -42,8 +56,8 @@
         
         // Initialize Select2 for modal
         if ($.fn.select2) {
-            #ds_customer_modal.select2({
-                dropdownParent: #sendEmailModal,
+            $('#ds_customer_modal').select2({
+                dropdownParent: $('#sendEmailModal'),
                 width: '100%',
                 theme: 'classic'
             });

@@ -1,6 +1,20 @@
 {% load widget_tweaks %}
 {% block content %}
 <!-- Email Form -->
+<style>
+    /* Fix Select2 alignment inside Bootstrap input-group */
+    .input-group > .select2-container--classic {
+        flex: 1 1 auto;
+        width: 1% !important;
+    }
+    .select2-container--classic .select2-selection--single {
+        height: 100% !important;
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+        display: flex;
+        align-items: center;
+    }
+</style>
 <form method="post" action="{% url 'stock_value_send_email_view' %}">
     {% csrf_token %}
     <input type="hidden" name="from_date" id="modal_from_date">
@@ -54,8 +68,8 @@
         
         // Initialize Select2 for modal
         if ($.fn.select2) {
-            #ds_customer_modal.select2({
-                dropdownParent: #sendEmailModal,
+            $('#ds_customer_modal').select2({
+                dropdownParent: $('#sendEmailModal'),
                 width: '100%',
                 theme: 'classic'
             });

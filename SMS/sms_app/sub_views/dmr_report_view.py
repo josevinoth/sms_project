@@ -1245,6 +1245,73 @@ def trip_send_email(request):
     for row in rows:
         ws.append(row)
 
+    # If customer is EIPL, apply cell merging matching the web/Excel export logic
+    if "EIPL" in (customer_obj.cu_name or "").upper() and len(rows) > 1:
+        # Find key column index (0-based) for grouping (C Note / LLR No / Job No / S.No)
+        job_no_col_idx = 1
+        possible_keys = ['C NOTE', 'LLR NO', 'JOB NO', 'BVM JOB NO', 'REF NUM']
+        upper_headers = [str(h).strip().upper() for h in headers]
+        for pk in possible_keys:
+            if pk in upper_headers:
+                job_no_col_idx = upper_headers.index(pk)
+                break
+
+        never_merge_cols = [
+            'NO OF PIECES', 'ACTUAL WEIGHT', 'ACTUAL WEIGHT (KGS)', 'CHARGEABLE WEIGHT',
+            'CAPACITY', 'CBM', 'SHIPPER SEAL #', 'PKG', 'SHIPPER PKG', 'REFERENCE NO'
+        ]
+
+        data_start_row = 2  # Excel row 2 (1-indexed, header is row 1)
+        total_rows = len(rows)
+
+        for col_idx, h in enumerate(upper_headers):
+            is_charge = 'CHARGE' in h
+            is_never_merge = h in never_merge_cols
+            if is_never_merge:
+                continue
+
+            start_i = 0
+            last_val = str(rows[0][col_idx]) if rows[0][col_idx] is not None else ""
+            last_key = str(rows[0][job_no_col_idx]) if rows[0][job_no_col_idx] is not None else ""
+
+            for i in range(1, total_rows):
+                cur_val = str(rows[i][col_idx]) if rows[i][col_idx] is not None else ""
+                cur_key = str(rows[i][job_no_col_idx]) if rows[i][job_no_col_idx] is not None else ""
+
+                if col_idx == job_no_col_idx or col_idx == 0:
+                    merge = (cur_val == last_val and cur_val != "")
+                elif is_charge:
+                    merge = (cur_key == last_key and cur_key != "")
+                else:
+                    merge = (cur_val == last_val and cur_key == last_key and cur_key != "")
+
+                if not merge:
+                    if (i - 1) > start_i:
+                        ws.merge_cells(
+                            start_row=data_start_row + start_i,
+                            start_column=col_idx + 1,
+                            end_row=data_start_row + i - 1,
+                            end_column=col_idx + 1
+                        )
+                    start_i = i
+                    last_val = cur_val
+                    last_key = cur_key
+
+            if (total_rows - 1) > start_i:
+                ws.merge_cells(
+                    start_row=data_start_row + start_i,
+                    start_column=col_idx + 1,
+                    end_row=data_start_row + total_rows - 1,
+                    end_column=col_idx + 1
+                )
+
+        # Apply vertical center alignment and thin borders to all data cells
+        for r_idx in range(data_start_row, data_start_row + total_rows):
+            for c_idx in range(1, len(headers) + 1):
+                cell = ws.cell(row=r_idx, column=c_idx)
+                cell.border = border
+                cell.alignment = Alignment(vertical="center", wrap_text=True)
+
     # Auto Width
     for col in ws.columns:
         max_len = 0
