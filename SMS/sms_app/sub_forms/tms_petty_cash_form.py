@@ -5,7 +5,7 @@ class TMSPettyCashForm(forms.ModelForm):
     class Meta:
         model = TMSPettyCashInfo
         fields = '__all__'
-        exclude = ['tpc_created_on', 'tpc_updated_at', 'tpc_updated_by', 'tpc_number', 'tpc_remarks']
+        exclude = ['tpc_created_on', 'tpc_created_by', 'tpc_updated_at', 'tpc_updated_by', 'tpc_number', 'tpc_remarks']
         widgets = {
             'tpc_transaction_date': forms.DateInput(attrs={'type': 'date'}),
             'tpc_trip_date': forms.DateInput(attrs={'type': 'date'}),

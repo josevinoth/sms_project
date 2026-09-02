@@ -133,6 +133,8 @@ def tms_petty_cash_add(request, tpc_id=0):
             saved_tpc = form.save(commit=False)
             if tpc_id == 0:
                 saved_tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', saved_tpc.tpc_branch)
+                saved_tpc.tpc_created_by = request.user
+            saved_tpc.tpc_updated_by = request.user
             saved_tpc.save()
             messages.success(request, "Petty Cash saved successfully.")
             return redirect('tms_petty_cash_list')
@@ -201,7 +203,9 @@ def tms_petty_cash_list(request):
             filters &= Q(tpc_branch__loc_name__icontains=search_branch)
             
             
-    tpc_list = TMSPettyCashInfo.objects.filter(filters).order_by('-id')
+    tpc_list = TMSPettyCashInfo.objects.filter(filters).select_related(
+        'tpc_business', 'tpc_branch', 'tpc_vehicle_number', 'tpc_created_by', 'tpc_updated_by'
+    ).order_by('-id')
     paginator = Paginator(tpc_list, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
