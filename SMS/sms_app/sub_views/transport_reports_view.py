@@ -7729,15 +7729,23 @@ def vendor_bills_pending_mkt_att_report_view(request):
     vendor_param = request.GET.get('vendor_name', '')
     veh_source_param = request.GET.get('veh_source', '')
 
-    # Settle finance status ID and Market ownership ID
-    settled_status_id = 7
-    market_ownership_id = 3
+    # Include trips in 'Trip Settled' (id=7), 'Ready for Invoice' (id=9), or Invoiced
+    eligible_status_ids = [7, 9]
+    from ..sub_models.trans_invoice_mod import TransInvoiceInfo
+    invoiced_trip_ids = set(TransInvoiceInfo.objects.filter(ti_trip_id__isnull=False).values_list('ti_trip_id', flat=True))
+    trip_filters = Q(tc_financestatus_id__in=eligible_status_ids) | Q(id__in=invoiced_trip_ids)
 
-    trip_filters = Q(tc_financestatus_id=settled_status_id)
-
-    # Branch filter based on user's branch
+    # Branch filter based on branch code (e.g. BLR, MAA) in Cnote / Enquiry / Trip number
     if branch_param:
-        trip_filters &= Q(tr_updated_by__user_extinfo__emp_branch_id=branch_param)
+        branch_obj = Location_info.objects.filter(id=branch_param).first()
+        if branch_obj:
+            branch_code = branch_obj.loc_name.replace('BVM ', '').replace('MC ', '').strip()
+            trip_filters &= (
+                Q(tr_consignmentnumber__co_consignmentnumber__icontains=f"_{branch_code}_") |
+                Q(tr_enquirynumber__en_enquirynumber__icontains=f"_{branch_code}_") |
+                Q(tr_tripnumber__icontains=f"_{branch_code}_") |
+                Q(tr_enquirynumber__en_assignedto__user_extinfo__emp_branch_id=branch_param)
+            )
 
     # Date filter on Trip Date (Departed Date)
     if from_date_param:
