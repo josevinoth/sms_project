@@ -192,6 +192,8 @@
                 <td>
                     {% if inv.tr_consignmentnumber %}
                     {{ inv.tr_consignmentnumber.co_consignmentnumber }}
+                    {% elif inv.tr_tripnumber %}
+                    {{ inv.tr_tripnumber }} (Cancelled)
                     {% elif inv.tr_enquirynumber %}
                     {{ inv.tr_enquirynumber.en_enquirynumber }} (Cancelled)
                     {% endif %}
