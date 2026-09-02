@@ -7772,9 +7772,13 @@ def vendor_bills_pending_mkt_att_report_ajax_view(request):
     if status_param and status_param.isdigit():
         sel_status_id = int(status_param)
         if sel_status_id == 9:
-            trip_filters = Q(tc_financestatus_id=9) | Q(tr_operational_status_id=9) | Q(id__in=invoiced_trip_ids)
+            # Ready for Invoice or Invoiced
+            trip_filters = Q(tc_financestatus_id=9) | Q(tc_financestatus__isnull=True, tr_operational_status_id=9) | Q(id__in=invoiced_trip_ids)
+        elif sel_status_id == 1:
+            # Trip Started (explicit status 1 or no finance/operational status set)
+            trip_filters = Q(tc_financestatus_id=1) | Q(tc_financestatus__isnull=True, tr_operational_status_id=1) | Q(tc_financestatus__isnull=True, tr_operational_status__isnull=True)
         else:
-            trip_filters = Q(tc_financestatus_id=sel_status_id) | Q(tr_operational_status_id=sel_status_id)
+            trip_filters = Q(tc_financestatus_id=sel_status_id) | Q(tc_financestatus__isnull=True, tr_operational_status_id=sel_status_id)
     else:
         trip_filters = (
             Q(tc_financestatus_id__in=eligible_status_ids) |
@@ -7810,16 +7814,29 @@ def vendor_bills_pending_mkt_att_report_ajax_view(request):
         except Exception:
             pass
 
-    # Vendor filter - via Allotment or Master Vehicle
+    # Vendor filter - match exact (Enquiry + Vehicle Number) allotment pairs or Master Vehicles
     if vendor_param:
-        vendor_enquiries = Vehicle_allotmentInfo.objects.filter(va_vendor_id=vendor_param).values_list(
-            'va_enquirynumber_id', flat=True)
-        vendor_master_vehs = VehiclemasterInfo.objects.filter(vm_vendor_id=vendor_param).values_list(
-            'vm_registrationnumber', flat=True)
-        trip_filters &= (
-            Q(tr_enquirynumber_id__in=list(vendor_enquiries)) |
-            Q(tr_vehiclenumber__in=list(vendor_master_vehs))
-        )
+        vendor_allotments = Vehicle_allotmentInfo.objects.filter(va_vendor_id=vendor_param)
+        allot_mkt_tuples = list(vendor_allotments.filter(va_vehiclenumber_mkt__isnull=False).exclude(va_vehiclenumber_mkt='').values_list('va_enquirynumber_id', 'va_vehiclenumber_mkt'))
+        allot_reg_tuples = list(vendor_allotments.filter(va_vehiclenumber__isnull=False).values_list('va_enquirynumber_id', 'va_vehiclenumber__vm_registrationnumber'))
+        
+        vendor_q = Q()
+        for enq_id, veh in allot_mkt_tuples:
+            if veh and veh.strip():
+                vendor_q |= Q(tr_enquirynumber_id=enq_id, tr_vehiclenumber__iexact=veh.strip())
+        for enq_id, veh in allot_reg_tuples:
+            if veh and veh.strip():
+                vendor_q |= Q(tr_enquirynumber_id=enq_id, tr_vehiclenumber__iexact=veh.strip())
+        
+        vendor_master_vehs = list(VehiclemasterInfo.objects.filter(vm_vendor_id=vendor_param).values_list('vm_registrationnumber', flat=True))
+        if vendor_master_vehs:
+            vendor_q |= Q(tr_vehiclenumber__in=vendor_master_vehs)
+        
+        # If no allotments or master vehicles exist for this vendor, ensure no trips match
+        if not vendor_q:
+            vendor_q = Q(id__in=[])
+            
+        trip_filters &= vendor_q
 
     if veh_source_param:
         trip_filters &= Q(tr_vehiclesource_id=veh_source_param)
