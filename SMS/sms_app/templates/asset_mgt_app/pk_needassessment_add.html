@@ -3,6 +3,159 @@
 
 {% block content %}
 
+<style>
+    /* Compact multiselect button matching standard inputs */
+    .custom-multiselect-button {
+        height: 31px !important;
+        min-height: 31px !important;
+        font-size: 0.8rem !important;
+        font-weight: 700 !important;
+        padding: 0.2rem 0.6rem !important;
+        border-radius: 8px !important;
+        line-height: 1.25 !important;
+        text-transform: uppercase !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        background: var(--input-bg) !important;
+        border: 1.5px solid var(--input-border) !important;
+        color: var(--text-main) !important;
+        text-align: left !important;
+    }
+    .custom-multiselect-button .multiselect-selected-text {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 90% !important;
+        display: inline-block !important;
+        text-align: left !important;
+    }
+
+    /* Full-width wrapper so dropdown aligns with input width */
+    .form-group-modern span.multiselect-native-select {
+        display: block !important;
+        width: 100% !important;
+        position: relative !important;
+    }
+    .form-group-modern span.multiselect-native-select .btn-group {
+        display: block !important;
+        width: 100% !important;
+        position: relative !important;
+    }
+
+    /* Dropdown menu container - matches button width & bounds */
+    .multiselect-container.dropdown-menu {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        box-sizing: border-box !important;
+        border-radius: 8px !important;
+        border: 1.5px solid var(--input-border) !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+        background: var(--bg-card) !important;
+        padding: 4px 0 !important;
+        margin: 2px 0 0 0 !important;
+        max-height: 250px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        z-index: 1050 !important;
+    }
+
+    /* List item reset */
+    .multiselect-container > li {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        text-align: left !important;
+        list-style: none !important;
+    }
+
+    /* Links inside multiselect */
+    .multiselect-container > li > a {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        text-decoration: none !important;
+        color: var(--text-main) !important;
+        text-align: left !important;
+        transition: background 0.15s ease;
+    }
+    .multiselect-container > li > a:hover,
+    .multiselect-container > li.active > a {
+        background: rgba(59, 130, 246, 0.1) !important;
+    }
+    [data-theme="dark"] .multiselect-container > li > a:hover,
+    [data-theme="dark"] .multiselect-container > li.active > a {
+        background: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Labels inside multiselect list item - ALWAYS left-aligned */
+    .multiselect-container > li > a > label {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 6px 12px !important;
+        cursor: pointer !important;
+        font-size: 0.8rem !important;
+        font-weight: 500 !important;
+        color: var(--text-main) !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        box-sizing: border-box !important;
+        text-align: left !important;
+    }
+
+    /* Checkbox inside the label - STRICTLY left-aligned */
+    .multiselect-container > li > a > label input[type="checkbox"] {
+        position: static !important;
+        margin: 0 10px 0 0 !important;
+        flex-shrink: 0 !important;
+        width: 16px !important;
+        height: 16px !important;
+        cursor: pointer !important;
+        accent-color: var(--accent-blue) !important;
+    }
+
+    /* Select all item */
+    .multiselect-container > li.multiselect-all > a > label {
+        font-weight: 700 !important;
+        color: var(--accent-blue) !important;
+        border-bottom: 1px solid var(--border-light) !important;
+        padding-bottom: 6px !important;
+        margin-bottom: 2px !important;
+    }
+
+    /* Search / Filter input */
+    .multiselect-container .multiselect-filter {
+        padding: 6px 10px !important;
+    }
+    .multiselect-container .multiselect-filter .input-group {
+        width: 100% !important;
+        margin: 0 !important;
+        display: flex !important;
+    }
+    .multiselect-container .input-group-addon,
+    .multiselect-container .input-group-btn {
+        display: none !important;
+    }
+    .multiselect-container .multiselect-filter input.multiselect-search {
+        width: 100% !important;
+        height: 28px !important;
+        font-size: 0.8rem !important;
+        border-radius: 6px !important;
+        border: 1px solid var(--input-border) !important;
+        padding: 3px 8px !important;
+    }
+</style>
+
 <div class="container-fluid py-4">
 
     <!-- Progress Tracker -->
@@ -11,254 +164,238 @@
     </div>
 
     <!-- Page Header -->
-    <div class="modern-header d-flex justify-content-between align-items-center">
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
         <h3 class="mb-0 text-white" style="font-size: 1.4rem; font-weight: 700; letter-spacing: 1px;">
             <i class="fas fa-clipboard-list mr-2"></i> Add/Update Need Assessment
         </h3>
-        {% if form.instance.id %}
-        <div class="d-flex gap-2" style="position: relative; z-index: 10;">
-            <a href="{% url 'pk_quotationsummary_insert' %}?na_id={{ form.instance.id }}" class="btn-modern btn-highlight py-2 px-4" style="font-size: 0.9rem; text-decoration: none;">
-                <i class="fas fa-file-invoice-dollar"></i> CONVERT TO QUOTATION
+        <div class="d-flex align-items-center flex-wrap" style="gap: 10px; position: relative; z-index: 10;">
+            {% if form.instance.id %}
+            <a href="{% url 'pk_quotationsummary_insert' %}?na_id={{ form.instance.id }}" class="btn-modern btn-highlight py-2 px-4" style="font-size: 0.9rem; text-decoration: none; border-radius: 12px; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fas fa-file-invoice-dollar"></i> Convert To Quotation
+            </a>
+            {% endif %}
+            <a href="{% url 'needassessment_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; border-radius: 12px; border: 1px solid var(--border-light); display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-arrow-left"></i> Back to List
             </a>
         </div>
-        {% endif %}
     </div>
 
+    <!-- Main Assessment Form -->
     <form method="POST" action="" id="needassessment_add" enctype="multipart/form-data">
         {% csrf_token %}
 
-    <div class="modern-card" style="padding: 1rem !important;">
-
-            <div class="row row-compact">
-                <!-- Column 1: Core Info -->
+        <div class="modern-card" style="padding: 1.5rem !important; border-top: none;">
+            <div class="row row-compact" id="need_assessment_main">
+                
+                <!-- Column 1: Customer & Core Info -->
                 <div class="col-12 col-md-6 col-xl-3 col-compact">
                     <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-id-card"></i> Core Info</div>
+                        <div class="form-section-title"><i class="fas fa-user-tag"></i> Customer & Core Info</div>
+                        
                         <div class="form-group-modern">
-                            <label class="form-label-modern">Assessment #</label>
-                            {% render_field form.na_assessment_num id="na_assessment_num" class="form-control form-control-modern disable_a_href" %}
+                            <label class="form-label-modern">Assessment Number</label>
+                            {% render_field form.na_assessment_num id="na_assessment_num" readonly="True" class="form-control form-control-modern modern-readonly disable_a_href" %}
                         </div>
+
                         <div class="form-group-modern">
                             <label class="form-label-modern">Date</label>
                             {% render_field form.na_date id="na_date" type="Date" class="form-control form-control-modern" %}
                         </div>
+
                         <div class="form-group-modern">
                             <label class="form-label-modern">Existing Customer</label>
                             {% render_field form.na_customer_name id="na_customer_name" class="form-control form-control-modern" onchange="package_type_change(); fetchCustomerDetails();" %}
                         </div>
+
                         <div class="form-group-modern">
-                            <label class="form-label-modern">New Customer</label>
+                            <label class="form-label-modern">New Customer Name</label>
                             {% render_field form.na_customer_new_name class="form-control form-control-modern disable_a_href" id="na_customer_new_name" %}
                         </div>
-                    </div>
-                </div>
 
-                <!-- Column 2: Contact & Work Type -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-address-book"></i> Contacts & Work</div>
-                        <div class="row no-gutters">
-                            <div class="col-6 pr-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Sales Person</label>
-                                    {% render_field form.na_sales_person class="form-control form-control-modern" id="na_sales_person" %}
-                                </div>
-                            </div>
-                            <div class="col-6 pl-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Contact No</label>
-                                    {% render_field form.na_contactno class="form-control form-control-modern" id="na_contactno" %}
-                                </div>
-                            </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Sales Person</label>
+                            {% render_field form.na_sales_person class="form-control form-control-modern" id="na_sales_person" %}
                         </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer Contact</label>
+                            {% render_field form.na_contactno class="form-control form-control-modern" id="na_contactno" %}
+                        </div>
+
                         <div class="form-group-modern">
                             <label class="form-label-modern">Customer Email</label>
                             {% render_field form.na_email class="form-control form-control-modern" id="na_email" %}
                         </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Work & Requirements -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-clipboard-list"></i> Work & Requirements</div>
+
                         <div class="form-group-modern">
                             <label class="form-label-modern">Type Of Work</label>
                             {% render_field form.na_type_of_work id="na_type_of_work" class="form-control form-control-modern" onchange="package_type_change()" %}
                         </div>
+
                         <div class="form-group-modern">
                             <label class="form-label-modern">Others (Pack Type)</label>
                             {% render_field form.na_others_type_pack id="na_others_type_pack" class="form-control form-control-modern" %}
                         </div>
-                    </div>
-                </div>
 
-                <!-- Column 3: Scope & Treatment -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-clipboard-check"></i> Scope & Norms</div>
                         <div class="form-group-modern">
                             <label class="form-label-modern">Scope Of Work</label>
                             {% render_field form.na_type_of_pack1 id="na_type_of_pack1" class="form-control form-control-modern" %}
                         </div>
+
                         <div class="form-group-modern">
                             <label class="form-label-modern">Wood Treatment</label>
                             {% render_field form.na_wood_treatment_req id="na_wood_treatment_req" class="form-control form-control-modern" %}
                         </div>
-                        <div class="row no-gutters">
-                            <div class="col-6 pr-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Unloading</label>
-                                    {% render_field form.na_unloading id="na_unloading" class="form-control form-control-modern" %}
-                                </div>
-                            </div>
-                            <div class="col-6 pl-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Status</label>
-                                    {% render_field form.na_status id="na_status" class="form-control form-control-modern" %}
-                                </div>
-                            </div>
-                        </div>
+
                         <div class="form-group-modern">
-                            <label class="form-label-modern">Special Req</label>
+                            <label class="form-label-modern">Wood Norms</label>
+                            {% render_field form.na_wood_norms id="na_wood_norms" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Special Requirements</label>
                             {% render_field form.na_special_requirements id="na_special_requirements" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Status</label>
+                            {% render_field form.na_status id="na_status" class="form-control form-control-modern" %}
                         </div>
                     </div>
                 </div>
 
-                <!-- Column 4: Delivery & Logistics -->
+                <!-- Column 3: Logistics & Handling -->
                 <div class="col-12 col-md-6 col-xl-3 col-compact">
                     <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-truck-loading"></i> Logistics</div>
-                        <div class="row no-gutters">
-                            <div class="col-6 pr-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Delivery By</label>
-                                    {% render_field form.na_delivery_by id="na_delivery_by" class="form-control form-control-modern" %}
-                                </div>
-                            </div>
-                            <div class="col-6 pl-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Deliv. Type</label>
-                                    {% render_field form.na_delivery_type id="na_delivery_type" class="form-control form-control-modern" onchange="deliver_type()" %}
-                                </div>
-                            </div>
+                        <div class="form-section-title"><i class="fas fa-truck-loading"></i> Logistics & Handling</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Delivery By</label>
+                            {% render_field form.na_delivery_by id="na_delivery_by" class="form-control form-control-modern" %}
                         </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Deliv. Type</label>
+                            {% render_field form.na_delivery_type id="na_delivery_type" class="form-control form-control-modern" onchange="deliver_type()" %}
+                        </div>
+
+                        <div class="form-group-modern" id="vehicle_type_group" style="display: none;">
+                            <label class="form-label-modern">Vehicle Type</label>
+                            {% render_field form.na_vehicle_type id="na_vehicle_type" class="form-control form-control-modern" %}
+                        </div>
+
                         <div class="form-group-modern">
                             <label class="form-label-modern">Delivery Location</label>
                             {% render_field form.na_delivery_location id="na_delivery_location" class="form-control form-control-modern" %}
                         </div>
+
                         <div class="form-group-modern">
                             <label class="form-label-modern">Packing Location</label>
                             {% render_field form.na_packing_field id="na_packing_field" class="form-control form-control-modern" %}
                         </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Unloading</label>
+                            {% render_field form.na_unloading id="na_unloading" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Type Of Lifting</label>
+                            {% render_field form.na_type_of_access id="na_type_of_access" class="form-control form-control-modern" %}
+                        </div>
+
                         <div class="form-group-modern">
                             <label class="form-label-modern">Attachment</label>
                             {% render_field form.na_attach id="na_attach" class="form-control form-control-modern" %}
                             {% if form.instance.na_attach %}
-                            <div class="mt-2">
-                                <a href="{{ form.instance.na_attach.url }}" target="_blank" style="font-size: 0.85rem; color: #17a2b8; text-decoration: none;">
-                                    <i class="fas fa-paperclip"></i> View Current Attachment
+                            <div class="mt-1">
+                                <a href="{{ form.instance.na_attach.url }}" target="_blank" style="font-size: 0.8rem; color: var(--accent-emerald); text-decoration: none; font-weight: 600;">
+                                    <i class="fas fa-paperclip mr-1"></i> View Current Attachment
                                 </a>
                             </div>
                             {% endif %}
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Additional Detail Sections (Full Width Groups) -->
-            <div class="row row-compact mt-2">
-                <div class="col-md-4 col-compact">
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-crane"></i> Lifting & Norms</div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Type Of Lifting</label>
-                            {% render_field form.na_type_of_access id="na_type_of_access" class="form-control form-control-modern" %}
+                <!-- Column 4: Scope & Instructions -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100 d-flex flex-column">
+                        <div class="form-section-title"><i class="fas fa-file-contract"></i> Scope & Notes</div>
+
+                        <div class="form-group-modern flex-grow-1 d-flex flex-column mb-3">
+                            <label class="form-label-modern">Client Scope</label>
+                            {% render_field form.na_client_scope id="na_client_scope" class="form-control form-control-modern flex-grow-1" style="min-height: 110px; resize: vertical;" placeholder="Enter client scope details..." %}
                         </div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Wood Norms</label>
-                            {% render_field form.na_wood_norms id="na_wood_norms" class="form-control form-control-modern" %}
+
+                        <div class="form-group-modern flex-grow-1 d-flex flex-column">
+                            <label class="form-label-modern">BVM Scope</label>
+                            {% render_field form.na_bvm_scope id="na_bvm_scope" class="form-control form-control-modern flex-grow-1" style="min-height: 110px; resize: vertical;" placeholder="Enter BVM scope details..." %}
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4 col-compact">
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-file-contract"></i> Client Scope</div>
-                        {% render_field form.na_client_scope id="na_client_scope" class="form-control form-control-modern" style="height: 140px !important;" %}
-                    </div>
-                </div>
-                <div class="col-md-4 col-compact">
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-shield-alt"></i> BVM Scope</div>
-                        {% render_field form.na_bvm_scope id="na_bvm_scope" class="form-control form-control-modern" style="height: 140px !important;" %}
-                    </div>
-                </div>
+
+                <!-- Hidden System Fields -->
+                {% render_field form.na_updated_by id="na_updated_by" hidden="True" class="form-control" %}
+                {% render_field form.nad_cost_unit id="nad_cost_unit" hidden="True" class="form-control" %}
+                {% render_field form.nad_cost_total id="nad_cost_total" hidden="True" class="form-control" %}
             </div>
 
-            {% render_field form.na_updated_by id="na_updated_by" hidden="True" class="form-control" %}
-            {% render_field form.nad_cost_unit id="nad_cost_unit" hidden="True" class="form-control" %}
-            {% render_field form.nad_cost_total id="nad_cost_total" hidden="True" class="form-control" %}
-
-            <!-- Messages -->
-            <div class="message-container my-2 text-center">
-                {% for message in messages %}
-                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
-                    <i class="fas fa-info-circle"></i> {{ message }}
-                </div>
-                {% endfor %}
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="row mt-0">
-                <div class="col-12 col-xl-12">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <button id="na_submit_btn" type="submit" class="btn-modern btn-submit px-5">
-                            <i class="fas fa-check mr-2"></i> Submit Assessment
-                        </button>
-                        <a href="{% url 'needassessment_list' %}" class="btn-modern btn-cancel px-5">
-                            <i class="fas fa-times mr-2"></i> Cancel
-                        </a>
+            <!-- Messages Section -->
+            <div class="row mt-2">
+                <div class="col-12 text-center">
+                    <div class="message text-center">
+                        {% for message in messages %}
+                        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm font-weight-bold">
+                            <i class="fas fa-info-circle mr-1"></i> {{ message }}
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
-        </form>
-    </div>
 
-    <hr class="my-4">
-
-    <!-- Accordion: Comments & Dimensions -->
-    <div id="accordion" class="modern-card mb-4" style="overflow: hidden;">
-
-        <!-- Comments -->
-        <div class="form-section" style="border-bottom: 1px solid #eee;">
-            <div class="form-section-title d-flex justify-content-between align-items-center" data-toggle="collapse" data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne" style="cursor: pointer;">
-                <span><i class="fas fa-comments"></i> Add/Edit Comments</span>
-                <i class="fas fa-chevron-down text-muted small"></i>
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-between align-items-center mt-4 px-2">
+                <button id="na_submit_btn" type="submit" class="btn-modern btn-submit px-5">
+                    <i class="fas fa-check mr-2"></i> Submit Assessment
+                </button>
+                <a href="{% url 'needassessment_list' %}" class="btn-modern btn-cancel px-5" style="text-decoration: none;">
+                    <i class="fas fa-times mr-2"></i> Cancel
+                </a>
             </div>
-            <div id="collapseOne" class="collapse" aria-labelledby="headingOne">
-                <div class="px-3 pb-3">
-                    <div id="comments_list_WOH">
-                        {% include "asset_mgt_app/comments_list_WOH.html" %}
-                    </div>
-                </div>
+        </div>
+    </form>
+
+    <!-- Dimensions Section -->
+    <div class="modern-card mt-4 p-0" style="overflow: hidden; border-radius: 14px;">
+        <div class="modern-list-header px-4 py-3 d-flex justify-content-between align-items-center" id="headingDimensions" style="margin-bottom: 0; border-radius: 0;">
+            <span class="text-white" style="cursor: pointer; font-size: 1.2rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;" data-toggle="collapse" data-target="#collapseDimensions" aria-expanded="true" aria-controls="collapseDimensions">
+                <i class="fas fa-ruler-combined"></i> Add/Edit Dimensions <i class="fas fa-angle-down" style="font-size: 0.95rem;"></i>
+            </span>
+            <div class="d-flex align-items-center" style="gap: 8px;">
+                {% if request.session.na_assessment_id %}
+                <a class="btn-modern btn-cancel py-2 px-3" style="font-size: 0.85rem; text-decoration: none; border-radius: 10px;" href="{% url 'need_assessment_print' request.session.na_assessment_id %}">
+                    <i class="fas fa-file-pdf mr-1"></i> Download PDF
+                </a>
+                {% endif %}
+                <a href="{% url 'na_dimension_insert' %}" id="add_dim_btn" class="btn-modern btn-submit py-2 px-4" style="font-size: 0.9rem; text-decoration: none; border-radius: 10px; background: var(--accent-emerald); box-shadow: 0 4px 15px rgba(20, 184, 166, 0.2);">
+                    <i class="fas fa-plus"></i> Insert Dimension
+                </a>
             </div>
         </div>
 
-        <!-- Dimensions -->
-        <div class="form-section">
-            <div class="form-section-title d-flex justify-content-between align-items-center" style="cursor: pointer;">
-                <span data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                    <i class="fas fa-ruler-combined"></i> Add/Edit Dimensions
-                </span>
-                {% if request.session.na_assessment_id %}
-                <a class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; text-decoration: none;" href="{% url 'need_assessment_print' request.session.na_assessment_id %}">
-                    <i class="fas fa-file-pdf"></i> Download PDF
-                </a>
-                {% endif %}
-            </div>
-            <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo">
-                <div class="px-3 pb-3">
-                    <div id="na_dimension_list_WOH">
-                        <div class="mb-4 d-flex justify-content-start">
-                            <a href="{% url 'na_dimension_insert' %}" id="add_dim_btn" class="btn-modern btn-submit" style="text-decoration: none;">
-                                <i class="fas fa-plus"></i> Insert Dimension
-                            </a>
-                        </div>
-                        <div class="table-container-modern p-0 border-0 shadow-none">
+        <div id="collapseDimensions" class="collapse show" aria-labelledby="headingDimensions">
+            <div class="p-4" style="background: var(--bg-card); color: var(--text-main);">
+                <div id="na_dimension_list_WOH">
+                    <div class="table-container-modern p-0 border-0 shadow-none">
+                        <div class="table-responsive">
                             <table id="na_dimension_list" class="table modern-table text-center">
                                 <thead>
                                     <tr>
@@ -280,7 +417,7 @@
                                 <tbody>
                                     {% for na_dimensioninfo in na_dimension_list %}
                                     <tr>
-                                        <td>{{ na_dimensioninfo.nad_created_at }}</td>
+                                        <td>{{ na_dimensioninfo.nad_created_at|date:"d-m-Y" }}</td>
                                         <td>{{ na_dimensioninfo.nad_assess_num }}</td>
                                         <td>{{ na_dimensioninfo.nad_item }}</td>
                                         <td>{{ na_dimensioninfo.nad_type_of_req }}</td>
@@ -289,7 +426,7 @@
                                         <td>{{ na_dimensioninfo.nad_width }}</td>
                                         <td>{{ na_dimensioninfo.nad_height }}</td>
                                         <td>{{ na_dimensioninfo.nad_quantity }}</td>
-                                        <td>{{ na_dimensioninfo.nad_updated_at }}</td>
+                                        <td>{{ na_dimensioninfo.nad_updated_at|date:"d-m-Y" }}</td>
                                         <td>{{ na_dimensioninfo.nad_updated_by }}</td>
                                         <td class="text-center">
                                             <a class="btn-modern btn-submit py-1 px-3" href="{% url 'na_dimension_update' na_dimensioninfo.id %}" style="font-size: 0.8rem; text-decoration: none;">
@@ -297,7 +434,7 @@
                                             </a>
                                         </td>
                                         <td class="text-center">
-                                            <form action="{% url 'na_dimension_delete' na_dimensioninfo.id %}" method="post" onclick="return confirm('Are you sure?');">
+                                            <form action="{% url 'na_dimension_delete' na_dimensioninfo.id %}" method="post" onclick="return confirm('Are you sure you want to delete this dimension?');">
                                                 {% csrf_token %}
                                                 <button type="submit" class="btn btn-sm btn-outline-danger delete-btn" style="border-radius: 8px;">
                                                     <i class="fas fa-trash-alt"></i>
@@ -309,61 +446,86 @@
                                 </tbody>
                             </table>
                         </div>
-                        <input type="hidden" id="na_status" value="{{ na_status_id }}">
                     </div>
+                    <input type="hidden" id="na_status_val" value="{{ form.instance.na_status_id|default:'' }}">
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Linked Quotations Hub -->
-    <div class="modern-card mb-4" style="overflow: hidden;">
-        <div class="form-section-title px-4 py-3 bg-light d-flex justify-content-between align-items-center" style="margin-bottom: 0;">
-            <span class="text-primary"><i class="fas fa-link mr-2"></i> Linked Quotations</span>
-            <span class="badge badge-pill badge-primary px-3 py-2">{{ linked_quotations|length }} Records</span>
+    <!-- Comments Section -->
+    <div class="modern-card mt-4 p-0" style="overflow: hidden; border-radius: 14px;">
+        <div class="modern-list-header px-4 py-3 d-flex justify-content-between align-items-center" id="headingComments" style="margin-bottom: 0; border-radius: 0;">
+            <span class="text-white" style="cursor: pointer; font-size: 1.2rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;" data-toggle="collapse" data-target="#collapseComments" aria-expanded="false" aria-controls="collapseComments">
+                <i class="fas fa-comments"></i> Add/Edit Comments <i class="fas fa-angle-down" style="font-size: 0.95rem;"></i>
+            </span>
+            <a href="{% url 'comments_insert' %}" id="comments_add_btn" class="btn-modern btn-submit py-2 px-4" style="font-size: 0.9rem; text-decoration: none; border-radius: 10px; background: var(--accent-emerald); box-shadow: 0 4px 15px rgba(20, 184, 166, 0.2);">
+                <i class="fas fa-plus"></i> Add Comment
+            </a>
         </div>
-        <div class="p-0">
-            {% if linked_quotations %}
-            <div class="table-responsive">
-                <table class="table modern-table text-center mb-0">
-                    <thead>
-                        <tr>
-                            <th>Quotation ID</th>
-                            <th>Date</th>
-                            <th>Total Cost</th>
-                            <th>Status</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for qs in linked_quotations %}
-                        <tr>
-                            <td class="font-weight-bold">{{ qs.qs_quotation_number }}</td>
-                            <td>{{ qs.qs_created_at }}</td>
-                            <td>₹{{ qs.qs_final_cost }}</td>
-                            <td>
-                                {% if qs.qs_status_id == 5 or qs.qs_status.id == 5 %}
-                                <span class="badge badge-success px-2 py-1">Completed</span>
-                                {% else %}
-                                <span class="badge badge-info px-2 py-1">Pending</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{% url 'pk_quotationsummary_update' qs.id %}" class="btn btn-sm btn-outline-primary" style="border-radius: 6px;">
-                                    <i class="fas fa-eye"></i> View
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+
+        <div id="collapseComments" class="collapse" aria-labelledby="headingComments">
+            <div class="p-4" style="background: var(--bg-card); color: var(--text-main);">
+                <div id="comments_list_WOH">
+                    {% include "asset_mgt_app/comments_list_WOH.html" %}
+                </div>
             </div>
-            {% else %}
-            <div class="text-center py-4 text-muted">
-                <i class="fas fa-file-invoice fa-2x mb-2 text-light"></i>
-                <p>No quotations linked to this assessment yet.</p>
+        </div>
+    </div>
+
+    <!-- Linked Quotations Section -->
+    <div class="modern-card mt-4 p-0" style="overflow: hidden; border-radius: 14px;">
+        <div class="modern-list-header px-4 py-3 d-flex justify-content-between align-items-center" id="headingQuotations" style="margin-bottom: 0; border-radius: 0;">
+            <span class="text-white" style="cursor: pointer; font-size: 1.2rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;" data-toggle="collapse" data-target="#collapseQuotations" aria-expanded="true" aria-controls="collapseQuotations">
+                <i class="fas fa-link mr-2"></i> Linked Quotations <i class="fas fa-angle-down" style="font-size: 0.95rem;"></i>
+            </span>
+            <span class="badge badge-pill badge-light px-3 py-2 text-dark font-weight-bold">{{ linked_quotations|length }} Records</span>
+        </div>
+
+        <div id="collapseQuotations" class="collapse show" aria-labelledby="headingQuotations">
+            <div class="p-0">
+                {% if linked_quotations %}
+                <div class="table-responsive">
+                    <table class="table modern-table text-center mb-0">
+                        <thead>
+                            <tr>
+                                <th>Quotation ID</th>
+                                <th>Date</th>
+                                <th>Total Cost</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for qs in linked_quotations %}
+                            <tr>
+                                <td class="font-weight-bold">{{ qs.qs_quotation_number }}</td>
+                                <td>{{ qs.qs_created_at|date:"d-m-Y" }}</td>
+                                <td>₹{{ qs.qs_final_cost }}</td>
+                                <td>
+                                    {% if qs.qs_status_id == 5 or qs.qs_status.id == 5 %}
+                                    <span class="badge badge-success px-2 py-1">Completed</span>
+                                    {% else %}
+                                    <span class="badge badge-info px-2 py-1">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'pk_quotationsummary_update' qs.id %}" class="btn btn-sm btn-outline-primary" style="border-radius: 6px;">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-file-invoice fa-2x mb-2 text-light"></i>
+                    <p class="mb-0">No quotations linked to this assessment yet.</p>
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
 
@@ -373,27 +535,32 @@
 
 {% block extra_js %}
 <script>
-	$(document).ready(function () {
-        document.getElementById("na_updated_by").value = '{{ user_id }}';
+    $(document).ready(function () {
+        var userIdElem = document.getElementById("na_updated_by");
+        if (userIdElem) {
+            userIdElem.value = '{{ user_id }}';
+        }
 
-        $('#na_dimension_list').DataTable({
-            dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print']
-        });
+        if (!$.fn.DataTable.isDataTable('#na_dimension_list')) {
+            $('#na_dimension_list').DataTable({
+                dom: 'lBfrtip',
+                buttons: ['copy', 'csv', 'excel', 'print']
+            });
+        }
 
         var assessment_num = document.getElementById("na_assessment_num")?.value || "";
         if (assessment_num === "") {
             $('#add_dim_btn').addClass('disable_a_href');
-            $('#comments_add_btn').addClass('disable_a_href');
+            $('#comments_add_btn, .comments_add_btn').addClass('disable_a_href');
             $('#comments_list_WOH').addClass('disable_a_href');
         } else {
             $('#add_dim_btn').removeClass('disable_a_href');
-            $('#comments_add_btn').removeClass('disable_a_href');
+            $('#comments_add_btn, .comments_add_btn').removeClass('disable_a_href');
             $('#comments_list_WOH').removeClass('disable_a_href');
         }
 
         var user_role = '{{ role }}';
-        var status = document.getElementById("na_status")?.value;
+        var status = document.getElementById("na_status_val")?.value || document.getElementById("na_status")?.value;
 
         if (status == 5 && user_role == "User") {
             alert('Since Status is Completed, you have read-only access. To edit, please contact Administrator');
@@ -404,43 +571,7 @@
             $('#comments_list_WOH').addClass('disable_a_href');
         }
 
-        package_type_change();
-    });
-</script>
-
-<script>
-	$("#na_customer_name").select2({
-		width: 'resolve'
-	});
-</script>
-
-<script>
-	function package_type_change() {
-		var type_packing = document.getElementById("na_type_of_work").value;
-		if (type_packing == 5) {
-			$('#na_others_type_pack').removeClass('disable_a_href');
-		} else {
-			$('#na_others_type_pack').addClass('disable_a_href');
-			document.getElementById("na_others_type_pack").value = " ";
-		}
-		var type_packing = document.getElementById("na_customer_name").value;
-		if (type_packing == 210) {
-			$('#na_customer_new_name').removeClass('disable_a_href');
-		} else {
-			$('#na_customer_new_name').addClass('disable_a_href');
-			document.getElementById("na_customer_new_name").value = " ";
-		}
-	}
-</script>
-
-<script>
-	$(document).ready(function () {
-		$('#comments_list').DataTable();
-	});
-</script>
-
-<script>
-	$(document).ready(function () {
+        // Initialize Multiselects
         $('#na_type_of_access').multiselect({
             includeSelectAllOption: true,
             enableFiltering: true,
@@ -484,158 +615,191 @@
             maxHeight: 250,
             dropUp: false
         });
+
+        // Prevent Popper from flipping multiselect dropdowns erratically
+        $('.custom-multiselect-button').attr('data-flip', 'false');
+
+        // Initialize Select2
+        $("#na_customer_name").select2({
+            width: '100%'
+        });
+
+        package_type_change();
+        deliver_type();
     });
-</script>
 
-<script>
-	function deliver_type() {
-		var na_delivery_type = document.getElementById("na_delivery_type").value;
-		var na_vehicle_type = document.getElementById("na_vehicle_type");
+    function package_type_change() {
+        var type_packing = document.getElementById("na_type_of_work")?.value;
+        if (type_packing == 5) {
+            $('#na_others_type_pack').removeClass('disable_a_href');
+        } else {
+            $('#na_others_type_pack').addClass('disable_a_href');
+            var othersField = document.getElementById("na_others_type_pack");
+            if (othersField && type_packing != 5) othersField.value = "";
+        }
+        var customerVal = document.getElementById("na_customer_name")?.value;
+        if (customerVal == 210) {
+            $('#na_customer_new_name').removeClass('disable_a_href');
+        } else {
+            $('#na_customer_new_name').addClass('disable_a_href');
+            var newCustField = document.getElementById("na_customer_new_name");
+            if (newCustField && customerVal != 210) newCustField.value = "";
+        }
+    }
 
-		if (na_delivery_type == 2) {
-			$('#na_vehicle_type').removeClass('disable_a_href');
-			na_vehicle_type.value = "";
-			na_vehicle_type.setAttribute("required", "required");
-		} else {
-			$('#na_vehicle_type').addClass('disable_a_href');
-			na_vehicle_type.value = "";
-			na_vehicle_type.removeAttribute("required");
-		}
-	}
-</script>
+    function deliver_type() {
+        var na_delivery_type = document.getElementById("na_delivery_type")?.value;
+        var na_vehicle_type = document.getElementById("na_vehicle_type");
+        var vehicle_type_group = document.getElementById("vehicle_type_group");
 
-<script>
-	function cusnewexist_enabler() {
-		var jn5 = document.getElementById("na_customer_new").value
-		if (jn5 == 2) {
-			$('#na_customer_name').removeClass('disable_a_href');
-			$('#na_customer_new_name').addClass('disable_a_href');
-			$('#na_customer_type').addClass('disable_a_href');
-			document.getElementById("na_customer_new_name").value = ""
-		} else {
-			$('#na_customer_name').addClass('disable_a_href');
-			$('#na_customer_new_name').removeClass('disable_a_href');
-			$('#na_customer_type').removeClass('disable_a_href');
-			document.getElementById("na_customer_name").value = ""
-		}
-	}
+        if (na_delivery_type == 2) {
+            $('#vehicle_type_group').show();
+            $('#na_vehicle_type').removeClass('disable_a_href');
+            if (na_vehicle_type) na_vehicle_type.setAttribute("required", "required");
+        } else {
+            $('#vehicle_type_group').hide();
+            $('#na_vehicle_type').addClass('disable_a_href');
+            if (na_vehicle_type) {
+                na_vehicle_type.value = "";
+                na_vehicle_type.removeAttribute("required");
+            }
+        }
+    }
+
+    function cusnewexist_enabler() {
+        var jn5 = document.getElementById("na_customer_new")?.value;
+        if (jn5 == 2) {
+            $('#na_customer_name').removeClass('disable_a_href');
+            $('#na_customer_new_name').addClass('disable_a_href');
+            $('#na_customer_type').addClass('disable_a_href');
+            var elem = document.getElementById("na_customer_new_name");
+            if (elem) elem.value = "";
+        } else {
+            $('#na_customer_name').addClass('disable_a_href');
+            $('#na_customer_new_name').removeClass('disable_a_href');
+            $('#na_customer_type').removeClass('disable_a_href');
+            var elem = document.getElementById("na_customer_name");
+            if (elem) elem.value = "";
+        }
+    }
+
+    function fetchCustomerDetails() {
+        var customerId = $("#na_customer_name").val();
+        if (customerId == 210) {
+            $('#na_customer_new_name').removeClass('disable_a_href');
+            $("#na_contactno").val("");
+            $("#na_email").val("");
+        } else {
+            $('#na_customer_new_name').addClass('disable_a_href');
+            var elem = document.getElementById("na_customer_new_name");
+            if (elem) elem.value = "";
+        }
+        if (customerId && customerId != 210) {
+            $.ajax({
+                url: "{% url 'get_customer_details' %}",
+                type: "GET",
+                data: { customer_id: customerId },
+                success: function (response) {
+                    $("#na_contactno").val(response.customer_contact || "");
+                    $("#na_email").val(response.customer_email || "");
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error fetching customer details:", error);
+                }
+            });
+        }
+    }
 </script>
 
 <style>
-	.popup-tip {
-		position: absolute;
-		background-color: #f8d7da;
-		color: #721c24;
-		padding: 6px 12px;
-		border: 1px solid #f5c6cb;
-		border-radius: 4px;
-		font-size: 13px;
-		z-index: 10000;
-	}
+    .popup-tip {
+        position: absolute;
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 6px 12px;
+        border: 1px solid #f5c6cb;
+        border-radius: 4px;
+        font-size: 13px;
+        z-index: 10000;
+    }
 </style>
 
 <script>
-	document.addEventListener("DOMContentLoaded", function () {
-		const fields = [
-			'na_date',
-			'na_type_of_work',
-			'na_type_of_pack1',
-			'na_wood_treatment_req',
-			'na_unloading',
-			'na_special_requirements',
-			'na_wood_norms',
-			'na_delivery_by',
-			'na_delivery_type',
-			'na_delivery_location',
-			'na_type_of_access',
-			'na_packing_field',
-			'na_status',
-			'na_attach'
-		];
+    document.addEventListener("DOMContentLoaded", function () {
+        const fields = [
+            'na_date',
+            'na_type_of_work',
+            'na_type_of_pack1',
+            'na_wood_treatment_req',
+            'na_unloading',
+            'na_special_requirements',
+            'na_wood_norms',
+            'na_delivery_by',
+            'na_delivery_type',
+            'na_delivery_location',
+            'na_type_of_access',
+            'na_packing_field',
+            'na_status',
+            'na_attach'
+        ];
 
-		const skipFields = ['na_assessment_num', 'na_customer_name', 'na_customer_new_name', 'na_others_type_pack'];
+        const skipFields = ['na_assessment_num', 'na_customer_name', 'na_customer_new_name', 'na_others_type_pack'];
 
-		for (let i = 1; i < fields.length; i++) {
-			const currentId = fields[i];
-			const prevId = fields[i - 1];
+        for (let i = 1; i < fields.length; i++) {
+            const currentId = fields[i];
+            const prevId = fields[i - 1];
 
-			if (skipFields.includes(currentId)) continue;
+            if (skipFields.includes(currentId)) continue;
 
-			const currentField = document.getElementById(currentId);
-			let prevField = document.getElementById(prevId);
+            const currentField = document.getElementById(currentId);
+            let prevField = document.getElementById(prevId);
 
-			let j = i - 1;
-			while (prevField && skipFields.includes(fields[j])) {
-				j--;
-				prevField = document.getElementById(fields[j]);
-			}
+            let j = i - 1;
+            while (prevField && skipFields.includes(fields[j])) {
+                j--;
+                prevField = document.getElementById(fields[j]);
+            }
 
-			if (currentField && prevField) {
-				currentField.addEventListener("focus", function (e) {
-					if (prevField.value.trim() === "") {
-						e.preventDefault();
-						currentField.blur();
-						showPopup(currentField, `Please fill ${getLabel(prevField)} first`);
-						prevField.focus();
-					}
-				});
+            if (currentField && prevField) {
+                currentField.addEventListener("focus", function (e) {
+                    if (prevField.value && prevField.value.trim() === "") {
+                        e.preventDefault();
+                        currentField.blur();
+                        showPopup(currentField, `Please fill ${getLabel(prevField)} first`);
+                        prevField.focus();
+                    }
+                });
 
-				currentField.addEventListener("mousedown", function (e) {
-					if (prevField.value.trim() === "") {
-						e.preventDefault();
-						showPopup(currentField, `Please fill ${getLabel(prevField)} first`);
-						prevField.focus();
-					}
-				});
-			}
-		}
+                currentField.addEventListener("mousedown", function (e) {
+                    if (prevField.value && prevField.value.trim() === "") {
+                        e.preventDefault();
+                        showPopup(currentField, `Please fill ${getLabel(prevField)} first`);
+                        prevField.focus();
+                    }
+                });
+            }
+        }
 
-		function showPopup(field, message) {
-			removePopup();
-			const rect = field.getBoundingClientRect();
-			const popup = document.createElement("div");
-			popup.className = "popup-tip";
-			popup.innerText = message;
-			document.body.appendChild(popup);
-			popup.style.top = (rect.top + window.scrollY - 30) + "px";
-			popup.style.left = (rect.left + window.scrollX + 10) + "px";
-			setTimeout(removePopup, 2000);
-		}
+        function showPopup(field, message) {
+            removePopup();
+            const rect = field.getBoundingClientRect();
+            const popup = document.createElement("div");
+            popup.className = "popup-tip";
+            popup.innerText = message;
+            document.body.appendChild(popup);
+            popup.style.top = (rect.top + window.scrollY - 30) + "px";
+            popup.style.left = (rect.left + window.scrollX + 10) + "px";
+            setTimeout(removePopup, 2000);
+        }
 
-		function removePopup() {
-			document.querySelectorAll(".popup-tip").forEach(el => el.remove());
-		}
+        function removePopup() {
+            document.querySelectorAll(".popup-tip").forEach(el => el.remove());
+        }
 
-		function getLabel(field) {
-			const labelSpan = field.closest(".form-group-modern")?.querySelector(".form-label-modern");
-			return labelSpan ? labelSpan.textContent.trim() : "previous field";
-		}
-	});
-</script>
-
-<script>
-	function fetchCustomerDetails() {
-		var customerId = $("#na_customer_name").val();
-		if (customerId == 210) {
-			$('#na_customer_new_name').removeClass('disable_a_href');
-		} else {
-			$('#na_customer_new_name').addClass('disable_a_href');
-			document.getElementById("na_customer_new_name").value = "";
-		}
-		if (customerId) {
-			$.ajax({
-				url: "{% url 'get_customer_details' %}",
-				type: "GET",
-				data: { customer_id: customerId },
-				success: function (response) {
-					$("#na_contactno").val(response.customer_contact);
-					$("#na_email").val(response.customer_email);
-				},
-				error: function (xhr, status, error) {
-					console.log("Error fetching customer details:", error);
-				}
-			});
-		}
-	}
+        function getLabel(field) {
+            const labelSpan = field.closest(".form-group-modern")?.querySelector(".form-label-modern");
+            return labelSpan ? labelSpan.textContent.trim() : "previous field";
+        }
+    });
 </script>
 {% endblock extra_js %}
