@@ -122,8 +122,8 @@
     <div class="row">
         <div class="col-12">
             {% for message in messages %}
-            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show font-weight-bold shadow-sm" role="alert" style="border-radius: 8px; border-left: 5px solid {% if message.tags == 'error' %}#dc2626{% else %}#2563eb{% endif %}; font-size: 0.9rem;">
-                <i class="fas {% if message.tags == 'error' %}fa-exclamation-triangle text-danger{% else %}fa-info-circle text-info{% endif %} mr-2"></i>
+            <div class="alert {{ message.tags }} alert-dismissible fade show font-weight-bold shadow-sm" role="alert" style="border-radius: 8px; border-left: 5px solid {% if 'danger' in message.tags %}#dc2626{% elif 'warning' in message.tags %}#f59e0b{% elif 'success' in message.tags %}#10b981{% else %}#2563eb{% endif %}; font-size: 0.9rem;">
+                <i class="fas {% if 'danger' in message.tags %}fa-exclamation-triangle text-danger{% elif 'warning' in message.tags %}fa-exclamation-triangle text-warning{% elif 'success' in message.tags %}fa-check-circle text-success{% else %}fa-info-circle text-info{% endif %} mr-2"></i>
                 {{ message }}
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <span aria-hidden="true">&times;</span>

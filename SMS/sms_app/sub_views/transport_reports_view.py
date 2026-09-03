@@ -7728,7 +7728,11 @@ def vendor_bills_pending_mkt_att_report_view(request):
     to_date_param = request.GET.get('to_date', '')
     vendor_param = request.GET.get('vendor_name', '')
     veh_source_param = request.GET.get('veh_source', '')
-    status_param = request.GET.get('status', '')
+    status_param = request.GET.getlist('status')
+    if not status_param:
+        single_status = request.GET.get('status', '').strip()
+        if single_status:
+            status_param = [s.strip() for s in single_status.split(',') if s.strip()]
 
     branches = Location_info.objects.filter(loc_name__in=['BVM MAA', 'BVM BLR']).order_by('loc_name')
     vendors = Vendor_info.objects.all().order_by('vend_name')
@@ -7763,22 +7767,29 @@ def vendor_bills_pending_mkt_att_report_ajax_view(request):
     to_date_param = request.GET.get('to_date', '').strip()
     vendor_param = request.GET.get('vendor_name', '').strip()
     veh_source_param = request.GET.get('veh_source', '').strip()
-    status_param = request.GET.get('status', '').strip()
+    status_param = request.GET.getlist('status[]') or request.GET.getlist('status')
+    if not status_param:
+        single_status = request.GET.get('status', '').strip()
+        if single_status:
+            status_param = [s.strip() for s in single_status.split(',') if s.strip()]
 
     # Include trips across the lifecycle: Trip Started (1), Trip Closed (2), Trip Settled (7), Ready for Invoice (9), Cancellation with Billing (10), or Invoiced
     eligible_status_ids = [1, 2, 7, 9, 10]
     invoiced_trip_ids = set(TransInvoiceInfo.objects.filter(ti_trip_id__isnull=False).values_list('ti_trip_id', flat=True))
     
-    if status_param and status_param.isdigit():
-        sel_status_id = int(status_param)
-        if sel_status_id == 9:
-            # Ready for Invoice or Invoiced
-            trip_filters = Q(tc_financestatus_id=9) | Q(tc_financestatus__isnull=True, tr_operational_status_id=9) | Q(id__in=invoiced_trip_ids)
-        elif sel_status_id == 1:
-            # Trip Started (explicit status 1 or no finance/operational status set)
-            trip_filters = Q(tc_financestatus_id=1) | Q(tc_financestatus__isnull=True, tr_operational_status_id=1) | Q(tc_financestatus__isnull=True, tr_operational_status__isnull=True)
-        else:
-            trip_filters = Q(tc_financestatus_id=sel_status_id) | Q(tc_financestatus__isnull=True, tr_operational_status_id=sel_status_id)
+    selected_status_ids = [int(s) for s in status_param if s.isdigit()]
+    if selected_status_ids:
+        status_q = Q()
+        for sel_status_id in selected_status_ids:
+            if sel_status_id == 9:
+                # Ready for Invoice or Invoiced
+                status_q |= Q(tc_financestatus_id=9) | Q(tc_financestatus__isnull=True, tr_operational_status_id=9) | Q(id__in=invoiced_trip_ids)
+            elif sel_status_id == 1:
+                # Trip Started (explicit status 1 or no finance/operational status set)
+                status_q |= Q(tc_financestatus_id=1) | Q(tc_financestatus__isnull=True, tr_operational_status_id=1) | Q(tc_financestatus__isnull=True, tr_operational_status__isnull=True)
+            else:
+                status_q |= Q(tc_financestatus_id=sel_status_id) | Q(tc_financestatus__isnull=True, tr_operational_status_id=sel_status_id)
+        trip_filters = status_q
     else:
         trip_filters = (
             Q(tc_financestatus_id__in=eligible_status_ids) |
@@ -7786,9 +7797,9 @@ def vendor_bills_pending_mkt_att_report_ajax_view(request):
             Q(id__in=invoiced_trip_ids)
         )
 
-    # Exclude Empty and Business Empty trips (only billable business trips with CNote)
+    # Exclude non-billable Empty trips (allow Business Empty and billable business trips with CNote)
     trip_filters &= Q(tr_consignmentnumber__isnull=False)
-    trip_filters &= ~Q(tr_category__category__icontains='Empty')
+    trip_filters &= ~Q(tr_category__category__iexact='Empty') & ~Q(tr_category__category__iexact=' Empty')
 
     # Branch filter based on Cnote number
     if branch_param:

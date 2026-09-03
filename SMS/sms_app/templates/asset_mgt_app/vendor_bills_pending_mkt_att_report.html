@@ -70,13 +70,12 @@
         <!-- Status Filter -->
         <div class="col-md-2 mb-2">
             <label class="form-label font-weight-bold">Status</label>
-            <select name="status" id="status" class="form-control form-control-modern select2">
-                <option value="">-- All Statuses --</option>
-                <option value="1" {% if status_param == '1' %}selected{% endif %}>Trip Started</option>
-                <option value="2" {% if status_param == '2' %}selected{% endif %}>Trip Closed</option>
-                <option value="7" {% if status_param == '7' %}selected{% endif %}>Trip Settled</option>
-                <option value="9" {% if status_param == '9' %}selected{% endif %}>Ready for Invoice</option>
-                <option value="10" {% if status_param == '10' %}selected{% endif %}>Cancellation with Billing</option>
+            <select name="status" id="status" class="form-control form-control-modern select2" multiple="multiple">
+                <option value="1" {% if '1' in status_param %}selected{% endif %}>Trip Started</option>
+                <option value="2" {% if '2' in status_param %}selected{% endif %}>Trip Closed</option>
+                <option value="7" {% if '7' in status_param %}selected{% endif %}>Trip Settled</option>
+                <option value="9" {% if '9' in status_param %}selected{% endif %}>Ready for Invoice</option>
+                <option value="10" {% if '10' in status_param %}selected{% endif %}>Cancellation with Billing</option>
             </select>
         </div>
 
@@ -133,7 +132,10 @@
                     d.from_date = $('#from_date').val();
                     d.to_date = $('#to_date').val();
                     d.vendor_name = $('#vendor_name').val();
-                    d.status = $('#status').val();
+                    const statusVal = $('#status').val();
+                    if (statusVal && statusVal.length) {
+                        d['status[]'] = statusVal;
+                    }
                 }
             },
             scrollX: true,
@@ -202,8 +204,9 @@
 
         $('#status').select2({
             width: '100%',
-            placeholder: '-- All Statuses --',
-            allowClear: true
+            placeholder: '-- Select Status(es) --',
+            allowClear: true,
+            closeOnSelect: false
         });
     });
 </script>

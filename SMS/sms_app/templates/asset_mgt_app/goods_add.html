@@ -839,6 +839,18 @@ $(document).ready(function() {
                 url: form.attr('action'),
                 data: form.serialize(),
                 success: function(response) {
+                    // Check if Django returned any error messages (e.g., Space/Volume Not Sufficient)
+                    // Note: Django MESSAGE_TAGS for ERROR is set to 'alert-danger', which our template renders as 'alert-alert-danger'
+                    var errorAlerts = $(response).find('.alert-danger, .alert-alert-danger');
+                    if (errorAlerts.length > 0) {
+                        var errorMsg = errorAlerts.first().text().replace('\u00d7', '').trim();
+                        var errorToast = $('<div style="position:fixed; top:20px; right:20px; background:#dc2626; color:white; padding:12px 24px; border-radius:8px; z-index:9999; box-shadow:0 4px 12px rgba(0,0,0,0.15); font-weight:bold; font-size:1.1rem;"><i class="fas fa-exclamation-triangle mr-2"></i> ' + errorMsg + '</div>');
+                        $('body').append(errorToast);
+                        setTimeout(function(){ errorToast.fadeOut(400, function(){ $(this).remove(); }); }, 5000);
+                        submitBtn.prop('disabled', false).html(originalBtnHtml);
+                        return; // Stop processing success
+                    }
+
                     // Update the table dynamically from the returned page HTML
                     var newTableHtml = $(response).find('.table-responsive').html();
                     if(newTableHtml) {
