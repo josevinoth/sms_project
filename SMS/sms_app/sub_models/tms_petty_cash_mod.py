@@ -33,6 +33,7 @@ class TMSPettyCashInfo(models.Model):
 
 
     tpc_created_on = models.DateTimeField(null=True, auto_now_add=True)
+    tpc_created_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='tms_petty_cash_created_by')
     tpc_updated_at = models.DateTimeField(null=True, auto_now=True)
     tpc_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True, related_name='tms_petty_cash_updated_by')
 

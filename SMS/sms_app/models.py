@@ -271,4 +271,7 @@ from .sub_models.credit_ledger_mod import CreditLedgerInfo
 from .sub_models.tms_petty_cash_mod import TMSPettyCashInfo
 from .sub_models.tms_expense_type_mod import TMSExpenseTypeInfo
 from .sub_models.rtratemaster_history_mod import RtratemasterHistory
+from .sub_models.wms_expense_type_mod import WMSExpenseTypeInfo
+from .sub_models.wms_petty_cash_mod import WMSPettyCashInfo
+
 
