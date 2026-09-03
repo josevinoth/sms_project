@@ -27,7 +27,10 @@ class PkquotationForm(forms.ModelForm):
         
         if 'pkqt_part_code' in self.initial and self.initial['pkqt_part_code']:
             part_id = self.initial['pkqt_part_code']
-            self.fields['pkqt_part_code'].queryset = PkpartcodeInfo.objects.filter(pk=part_id)
+            part_obj = PkpartcodeInfo.objects.filter(pk=part_id).first()
+            if part_obj:
+                self.fields['pkqt_part_code'].queryset = PkpartcodeInfo.objects.filter(pk=part_id)
+                self.fields['pkqt_part_code'].choices = [(part_obj.pk, str(part_obj))]
         self.fields['pkqt_cost_type'].empty_label = "--Select--"
         self.fields['pkqt_stock_type'].empty_label = "--Select--"
         self.fields['pkqt_stock_description'].empty_label = "--Select--"

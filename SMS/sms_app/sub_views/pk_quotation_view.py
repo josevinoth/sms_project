@@ -27,31 +27,35 @@ def pk_quotation_add(request, quotation_id=0):
 
     if request.method == "GET":
         if quotation_id == 0:
-            print("Inside PK quotation GET add")
+            # Retrieve stored values (IDs) from session safely for continuous data entry
+            pkqt_cost_type_id = request.session.get('last_cost_type')
+            pkqt_job_type_id = request.session.get('last_job_type')
+            pkqt_job_type_quant_id = request.session.get('last_job_type_quantity')
+            pkqt_part_code_id = request.session.get('last_part_code')
+            pkqt_stock_type_id = request.session.get('last_stock_type_quantity')
+            pkqt_stock_description_id = request.session.get('last_stock_desc_quantity')
+            pkqt_item_type_id = request.session.get('last_item_type')
+            pkqt_item_description_id = request.session.get('last_item_desc')
 
-            # # ✅ Retrieve stored values (IDs) from session safely
-            # pkqt_cost_type_id = request.session.get('last_cost_type')
-            # pkqt_job_type_id = request.session.get('last_job_type')
-            # pkqt_job_type_quant_id = request.session.get('last_job_type_quantity')
-            # pkqt_stock_type_id = request.session.get('last_stock_type_quantity')
-            # pkqt_stock_description_id = request.session.get('last_stock_desc_quantity')
-            # pkqt_item_type_id = request.session.get('last_item_type')
-            # pkqt_item_description_id = request.session.get('last_item_desc')
-            #
-            # initial_data = {
-            #     'pkqt_cost_type': Costtype.objects.filter(id=pkqt_cost_type_id).first(),
-            #     'pkqt_requirement': Nadimension.objects.filter(id=pkqt_job_type_id).first() if pkqt_job_type_id else None,
-            #     'pkqt_na_quantity': pkqt_job_type_quant_id,
-            #     'pkqt_stock_type': Pkstocktype.objects.filter(id=pkqt_stock_type_id).first() if pkqt_stock_type_id else None,
-            #     'pkqt_stock_description': Stockdescription.objects.filter(id=pkqt_stock_description_id).first() if pkqt_stock_description_id else None,
-            #     'pkqt_item': pk_itemInfo.objects.filter(id=pkqt_item_type_id).first() if pkqt_item_type_id else None,
-            #     'pkqt_itemdescription': pk_itemdescriptionInfo.objects.filter(id=pkqt_item_description_id).first() if pkqt_item_description_id else None,
-            #
-            # }
-            # print(initial_data)
+            initial_data = {}
+            if pkqt_cost_type_id:
+                initial_data['pkqt_cost_type'] = pkqt_cost_type_id
+            if pkqt_job_type_id:
+                initial_data['pkqt_requirement'] = pkqt_job_type_id
+            if pkqt_job_type_quant_id:
+                initial_data['pkqt_na_quantity'] = pkqt_job_type_quant_id
+            if pkqt_part_code_id:
+                initial_data['pkqt_part_code'] = pkqt_part_code_id
+            if pkqt_stock_type_id:
+                initial_data['pkqt_stock_type'] = pkqt_stock_type_id
+            if pkqt_stock_description_id:
+                initial_data['pkqt_stock_description'] = pkqt_stock_description_id
+            if pkqt_item_type_id:
+                initial_data['pkqt_item'] = pkqt_item_type_id
+            if pkqt_item_description_id:
+                initial_data['pkqt_itemdescription'] = pkqt_item_description_id
 
-            # form = PkquotationForm(initial=initial_data)
-            form = PkquotationForm
+            form = PkquotationForm(initial=initial_data)
             # Calculate total_cft_display dynamically for the assessment (Wood ONLY)
             aggregate_cft = PkquotationInfo.objects.filter(
                 pkqt_assessment_num=na_assessment_num_id,
@@ -209,20 +213,23 @@ def pk_quotation_add(request, quotation_id=0):
 
                 messages.success(request, 'Quotation Updated Successfully')
 
-            # ✅ Store selected values in session after a successful form save
-            # request.session['last_cost_type'] = form.cleaned_data.get('pkqt_cost_type').id if form.cleaned_data.get('pkqt_cost_type') else None
-            # request.session['last_job_type'] = form.cleaned_data.get('pkqt_requirement').id if form.cleaned_data.get('pkqt_requirement') else None
-            # request.session['last_job_type_quantity'] = form.cleaned_data.get('pkqt_na_quantity') if form.cleaned_data.get('pkqt_na_quantity') else None
-            # request.session['last_stock_type_quantity'] = form.cleaned_data.get('pkqt_stock_type').id if form.cleaned_data.get('pkqt_stock_type') else None
-            # request.session['last_stock_desc_quantity'] = form.cleaned_data.get('pkqt_stock_description').id if form.cleaned_data.get('pkqt_stock_description') else None
-            # request.session['last_item_type'] = form.cleaned_data.get('pkqt_item').id if form.cleaned_data.get('pkqt_item') else None
-            # request.session['last_item_desc'] = form.cleaned_data.get('pkqt_itemdescription').id if form.cleaned_data.get('pkqt_itemdescription') else None
-            # request.session['last_box_id_clearance_l'] = form.cleaned_data.get('pkqt_box_id_clearance_l') if form.cleaned_data.get('pkqt_box_id_clearance_l') else None
-            # request.session['last_box_id_clearance_w'] = form.cleaned_data.get('pkqt_box_id_clearance_w') if form.cleaned_data.get('pkqt_box_id_clearance_w') else None
-            # request.session['last_box_id_clearance_h'] = form.cleaned_data.get('pkqt_box_id_clearance_h') if form.cleaned_data.get('pkqt_box_id_clearance_h') else None
-            # request.session['last_box_od_clearance_l'] = form.cleaned_data.get('pkqt_box_od_clearance_l') if form.cleaned_data.get('pkqt_box_od_clearance_l') else None
-            # request.session['last_box_od_clearance_w'] = form.cleaned_data.get('pkqt_box_od_clearance_w') if form.cleaned_data.get('pkqt_box_od_clearance_w') else None
-            # request.session['last_box_od_clearance_h'] = form.cleaned_data.get('pkqt_box_od_clearance_h') if form.cleaned_data.get('pkqt_box_od_clearance_h') else None
+            # Store selected values in session after a successful form save for continuous entry
+            if form.cleaned_data.get('pkqt_cost_type'):
+                request.session['last_cost_type'] = form.cleaned_data.get('pkqt_cost_type').id
+            if form.cleaned_data.get('pkqt_requirement'):
+                request.session['last_job_type'] = form.cleaned_data.get('pkqt_requirement').id
+            if form.cleaned_data.get('pkqt_na_quantity'):
+                request.session['last_job_type_quantity'] = form.cleaned_data.get('pkqt_na_quantity')
+            if form.cleaned_data.get('pkqt_part_code'):
+                request.session['last_part_code'] = form.cleaned_data.get('pkqt_part_code').id
+            if form.cleaned_data.get('pkqt_stock_type'):
+                request.session['last_stock_type_quantity'] = form.cleaned_data.get('pkqt_stock_type').id
+            if form.cleaned_data.get('pkqt_stock_description'):
+                request.session['last_stock_desc_quantity'] = form.cleaned_data.get('pkqt_stock_description').id
+            if form.cleaned_data.get('pkqt_item'):
+                request.session['last_item_type'] = form.cleaned_data.get('pkqt_item').id
+            if form.cleaned_data.get('pkqt_itemdescription'):
+                request.session['last_item_desc'] = form.cleaned_data.get('pkqt_itemdescription').id
 
             return redirect('/SMS/pk_quotation_insert/')
 

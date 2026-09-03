@@ -50,6 +50,10 @@
                             <label class="form-label-modern">New Customer</label>
                             {% render_field form.na_customer_new_name class="form-control form-control-modern disable_a_href" id="na_customer_new_name" %}
                         </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Sales Person</label>
+                            {% render_field form.na_sales_person class="form-control form-control-modern" id="na_sales_person" %}
+                        </div>
                     </div>
                 </div>
 
@@ -57,19 +61,9 @@
                 <div class="col-12 col-md-6 col-xl-3 col-compact">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-address-book"></i> Contacts & Work</div>
-                        <div class="row no-gutters">
-                            <div class="col-6 pr-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Sales Person</label>
-                                    {% render_field form.na_sales_person class="form-control form-control-modern" id="na_sales_person" %}
-                                </div>
-                            </div>
-                            <div class="col-6 pl-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Contact No</label>
-                                    {% render_field form.na_contactno class="form-control form-control-modern" id="na_contactno" %}
-                                </div>
-                            </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Contact No</label>
+                            {% render_field form.na_contactno class="form-control form-control-modern" id="na_contactno" %}
                         </div>
                         <div class="form-group-modern">
                             <label class="form-label-modern">Customer Email</label>
@@ -83,10 +77,14 @@
                             <label class="form-label-modern">Others (Pack Type)</label>
                             {% render_field form.na_others_type_pack id="na_others_type_pack" class="form-control form-control-modern" %}
                         </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Unloading</label>
+                            {% render_field form.na_unloading id="na_unloading" class="form-control form-control-modern" %}
+                        </div>
                     </div>
                 </div>
 
-                <!-- Column 3: Scope & Treatment -->
+                <!-- Column 3: Scope & Norms -->
                 <div class="col-12 col-md-6 col-xl-3 col-compact">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-clipboard-check"></i> Scope & Norms</div>
@@ -98,19 +96,13 @@
                             <label class="form-label-modern">Wood Treatment</label>
                             {% render_field form.na_wood_treatment_req id="na_wood_treatment_req" class="form-control form-control-modern" %}
                         </div>
-                        <div class="row no-gutters">
-                            <div class="col-6 pr-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Unloading</label>
-                                    {% render_field form.na_unloading id="na_unloading" class="form-control form-control-modern" %}
-                                </div>
-                            </div>
-                            <div class="col-6 pl-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Status</label>
-                                    {% render_field form.na_status id="na_status" class="form-control form-control-modern" %}
-                                </div>
-                            </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Type Of Lifting</label>
+                            {% render_field form.na_type_of_access id="na_type_of_access" class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Wood Norms</label>
+                            {% render_field form.na_wood_norms id="na_wood_norms" class="form-control form-control-modern" %}
                         </div>
                         <div class="form-group-modern">
                             <label class="form-label-modern">Special Req</label>
@@ -122,7 +114,7 @@
                 <!-- Column 4: Delivery & Logistics -->
                 <div class="col-12 col-md-6 col-xl-3 col-compact">
                     <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-truck-loading"></i> Logistics</div>
+                        <div class="form-section-title"><i class="fas fa-truck-loading"></i> Logistics & Status</div>
                         <div class="row no-gutters">
                             <div class="col-6 pr-1">
                                 <div class="form-group-modern">
@@ -149,42 +141,33 @@
                             <label class="form-label-modern">Attachment</label>
                             {% render_field form.na_attach id="na_attach" class="form-control form-control-modern" %}
                             {% if form.instance.na_attach %}
-                            <div class="mt-2">
+                            <div class="mt-1">
                                 <a href="{{ form.instance.na_attach.url }}" target="_blank" style="font-size: 0.85rem; color: #17a2b8; text-decoration: none;">
                                     <i class="fas fa-paperclip"></i> View Current Attachment
                                 </a>
                             </div>
                             {% endif %}
                         </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Status</label>
+                            {% render_field form.na_status id="na_status" class="form-control form-control-modern" %}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Additional Detail Sections (Full Width Groups) -->
+            <!-- Scope Details Row (Client Scope & BVM Scope) -->
             <div class="row row-compact mt-2">
-                <div class="col-md-4 col-compact">
-                    <div class="form-section">
-                        <div class="form-section-title"><i class="fas fa-crane"></i> Lifting & Norms</div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Type Of Lifting</label>
-                            {% render_field form.na_type_of_access id="na_type_of_access" class="form-control form-control-modern" %}
-                        </div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Wood Norms</label>
-                            {% render_field form.na_wood_norms id="na_wood_norms" class="form-control form-control-modern" %}
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 col-compact">
-                    <div class="form-section">
+                <div class="col-md-6 col-compact">
+                    <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-file-contract"></i> Client Scope</div>
-                        {% render_field form.na_client_scope id="na_client_scope" class="form-control form-control-modern" style="height: 140px !important;" %}
+                        {% render_field form.na_client_scope id="na_client_scope" class="form-control form-control-modern" style="height: 120px !important;" %}
                     </div>
                 </div>
-                <div class="col-md-4 col-compact">
-                    <div class="form-section">
+                <div class="col-md-6 col-compact">
+                    <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-shield-alt"></i> BVM Scope</div>
-                        {% render_field form.na_bvm_scope id="na_bvm_scope" class="form-control form-control-modern" style="height: 140px !important;" %}
+                        {% render_field form.na_bvm_scope id="na_bvm_scope" class="form-control form-control-modern" style="height: 120px !important;" %}
                     </div>
                 </div>
             </div>
@@ -258,8 +241,9 @@
                                 <i class="fas fa-plus"></i> Insert Dimension
                             </a>
                         </div>
-                        <div class="table-container-modern p-0 border-0 shadow-none">
-                            <table id="na_dimension_list" class="table modern-table text-center">
+                        <div class="table-container-modern w-100 p-0 border-0 shadow-none">
+                            <div class="table-responsive">
+                                <table id="na_dimension_list" class="table modern-table w-100 text-center">
                                 <thead>
                                     <tr>
                                         <th>Created On</th>
@@ -308,6 +292,7 @@
                                     {% endfor %}
                                 </tbody>
                             </table>
+                            </div>
                         </div>
                         <input type="hidden" id="na_status" value="{{ na_status_id }}">
                     </div>
@@ -378,7 +363,8 @@
 
         $('#na_dimension_list').DataTable({
             dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print']
+            buttons: ['copy', 'csv', 'excel', 'print'],
+            autoWidth: false
         });
 
         var assessment_num = document.getElementById("na_assessment_num")?.value || "";
@@ -474,6 +460,17 @@
             dropUp: false
         });
 
+        $('#na_wood_treatment_req').multiselect({
+            includeSelectAllOption: true,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering: true,
+            buttonWidth: '100%',
+            nonSelectedText: 'Select Wood Treatment',
+            buttonClass: 'custom-multiselect-button',
+            maxHeight: 250,
+            dropUp: false
+        });
+
         $('#na_consumables').multiselect({
             includeSelectAllOption: true,
             enableFiltering: true,
@@ -538,19 +535,23 @@
 	document.addEventListener("DOMContentLoaded", function () {
 		const fields = [
 			'na_date',
+			'na_sales_person',
+			'na_contactno',
+			'na_email',
 			'na_type_of_work',
+			'na_others_type_pack',
+			'na_unloading',
 			'na_type_of_pack1',
 			'na_wood_treatment_req',
-			'na_unloading',
-			'na_special_requirements',
+			'na_type_of_access',
 			'na_wood_norms',
+			'na_special_requirements',
 			'na_delivery_by',
 			'na_delivery_type',
 			'na_delivery_location',
-			'na_type_of_access',
 			'na_packing_field',
-			'na_status',
-			'na_attach'
+			'na_attach',
+			'na_status'
 		];
 
 		const skipFields = ['na_assessment_num', 'na_customer_name', 'na_customer_new_name', 'na_others_type_pack'];

@@ -24,4 +24,6 @@ class PkquotationsummaryForm(forms.ModelForm):
         
         self.fields['qs_assessment_num'].queryset = qs.order_by('-id')
         self.fields['qs_updated_by'].empty_label = "--Select--"
+        from ..models import StatusList
+        self.fields['qs_status'].queryset = StatusList.objects.filter(id__in=[6, 5]).order_by('-id')
         self.fields['qs_status'].empty_label = "--Select--"

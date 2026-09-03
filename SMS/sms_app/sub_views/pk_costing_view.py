@@ -507,24 +507,25 @@ def pk_item_search_page_costing(request):
             available_ratio = (available_qty / float(batch_qty)) if batch_qty else 0.0
             available_cft = float(batch_cft or 0.0) * available_ratio
 
-            # Include the batch even if available_qty is 0, so user knows it exists but is depleted
-            formatted_results.append({
-                'id': batch.id, # Link directly to the batch record
-                'sp_vendor_bill_id': batch.sm_invoice_no,
-                'sp_stock_in_date': batch.sm_invoice_date.strftime('%Y-%m-%d') if batch.sm_invoice_date else '',
-                'sp_purchase_num': batch.sm_stock_purchase_number or batch.sm_invoice_no,
-                'sp_part_code__pc_code': p.pc_code,
-                'sp_stock_type__pk_stocktype': p.pc_stock_type.pk_stocktype if p.pc_stock_type else '',
-                'sp_stock_description__stock_description': p.pc_stock_description.stock_description if p.pc_stock_description else '',
-                'sp_thick_height': batch.sm_thickness,
-                'sp_width': batch.sm_width,
-                'sp_length': batch.sm_length,
-                'sp_cft': round(max(0, available_cft), 4),
-                'sp_quantity': round(max(0, available_qty), 2),
-                'sp_rate': round(batch.sm_per_unit_cost or 0.0, 2),
-                'sp_uom__unit_of_measure': p.pc_uom.unit_of_measure if p.pc_uom else '',
-                'sp_size': f"{batch.sm_thickness}x{batch.sm_width}x{batch.sm_length}"
-            })
+            # Only show batches that currently have available stock > 0
+            if available_qty > 0:
+                formatted_results.append({
+                    'id': batch.id, # Link directly to the batch record
+                    'sp_vendor_bill_id': batch.sm_invoice_no,
+                    'sp_stock_in_date': batch.sm_invoice_date.strftime('%d-%m-%Y') if batch.sm_invoice_date else '',
+                    'sp_purchase_num': batch.sm_stock_purchase_number or batch.sm_invoice_no,
+                    'sp_part_code__pc_code': p.pc_code,
+                    'sp_stock_type__pk_stocktype': p.pc_stock_type.pk_stocktype if p.pc_stock_type else '',
+                    'sp_stock_description__stock_description': p.pc_stock_description.stock_description if p.pc_stock_description else '',
+                    'sp_thick_height': batch.sm_thickness,
+                    'sp_width': batch.sm_width,
+                    'sp_length': batch.sm_length,
+                    'sp_cft': round(max(0, available_cft), 4),
+                    'sp_quantity': round(max(0, available_qty), 2),
+                    'sp_rate': round(batch.sm_per_unit_cost or 0.0, 2),
+                    'sp_uom__unit_of_measure': p.pc_uom.unit_of_measure if p.pc_uom else '',
+                    'sp_size': f"{batch.sm_thickness}x{batch.sm_width}x{batch.sm_length}"
+                })
 
     return JsonResponse(formatted_results, safe=False)
 @login_required(login_url='login_page')

@@ -12,7 +12,8 @@ class PkneedassessmentInfo(models.Model):
     na_customer_name = models.ForeignKey(CustomerInfo, on_delete=models.CASCADE, default='')
     na_type_of_work = models.ForeignKey(Natypeofwork, on_delete=models.CASCADE, default='')
     na_type_of_pack1 = models.ForeignKey(Packreuqirementinfo, on_delete=models.CASCADE, null=True, blank=True)
-    na_wood_treatment_req = models.ForeignKey(Nawoodtreatmentreq, on_delete=models.CASCADE, default='')
+    # Updated field to ManyToMany for multi-select functionality
+    na_wood_treatment_req = models.ManyToManyField(Nawoodtreatmentreq, blank=True)
     na_unloading = models.ForeignKey(Nabvmcustomer, on_delete=models.CASCADE, related_name='na_unloading', db_column='na_unloading', default='')
     na_wood_norms = models.ManyToManyField(Nawoodnorms,blank=True)
     na_delivery_by = models.ForeignKey(Nabvmcustomer, on_delete=models.CASCADE, related_name='na_delivery_by', db_column='na_delivery_by', null=True, blank=True, default='')

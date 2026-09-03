@@ -2,72 +2,69 @@
 
 {% block content %}
 <div class="pms-sticky-calculation">
-    <div class="modern-card" style="padding: 1.2rem; border-top: 4px solid var(--accent-orange);">
-        <div class="form-section-title text-center mb-4" style="color: var(--accent-orange); border-bottom: 2px solid var(--border-light); padding-bottom: 10px;">
-            <h4><i class="fas fa-calculator"></i> Calculator</h4>
-        </div>
-        
+    <div class="modern-card p-3 border-0 shadow-none">
         <div id="dimension_type">
-            <!-- Dimension Type Field -->
-            <div class="form-group-modern mb-3">
-                <label class="form-label-modern text-dark small text-uppercase font-weight-bold">Dimension Type</label>
+            <!-- Dimension Type & UOM -->
+            <div class="form-group-modern mb-2">
+                <label class="form-label-modern font-weight-bold">Dimension Type</label>
                 <input type="text" id="pkqt_dimension_type" class="form-control form-control-modern disable_a_href text-center font-weight-bold" style="color: var(--accent-emerald) !important;">
             </div>
 
             <input type="text" id="pkqt_dimension_type_id" class="form-control" style="display: none;">
 
-            <div class="row">
+            <div class="row row-compact mb-2">
                 <div class="col-12 mb-2">
                     <div class="form-group-modern">
-                        <label class="form-label-modern text-dark small text-uppercase font-weight-bold">UOM</label>
+                        <label class="form-label-modern font-weight-bold">UOM</label>
                         <input type="text" id="pkqt_uom_calc" class="form-control form-control-modern disable_a_href text-center font-weight-bold">
                     </div>
                 </div>
                 <div class="col-4 pr-1">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern text-dark small text-center w-100 font-weight-bold">L</label>
+                    <div class="form-group-modern mb-0">
+                        <label class="form-label-modern text-center w-100 font-weight-bold">L</label>
                         <input type="number" id="pkqt_l" class="form-control form-control-modern disable_a_href text-center">
                     </div>
                 </div>
                 <div class="col-4 px-1">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern text-dark small text-center w-100 font-weight-bold">W</label>
+                    <div class="form-group-modern mb-0">
+                        <label class="form-label-modern text-center w-100 font-weight-bold">W</label>
                         <input type="number" id="pkqt_w" class="form-control form-control-modern disable_a_href text-center">
                     </div>
                 </div>
                 <div class="col-4 pl-1">
-                    <div class="form-group-modern">
-                        <label class="form-label-modern text-dark small text-center w-100 font-weight-bold">H</label>
+                    <div class="form-group-modern mb-0">
+                        <label class="form-label-modern text-center w-100 font-weight-bold">H</label>
                         <input type="number" id="pkqt_h" class="form-control form-control-modern disable_a_href text-center">
                     </div>
                 </div>
             </div>
 
-            <div class="row mt-3">
+            <!-- Clearances -->
+            <div class="row row-compact mt-3 mb-2">
                 <div class="col-6 pr-1">
                     <div class="p-2" style="background: var(--bg-section); border-radius: 8px; border: 1px dashed var(--accent-orange);">
-                        <div class="text-center small font-weight-bold mb-2" style="color: var(--accent-orange);">ID Clearance</div>
-                        <div class="input-group input-group-sm mb-2 shadow-sm">
+                        <div class="text-center font-weight-bold mb-2 small" style="color: var(--accent-orange);">ID Clearance</div>
+                        <div class="input-group input-group-sm mb-2">
                             <input type="number" id="pkqt_box_id_clearance_l" class="form-control form-control-modern text-center" value="0" placeholder="L">
                         </div>
-                        <div class="input-group input-group-sm mb-2 shadow-sm">
+                        <div class="input-group input-group-sm mb-2">
                             <input type="number" id="pkqt_box_id_clearance_w" class="form-control form-control-modern text-center" value="0" placeholder="W">
                         </div>
-                        <div class="input-group input-group-sm mb-0 shadow-sm">
+                        <div class="input-group input-group-sm mb-0">
                             <input type="number" id="pkqt_box_id_clearance_h" class="form-control form-control-modern text-center" value="0" placeholder="H">
                         </div>
                     </div>
                 </div>
                 <div class="col-6 pl-1">
                     <div class="p-2" style="background: var(--bg-section); border-radius: 8px; border: 1px dashed var(--accent-blue);">
-                        <div class="text-center small font-weight-bold mb-2" style="color: var(--accent-blue);">OD Clearance</div>
-                        <div class="input-group input-group-sm mb-2 shadow-sm">
+                        <div class="text-center font-weight-bold mb-2 small" style="color: var(--accent-blue);">OD Clearance</div>
+                        <div class="input-group input-group-sm mb-2">
                             <input type="number" id="pkqt_box_od_clearance_l" class="form-control form-control-modern text-center" value="0" placeholder="L">
                         </div>
-                        <div class="input-group input-group-sm mb-2 shadow-sm">
+                        <div class="input-group input-group-sm mb-2">
                             <input type="number" id="pkqt_box_od_clearance_w" class="form-control form-control-modern text-center" value="0" placeholder="W">
                         </div>
-                        <div class="input-group input-group-sm mb-0 shadow-sm">
+                        <div class="input-group input-group-sm mb-0">
                             <input type="number" id="pkqt_box_od_clearance_h" class="form-control form-control-modern text-center" value="0" placeholder="H">
                         </div>
                     </div>
@@ -75,35 +72,35 @@
             </div>
 
             <!-- Table to display calculated values -->
-            <div class="mt-4 text-center font-weight-bold" style="color: var(--text-main); letter-spacing: 0.5px; border-bottom: 2px solid var(--border-light); padding-bottom: 5px; font-size: 0.85rem;">BOX OD DIMENSIONS</div>
-            <div class="table-responsive mt-2">
+            <div class="text-center font-weight-bold mt-3 mb-2 small" style="color: var(--text-main); letter-spacing: 0.5px;">BOX OD DIMENSIONS</div>
+            <div class="table-responsive">
                 <table class="table table-sm table-borderless text-center mb-0" style="background: var(--bg-section); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-light);">
                     <thead>
                     <tr style="background: var(--accent-emerald); color: #fff;">
-                        <th class="font-weight-normal py-2 small">Unit</th>
-                        <th class="font-weight-normal py-2 small">L</th>
-                        <th class="font-weight-normal py-2 small">W</th>
-                        <th class="font-weight-normal py-2 small">H</th>
+                        <th class="py-2 small font-weight-bold">Unit</th>
+                        <th class="py-2 small font-weight-bold">L</th>
+                        <th class="py-2 small font-weight-bold">W</th>
+                        <th class="py-2 small font-weight-bold">H</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr style="border-bottom: 1px solid var(--border-light);">
-                        <td class="font-weight-bold align-middle small" style="background: var(--bg-card); color: var(--text-main); border-right: 1px solid var(--border-light);">cm</td>
-                        <td><input type="text" id="length_cm" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" style="color: var(--text-main) !important;" readonly></td>
-                        <td><input type="text" id="width_cm" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" style="color: var(--text-main) !important;" readonly></td>
-                        <td><input type="text" id="height_cm" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" style="color: var(--text-main) !important;" readonly></td>
+                        <td class="font-weight-bold align-middle small" style="background: var(--bg-card);">cm</td>
+                        <td><input type="text" id="length_cm" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" readonly></td>
+                        <td><input type="text" id="width_cm" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" readonly></td>
+                        <td><input type="text" id="height_cm" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" readonly></td>
                     </tr>
                     <tr style="border-bottom: 1px solid var(--border-light);">
-                        <td class="font-weight-bold align-middle small" style="background: var(--bg-card); color: var(--text-main); border-right: 1px solid var(--border-light);">inch</td>
-                        <td><input type="text" id="length_in" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" style="color: var(--text-main) !important;" readonly></td>
-                        <td><input type="text" id="width_in" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" style="color: var(--text-main) !important;" readonly></td>
-                        <td><input type="text" id="height_in" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" style="color: var(--text-main) !important;" readonly></td>
+                        <td class="font-weight-bold align-middle small" style="background: var(--bg-card);">inch</td>
+                        <td><input type="text" id="length_in" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" readonly></td>
+                        <td><input type="text" id="width_in" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" readonly></td>
+                        <td><input type="text" id="height_in" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" readonly></td>
                     </tr>
                     <tr>
-                        <td class="font-weight-bold align-middle small" style="background: var(--bg-card); color: var(--text-main); border-right: 1px solid var(--border-light);">feet</td>
-                        <td><input type="text" id="length_ft" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" style="color: var(--text-main) !important;" readonly></td>
-                        <td><input type="text" id="width_ft" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" style="color: var(--text-main) !important;" readonly></td>
-                        <td><input type="text" id="height_ft" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" style="color: var(--text-main) !important;" readonly></td>
+                        <td class="font-weight-bold align-middle small" style="background: var(--bg-card);">feet</td>
+                        <td><input type="text" id="length_ft" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" readonly></td>
+                        <td><input type="text" id="width_ft" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" readonly></td>
+                        <td><input type="text" id="height_ft" class="form-control form-control-sm text-center border-0 bg-transparent font-weight-bold" readonly></td>
                     </tr>
                     </tbody>
                 </table>
@@ -111,28 +108,28 @@
 
             <!-- Quantity and Sqft Table -->
             <div class="table-responsive mt-3">
-                <table class="table table-sm table-borderless text-center" style="background: var(--bg-section); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-light);">
+                <table class="table table-sm table-borderless text-center mb-0" style="background: var(--bg-section); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-light);">
                     <thead>
                     <tr style="background: var(--accent-orange); color: #fff;">
-                        <th class="font-weight-normal py-2 small">Qty</th>
-                        <th class="font-weight-normal py-2 small">Sq.ft</th>
-                        <th class="font-weight-normal py-2 small">Total Sq.ft</th>
+                        <th class="py-2 small font-weight-bold">Qty</th>
+                        <th class="py-2 small font-weight-bold">Sq.ft</th>
+                        <th class="py-2 small font-weight-bold">Total Sq.ft</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr>
                         <td class="p-2"><input type="number" class="form-control form-control-modern text-center font-weight-bold" id="quantity" onchange="calculateTotalSqft()"></td>
-                        <td class="p-2"><input type="text" class="form-control form-control-modern text-center bg-transparent" style="color: var(--text-main) !important;" id="sqft" readonly></td>
-                        <td class="p-2"><input type="text" class="form-control form-control-modern text-center font-weight-bold" style="color: var(--accent-emerald) !important; background: transparent;" id="total_sqft" readonly></td>
+                        <td class="p-2"><input type="text" class="form-control form-control-modern text-center bg-transparent border-0" id="sqft" readonly></td>
+                        <td class="p-2"><input type="text" class="form-control form-control-modern text-center font-weight-bold border-0" style="color: var(--accent-emerald) !important;" id="total_sqft" readonly></td>
                     </tr>
                     </tbody>
                 </table>
             </div>
 
             <!-- Button to trigger calculation -->
-            <div class="mt-4">
-                <button class="btn-modern btn-submit w-100 shadow" style="background: linear-gradient(135deg, var(--accent-orange), #e65100); border: none;" onclick="run_all_calculations()">
-                    <i class="fas fa-sync-alt mr-2"></i> RE-CALCULATE
+            <div class="mt-3">
+                <button class="btn-modern btn-submit w-100" style="background: linear-gradient(135deg, var(--accent-orange), #e65100); border: none;" onclick="run_all_calculations()">
+                    <i class="fas fa-sync-alt mr-1"></i> RE-CALCULATE
                 </button>
             </div>
         </div>

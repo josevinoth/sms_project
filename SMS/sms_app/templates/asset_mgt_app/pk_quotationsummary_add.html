@@ -36,27 +36,23 @@
                             {% render_field form.qs_assessment_num id="qs_assessment_num" class="form-control form-control-modern" %}
                         </div>
                         <div class="form-group-modern">
+                            <label class="form-label-modern">Quotation Number</label>
+                            {% render_field form.qs_quotation_number id="qs_quotation_number" class="form-control form-control-modern disable_a_href" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Customer Info -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-user"></i> Customer Info</div>
+                        <div class="form-group-modern">
                             <label class="form-label-modern">Customer Name</label>
                             {% render_field form.qs_customer_name_2 id="qs_customer_name_2" class="form-control form-control-modern disable_a_href" %}
                         </div>
                         <div class="form-group-modern">
                             <label class="form-label-modern">New Customer Name</label>
                             {% render_field form.pkqt_customer_new_name id="pkqt_customer_new_name" class="form-control form-control-modern disable_a_href" %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Column 2: Ref & Status -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-info-circle"></i> Status & Ref</div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Quotation Number</label>
-                            {% render_field form.qs_quotation_number id="qs_quotation_number" class="form-control form-control-modern disable_a_href" %}
-                        </div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Quotation Status</label>
-                            {% render_field form.qs_status id="qs_status" class="form-control form-control-modern" %}
                         </div>
                     </div>
                 </div>
@@ -170,6 +166,10 @@
                         <div class="form-group-modern">
                             <label class="form-label-modern" style="color: var(--primary-emerald);">Final Cost (Grand Total)</label>
                             {% render_field form.qs_final_cost id="qs_final_cost" class="form-control form-control-modern disable_a_href font-weight-bold" style="color: var(--primary-emerald); font-size: 1.1rem;" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Quotation Status</label>
+                            {% render_field form.qs_status id="qs_status" class="form-control form-control-modern" %}
                         </div>
                     </div>
                 </div>

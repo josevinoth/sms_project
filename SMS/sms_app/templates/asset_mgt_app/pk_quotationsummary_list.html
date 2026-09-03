@@ -25,7 +25,7 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Clone</th>
+                        {% comment %} <th>Clone</th> {% endcomment %}
                         <th>Edit</th>
                         <th>Created On</th>
                         <th>Assessment #</th>
@@ -55,6 +55,8 @@
                     {% for quotationsummaryinfo in quotationsummary_list %}
                     <tr>
                         <td>{{ quotationsummaryinfo.id }}</td>
+
+                        {% comment %}
                         <td>
                             {% if quotationsummaryinfo.qs_status.id == 5 %}
                             <a href="{% url 'pk_quotationsummary_clone' quotationsummaryinfo.id %}" class="btn btn-warning btn-sm" onclick="return confirm('Would you like to make a copy of this record as Costing Summary?');">
@@ -66,6 +68,8 @@
                             </button>
                             {% endif %}
                         </td>
+                        {% endcomment %}
+
                         <td>
                             <a class="btn btn-primary btn-sm" href="{% url 'pk_quotationsummary_update' quotationsummaryinfo.id %}">
                                 <i class="far fa-edit"></i>

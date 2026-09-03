@@ -463,6 +463,21 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
                 quotations = PkquotationInfo.objects.filter(
                     pkqt_assessment_num=quotationsummary.qs_assessment_num,
                 )
+
+                # Validate GRN requirement for Packing Material Cost items
+                missing_grn_items = quotations.filter(
+                    pkqt_cost_type_id=8
+                ).filter(Q(pkqt_stock_purchase_number__isnull=True) | Q(pkqt_stock_purchase_number=0))
+
+                if missing_grn_items.exists():
+                    item_names = ", ".join([str(q.pkqt_item) if q.pkqt_item else "Material Item" for q in missing_grn_items])
+                    messages.error(
+                        request,
+                        f"Cannot clone to Costing: Packing Material Cost item(s) [{item_names}] do not have a GRN / Stock Purchase Number assigned. Please select stock purchase records in Quotation Management first."
+                    )
+                    costing_summary.delete()
+                    return redirect(request.META.get('HTTP_REFERER', 'pk_quotationsummary_list'))
+
                 print(f"DEBUG: Found {quotations.count()} quotations for assessment {quotationsummary.qs_assessment_num}")
                 stock_status_instance = pk_stock_statusinfo.objects.get(id=1)
                 if quotations.exists():
@@ -564,6 +579,21 @@ def pk_quotationsummary_clone_po(request, purchaseorder_id):
     # Using Line-Level ID (POdimension ID) for cleanup
     current_pod_ids = po_items.values_list('id', flat=True)
     PkcostingInfo.objects.filter(ct_customer_po=po).exclude(ct_po_dimension_id__in=current_pod_ids).delete()
+
+    # Validate that all Packing Material Cost items (Cost Type 8) have a GRN stock purchase number assigned
+    for po_item in po_items:
+        missing_grn_items = PkquotationInfo.objects.filter(
+            pkqt_requirement=po_item.pod_nad,
+            pkqt_cost_type_id=8
+        ).filter(Q(pkqt_stock_purchase_number__isnull=True) | Q(pkqt_stock_purchase_number=0))
+        
+        if missing_grn_items.exists():
+            item_names = ", ".join([str(q.pkqt_item) if q.pkqt_item else "Material Item" for q in missing_grn_items])
+            messages.error(
+                request,
+                f"Cannot clone to Costing: Packing Material Cost item(s) [{item_names}] do not have a GRN / Stock Purchase Number assigned. Please assign stock purchase numbers in Quotation Management first."
+            )
+            return redirect(request.META.get('HTTP_REFERER', 'pk_purchaseorder_list'))
 
     for po_item in po_items:
         # Find all quotation details matching this item (Nadimension)
