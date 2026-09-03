@@ -380,6 +380,27 @@ function initTripTable() {
                             var node = sheet.createElement('mergeCell');
                             node.setAttribute('ref', m.col + m.startRow + ':' + m.col + m.endRow);
                             mergeCellsNode.appendChild(node);
+
+                            // Clear underlying cell values for secondary rows (m.startRow + 1 to m.endRow)
+                            // so that SUM / formulas or selecting columns in Excel does not double-count merged charges/values
+                            for (var r = m.startRow + 1; r <= m.endRow; r++) {
+                                for (var dr = 0; dr < dataRows.length; dr++) {
+                                    if (parseInt(dataRows[dr].getAttribute('r')) === r) {
+                                        var cells = dataRows[dr].getElementsByTagName('c');
+                                        for (var ci = 0; ci < cells.length; ci++) {
+                                            if (cells[ci].getAttribute('r') === (m.col + r)) {
+                                                // Remove value/text child elements to make the underlying cell truly empty
+                                                while (cells[ci].firstChild) {
+                                                    cells[ci].removeChild(cells[ci].firstChild);
+                                                }
+                                                cells[ci].removeAttribute('t');
+                                                break;
+                                            }
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
                         });
 
                     } catch (e) {

@@ -7728,30 +7728,115 @@ def vendor_bills_pending_mkt_att_report_view(request):
     to_date_param = request.GET.get('to_date', '')
     vendor_param = request.GET.get('vendor_name', '')
     veh_source_param = request.GET.get('veh_source', '')
+    status_param = request.GET.get('status', '')
 
-    # Settle finance status ID and Market ownership ID
-    settled_status_id = 7
-    market_ownership_id = 3
+    branches = Location_info.objects.filter(loc_name__in=['BVM MAA', 'BVM BLR']).order_by('loc_name')
+    vendors = Vendor_info.objects.all().order_by('vend_name')
 
-    trip_filters = Q(tc_financestatus_id=settled_status_id)
+    context = {
+        'title': title,
+        'branch_param': branch_param,
+        'from_date_param': from_date_param,
+        'to_date_param': to_date_param,
+        'vendor_param': vendor_param,
+        'veh_source_param': veh_source_param,
+        'status_param': status_param,
+        'branches': branches,
+        'vendors': vendors,
+    }
 
-    # Branch filter based on user's branch
+    return render(request, "asset_mgt_app/vendor_bills_pending_mkt_att_report.html", context)
+
+
+@login_required(login_url='login_page')
+def vendor_bills_pending_mkt_att_report_ajax_view(request):
+    from django.http import JsonResponse
+    from ..sub_models.trans_invoice_mod import TransInvoiceInfo
+
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 25))
+    search_value = request.GET.get('search[value]', '').strip()
+
+    branch_param = request.GET.get('branch', '').strip()
+    from_date_param = request.GET.get('from_date', '').strip()
+    to_date_param = request.GET.get('to_date', '').strip()
+    vendor_param = request.GET.get('vendor_name', '').strip()
+    veh_source_param = request.GET.get('veh_source', '').strip()
+    status_param = request.GET.get('status', '').strip()
+
+    # Include trips across the lifecycle: Trip Started (1), Trip Closed (2), Trip Settled (7), Ready for Invoice (9), Cancellation with Billing (10), or Invoiced
+    eligible_status_ids = [1, 2, 7, 9, 10]
+    invoiced_trip_ids = set(TransInvoiceInfo.objects.filter(ti_trip_id__isnull=False).values_list('ti_trip_id', flat=True))
+    
+    if status_param and status_param.isdigit():
+        sel_status_id = int(status_param)
+        if sel_status_id == 9:
+            # Ready for Invoice or Invoiced
+            trip_filters = Q(tc_financestatus_id=9) | Q(tc_financestatus__isnull=True, tr_operational_status_id=9) | Q(id__in=invoiced_trip_ids)
+        elif sel_status_id == 1:
+            # Trip Started (explicit status 1 or no finance/operational status set)
+            trip_filters = Q(tc_financestatus_id=1) | Q(tc_financestatus__isnull=True, tr_operational_status_id=1) | Q(tc_financestatus__isnull=True, tr_operational_status__isnull=True)
+        else:
+            trip_filters = Q(tc_financestatus_id=sel_status_id) | Q(tc_financestatus__isnull=True, tr_operational_status_id=sel_status_id)
+    else:
+        trip_filters = (
+            Q(tc_financestatus_id__in=eligible_status_ids) |
+            Q(tr_operational_status_id__in=eligible_status_ids) |
+            Q(id__in=invoiced_trip_ids)
+        )
+
+    # Exclude Empty and Business Empty trips (only billable business trips with CNote)
+    trip_filters &= Q(tr_consignmentnumber__isnull=False)
+    trip_filters &= ~Q(tr_category__category__icontains='Empty')
+
+    # Branch filter based on Cnote number
     if branch_param:
-        trip_filters &= Q(tr_updated_by__user_extinfo__emp_branch_id=branch_param)
+        branch_obj = Location_info.objects.filter(id=branch_param).first()
+        if branch_obj:
+            branch_code = branch_obj.loc_name.replace('BVM ', '').replace('MC ', '').strip()
+            trip_filters &= (
+                Q(tr_consignmentnumber__co_consignmentnumber__icontains=f"_{branch_code}_") |
+                Q(tr_consignmentnumber__co_consignmentnumber__startswith=f"{branch_code}_")
+            )
 
     # Date filter on Trip Date (Departed Date)
     if from_date_param:
-        from_date_obj = datetime.strptime(from_date_param, '%Y-%m-%d').date()
-        trip_filters &= Q(tr_departeddate__date__gte=from_date_obj)
+        try:
+            from_date_obj = datetime.strptime(from_date_param, '%Y-%m-%d').date()
+            trip_filters &= Q(tr_departeddate__date__gte=from_date_obj)
+        except Exception:
+            pass
     if to_date_param:
-        to_date_obj = datetime.strptime(to_date_param, '%Y-%m-%d').date()
-        trip_filters &= Q(tr_departeddate__date__lte=to_date_obj)
+        try:
+            to_date_obj = datetime.strptime(to_date_param, '%Y-%m-%d').date()
+            trip_filters &= Q(tr_departeddate__date__lte=to_date_obj)
+        except Exception:
+            pass
 
-    # Vendor filter - via Allotment
+    # Vendor filter - match exact (Enquiry + Vehicle Number) allotment pairs or Master Vehicles
     if vendor_param:
-        vendor_enquiries = Vehicle_allotmentInfo.objects.filter(va_vendor_id=vendor_param).values_list(
-            'va_enquirynumber_id', flat=True)
-        trip_filters &= Q(tr_enquirynumber_id__in=list(vendor_enquiries))
+        vendor_allotments = Vehicle_allotmentInfo.objects.filter(va_vendor_id=vendor_param)
+        allot_mkt_tuples = list(vendor_allotments.filter(va_vehiclenumber_mkt__isnull=False).exclude(va_vehiclenumber_mkt='').values_list('va_enquirynumber_id', 'va_vehiclenumber_mkt'))
+        allot_reg_tuples = list(vendor_allotments.filter(va_vehiclenumber__isnull=False).values_list('va_enquirynumber_id', 'va_vehiclenumber__vm_registrationnumber'))
+        
+        vendor_q = Q()
+        for enq_id, veh in allot_mkt_tuples:
+            if veh and veh.strip():
+                vendor_q |= Q(tr_enquirynumber_id=enq_id, tr_vehiclenumber__iexact=veh.strip())
+        for enq_id, veh in allot_reg_tuples:
+            if veh and veh.strip():
+                vendor_q |= Q(tr_enquirynumber_id=enq_id, tr_vehiclenumber__iexact=veh.strip())
+        
+        vendor_master_vehs = list(VehiclemasterInfo.objects.filter(vm_vendor_id=vendor_param).values_list('vm_registrationnumber', flat=True))
+        if vendor_master_vehs:
+            vendor_q |= Q(tr_vehiclenumber__in=vendor_master_vehs)
+        
+        # If no allotments or master vehicles exist for this vendor, ensure no trips match
+        if not vendor_q:
+            vendor_q = Q(id__in=[])
+            
+        trip_filters &= vendor_q
 
     if veh_source_param:
         trip_filters &= Q(tr_vehiclesource_id=veh_source_param)
@@ -7760,7 +7845,6 @@ def vendor_bills_pending_mkt_att_report_view(request):
         trip_filters &= Q(tr_vehiclesource_id__in=[2, 3])
 
     # Exclude already billed trips — market trips via MarketBillInfo, attached trips via AttachedBillInfo
-    # Robustly collect market billed trip info (mb_selected_trips usually has IDs, but handle trip numbers variant too)
     market_billed_trip_ids = set()
     market_billed_trip_numbers = set()
     for bill in MarketBillInfo.objects.exclude(mb_selected_trips__isnull=True).exclude(mb_selected_trips=''):
@@ -7780,7 +7864,6 @@ def vendor_bills_pending_mkt_att_report_view(request):
         )
         market_billed_trip_ids.update(resolved_market_ids)
 
-    # Collect billed attached trip numbers (ab_selected_trips stores trip numbers, NOT integer IDs)
     attached_billed_trip_numbers = set()
     for bill in AttachedBillInfo.objects.exclude(ab_selected_trips__isnull=True).exclude(ab_selected_trips=''):
         for tno in bill.ab_selected_trips.split(','):
@@ -7788,34 +7871,57 @@ def vendor_bills_pending_mkt_att_report_view(request):
             if tno:
                 attached_billed_trip_numbers.add(tno)
 
-    # Resolve trip numbers to integer IDs for fast exclusion
     attached_billed_trip_ids = set(
         TripdetailInfo.objects.filter(
             tr_tripnumber__in=attached_billed_trip_numbers
         ).values_list('id', flat=True)
     )
 
-    trips = list(TripdetailInfo.objects.filter(trip_filters).select_related(
-        'tr_enquirynumber', 'tr_enquirynumber__en_customername', 'tr_enquirynumber__en_fromlocaion',
-        'tr_enquirynumber__en_tolocation',
-        'tr_consignmentnumber', 'tr_departedlocation', 'tr_reportedlocation',
-        'tr_vehicletype', 'tr_vehiclesource',
-        'tr_updated_by', 'tr_updated_by__user_extinfo__emp_branch'
-    ))
+    base_qs = TripdetailInfo.objects.filter(trip_filters).exclude(
+        Q(tr_vehiclesource_id=3, id__in=market_billed_trip_ids) |
+        Q(tr_vehiclesource_id=2, id__in=attached_billed_trip_ids)
+    )
 
-    # Filter per source: market trips excluded via market bills, attached trips excluded via attached bills
-    def is_billed(trip):
-        src = trip.tr_vehiclesource_id
-        if src == 3:  # Market
-            return trip.id in market_billed_trip_ids
-        elif src == 2:  # Attached
-            return trip.id in attached_billed_trip_ids
-        return False
+    records_total = base_qs.count()
 
-    trips = [t for t in trips if not is_billed(t)]
+    if search_value:
+        base_qs = base_qs.filter(
+            Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+            Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
+            Q(tr_vehiclenumber__icontains=search_value) |
+            Q(tr_departedlocation__place_name__icontains=search_value) |
+            Q(tr_reportedlocation__place_name__icontains=search_value) |
+            Q(tr_enquirynumber__en_fromlocaion__place_name__icontains=search_value) |
+            Q(tr_enquirynumber__en_tolocation__place_name__icontains=search_value) |
+            Q(tr_tripnumber__icontains=search_value)
+        )
 
-    # Pre-fetch all relevant vehicle allotments in one query
-    enquiry_ids = [t.tr_enquirynumber_id for t in trips if t.tr_enquirynumber_id]
+    records_filtered = base_qs.count()
+
+    # Order by departed date descending by default
+    base_qs = base_qs.order_by('-tr_departeddate', '-id')
+
+    # Paginate efficiently at the database level
+    if length != -1:
+        paginated_trips = list(base_qs[start:start + length].select_related(
+            'tr_enquirynumber', 'tr_enquirynumber__en_customername', 'tr_enquirynumber__en_fromlocaion',
+            'tr_enquirynumber__en_tolocation',
+            'tr_consignmentnumber', 'tr_departedlocation', 'tr_reportedlocation',
+            'tr_vehicletype', 'tr_vehiclesource',
+            'tc_financestatus', 'tr_operational_status',
+            'tr_updated_by', 'tr_updated_by__user_extinfo__emp_branch'
+        ))
+    else:
+        paginated_trips = list(base_qs[start:].select_related(
+            'tr_enquirynumber', 'tr_enquirynumber__en_customername', 'tr_enquirynumber__en_fromlocaion',
+            'tr_enquirynumber__en_tolocation',
+            'tr_consignmentnumber', 'tr_departedlocation', 'tr_reportedlocation',
+            'tr_vehicletype', 'tr_vehiclesource',
+            'tc_financestatus', 'tr_operational_status',
+            'tr_updated_by', 'tr_updated_by__user_extinfo__emp_branch'
+        ))
+
+    enquiry_ids = [t.tr_enquirynumber_id for t in paginated_trips if t.tr_enquirynumber_id]
     allotments = Vehicle_allotmentInfo.objects.filter(
         va_enquirynumber_id__in=enquiry_ids
     ).select_related('va_vendor', 'va_vehiclenumber')
@@ -7826,14 +7932,12 @@ def vendor_bills_pending_mkt_att_report_view(request):
         veh_no = (a.va_vehiclenumber.vm_registrationnumber if a.va_vehiclenumber else (
                 a.va_vehiclenumber_mkt or "")).lower().strip()
         key = (a.va_enquirynumber_id, veh_no)
-        # Store first matched allotment for enquiry+vehicle pair
         if key not in allotment_map:
             allotment_map[key] = a
         if a.va_enquirynumber_id not in enquiry_allotment_map or a.id > enquiry_allotment_map[a.va_enquirynumber_id].id:
             enquiry_allotment_map[a.va_enquirynumber_id] = a
 
-    # Fallback vendor map from VehiclemasterInfo.vm_vendor (used for attached vehicles)
-    all_veh_nos = [t.tr_vehiclenumber for t in trips if t.tr_vehiclenumber]
+    all_veh_nos = [t.tr_vehiclenumber for t in paginated_trips if t.tr_vehiclenumber]
     veh_vendor_map = {
         v.vm_registrationnumber.strip().lower(): v.vm_vendor
         for v in VehiclemasterInfo.objects.filter(
@@ -7842,9 +7946,8 @@ def vendor_bills_pending_mkt_att_report_view(request):
         if v.vm_vendor
     }
 
-    data_rows = []
-
-    for i, trip in enumerate(trips, start=1):
+    data = []
+    for i, trip in enumerate(paginated_trips, start=start + 1):
         veh_no_lower = (trip.tr_vehiclenumber or "").lower().strip()
         key = (trip.tr_enquirynumber_id, veh_no_lower)
         allotment = allotment_map.get(key)
@@ -7859,66 +7962,57 @@ def vendor_bills_pending_mkt_att_report_view(request):
             buy_cost = float(allotment.va_specialbuy) if allotment.va_specialbuy else float(
                 allotment.va_standardbuy or 0.0)
 
-        # Fallback: for attached vehicles, pull vendor from VehiclemasterInfo.vm_vendor
         if not vendor_name:
             v_vendor = veh_vendor_map.get(veh_no_lower)
             if v_vendor:
                 vendor_name = v_vendor.vend_name
 
-        # Apply vendor filter again in Python space as a strict safety check
-        if vendor_param:
-            allotment_vendor_id = str(allotment.va_vendor_id) if allotment and allotment.va_vendor else ""
-            vm_vendor_obj = veh_vendor_map.get(veh_no_lower)
-            vm_vendor_id = str(vm_vendor_obj.id) if vm_vendor_obj else ""
-            if allotment_vendor_id != str(vendor_param) and vm_vendor_id != str(vendor_param):
-                continue
-
-        trip_date = timezone.localtime(trip.tr_departeddate).strftime('%Y-%m-%d') if trip.tr_departeddate else ""
-        cnote = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else ""
+        trip_date = timezone.localtime(trip.tr_departeddate).strftime('%Y-%m-%d') if trip.tr_departeddate else "-"
+        cnote = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "-"
         from_loc = str(trip.tr_departedlocation) if trip.tr_departedlocation else (
-            str(trip.tr_enquirynumber.en_fromlocaion) if trip.tr_enquirynumber and trip.tr_enquirynumber.en_fromlocaion else "")
+            str(trip.tr_enquirynumber.en_fromlocaion) if trip.tr_enquirynumber and trip.tr_enquirynumber.en_fromlocaion else "-")
         to_loc = str(trip.tr_reportedlocation) if trip.tr_reportedlocation else (
-            str(trip.tr_enquirynumber.en_tolocation) if trip.tr_enquirynumber and trip.tr_enquirynumber.en_tolocation else "")
+            str(trip.tr_enquirynumber.en_tolocation) if trip.tr_enquirynumber and trip.tr_enquirynumber.en_tolocation else "-")
         customer = str(
-            trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername else ""
-        veh_no = trip.tr_vehiclenumber if trip.tr_vehiclenumber else ""
-        veh_type = str(trip.tr_vehicletype) if trip.tr_vehicletype else ""
-        branch = ""
-        if hasattr(trip.tr_updated_by, 'user_extinfo') and trip.tr_updated_by.user_extinfo.emp_branch:
-            branch = trip.tr_updated_by.user_extinfo.emp_branch.loc_name
-        veh_source = str(trip.tr_vehiclesource.ow_ownership) if trip.tr_vehiclesource else ""
+            trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername else "-"
+        veh_no = trip.tr_vehiclenumber if trip.tr_vehiclenumber else "-"
+        veh_type = str(trip.tr_vehicletype) if trip.tr_vehicletype else "-"
+        veh_source = str(trip.tr_vehiclesource.ow_ownership) if trip.tr_vehiclesource else "-"
+        status_label = trip.tc_financestatus.status if trip.tc_financestatus else (trip.tr_operational_status.status if trip.tr_operational_status else "Trip Started")
 
-        data_rows.append({
-            's_no': i,
-            'branch': branch,
-            'veh_source': veh_source,
-            'trip_date': trip_date,
-            'cnote': cnote,
-            'from_loc': from_loc,
-            'to_loc': to_loc,
-            'customer': customer,
-            'veh_no': veh_no,
-            'veh_type': veh_type,
-            'vendor_name': vendor_name,
-            'buy_cost': buy_cost
-        })
+        badge_class = "badge-warning"
+        if status_label == "Ready for Invoice":
+            badge_class = "badge-success"
+        elif status_label == "Trip Settled":
+            badge_class = "badge-info"
+        elif status_label == "Trip Closed":
+            badge_class = "badge-primary"
+        elif status_label == "Cancellation with Billing":
+            badge_class = "badge-danger"
 
-    branches = Location_info.objects.filter(loc_name__in=['BVM MAA', 'BVM BLR']).order_by('loc_name')
-    vendors = Vendor_info.objects.all().order_by('vend_name')
+        status_html = f'<span class="badge {badge_class} px-2 py-1">{status_label}</span>'
 
-    context = {
-        'title': title,
-        'data_rows': data_rows,
-        'branch_param': branch_param,
-        'from_date_param': from_date_param,
-        'to_date_param': to_date_param,
-        'vendor_param': vendor_param,
-        'veh_source_param': veh_source_param,
-        'branches': branches,
-        'vendors': vendors,
-    }
+        data.append([
+            i,
+            trip_date,
+            cnote,
+            from_loc,
+            to_loc,
+            customer,
+            veh_no,
+            veh_type,
+            veh_source,
+            vendor_name or "-",
+            f"{buy_cost:.1f}",
+            status_html
+        ])
 
-    return render(request, "asset_mgt_app/vendor_bills_pending_mkt_att_report.html", context)
+    return JsonResponse({
+        'draw': draw,
+        'recordsTotal': records_total,
+        'recordsFiltered': records_filtered,
+        'data': data
+    })
 
 
 @login_required(login_url='login_page')

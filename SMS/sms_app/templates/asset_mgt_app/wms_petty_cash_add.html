@@ -1,0 +1,363 @@
+﻿{% extends "asset_mgt_app/base_modern.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+
+<form method="POST" id="wms_petty_cash_add" action="" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <div class="container-fluid">
+        <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+                <i class="fas fa-money-bill-wave mr-2"></i> Add/Update WMS Petty Cash
+            </h3>
+            <div>
+                <a href="{% url 'wms_petty_cash_list' %}" class="btn btn-highlight" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+        
+        <div class="modern-card" style="border-top:none; padding: 1rem !important;">
+            <div class="row">
+                <!-- ========== COLUMN 1 ========== -->
+                <div class="col-12 col-md-4">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-info-circle"></i> GENERAL INFO</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Business</label>
+                            {% render_field form.wpc_business id="wpc_business" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Branch</label>
+                            {% render_field form.wpc_branch id="wpc_branch" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Expenses Category</label>
+                            {% render_field form.wpc_category id="wpc_category" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Voucher Number</label>
+                            <input type="text" id="wpc_number" name="wpc_number" class="form-control form-control-modern disable_a_href bg-secondary text-white" placeholder="Auto generated" readonly="readonly" value="{{ form.instance.wpc_number|default_if_none:'' }}">
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Transaction Date</label>
+                            {% render_field form.wpc_transaction_date id="wpc_transaction_date" class="form-control form-control-modern" type="date" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Expenses Type</label>
+                            {% render_field form.wpc_expense_type id="wpc_expense_type" class="form-control form-control-modern select2" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Credit Ledger</label>
+                            {% render_field form.wpc_credit_ledger id="wpc_credit_ledger" class="form-control form-control-modern" %}
+                            <span id="ledger_balance_display" class="text-success font-weight-bold" style="font-size: 0.9rem; margin-top: 6px; display: block;"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ========== COLUMN 2 ========== -->
+                <div class="col-12 col-md-4">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-warehouse"></i> WAREHOUSE DETAILS</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">To Person</label>
+                            {% render_field form.wpc_to id="wpc_to" class="form-control form-control-modern select2" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Units</label>
+                            {% render_field form.wpc_unit id="wpc_unit" class="form-control form-control-modern select2" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Job No</label>
+                            {% render_field form.wpc_job_no id="wpc_job_no" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer Name</label>
+                            {% render_field form.wpc_customer id="wpc_customer" class="form-control form-control-modern select2" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Business Model</label>
+                            {% render_field form.wpc_business_model id="wpc_business_model" class="form-control form-control-modern select2" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Remarks</label>
+                            {% render_field form.wpc_remarks id="wpc_remarks" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== COLUMN 3 ========== -->
+                <div class="col-12 col-md-4">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-file-invoice-dollar"></i> BILL & PAYMENT DETAILS</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Bill No</label>
+                            {% render_field form.wpc_bill_no id="wpc_bill_no" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Bill Amount</label>
+                            {% render_field form.wpc_bill_amount id="wpc_bill_amount" class="form-control form-control-modern" type="number" step="0.01" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">GST %</label>
+                            {% render_field form.wpc_gst_percentage id="wpc_gst_percentage" class="form-control form-control-modern" type="number" step="0.01" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">GST Amount</label>
+                            {% render_field form.wpc_gst_amount id="wpc_gst_amount" class="form-control form-control-modern" type="number" step="0.01" readonly="readonly" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Total Amount</label>
+                            {% render_field form.wpc_total_amount id="wpc_total_amount" class="form-control form-control-modern" type="number" step="0.01" readonly="readonly" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Bill Attachment</label>
+                            {% render_field form.wpc_bill_attachment id="wpc_bill_attachment" class="form-control form-control-modern" style="height: auto; padding: 4px;" %}
+                            {% if form.instance.wpc_bill_attachment %}
+                            <span class="mt-1 d-block" style="font-size: 0.8rem;"><a href="{{ form.instance.wpc_bill_attachment.url }}" target="_blank" class="text-primary"><i class="fas fa-paperclip"></i> View Current Attachment</a></span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ================= ACTION BUTTONS ================= -->
+            <div class="action-row mt-4 d-flex justify-content-between">
+                <button type="submit" class="btn-modern btn-highlight">
+                    <i class="fas fa-check"></i> Submit
+                </button>
+                <a href="{% url 'wms_petty_cash_list' %}" class="btn-modern btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    $(document).ready(function() {
+        $('.select2').not('#wpc_to').select2({
+            width: '100%',
+            placeholder: '--Select--',
+            allowClear: true
+        });
+
+        $('#wpc_to').select2({
+            width: '100%',
+            placeholder: '--Select--',
+            allowClear: true,
+            tags: true,
+            createTag: function (params) {
+                var term = $.trim(params.term);
+                if (term === '') {
+                    return null;
+                }
+                return {
+                    id: term,
+                    text: term,
+                    newTag: true
+                }
+            }
+        });
+
+        {% if form.instance.wpc_to_manual %}
+            var manualVal = "{{ form.instance.wpc_to_manual|escapejs }}";
+            if ($('#wpc_to option[value="' + manualVal + '"]').length === 0) {
+                var newOption = new Option(manualVal, manualVal, true, true);
+                $('#wpc_to').append(newOption).trigger('change');
+            } else {
+                $('#wpc_to').val(manualVal).trigger('change');
+            }
+        {% endif %}
+
+        // Real-time calculation for GST Amount and Total Amount
+        function calculateAmounts() {
+            var billAmt = parseFloat($('#wpc_bill_amount').val()) || 0;
+            var gstPct = parseFloat($('#wpc_gst_percentage').val()) || 0;
+
+            var gstAmt = (billAmt * gstPct) / 100;
+            var totalAmt = billAmt + gstAmt;
+
+            $('#wpc_gst_amount').val(gstAmt.toFixed(2));
+            $('#wpc_total_amount').val(totalAmt.toFixed(2));
+        }
+
+        $('#wpc_bill_amount, #wpc_gst_percentage').on('input change', function() {
+            calculateAmounts();
+        });
+
+        // Autocomplete/lookup Job No to fill Customer and Business Model
+        $('#wpc_job_no').on('blur change', function() {
+            var jobNo = $(this).val().trim();
+            if (jobNo) {
+                $.ajax({
+                    url: "{% url 'get_wms_job_details' %}",
+                    data: { 'job_no': jobNo },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            if (response.customer_id) {
+                                $('#wpc_customer').val(response.customer_id).trigger('change');
+                            }
+                            if (response.business_model_id) {
+                                $('#wpc_business_model').val(response.business_model_id).trigger('change');
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        // Default Expenses Category and Credit Ledger based on selected Branch
+        function updateBranchDefaults() {
+            var branchText = $('#wpc_branch').find("option:selected").text().trim().toUpperCase();
+            
+            // 1. Default Expenses Category to Cash Expense if empty
+            if (!$('#wpc_category').val()) {
+                $('#wpc_category option').each(function() {
+                    if ($(this).text().toLowerCase().indexOf('cash') > -1) {
+                        $('#wpc_category').val($(this).val()).trigger('change');
+                        return false;
+                    }
+                });
+            }
+            
+            // 2. Default Credit Ledger based on branch name
+            if (branchText && branchText !== '---------' && branchText !== '--SELECT--') {
+                var branchParts = branchText.split(/\s+/);
+                var branchCode = branchParts[branchParts.length - 1]; // e.g. "MAA", "BLR"
+                
+                var matchedLedgerVal = null;
+                // Exact match: WH Petty Cash - <BranchCode> (non-admin)
+                $('#wpc_credit_ledger option').each(function() {
+                    var optText = $(this).text().toUpperCase();
+                    if (optText.indexOf('WH') > -1 && optText.indexOf(branchCode) > -1 && optText.indexOf('ADMIN') === -1) {
+                        matchedLedgerVal = $(this).val();
+                        return false;
+                    }
+                });
+                
+                // Fallback match: Any ledger containing the branch code
+                if (!matchedLedgerVal) {
+                    $('#wpc_credit_ledger option').each(function() {
+                        var optText = $(this).text().toUpperCase();
+                        if (optText.indexOf(branchCode) > -1) {
+                            matchedLedgerVal = $(this).val();
+                            return false;
+                        }
+                    });
+                }
+                
+                if (matchedLedgerVal && $('#wpc_credit_ledger').val() !== matchedLedgerVal) {
+                    $('#wpc_credit_ledger').val(matchedLedgerVal).trigger('change');
+                }
+            }
+        }
+
+        $('#wpc_branch').change(function() {
+            updateBranchDefaults();
+        });
+
+        // Initialize defaults on load
+        if (!$('#wpc_category').val()) {
+            $('#wpc_category option').each(function() {
+                if ($(this).text().toLowerCase().indexOf('cash') > -1) {
+                    $('#wpc_category').val($(this).val()).trigger('change');
+                    return false;
+                }
+            });
+        }
+        if ($('#wpc_branch').val() && !$('#wpc_credit_ledger').val()) {
+            updateBranchDefaults();
+        }
+
+        // Fetch Credit Ledger balance on change
+        $('#wpc_credit_ledger').change(function() {
+            var ledgerId = $(this).val();
+            if (ledgerId) {
+                $.ajax({
+                    url: "{% url 'get_ledger_balance' %}",
+                    data: { 'ledger_id': ledgerId },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $('#ledger_balance_display').text("Total Balance: " + response.balance);
+                        } else {
+                            $('#ledger_balance_display').text("");
+                        }
+                    },
+                    error: function() {
+                        $('#ledger_balance_display').text("");
+                    }
+                });
+            } else {
+                $('#ledger_balance_display').text("");
+            }
+        });
+
+        if ($('#wpc_credit_ledger').val()) {
+            $('#wpc_credit_ledger').trigger('change');
+        }
+    });
+</script>
+
+<style>
+    /* Compact styling matching TMS design */
+    #wms_petty_cash_add .form-group-modern {
+        margin-bottom: 0.6rem;
+    }
+    #wms_petty_cash_add .form-control-modern {
+        border-radius: 6px;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        height: 34px;
+    }
+    #wms_petty_cash_add textarea.form-control-modern {
+        height: auto;
+    }
+    #wms_petty_cash_add .form-label-modern {
+        margin-bottom: 0.15rem;
+        font-size: 0.8rem;
+    }
+    #wms_petty_cash_add .form-section {
+        padding: 0.8rem;
+    }
+
+    /* Fix Select2 Missing Outline and styling to match TMS exactly */
+    .select2-container .select2-selection--single {
+        height: 34px !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 6px !important;
+        padding: 0.2rem 0.4rem;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 32px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 26px !important;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #495057;
+    }
+</style>
+
+{% endblock %}
