@@ -20,6 +20,7 @@
                     <th>Job Number</th>
                     <th>Job Type</th>
                     <th>Cost Type</th>
+                    <th>Part Code</th>
                     <th>Stock Type</th>
                     <th>Stock Description</th>
                     <th>Item Name</th>
@@ -50,6 +51,7 @@
                     <td>{{costinginfo.ct_job_no}}</td>
                     <td>{{costinginfo.ct_requirement}}</td>
                     <td>{{costinginfo.ct_cost_type}}</td>
+                    <td>{{costinginfo.ct_part_code.pc_code|default:"None"}}</td>
                     <td>{{costinginfo.ct_stock_type}}</td>
                     <td>{{costinginfo.ct_stock_description}}</td>
                     <td>{{costinginfo.ct_item}}</td>

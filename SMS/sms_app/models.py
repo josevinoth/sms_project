@@ -153,14 +153,14 @@ from .sub_models.pk_stock_type_mod import Pkstocktype
 from .sub_models.stock_description_mod import Stockdescription
 from .sub_models.pk_packing_field_mod import Napackingfield
 from .sub_models.pk_special_requirements import Naspecialrequirements
-from .sub_models.pk_needassessment_mod import PkneedassessmentInfo
+from .sub_models.pk_needassessment_mod import PkneedassessmentInfo, PkneedassessmentAttachmentInfo
 from .sub_models.pk_openingstock_mod import PkopeningstockInfo
 from .sub_models.pk_dimension_type_mod import Nadimensiontype
 from .sub_models.na_dimension_mod import Nadimension
 from .sub_models.pk_quotes_mod import PkquotesInfo
 from .sub_models.pk_retrival_mod import PkretrivalInfo
 from .sub_models.pk_quotation_summary_mod import PkquotationsummaryInfo
-from .sub_models.pk_purchaseorder_mod import PkpurchaseorderInfo
+from .sub_models.pk_purchaseorder_mod import PkpurchaseorderInfo, PkpurchaseorderAttachmentInfo
 from .sub_models.po_dimension_mod import POdimension
 from .sub_models.pk_costing_summary_mod import PkcostingsummaryInfo
 from .sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo

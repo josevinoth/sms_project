@@ -138,13 +138,36 @@
                             {% render_field form.na_packing_field id="na_packing_field" class="form-control form-control-modern" %}
                         </div>
                         <div class="form-group-modern">
-                            <label class="form-label-modern">Attachment</label>
-                            {% render_field form.na_attach id="na_attach" class="form-control form-control-modern" %}
-                            {% if form.instance.na_attach %}
-                            <div class="mt-1">
-                                <a href="{{ form.instance.na_attach.url }}" target="_blank" style="font-size: 0.85rem; color: #17a2b8; text-decoration: none;">
-                                    <i class="fas fa-paperclip"></i> View Current Attachment
+                            <label class="form-label-modern d-flex justify-content-between align-items-center">
+                                <span>Attachments</span>
+                                {% if na_attachments %}
+                                <a href="#att_na_collapse" data-toggle="collapse" class="text-info ml-1" title="{{ na_attachments|length }} attachment{{ na_attachments|length|pluralize }}" style="font-size:0.75rem; text-decoration:none;">
+                                    <i class="fas fa-paperclip mr-1"></i><b>{{ na_attachments|length }}</b>
                                 </a>
+                                {% endif %}
+                            </label>
+                            {% if form.instance.na_attach %}
+                            <div class="small mb-1 text-muted">
+                                Primary: <a href="{{ form.instance.na_attach.url }}" target="_blank" class="text-primary font-weight-bold"><i class="fas fa-file-pdf mr-1"></i>View Primary File</a>
+                            </div>
+                            {% endif %}
+                            <input type="file" name="na_attach_files" id="na_attach_files" class="form-control-file form-control-modern mt-1" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+                            
+                            {% if na_attachments %}
+                            <div id="att_na_collapse" class="collapse mt-2">
+                                <div class="border rounded p-2" style="background:#f8fafc; max-height:130px; overflow-y:auto;">
+                                    {% for att in na_attachments %}
+                                    <div class="d-flex align-items-center justify-content-between py-1 border-bottom" id="na-att-row-{{ att.id }}">
+                                        <span class="text-truncate small" style="max-width:70%; font-size:0.75rem;" title="{{ att.filename|default:att.file.name }}">
+                                            <i class="far fa-file-alt text-primary mr-1"></i>{{ att.filename|default:att.file.name }}
+                                        </span>
+                                        <span>
+                                            <a href="{{ att.file.url }}" target="_blank" class="text-primary mr-2" title="View" style="font-size:0.8rem;"><i class="fas fa-eye"></i></a>
+                                            <a role="button" class="text-danger" onclick="deleteNaAtt({{ att.id }})" title="Delete" style="cursor:pointer; font-size:0.8rem;"><i class="fas fa-trash-alt"></i></a>
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
                             </div>
                             {% endif %}
                         </div>
@@ -161,13 +184,13 @@
                 <div class="col-md-6 col-compact">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-file-contract"></i> Client Scope</div>
-                        {% render_field form.na_client_scope id="na_client_scope" class="form-control form-control-modern" style="height: 120px !important;" %}
+                        {% render_field form.na_client_scope id="na_client_scope" class="form-control form-control-modern auto-expand-textarea" rows="1" style="height: 42px !important; min-height: 42px; transition: height 0.2s ease; overflow-y: hidden; resize: none;" %}
                     </div>
                 </div>
                 <div class="col-md-6 col-compact">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-shield-alt"></i> BVM Scope</div>
-                        {% render_field form.na_bvm_scope id="na_bvm_scope" class="form-control form-control-modern" style="height: 120px !important;" %}
+                        {% render_field form.na_bvm_scope id="na_bvm_scope" class="form-control form-control-modern auto-expand-textarea" rows="1" style="height: 42px !important; min-height: 42px; transition: height 0.2s ease; overflow-y: hidden; resize: none;" %}
                     </div>
                 </div>
             </div>
@@ -177,10 +200,10 @@
             {% render_field form.nad_cost_total id="nad_cost_total" hidden="True" class="form-control" %}
 
             <!-- Messages -->
-            <div class="message-container my-2 text-center">
+            <div class="message-container my-3 text-center">
                 {% for message in messages %}
-                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-1 px-3 d-inline-block shadow-sm">
-                    <i class="fas fa-info-circle"></i> {{ message }}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags %}{{ message.tags }}{% else %}info{% endif %} py-2 px-4 d-inline-block shadow-sm rounded-lg font-weight-bold" style="font-size: 1.05rem;">
+                    <i class="fas {% if message.tags == 'error' %}fa-exclamation-triangle{% else %}fa-check-circle{% endif %} mr-2"></i> {{ message }}
                 </div>
                 {% endfor %}
             </div>
@@ -637,6 +660,44 @@
 				}
 			});
 		}
+	}
+
+	$(document).ready(function() {
+		$('.auto-expand-textarea').on('input focus', function() {
+			this.style.setProperty('height', 'auto', 'important');
+			var newHeight = Math.max(42, this.scrollHeight);
+			this.style.setProperty('height', newHeight + 'px', 'important');
+		}).on('blur', function() {
+			if (!this.value.trim()) {
+				this.style.setProperty('height', '42px', 'important');
+			}
+		});
+
+		// Trigger initial height check for populated textareas
+		$('.auto-expand-textarea').each(function() {
+			if (this.value.trim()) {
+				this.style.setProperty('height', Math.max(42, this.scrollHeight) + 'px', 'important');
+			}
+		});
+	});
+
+	function deleteNaAtt(attId) {
+		if (!confirm('Are you sure you want to delete this attachment?')) return;
+		$.ajax({
+			url: '/SMS/delete_na_attachment/' + attId + '/',
+			type: 'POST',
+			headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+			success: function(resp) {
+				if (resp.status === 'success') {
+					$('#na-att-row-' + attId).fadeOut(300, function() { $(this).remove(); });
+				} else {
+					alert(resp.message || 'Failed to delete attachment.');
+				}
+			},
+			error: function() {
+				alert('An error occurred while deleting attachment.');
+			}
+		});
 	}
 </script>
 {% endblock extra_js %}

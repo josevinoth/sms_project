@@ -11,7 +11,10 @@
     <!-- Page Header -->
     <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
         <h2 class="mb-0 text-white"><i class="fas fa-coins mr-2"></i> Add/Update Costing</h2>
-        <div style="position: relative; z-index: 10;">
+        <div class="d-flex gap-2" style="position: relative; z-index: 10;">
+            <button type="button" class="btn-modern py-1 px-3 mr-2" data-toggle="modal" data-target="#calculatorModal" style="background: #2563eb; border: 1px solid #3b82f6; color: white; font-size: 0.85rem; font-weight: 700;">
+                <i class="fas fa-calculator mr-1"></i> Calculator
+            </button>
             <a href="{% url 'costing_cancel' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size: 0.9rem; text-decoration: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important;">
                 <i class="fas fa-arrow-left"></i> BACK TO LIST
             </a>
@@ -33,9 +36,9 @@
                 {% endif %}
 
                 <div class="row row-compact">
-                    <!-- Column 1: Basic & Job Info -->
-                    <div class="col-12 col-md-4 col-xl-3 col-compact">
-                        <div class="form-section">
+                    <!-- Section 1: Basic Info -->
+                    <div class="col-12 col-md-6 col-xl-3 col-compact">
+                        <div class="form-section h-100">
                             <div class="form-section-title"><i class="fas fa-id-card"></i> Basic Info</div>
                             <div class="form-row-modern">
                                 <div class="form-group-modern">
@@ -95,21 +98,14 @@
                         </div>
                     </div>
 
-                    <!-- Column 2: Part & Item Details -->
-                    <div class="col-12 col-md-4 col-xl-3 col-compact">
-                        <div class="form-section">
-                            <div class="form-section-title"><i class="fas fa-barcode"></i> Part & Item</div>
+                    <!-- Section 2: Part & Stock -->
+                    <div class="col-12 col-md-6 col-xl-3 col-compact">
+                        <div class="form-section h-100">
+                            <div class="form-section-title"><i class="fas fa-barcode"></i> Part & Stock</div>
                             <div class="form-row-modern">
                                 <div class="form-group-modern">
                                     <label class="form-label-modern">Part Code</label>
-                                    <div class="input-group input-group-sm">
-                                        {% render_field form.ct_part_code id="ct_part_code" onchange="fetchPartCodeDetails()" class="form-control form-control-modern select2" %}
-                                        <div class="input-group-append">
-                                            <button class="btn btn-warning py-0" type="button" id="show_stock_summary" style="height: 32px;">
-                                                <i class="fas fa-warehouse"></i>
-                                            </button>
-                                        </div>
-                                    </div>
+                                    {% render_field form.ct_part_code id="ct_part_code" onchange="fetchPartCodeDetails()" class="form-control form-control-modern select2" %}
                                 </div>
                                 <div class="row no-gutters">
                                     <div class="col-6 pr-1">
@@ -125,6 +121,26 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="form-group-modern stock-info-box" style="border-left: 3px solid var(--accent-orange); padding-left: 8px;">
+                                    <label class="form-label-modern" style="color: var(--accent-orange);">Stock Purchase #</label>
+                                    {% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control form-control-modern" %}
+                                </div>
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Available Qty</label>
+                                    {% render_field form.ct_quantity id="ct_quantity_display_dup" class="form-control form-control-modern" readonly="readonly" %}
+                                </div>
+                                <button id="search_wood" type="button" class="btn-modern btn-highlight w-100 mt-2">
+                                    <i class="fas fa-search"></i> Search Item
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Item Details -->
+                    <div class="col-12 col-md-6 col-xl-3 col-compact">
+                        <div class="form-section h-100">
+                            <div class="form-section-title"><i class="fas fa-box-open"></i> Item Details</div>
+                            <div class="form-row-modern">
                                 <div class="form-group-modern">
                                     <label class="form-label-modern">Item Name</label>
                                     {% render_field form.ct_item id="ct_item" onchange="changeItemDescription()" class="form-control form-control-modern" %}
@@ -167,17 +183,14 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button id="search_wood" type="button" class="btn-modern btn-highlight w-100 mt-2">
-                                    <i class="fas fa-search"></i> Search Item
-                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Column 3: Calculation & Costing -->
-                    <div class="col-12 col-md-4 col-xl-3 col-compact">
-                        <div class="form-section">
-                            <div class="form-section-title"><i class="fas fa-calculator"></i> Calculations</div>
+                    <!-- Section 4: Calculations & Cost -->
+                    <div class="col-12 col-md-6 col-xl-3 col-compact">
+                        <div class="form-section h-100" style="border-left: 4px solid var(--accent-emerald);">
+                            <div class="form-section-title" style="color: var(--accent-emerald);"><i class="fas fa-coins"></i> Calculations & Cost</div>
                             <div class="form-row-modern">
                                 <div class="row no-gutters">
                                     <div class="col-6 pr-1">
@@ -202,7 +215,7 @@
                                     </div>
                                     <div class="col-6 pl-1">
                                         <div class="form-group-modern">
-                                            <label class="form-label-modern">Req Value</label>
+                                            <label class="form-label-modern" id="req_value_label">Req Value <i class="fas fa-info-circle text-info ml-1" id="req_value_icon" data-toggle="tooltip" title="Calculated Volume (CFT) or Area (SQFT) required for calculation"></i></label>
                                             {% render_field form.ct_sqrt_req id="ct_sqrt_req" onchange="change_cost_type()" class="form-control form-control-modern" %}
                                         </div>
                                     </div>
@@ -225,12 +238,6 @@
                                     <label class="form-label-modern">Days/Hours</label>
                                     {% render_field form.ct_days id="ct_days" onchange="change_cost_type()" class="form-control form-control-modern" %}
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="form-section" style="border-left: 4px solid var(--accent-emerald);">
-                            <div class="form-section-title" style="color: var(--accent-emerald);"><i class="fas fa-coins"></i> Costing Information</div>
-                            <div class="form-row-modern">
                                 <div class="row no-gutters">
                                     <div class="col-6 pr-1">
                                         <div class="form-group-modern">
@@ -245,21 +252,12 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Total Job Value (INR)</label>
-                                    {% render_field form.ct_totalbox_cost id="ct_totalbox_cost" class="form-control form-control-modern font-weight-bold text-success bg-light" style="font-size: 1.2rem; text-align: center;" %}
-                                </div>
-                                <div class="form-group-modern stock-info-box mt-2" style="border-left: 3px solid var(--accent-orange); padding-left: 8px;">
-                                    <label class="form-label-modern" style="color: var(--accent-orange);">Stock Purchase #</label>
-                                    {% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control form-control-modern" %}
+                                <div class="form-group-modern mb-1">
+                                    <label class="form-label-modern">Total Cost (INR)</label>
+                                    {% render_field form.ct_totalbox_cost id="ct_totalbox_cost" readonly="True" class="form-control form-control-modern" style="font-size: 1.1rem !important; color: var(--accent-emerald) !important; text-align: center; font-weight: 700;" %}
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Column 4: Calculator -->
-                    <div class="col-12 col-xl-3 col-compact">
-                        {% include "asset_mgt_app/calculation_card.html" %}
                     </div>
                 </div>
 
@@ -271,18 +269,14 @@
                     <input type="hidden" id="hidden_pc_stock_description">
                 </div>
 
-                <!-- Action Buttons Parallel (Corners) -->
-                <div class="row mt-0">
-                    <div class="col-12 col-xl-9">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <button type="submit" class="btn-modern btn-submit px-4">
-                                <i class="fas fa-save mr-2"></i> Save Costing
-                            </button>
-                            <a href="{% url 'costing_cancel' %}" class="btn-modern btn-cancel px-4">
-                                <i class="fas fa-times mr-2"></i> Cancel
-                            </a>
-                        </div>
-                    </div>
+                <!-- Action Buttons Parallel -->
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-2" style="border-top: 1px solid var(--border-light);">
+                    <button type="submit" class="btn-modern btn-submit px-4">
+                        <i class="fas fa-save mr-2"></i> Save Costing
+                    </button>
+                    <a href="{% url 'costing_cancel' %}" class="btn-modern btn-cancel px-4">
+                        <i class="fas fa-times mr-2"></i> Cancel
+                    </a>
                 </div>
             </form>
         </div>
@@ -294,6 +288,46 @@
 
     <div class="mt-2">
         {% include "asset_mgt_app/pk_costing_list_WOH.html" %}
+    </div>
+</div>
+
+<!-- Calculator Modal -->
+<div class="modal fade" id="calculatorModal" tabindex="-1" role="dialog" aria-labelledby="calculatorModalLabel" aria-hidden="true" style="z-index: 99999;">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 420px;">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.3); background: var(--bg-card);">
+            <div class="modal-header py-2 px-3" style="background: var(--accent-orange); color: white; border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                <h6 class="modal-title font-weight-bold" id="calculatorModalLabel">
+                    <i class="fas fa-calculator mr-2"></i> Quick Calculator
+                </h6>
+                <button type="button" class="close text-white p-0 m-0" data-dismiss="modal" aria-label="Close" style="line-height: 1;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-2">
+                {% include "asset_mgt_app/calculation_card.html" %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Search Results Dialog Modal -->
+<div class="modal fade" id="stockSearchResultModal" tabindex="-1" role="dialog" aria-labelledby="stockSearchResultModalLabel" aria-hidden="true" style="z-index: 9999;">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div class="modal-header bg-warning text-dark" style="border-top-left-radius: 12px; border-top-right-radius: 12px; padding: 0.8rem 1.2rem;">
+                <h5 class="modal-title font-weight-bold" id="stockSearchResultModalLabel">
+                    <i class="fas fa-boxes mr-2"></i> Select Available Stock Purchase Record
+                </h5>
+                <button type="button" class="close text-dark" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-3">
+                <div id="pk_item_search_page_costing_modal_container">
+                    <!-- Search results dynamically injected here -->
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -410,7 +444,8 @@
 			load_pk_requirement_type_by_job();
 		}
         
-        $(document).on("click", "#search_wood", function () {
+        $(document).on("click", "#search_wood", function (e) {
+            e.preventDefault();
             if (typeof search_wood === 'function') search_wood();
         });
     });
@@ -704,7 +739,7 @@
         var width_req = parseFloat($("#ct_width_req").val()) || 0;
         var height_req = parseFloat($("#ct_height_req").val()) || 0;
         var part_code = $("#ct_part_code").val();
-        var includeContainer = $('#pk_item_search_page_costing');
+        var includeContainer = $('#pk_item_search_page_costing_modal_container');
 
         $.ajax({
             url: "{% url 'pk_item_search_page_costing' %}",
@@ -720,6 +755,7 @@
                 var tableHtml = '<div class="table-container-modern stock-table-frame"><div class="table-responsive"><table id="stockTable" class="table modern-table" style="min-width: 1600px;">';
                 tableHtml += '<thead class="thead-dark">';
                 tableHtml += '<tr>';
+                tableHtml += '<th>Select</th>';
                 tableHtml += '<th>ID</th>';
                 tableHtml += '<th>Vendor Bill</th>';
                 tableHtml += '<th>Date</th>';
@@ -735,13 +771,22 @@
                 tableHtml += '<th>Rate/Qty (CFT)</th>';
                 tableHtml += '<th>UOM</th>';
                 tableHtml += '<th>Size</th>';
-                tableHtml += '<th>Select</th>';
                 tableHtml += '</tr></thead><tbody>';
 
                 if (results.length > 0) {
                     for (var i = 0; i < results.length; i++) {
                         var row = results[i];
                         tableHtml += '<tr>';
+                        if (row.sp_quantity > 0) {
+                            tableHtml += '<td><a href="#" class="btn btn-primary btn-sm select-stock" ' +
+                                'data-id="' + row.id + '" ' +
+                                'data-purchase_num="' + row.sp_purchase_num + '" ' +
+                                'data-quantity="' + row.sp_quantity + '" ' +
+                                'data-rate="' + row.sp_rate + '" ' +
+                                '>Select</a></td>';
+                        } else {
+                            tableHtml += '<td><span class="badge badge-danger">Out of Stock</span></td>';
+                        }
                         tableHtml += '<td>' + row.id + '</td>';
                         tableHtml += '<td>' + (row.sp_vendor_bill_id || '-') + '</td>';
                         tableHtml += '<td>' + (row.sp_stock_in_date || '-') + '</td>';
@@ -757,22 +802,13 @@
                         tableHtml += '<td>' + row.sp_rate + '</td>';
                         tableHtml += '<td>' + row.sp_uom__unit_of_measure + '</td>';
                         tableHtml += '<td>' + row.sp_size + '</td>';
-                        if (row.sp_quantity > 0) {
-                            tableHtml += '<td><a href="#" class="btn btn-primary btn-modern select-stock" ' +
-                                'data-id="' + row.id + '" ' +
-                                'data-purchase_num="' + row.sp_purchase_num + '" ' +
-                                'data-quantity="' + row.sp_quantity + '" ' +
-                                'data-rate="' + row.sp_rate + '" ' +
-                                '>Select</a></td>';
-                        } else {
-                            tableHtml += '<td><span class="badge badge-danger">Out of Stock</span></td>';
-                        }
                         tableHtml += '</tr>';
                     }
                 }
 
                 tableHtml += '</tbody></table></div></div>';
                 includeContainer.html('<div id="scrollable-stock-table" style="max-height: 500px; overflow: auto;">' + tableHtml + '</div>');
+                $('#stockSearchResultModal').modal('show');
 
                 if ($.fn.DataTable.isDataTable('#stockTable')) {
                     $('#stockTable').DataTable().destroy();

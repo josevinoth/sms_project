@@ -4,6 +4,7 @@ from ..models import StatusList,CustomerInfo,MyUser,PkneedassessmentInfo
 class PkquotationsummaryInfo(models.Model):
     qs_assessment_num = models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, default='')
     qs_wood_cost = models.FloatField(blank=True, null=True, default=0.0)
+    qs_plywood_cost = models.FloatField(blank=True, null=True, default=0.0)
     qs_engineer_cost = models.FloatField(blank=True, null=True, default=0.0)
     qs_labour_cost = models.FloatField(blank=True, null=True, default=0.0)
     qs_margin = models.FloatField(blank=True, null=True, default=0.0)
@@ -14,6 +15,7 @@ class PkquotationsummaryInfo(models.Model):
     qs_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='qs_updated_by',
                                       db_column='qs_updated_by', null=True)
     qs_total_cft = models.FloatField(blank=True, null=True, default=0.0)
+    qs_total_sqft = models.FloatField(blank=True, null=True, default=0.0)
     qs_crane_cost = models.FloatField(blank=True, null=True, default=0.0)
     qs_ht_cost = models.FloatField(blank=True, null=True, default=0.0)
     qs_management_cost = models.FloatField(blank=True, null=True, default=0.0)

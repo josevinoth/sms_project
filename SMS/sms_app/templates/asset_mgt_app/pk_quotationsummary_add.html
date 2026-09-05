@@ -64,28 +64,22 @@
                         <div class="row no-gutters">
                             <div class="col-6 pr-1">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Wood Cost</label>
+                                    <label class="form-label-modern text-truncate" title="Wood Cost">Wood Cost</label>
                                     {% render_field form.qs_wood_cost id="qs_wood_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
                             </div>
                             <div class="col-6 pl-1">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Engineer Cost</label>
-                                    {% render_field form.qs_engineer_cost id="qs_engineer_cost" class="form-control form-control-modern disable_a_href" %}
+                                    <label class="form-label-modern text-truncate" title="Plywood Cost">Plywood Cost</label>
+                                    {% render_field form.qs_plywood_cost id="qs_plywood_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
                             </div>
                         </div>
                         <div class="row no-gutters">
-                            <div class="col-6 pr-1">
+                            <div class="col-12">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Labour Cost</label>
+                                    <label class="form-label-modern text-truncate" title="Labour Cost">Labour Cost</label>
                                     {% render_field form.qs_labour_cost id="qs_labour_cost" class="form-control form-control-modern disable_a_href" %}
-                                </div>
-                            </div>
-                            <div class="col-6 pl-1">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Crane Cost</label>
-                                    {% render_field form.qs_crane_cost id="qs_crane_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
                             </div>
                         </div>
@@ -99,27 +93,27 @@
                         <div class="row no-gutters">
                             <div class="col-6 pr-1">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">HT Cost</label>
+                                    <label class="form-label-modern text-truncate" title="HT Cost">HT Cost</label>
                                     {% render_field form.qs_ht_cost id="qs_ht_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
                             </div>
                             <div class="col-6 pl-1">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Mgt Cost</label>
-                                    {% render_field form.qs_management_cost id="qs_management_cost" class="form-control form-control-modern disable_a_href" %}
+                                    <label class="form-label-modern text-truncate" title="Crane Cost">Crane Cost</label>
+                                    {% render_field form.qs_crane_cost id="qs_crane_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
                             </div>
                         </div>
                         <div class="row no-gutters">
                             <div class="col-6 pr-1">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Consumables</label>
+                                    <label class="form-label-modern text-truncate" title="Consumables">Consumables</label>
                                     {% render_field form.qs_material_cost id="qs_material_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
                             </div>
                             <div class="col-6 pl-1">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Transport</label>
+                                    <label class="form-label-modern text-truncate" title="Transport">Transport</label>
                                     {% render_field form.qs_transport_cost id="qs_transport_cost" class="form-control form-control-modern disable_a_href" %}
                                 </div>
                             </div>
@@ -153,13 +147,33 @@
                         </div>
                     </div>
                     <div class="col-12 col-md-6 col-xl-3 col-compact">
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Total CFT</label>
-                            {% render_field form.qs_total_cft id="qs_total_cft" onchange="change_charge_type()" class="form-control form-control-modern disable_a_href" %}
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern text-truncate" title="Total CFT">Total CFT</label>
+                                    {% render_field form.qs_total_cft id="qs_total_cft" onchange="change_charge_type()" class="form-control form-control-modern disable_a_href" %}
+                                </div>
+                            </div>
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern text-truncate" title="Total SQFT">Total SQFT</label>
+                                    <input type="text" id="qs_total_sqft" class="form-control form-control-modern disable_a_href" value="{{ total_sqft }}">
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Rate Per CFT</label>
-                            {% render_field form.qs_rate_per_cft id="qs_rate_per_cft" class="form-control form-control-modern disable_a_href" %}
+                        <div class="row no-gutters">
+                            <div class="col-6 pr-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern text-truncate" title="Rate Per CFT">Rate / CFT</label>
+                                    {% render_field form.qs_rate_per_cft id="qs_rate_per_cft" class="form-control form-control-modern disable_a_href" %}
+                                </div>
+                            </div>
+                            <div class="col-6 pl-1">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern text-truncate" title="Rate Per SQFT">Rate / SQFT</label>
+                                    <input type="text" id="qs_rate_per_sqft" class="form-control form-control-modern disable_a_href" value="{{ rate_per_sqft }}">
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6 col-xl-3 col-compact">
@@ -288,8 +302,8 @@
                 <tr>
                     <th>Job Type</th>
                     <th>Wood Cost</th>
+                    <th>Plywood Cost</th>
                     <th>Consumables</th>
-                    <th>Engineer Cost</th>
                     <th>Labour Cost</th>
                     <th>Crane Cost</th>
                     <th>HT Cost</th>
@@ -302,8 +316,8 @@
                 <tr>
                     <td>{{ job.job_type }}</td>
                     <td>₹{{ job.wood_cost }}</td>
+                    <td>₹{{ job.plywood_cost }}</td>
                     <td>₹{{ job.consumables }}</td>
-                    <td>₹{{ job.engineer_cost }}</td>
                     <td>₹{{ job.labour_cost }}</td>
                     <td>₹{{ job.crane_cost }}</td>
                     <td>₹{{ job.ht_cost }}</td>
@@ -376,15 +390,16 @@
 {% block extra_js %}
 <script>
     $(document).ready(function () {
-        document.getElementById("qs_updated_by").value = '{{user_id}}';
-        document.getElementById("qs_wood_cost").value = '{{wood_cost}}';
-        document.getElementById("qs_engineer_cost").value = '{{engineer_cost}}';
-        document.getElementById("qs_labour_cost").value = '{{labour_cost}}';
-        document.getElementById("qs_crane_cost").value = '{{crane_cost}}';
-        document.getElementById("qs_ht_cost").value = '{{ht_cost}}';
-        document.getElementById("qs_management_cost").value = '{{management_cost}}';
-        document.getElementById("qs_material_cost").value = '{{material_cost}}';
-        document.getElementById("qs_transport_cost").value = '{{transport_cost}}';
+        if (document.getElementById("qs_updated_by")) document.getElementById("qs_updated_by").value = '{{user_id}}';
+        if (document.getElementById("qs_wood_cost")) document.getElementById("qs_wood_cost").value = '{{wood_cost}}';
+        if (document.getElementById("qs_plywood_cost")) document.getElementById("qs_plywood_cost").value = '{{plywood_cost}}';
+        if (document.getElementById("qs_engineer_cost")) document.getElementById("qs_engineer_cost").value = '{{engineer_cost}}';
+        if (document.getElementById("qs_labour_cost")) document.getElementById("qs_labour_cost").value = '{{labour_cost}}';
+        if (document.getElementById("qs_crane_cost")) document.getElementById("qs_crane_cost").value = '{{crane_cost}}';
+        if (document.getElementById("qs_ht_cost")) document.getElementById("qs_ht_cost").value = '{{ht_cost}}';
+        if (document.getElementById("qs_management_cost")) document.getElementById("qs_management_cost").value = '{{management_cost}}';
+        if (document.getElementById("qs_material_cost")) document.getElementById("qs_material_cost").value = '{{material_cost}}';
+        if (document.getElementById("qs_transport_cost")) document.getElementById("qs_transport_cost").value = '{{transport_cost}}';
         change_charge_type();
 
         var user_role = '{{role_id}}';
@@ -434,16 +449,17 @@
 
     function change_charge_type() {
         var wood_cost = parseFloat(document.getElementById("qs_wood_cost").value) || 0;
-        var engineer_cost = parseFloat(document.getElementById("qs_engineer_cost").value) || 0;
+        var plywood_cost = parseFloat(document.getElementById("qs_plywood_cost") ? document.getElementById("qs_plywood_cost").value : 0) || 0;
+        var engineer_cost = parseFloat(document.getElementById("qs_engineer_cost") ? document.getElementById("qs_engineer_cost").value : 0) || 0;
         var labour_cost = parseFloat(document.getElementById("qs_labour_cost").value) || 0;
         var crane_cost = parseFloat(document.getElementById("qs_crane_cost").value) || 0;
         var ht_cost = parseFloat(document.getElementById("qs_ht_cost").value) || 0;
-        var management_cost = parseFloat(document.getElementById("qs_management_cost").value) || 0;
+        var management_cost = parseFloat(document.getElementById("qs_management_cost") ? document.getElementById("qs_management_cost").value : 0) || 0;
         var material_cost = parseFloat(document.getElementById("qs_material_cost").value) || 0;
         var transport_cost = parseFloat(document.getElementById("qs_transport_cost").value) || 0;
         var margin = parseFloat(document.getElementById("qs_margin").value) || 0;
         
-        var total_cost_wo_m = wood_cost + engineer_cost + labour_cost + crane_cost + ht_cost + management_cost + material_cost + transport_cost;
+        var total_cost_wo_m = wood_cost + plywood_cost + engineer_cost + labour_cost + crane_cost + ht_cost + management_cost + material_cost + transport_cost;
         document.getElementById("qs_total_cost_wom").value = total_cost_wo_m.toFixed(2);
         
         var margin_value = total_cost_wo_m * (margin / 100);
@@ -455,8 +471,14 @@
         document.getElementById("qs_final_cost").value = final_cost.toFixed(2);
 
         var total_cft = parseFloat(document.getElementById("qs_total_cft").value) || 0;
-        var rate_per_cft = isNaN(total_cost / total_cft) ? 0 : (total_cost / total_cft);
+        var rate_per_cft = (total_cft > 0) ? (wood_cost / total_cft) : 0;
         document.getElementById("qs_rate_per_cft").value = rate_per_cft.toFixed(2);
+
+        var total_sqft = parseFloat(document.getElementById("qs_total_sqft") ? document.getElementById("qs_total_sqft").value : 0) || 0;
+        var rate_per_sqft = (total_sqft > 0) ? (plywood_cost / total_sqft) : 0;
+        if (document.getElementById("qs_rate_per_sqft")) {
+            document.getElementById("qs_rate_per_sqft").value = rate_per_sqft.toFixed(2);
+        }
     }
 
     $('#qs_assessment_num').on('change', function () {

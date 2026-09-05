@@ -518,6 +518,7 @@ urlpatterns = [
     path('needassessment_list/', views.needassessment_list, name='needassessment_list'),  # List needassessment
     path('needassessment_insert/', views.needassessment_add, name='needassessment_insert'),  # Add needassessment
     path('needassessment_update/<int:needassessment_id>', views.needassessment_add, name='needassessment_update'),
+    path('delete_na_attachment/<int:att_id>/', views.delete_na_attachment, name='delete_na_attachment'),
     # update needassessment
     path('needassessment_delete/<int:needassessment_id>', views.needassessment_delete, name='needassessment_delete'),
     # delete needassessment
@@ -537,6 +538,7 @@ urlpatterns = [
     path('purchaseorder_list/', views.purchaseorder_list, name='purchaseorder_list'),  # List purchaseorder
     path('purchaseorder_insert/', views.purchaseorder_add, name='purchaseorder_insert'),  # Add purchaseorder
     path('purchaseorder_update/<int:purchaseorder_id>', views.purchaseorder_add, name='purchaseorder_update'),
+    path('delete_po_attachment/<int:att_id>/', views.delete_po_attachment, name='delete_po_attachment'),
     # update purchaseorder
     path('purchaseorder_delete/<int:purchaseorder_id>', views.purchaseorder_delete, name='purchaseorder_delete'),
     # delete purchaseorder

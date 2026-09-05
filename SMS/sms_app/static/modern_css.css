@@ -676,15 +676,12 @@ a.btn-modern + a.btn-modern {
 .table-container-modern {
     background: var(--bg-card);
     backdrop-filter: blur(12px);
-    border-radius: 24px;
-    padding: 1rem;
-    border: 1px solid rgba(var(--border-light-rgb), 0.06);
-    box-shadow: 0 15px 40px var(--shadow-main);
-    margin-bottom: 2rem;
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: auto !important; /* Smooth responsive horizontal scroll on all zoom levels */
-    -webkit-overflow-scrolling: touch;
+    border-radius: 14px;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 4px 12px var(--shadow-main);
+    margin-bottom: 1.25rem;
+    overflow-x: auto; /* Ensure horizontal scroll for wide tables */
 }
 
 .modern-table {
@@ -702,31 +699,12 @@ table.dataTable thead th {
     color: #ffffff !important;
     font-weight: 700;
     text-transform: uppercase;
-    font-size: 0.82rem;
-    letter-spacing: 0.5px;
-    padding: 0.75rem 0.8rem !important;
+    font-size: 0.72rem;
+    letter-spacing: 0.4px;
+    padding: 0.45rem 0.55rem !important;
     border: none !important;
     border-bottom: none !important;
     vertical-align: middle !important;
-    white-space: nowrap !important;
-    text-align: center !important;
-}
-
-/* ══ DataTables Wrapper Responsiveness & Alignment Fix ══ */
-.dataTables_wrapper {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: auto !important;
-}
-
-.dataTables_scrollHead,
-.dataTables_scrollBody {
-    width: 100% !important;
-}
-
-.dataTables_scrollHeadInner,
-.dataTables_scrollHeadInner table.modern-table {
-    width: 100% !important;
 }
 
 /* ══ Remove line/border under table header for modern tables & DataTables ══ */
@@ -798,9 +776,7 @@ table.dataTable tbody td {
     font-size: 0.78rem;
     font-weight: 600;
     color: var(--text-main) !important;
-    vertical-align: middle;
-    text-align: center !important;
-    white-space: nowrap !important;
+    vertical-align: middle !important;
     line-height: 1.25;
 }
 
@@ -2425,12 +2401,3 @@ body, .modern-card, .form-section, .form-control-modern, .modern-table td, .tabl
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35) !important;
 }
-
-/* Hide unstyled clear search button in bootstrap-multiselect dropdowns */
-.multiselect-clear-filter,
-.multiselect-filter-clear-button,
-.input-group-append button.multiselect-clear-filter {
-    display: none !important;
-}
-
-

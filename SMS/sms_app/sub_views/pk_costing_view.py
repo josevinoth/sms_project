@@ -468,16 +468,6 @@ def pk_item_search_page_costing(request):
     if stock_description and stock_description != '0':
         parts = parts.filter(pc_stock_description_id=stock_description)
 
-    try:
-        if length_req and float(length_req) > 0:
-            parts = parts.filter(pc_length=float(length_req))
-        if width_req and float(width_req) > 0:
-            parts = parts.filter(pc_width=float(width_req))
-        if height_req and float(height_req) > 0:
-            parts = parts.filter(pc_height=float(height_req))
-    except (ValueError, TypeError):
-        pass
-
     p_ids = list(parts.values_list('id', flat=True))
 
     if not p_ids and part_code and not part_code.isdigit():

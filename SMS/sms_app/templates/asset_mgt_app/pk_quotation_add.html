@@ -380,7 +380,8 @@
         if (typeof load_pk_requirement_type === 'function') load_pk_requirement_type();
         if (typeof change_cost_type === 'function') change_cost_type();
         
-        $(document).on("click", "#search_wood", function () {
+        $(document).on("click", "#search_wood", function (e) {
+            e.preventDefault();
             if (typeof search_wood === 'function') search_wood();
         });
 
@@ -748,9 +749,9 @@
     function search_wood() {
         var stock_description = $("#pkqt_stock_description").val();
         var stock_type = $("#pkqt_stock_type").val();
-        var length_req = parseFloat($("#pkqt_length_req").val());
-        var width_req = parseFloat($("#pkqt_width_req").val());
-        var height_req = parseFloat($("#pkqt_height_req").val());
+        var length_req = parseFloat($("#pkqt_length_req").val()) || 0;
+        var width_req = parseFloat($("#pkqt_width_req").val()) || 0;
+        var height_req = parseFloat($("#pkqt_height_req").val()) || 0;
         var part_code = $("#pkqt_part_code").val();
         var includeContainer = $('#pk_item_search_page_costing_modal_container');
 

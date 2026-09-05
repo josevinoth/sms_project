@@ -118,7 +118,7 @@
 
 <!-- Content Section -->
 <div class="container-fluid pt-1 pb-3">
-    {% if messages %}
+    {% if messages and not hide_top_messages %}
     <div class="row">
         <div class="col-12">
             {% for message in messages %}

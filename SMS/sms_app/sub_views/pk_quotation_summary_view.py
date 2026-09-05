@@ -9,7 +9,7 @@ from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_del
 from ..forms import PkcostingsummaryForm,PkquotationsummaryForm
 from ..models import pk_stock_statusinfo,PkcostingInfo,User_extInfo,Nadimension,PkquotationsummaryInfo,PkneedassessmentInfo,PkquotationInfo,PkcostingsummaryInfo,PkpurchaseorderInfo,StatusList,POdimension
 from django.shortcuts import render, redirect
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Q
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
@@ -59,70 +59,59 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
             form = PkquotationsummaryForm(instance=quotationsummary)
             quotation_list = PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id)
 
-            # Aggregate costs
-            def get_aggregate_cft(assessment_id, cost_type, stock_types=None):
-                filter_kwargs = {'pkqt_assessment_num': assessment_id, 'pkqt_cost_type': cost_type}
-                if stock_types:
-                    filter_kwargs['pkqt_stock_type__in'] = stock_types
-                # Calculate total project CFT: Sum(CFT_per_box * num_boxes)
-                cost = PkquotationInfo.objects.filter(**filter_kwargs).aggregate(
-                    total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity'))
-                )['total']
-                return round(cost, 3) if cost is not None else 0.0
+            # Optimized single-pass aggregation
+            all_q_items = PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id).select_related('pkqt_requirement')
 
-            def get_aggregate_cost(assessment_id, cost_type, stock_types=None):
-                filter_kwargs = {'pkqt_assessment_num': assessment_id, 'pkqt_cost_type': cost_type}
-                if stock_types:
-                    filter_kwargs['pkqt_stock_type__in'] = stock_types
-                cost = PkquotationInfo.objects.filter(**filter_kwargs).aggregate(Sum('pkqt_totalbox_cost'))[
-                    'pkqt_totalbox_cost__sum']
-                return round(cost, 3) if cost is not None else 0.0
+            wood_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 8 and q.pkqt_stock_type_id in [1, 5]), 3)
+            plywood_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 8 and q.pkqt_stock_type_id in [4, 6]), 3)
+            total_cft = round(sum((q.pkqt_sqrt_req or 0.0) * (q.pkqt_na_quantity or 1) for q in all_q_items if q.pkqt_cost_type_id == 8 and q.pkqt_stock_type_id in [1, 5]), 3)
+            total_sqft = round(sum((q.pkqt_sqrt_req or 0.0) * (q.pkqt_na_quantity or 1) for q in all_q_items if q.pkqt_cost_type_id == 8 and q.pkqt_stock_type_id in [4, 6]), 3)
+            engineer_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 2), 3)
+            labour_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id in [3, 9]), 3)
+            crane_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 6), 3)
+            ht_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 5), 3)
+            management_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 7), 3)
+            material_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 8 and q.pkqt_stock_type_id == 2), 3)
+            transport_cost = round(sum(q.pkqt_totalbox_cost or 0.0 for q in all_q_items if q.pkqt_cost_type_id == 4), 3)
 
-            wood_cost = get_aggregate_cost(needassessment_id, 8, [1, 4, 5])
-            total_cft = get_aggregate_cft(needassessment_id, 8, [1, 4, 5])
-            engineer_cost = get_aggregate_cost(needassessment_id, 2)
-            packing_labour_cost = get_aggregate_cost(needassessment_id, 3)
-            labour_cost = packing_labour_cost
-            crane_cost = get_aggregate_cost(needassessment_id, 6)
-            ht_cost = get_aggregate_cost(needassessment_id, 5)
-            management_cost = get_aggregate_cost(needassessment_id, 7)
-            material_cost = get_aggregate_cost(needassessment_id, 8, [2])
-            transport_cost = get_aggregate_cost(needassessment_id, 4)
+            # Grouping by job type in Python memory (0 extra queries)
+            job_map = {}
+            for q in all_q_items:
+                if not q.pkqt_requirement or not q.pkqt_requirement.nad_item:
+                    continue
+                jname = q.pkqt_requirement.nad_item
+                if jname not in job_map:
+                    job_map[jname] = {'wood': 0.0, 'plywood': 0.0, 'consumables': 0.0, 'engineer': 0.0, 'labour': 0.0, 'crane': 0.0, 'ht': 0.0, 'transport': 0.0}
 
-            # Grouping by job type for the table
+                ct = q.pkqt_cost_type_id
+                st = q.pkqt_stock_type_id
+                val = float(q.pkqt_totalbox_cost or 0.0)
+
+                if ct == 8 and st in [1, 5]: job_map[jname]['wood'] += val
+                elif ct == 8 and st in [4, 6]: job_map[jname]['plywood'] += val
+                elif ct == 8 and st == 2: job_map[jname]['consumables'] += val
+                elif ct == 2: job_map[jname]['engineer'] += val
+                elif ct in [3, 9]: job_map[jname]['labour'] += val
+                elif ct == 6: job_map[jname]['crane'] += val
+                elif ct == 5: job_map[jname]['ht'] += val
+                elif ct == 4: job_map[jname]['transport'] += val
+
             aggregated_jobs = []
-            # Group by the string identifier 'nad_item' to combine identical job types
-            # Using set() to remove duplicates because Django's distinct() fails over joins with default ordering
-            job_types = set(PkquotationInfo.objects.filter(pkqt_assessment_num=needassessment_id).values_list('pkqt_requirement__nad_item', flat=True))
-            
-            for job_type_name in job_types:
-                if not job_type_name: continue
+            for jname, costs in job_map.items():
+                j_wood = round(costs['wood'], 3)
+                j_plywood = round(costs['plywood'], 3)
+                j_consumables = round(costs['consumables'], 3)
+                j_engineer = round(costs['engineer'], 3)
+                j_labour = round(costs['labour'], 3)
+                j_crane = round(costs['crane'], 3)
+                j_ht = round(costs['ht'], 3)
+                j_transport = round(costs['transport'], 3)
+                j_unit_cost = round(sum([j_wood, j_plywood, j_consumables, j_engineer, j_labour, j_crane, j_ht, j_transport]), 3)
 
-                # Helper to get cost for specific job type string
-                def get_job_cost(cost_type, stock_types=None):
-                    filter_kwargs = {
-                        'pkqt_assessment_num': needassessment_id, 
-                        'pkqt_cost_type': cost_type, 
-                        'pkqt_requirement__nad_item': job_type_name
-                    }
-                    if stock_types:
-                        filter_kwargs['pkqt_stock_type__in'] = stock_types
-                    cost = PkquotationInfo.objects.filter(**filter_kwargs).aggregate(Sum('pkqt_totalbox_cost'))['pkqt_totalbox_cost__sum']
-                    return round(cost, 3) if cost is not None else 0.0
-
-                j_wood = get_job_cost(8, [1, 4, 5])
-                j_consumables = get_job_cost(8, [2])
-                j_engineer = get_job_cost(2)
-                j_labour = get_job_cost(3)
-                j_crane = get_job_cost(6)
-                j_ht = get_job_cost(5)
-                j_transport = get_job_cost(4)
-                
-                j_unit_cost = sum([j_wood, j_consumables, j_engineer, j_labour, j_crane, j_ht, j_transport])
-                
                 aggregated_jobs.append({
-                    'job_type': job_type_name,
+                    'job_type': jname,
                     'wood_cost': j_wood,
+                    'plywood_cost': j_plywood,
                     'consumables': j_consumables,
                     'engineer_cost': j_engineer,
                     'labour_cost': j_labour,
@@ -132,10 +121,16 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                     'unit_cost': j_unit_cost
                 })
 
+            rate_per_cft = round(wood_cost / total_cft, 2) if total_cft > 0 else 0.0
+            rate_per_sqft = round(plywood_cost / total_sqft, 2) if total_sqft > 0 else 0.0
+
             # Update quotation summary
             PkquotationsummaryInfo.objects.filter(qs_assessment_num=needassessment_id).update(
                 qs_wood_cost=wood_cost,
+                qs_plywood_cost=plywood_cost,
                 qs_total_cft=total_cft,
+                qs_total_sqft=total_sqft,
+                qs_rate_per_cft=rate_per_cft,
                 qs_engineer_cost=engineer_cost,
                 qs_labour_cost=labour_cost,
                 qs_crane_cost=crane_cost,
@@ -155,6 +150,7 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 'quotation_list': quotation_list,
                 'aggregated_jobs': aggregated_jobs,
                 'wood_cost': wood_cost,
+                'plywood_cost': plywood_cost,
                 'engineer_cost': engineer_cost,
                 'labour_cost': labour_cost,
                 'crane_cost': crane_cost,
@@ -162,6 +158,9 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 'management_cost': management_cost,
                 'material_cost': material_cost,
                 'transport_cost': transport_cost,
+                'rate_per_cft': rate_per_cft,
+                'total_sqft': total_sqft,
+                'rate_per_sqft': rate_per_sqft,
                 'role_id': role_id,
                 'role': role,
                 'linked_pos': linked_pos,
@@ -321,11 +320,21 @@ def pk_bvm_quotation_pdf(request,quotation_id=0):
     new_customer_name = quotation_summary.pkqt_customer_new_name
 
     if customer_obj and customer_obj.id == 210:
-        customer_display_name = f"Mr. {new_customer_name}"
+        customer_display_name = new_customer_name or ""
     elif customer_obj:
-        customer_display_name = f"Mr. {customer_obj.cu_name}"
+        customer_display_name = customer_obj.cu_nameshort or customer_obj.cu_name
     else:
-        customer_display_name = f"Mr. {new_customer_name}" if new_customer_name else ""
+        customer_display_name = new_customer_name or ""
+
+    # Construct complete address: fallback to CustomerInfo address if qs_address is blank/incomplete
+    address = quotation_summary.qs_address or ""
+    if customer_obj and (not address or len(address.strip()) == 0):
+        addr_parts = []
+        if customer_obj.cu_address:
+            addr_parts.append(customer_obj.cu_address.strip())
+        if customer_obj.cu_pincode:
+            addr_parts.append(f"Pincode: {customer_obj.cu_pincode.strip()}")
+        address = "\n".join(addr_parts)
     total_sum=0
     for i in na_req:
         k=i.id
@@ -581,19 +590,25 @@ def pk_quotationsummary_clone_po(request, purchaseorder_id):
     PkcostingInfo.objects.filter(ct_customer_po=po).exclude(ct_po_dimension_id__in=current_pod_ids).delete()
 
     # Validate that all Packing Material Cost items (Cost Type 8) have a GRN stock purchase number assigned
+    all_missing_grn = []
     for po_item in po_items:
         missing_grn_items = PkquotationInfo.objects.filter(
             pkqt_requirement=po_item.pod_nad,
             pkqt_cost_type_id=8
-        ).filter(Q(pkqt_stock_purchase_number__isnull=True) | Q(pkqt_stock_purchase_number=0))
+        ).filter(Q(pkqt_stock_purchase_number__isnull=True) | Q(pkqt_stock_purchase_number=0)).select_related('pkqt_part_code')
         
-        if missing_grn_items.exists():
-            item_names = ", ".join([str(q.pkqt_item) if q.pkqt_item else "Material Item" for q in missing_grn_items])
-            messages.error(
-                request,
-                f"Cannot clone to Costing: Packing Material Cost item(s) [{item_names}] do not have a GRN / Stock Purchase Number assigned. Please assign stock purchase numbers in Quotation Management first."
-            )
-            return redirect(request.META.get('HTTP_REFERER', 'pk_purchaseorder_list'))
+        for q in missing_grn_items:
+            part_code_str = q.pkqt_part_code.part_code if q.pkqt_part_code and q.pkqt_part_code.part_code else "N/A"
+            if part_code_str not in all_missing_grn:
+                all_missing_grn.append(part_code_str)
+        
+    if all_missing_grn:
+        missing_list_str = ", ".join(all_missing_grn)
+        messages.error(
+            request,
+            f"Cannot clone to Costing: Packing Material Part Code(s) [{missing_list_str}] do not have a GRN / Stock Purchase Number assigned. Please assign stock purchase numbers in Quotation Management first."
+        )
+        return redirect(request.META.get('HTTP_REFERER', 'pk_purchaseorder_list'))
 
     for po_item in po_items:
         # Find all quotation details matching this item (Nadimension)

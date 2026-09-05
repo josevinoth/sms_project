@@ -9,7 +9,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models.aggregates import Sum
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
-from django.db.models import Sum
+from django.db.models import Sum, F
 from ..sub_models.na_dimension_mod import Nadimension
 from ..views import Pkcosting_delete,Pkcostingsummary_delete,get_tracker_flags
 from ..sub_models.packing_jobs_mod import Packingjobs
@@ -61,20 +61,32 @@ def costingsummary_add(request,costingsummary_id=0):
             else:
                 output = 0
 
-            # Combined Wood Cost
-            wood_cost = PkcostingInfo.objects.filter(ct_stock_type__in=[1, 4], ct_cost_type=8, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
+            # Combined Wood Cost (Wood=1, Hardwood=5)
+            wood_cost = PkcostingInfo.objects.filter(ct_stock_type__in=[1, 5], ct_cost_type=8, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
             wood_cost = round(wood_cost, 2)
 
-            # Combined Total CFT
-            total_cft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type=1, **base_filter).aggregate(Sum('ct_sqrt_req'))['ct_sqrt_req__sum'] or 0.0
+            # Combined Plywood Cost (Plywood=4, Marine Ply=6)
+            plywood_cost = PkcostingInfo.objects.filter(ct_stock_type__in=[4, 6], ct_cost_type=8, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
+            plywood_cost = round(plywood_cost, 2)
+
+            # Combined Total CFT (Wood=1, Hardwood=5)
+            total_cft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type__in=[1, 5], **base_filter).aggregate(
+                total=Sum(F('ct_sqrt_req') * F('ct_na_quantity'))
+            )['total'] or 0.0
             total_cft = round(total_cft, 2)
+
+            # Combined Total SQFT (Plywood=4, Marine Ply=6)
+            total_sqft = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_type__in=[4, 6], **base_filter).aggregate(
+                total=Sum(F('ct_sqrt_req') * F('ct_na_quantity'))
+            )['total'] or 0.0
+            total_sqft = round(total_sqft, 2)
 
             # Combined Engineer Cost
             engineer_cost = PkcostingInfo.objects.filter(ct_cost_type=2, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
             engineer_cost = round(engineer_cost, 2)
 
-            # Combined Packing/Labour Cost
-            packing_labour_cost = PkcostingInfo.objects.filter(ct_cost_type=3, **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
+            # Combined Labour Cost (In-house=3, On-site=9)
+            packing_labour_cost = PkcostingInfo.objects.filter(ct_cost_type__in=[3, 9], **base_filter).aggregate(Sum('ct_totalbox_cost'))['ct_totalbox_cost__sum'] or 0.0
             labour_cost = round(packing_labour_cost, 2)
 
             # Combined Crane Cost
@@ -102,7 +114,7 @@ def costingsummary_add(request,costingsummary_id=0):
 
             # Calculate Total (W/O Margin)
             total_cost_wom = (
-                wood_cost + engineer_cost + labour_cost + crane_cost + 
+                wood_cost + plywood_cost + engineer_cost + labour_cost + crane_cost + 
                 ht_cost + management_cost + material_cost + transport_cost + others_cost
             )
             total_cost_wom = round(total_cost_wom, 2)
@@ -112,9 +124,9 @@ def costingsummary_add(request,costingsummary_id=0):
             total_cost_wm = total_cost_wom + (total_cost_wom * margin / 100)
             total_cost_wm = round(total_cost_wm, 2)
 
-            # Rate per CFT
-            rate_per_cft = total_cost_wm / total_cft if total_cft > 0 else 0.0
-            rate_per_cft = round(rate_per_cft, 2)
+            # Rate per CFT & Rate per SQFT
+            rate_per_cft = round(wood_cost / total_cft, 2) if total_cft > 0 else 0.0
+            rate_per_sqft = round(plywood_cost / total_sqft, 2) if total_sqft > 0 else 0.0
 
             # Final Cost (with GST)
             gst_percent = costingsummary.cs_gst or 0.0
@@ -124,7 +136,9 @@ def costingsummary_add(request,costingsummary_id=0):
             # UPDATE DATABASE
             PkcostingsummaryInfo.objects.filter(pk=costingsummary_id).update(
                 cs_wood_cost=wood_cost,
+                cs_plywood_cost=plywood_cost,
                 cs_total_cft=total_cft,
+                cs_total_sqft=total_sqft,
                 cs_engineer_cost=engineer_cost,
                 cs_labour_cost=labour_cost,
                 cs_crane_cost=crane_cost,
@@ -203,6 +217,7 @@ def costingsummary_add(request,costingsummary_id=0):
                     'user_id': user_id,
                     'costing_list': costing_list,
                     'wood_cost': wood_cost,
+                    'plywood_cost': plywood_cost,
                     'engineer_cost': engineer_cost,
                     'labour_cost': labour_cost,
                     'crane_cost': crane_cost,
@@ -212,6 +227,10 @@ def costingsummary_add(request,costingsummary_id=0):
                     'transport_cost': transport_cost,
                     'others_cost': others_cost,
                     'total_cost_wom': total_cost_wom,
+                    'total_cft': total_cft,
+                    'rate_per_cft': rate_per_cft,
+                    'total_sqft': total_sqft,
+                    'rate_per_sqft': rate_per_sqft,
                     'role_id': role_id,
                     'output': output,
                     'current_step': 'costing',

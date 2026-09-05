@@ -52,3 +52,18 @@ class PkneedassessmentInfo(models.Model):
     @property
     def wood_norms_str(self):
         return " ".join([str(n.wood_norms).upper() for n in self.na_wood_norms.all()]) if self.pk else ""
+
+
+def na_attachment_directory_path(instance, filename):
+    na_identifier = instance.na.na_assessment_num if instance.na and instance.na.na_assessment_num else 'common'
+    return 'Pkneedassessmentfiles/{0}/{1}'.format(na_identifier, filename)
+
+
+class PkneedassessmentAttachmentInfo(models.Model):
+    na = models.ForeignKey(PkneedassessmentInfo, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to=na_attachment_directory_path)
+    filename = models.CharField(max_length=300, null=True, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"NA {self.na.na_assessment_num} - {self.filename or self.file.name}"
