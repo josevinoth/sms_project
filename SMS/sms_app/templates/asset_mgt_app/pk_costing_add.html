@@ -488,7 +488,6 @@
                 document.getElementById("ct_totalbox_cost").value = (total_cft * rate).toFixed(2); // Total Job Cost
                 
                 // Total Pieces for retrieval
-                // Only overwrite the available quantity when no stock batch is selected
                 var stockPurchaseElem = document.getElementById("ct_stock_purchase_number");
                 var stockSelected = stockPurchaseElem && stockPurchaseElem.value && stockPurchaseElem.value !== "";
                 if (!stockSelected) {
@@ -500,7 +499,7 @@
                 var total_qty = quantity_per_box * job_type_qty;
                 var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
                 
-                document.getElementById("ct_sqrt_req").value = total_qty.toFixed(2); // Save total qty as "Total CFT/SQFT"
+                document.getElementById("ct_sqrt_req").value = "0.00"; // Consumables are NOT CFT
                 document.getElementById("ct_total_cost").value = (quantity_per_box * rate).toFixed(2); // Unit Cost
                 document.getElementById("ct_totalbox_cost").value = (total_qty * rate).toFixed(2); // Total Job Cost
                 

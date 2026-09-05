@@ -2,129 +2,109 @@
 <div class="table-container-modern mt-2">
     <div class="modern-header mb-0 d-flex justify-content-between align-items-center" style="border-radius: 8px 8px 0 0;">
         <h4 class="mb-0 text-white"><i class="fas fa-list-ul mr-2"></i> COSTING LIST</h4>
-        <input type="text" id="costing_list_search" class="form-control form-control-sm"
-               placeholder="🔍 Search..."
-               style="max-width:280px; border-radius:6px; border:2px solid #17a2b8;">
     </div>
 
-    <div class="p-3 bg-white shadow-sm" style="border-radius: 0 0 8px 8px; overflow: hidden;">
-        <div class="table-responsive costing-list-scroll">
-        <table id="costing_list" class="table modern-table" style="width:100%; min-width: 2200px;">
-            <thead class="thead-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Created On</th>
-                    <th>Stock Purchase Number</th>
-                    <th>Assessment Number</th>
-                    <th>Customer Name</th>
-                    <th>Job Number</th>
-                    <th>Job Type</th>
-                    <th>Cost Type</th>
-                    <th>Part Code</th>
-                    <th>Stock Type</th>
-                    <th>Stock Description</th>
-                    <th>Item Name</th>
-                    <th>Item Description</th>
-                    <th>Width (in)</th>
-                    <th>Height (in)</th>
-                    <th>Length (ft)</th>
-                    <th>Quantity</th>
-                    <th>UOM</th>
-                    <th>Total CFT</th>
-                    <th>Rate/QTY (CFT)</th>
-                    <th>Days</th>
-                    <th>Job Type Quantity</th>
-                    <th>Unit Cost</th>
-                    <th>Total Cost</th>
-                    <th class="text-center">Edit</th>
-                    <th class="text-center">Delete</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for costinginfo in costing_list %}
-                <tr>
-                    <td class="font-weight-bold">#{{costinginfo.id}}</td>
-                    <td>{{costinginfo.ct_created_at|date:"Y-m-d"}}</td>
-                    <td>{{costinginfo.ct_stock_purchase_number}}</td>
-                    <td>{{costinginfo.ct_assessment_num}}</td>
-                    <td>{{costinginfo.ct_customer_name}}</td>
-                    <td>{{costinginfo.ct_job_no}}</td>
-                    <td>{{costinginfo.ct_requirement}}</td>
-                    <td>{{costinginfo.ct_cost_type}}</td>
-                    <td>{{costinginfo.ct_part_code.pc_code|default:"None"}}</td>
-                    <td>{{costinginfo.ct_stock_type}}</td>
-                    <td>{{costinginfo.ct_stock_description}}</td>
-                    <td>{{costinginfo.ct_item}}</td>
-                    <td>{{costinginfo.ct_itemdescription}}</td>
-                    <td>{{costinginfo.ct_width_req}}</td>
-                    <td>{{costinginfo.ct_height_req}}</td>
-                    <td>{{costinginfo.ct_length_req}}</td>
-                    <td>{{costinginfo.ct_quantity_req}}</td>
-                    <td>{{costinginfo.ct_uom}}</td>
-                    <td>{{costinginfo.ct_sqrt_req}}</td>
-                    <td>{{costinginfo.ct_rate}}</td>
-                    <td>{{costinginfo.ct_days}}</td>
-                    <td>{{costinginfo.ct_na_quantity}}</td>
-                    <td>{{costinginfo.ct_total_cost}}</td>
-                    <td class="font-weight-bold text-success">₹{{costinginfo.ct_totalbox_cost}}</td>
-                    <td class="text-center">
-                        <a class="btn btn-primary btn-sm" href="{% url 'costing_update' costinginfo.id %}" title="Edit">
-                            <i class="far fa-edit"></i>
-                        </a>
-                    </td>
-                    <td class="text-center">
-                        {% if costinginfo.ct_stock_status.id == 2 or costinginfo.ct_stock_status.id == 4 %}
-                        <button class="btn btn-danger btn-sm" disabled title="Cannot delete (Received/Supplied)">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                        {% else %}
-                        <form action="{% url 'costing_delete' costinginfo.id %}" method="post" class="d-inline"
-                            onclick="return confirm('Are you sure?');">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+    <div class="p-3 bg-white shadow-sm" style="border-radius: 0 0 8px 8px;">
+        <div class="table-responsive">
+            <table id="costing_list" class="table modern-table text-nowrap" style="width:100%;">
+                <thead class="thead-dark">
+                    <tr>
+                        <th style="min-width: 60px;">ID</th>
+                        <th style="min-width: 100px;">Created On</th>
+                        <th style="min-width: 180px;">Stock Purchase Number</th>
+                        <th style="min-width: 180px;">Assessment Number</th>
+                        <th style="min-width: 150px;">Customer Name</th>
+                        <th style="min-width: 150px;">Job Number</th>
+                        <th style="min-width: 150px;">Job Type</th>
+                        <th style="min-width: 130px;">Cost Type</th>
+                        <th style="min-width: 100px;">Part Code</th>
+                        <th style="min-width: 120px;">Stock Type</th>
+                        <th style="min-width: 160px;">Stock Description</th>
+                        <th style="min-width: 140px;">Item Name</th>
+                        <th style="min-width: 160px;">Item Description</th>
+                        <th style="min-width: 90px;">Width (in)</th>
+                        <th style="min-width: 90px;">Height (in)</th>
+                        <th style="min-width: 90px;">Length (ft)</th>
+                        <th style="min-width: 90px;">Quantity</th>
+                        <th style="min-width: 80px;">UOM</th>
+                        <th style="min-width: 90px;">Total CFT</th>
+                        <th style="min-width: 120px;">Rate/QTY (CFT)</th>
+                        <th style="min-width: 70px;">Days</th>
+                        <th style="min-width: 140px;">Job Type Quantity</th>
+                        <th style="min-width: 100px;">Unit Cost</th>
+                        <th style="min-width: 110px;">Total Cost</th>
+                        <th class="text-center" style="min-width: 60px;">Edit</th>
+                        <th class="text-center" style="min-width: 60px;">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for costinginfo in costing_list %}
+                    <tr>
+                        <td class="font-weight-bold">#{{costinginfo.id}}</td>
+                        <td>{{costinginfo.ct_created_at|date:"Y-m-d"}}</td>
+                        <td>{{costinginfo.ct_stock_purchase_number}}</td>
+                        <td>{{costinginfo.ct_assessment_num}}</td>
+                        <td>{{costinginfo.ct_customer_name}}</td>
+                        <td>{{costinginfo.ct_job_no}}</td>
+                        <td>{{costinginfo.ct_requirement}}</td>
+                        <td>{{costinginfo.ct_cost_type}}</td>
+                        <td>{{costinginfo.ct_part_code.pc_code|default:"None"}}</td>
+                        <td>{{costinginfo.ct_stock_type}}</td>
+                        <td>{{costinginfo.ct_stock_description}}</td>
+                        <td>{{costinginfo.ct_item}}</td>
+                        <td>{{costinginfo.ct_itemdescription}}</td>
+                        <td>{{costinginfo.ct_width_req}}</td>
+                        <td>{{costinginfo.ct_height_req}}</td>
+                        <td>{{costinginfo.ct_length_req}}</td>
+                        <td>{{costinginfo.ct_quantity_req}}</td>
+                        <td>{{costinginfo.ct_uom}}</td>
+                        <td>{{costinginfo.ct_sqrt_req}}</td>
+                        <td>{{costinginfo.ct_rate}}</td>
+                        <td>{{costinginfo.ct_days}}</td>
+                        <td>{{costinginfo.ct_na_quantity}}</td>
+                        <td>{{costinginfo.ct_total_cost}}</td>
+                        <td class="font-weight-bold text-success">₹{{costinginfo.ct_totalbox_cost}}</td>
+                        <td class="text-center">
+                            <a class="btn btn-primary btn-sm" href="{% url 'costing_update' costinginfo.id %}" title="Edit">
+                                <i class="far fa-edit"></i>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            {% if costinginfo.ct_stock_status.id == 2 or costinginfo.ct_stock_status.id == 4 %}
+                            <button class="btn btn-danger btn-sm" disabled title="Cannot delete (Received/Supplied)">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
-                        </form>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                            {% else %}
+                            <form action="{% url 'costing_delete' costinginfo.id %}" method="post" class="d-inline"
+                                onclick="return confirm('Are you sure?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<style>
-    .costing-list-scroll {
-        overflow-x: auto;
-        overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .costing-list-scroll .modern-table th,
-    .costing-list-scroll .modern-table td {
-        white-space: normal;
-        overflow-wrap: anywhere;
-        vertical-align: middle;
-    }
-
-    .costing-list-scroll .modern-table th {
-        min-width: 88px;
-    }
-
-    .costing-list-scroll .modern-table th:nth-last-child(-n+2),
-    .costing-list-scroll .modern-table td:nth-last-child(-n+2) {
-        min-width: 100px;
-        white-space: nowrap;
-    }
-</style>
-
 <script>
-    document.getElementById('costing_list_search').addEventListener('keyup', function() {
-        var term = this.value.toLowerCase();
-        document.querySelectorAll('#costing_list tbody tr').forEach(function(row) {
-            row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+    $(document).ready(function() {
+        if ($.fn.DataTable.isDataTable('#costing_list')) {
+            $('#costing_list').DataTable().destroy();
+        }
+        $('#costing_list').DataTable({
+            dom: 'lBfrtip',
+            buttons: ['copy', 'csv', 'excel', 'print'],
+            scrollX: true,
+            autoWidth: false,
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            order: [[0, 'desc']]
         });
     });
 </script>

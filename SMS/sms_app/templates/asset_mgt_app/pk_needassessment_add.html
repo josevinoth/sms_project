@@ -246,79 +246,23 @@
 
         <!-- Dimensions -->
         <div class="form-section">
-            <div class="form-section-title d-flex justify-content-between align-items-center" style="cursor: pointer;">
-                <span data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                    <i class="fas fa-ruler-combined"></i> Add/Edit Dimensions
-                </span>
+            <div class="form-section-title d-flex justify-content-between align-items-center" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo" style="cursor: pointer;">
+                <div>
+                    <i class="fas fa-ruler-combined mr-1"></i> Add/Edit Dimensions
+                    <i class="fas fa-chevron-down text-muted small ml-2"></i>
+                </div>
                 {% if request.session.na_assessment_id %}
-                <a class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; text-decoration: none;" href="{% url 'need_assessment_print' request.session.na_assessment_id %}">
-                    <i class="fas fa-file-pdf"></i> Download PDF
+                <a class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem; text-decoration: none;" href="{% url 'need_assessment_print' request.session.na_assessment_id %}" onclick="event.stopPropagation();">
+                    <i class="fas fa-file-pdf mr-1"></i> Download PDF
                 </a>
                 {% endif %}
             </div>
             <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo">
                 <div class="px-3 pb-3">
                     <div id="na_dimension_list_WOH">
-                        <div class="mb-4 d-flex justify-content-start">
-                            <a href="{% url 'na_dimension_insert' %}" id="add_dim_btn" class="btn-modern btn-submit" style="text-decoration: none;">
-                                <i class="fas fa-plus"></i> Insert Dimension
-                            </a>
-                        </div>
-                        <div class="table-container-modern w-100 p-0 border-0 shadow-none">
-                            <div class="table-responsive">
-                                <table id="na_dimension_list" class="table modern-table w-100 text-center">
-                                <thead>
-                                    <tr>
-                                        <th>Created On</th>
-                                        <th>Assessment Number</th>
-                                        <th>Item Number</th>
-                                        <th>Requirement Type</th>
-                                        <th>UOM</th>
-                                        <th>Length</th>
-                                        <th>Width</th>
-                                        <th>Height</th>
-                                        <th>Quantity</th>
-                                        <th>Updated On</th>
-                                        <th>Updated By</th>
-                                        <th class="text-center">Edit</th>
-                                        <th class="text-center">Delete</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for na_dimensioninfo in na_dimension_list %}
-                                    <tr>
-                                        <td>{{ na_dimensioninfo.nad_created_at }}</td>
-                                        <td>{{ na_dimensioninfo.nad_assess_num }}</td>
-                                        <td>{{ na_dimensioninfo.nad_item }}</td>
-                                        <td>{{ na_dimensioninfo.nad_type_of_req }}</td>
-                                        <td>{{ na_dimensioninfo.nad_uom }}</td>
-                                        <td>{{ na_dimensioninfo.nad_length }}</td>
-                                        <td>{{ na_dimensioninfo.nad_width }}</td>
-                                        <td>{{ na_dimensioninfo.nad_height }}</td>
-                                        <td>{{ na_dimensioninfo.nad_quantity }}</td>
-                                        <td>{{ na_dimensioninfo.nad_updated_at }}</td>
-                                        <td>{{ na_dimensioninfo.nad_updated_by }}</td>
-                                        <td class="text-center">
-                                            <a class="btn-modern btn-submit py-1 px-3" href="{% url 'na_dimension_update' na_dimensioninfo.id %}" style="font-size: 0.8rem; text-decoration: none;">
-                                                <i class="far fa-edit"></i>
-                                            </a>
-                                        </td>
-                                        <td class="text-center">
-                                            <form action="{% url 'na_dimension_delete' na_dimensioninfo.id %}" method="post" onclick="return confirm('Are you sure?');">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm btn-outline-danger delete-btn" style="border-radius: 8px;">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                            </div>
-                        </div>
-                        <input type="hidden" id="na_status" value="{{ na_status_id }}">
+                        {% include "asset_mgt_app/na_dimension_list_WOH.html" %}
                     </div>
+                    <input type="hidden" id="na_status" value="{{ na_status_id }}">
                 </div>
             </div>
         </div>
@@ -384,10 +328,15 @@
 	$(document).ready(function () {
         document.getElementById("na_updated_by").value = '{{ user_id }}';
 
-        $('#na_dimension_list').DataTable({
+        var dimTable = $('#na_dimension_list').DataTable({
             dom: 'lBfrtip',
             buttons: ['copy', 'csv', 'excel', 'print'],
+            scrollX: true,
             autoWidth: false
+        });
+
+        $('#collapseTwo').on('shown.bs.collapse', function () {
+            dimTable.columns.adjust().draw();
         });
 
         var assessment_num = document.getElementById("na_assessment_num")?.value || "";

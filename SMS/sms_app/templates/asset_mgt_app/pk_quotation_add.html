@@ -488,10 +488,11 @@
                 var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
                 var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
                 var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
-                var cft_req = length_req * width_req * quantity_req;
-                document.getElementById("pkqt_sqrt_req").value = cft_req.toFixed(2);
+                
+                // Consumables stock type - CFT volume does NOT apply
+                document.getElementById("pkqt_sqrt_req").value = "0.00";
 
-                var totalCost = rate * cft_req;
+                var totalCost = rate * quantity_req;
                 document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
                 var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
                 var totalboxCost = totalCost * na_quantity;
