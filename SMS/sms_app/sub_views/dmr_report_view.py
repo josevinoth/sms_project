@@ -616,6 +616,10 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
         goods_list = goods_map.get(trip.tr_consignmentnumber_id) or [None]
         va = va_map.get(trip.tr_enquirynumber_id)
 
+        # If cancellation charges are applicable for a trip, trip charges should be 0
+        cancellation_val = safe_num(trip.tc_cancellation)
+        effective_tripcost = 0.0 if cancellation_val > 0 else safe_num(trip.tc_tripcost)
+
         for cons_goods in goods_list:
             row = []
             for h in headers:
@@ -743,7 +747,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                     row.append(safe_str(trip.tr_enquirynumber.en_customername));
                     continue
                 if hh in ("tripcost", "trip cost", "trip charges"):
-                    row.append(safe_num(trip.tc_tripcost));
+                    row.append(effective_tripcost);
                     continue
                 if hh in ("job no", "bvm job no", "bvm job number", "ceva job no", "bvm job"):
                     row.append(safe_str(cons_detail.co_consignmentnumber) if cons_detail else "");
@@ -961,7 +965,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                     row.append(safe_num(trip.tc_haltingcost));
                     continue
                 if hh == "charges":
-                    row.append(safe_num(trip.tc_tripcost));
+                    row.append(effective_tripcost);
                     continue
                 if "weightment charges" in hh or hh == "weighment pass":
                     row.append(safe_num(trip.tc_weighmentcost));
@@ -979,7 +983,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                     row.append(safe_num(trip.tc_unloadingcost));
                     continue
                 if "total charges" in hh or hh == "total cost":
-                    row.append(safe_num(trip.tc_tripcost) + safe_num(trip.tc_parkingcost) + safe_num(
+                    row.append(effective_tripcost + safe_num(trip.tc_cancellation) + safe_num(trip.tc_parkingcost) + safe_num(
                         trip.tc_unloadingcost) + safe_num(trip.tc_loadingcost) + safe_num(trip.tc_weighmentcost) + safe_num(
                         trip.tc_handlingcost) + safe_num(trip.tc_supervisorcost) + safe_num(trip.tc_haltingcost) + safe_num(
                         trip.tc_tollcost));
