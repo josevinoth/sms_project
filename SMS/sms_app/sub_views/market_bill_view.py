@@ -58,27 +58,6 @@ def market_bill_add(request):
                         'halting_cost': h_cost_val,
                     }
 
-                    TripdetailInfo.objects.filter(id=tid).update(
-                        tc_loadingcost=l_cost_val,
-                        tc_unloadingcost=u_cost_val,
-                        tc_parkingcost=p_cost_val,
-                        tc_no_of_days_halting=h_days_val,
-                        tc_haltingcost=h_cost_val
-                    )
-
-                    # Update Buying Price in Allotment instead of Revenue in Trip
-                    trip_obj = TripdetailInfo.objects.get(id=tid)
-                    allotment = Vehicle_allotmentInfo.objects.filter(
-                        Q(va_enquirynumber=trip_obj.tr_enquirynumber),
-                        Q(va_vehiclenumber__vm_registrationnumber__iexact=trip_obj.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip_obj.tr_vehiclenumber)
-                    ).first()
-                    if not allotment:
-                        allotment = Vehicle_allotmentInfo.objects.filter(
-                            va_enquirynumber=trip_obj.tr_enquirynumber
-                        ).order_by('-id').first()
-                    if allotment:
-                        Vehicle_allotmentInfo.objects.filter(id=allotment.id).update(va_specialbuy=t_cost_val)
-
             obj.mb_trip_details = trip_details_dict
             obj.save()
 
@@ -198,27 +177,6 @@ def market_bill_edit(request, id):
                         'halting_days': h_days_val,
                         'halting_cost': h_cost_val,
                     }
-
-                    TripdetailInfo.objects.filter(id=tid).update(
-                        tc_loadingcost=l_cost_val,
-                        tc_unloadingcost=u_cost_val,
-                        tc_parkingcost=p_cost_val,
-                        tc_no_of_days_halting=h_days_val,
-                        tc_haltingcost=h_cost_val
-                    )
-
-                    # Update Buying Price in Allotment instead of Revenue in Trip
-                    trip_obj = TripdetailInfo.objects.get(id=tid)
-                    allotment = Vehicle_allotmentInfo.objects.filter(
-                        Q(va_enquirynumber=trip_obj.tr_enquirynumber),
-                        Q(va_vehiclenumber__vm_registrationnumber__iexact=trip_obj.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip_obj.tr_vehiclenumber)
-                    ).first()
-                    if not allotment:
-                        allotment = Vehicle_allotmentInfo.objects.filter(
-                            va_enquirynumber=trip_obj.tr_enquirynumber
-                        ).order_by('-id').first()
-                    if allotment:
-                        Vehicle_allotmentInfo.objects.filter(id=allotment.id).update(va_specialbuy=t_cost_val)
 
             obj.mb_trip_details = trip_details_dict
             obj.save()
@@ -834,24 +792,36 @@ def market_bill_export_tally(request):
             if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername:
                 customer_name = trip.tr_enquirynumber.en_customername.customer_name if hasattr(trip.tr_enquirynumber.en_customername, 'customer_name') else str(trip.tr_enquirynumber.en_customername)
             
-            transport_cost = 0.0
-            allotment = Vehicle_allotmentInfo.objects.filter(
-                Q(va_enquirynumber=trip.tr_enquirynumber),
-                Q(va_vehiclenumber__vm_registrationnumber__iexact=trip.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip.tr_vehiclenumber)
-            ).first()
-            if not allotment:
+            trip_detail = bill.mb_trip_details.get(str(trip.id)) if bill.mb_trip_details else None
+            if trip_detail:
+                transport_cost = float(trip_detail.get('trip_cost', 0))
+                loading_cost = float(trip_detail.get('loading_cost', 0))
+                unloading_cost = float(trip_detail.get('unloading_cost', 0))
+                parking_cost = float(trip_detail.get('parking_cost', 0))
+                halting_cost = float(trip_detail.get('halting_cost', 0))
+            else:
+                transport_cost = 0.0
                 allotment = Vehicle_allotmentInfo.objects.filter(
-                    va_enquirynumber=trip.tr_enquirynumber
-                ).order_by('-id').first()
-            if allotment and allotment.va_specialbuy:
-                transport_cost = float(allotment.va_specialbuy)
+                    Q(va_enquirynumber=trip.tr_enquirynumber),
+                    Q(va_vehiclenumber__vm_registrationnumber__iexact=trip.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip.tr_vehiclenumber)
+                ).first()
+                if not allotment:
+                    allotment = Vehicle_allotmentInfo.objects.filter(
+                        va_enquirynumber=trip.tr_enquirynumber
+                    ).order_by('-id').first()
+                if allotment and allotment.va_specialbuy:
+                    transport_cost = float(allotment.va_specialbuy)
+                loading_cost = float(trip.tc_loadingcost or 0)
+                unloading_cost = float(trip.tc_unloadingcost or 0)
+                parking_cost = float(trip.tc_parkingcost or 0)
+                halting_cost = float(trip.tc_haltingcost or 0)
                 
             expenses = []
             if transport_cost > 0: expenses.append(("Transportation", transport_cost))
-            if trip.tc_loadingcost and float(trip.tc_loadingcost) > 0: expenses.append(("Loading", float(trip.tc_loadingcost)))
-            if trip.tc_unloadingcost and float(trip.tc_unloadingcost) > 0: expenses.append(("Unloading", float(trip.tc_unloadingcost)))
-            if trip.tc_parkingcost and float(trip.tc_parkingcost) > 0: expenses.append(("Parking", float(trip.tc_parkingcost)))
-            if trip.tc_haltingcost and float(trip.tc_haltingcost) > 0: expenses.append(("Halting", float(trip.tc_haltingcost)))
+            if loading_cost > 0: expenses.append(("Loading", loading_cost))
+            if unloading_cost > 0: expenses.append(("Unloading", unloading_cost))
+            if parking_cost > 0: expenses.append(("Parking", parking_cost))
+            if halting_cost > 0: expenses.append(("Halting", halting_cost))
             
             for exp_name, amt in expenses:
                 row = [

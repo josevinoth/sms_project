@@ -587,8 +587,22 @@
     // DataTable instance variable
     let tripsDataTable = null;
 
+    // Export options configuration for Trips DataTable
+    const tripsExportOptions = {
+        columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+        format: {
+            body: function (data, row, column, node) {
+                const input = $(node).find('input');
+                if (input.length > 0) {
+                    return input.val();
+                }
+                return $(node).text().trim();
+            }
+        }
+    };
+
     // Function to initialize DataTable
-    function initializeTripsDataTable() {
+    function initializeTripsDataTable(emptyMessage) {
         // Destroy existing DataTable if it exists
         if (tripsDataTable) {
             tripsDataTable.destroy();
@@ -608,19 +622,69 @@
             }
         });
 
-        // Only initialize if we have rows and none of them have colspan
+        // Only consider as data if we have rows and none of them have colspan
         const hasData = rows.length > 0 && !hasColspan;
 
-        if (hasData) {
-            tripsDataTable = $('#tripsTable').DataTable({
-                order: [[1, 'desc']], // Sort by Cnote column by default
-                destroy: true,
-                paging: true,
-                searching: true,
-                info: true,
-                pageLength: 10
-            });
+        if (!hasData) {
+            tbody.innerHTML = '';
         }
+
+        const defaultEmptyMsg = isEditMode ? "No trips found in this bill" : "Select a vendor to view trips";
+        const emptyText = emptyMessage || defaultEmptyMsg;
+
+        tripsDataTable = $('#tripsTable').DataTable({
+            order: hasData ? [[1, 'desc']] : [], // Sort by Cnote column by default when data exists
+            columnDefs: [
+                { orderable: false, targets: [0, 15] } // Checkbox and Mail Attach columns
+            ],
+            destroy: true,
+            paging: true,
+            searching: true,
+            info: true,
+            pageLength: 10,
+            scrollX: true,
+            autoWidth: false,
+            language: {
+                emptyTable: emptyText,
+                search: "",
+                searchPlaceholder: "Search trips..."
+            },
+            dom:
+                "<'row mb-2 align-items-center'<'col-md-6'l><'col-md-6 text-right'f>>" +
+                "<'row mb-2'<'col-md-12'B>>" +
+                "<'row'<'col-md-12'tr>>" +
+                "<'row mt-2 align-items-center'<'col-md-5'i><'col-md-7'p>>",
+            buttons: [
+                {
+                    extend: 'copy',
+                    text: '<i class="fas fa-copy mr-1"></i> COPY',
+                    className: 'btn-modern-dt',
+                    title: 'Market Bill Trips',
+                    exportOptions: tripsExportOptions
+                },
+                {
+                    extend: 'csv',
+                    text: '<i class="fas fa-file-csv mr-1"></i> CSV',
+                    className: 'btn-modern-dt',
+                    title: 'Market Bill Trips',
+                    exportOptions: tripsExportOptions
+                },
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel mr-1"></i> EXCEL',
+                    className: 'btn-modern-dt',
+                    title: 'Market Bill Trips',
+                    exportOptions: tripsExportOptions
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print mr-1"></i> PRINT',
+                    className: 'btn-modern-dt',
+                    title: 'Market Bill Trips',
+                    exportOptions: tripsExportOptions
+                }
+            ]
+        });
     }
 
     // ========== VENDOR CHANGE: LOAD TRIPS ==========
@@ -635,10 +699,9 @@
             tripsDataTable = null;
         }
 
-        tbody.innerHTML = '<tr><td colspan="15" class="text-center">Loading...</td></tr>';
-
         if (!vendorId) {
-            tbody.innerHTML = '<tr><td colspan="15" class="text-center text-muted">Select a vendor to view trips</td></tr>';
+            tbody.innerHTML = '';
+            initializeTripsDataTable("Select a vendor to view trips");
             // Clear TDS Type display when vendor is cleared
             const h = document.getElementById("mb_tds_type_hidden");
             const d = document.getElementById("mb_tds_type_display");
@@ -647,6 +710,8 @@
             setTdsByType();
             return;
         }
+
+        tbody.innerHTML = '<tr><td colspan="16" class="text-center"><i class="fas fa-spinner fa-spin mr-1"></i> Loading trips...</td></tr>';
 
         // ---- Auto-set TDS Type from vendor PAN ----
         fetch("{% url 'get_vendor_pan' %}?vendor_id=" + vendorId)
@@ -675,7 +740,8 @@
                 const availableTrips = data.trips.filter(t => !selectedTripIds.has(t.id.toString()));
 
                 if (availableTrips.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="15" class="text-center text-muted">No available trips found for this vendor</td></tr>';
+                    tbody.innerHTML = '';
+                    initializeTripsDataTable("No available trips found for this vendor");
                     return;
                 }
 
@@ -761,7 +827,8 @@
             })
             .catch(err => {
                 console.error("Error loading trips:", err);
-                tbody.innerHTML = '<tr><td colspan="15" class="text-center text-danger">Error loading trips</td></tr>';
+                tbody.innerHTML = '';
+                initializeTripsDataTable("Error loading trips");
             });
     });
 
