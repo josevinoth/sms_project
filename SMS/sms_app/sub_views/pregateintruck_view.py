@@ -38,8 +38,6 @@ def pregateintruck_add(request, pregateintruck_id=0):
     else:
         gatein_num_id = request.session.get('gatein_num_id')
         if not gatein_num_id:
-            from django.contrib import messages
-            from django.shortcuts import redirect
             messages.error(request, 'Session expired or missing Gate In Number. Please search again.')
             return redirect('/SMS/pre_gatein_search/')
             
