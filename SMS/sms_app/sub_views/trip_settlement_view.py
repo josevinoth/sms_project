@@ -268,6 +268,9 @@ def trip_settlement_edit(request, trip_id):
             if trip:
                 sync_closure_files_to_invoice(request, trip, files_obj)
 
+            from .trans_invoice_view import sync_trip_charges_to_invoice
+            sync_trip_charges_to_invoice(trip_obj)
+
             messages.success(request, "Trip settlement updated.")
             return redirect('trip_settlement_view')
 
