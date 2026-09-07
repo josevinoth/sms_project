@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from ..forms import POdimensionForm,PkpurchaseorderForm
-from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkquotationsummaryInfo,PkcostingsummaryInfo, pk_stock_statusinfo, PkquotationInfo, PkcostingInfo, StatusList
+from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkpurchaseorderAttachmentInfo,PkquotationsummaryInfo,PkcostingsummaryInfo, pk_stock_statusinfo, PkquotationInfo, PkcostingInfo, StatusList
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete,get_tracker_flags
@@ -69,6 +69,7 @@ def purchaseorder_add(request, purchaseorder_id=0):
             
             # Fetch linked costing summaries for the hub
             linked_costings = PkcostingsummaryInfo.objects.filter(cs_customer_po=purchaseorder_id)
+            po_attachments = PkpurchaseorderAttachmentInfo.objects.filter(po=purchaseorder).order_by('-uploaded_at')
             
             context = {
                 'form': form,
@@ -79,6 +80,7 @@ def purchaseorder_add(request, purchaseorder_id=0):
                 'role': role,
                 'role_id': role_id,
                 'linked_costings': linked_costings,
+                'po_attachments': po_attachments,
                 'current_step': 'po',
                 'tracker_flags': get_tracker_flags(na_id),
             }
@@ -106,6 +108,14 @@ def purchaseorder_add(request, purchaseorder_id=0):
                     instance.sales_order_num = generate_next_number(PkpurchaseorderInfo, 'sales_order_num', prefix, 6)
                     instance.save()
                     
+                    # Process multiple attachments
+                    for f in request.FILES.getlist('po_attach_files'):
+                        PkpurchaseorderAttachmentInfo.objects.create(
+                            po=instance,
+                            file=f,
+                            filename=f.name
+                        )
+                    
                     # Set session variables for dimension insert/update after add
                     request.session['ses_na_id'] = instance.po_assessment_num.id if instance.po_assessment_num else None
                     request.session['purchaseorder_id'] = instance.id
@@ -130,6 +140,14 @@ def purchaseorder_add(request, purchaseorder_id=0):
                 instance.sales_order_num = purchaseorder.sales_order_num
                 instance.save()
                 
+                # Process multiple attachments
+                for f in request.FILES.getlist('po_attach_files'):
+                    PkpurchaseorderAttachmentInfo.objects.create(
+                        po=instance,
+                        file=f,
+                        filename=f.name
+                    )
+                
                 # Set session variables for dimension insert/update after edit
                 request.session['ses_na_id'] = instance.po_assessment_num.id if instance.po_assessment_num else None
                 request.session['purchaseorder_id'] = instance.id
@@ -145,6 +163,19 @@ def purchaseorder_add(request, purchaseorder_id=0):
         # Redirect to the last purchase order or current edited one
         last_id = purchaseorder_id if purchaseorder_id else PkpurchaseorderInfo.objects.order_by('-id').values_list('id', flat=True).first()
         return redirect('/SMS/purchaseorder_update/' + str(last_id))
+
+
+@login_required(login_url='login_page')
+def delete_po_attachment(request, att_id):
+    if request.method == 'POST':
+        try:
+            att = PkpurchaseorderAttachmentInfo.objects.get(id=att_id)
+            att.file.delete(save=False)
+            att.delete()
+            return JsonResponse({'status': 'success'})
+        except PkpurchaseorderAttachmentInfo.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Attachment not found'}, status=404)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
 
 
 # List purchaseorder

@@ -11,13 +11,14 @@ from ..models import (
     PkquotationsummaryInfo, PkquotationInfo, POdimension, Natypeofreq, Unitofmeasure, 
     Naconsumables, VehicletypeInfo, Pkstocktype, Pkwooddescription, Nadimensiontype, 
     PkpurchaseorderInfo, PkcostingsummaryInfo, PkcostingInfo, commentsInfo, User_extInfo, 
-    PkneedassessmentInfo, Nadimension, Natypeofwork, Packreuqirementinfo, 
+    PkneedassessmentInfo, PkneedassessmentAttachmentInfo, Nadimension, Natypeofwork, Packreuqirementinfo, 
     Nawoodtreatmentreq, Nabvmcustomer, Nawoodnorms, Natypeofaccess, Naplywoodthickness, 
     Natypeofplywood, Natypeofwood
 )
 from django.shortcuts import render, redirect, get_object_or_404
 from random import randint
 from django.contrib import messages
+from django.http import JsonResponse
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
 def get_tracker_flags(na_id):
@@ -103,6 +104,7 @@ def needassessment_add(request,needassessment_id=0):
             
             # Fetch linked quotations for the hub
             linked_quotations = PkquotationsummaryInfo.objects.filter(qs_assessment_num=needassessment_id)
+            na_attachments = PkneedassessmentAttachmentInfo.objects.filter(na=needassessment).order_by('-uploaded_at')
             
             context={
                 'form': form,
@@ -112,8 +114,10 @@ def needassessment_add(request,needassessment_id=0):
                 'na_dimension_list': na_dimension_list,
                 'comments_list': comments_list,
                 'linked_quotations': linked_quotations,
+                'na_attachments': na_attachments,
                 'current_step': 'assessment',
                 'tracker_flags': get_tracker_flags(needassessment_id),
+                'hide_top_messages': True,
                 }
         return render(request, "asset_mgt_app/pk_needassessment_add.html", context)
     else:
@@ -137,6 +141,14 @@ def needassessment_add(request,needassessment_id=0):
                 instance.na_assessment_num = assessment_num_next
                 instance.save(update_fields=['na_assessment_num'])
 
+                # Process multiple attachments
+                for f in request.FILES.getlist('na_attach_files'):
+                    PkneedassessmentAttachmentInfo.objects.create(
+                        na=instance,
+                        file=f,
+                        filename=f.name
+                    )
+
                 messages.success(request, 'Record Updated Successfully with Assessment Number: ' + assessment_num_next)
                 return redirect(f'/SMS/needassessment_update/{instance.id}')
             else:
@@ -153,13 +165,35 @@ def needassessment_add(request,needassessment_id=0):
             needassessment = PkneedassessmentInfo.objects.get(pk=needassessment_id)
             form = PkneedassessmentForm(request.POST,request.FILES,instance=needassessment)
             if form.is_valid():
-                form.save()
+                instance = form.save()
+                
+                # Process multiple attachments
+                for f in request.FILES.getlist('na_attach_files'):
+                    PkneedassessmentAttachmentInfo.objects.create(
+                        na=instance,
+                        file=f,
+                        filename=f.name
+                    )
+
                 print("needassessment Form is Valid")
                 messages.success(request, 'Record Updated Successfully')
             else:
                 print("needassessment Form is Not Valid")
                 messages.error(request, 'Record Not Updated Successfully')
             return redirect(request.META['HTTP_REFERER'])
+
+
+@login_required(login_url='login_page')
+def delete_na_attachment(request, att_id):
+    if request.method == 'POST':
+        try:
+            att = PkneedassessmentAttachmentInfo.objects.get(id=att_id)
+            att.file.delete(save=False)
+            att.delete()
+            return JsonResponse({'status': 'success'})
+        except PkneedassessmentAttachmentInfo.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Attachment not found'}, status=404)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
         # return redirect('/SMS/requirements_list')
 
 # List needassessment

@@ -23,6 +23,7 @@
             <th>Customer Name</th>
             <th>Job Type</th>
             <th>Cost Type</th>
+            <th>Part Code</th>
             <th>Stock Type</th>
             <th>Stock Description</th>
             <th>Item Name</th>
@@ -53,6 +54,7 @@
             <td> {{quotationinfo.pkqt_customer_name}}</td>
             <td> {{quotationinfo.pkqt_requirement}}</td>
             <td> {{quotationinfo.pkqt_cost_type}}</td>
+            <td> {{quotationinfo.pkqt_part_code.pc_code|default:"None"}}</td>
             <td> {{quotationinfo.pkqt_stock_type}}</td>
             <td> {{quotationinfo.pkqt_stock_description}}</td>
             <td> {{quotationinfo.pkqt_item}}</td>

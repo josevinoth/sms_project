@@ -8,11 +8,11 @@ class PkcostingsummaryForm(forms.ModelForm):
         model = PkcostingsummaryInfo
         fields = [
             'cs_assessment_num', 'cs_customer_name', 'cs_customer_new_name', 
-            'cs_customer_po', 'cs_invoice_num', 'cs_job_no', 'cs_wood_cost', 
+            'cs_customer_po', 'cs_invoice_num', 'cs_job_no', 'cs_wood_cost', 'cs_plywood_cost',
             'cs_engineer_cost', 'cs_labour_cost', 'cs_crane_cost', 'cs_ht_cost', 
             'cs_management_cost', 'cs_material_cost', 'cs_transport_cost', 
             'cs_total_cost_wom', 'cs_margin', 'cs_total_cost_wm', 'cs_gst', 
-            'cs_final_cost', 'cs_total_cft', 'cs_rate_per_cft', 'cs_status', 
+            'cs_final_cost', 'cs_total_cft', 'cs_rate_per_cft', 'cs_total_sqft', 'cs_status', 
             'cs_pack_type', 'cs_address', 'cs_cost_includes', 'cs_notes', 
             'cs_terms_condition', 'cs_client_scope', 'cs_bvm_scope', 
             'cs_others_cost', 'cs_others_description', 'cs_updated_by'
