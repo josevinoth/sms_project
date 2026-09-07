@@ -30,7 +30,19 @@ from django.utils import timezone
 def pregateintruck_add(request, pregateintruck_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    gatein_num_id = request.session['gatein_num_id']
+    
+    if pregateintruck_id != 0:
+        pregateintruck = get_object_or_404(Pregateintruckinfo, pk=pregateintruck_id)
+        gatein_num_id = pregateintruck.pregatein_number_id
+        request.session['gatein_num_id'] = gatein_num_id
+    else:
+        gatein_num_id = request.session.get('gatein_num_id')
+        if not gatein_num_id:
+            from django.contrib import messages
+            from django.shortcuts import redirect
+            messages.error(request, 'Session expired or missing Gate In Number. Please search again.')
+            return redirect('/SMS/pre_gatein_search/')
+            
     print(gatein_num_id, 'gatein')
 
     high_list = HighvalueInfo.objects.filter(hc_pregatein_number_id=gatein_num_id)
