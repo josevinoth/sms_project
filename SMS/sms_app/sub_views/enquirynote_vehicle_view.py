@@ -132,6 +132,11 @@ def enquirynotevehicle_add(request, enquirynotevehicle_id=0):
                 if master_rate is not None:
                     instance.env_sale = master_rate
 
+                # Disallow saving if no route rate found in Route Rate Master
+                if not instance.env_sale or float(instance.env_sale) == 0:
+                    messages.error(request, 'No Route Rate Master found for this Customer, Department, Route, and Vehicle Type. Please configure the route rate in Route Rate Master first.')
+                    return redirect(request.META.get('HTTP_REFERER', f'/SMS/enquirynote_update/{enquiry_num_id}'))
+
                 # Auto-fill env_special_sale from env_sale if left blank or 0
                 if not instance.env_special_sale or float(instance.env_special_sale) == 0:
                     if instance.env_sale and float(instance.env_sale) > 0:
@@ -196,6 +201,11 @@ def enquirynotevehicle_add(request, enquirynotevehicle_id=0):
                         if not updated_instance.env_special_sale or float(updated_instance.env_special_sale) == 0:
                             if updated_instance.env_sale and float(updated_instance.env_sale) > 0:
                                 updated_instance.env_special_sale = float(updated_instance.env_sale)
+
+                    # Disallow updating if no route rate found in Route Rate Master
+                    if not updated_instance.env_sale or float(updated_instance.env_sale) == 0:
+                        messages.error(request, 'No Route Rate Master found for this Customer, Department, Route, and Vehicle Type. Please configure the route rate in Route Rate Master first.')
+                        return redirect(request.META.get('HTTP_REFERER', f'/SMS/enquirynote_update/{enquiry_num_id}'))
 
                     updated_instance.save()
                     form.save_m2m()
