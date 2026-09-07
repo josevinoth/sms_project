@@ -5,6 +5,8 @@ from ..models import TripdetailInfo, Tripstatusinfo,Trip_closure_files_Info
 class TripSettlementForm(forms.ModelForm):
     customer_name = forms.CharField(label="Customer Name", required=False, disabled=True)
     trip_date = forms.CharField(label="Trip Date", required=False, disabled=True)
+    special_sell = forms.CharField(label="Special Sell", required=False)
+    special_sell_check = forms.BooleanField(label="Bill to Customer", required=False, initial=False)
 
     class Meta:
         model = TripdetailInfo
@@ -27,9 +29,11 @@ class TripSettlementForm(forms.ModelForm):
         self.fields['tc_financestatus'].empty_label = "--Select--"
         self.fields['tr_iou'].empty_label = "--Select--"
         
-        # Default "Trip Charges" checkbox to True
+        # Default "Trip Charges" checkbox to True, "Special Sell" checkbox to False
         if 'tc_tripcost_check' in self.fields:
             self.fields['tc_tripcost_check'].initial = True
+        if 'special_sell_check' in self.fields:
+            self.fields['special_sell_check'].initial = False
         # Only show Trip Settled & Clarification
         self.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(
             id__in=[7, 4]   # Trip Settled, Clarification

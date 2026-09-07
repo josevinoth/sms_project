@@ -6,11 +6,105 @@ from django.core.files.base import ContentFile
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 
-from ..models import TripdetailInfo, Trip_closure_files_Info, Vehicle_allotmentInfo, TripAttachmentInfo
+from ..models import TripdetailInfo, Trip_closure_files_Info, Vehicle_allotmentInfo, TripAttachmentInfo, Enquirynotevehicle
 from ..forms import TripSettlementForm, TripclosurefilesForm
 from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
 from ..sub_forms.invoice_document_form import InvoiceDocumentForm
 from ..sub_models.trip_status_mod import Tripstatusinfo
+
+
+def get_enquiry_special_sell(trip):
+    """
+    Directly fetch the Special Sell (env_special_sale) from the Enquiry Note page (Enquirynotevehicle).
+    Matches by Enquiry Number and Vehicle Type (Placed > Requested).
+    Falls back to any Enquirynotevehicle for the enquiry note.
+    """
+    if not trip or not trip.tr_enquirynumber:
+        return 0.0
+
+    enquiry = trip.tr_enquirynumber
+    vt_placed_id = getattr(trip, 'tr_vehicletype_placed_id', None)
+    vt_req_id = getattr(trip, 'tr_vehicletype_id', None)
+
+    # 1. Match by enquiry + vehicle type placed
+    if vt_placed_id:
+        env_obj = Enquirynotevehicle.objects.filter(
+            env_enquirynumber=enquiry,
+            env_vehicletype_id=vt_placed_id
+        ).first()
+        if env_obj:
+            if env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
+                return float(env_obj.env_special_sale)
+            if env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+                return float(env_obj.env_sale)
+
+    # 2. Match by enquiry + vehicle type requested
+    if vt_req_id:
+        env_obj = Enquirynotevehicle.objects.filter(
+            env_enquirynumber=enquiry,
+            env_vehicletype_id=vt_req_id
+        ).first()
+        if env_obj:
+            if env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
+                return float(env_obj.env_special_sale)
+            if env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+                return float(env_obj.env_sale)
+
+    # 3. Match any Enquirynotevehicle for this enquiry
+    env_obj = Enquirynotevehicle.objects.filter(
+        env_enquirynumber=enquiry
+    ).first()
+    if env_obj:
+        if env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
+            return float(env_obj.env_special_sale)
+        if env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+            return float(env_obj.env_sale)
+
+    return 0.0
+
+
+def get_enquiry_standard_sell(trip):
+    """
+    Get the actual / standard sell rate for the trip from Enquiry Note / Allotment / Tripdetail.
+    """
+    if not trip:
+        return 0.0
+
+    # 1. Check Enquiry Note Vehicle env_sale
+    if trip.tr_enquirynumber:
+        enquiry = trip.tr_enquirynumber
+        vt_placed_id = getattr(trip, 'tr_vehicletype_placed_id', None)
+        vt_req_id = getattr(trip, 'tr_vehicletype_id', None)
+        if vt_placed_id:
+            env_obj = Enquirynotevehicle.objects.filter(
+                env_enquirynumber=enquiry,
+                env_vehicletype_id=vt_placed_id
+            ).first()
+            if env_obj and env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+                return float(env_obj.env_sale)
+        if vt_req_id:
+            env_obj = Enquirynotevehicle.objects.filter(
+                env_enquirynumber=enquiry,
+                env_vehicletype_id=vt_req_id
+            ).first()
+            if env_obj and env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+                return float(env_obj.env_sale)
+        env_obj = Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry).first()
+        if env_obj and env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+            return float(env_obj.env_sale)
+
+    # 2. Check Allotment va_sale
+    if trip.tr_enquirynumber:
+        allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=trip.tr_enquirynumber)
+        for a in allotments:
+            if a.va_sale is not None and float(a.va_sale) > 0:
+                return float(a.va_sale)
+
+    # 3. Check Trip detail tc_tripcost
+    if trip.tc_tripcost is not None and float(trip.tc_tripcost) > 0:
+        return float(trip.tc_tripcost)
+
+    return 0.0
 
 
 def _stored_file_content(file_field):
@@ -544,7 +638,8 @@ def invoice_documents_add(request, trip_id):
         'tc_rtocost', 'tc_rtocost_check',
         'tc_betacost', 'tc_betacost_check',
         'tc_cancellation', 'tc_cancellation_check',
-        'tc_tripcost_check'
+        'tc_tripcost_check',
+        'special_sell', 'special_sell_check',
     ]
 
     if request.method == 'POST':
@@ -570,6 +665,19 @@ def invoice_documents_add(request, trip_id):
         for field in files_form.fields:
             files_form.fields[field].required = False
 
+        # Validate Special Sell must be strictly greater than actual/standard rate
+        special_sell_val = request.POST.get('special_sell', '').strip()
+        if special_sell_val not in ('', None):
+            try:
+                special_sell_num = float(special_sell_val)
+                actual_rate = get_enquiry_standard_sell(trip)
+                if actual_rate > 0 and special_sell_num <= actual_rate:
+                    messages.error(request, f"Special Sell value ({special_sell_num}) must be greater than the actual rate ({actual_rate}).")
+                    return redirect('invoice_documents_add', trip_id=trip_id)
+            except (ValueError, TypeError):
+                messages.error(request, "Please enter a valid numeric value for Special Sell.")
+                return redirect('invoice_documents_add', trip_id=trip_id)
+
         # Validate Sell Rate Doc only if Special Sell > Standard Sell
         if check_sell_rate_doc_required(trip):
             has_sell_rate_doc = 'id_sell_rate_doc' in request.FILES or (invoice_doc and invoice_doc.id_sell_rate_doc and not request.POST.get('id_sell_rate_doc-clear'))
@@ -582,6 +690,42 @@ def invoice_documents_add(request, trip_id):
             trip_obj = settlement_form.save(commit=False)
             trip_obj.tr_updated_by = request.user
             trip_obj.save()
+
+            # Save updated special sell directly back to Enquiry Note / Allotment if provided
+            special_sell_val = settlement_form.cleaned_data.get('special_sell')
+            if special_sell_val not in (None, ''):
+                try:
+                    special_sell_num = float(special_sell_val)
+                    enquiry = trip_obj.tr_enquirynumber
+                    vt_placed_id = getattr(trip_obj, 'tr_vehicletype_placed_id', None)
+                    vt_req_id = getattr(trip_obj, 'tr_vehicletype_id', None)
+                    if vt_placed_id:
+                        Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry, env_vehicletype_id=vt_placed_id).update(env_special_sale=special_sell_num)
+                    elif vt_req_id:
+                        Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry, env_vehicletype_id=vt_req_id).update(env_special_sale=special_sell_num)
+                    else:
+                        Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry).update(env_special_sale=special_sell_num)
+
+                    # Also update allotment if exists
+                    allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry)
+                    target_veh = (trip_obj.tr_vehiclenumber or '').strip().replace(' ', '').replace('-', '').upper()
+                    updated_allotment = False
+                    if allotments.exists() and target_veh:
+                        for a in allotments:
+                            reg = ''
+                            if a.va_vehiclenumber and getattr(a.va_vehiclenumber, 'vm_registrationnumber', None):
+                                reg = a.va_vehiclenumber.vm_registrationnumber.strip().replace(' ', '').replace('-', '').upper()
+                            elif a.va_vehiclenumber_mkt:
+                                reg = a.va_vehiclenumber_mkt.strip().replace(' ', '').replace('-', '').upper()
+                            if reg == target_veh:
+                                a.va_special_sale = special_sell_num
+                                a.save(update_fields=['va_special_sale'])
+                                updated_allotment = True
+                                break
+                    if not updated_allotment and allotments.exists():
+                        allotments.filter(id=allotments.first().id).update(va_special_sale=special_sell_num)
+                except (ValueError, TypeError) as e:
+                    print(f"Error updating special sell value: {e}")
 
             # Save closure files if any
             files_obj = files_form.save(commit=False)
@@ -761,6 +905,10 @@ def invoice_documents_add(request, trip_id):
     # Sell value for display
     from .tripclosure_add_view import get_allotment_sale_rate
     va_sale = get_allotment_sale_rate(trip)
+    special_sell = get_enquiry_special_sell(trip)
+    actual_sell_rate = get_enquiry_standard_sell(trip) or (float(trip.tc_tripcost) if trip.tc_tripcost else 0.0)
+    if 'special_sell' in settlement_form.fields:
+        settlement_form.fields['special_sell'].initial = special_sell
     is_sell_rate_doc_required = check_sell_rate_doc_required(trip)
 
 
@@ -782,6 +930,8 @@ def invoice_documents_add(request, trip_id):
             trip.tr_enquirynumber.en_enquirynumber if trip.tr_enquirynumber else ''
         ),
         'va_sale': va_sale,
+        'special_sell': special_sell,
+        'actual_sell_rate': actual_sell_rate,
         'is_sell_rate_doc_required': is_sell_rate_doc_required,
         'live_customer_ref': (
             trip.tr_consignmentnumber.co_cusrefnum
