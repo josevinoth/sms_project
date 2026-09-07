@@ -499,7 +499,7 @@ DRIVERS_ADVANCE_HEADERS = [
 
 INVOICE_PENDING_HEADERS = [
     "SNo", "Branch", "Customer Short Name", "Planning Date", "Cnote No", "From", "To", "Dept",
-    "Veh No", "Veh Type", "Veh Source", "Consignee", "No. of Pcs", "Weight", "Trip Status",
+    "Veh No", "Veh Type", "Veh Source", "Consignee", "Reference No", "No. of Pcs", "Weight", "Trip Status",
     "Transportation Charges", "Toll Charges", "Parking Charges", "Loading Charges", "Unloading Charges",
     "Halting Charges", "Docket Charges", "Weighment Charges", "Handling Charges", "Cancellation Charges",
     "TOTAL"
@@ -2196,6 +2196,8 @@ def invoice_pending_report_ajax_view(request):
                 Q(tr_vehiclenumber__icontains=search_value) |
                 Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
                 Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+                Q(tr_consignmentnumber__co_cusrefnum__icontains=search_value) |
+                Q(tr_customerref__icontains=search_value) |
                 Q(tr_departedlocation__place_name__icontains=search_value) |
                 Q(tr_reportedlocation__place_name__icontains=search_value) |
                 Q(tr_enquirynumber__en_customerdepartment__ct_customerdepartment__icontains=search_value) |
@@ -2223,7 +2225,8 @@ def invoice_pending_report_ajax_view(request):
         5: 'tr_departedlocation__place_name',
         6: 'tr_reportedlocation__place_name',
         8: 'tr_vehiclenumber',
-        24: 'trip_total',
+        12: 'tr_consignmentnumber__co_cusrefnum',
+        26: 'trip_total',
     }
     order_field = col_map.get(order_col, 'tr_created_at')
     if order_dir == 'desc' and not order_field.startswith('-'):
@@ -2238,14 +2241,30 @@ def invoice_pending_report_ajax_view(request):
     else:
         trips_slice = trips[start:]
 
-    # Bulk-fetch consignment goods for current page only
+    # Bulk-fetch consignment goods for current page only (aggregate all goods per consignment)
     trip_cons_ids = [t.tr_consignmentnumber_id for t in trips_slice if t.tr_consignmentnumber_id]
-    goods_map = {
-        g.cg_consignmentnumber_id: g
-        for g in ConsignmentgoodsInfo.objects.filter(
-            cg_consignmentnumber_id__in=trip_cons_ids
-        )
-    }
+    goods_records = (
+        ConsignmentgoodsInfo.objects
+        .filter(cg_consignmentnumber_id__in=trip_cons_ids)
+        .select_related('cg_consignee')
+        .order_by('id')
+    )
+    goods_map = {}
+    for g in goods_records:
+        cid = g.cg_consignmentnumber_id
+        if cid not in goods_map:
+            goods_map[cid] = {
+                'total_qty': 0,
+                'total_weight': 0.0,
+                'consignee_list': [],
+            }
+        d = goods_map[cid]
+        d['total_qty'] += (g.cg_qty or 0)
+        d['total_weight'] += (g.cg_weight or 0.0)
+        if g.cg_consignee:
+            c_name = str(g.cg_consignee).strip()
+            if c_name and c_name not in d['consignee_list']:
+                d['consignee_list'].append(c_name)
 
     # Bulk-fetch invoice documents for current page only
     trip_numbers = [t.tr_tripnumber for t in trips_slice if t.tr_tripnumber]
@@ -2268,7 +2287,7 @@ def invoice_pending_report_ajax_view(request):
     data = []
     for idx, trip in enumerate(trips_slice, start=start + 1):
         cons = trip.tr_consignmentnumber
-        goods = goods_map.get(trip.tr_consignmentnumber_id) if trip.tr_consignmentnumber_id else None
+        g_data = goods_map.get(trip.tr_consignmentnumber_id) if trip.tr_consignmentnumber_id else None
         inv_status = invoice_doc_map.get(trip.tr_tripnumber, "-") if trip.tr_tripnumber else "-"
 
         # Branch
@@ -2345,6 +2364,11 @@ def invoice_pending_report_ajax_view(request):
             (safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0)
         )
 
+        ref_no = safe_str(cons.co_cusrefnum if cons and cons.co_cusrefnum else (trip.tr_customerref or ""))
+        consignee_val = ", ".join(g_data['consignee_list']) if g_data and g_data['consignee_list'] else ""
+        qty_val = g_data['total_qty'] if g_data else 0
+        weight_val = g_data['total_weight'] if g_data else 0.0
+
         data.append([
             idx,
             branch_name,
@@ -2357,9 +2381,10 @@ def invoice_pending_report_ajax_view(request):
             safe_str(trip.tr_vehiclenumber),
             veh_type_str,
             safe_str(trip.tr_vehiclesource.ow_ownership) if trip.tr_vehiclesource else "",
-            safe_str(goods.cg_consignee) if goods else "",
-            safe_num(goods.cg_qty) if goods else 0,
-            safe_num(goods.cg_weight) if goods else 0.0,
+            consignee_val,
+            ref_no,
+            qty_val,
+            weight_val,
             trip_status_display,
             safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0,
             safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0,
