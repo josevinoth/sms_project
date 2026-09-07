@@ -413,9 +413,19 @@
                         tbody.append('<tr><td colspan="12" class="text-center text-muted">No trips found for selected criteria</td></tr>');
                     }
 
-                    // Rows in DOM — now sync toll/trip-IDs and recalculate
-                    isInitialLoad = false;
-                    syncTableToHeader();
+                    // Rows in DOM — handle initial load vs dynamic change
+                    if (isInitialLoad) {
+                        var savedTollVal = parseFloat($('#id_ab_toll_cost').val());
+                        var $checkedRows = $('.trip-checkbox:checked');
+                        if (!isNaN(savedTollVal) && savedTollVal > 0 && $checkedRows.length === 1) {
+                            $checkedRows.closest('tr').find('.trip-toll-cost').val(savedTollVal.toFixed(2));
+                        }
+                        isInitialLoad = false;
+                        calculateAmounts();
+                    } else {
+                        isInitialLoad = false;
+                        syncTableToHeader();
+                    }
                 },
                 error: function (xhr, status, error) {
                     console.error("AJAX Error:", status, error);
