@@ -578,8 +578,18 @@ def invoice_documents_add(request, trip_id):
                 return redirect('invoice_documents_add', trip_id=trip_id)
 
         if invoice_form.is_valid() and settlement_form.is_valid() and files_form.is_valid():
-            # Save status change on trip
+            # Preserve existing checkbox states on trip since checkboxes are not present in this form POST
+            chk_fields = [
+                'tc_tripcost_check', 'tc_parkingcost_check', 'tc_tollcost_check',
+                'tc_loadingcost_check', 'tc_unloadingcost_check', 'tc_weighmentcost_check',
+                'tc_handlingcost_check', 'tc_supervisorcost_check', 'tc_haltingcost_check',
+                'tc_total_halting_cost_check', 'tc_rtocost_check', 'tc_betacost_check',
+                'tc_cancellation_check'
+            ]
             trip_obj = settlement_form.save(commit=False)
+            for f in chk_fields:
+                setattr(trip_obj, f, getattr(trip, f, False))
+
             trip_obj.tr_updated_by = request.user
             trip_obj.save()
 

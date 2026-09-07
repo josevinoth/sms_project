@@ -7,6 +7,10 @@ class PkpurchaseorderForm(forms.ModelForm):
     class Meta:
         model = PkpurchaseorderInfo
         exclude = ['sales_order_num', 'po_updated_by']
+        widgets = {
+            'po_date': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+            'po_validity_date': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
+        }
 
     def __init__(self, *args, **kwargs):
         na_id = kwargs.pop('na_id', None)

@@ -37,3 +37,18 @@ class PkpurchaseorderInfo(models.Model):
         # Tax is stored as percentage (e.g., 12 for 12%), so divide by 100
         self.po_total_value = self.po_value + (self.po_value * self.po_tax / 100)
         super(PkpurchaseorderInfo, self).save(*args, **kwargs)
+
+
+def po_attachment_directory_path(instance, filename):
+    po_identifier = instance.po.po_num if instance.po and instance.po.po_num else 'common'
+    return 'Pkpurchaseorderfiles/{0}/{1}'.format(po_identifier, filename)
+
+
+class PkpurchaseorderAttachmentInfo(models.Model):
+    po = models.ForeignKey(PkpurchaseorderInfo, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to=po_attachment_directory_path)
+    filename = models.CharField(max_length=300, null=True, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"PO {self.po.po_num} - {self.filename or self.file.name}"

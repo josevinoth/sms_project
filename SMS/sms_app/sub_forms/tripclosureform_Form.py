@@ -30,10 +30,51 @@ class TripclosureaddForm(forms.ModelForm):
                 self.fields['tr_vehiclenumber'].queryset = VehiclemasterInfo.objects.filter(pk=inst.tr_vehiclenumber_id)
 
         # Default "Trip Charges" checkboxes to True
-        if 'tc_tripcost_check' in self.fields:
-            self.fields['tc_tripcost_check'].initial = True
-        if 'tc_tripcost_vendor_check' in self.fields:
-            self.fields['tc_tripcost_vendor_check'].initial = True
+        check_fields = [
+            'tc_tripcost_check', 'tc_parkingcost_check', 'tc_tollcost_check',
+            'tc_loadingcost_check', 'tc_unloadingcost_check', 'tc_weighmentcost_check',
+            'tc_supervisorcost_check', 'tc_handlingcost_check', 'tc_haltingcost_check',
+            'tc_total_halting_cost_check', 'tc_rtocost_check', 'tc_betacost_check',
+            'tc_cancellation_check'
+        ]
+        vendor_check_fields = [
+            'tc_tripcost_vendor_check', 'tc_parkingcost_vendor_check', 'tc_tollcost_vendor_check',
+            'tc_loadingcost_vendor_check', 'tc_unloadingcost_vendor_check', 'tc_weighmentcost_vendor_check',
+            'tc_supervisorcost_vendor_check', 'tc_handlingcost_vendor_check', 'tc_haltingcost_vendor_check',
+            'tc_total_halting_cost_vendor_check', 'tc_rtocost_vendor_check', 'tc_betacost_vendor_check',
+            'tc_cancellation_vendor_check'
+        ]
+
+        if not inst or not inst.pk:
+            for f in check_fields:
+                if f in self.fields:
+                    self.fields[f].initial = True
+            for f in vendor_check_fields:
+                if f in self.fields:
+                    self.fields[f].initial = True
+        else:
+            # If editing existing trip, auto-check if cost is present (> 0) and checkbox was un-initialized
+            cost_map = {
+                'tc_parkingcost_check': inst.tc_parkingcost,
+                'tc_tollcost_check': inst.tc_tollcost,
+                'tc_loadingcost_check': inst.tc_loadingcost,
+                'tc_unloadingcost_check': inst.tc_unloadingcost,
+                'tc_weighmentcost_check': inst.tc_weighmentcost,
+                'tc_supervisorcost_check': inst.tc_supervisorcost,
+                'tc_handlingcost_check': inst.tc_handlingcost,
+                'tc_haltingcost_check': inst.tc_haltingcost,
+                'tc_total_halting_cost_check': inst.tc_total_halting_cost,
+                'tc_rtocost_check': inst.tc_rtocost,
+                'tc_betacost_check': inst.tc_betacost,
+                'tc_cancellation_check': inst.tc_cancellation,
+            }
+            for chk_field, cost_val in cost_map.items():
+                if chk_field in self.fields and not getattr(inst, chk_field, False):
+                    try:
+                        if cost_val and float(cost_val) > 0:
+                            self.fields[chk_field].initial = True
+                    except (ValueError, TypeError):
+                        pass
 
 class TripclosurefilesForm(forms.ModelForm):
     class Meta:
