@@ -665,14 +665,14 @@ def invoice_documents_add(request, trip_id):
         for field in files_form.fields:
             files_form.fields[field].required = False
 
-        # Validate Special Sell must be strictly greater than actual/standard rate
+        # Validate Special Sell cannot be less than actual/standard rate
         special_sell_val = request.POST.get('special_sell', '').strip()
         if special_sell_val not in ('', None):
             try:
                 special_sell_num = float(special_sell_val)
-                actual_rate = get_enquiry_standard_sell(trip)
-                if actual_rate > 0 and special_sell_num <= actual_rate:
-                    messages.error(request, f"Special Sell value ({special_sell_num}) must be greater than the actual rate ({actual_rate}).")
+                actual_rate = get_enquiry_standard_sell(trip) or (float(trip.tc_tripcost) if trip.tc_tripcost else 0.0)
+                if actual_rate > 0 and special_sell_num < actual_rate:
+                    messages.error(request, f"Special Sell value ({special_sell_num}) cannot be less than the actual rate ({actual_rate}).")
                     return redirect('invoice_documents_add', trip_id=trip_id)
             except (ValueError, TypeError):
                 messages.error(request, "Please enter a valid numeric value for Special Sell.")
