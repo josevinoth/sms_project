@@ -859,7 +859,7 @@ def invoice_list_ajax(request):
             Q(bill_invoice_ref__icontains=search_value) |
             Q(bill_customer_name__cu_name__icontains=search_value) |
             Q(bill_customer_type__tb_trbusinesstype__icontains=search_value) |
-            Q(bill_status__icontains=search_value)
+            Q(bill_status__status_title__icontains=search_value)
         )
 
     recordsFiltered = queryset.count()
