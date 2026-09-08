@@ -98,6 +98,26 @@ def get_trip_halting_charge(t):
     return halting
 
 
+def get_trip_transport_charge(t):
+    """
+    Returns the transportation charge to bill to customer for a trip (TripdetailInfo):
+    - If special sell is checked (tc_special_sell_check), returns special sell value.
+    - Else if trip charges is checked (tc_tripcost_check), returns tc_tripcost.
+    - Otherwise returns 0.0.
+    """
+    if not t:
+        return 0.0
+    if getattr(t, 'tc_special_sell_check', False):
+        val = getattr(t, 'tc_special_sell', None)
+        if val is not None and float(val) > 0:
+            return float(val)
+        from .invoice_documents_view import get_enquiry_special_sell
+        return float(get_enquiry_special_sell(t) or 0.0)
+    elif getattr(t, 'tc_tripcost_check', False):
+        return float(t.tc_tripcost or 0.0)
+    return 0.0
+
+
 def calculate_trip_invoice_total(t):
     """
     Calculates total transport invoice charges for a trip (TripdetailInfo)
@@ -105,7 +125,7 @@ def calculate_trip_invoice_total(t):
     """
     if not t:
         return 0.0
-    transport = float(t.tc_tripcost or 0) if getattr(t, 'tc_tripcost_check', False) else 0.0
+    transport = float(get_trip_transport_charge(t) or 0.0)
     toll = float(t.tc_tollcost or 0) if getattr(t, 'tc_tollcost_check', False) else 0.0
     parking = float(t.tc_parkingcost or 0) if getattr(t, 'tc_parkingcost_check', False) else 0.0
     loading = float(t.tc_loadingcost or 0) if getattr(t, 'tc_loadingcost_check', False) else 0.0
@@ -139,7 +159,7 @@ def sync_master_invoice_totals(master_inv):
     for item in woh_items:
         t = item.ti_trip
         if t:
-            transport = t.tc_tripcost   if t.tc_tripcost_check   else 0
+            transport = get_trip_transport_charge(t)
             toll      = t.tc_tollcost   if t.tc_tollcost_check   else 0
             parking   = t.tc_parkingcost if t.tc_parkingcost_check else 0
             loading   = t.tc_loadingcost if t.tc_loadingcost_check else 0
@@ -221,7 +241,7 @@ def sync_trip_charges_to_invoice(trip):
 
     # Recompute each charge field honouring the _check flag
     t = trip
-    transport = t.tc_tripcost   if t.tc_tripcost_check   else 0
+    transport = get_trip_transport_charge(t)
     toll      = t.tc_tollcost   if t.tc_tollcost_check   else 0
     parking   = t.tc_parkingcost if t.tc_parkingcost_check else 0
     loading   = t.tc_loadingcost if t.tc_loadingcost_check else 0
@@ -1004,7 +1024,7 @@ def trans_invoice_list_woh(request, customer_id):
                         "ti_state": state,
                         "ti_inv_no": inv_no,
                         "ti_inv_date": inv_date,
-                        "ti_transportation_charges": trip.tc_tripcost if trip.tc_tripcost_check else 0,
+                        "ti_transportation_charges": get_trip_transport_charge(trip),
                         "ti_toll_charges": trip.tc_tollcost if trip.tc_tollcost_check else 0,
                         "ti_parking_charges": trip.tc_parkingcost if trip.tc_parkingcost_check else 0,
                         "ti_loading_charges": trip.tc_loadingcost if trip.tc_loadingcost_check else 0,
@@ -1075,7 +1095,12 @@ def trans_invoice_list_woh(request, customer_id):
 
         .annotate(
             trip_total=(
-                Case(When(tc_tripcost_check=True, then=F('tc_tripcost')), default=0.0, output_field=FloatField()) +
+                Case(
+                    When(tc_special_sell_check=True, then=Coalesce(F('tc_special_sell'), Value(0.0))),
+                    When(tc_tripcost_check=True, then=Coalesce(F('tc_tripcost'), Value(0.0))),
+                    default=Value(0.0),
+                    output_field=FloatField()
+                ) +
                 Case(When(tc_tollcost_check=True, then=F('tc_tollcost')), default=0.0, output_field=FloatField()) +
                 Case(When(tc_parkingcost_check=True, then=F('tc_parkingcost')), default=0.0, output_field=FloatField()) +
                 Case(When(tc_loadingcost_check=True, then=F('tc_loadingcost')), default=0.0, output_field=FloatField()) +
@@ -1102,6 +1127,7 @@ def trans_invoice_list_woh(request, customer_id):
     curr_pdf_map = {doc.id_tripnumber: doc.id_merged_pdf.url if doc.id_merged_pdf else None for doc in curr_pdf_docs}
     for trip in trans_invoice_list:
         trip.combined_pdf_url = curr_pdf_map.get(trip.tr_tripnumber)
+        trip.calculated_transport = get_trip_transport_charge(trip)
         trip.calculated_halting = get_trip_halting_charge(trip)
         trip.trip_total = calculate_trip_invoice_total(trip)
 
@@ -1122,7 +1148,12 @@ def trans_invoice_list_woh(request, customer_id):
 
         .annotate(
             trip_total=(
-                Case(When(tc_tripcost_check=True, then=F('tc_tripcost')), default=0.0, output_field=FloatField()) +
+                Case(
+                    When(tc_special_sell_check=True, then=Coalesce(F('tc_special_sell'), Value(0.0))),
+                    When(tc_tripcost_check=True, then=Coalesce(F('tc_tripcost'), Value(0.0))),
+                    default=Value(0.0),
+                    output_field=FloatField()
+                ) +
                 Case(When(tc_tollcost_check=True, then=F('tc_tollcost')), default=0.0, output_field=FloatField()) +
                 Case(When(tc_parkingcost_check=True, then=F('tc_parkingcost')), default=0.0, output_field=FloatField()) +
                 Case(When(tc_loadingcost_check=True, then=F('tc_loadingcost')), default=0.0, output_field=FloatField()) +
@@ -1149,6 +1180,7 @@ def trans_invoice_list_woh(request, customer_id):
     pdf_map = {doc.id_tripnumber: doc.id_merged_pdf.url if doc.id_merged_pdf else None for doc in invoice_docs}
     for trip in invoice_list_master:
         trip.combined_pdf_url = pdf_map.get(trip.tr_tripnumber)
+        trip.calculated_transport = get_trip_transport_charge(trip)
         trip.calculated_halting = get_trip_halting_charge(trip)
         trip.trip_total = calculate_trip_invoice_total(trip)
 
@@ -1356,7 +1388,7 @@ def trans_invoice_excel(request, invoice_no):
         goods = obj.ti_goods
 
         if trip:
-            transport = trip.tc_tripcost if trip.tc_tripcost_check else 0
+            transport = get_trip_transport_charge(trip)
             toll = trip.tc_tollcost if trip.tc_tollcost_check else 0
             parking = trip.tc_parkingcost if trip.tc_parkingcost_check else 0
             loading = trip.tc_loadingcost if trip.tc_loadingcost_check else 0
@@ -1491,7 +1523,7 @@ def trans_invoice_tally_excel(request, invoice_no):
         cons = obj.ti_consignment
         
         if trip:
-            transport = trip.tc_tripcost if trip.tc_tripcost_check else 0
+            transport = get_trip_transport_charge(trip)
             toll = trip.tc_tollcost if trip.tc_tollcost_check else 0
             parking = trip.tc_parkingcost if trip.tc_parkingcost_check else 0
             loading = trip.tc_loadingcost if trip.tc_loadingcost_check else 0

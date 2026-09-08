@@ -94,7 +94,7 @@
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Trip Charges</label>
                             <div class="d-flex align-items-center w-50">
                                 {% render_field tripclosure_form.tc_tripcost id="tc_tripcost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" %}
-                                {% render_field tripclosure_form.tc_tripcost_check id="tc_tripcost_check" class="ml-2" style="width:16px; height:16px;" %}
+                                {% render_field tripclosure_form.tc_tripcost_check id="tc_tripcost_check" class="ml-2" style="width:16px; height:16px; cursor: pointer;" title="Bill Trip Charges to Customer" %}
                             </div>
                         </div>
                         <!-- Special Sell -->
@@ -550,20 +550,39 @@
             }
         }
 
-        $("#special_sell_check").on("change", function() {
-            toggleSpecialSellEdit();
+        // Mutual unchecking: both remain checkable at all times; selecting one removes the check from the other
+        $("#tc_tripcost_check").on("change", function() {
             if ($(this).is(":checked")) {
+                $("#special_sell_check").prop("checked", false);
+            }
+            toggleSpecialSellEdit();
+        });
+
+        $("#special_sell_check").on("change", function() {
+            if ($(this).is(":checked")) {
+                $("#tc_tripcost_check").prop("checked", false);
                 $("#special_sell").focus();
             }
+            toggleSpecialSellEdit();
         });
+
+        // If both are somehow checked initially, remove check from Special Sell
+        if ($("#tc_tripcost_check").is(":checked") && $("#special_sell_check").is(":checked")) {
+            $("#special_sell_check").prop("checked", false);
+        }
 
         // Initialize state on page load
         toggleSpecialSellEdit();
 
         // Validate Special Sell only if lower than actual rate
         $("form").on("submit", function (e) {
+            // Guard: ensure both are not checked at the same time
+            if ($("#tc_tripcost_check").is(":checked") && $("#special_sell_check").is(":checked")) {
+                $("#special_sell_check").prop("checked", false);
+            }
+
             var specialSellVal = ($("#special_sell").val() || "").trim();
-            if (specialSellVal !== "") {
+            if ($("#special_sell_check").is(":checked") && specialSellVal !== "") {
                 var specNum = parseFloat(specialSellVal);
                 var tripCostVal = $("#tc_tripcost").val();
                 var actualRate = parseFloat("{{ actual_sell_rate|default:'0' }}") || parseFloat(tripCostVal) || 0;

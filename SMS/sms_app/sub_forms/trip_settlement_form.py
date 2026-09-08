@@ -16,7 +16,8 @@ class TripSettlementForm(forms.ModelForm):
                   'tc_unloadingcost', 'tc_weighmentcost', 'tc_handlingcost', 'tr_iou', 'tc_financestatus',
                   'tr_customerref', 'tc_no_of_days_halting', 'tc_supervisorcost', 'tc_haltingcost', 'tc_rtocost',
                   'tc_betacost', 'tc_cancellation',
-                  'tc_tripcost_check', 'tc_parkingcost_check', 'tc_tollcost_check', 'tc_loadingcost_check',
+                  'tc_tripcost_check', 'tc_special_sell_check', 'tc_special_sell',
+                  'tc_parkingcost_check', 'tc_tollcost_check', 'tc_loadingcost_check',
                   'tc_unloadingcost_check', 'tc_weighmentcost_check', 'tc_handlingcost_check',
                   'tc_haltingcost_check', 'tc_total_halting_cost_check', 'tc_rtocost_check',
                   'tc_betacost_check', 'tc_cancellation_check', 'tc_supervisorcost_check']
@@ -29,11 +30,19 @@ class TripSettlementForm(forms.ModelForm):
         self.fields['tc_financestatus'].empty_label = "--Select--"
         self.fields['tr_iou'].empty_label = "--Select--"
         
-        # Default "Trip Charges" checkbox to True, "Special Sell" checkbox to False
+        # Mutual exclusivity for initial checkbox state: default Trip Charges to True, Special Sell to False
+        is_special_sell_checked = False
+        is_tripcost_checked = True
+        if self.instance and self.instance.pk:
+            is_special_sell_checked = getattr(self.instance, 'tc_special_sell_check', False)
+            is_tripcost_checked = getattr(self.instance, 'tc_tripcost_check', True)
+            if is_special_sell_checked:
+                is_tripcost_checked = False
+        
         if 'tc_tripcost_check' in self.fields:
-            self.fields['tc_tripcost_check'].initial = True
+            self.fields['tc_tripcost_check'].initial = is_tripcost_checked
         if 'special_sell_check' in self.fields:
-            self.fields['special_sell_check'].initial = False
+            self.fields['special_sell_check'].initial = is_special_sell_checked
         # Only show Trip Settled & Clarification
         self.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(
             id__in=[7, 4]   # Trip Settled, Clarification
