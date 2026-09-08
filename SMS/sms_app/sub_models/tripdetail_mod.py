@@ -71,6 +71,8 @@ class TripdetailInfo(models.Model):
 
     # Bill to Customer Checkboxes (Specifically for Trans Invoice)
     tc_tripcost_check = models.BooleanField(default=True)
+    tc_special_sell_check = models.BooleanField(default=False)
+    tc_special_sell = models.FloatField(default=0.0, null=True, blank=True)
     tc_parkingcost_check = models.BooleanField(default=False)
     tc_tollcost_check = models.BooleanField(default=False)
     tc_loadingcost_check = models.BooleanField(default=False)

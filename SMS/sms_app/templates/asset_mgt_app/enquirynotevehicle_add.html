@@ -179,8 +179,14 @@
             document.getElementById("env_enquirynumber").value =enquiry_num_id_val;
         }
 
-        // Enable env_enquirynumber, env_sale, env_special_sale on form submit
-        $('#enquirynotevehicle_add').on('submit', function() {
+        // Enable env_enquirynumber, env_sale, env_special_sale on form submit and validate rate
+        $('#enquirynotevehicle_add').on('submit', function(e) {
+            var saleVal = $('#env_sale').val();
+            if (!saleVal || parseFloat(saleVal) <= 0 || isNaN(parseFloat(saleVal))) {
+                e.preventDefault();
+                alert('No Route Rate Master found for this Customer, Department, Route, and Vehicle Type. Please configure the route rate in Route Rate Master first.');
+                return false;
+            }
             $('#env_enquirynumber').prop('disabled', false);
             $('#env_sale').prop('disabled', false);
             $('#env_special_sale').prop('disabled', false);

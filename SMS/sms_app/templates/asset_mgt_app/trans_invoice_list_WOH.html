@@ -176,7 +176,7 @@
                 {% endwith %}
 
                 <!-- ================= CHARGES ================= -->
-                <td>{% if trip.tc_tripcost_check %}{{ trip.tc_tripcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if trip.calculated_transport is not None %}{{ trip.calculated_transport|floatformat:2 }}{% elif trip.tc_tripcost_check %}{{ trip.tc_tripcost }}{% else %}0.0{% endif %}</td>
                 <td>{% if trip.tc_tollcost_check %}{{ trip.tc_tollcost }}{% else %}0.0{% endif %}</td>
                 <td>{% if trip.tc_parkingcost_check %}{{ trip.tc_parkingcost }}{% else %}0.0{% endif %}</td>
                 <td>{% if trip.tc_loadingcost_check %}{{ trip.tc_loadingcost }}{% else %}0.0{% endif %}</td>

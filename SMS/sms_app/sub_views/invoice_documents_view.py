@@ -639,6 +639,7 @@ def invoice_documents_add(request, trip_id):
         'tc_betacost', 'tc_betacost_check',
         'tc_cancellation', 'tc_cancellation_check',
         'tc_tripcost_check',
+        'tc_special_sell_check', 'tc_special_sell',
         'special_sell', 'special_sell_check',
     ]
 
@@ -686,23 +687,49 @@ def invoice_documents_add(request, trip_id):
                 return redirect('invoice_documents_add', trip_id=trip_id)
 
         if invoice_form.is_valid() and settlement_form.is_valid() and files_form.is_valid():
-            # Preserve existing checkbox states on trip since checkboxes are not present in this form POST
             chk_fields = [
-                'tc_tripcost_check', 'tc_parkingcost_check', 'tc_tollcost_check',
+                'tc_tripcost_check', 'tc_special_sell_check', 'tc_parkingcost_check', 'tc_tollcost_check',
                 'tc_loadingcost_check', 'tc_unloadingcost_check', 'tc_weighmentcost_check',
                 'tc_handlingcost_check', 'tc_supervisorcost_check', 'tc_haltingcost_check',
                 'tc_total_halting_cost_check', 'tc_rtocost_check', 'tc_betacost_check',
                 'tc_cancellation_check'
             ]
             trip_obj = settlement_form.save(commit=False)
+            is_special_sell_checked = bool(request.POST.get('special_sell_check'))
+            is_tripcost_checked = bool(request.POST.get('tc_tripcost_check'))
+
+            if is_special_sell_checked:
+                trip_obj.tc_special_sell_check = True
+                trip_obj.tc_tripcost_check = False
+            elif is_tripcost_checked:
+                trip_obj.tc_special_sell_check = False
+                trip_obj.tc_tripcost_check = True
+            else:
+                trip_obj.tc_special_sell_check = False
+                trip_obj.tc_tripcost_check = False
+
             for f in chk_fields:
-                setattr(trip_obj, f, getattr(trip, f, False))
+                if f in ('tc_tripcost_check', 'tc_special_sell_check'):
+                    continue
+                elif f in editable_fields:
+                    setattr(trip_obj, f, f in request.POST)
+                else:
+                    setattr(trip_obj, f, getattr(trip, f, False))
+
+            # Store special sell on trip_obj if provided
+            special_sell_val = request.POST.get('special_sell', '').strip() or settlement_form.cleaned_data.get('special_sell')
+            if special_sell_val not in (None, ''):
+                try:
+                    trip_obj.tc_special_sell = float(special_sell_val)
+                except (ValueError, TypeError):
+                    pass
+            elif is_special_sell_checked and (not trip_obj.tc_special_sell or trip_obj.tc_special_sell <= 0):
+                trip_obj.tc_special_sell = get_enquiry_special_sell(trip_obj)
 
             trip_obj.tr_updated_by = request.user
             trip_obj.save()
 
             # Save updated special sell directly back to Enquiry Note / Allotment if provided
-            special_sell_val = settlement_form.cleaned_data.get('special_sell')
             if special_sell_val not in (None, ''):
                 try:
                     special_sell_num = float(special_sell_val)
@@ -915,10 +942,22 @@ def invoice_documents_add(request, trip_id):
     # Sell value for display
     from .tripclosure_add_view import get_allotment_sale_rate
     va_sale = get_allotment_sale_rate(trip)
-    special_sell = get_enquiry_special_sell(trip)
+    special_sell = (
+        float(trip.tc_special_sell)
+        if getattr(trip, 'tc_special_sell', None) is not None and float(trip.tc_special_sell) > 0
+        else get_enquiry_special_sell(trip)
+    )
     actual_sell_rate = get_enquiry_standard_sell(trip) or (float(trip.tc_tripcost) if trip.tc_tripcost else 0.0)
     if 'special_sell' in settlement_form.fields:
         settlement_form.fields['special_sell'].initial = special_sell
+    is_special_sell_checked = getattr(trip, 'tc_special_sell_check', False)
+    is_tripcost_checked = getattr(trip, 'tc_tripcost_check', True)
+    if is_special_sell_checked:
+        is_tripcost_checked = False
+    if 'tc_tripcost_check' in settlement_form.fields:
+        settlement_form.fields['tc_tripcost_check'].initial = is_tripcost_checked
+    if 'special_sell_check' in settlement_form.fields:
+        settlement_form.fields['special_sell_check'].initial = is_special_sell_checked
     is_sell_rate_doc_required = check_sell_rate_doc_required(trip)
 
 
