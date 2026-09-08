@@ -280,13 +280,15 @@ def dispatch_remove_goods(request):
                 goods.wh_storage_time = 0
                 goods.wh_checkout_time = None
                 goods.wh_truck_type = None
+                goods.wh_storage_cost_total = 0
+                goods.wh_storage_cost_per_day = 0
                 goods_to_update.append(goods)
 
         if goods_to_update:
             Warehouse_goods_info.objects.bulk_update(
                 goods_to_update,
                 ['wh_dispatch_num', 'wh_dispatch_id', 'wh_dispatch_qty', 'wh_check_in_out', 'wh_storage_time',
-                 'wh_checkout_time', 'wh_truck_type']
+                 'wh_checkout_time', 'wh_truck_type', 'wh_storage_cost_total', 'wh_storage_cost_per_day']
             )
 
     dispatch_num_val = request.session.get('ses_dispatch_num_val')
@@ -777,10 +779,18 @@ def dispatch_list_ajax(request):
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
     search_value = request.GET.get('search[value]', '')
+    dispatch_number = request.GET.get('dispatch_number', '')
+    job_number = request.GET.get('job_number', '')
 
     queryset = Dispatch_info.objects.select_related(
         'dispatch_customer', 'dispatch_status', 'dispatch_updated_by'
     ).all()
+
+    if dispatch_number:
+        queryset = queryset.filter(dispatch_num__icontains=dispatch_number)
+    
+    if job_number:
+        queryset = queryset.filter(dispatch_job_num_list__icontains=job_number)
 
     if search_value:
         queryset = queryset.filter(
