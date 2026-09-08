@@ -2040,6 +2040,8 @@ def invoice_pending_report_ajax_view(request):
     """Server-side DataTables AJAX endpoint for Invoice Pending Report (Synced)."""
     from ..models import TransInvoiceInfo, ConsignmentgoodsInfo, Vehicle_allotmentInfo
     from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
+    from .invoice_documents_view import get_enquiry_special_sell, get_enquiry_standard_sell
+    from .tripclosure_add_view import get_allotment_sale_rate
     from django.http import JsonResponse
     from collections import defaultdict
 
@@ -2112,7 +2114,12 @@ def invoice_pending_report_ajax_view(request):
         'tc_financestatus',
     ).annotate(
         trip_total=(
-                Case(When(tc_tripcost_check=True, then=F('tc_tripcost')), default=0.0, output_field=FloatField()) +
+                Case(
+                    When(tc_special_sell_check=True, tc_special_sell__gt=0, then=F('tc_special_sell')),
+                    When(tc_tripcost_check=True, then=F('tc_tripcost')),
+                    default=0.0,
+                    output_field=FloatField()
+                ) +
                 Case(When(tc_tollcost_check=True, then=F('tc_tollcost')), default=0.0, output_field=FloatField()) +
                 Case(When(tc_parkingcost_check=True, then=F('tc_parkingcost')), default=0.0,
                      output_field=FloatField()) +
@@ -2351,8 +2358,48 @@ def invoice_pending_report_ajax_view(request):
         else:
             halting_val = 0.0
 
+        # Determine Transportation Charges:
+        # Check if trip is settled / ready for invoice or has billing checkboxes
+        is_settled = trip.tc_financestatus_id in [7, 9]  # 7: Trip Settled, 9: Ready For Invoice
+        is_special_sell_check = getattr(trip, 'tc_special_sell_check', False)
+        is_tripcost_check = getattr(trip, 'tc_tripcost_check', False)
+
+        if is_settled:
+            if is_special_sell_check:
+                transport_val = safe_num(trip.tc_special_sell)
+                if transport_val <= 0 and allotment and safe_num(allotment.va_special_sale) > 0:
+                    transport_val = safe_num(allotment.va_special_sale)
+                if transport_val <= 0:
+                    transport_val = safe_num(get_enquiry_special_sell(trip))
+            elif is_tripcost_check:
+                transport_val = safe_num(trip.tc_tripcost)
+                if transport_val <= 0 and allotment and safe_num(allotment.va_sale) > 0:
+                    transport_val = safe_num(allotment.va_sale)
+                if transport_val <= 0:
+                    transport_val = safe_num(get_enquiry_standard_sell(trip))
+            else:
+                transport_val = 0.0
+        else:
+            # For trips which are NOT settled (e.g. Trip Started, Trip Closed, Awaiting Trip Settlement):
+            if is_special_sell_check:
+                transport_val = safe_num(trip.tc_special_sell)
+                if transport_val <= 0 and allotment and safe_num(allotment.va_special_sale) > 0:
+                    transport_val = safe_num(allotment.va_special_sale)
+                if transport_val <= 0:
+                    transport_val = safe_num(get_enquiry_special_sell(trip))
+            elif is_tripcost_check and safe_num(trip.tc_tripcost) > 0:
+                transport_val = safe_num(trip.tc_tripcost)
+            else:
+                # Show transportation charges as Special Sell field in Vehicle Allotment page
+                if allotment and allotment.va_special_sale is not None and safe_num(allotment.va_special_sale) > 0:
+                    transport_val = safe_num(allotment.va_special_sale)
+                elif allotment and allotment.va_sale is not None and safe_num(allotment.va_sale) > 0:
+                    transport_val = safe_num(allotment.va_sale)
+                else:
+                    transport_val = safe_num(get_enquiry_special_sell(trip)) or safe_num(get_allotment_sale_rate(trip))
+
         row_total = (
-            (safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0) +
+            safe_num(transport_val) +
             (safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0) +
             (safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0) +
             (safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0) +
@@ -2386,7 +2433,7 @@ def invoice_pending_report_ajax_view(request):
             qty_val,
             weight_val,
             trip_status_display,
-            safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0,
+            round(safe_num(transport_val), 2),
             safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0,
             safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0,
             safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0,
