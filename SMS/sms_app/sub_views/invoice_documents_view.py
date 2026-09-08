@@ -518,22 +518,30 @@ def invoice_documents_list_ajax_view(request):
         return JsonResponse({'error': str(e)})
 
 
-def check_sell_rate_doc_required(trip):
+def check_sell_rate_doc_required(trip, special_sell_val=None, is_special_sell_checked=None):
     """
     Sell Rate Doc is mandatory only when:
-    - A corresponding Vehicle Allotment exists,
-    - Standard Sell (va_sale) is configured and > 0,
-    - Special Sell (va_special_sale) is configured and > 0,
-    - Special Sell is strictly greater than Standard Sell (va_special_sale > va_sale).
-    If Standard Sell == Special Sell, or if Standard Sell is not defined (0/None),
+    - Special Sell is being billed/selected (or checked on the trip/form),
+    - Standard Sell / Trip Cost is configured and > 0,
+    - Special Sell is configured and > 0,
+    - Special Sell is strictly greater than Standard Sell / Trip Cost (spec_sale > std_sale).
+    If Standard Sell == Special Sell, or if Special Sell is not selected,
     the sell rate approval doc is NOT mandatory.
     """
-    if not trip or not trip.tr_enquirynumber:
+    if not trip:
         return False
+
+    # If is_special_sell_checked is explicitly specified as False, it is not being billed
+    if is_special_sell_checked is False:
+        return False
+    elif is_special_sell_checked is None:
+        # If not specified, check if special_sell_val was explicitly provided or tc_special_sell_check is True
+        if not getattr(trip, 'tc_special_sell_check', False) and special_sell_val is None:
+            return False
 
     allotments = Vehicle_allotmentInfo.objects.filter(
         va_enquirynumber=trip.tr_enquirynumber
-    ).select_related('va_vehiclenumber')
+    ).select_related('va_vehiclenumber') if trip.tr_enquirynumber else Vehicle_allotmentInfo.objects.none()
 
     target_veh = (trip.tr_vehiclenumber or '').strip().replace(' ', '').replace('-', '').upper()
     matched_allotment = None
@@ -553,18 +561,41 @@ def check_sell_rate_doc_required(trip):
     if not matched_allotment and allotments.exists():
         matched_allotment = allotments.first()
 
-    if not matched_allotment:
-        return False
+    std_sale = 0.0
+    if matched_allotment and matched_allotment.va_sale is not None:
+        try:
+            std_sale = float(matched_allotment.va_sale)
+        except (ValueError, TypeError):
+            std_sale = 0.0
 
-    try:
-        std_sale = float(matched_allotment.va_sale) if matched_allotment.va_sale is not None else 0.0
-    except (ValueError, TypeError):
-        std_sale = 0.0
+    if std_sale <= 0.0:
+        std_sale = get_enquiry_standard_sell(trip)
 
-    try:
-        spec_sale = float(matched_allotment.va_special_sale) if matched_allotment.va_special_sale is not None else 0.0
-    except (ValueError, TypeError):
+    if std_sale <= 0.0 and getattr(trip, 'tc_tripcost', None):
+        try:
+            std_sale = float(trip.tc_tripcost)
+        except (ValueError, TypeError):
+            std_sale = 0.0
+
+    if special_sell_val is not None:
+        try:
+            spec_sale = float(special_sell_val)
+        except (ValueError, TypeError):
+            spec_sale = 0.0
+    else:
         spec_sale = 0.0
+        if getattr(trip, 'tc_special_sell', None) is not None:
+            try:
+                spec_sale = float(trip.tc_special_sell)
+            except (ValueError, TypeError):
+                spec_sale = 0.0
+        if spec_sale <= 0.0 and matched_allotment and matched_allotment.va_special_sale is not None:
+            try:
+                spec_sale = float(matched_allotment.va_special_sale)
+            except (ValueError, TypeError):
+                spec_sale = 0.0
+        if spec_sale <= 0.0:
+            spec_sale = get_enquiry_special_sell(trip)
 
     if std_sale <= 0.0 or spec_sale <= 0.0:
         return False
@@ -668,7 +699,9 @@ def invoice_documents_add(request, trip_id):
 
         # Validate Special Sell cannot be less than actual/standard rate
         special_sell_val = request.POST.get('special_sell', '').strip()
-        if special_sell_val not in ('', None):
+        is_special_sell_checked = bool(request.POST.get('special_sell_check'))
+
+        if is_special_sell_checked and special_sell_val not in ('', None):
             try:
                 special_sell_num = float(special_sell_val)
                 actual_rate = get_enquiry_standard_sell(trip) or (float(trip.tc_tripcost) if trip.tc_tripcost else 0.0)
@@ -680,10 +713,10 @@ def invoice_documents_add(request, trip_id):
                 return redirect('invoice_documents_add', trip_id=trip_id)
 
         # Validate Sell Rate Doc only if Special Sell > Standard Sell
-        if check_sell_rate_doc_required(trip):
+        if check_sell_rate_doc_required(trip, special_sell_val=special_sell_val if is_special_sell_checked else None, is_special_sell_checked=is_special_sell_checked):
             has_sell_rate_doc = 'id_sell_rate_doc' in request.FILES or (invoice_doc and invoice_doc.id_sell_rate_doc and not request.POST.get('id_sell_rate_doc-clear'))
             if not has_sell_rate_doc:
-                messages.error(request, "Sell Rate Doc is mandatory because Special Sell > Standard Sell.")
+                messages.error(request, "Sell Rate Doc is mandatory because Special Sell is higher than Standard Sell / Trip Charges.")
                 return redirect('invoice_documents_add', trip_id=trip_id)
 
         if invoice_form.is_valid() and settlement_form.is_valid() and files_form.is_valid():
@@ -958,7 +991,11 @@ def invoice_documents_add(request, trip_id):
         settlement_form.fields['tc_tripcost_check'].initial = is_tripcost_checked
     if 'special_sell_check' in settlement_form.fields:
         settlement_form.fields['special_sell_check'].initial = is_special_sell_checked
-    is_sell_rate_doc_required = check_sell_rate_doc_required(trip)
+    is_sell_rate_doc_required = check_sell_rate_doc_required(
+        trip,
+        special_sell_val=special_sell,
+        is_special_sell_checked=is_special_sell_checked
+    )
 
 
     # Build attachments grouped by category for collapsible dropdowns
