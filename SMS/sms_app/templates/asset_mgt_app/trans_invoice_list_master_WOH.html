@@ -248,7 +248,7 @@
 
 
                 <!-- Charges (trip costs) -->
-                <td>{% if inv.tc_tripcost_check %}{{ inv.tc_tripcost }}{% else %}0.0{% endif %}</td>
+                <td>{% if inv.calculated_transport is not None %}{{ inv.calculated_transport|floatformat:2 }}{% elif inv.tc_tripcost_check %}{{ inv.tc_tripcost }}{% else %}0.0{% endif %}</td>
                 <td>{% if inv.tc_tollcost_check %}{{ inv.tc_tollcost }}{% else %}0.0{% endif %}</td>
                 <td>{% if inv.tc_parkingcost_check %}{{ inv.tc_parkingcost }}{% else %}0.0{% endif %}</td>
                 <td>{% if inv.tc_loadingcost_check %}{{ inv.tc_loadingcost }}{% else %}0.0{% endif %}</td>

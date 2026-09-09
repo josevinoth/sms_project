@@ -499,7 +499,7 @@ DRIVERS_ADVANCE_HEADERS = [
 
 INVOICE_PENDING_HEADERS = [
     "SNo", "Branch", "Customer Short Name", "Planning Date", "Cnote No", "From", "To", "Dept",
-    "Veh No", "Veh Type", "Veh Source", "Consignee", "No. of Pcs", "Weight", "Trip Status",
+    "Veh No", "Veh Type", "Veh Source", "Consignee", "Reference No", "No. of Pcs", "Weight", "Trip Status",
     "Transportation Charges", "Toll Charges", "Parking Charges", "Loading Charges", "Unloading Charges",
     "Halting Charges", "Docket Charges", "Weighment Charges", "Handling Charges", "Cancellation Charges",
     "TOTAL"
@@ -2040,6 +2040,8 @@ def invoice_pending_report_ajax_view(request):
     """Server-side DataTables AJAX endpoint for Invoice Pending Report (Synced)."""
     from ..models import TransInvoiceInfo, ConsignmentgoodsInfo, Vehicle_allotmentInfo
     from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
+    from .invoice_documents_view import get_enquiry_special_sell, get_enquiry_standard_sell
+    from .tripclosure_add_view import get_allotment_sale_rate
     from django.http import JsonResponse
     from collections import defaultdict
 
@@ -2112,7 +2114,12 @@ def invoice_pending_report_ajax_view(request):
         'tc_financestatus',
     ).annotate(
         trip_total=(
-                Case(When(tc_tripcost_check=True, then=F('tc_tripcost')), default=0.0, output_field=FloatField()) +
+                Case(
+                    When(tc_special_sell_check=True, tc_special_sell__gt=0, then=F('tc_special_sell')),
+                    When(tc_tripcost_check=True, then=F('tc_tripcost')),
+                    default=0.0,
+                    output_field=FloatField()
+                ) +
                 Case(When(tc_tollcost_check=True, then=F('tc_tollcost')), default=0.0, output_field=FloatField()) +
                 Case(When(tc_parkingcost_check=True, then=F('tc_parkingcost')), default=0.0,
                      output_field=FloatField()) +
@@ -2196,6 +2203,8 @@ def invoice_pending_report_ajax_view(request):
                 Q(tr_vehiclenumber__icontains=search_value) |
                 Q(tr_enquirynumber__en_customername__cu_name__icontains=search_value) |
                 Q(tr_consignmentnumber__co_consignmentnumber__icontains=search_value) |
+                Q(tr_consignmentnumber__co_cusrefnum__icontains=search_value) |
+                Q(tr_customerref__icontains=search_value) |
                 Q(tr_departedlocation__place_name__icontains=search_value) |
                 Q(tr_reportedlocation__place_name__icontains=search_value) |
                 Q(tr_enquirynumber__en_customerdepartment__ct_customerdepartment__icontains=search_value) |
@@ -2223,7 +2232,8 @@ def invoice_pending_report_ajax_view(request):
         5: 'tr_departedlocation__place_name',
         6: 'tr_reportedlocation__place_name',
         8: 'tr_vehiclenumber',
-        24: 'trip_total',
+        12: 'tr_consignmentnumber__co_cusrefnum',
+        26: 'trip_total',
     }
     order_field = col_map.get(order_col, 'tr_created_at')
     if order_dir == 'desc' and not order_field.startswith('-'):
@@ -2238,14 +2248,30 @@ def invoice_pending_report_ajax_view(request):
     else:
         trips_slice = trips[start:]
 
-    # Bulk-fetch consignment goods for current page only
+    # Bulk-fetch consignment goods for current page only (aggregate all goods per consignment)
     trip_cons_ids = [t.tr_consignmentnumber_id for t in trips_slice if t.tr_consignmentnumber_id]
-    goods_map = {
-        g.cg_consignmentnumber_id: g
-        for g in ConsignmentgoodsInfo.objects.filter(
-            cg_consignmentnumber_id__in=trip_cons_ids
-        )
-    }
+    goods_records = (
+        ConsignmentgoodsInfo.objects
+        .filter(cg_consignmentnumber_id__in=trip_cons_ids)
+        .select_related('cg_consignee')
+        .order_by('id')
+    )
+    goods_map = {}
+    for g in goods_records:
+        cid = g.cg_consignmentnumber_id
+        if cid not in goods_map:
+            goods_map[cid] = {
+                'total_qty': 0,
+                'total_weight': 0.0,
+                'consignee_list': [],
+            }
+        d = goods_map[cid]
+        d['total_qty'] += (g.cg_qty or 0)
+        d['total_weight'] += (g.cg_weight or 0.0)
+        if g.cg_consignee:
+            c_name = str(g.cg_consignee).strip()
+            if c_name and c_name not in d['consignee_list']:
+                d['consignee_list'].append(c_name)
 
     # Bulk-fetch invoice documents for current page only
     trip_numbers = [t.tr_tripnumber for t in trips_slice if t.tr_tripnumber]
@@ -2268,7 +2294,7 @@ def invoice_pending_report_ajax_view(request):
     data = []
     for idx, trip in enumerate(trips_slice, start=start + 1):
         cons = trip.tr_consignmentnumber
-        goods = goods_map.get(trip.tr_consignmentnumber_id) if trip.tr_consignmentnumber_id else None
+        g_data = goods_map.get(trip.tr_consignmentnumber_id) if trip.tr_consignmentnumber_id else None
         inv_status = invoice_doc_map.get(trip.tr_tripnumber, "-") if trip.tr_tripnumber else "-"
 
         # Branch
@@ -2332,8 +2358,48 @@ def invoice_pending_report_ajax_view(request):
         else:
             halting_val = 0.0
 
+        # Determine Transportation Charges:
+        # Check if trip is settled / ready for invoice or has billing checkboxes
+        is_settled = trip.tc_financestatus_id in [7, 9]  # 7: Trip Settled, 9: Ready For Invoice
+        is_special_sell_check = getattr(trip, 'tc_special_sell_check', False)
+        is_tripcost_check = getattr(trip, 'tc_tripcost_check', False)
+
+        if is_settled:
+            if is_special_sell_check:
+                transport_val = safe_num(trip.tc_special_sell)
+                if transport_val <= 0 and allotment and safe_num(allotment.va_special_sale) > 0:
+                    transport_val = safe_num(allotment.va_special_sale)
+                if transport_val <= 0:
+                    transport_val = safe_num(get_enquiry_special_sell(trip))
+            elif is_tripcost_check:
+                transport_val = safe_num(trip.tc_tripcost)
+                if transport_val <= 0 and allotment and safe_num(allotment.va_sale) > 0:
+                    transport_val = safe_num(allotment.va_sale)
+                if transport_val <= 0:
+                    transport_val = safe_num(get_enquiry_standard_sell(trip))
+            else:
+                transport_val = 0.0
+        else:
+            # For trips which are NOT settled (e.g. Trip Started, Trip Closed, Awaiting Trip Settlement):
+            if is_special_sell_check:
+                transport_val = safe_num(trip.tc_special_sell)
+                if transport_val <= 0 and allotment and safe_num(allotment.va_special_sale) > 0:
+                    transport_val = safe_num(allotment.va_special_sale)
+                if transport_val <= 0:
+                    transport_val = safe_num(get_enquiry_special_sell(trip))
+            elif is_tripcost_check and safe_num(trip.tc_tripcost) > 0:
+                transport_val = safe_num(trip.tc_tripcost)
+            else:
+                # Show transportation charges as Special Sell field in Vehicle Allotment page
+                if allotment and allotment.va_special_sale is not None and safe_num(allotment.va_special_sale) > 0:
+                    transport_val = safe_num(allotment.va_special_sale)
+                elif allotment and allotment.va_sale is not None and safe_num(allotment.va_sale) > 0:
+                    transport_val = safe_num(allotment.va_sale)
+                else:
+                    transport_val = safe_num(get_enquiry_special_sell(trip)) or safe_num(get_allotment_sale_rate(trip))
+
         row_total = (
-            (safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0) +
+            safe_num(transport_val) +
             (safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0) +
             (safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0) +
             (safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0) +
@@ -2344,6 +2410,11 @@ def invoice_pending_report_ajax_view(request):
             (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0) +
             (safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0)
         )
+
+        ref_no = safe_str(cons.co_cusrefnum if cons and cons.co_cusrefnum else (trip.tr_customerref or ""))
+        consignee_val = ", ".join(g_data['consignee_list']) if g_data and g_data['consignee_list'] else ""
+        qty_val = g_data['total_qty'] if g_data else 0
+        weight_val = g_data['total_weight'] if g_data else 0.0
 
         data.append([
             idx,
@@ -2357,11 +2428,12 @@ def invoice_pending_report_ajax_view(request):
             safe_str(trip.tr_vehiclenumber),
             veh_type_str,
             safe_str(trip.tr_vehiclesource.ow_ownership) if trip.tr_vehiclesource else "",
-            safe_str(goods.cg_consignee) if goods else "",
-            safe_num(goods.cg_qty) if goods else 0,
-            safe_num(goods.cg_weight) if goods else 0.0,
+            consignee_val,
+            ref_no,
+            qty_val,
+            weight_val,
             trip_status_display,
-            safe_num(trip.tc_tripcost) if trip.tc_tripcost_check else 0,
+            round(safe_num(transport_val), 2),
             safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0,
             safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0,
             safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0,

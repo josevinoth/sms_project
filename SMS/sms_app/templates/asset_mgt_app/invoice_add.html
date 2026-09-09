@@ -233,9 +233,11 @@
     <label class="form-label-modern">Total Crane Cost (INR)</label>
     {% render_field invoice_form.bill_tot_crane_charges class="form-control disable_a_href" id="bill_tot_crane_charges" %}
 </div>
-								{% render_field invoice_form.bill_updated_by id="bill_updated_by" hidden="True" class="form-control" %}
-								{% render_field invoice_form.bill_updated_at id="bill_updated_at" class="form-control" %}
-								{% render_field invoice_form.bill_created_on id="bill_created_on" class="form-control" %}
+								<div style="display: none;">
+									{% render_field invoice_form.bill_updated_by id="bill_updated_by" class="form-control" %}
+									{% render_field invoice_form.bill_updated_at id="bill_updated_at" class="form-control" %}
+									{% render_field invoice_form.bill_created_on id="bill_created_on" class="form-control" %}
+								</div>
 							</div>
 							</div>
 <div class="col-12 col-md-6 col-xl-3 mb-4 mb-xl-0">
