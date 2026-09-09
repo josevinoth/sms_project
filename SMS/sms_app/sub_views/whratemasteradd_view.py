@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -258,7 +259,7 @@ def whratemaster_list_ajax(request):
 
             'whrm_description': item.whrm_description or '',
 
-            'whrm_updated_on': item.whrm_updated_on.strftime('%b %d, %Y') if item.whrm_updated_on else '',
+            'whrm_updated_on': timezone.localtime(item.whrm_updated_on).strftime('%b %d, %Y') if item.whrm_updated_on else '',
 
             'whrm_updated_by': str(item.whrm_updated_by.username) if hasattr(item, 'whrm_updated_by') and item.whrm_updated_by else '',
 
@@ -444,7 +445,7 @@ def whratemaster_list_ajax(request):
 
             'whrm_description': item.whrm_description or '',
 
-            'whrm_updated_on': item.whrm_updated_on.strftime('%b %d, %Y') if item.whrm_updated_on else '',
+            'whrm_updated_on': timezone.localtime(item.whrm_updated_on).strftime('%b %d, %Y') if item.whrm_updated_on else '',
 
             'whrm_updated_by': str(item.whrm_updated_by.username) if hasattr(item, 'whrm_updated_by') and item.whrm_updated_by else '',
 
@@ -550,7 +551,7 @@ def whratemaster_list_ajax(request):
             'whrm_max_area': item.whrm_max_area or 0,
             'whrm_rate': item.whrm_rate or 0,
             'whrm_description': item.whrm_description or '',
-            'whrm_updated_on': item.whrm_updated_on.strftime('%b %d, %Y') if item.whrm_updated_on else '',
+            'whrm_updated_on': timezone.localtime(item.whrm_updated_on).strftime('%b %d, %Y') if item.whrm_updated_on else '',
             'whrm_updated_by': str(item.whrm_updated_by.username) if hasattr(item, 'whrm_updated_by') and item.whrm_updated_by else '',
             'delete': delete_btn
         })

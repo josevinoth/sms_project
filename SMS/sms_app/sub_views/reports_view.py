@@ -244,10 +244,10 @@ def stock_value_reports(request):
                 str(stock_value.wh_job_no if stock_value.wh_job_no else ''), # 0 Job Number
                 str(stock_value.wh_qr_rand_num if stock_value.wh_qr_rand_num else ''), # 1 Stock Number
                 str(stock_value.wh_customer_name if stock_value.wh_customer_name else ''), # 2 Customer
-                gatein.gatein_arrival_date.strftime('%b %d, %Y, %I:%M %p') if gatein and gatein.gatein_arrival_date else '', # 3
-                gatein.gatein_created_at.strftime('%b %d, %Y, %I:%M %p') if gatein and gatein.gatein_created_at else '', # 4
-                lb.lb_stock_unloading_start_time.strftime('%b %d, %Y, %I:%M %p') if lb and lb.lb_stock_unloading_start_time else '', # 5
-                lb.lb_stock_unloading_end_time.strftime('%b %d, %Y, %I:%M %p') if lb and lb.lb_stock_unloading_end_time else '', # 6
+                timezone.localtime(gatein.gatein_arrival_date).strftime('%b %d, %Y, %I:%M %p') if gatein and gatein.gatein_arrival_date else '', # 3
+                timezone.localtime(gatein.gatein_created_at).strftime('%b %d, %Y, %I:%M %p') if gatein and gatein.gatein_created_at else '', # 4
+                timezone.localtime(lb.lb_stock_unloading_start_time).strftime('%b %d, %Y, %I:%M %p') if lb and lb.lb_stock_unloading_start_time else '', # 5
+                timezone.localtime(lb.lb_stock_unloading_end_time).strftime('%b %d, %Y, %I:%M %p') if lb and lb.lb_stock_unloading_end_time else '', # 6
                 str(gatein.gatein_transporter if gatein else ''), # 7 Transporter
                 str(gatein.gatein_truck_number if gatein else ''), # 8 Truck Number
                 str(gatein.gatein_truck_type if gatein else ''), # 9 Truck Type(In)
@@ -274,7 +274,7 @@ def stock_value_reports(request):
                 str(lb.lb_stock_invoice_currency if lb else ''), # 30 Invoice Currency
                 str(stock_value.wh_invoice_amount_inr if stock_value.wh_invoice_amount_inr else ''), # 31 Invoice (INR)
                 str(lb.lb_eway_bill if lb else ''), # 32 E-Way Bill
-                lb.lb_validity_date.strftime('%b %d, %Y, %I:%M %p') if lb and lb.lb_validity_date else '', # 33
+                timezone.localtime(lb.lb_validity_date).strftime('%b %d, %Y, %I:%M %p') if lb and lb.lb_validity_date else '', # 33
                 str(stock_value.wh_fumigation_process if stock_value.wh_fumigation_process else ''), # 34 Fumigation
                 str(stock_value.wh_check_in_out if stock_value.wh_check_in_out else ''), # 35 Check In-Out
                 str(stock_value.wh_branch if stock_value.wh_branch else ''), # 36 Branch
@@ -283,10 +283,10 @@ def stock_value_reports(request):
                 str((datetime.now() - stock_value.wh_checkin_time.replace(tzinfo=None)).days) if stock_value.wh_checkin_time else str(stock_value.wh_storage_time if stock_value.wh_storage_time else ''), # 39 Storage Days
                 str(dispatch.dispatch_truck_number if dispatch else ''), # 40 Truck Number Out
                 str(dispatch.dispatch_truck_type if dispatch else ''), # 41 Truck Type Out
-                dispatch.dispatch_gatein_time.strftime('%d-%b-%Y %H:%M:%S') if dispatch and dispatch.dispatch_gatein_time else '', # 42
-                dispatch.dispatch_dockin_time.strftime('%d-%b-%Y %H:%M:%S') if dispatch and dispatch.dispatch_dockin_time else '', # 43
-                dispatch.dispatch_dockout_time.strftime('%d-%b-%Y %H:%M:%S') if dispatch and dispatch.dispatch_dockout_time else '', # 44
-                dispatch.dispatch_depature_date.strftime('%d-%b-%Y %H:%M:%S') if dispatch and dispatch.dispatch_depature_date else '', # 45
+                timezone.localtime(dispatch.dispatch_gatein_time).strftime('%d-%b-%Y %H:%M:%S') if dispatch and dispatch.dispatch_gatein_time else '', # 42
+                timezone.localtime(dispatch.dispatch_dockin_time).strftime('%d-%b-%Y %H:%M:%S') if dispatch and dispatch.dispatch_dockin_time else '', # 43
+                timezone.localtime(dispatch.dispatch_dockout_time).strftime('%d-%b-%Y %H:%M:%S') if dispatch and dispatch.dispatch_dockout_time else '', # 44
+                timezone.localtime(dispatch.dispatch_depature_date).strftime('%d-%b-%Y %H:%M:%S') if dispatch and dispatch.dispatch_depature_date else '', # 45
                 str(dispatch.dispatch_sticker_pasted_bvm if dispatch else ''), # 46 Labels
                 str(dispatch.dispatch_mawb if dispatch else ''), # 47 MAWB
                 str(dispatch.dispatch_num if dispatch else ''), # 48 Dispatch Number
@@ -430,7 +430,7 @@ def damage_reports_list(request):
                 total_pcs = gatein.gatein_actual_count or gatein.gatein_no_of_pkg or "-"
 
             data.append([
-                checkin_date.strftime('%b %d, %Y, %I:%M %p') if checkin_date else '',
+                timezone.localtime(checkin_date).strftime('%b %d, %Y, %I:%M %p') if checkin_date else '',
                 str(damage.dam_wh_job_num if damage.dam_wh_job_num else ''),
                 str(customer_name_display),
                 str(invoice_no),
@@ -892,11 +892,11 @@ def export_stockreport_to_csv(request):
                         truck_numbers.append(dispatch.dispatch_truck_number or "")
                         truck_types.append(getattr(dispatch.dispatch_truck_type, 'vt_vehicletype', "") or "")
                         truck_types_placed.append(dispatch.dispatch_truck_type_placed or "")
-                        gatein_times_out.append(dispatch.dispatch_gatein_time.strftime("%d-%b-%y %H:%M:%S") if dispatch.dispatch_gatein_time else "")
-                        dockin_times_out.append(dispatch.dispatch_dockin_time.strftime("%d-%b-%y %H:%M:%S") if dispatch.dispatch_dockin_time else "")
-                        dockout_times_out.append(dispatch.dispatch_dockout_time.strftime("%d-%b-%y %H:%M:%S") if dispatch.dispatch_dockout_time else "")
+                        gatein_times_out.append(timezone.localtime(dispatch.dispatch_gatein_time).strftime("%d-%b-%y %H:%M:%S") if dispatch.dispatch_gatein_time else "")
+                        dockin_times_out.append(timezone.localtime(dispatch.dispatch_dockin_time).strftime("%d-%b-%y %H:%M:%S") if dispatch.dispatch_dockin_time else "")
+                        dockout_times_out.append(timezone.localtime(dispatch.dispatch_dockout_time).strftime("%d-%b-%y %H:%M:%S") if dispatch.dispatch_dockout_time else "")
                         departure_times.append(
-                            dispatch.dispatch_depature_date.strftime(
+                            timezone.localtime(dispatch.dispatch_depature_date).strftime(
                                 "%d-%b-%y") if dispatch.dispatch_depature_date else ""
                         )
                         sticker_pasted_bys.append(getattr(dispatch.dispatch_sticker_pasted_bvm, 'lp_name', "") or "")
@@ -1219,14 +1219,14 @@ def stock_value_send_email_view(request,pre_gatein_id=None,customer_name=None,su
                     mawb_list.append(dispatch.dispatch_mawb or "")
 
                     if dispatch.dispatch_gatein_time:
-                        gatein_times_out.append(dispatch.dispatch_gatein_time.strftime('%d-%b-%Y %H:%M:%S'))
+                        gatein_times_out.append(timezone.localtime(dispatch.dispatch_gatein_time).strftime('%d-%b-%Y %H:%M:%S'))
                     if dispatch.dispatch_dockin_time:
-                        dockin_times_out.append(dispatch.dispatch_dockin_time.strftime('%d-%b-%Y %H:%M:%S'))
+                        dockin_times_out.append(timezone.localtime(dispatch.dispatch_dockin_time).strftime('%d-%b-%Y %H:%M:%S'))
                     if dispatch.dispatch_dockout_time:
-                        dockout_times_out.append(dispatch.dispatch_dockout_time.strftime('%d-%b-%Y %H:%M:%S'))
+                        dockout_times_out.append(timezone.localtime(dispatch.dispatch_dockout_time).strftime('%d-%b-%Y %H:%M:%S'))
 
                     if dispatch.dispatch_depature_date:
-                        departure_times.append(dispatch.dispatch_depature_date.strftime('%d-%b-%Y %H:%M:%S'))
+                        departure_times.append(timezone.localtime(dispatch.dispatch_depature_date).strftime('%d-%b-%Y %H:%M:%S'))
 
                 dispatch_qty += partial.pd_dispatch_qty or 0  # Sum total qty
 
