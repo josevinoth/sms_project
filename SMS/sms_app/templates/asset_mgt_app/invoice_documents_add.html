@@ -337,7 +337,7 @@
                         <!-- Sell Rate Doc Field -->
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">
-                                Sell Rate Doc {% if is_sell_rate_doc_required %}<span class="text-danger font-weight-bold" title="Mandatory because Special Sell > Standard Sell">*</span>{% endif %}
+                                Sell Rate Doc <span id="sell_rate_doc_required_star" class="text-danger font-weight-bold {% if not is_sell_rate_doc_required %}d-none{% endif %}" title="Mandatory because Special Sell > Standard Sell / Trip Charges">*</span>
                                 {% if invoice_doc and invoice_doc.id_sell_rate_doc %}<a href="{{ invoice_doc.id_sell_rate_doc.url }}" target="_blank" class="text-success ml-1"><i class="fas fa-eye"></i></a>{% endif %}
                             </label>
                             <div class="w-50">
@@ -548,7 +548,31 @@
                     "cursor": "default"
                 });
             }
+            checkSellRateDocRequirement();
         }
+
+        function checkSellRateDocRequirement() {
+            var isChecked = $("#special_sell_check").is(":checked");
+            var specialSellVal = parseFloat($("#special_sell").val()) || 0;
+            var tripCostVal = parseFloat($("#tc_tripcost").val()) || 0;
+            var actualRate = parseFloat("{{ actual_sell_rate|default:'0' }}") || tripCostVal;
+            var hasExistingDoc = {% if invoice_doc and invoice_doc.id_sell_rate_doc %}true{% else %}false{% endif %};
+
+            var isRequired = isChecked && (specialSellVal > actualRate) && (actualRate > 0);
+
+            if (isRequired) {
+                $("#sell_rate_doc_required_star").removeClass("d-none");
+                if (!hasExistingDoc) {
+                    $("#id_sell_rate_doc").prop("required", true);
+                }
+            } else {
+                $("#sell_rate_doc_required_star").addClass("d-none");
+                $("#id_sell_rate_doc").prop("required", false);
+            }
+            return isRequired;
+        }
+
+        $("#special_sell").on("input change", checkSellRateDocRequirement);
 
         // Mutual unchecking: both remain checkable at all times; selecting one removes the check from the other
         $("#tc_tripcost_check").on("change", function() {
@@ -573,6 +597,7 @@
 
         // Initialize state on page load
         toggleSpecialSellEdit();
+        checkSellRateDocRequirement();
 
         // Validate Special Sell only if lower than actual rate
         $("form").on("submit", function (e) {
@@ -581,12 +606,14 @@
                 $("#special_sell_check").prop("checked", false);
             }
 
+            var isChecked = $("#special_sell_check").is(":checked");
             var specialSellVal = ($("#special_sell").val() || "").trim();
-            if ($("#special_sell_check").is(":checked") && specialSellVal !== "") {
-                var specNum = parseFloat(specialSellVal);
-                var tripCostVal = $("#tc_tripcost").val();
-                var actualRate = parseFloat("{{ actual_sell_rate|default:'0' }}") || parseFloat(tripCostVal) || 0;
-                
+            var specNum = parseFloat(specialSellVal) || 0;
+            var tripCostVal = parseFloat($("#tc_tripcost").val()) || 0;
+            var actualRate = parseFloat("{{ actual_sell_rate|default:'0' }}") || tripCostVal;
+            var hasExistingDoc = {% if invoice_doc and invoice_doc.id_sell_rate_doc %}true{% else %}false{% endif %};
+
+            if (isChecked && specialSellVal !== "") {
                 if (!isNaN(specNum) && actualRate > 0) {
                     if (specNum < actualRate) {
                         e.preventDefault();
@@ -594,6 +621,18 @@
                         $("#special_sell").focus();
                         return false;
                     }
+                }
+            }
+
+            // Enforce Sell Rate Doc if Special Sell > Standard Sell / Trip Charges
+            if (isChecked && (specNum > actualRate) && (actualRate > 0)) {
+                var fileInput = document.getElementById("id_sell_rate_doc");
+                var hasNewFile = fileInput && fileInput.files && fileInput.files.length > 0;
+                if (!hasExistingDoc && !hasNewFile) {
+                    e.preventDefault();
+                    alert("Sell Rate Doc is mandatory because Special Sell (" + specNum + ") is higher than Standard Sell / Trip Charges (" + actualRate + "). Please upload the Sell Rate Doc.");
+                    if (fileInput) fileInput.focus();
+                    return false;
                 }
             }
         });

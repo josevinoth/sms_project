@@ -123,8 +123,6 @@ def costing_add(request, costing_id=0):
             'na_customer_new_name_id': na_customer_new_name_id,
             'ses_customer_po_id': ses_customer_po_id,
             'costing_list': PkcostingInfo.objects.filter(
-                ct_assessment_num=na_assessment_num_id, 
-                ct_customer_po=ses_customer_po_id,
                 ct_job_no=current_job_no_val
             ).order_by('-id'),
             'excess_costing_list': PkcostingInfo.objects.all(),
@@ -501,6 +499,7 @@ def pk_item_search_page_costing(request):
             if available_qty > 0:
                 formatted_results.append({
                     'id': batch.id, # Link directly to the batch record
+                    'partcode_id': p.id, # PkpartcodeInfo primary key ID
                     'sp_vendor_bill_id': batch.sm_invoice_no,
                     'sp_stock_in_date': batch.sm_invoice_date.strftime('%d-%m-%Y') if batch.sm_invoice_date else '',
                     'sp_purchase_num': batch.sm_stock_purchase_number or batch.sm_invoice_no,
@@ -595,7 +594,8 @@ def pk_get_po_requirement_type(request):
 
     # If job_no is provided, narrow down to items used in that specific job
     if job_no:
-        po_dimensions = po_dimensions.filter(pkcostinginfo__ct_job_no=job_no).distinct()
+        used_nad_ids = PkcostingInfo.objects.filter(ct_job_no=job_no).values_list('ct_requirement_id', flat=True).distinct()
+        po_dimensions = po_dimensions.filter(pod_nad_id__in=used_nad_ids).distinct()
 
     # Fetch requirement type from Need Assessment dimension
     # Try to filter by ID first, then by PO Number string if ID is not found or invalid

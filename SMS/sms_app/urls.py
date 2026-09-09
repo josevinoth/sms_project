@@ -736,6 +736,7 @@ urlpatterns = [
     path('iou_delete/<int:iou_id>', views.iou_delete, name='iou_delete'),  # delete IOU
     path('pk_return_excess_to_stock/<int:costing_id>/', views.pk_return_excess_to_stock, name='pk_return_excess_to_stock'),
     path('modify_dimensions_view/', views.modify_dimensions_view, name='modify_dimensions_view'),
+    path('pk_update_quotation_partcode/', views.pk_update_quotation_partcode, name='pk_update_quotation_partcode'),
     # modify_dimensions_view
     path('pk_return_list/', views.pk_return_list, name='pk_return_list'),  # List retrival
     path('pk_retrival_list/', views.pk_retrival_list, name='pk_retrival_list'),  # List retrival

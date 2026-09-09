@@ -68,32 +68,54 @@
         <div class="modern-card">
             <div class="row row-compact">
                 
-                <!-- Column 1: Vehicle & Route Info -->
+                <!-- Column 1: Vendor & Vehicle Info -->
                 <div class="col-12 col-md-6 col-xl-3 col-compact">
                     <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-truck"></i> Vehicle & Route Info</div>
+                        <div class="form-section-title"><i class="fas fa-truck"></i> Vendor & Vehicle Info</div>
                         
                         <div class="form-group-modern">
-                            <label class="form-label-modern">Vehicle Type</label>
+                            <label class="form-label-modern">Vendor <span style="color:#e74c3c;">*</span></label>
+                            {% render_field form.vr1_vendor id="vr1_vendor" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vehicle Type <span style="color:#e74c3c;">*</span></label>
                             {% render_field form.vr1_vehicletype id="vr1_vehicletype" class="form-control form-control-modern" %}
                         </div>
 
                         <div class="form-group-modern">
-                            <label class="form-label-modern">Vehicle Category</label>
+                            <label class="form-label-modern">Vehicle Category <span style="color:#e74c3c;">*</span></label>
                             {% render_field form.vr1_vehiclecategory id="vr1_vehiclecategory" class="form-control form-control-modern" %}
-                        </div>
-
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">From Location</label>
-                            {% render_field form.vr1_fromlocation id="vr1_fromlocation" class="form-control form-control-modern" %}
                         </div>
                     </div>
                 </div>
 
-                <!-- Column 2: Touch Points 1-3 -->
+                <!-- Column 2: Route Locations -->
                 <div class="col-12 col-md-6 col-xl-3 col-compact">
                     <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-map-marker-alt"></i> Touch Points</div>
+                        <div class="form-section-title"><i class="fas fa-map-marked-alt"></i> Route Locations</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">From Location <span style="color:#e74c3c;">*</span></label>
+                            {% render_field form.vr1_fromlocation id="vr1_fromlocation" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">To Location <span style="color:#e74c3c;">*</span></label>
+                            {% render_field form.vr1_tolocation id="vr1_tolocation" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Rate <span style="color:#e74c3c;">*</span></label>
+                            {% render_field form.vr1_rate class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Touch Points 1 & 2 -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-map-marker-alt"></i> Touch Points (1 - 2)</div>
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">Touch Point 1</label>
@@ -104,44 +126,22 @@
                             <label class="form-label-modern">Touch Point 2</label>
                             {% render_field form.vr1_touchpoint2 id="vr1_touchpoint2" class="form-control form-control-modern" %}
                         </div>
+                    </div>
+                </div>
+
+                <!-- Column 4: Touch Points 3 & 4 -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-map-marker-alt"></i> Touch Points (3 - 4)</div>
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">Touch Point 3</label>
                             {% render_field form.vr1_touchpoint3 id="vr1_touchpoint3" class="form-control form-control-modern" %}
                         </div>
-                    </div>
-                </div>
-
-                <!-- Column 3: Touch Point 4 & Destination -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-map-marked-alt"></i> Destination & Vendor</div>
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">Touch Point 4</label>
                             {% render_field form.vr1_touchpoint4 id="vr1_touchpoint4" class="form-control form-control-modern" %}
-                        </div>
-
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">To Location</label>
-                            {% render_field form.vr1_tolocation id="vr1_tolocation" class="form-control form-control-modern" %}
-                        </div>
-
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Vendor</label>
-                            {% render_field form.vr1_vendor id="vr1_vendor" class="form-control form-control-modern" %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Column 4: Rate Details -->
-                <div class="col-12 col-md-6 col-xl-3 col-compact">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-money-bill-wave"></i> Rate Details</div>
-
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Rate</label>
-                            {% render_field form.vr1_rate class="form-control form-control-modern" %}
                         </div>
                     </div>
                 </div>

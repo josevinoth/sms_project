@@ -4,11 +4,11 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from ..forms import POdimensionForm,PkpurchaseorderForm
-from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkpurchaseorderAttachmentInfo,PkquotationsummaryInfo,PkcostingsummaryInfo, pk_stock_statusinfo, PkquotationInfo, PkcostingInfo, StatusList
+from ..models import User_extInfo,Nadimension,POdimension,PkneedassessmentInfo,PkpurchaseorderInfo,PkpurchaseorderAttachmentInfo,PkquotationsummaryInfo,PkcostingsummaryInfo, pk_stock_statusinfo, PkquotationInfo, PkcostingInfo, StatusList, StockMaintenance
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from ..views import Pkcosting_delete,Pkcostingsummary_delete,Pkpurchaseorder_delete,Pkpurchaseorder_dim_delete,get_tracker_flags
-from django.db.models import Sum, Max
+from django.db.models import Sum, Max, Q
 from .general_utils import get_financial_year, generate_next_number, get_branch_code, get_session_branch_id
 
 @login_required(login_url='login_page')
@@ -73,6 +73,7 @@ def purchaseorder_add(request, purchaseorder_id=0):
             
             context = {
                 'form': form,
+                'purchaseorder_id': purchaseorder_id,
                 'first_name': first_name,
                 'user_id': user_id,
                 'na_id': na_id,
@@ -387,6 +388,61 @@ def pk_create_batch_job(request):
             return JsonResponse({'success': False, 'message': 'Missing PO ID or items'}, status=400)
 
         po = get_object_or_404(PkpurchaseorderInfo, id=po_id)
+
+        # Validate live stock availability for material part codes (Cost Type 8)
+        po_dimension_ids = [it['id'] for it in items]
+        selected_pods = POdimension.objects.filter(id__in=po_dimension_ids)
+        insufficient_stock_items = []
+        item_qty_map = {it['id']: float(it['qty']) for it in items}
+        
+        for pod in selected_pods:
+            job_qty = item_qty_map.get(pod.id, 0.0)
+            materials = PkquotationInfo.objects.filter(
+                pkqt_requirement=pod.pod_nad,
+                pkqt_cost_type_id=8
+            ).select_related('pkqt_part_code', 'pkqt_stock_description')
+            
+            for q in materials:
+                if not q.pkqt_part_code:
+                    continue
+                part_code_obj = q.pkqt_part_code
+                part_code_str = part_code_obj.pc_code
+                # Required count = per_item_req * job_qty
+                per_item_req = float(q.pkqt_quantity_req or q.pkqt_quantity or 1.0)
+                total_needed = per_item_req * job_qty
+                
+                # Sum available stock from StockMaintenance
+                batches = StockMaintenance.objects.filter(
+                    sm_partcode=part_code_obj,
+                    sm_stock_type_id=1
+                )
+                avail_qty = 0.0
+                from .pk_costing_view import _available_qty_for_stock_entry
+                for b in batches:
+                    avail_qty += _available_qty_for_stock_entry(b)
+                
+                if avail_qty < total_needed:
+                    insufficient_stock_items.append({
+                        'quotation_id': q.id,
+                        'pod_id': pod.id,
+                        'item_name': pod.pod_item,
+                        'part_code_id': part_code_obj.id,
+                        'part_code': part_code_str,
+                        'description': q.pkqt_stock_description.stock_description if q.pkqt_stock_description else '',
+                        'needed_qty': round(total_needed, 2),
+                        'available_qty': round(avail_qty, 2),
+                        'shortfall': round(total_needed - avail_qty, 2)
+                    })
+
+        # If user did not pass override flag, warn user and offer Partcode change option
+        allow_stock_override = data.get('allow_stock_override', False)
+        if insufficient_stock_items and not allow_stock_override:
+            return JsonResponse({
+                'success': False,
+                'stock_alert': True,
+                'insufficient_stock_items': insufficient_stock_items,
+                'message': 'Stock shortfall detected for one or more partcodes.'
+            }, status=400)
         
         # 1. Generate unique Job Number (e.g., 24-25_BLR_JOB-0001)
         fy = get_financial_year()
@@ -536,3 +592,38 @@ def pk_get_po_items_for_job(request):
         })
     
     return JsonResponse({'success': True, 'items': items_data})
+
+@login_required(login_url='login_page')
+def pk_update_quotation_partcode(request):
+    """
+    Updates the partcode on a PkquotationInfo record when user selects an alternative partcode.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'POST required'}, status=405)
+    try:
+        data = json.loads(request.body)
+        quotation_id = data.get('quotation_id')
+        new_part_code_id = data.get('new_part_code_id')
+        
+        if not quotation_id or not new_part_code_id:
+            return JsonResponse({'success': False, 'message': 'Missing quotation ID or new part code ID'}, status=400)
+            
+        quotation = PkquotationInfo.objects.get(id=quotation_id)
+        from sms_app.models import PkpartcodeInfo
+        pc_str = str(new_part_code_id).strip()
+        try:
+            new_pc = PkpartcodeInfo.objects.get(pc_code=pc_str)
+        except PkpartcodeInfo.DoesNotExist:
+            if pc_str.isdigit():
+                new_pc = PkpartcodeInfo.objects.get(id=int(pc_str))
+            else:
+                raise
+        
+        quotation.pkqt_part_code = new_pc
+        if new_pc.pc_stock_description:
+            quotation.pkqt_stock_description = new_pc.pc_stock_description
+        quotation.save(update_fields=['pkqt_part_code', 'pkqt_stock_description'])
+        
+        return JsonResponse({'success': True, 'message': f'Part code updated to {new_pc.pc_code}'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
