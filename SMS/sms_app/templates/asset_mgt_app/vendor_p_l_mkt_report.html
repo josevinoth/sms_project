@@ -118,25 +118,26 @@
 
         $('#vendor_select').on('change', function () {
             var vendorId = $(this).val();
-            if (vendorId) {
-                $.ajax({
-                    url: "{% url 'get_pl_vehicles_by_vendor' %}",
-                    data: { 'vendor_id': vendorId },
-                    dataType: 'json',
-                    success: function (data) {
-                        var $vehicleSelect = $('#vehicle_number');
-                        $vehicleSelect.empty();
-                        $vehicleSelect.append('<option value="">Select Vehicle</option>');
-                        $.each(data, function (index, vehicle) {
-                            $vehicleSelect.append('<option value="' + vehicle + '">' + vehicle + '</option>');
-                        });
-                        $vehicleSelect.val('').trigger('change.select2');
-                        $('#vendor_p_l_report_table').DataTable().ajax.reload();
-                    }
-                });
-            } else {
-                window.location.reload();
-            }
+            var ajaxData = vendorId ? { 'vendor_id': vendorId } : { 'source_id': 3 };
+            $.ajax({
+                url: "{% url 'get_pl_vehicles_by_vendor' %}",
+                data: ajaxData,
+                dataType: 'json',
+                success: function (data) {
+                    var $vehicleSelect = $('#vehicle_number');
+                    $vehicleSelect.empty();
+                    $vehicleSelect.append('<option value="">Select Vehicle</option>');
+                    $.each(data, function (index, vehicle) {
+                        $vehicleSelect.append('<option value="' + vehicle + '">' + vehicle + '</option>');
+                    });
+                    $vehicleSelect.val('').trigger('change.select2');
+                    $('#vendor_p_l_report_table').DataTable().ajax.reload();
+                }
+            });
+        });
+
+        $('#vehicle_number').on('change', function () {
+            $('#vendor_p_l_report_table').DataTable().ajax.reload();
         });
 
         $('#vendor_p_l_report_table').DataTable({

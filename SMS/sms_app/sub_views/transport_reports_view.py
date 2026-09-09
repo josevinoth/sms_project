@@ -2458,7 +2458,7 @@ def invoice_pending_report_ajax_view(request):
 def vendor_p_l_mkt_report_view(request):
     first_name = request.session.get('first_name')
 
-    from ..models import Vehicle_allotmentInfo, VehiclemasterInfo
+    from ..models import Vehicle_allotmentInfo, VehiclemasterInfo, TripdetailInfo
     from ..sub_models.vendor_info_mod import Vendor_info
 
     if request.method == "POST":
@@ -2490,8 +2490,7 @@ def vendor_p_l_mkt_report_view(request):
         id__in=set(list(market_vendor_ids_allotment) + list(market_vendor_ids_master))
     ).order_by('vend_name')
 
-    # Get vehicle numbers for the selected vendor
-    vehicle_numbers = []
+    # Get vehicle numbers for the selected vendor, or all market vehicles if no vendor selected
     if vendor_id:
         va_mkt_veh = Vehicle_allotmentInfo.objects.filter(
             va_vendor_id=vendor_id,
@@ -2514,6 +2513,31 @@ def vendor_p_l_mkt_report_view(request):
         vehicle_numbers = sorted({
             v.strip().upper() for v in list(va_mkt_veh) + list(va_mast_veh) + list(vm_mast_veh)
             if v and str(v).strip()
+        })
+    else:
+        va_mkt_veh = Vehicle_allotmentInfo.objects.filter(
+            va_vehiclesource_id=3,
+            va_vehiclenumber_mkt__isnull=False
+        ).exclude(va_vehiclenumber_mkt="").values_list('va_vehiclenumber_mkt', flat=True).distinct()
+
+        va_mast_veh = Vehicle_allotmentInfo.objects.filter(
+            va_vehiclesource_id=3,
+            va_vehiclenumber__isnull=False
+        ).values_list('va_vehiclenumber__vm_registrationnumber', flat=True).distinct()
+
+        vm_mast_veh = VehiclemasterInfo.objects.filter(
+            vm_ownership_id=3
+        ).exclude(vm_registrationnumber__isnull=True).exclude(vm_registrationnumber="").values_list(
+            'vm_registrationnumber', flat=True).distinct()
+
+        trip_mkt_veh = TripdetailInfo.objects.filter(
+            tr_vehiclesource_id=3,
+            tr_vehiclenumber__isnull=False
+        ).exclude(tr_vehiclenumber="").values_list('tr_vehiclenumber', flat=True).distinct()
+
+        vehicle_numbers = sorted({
+            v.strip().upper() for v in list(va_mkt_veh) + list(va_mast_veh) + list(vm_mast_veh) + list(trip_mkt_veh)
+            if v and str(v).strip() and str(v).strip().lower() != 'null'
         })
 
     return render(request, "asset_mgt_app/vendor_p_l_mkt_report.html", {
@@ -2896,7 +2920,7 @@ def vendor_p_l_mkt_report_ajax_view(request):
 def vendor_p_l_attached_report_view(request):
     first_name = request.session.get('first_name')
 
-    from ..models import Vehicle_allotmentInfo, VehiclemasterInfo
+    from ..models import Vehicle_allotmentInfo, VehiclemasterInfo, TripdetailInfo
     from ..sub_models.vendor_info_mod import Vendor_info
 
     if request.method == "POST":
@@ -2935,7 +2959,7 @@ def vendor_p_l_attached_report_view(request):
         id__in=set(list(attached_vendor_ids_allotment) + list(attached_vendor_ids_master))
     ).order_by('vend_name')
 
-    vehicle_numbers = []
+    # Get vehicle numbers for the selected vendor, or all attached vehicles if no vendor selected
     if vendor_id:
         va_att_veh = Vehicle_allotmentInfo.objects.filter(
             va_vendor_id=vendor_id, va_vehiclesource_id=2, va_vehiclenumber_mkt__isnull=False
@@ -2953,6 +2977,31 @@ def vendor_p_l_attached_report_view(request):
         vehicle_numbers = sorted({
             v.strip().upper() for v in list(va_att_veh) + list(va_mast_veh) + list(vm_mast_veh)
             if v and str(v).strip()
+        })
+    else:
+        va_att_veh = Vehicle_allotmentInfo.objects.filter(
+            va_vehiclesource_id=2,
+            va_vehiclenumber_mkt__isnull=False
+        ).exclude(va_vehiclenumber_mkt="").values_list('va_vehiclenumber_mkt', flat=True).distinct()
+
+        va_mast_veh = Vehicle_allotmentInfo.objects.filter(
+            va_vehiclesource_id=2,
+            va_vehiclenumber__isnull=False
+        ).values_list('va_vehiclenumber__vm_registrationnumber', flat=True).distinct()
+
+        vm_mast_veh = VehiclemasterInfo.objects.filter(
+            vm_ownership_id=2
+        ).exclude(vm_registrationnumber__isnull=True).exclude(vm_registrationnumber="").values_list(
+            'vm_registrationnumber', flat=True).distinct()
+
+        trip_att_veh = TripdetailInfo.objects.filter(
+            tr_vehiclesource_id=2,
+            tr_vehiclenumber__isnull=False
+        ).exclude(tr_vehiclenumber="").values_list('tr_vehiclenumber', flat=True).distinct()
+
+        vehicle_numbers = sorted({
+            v.strip().upper() for v in list(va_att_veh) + list(va_mast_veh) + list(vm_mast_veh) + list(trip_att_veh)
+            if v and str(v).strip() and str(v).strip().lower() != 'null'
         })
 
     return render(request, "asset_mgt_app/vendor_p_l_attached_report.html", {
@@ -3646,11 +3695,51 @@ def vendor_p_l_attached_report_ajax_view(request):
 
 @login_required(login_url='login_page')
 def get_pl_vehicles_by_vendor(request):
-    from ..models import Vehicle_allotmentInfo
+    from ..models import Vehicle_allotmentInfo, VehiclemasterInfo, TripdetailInfo
     vendor_id = request.GET.get('vendor_id', '').strip()
+    source_id = request.GET.get('source_id', '').strip()
 
     if not vendor_id:
-        return JsonResponse([], safe=False)
+        # If no vendor_id is provided, return all relevant vehicles
+        va_filters = {'va_vehiclenumber_mkt__isnull': False}
+        va_mast_filters = {'va_vehiclenumber__isnull': False}
+        vm_filters = {}
+        trip_filters = {'tr_vehiclenumber__isnull': False}
+
+        if source_id:
+            try:
+                src = int(source_id)
+                va_filters['va_vehiclesource_id'] = src
+                va_mast_filters['va_vehiclesource_id'] = src
+                vm_filters['vm_ownership_id'] = src
+                trip_filters['tr_vehiclesource_id'] = src
+            except ValueError:
+                pass
+
+        va_qs_mkt = Vehicle_allotmentInfo.objects.filter(**va_filters).exclude(
+            va_vehiclenumber_mkt=""
+        ).values_list('va_vehiclenumber_mkt', flat=True).distinct()
+
+        va_qs = Vehicle_allotmentInfo.objects.filter(**va_mast_filters).values_list(
+            'va_vehiclenumber__vm_registrationnumber', flat=True
+        ).distinct()
+
+        vm_qs = VehiclemasterInfo.objects.filter(**vm_filters).exclude(
+            vm_registrationnumber__isnull=True
+        ).exclude(vm_registrationnumber="").exclude(vm_registrationnumber="Null").values_list(
+            'vm_registrationnumber', flat=True
+        ).distinct()
+
+        trip_qs = TripdetailInfo.objects.filter(**trip_filters).exclude(
+            tr_vehiclenumber=""
+        ).values_list('tr_vehiclenumber', flat=True).distinct()
+
+        combined_qs = list(va_qs) + list(va_qs_mkt) + list(vm_qs) + list(trip_qs)
+        vehicle_list = sorted(set(
+            v.strip().upper() for v in combined_qs
+            if v and str(v).strip() and str(v).strip().lower() != 'null'
+        ))
+        return JsonResponse(vehicle_list, safe=False)
 
     # Primary source: Vehicle_allotmentInfo links vendors to vehicle numbers
     va_qs = Vehicle_allotmentInfo.objects.filter(
@@ -3671,8 +3760,8 @@ def get_pl_vehicles_by_vendor(request):
     combined_qs = list(va_qs) + list(va_qs_mkt)
 
     vehicle_list = sorted(set(
-        v for v in combined_qs
-        if v and v.strip() and v.strip().lower() != 'null'
+        v.strip().upper() for v in combined_qs
+        if v and str(v).strip() and str(v).strip().lower() != 'null'
     ))
 
     # Fallback: also check VehiclemasterInfo.vm_vendor if nothing found above
@@ -3686,7 +3775,7 @@ def get_pl_vehicles_by_vendor(request):
         ).exclude(
             vm_registrationnumber="Null"
         ).values_list('vm_registrationnumber', flat=True).distinct()
-        vehicle_list = sorted(set(vm_qs))
+        vehicle_list = sorted(set(v.strip().upper() for v in vm_qs if v and str(v).strip()))
 
     return JsonResponse(vehicle_list, safe=False)
 

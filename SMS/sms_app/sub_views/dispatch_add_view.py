@@ -545,6 +545,8 @@ def dispatch_search(request):
     context = {
         'first_name': first_name,
         'page_obj': page_obj,
+        'dispatch_number': dispatch_number,
+        'job_number': job_number,
     }
     return render(request, "asset_mgt_app/dispatch_list.html", context)
 
@@ -858,7 +860,7 @@ def dispatch_list_ajax(request):
 
         data.append({
             'edit': edit_btn,
-            'dispatch_created_at': item.dispatch_created_at.strftime('%Y-%m-%d %H:%M:%S') if item.dispatch_created_at else '',
+            'dispatch_created_at': timezone.localtime(item.dispatch_created_at).strftime('%Y-%m-%d %H:%M:%S') if item.dispatch_created_at else '',
             'dispatch_num': item.dispatch_num or '',
             'gatepass': gatepass,
             'dispatch_customer': str(item.dispatch_customer.cu_name) if hasattr(item, 'dispatch_customer') and item.dispatch_customer else 'None',
@@ -871,7 +873,7 @@ def dispatch_list_ajax(request):
             'dispatch_job_num_list': f'<div class="scrollable-cell">{item.dispatch_job_num_list or ""}</div>',
             'dispatch_status': str(item.dispatch_status.status_title) if hasattr(item, 'dispatch_status') and item.dispatch_status else 'None',
             'dispatch_updated_by': str(item.dispatch_updated_by) if item.dispatch_updated_by else 'None',
-            'dispatch_updated_at': item.dispatch_updated_at.strftime('%b %d, %Y') if item.dispatch_updated_at else '',
+            'dispatch_updated_at': timezone.localtime(item.dispatch_updated_at).strftime('%b %d, %Y') if item.dispatch_updated_at else '',
             'delete': delete_btn
         })
 

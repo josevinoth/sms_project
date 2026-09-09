@@ -43,15 +43,19 @@ def rtratemaster_add(request, rtratemaster_id=0):
                 ro_touchpoint=ro_touchpoint, ro_touchpoint2=ro_touchpoint2,
                 ro_touchpoint3=ro_touchpoint3, ro_touchpoint4=ro_touchpoint4
             ).exclude(id=rtratemaster_id).exists():
+                curr_user = user_obj if user_obj else (request.user if request.user.is_authenticated else None)
                 if rtratemaster_id == 0:
-                    new_rate = form.save()
+                    new_rate = form.save(commit=False)
+                    if curr_user:
+                        new_rate.ro_updated_by = curr_user
+                    new_rate.save()
                     # Log Audit History
                     RtratemasterHistory.objects.create(
                         rate_master=new_rate,
                         old_rate=None,
                         new_rate=new_rate_val,
                         action_type='CREATE',
-                        changed_by=user_obj or new_rate.ro_updated_by,
+                        changed_by=curr_user or new_rate.ro_updated_by,
                         remarks="Initial creation"
                     )
                     messages.success(request, 'Record Updated Successfully')
@@ -60,7 +64,10 @@ def rtratemaster_add(request, rtratemaster_id=0):
                     rtratemaster = RtratemasterInfo.objects.get(pk=rtratemaster_id)
                     old_rate_val = rtratemaster.ro_rate
                     form = RtratemasteraddForm(request.POST, instance=rtratemaster)
-                    updated_item = form.save()
+                    updated_item = form.save(commit=False)
+                    if curr_user:
+                        updated_item.ro_updated_by = curr_user
+                    updated_item.save()
 
                     # Log Audit History if rate changed or updated
                     RtratemasterHistory.objects.create(
@@ -68,7 +75,7 @@ def rtratemaster_add(request, rtratemaster_id=0):
                         old_rate=old_rate_val,
                         new_rate=new_rate_val,
                         action_type='UPDATE',
-                        changed_by=user_obj or updated_item.ro_updated_by,
+                        changed_by=curr_user or updated_item.ro_updated_by,
                         remarks=f"Rate updated from ₹{old_rate_val} to ₹{new_rate_val}" if old_rate_val != new_rate_val else "Record updated"
                     )
                     messages.success(request, 'Record Updated Successfully')

@@ -158,23 +158,21 @@
             var $vehicleSelect = $('#vehicle_number');
             $vehicleSelect.empty().append('<option value="">Select Vehicle</option>');
             
-            if (vendorId) {
-                $.ajax({
-                    url: "{% url 'get_pl_vehicles_by_vendor' %}",
-                    data: { 'vendor_id': vendorId },
-                    success: function (data) {
-                        $.each(data, function(index, regNo) {
-                            $vehicleSelect.append('<option value="' + regNo + '">' + regNo + '</option>');
-                        });
-                        $vehicleSelect.trigger('change.select2');
-                    },
-                    error: function() {
-                        $vehicleSelect.trigger('change.select2');
-                    }
-                });
-            } else {
-                $vehicleSelect.trigger('change');
-            }
+            var ajaxData = vendorId ? { 'vendor_id': vendorId } : { 'source_id': 2 };
+            $.ajax({
+                url: "{% url 'get_pl_vehicles_by_vendor' %}",
+                data: ajaxData,
+                success: function (data) {
+                    $.each(data, function(index, regNo) {
+                        $vehicleSelect.append('<option value="' + regNo + '">' + regNo + '</option>');
+                    });
+                    $vehicleSelect.trigger('change.select2');
+                    $('#vendor_p_l_report_table').DataTable().ajax.reload();
+                },
+                error: function() {
+                    $vehicleSelect.trigger('change.select2');
+                }
+            });
         });
         
         $('#vehicle_number').on('change', function() {

@@ -24,7 +24,7 @@ class TripdetailInfo(models.Model):
     tr_vehicletype_placed = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='',related_name='tr_vehicletype_placed', db_column='tr_vehicletype_placed')
     tr_vehicletype_selection_requested= models.BooleanField(blank=True,null=True)
     tr_vehicletype_selection_placed= models.BooleanField(blank=True,null=True)
-    tr_vehiclenumber = models.CharField(max_length=10,blank=True,null=True)
+    tr_vehiclenumber = models.CharField(max_length=11,blank=True,null=True)
     tr_drivername = models.CharField(max_length=100,null=True,blank=True)
     tr_driver_lic = models.CharField(max_length=100,null=True,blank=True)
     tr_drivernumber = models.CharField(max_length=30,null=True,blank=True)

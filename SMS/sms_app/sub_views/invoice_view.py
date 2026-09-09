@@ -59,8 +59,8 @@ def invoice_list_ajax_response(request, queryset):
             'wh_goods_invoice': obj.wh_goods_invoice or '',
             'wh_customer_name': str(obj.wh_customer_name) if obj.wh_customer_name else '',
             'wh_customer_type': str(obj.wh_customer_type) if obj.wh_customer_type else '',
-            'wh_checkin_time': obj.wh_checkin_time.strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if obj.wh_checkin_time else 'None',
-            'wh_checkout_time': obj.wh_checkout_time.strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if obj.wh_checkout_time else 'None',
+            'wh_checkin_time': timezone.localtime(obj.wh_checkin_time).strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if obj.wh_checkin_time else 'None',
+            'wh_checkout_time': timezone.localtime(obj.wh_checkout_time).strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if obj.wh_checkout_time else 'None',
             'wh_total_invoice_cost': str(obj.wh_total_invoice_cost) if obj.wh_total_invoice_cost else '0.0',
         })
         
@@ -793,8 +793,8 @@ def invoice_report(request):
                 sliced_qs = queryset[start:start+length]
 
             for obj in sliced_qs:
-                checkin = obj.wh_checkin_time.strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if hasattr(obj.wh_checkin_time, 'strftime') else str(obj.wh_checkin_time or '')
-                checkout = obj.wh_checkout_time.strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if hasattr(obj.wh_checkout_time, 'strftime') else str(obj.wh_checkout_time or '')
+                checkin = timezone.localtime(obj.wh_checkin_time).strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if hasattr(obj.wh_checkin_time, 'strftime') else str(obj.wh_checkin_time or '')
+                checkout = timezone.localtime(obj.wh_checkout_time).strftime("%b %d, %Y, %I:%M %p").replace(" 0", " ") if hasattr(obj.wh_checkout_time, 'strftime') else str(obj.wh_checkout_time or '')
                 
                 data.append([
                     obj.wh_job_no or '',
@@ -897,7 +897,7 @@ def invoice_list_ajax(request):
         amount_badge = f'<span class="badge" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.4rem 0.6rem; border-radius: 6px;">{invoiceinfo.bill_total_post_gst or 0.0}</span>'
         
         data.append({
-            'bill_created_on': invoiceinfo.bill_created_on.strftime('%b %d, %Y, %I:%M %p') if invoiceinfo.bill_created_on else '',
+            'bill_created_on': timezone.localtime(invoiceinfo.bill_created_on).strftime('%b %d, %Y, %I:%M %p') if invoiceinfo.bill_created_on else '',
             'bill_invoice_ref': f'<span class="font-weight-bold">{invoiceinfo.bill_invoice_ref or ""}</span>',
             'bill_invoice_date': invoiceinfo.bill_invoice_date.strftime('%b %d, %Y') if invoiceinfo.bill_invoice_date else '',
             'bill_customer_name': f'<span class="font-weight-bold">{invoiceinfo.bill_customer_name.cu_name if invoiceinfo.bill_customer_name else ""}</span>',
@@ -905,7 +905,7 @@ def invoice_list_ajax(request):
             'bill_e_invoice': invoiceinfo.bill_e_invoice or 'None',
             'bill_total_post_gst': amount_badge,
             'bill_updated_by': invoiceinfo.bill_updated_by.username if invoiceinfo.bill_updated_by else '',
-            'bill_updated_at': invoiceinfo.bill_updated_at.strftime('%b %d, %Y, %I:%M %p') if invoiceinfo.bill_updated_at else '',
+            'bill_updated_at': timezone.localtime(invoiceinfo.bill_updated_at).strftime('%b %d, %Y, %I:%M %p') if invoiceinfo.bill_updated_at else '',
             'bill_status': str(invoiceinfo.bill_status) if invoiceinfo.bill_status else '',
             'excel_btn': excel_btn,
             'tally_btn': tally_btn,

@@ -145,10 +145,42 @@ def pk_retrival_add(request, retrival_id=0):
 @login_required(login_url='login_page')
 def pk_retrival_list(request):
     first_name = request.session.get('first_name')
+    retrival_queryset = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_status__in=[1, 3]).order_by('-id')
+
+    grouped_retrival = {}
+    for item in retrival_queryset:
+        job_no = item.ct_job_no
+        part_code_id = item.ct_part_code_id
+        stock_id = item.ct_stock_purchase_number.sm_stock_purchase_number if item.ct_stock_purchase_number else (item.ct_stock_purchase_number.sm_invoice_no if item.ct_stock_purchase_number else 'None')
+        key = f"{job_no}_{part_code_id}_{stock_id}"
+        
+        if key not in grouped_retrival:
+            grouped_retrival[key] = {
+                'id': item.id,
+                'ids': [str(item.id)],
+                'job_no': job_no,
+                'customer_name': item.ct_assessment_num.na_customer_name.cu_name if item.ct_assessment_num and item.ct_assessment_num.na_customer_name else (item.ct_customer_name.cu_name if item.ct_customer_name else '-'),
+                'customer_po': item.ct_customer_po.po_num if item.ct_customer_po else '',
+                'part_code': item.ct_part_code.pc_code if item.ct_part_code else 'None',
+                'stock_type': str(item.ct_stock_type) if item.ct_stock_type else '',
+                'description': item.ct_part_code.pc_stock_description.stock_description if item.ct_part_code and item.ct_part_code.pc_stock_description else (str(item.ct_stock_description) if item.ct_stock_description else ''),
+                'quantity': float(item.ct_na_quantity or 0) * float(item.ct_quantity_req or 0),
+                'stock_id': stock_id,
+                'stock_status': item.ct_stock_status,
+                'updated_at': item.ct_updated_at,
+                'updated_by': item.ct_updated_by.first_name if item.ct_updated_by else '',
+            }
+        else:
+            grouped_retrival[key]['ids'].append(str(item.id))
+            grouped_retrival[key]['quantity'] += float(item.ct_na_quantity or 0) * float(item.ct_quantity_req or 0)
+            
+    for k, v in grouped_retrival.items():
+        v['ids_csv'] = ",".join(v['ids'])
+
     context = {
-                'pk_retrival_list' : PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status__in=[1, 3]).order_by('-id'),
-                'first_name': first_name
-               }
+        'grouped_list' : list(grouped_retrival.values()),
+        'first_name': first_name,
+    }
     return render(request,"asset_mgt_app/pk_retrival_list.html",context)
 
 #Delete retrival
