@@ -582,6 +582,11 @@ def pk_quotationsummary_clone_po(request, purchaseorder_id):
     except pk_stock_statusinfo.DoesNotExist:
         stock_status_instance = None
 
+    try:
+        wip_status = StatusList.objects.get(id=6)
+    except StatusList.DoesNotExist:
+        wip_status = None
+
     cloned_count = 0
     
     # NEW: Cleanup existing costing records for this PO that are no longer in the PO dimensions
@@ -598,17 +603,36 @@ def pk_quotationsummary_clone_po(request, purchaseorder_id):
         ).filter(Q(pkqt_stock_purchase_number__isnull=True) | Q(pkqt_stock_purchase_number=0)).select_related('pkqt_part_code')
         
         for q in missing_grn_items:
-            part_code_str = q.pkqt_part_code.part_code if q.pkqt_part_code and q.pkqt_part_code.part_code else "N/A"
-            if part_code_str not in all_missing_grn:
-                all_missing_grn.append(part_code_str)
+            part_code_str = q.pkqt_part_code.pc_code if q.pkqt_part_code and q.pkqt_part_code.pc_code else "N/A"
+            item_str = f"Part Code '{part_code_str}' for Item '{po_item.pod_item}'"
+            if item_str not in all_missing_grn:
+                all_missing_grn.append(item_str)
         
     if all_missing_grn:
-        missing_list_str = ", ".join(all_missing_grn)
+        missing_list_str = "; ".join(all_missing_grn)
         messages.error(
             request,
-            f"Cannot clone to Costing: Packing Material Part Code(s) [{missing_list_str}] do not have a GRN / Stock Purchase Number assigned. Please assign stock purchase numbers in Quotation Management first."
+            f"Cannot clone to Costing: {missing_list_str} do not have a GRN / Stock Purchase Number assigned. Please assign stock purchase numbers in Quotation Management first."
         )
         return redirect(request.META.get('HTTP_REFERER', 'pk_purchaseorder_list'))
+
+    summary = PkcostingsummaryInfo.objects.filter(cs_customer_po=po).order_by('-id').first()
+    if not summary:
+        summary = PkcostingsummaryInfo.objects.create(
+            cs_customer_po=po,
+            cs_assessment_num=po_items.first().pod_assess_num if po_items.exists() else po.po_assessment_num,
+            cs_customer_name=po.po_customer_name,
+            cs_status=wip_status,
+        )
+
+    # Auto-generate Job Number for the Costing Summary if not assigned
+    if not summary.cs_job_no:
+        fy = get_financial_year()
+        branch_id = get_session_branch_id(request)
+        branch_code = get_branch_code(branch_id)
+        prefix = f"{fy}_{branch_code}_JOB_"
+        summary.cs_job_no = generate_next_number(PkcostingsummaryInfo, 'cs_job_no', prefix, 4)
+        summary.save()
 
     for po_item in po_items:
         # Find all quotation details matching this item (Nadimension)
@@ -617,11 +641,13 @@ def pk_quotationsummary_clone_po(request, purchaseorder_id):
         )
         
         for q in quotations:
-            # Check if already cloned to prevent duplicates for this SPECIFIC PO LINE
+            # Check if already cloned to prevent duplicates for this SPECIFIC PO LINE & Stock Item
             if not PkcostingInfo.objects.filter(
                 ct_customer_po=po,
                 ct_po_dimension=po_item,
-                ct_cost_type=q.pkqt_cost_type
+                ct_cost_type=q.pkqt_cost_type,
+                ct_stock_description=q.pkqt_stock_description,
+                ct_part_code=q.pkqt_part_code
             ).exists():
                 PkcostingInfo.objects.create(
                     ct_cost_type=q.pkqt_cost_type,
@@ -658,23 +684,9 @@ def pk_quotationsummary_clone_po(request, purchaseorder_id):
                     ct_part_code=q.pkqt_part_code,
                     ct_total_cft_display=q.pkqt_total_cft_display,
                     ct_po_dimension=po_item,  # NEW: Link to the specific PO line
+                    ct_job_no=summary.cs_job_no  # NEW: Assign the job number to costing lines
                 )
                 cloned_count += 1
-
-    # Ensure Costing Summary exists for this PO
-    try:
-        wip_status = StatusList.objects.get(id=6)
-    except StatusList.DoesNotExist:
-        wip_status = None
-
-    summary, created = PkcostingsummaryInfo.objects.get_or_create(
-        cs_customer_po=po,
-        defaults={
-            'cs_assessment_num': po_items.first().pod_assess_num if po_items.exists() else po.po_assessment_num,
-            'cs_customer_name': po.po_customer_name,
-            'cs_status': wip_status,
-        }
-    )
 
     if cloned_count > 0:
         messages.success(request, f'Successfully cloned {cloned_count} items to Costing.')

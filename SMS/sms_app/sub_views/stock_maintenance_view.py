@@ -318,13 +318,16 @@ def get_part_details(request):
             part_totals = get_part_totals(part.id)
 
             data = {
+                'part_id': part.id,
                 'partCodeText': part.pc_code,
                 'description': desc,
+                'stock_type': part.pc_stock_type.pk_stocktype if part.pc_stock_type else "",
                 'thickness': part.pc_height or 0,
                 'width': part.pc_width or 0,
                 'length': part.pc_length or 0,
                 'uom_id': part.pc_uom.id if part.pc_uom else "",
                 'uom_name': part.pc_uom.unit_of_measure if part.pc_uom else "",
+                'dia_width': part.pc_diameter_width or 0,
                 'part_totals': part_totals
             }
 

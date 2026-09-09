@@ -161,29 +161,44 @@ def costingsummary_add(request,costingsummary_id=0):
             job_type_dict = {}
             for item in costing_list:
                 job_type = str(item.ct_requirement) if item.ct_requirement else "None"
-                cost = float(item.ct_total_cost or 0)
-                if job_type not in job_type_dict:
+                cost = float(item.ct_totalbox_cost or 0)
+                
+                # Use linked PO dimension line if present for exact PO info
+                po_dim = item.ct_po_dimension
+                key = (job_type, po_dim.id if po_dim else None)
+                
+                if key not in job_type_dict:
                     po_num = "—"
                     po_value = "—"
-                    if item.ct_requirement:
-                        po_dim = POdimension.objects.filter(pod_nad=item.ct_requirement).first()
-                        if po_dim:
-                            if po_dim.pod_po_num:
-                                po_num = po_dim.pod_po_num.po_num
-                            if po_dim.pod_value:
-                                po_value = po_dim.pod_value
+                    if po_dim:
+                        if po_dim.pod_po_num:
+                            po_num = po_dim.pod_po_num.po_num
+                        if po_dim.pod_value:
+                            po_value = po_dim.pod_value
+                    elif item.ct_requirement:
+                        found_dim = POdimension.objects.filter(pod_nad=item.ct_requirement).first()
+                        if found_dim:
+                            if found_dim.pod_po_num:
+                                po_num = found_dim.pod_po_num.po_num
+                            if found_dim.pod_value:
+                                po_value = found_dim.pod_value
                     
-                    job_type_dict[job_type] = {'total': 0.0, 'po_num': po_num, 'po_value': po_value}
-                job_type_dict[job_type]['total'] += cost
+                    job_type_dict[key] = {
+                        'job_type': job_type,
+                        'total': 0.0, 
+                        'po_num': po_num, 
+                        'po_value': po_value
+                    }
+                job_type_dict[key]['total'] += cost
                 
             job_type_totals = [
                 {
-                    'job_type': jt, 
+                    'job_type': data['job_type'], 
                     'total': round(data['total'], 2), 
                     'po_num': data['po_num'], 
                     'po_value': data['po_value']
                 } 
-                for jt, data in job_type_dict.items() if jt != "None"
+                for key, data in job_type_dict.items() if data['job_type'] != "None"
             ]
 
             retrival_queryset = costing_list.filter(ct_cost_type=8)

@@ -31,6 +31,7 @@
                         <th>ID</th>
                         <th>Created</th>
                         <th>Assessment No</th>
+                        <th>Customer Name</th>
                         <th>Customer PO</th>
                         <th>PO Date</th>
                         <th>Total Value</th>
@@ -49,6 +50,7 @@
                         <td class="text-muted">{{ purchaseorderinfo.id }}</td>
                         <td>{{ purchaseorderinfo.po_created_at|date:"d-m-Y" }}</td>
                         <td class="font-weight-bold">{{ purchaseorderinfo.po_assessment_num }}</td>
+                        <td class="font-weight-bold text-dark">{{ purchaseorderinfo.po_customer_name|default:purchaseorderinfo.po_customer_new_name|default:"-" }}</td>
                         <td><span class="badge badge-light border p-2">{{ purchaseorderinfo.po_num }}</span></td>
                         <td>{{ purchaseorderinfo.po_date|date:"d-m-Y" }}</td>
                         <td class="font-weight-bold text-primary">₹{{ purchaseorderinfo.po_total_value }}</td>
@@ -65,10 +67,10 @@
                         <td>{{ purchaseorderinfo.po_updated_at|date:"d-m-Y H:i" }}</td>
                         <td>{{ purchaseorderinfo.po_updated_by }}</td>
                         <td class="text-center">
-                            <a class="btn-modern btn-submit py-1 px-3" style="background: #f39c12; font-size: 0.8rem; text-decoration: none;"
-                               href="{% url 'pk_quotationsummary_clone_po' purchaseorderinfo.id %}" title="Clone to Costing">
-                                <i class="fas fa-copy"></i>
-                            </a>
+                            <button type="button" class="btn-modern btn-submit py-1 px-3 open-job-modal-btn" style="background: #f39c12; font-size: 0.8rem; border: none;"
+                               data-po-id="{{ purchaseorderinfo.id }}" title="Create Production Job (Batch Release)">
+                                <i class="fas fa-industry"></i>
+                            </button>
                         </td>
                         <td class="text-center">
                             <a class="btn-modern btn-submit py-1 px-3" href="{% url 'purchaseorder_update' purchaseorderinfo.id %}" style="font-size: 0.8rem; text-decoration: none;">
@@ -91,11 +93,525 @@
     </div>
 </div>
 
+<!-- Job Creation Modal -->
+<div class="modal fade" id="jobCreationModal" tabindex="-1" role="dialog" aria-labelledby="jobCreationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+            <div class="modal-header bg-white py-4" style="border-bottom: 2px solid var(--border-light) !important;">
+                <h5 class="modal-title font-weight-bold text-dark" id="jobCreationModalLabel">
+                    <i class="fas fa-industry mr-2 text-primary"></i> Create Production Batch Job
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <div id="modal_job_error_alert" class="alert alert-danger shadow-sm mb-3 d-none" style="border-radius: 12px; border-left: 5px solid #ef4444 !important; font-weight: 600;">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> <span id="modal_job_error_text"></span>
+                </div>
+                <div class="alert alert-info border-0 shadow-sm mb-4" style="border-radius: 12px; background: white; border-left: 5px solid var(--primary-emerald) !important; color: #1e293b; font-weight: 600;">
+                    <i class="fas fa-info-circle mr-2 text-primary"></i> Enter batch release quantities for this production job. Items with 0 quantity will be skipped.
+                </div>
+                <div class="table-responsive rounded shadow-sm">
+                    <table class="table table-hover bg-white mb-0" id="modal_job_table">
+                        <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                            <tr>
+                                <th class="text-dark font-weight-800" style="color: #000 !important; font-weight: 800 !important;">Item Specification</th>
+                                <th class="text-dark font-weight-800" style="color: #000 !important; font-weight: 800 !important;">Order Balance</th>
+                                <th class="text-dark font-weight-800" style="color: #000 !important; font-weight: 800 !important; width: 160px;">Job Release Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-white border-top-0 py-4">
+                <button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-modern btn-submit" id="confirm_batch_job_btn">
+                    <i class="fas fa-check-circle"></i> Create Job & Map Items
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Partcode & Live Stock Search Modal -->
+<div class="modal fade" id="partCodeSearchModal" tabindex="-1" role="dialog" aria-labelledby="partCodeSearchModalLabel" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+            <div class="modal-header bg-white py-3" style="border-bottom: 2px solid var(--border-light) !important;">
+                <h5 class="modal-title font-weight-bold text-dark" id="partCodeSearchModalLabel">
+                    <i class="fas fa-search mr-2 text-primary"></i> Select Alternative Part Code & Stock
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <input type="hidden" id="modal_target_quotation_id">
+                <input type="hidden" id="modal_selected_partcode_id">
+                
+                <div class="row row-compact mb-3">
+                    <!-- Section 1: Part & Stock Identity -->
+                    <div class="col-12 col-md-6 col-xl-3 col-compact">
+                        <div class="form-section h-100 bg-white p-3 rounded shadow-sm">
+                            <div class="form-section-title font-weight-bold text-primary mb-2"><i class="fas fa-barcode"></i> Part & Stock</div>
+                            <div class="form-group-modern mb-2">
+                                <label class="form-label-modern small font-weight-bold">Part Code</label>
+                                <select id="modal_part_code_select" class="form-control form-control-modern select2" style="width: 100%;"></select>
+                            </div>
+                            <div class="form-group-modern mb-2">
+                                <label class="form-label-modern small font-weight-bold">Stock Type</label>
+                                <input type="text" id="modal_stock_type" class="form-control form-control-modern bg-light" readonly placeholder="--Select--">
+                            </div>
+                            <div class="form-group-modern mb-2">
+                                <label class="form-label-modern small font-weight-bold">Stock Desc</label>
+                                <input type="text" id="modal_stock_desc" class="form-control form-control-modern bg-light" readonly placeholder="--Select--">
+                            </div>
+                            <div class="form-group-modern mb-2">
+                                <label class="form-label-modern small font-weight-bold">Stock Purchase #</label>
+                                <input type="text" id="modal_stock_purchase" class="form-control form-control-modern bg-light" readonly placeholder="--Select--">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Dimensions & Available Stock -->
+                    <div class="col-12 col-md-6 col-xl-3 col-compact">
+                        <div class="form-section h-100 bg-white p-3 rounded shadow-sm">
+                            <div class="form-section-title font-weight-bold text-primary mb-2"><i class="fas fa-ruler-combined"></i> Dimensions & Stock</div>
+                            <div class="row no-gutters mb-2">
+                                <div class="col-4 pr-1">
+                                    <label class="form-label-modern x-small">L (ft)</label>
+                                    <input type="text" id="modal_dim_l" class="form-control form-control-modern text-center" placeholder="0.0">
+                                </div>
+                                <div class="col-4 px-1">
+                                    <label class="form-label-modern x-small">W (in/ft)</label>
+                                    <input type="text" id="modal_dim_w" class="form-control form-control-modern text-center" placeholder="0.0">
+                                </div>
+                                <div class="col-4 pl-1">
+                                    <label class="form-label-modern x-small">H (in/mm)</label>
+                                    <input type="text" id="modal_dim_h" class="form-control form-control-modern text-center" placeholder="0.0">
+                                </div>
+                            </div>
+                            <div class="form-group-modern mb-2">
+                                <label class="form-label-modern small font-weight-bold">UOM</label>
+                                <input type="text" id="modal_uom" class="form-control form-control-modern bg-light" readonly placeholder="--Select--">
+                            </div>
+                            <div class="form-group-modern mb-2">
+                                <label class="form-label-modern small font-weight-bold">Dia / Width</label>
+                                <input type="text" id="modal_dia_width" class="form-control form-control-modern" placeholder="0.0">
+                            </div>
+                            <div class="form-group-modern mb-2">
+                                <label class="form-label-modern small font-weight-bold text-success">Available Qty</label>
+                                <input type="text" id="modal_avail_qty" class="form-control form-control-modern font-weight-bold text-success bg-light" readonly value="0">
+                            </div>
+                            <button type="button" class="btn btn-warning btn-block font-weight-bold py-2 mt-2" id="modal_search_stock_btn">
+                                <i class="fas fa-search mr-1"></i> Search Item
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Calculations & Cost -->
+                    <div class="col-12 col-md-6 col-xl-6 col-compact">
+                        <div class="form-section h-100 bg-white p-3 rounded shadow-sm" style="border-left: 4px solid var(--primary-emerald) !important;">
+                            <div class="form-section-title font-weight-bold text-success mb-2"><i class="fas fa-calculator"></i> Calculations & Cost</div>
+                            <div class="row no-gutters mb-2">
+                                <div class="col-6 pr-1">
+                                    <label class="form-label-modern small font-weight-bold">Purch. UOM</label>
+                                    <input type="text" id="modal_purch_uom" class="form-control form-control-modern bg-light" readonly placeholder="--Select--">
+                                </div>
+                                <div class="col-6 pl-1">
+                                    <label class="form-label-modern small font-weight-bold">Cons. UOM</label>
+                                    <input type="text" id="modal_cons_uom" class="form-control form-control-modern bg-light" readonly placeholder="--Select--">
+                                </div>
+                            </div>
+                            <div class="row no-gutters mb-2">
+                                <div class="col-6 pr-1">
+                                    <label class="form-label-modern small font-weight-bold">Qty Req</label>
+                                    <input type="number" id="modal_qty_req" class="form-control form-control-modern font-weight-bold" value="1">
+                                </div>
+                                <div class="col-6 pl-1">
+                                    <label class="form-label-modern small font-weight-bold">Req Value</label>
+                                    <input type="text" id="modal_req_value" class="form-control form-control-modern bg-light" readonly value="0.00">
+                                </div>
+                            </div>
+                            <div class="row no-gutters mb-2">
+                                <div class="col-6 pr-1">
+                                    <label class="form-label-modern small">Conversion</label>
+                                    <input type="text" id="modal_conversion" class="form-control form-control-modern" value="0.0">
+                                </div>
+                                <div class="col-6 pl-1">
+                                    <label class="form-label-modern small">Days / Hours</label>
+                                    <input type="text" id="modal_days_hours" class="form-control form-control-modern" value="1">
+                                </div>
+                            </div>
+                            <div class="row no-gutters mb-2">
+                                <div class="col-6 pr-1">
+                                    <label class="form-label-modern small">Rate / Unit</label>
+                                    <input type="text" id="modal_rate_unit" class="form-control form-control-modern" value="0.0">
+                                </div>
+                                <div class="col-6 pl-1">
+                                    <label class="form-label-modern small">Unit Cost</label>
+                                    <input type="text" id="modal_unit_cost" class="form-control form-control-modern bg-light" readonly value="0.00">
+                                </div>
+                            </div>
+                            <div class="p-2 bg-light rounded text-center mt-2 border">
+                                <div class="small font-weight-bold text-muted">TOTAL COST (INR)</div>
+                                <div class="h4 mb-0 font-weight-bold text-success" id="modal_total_cost_display">₹0.00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Inventory Results Table -->
+                <div class="bg-white p-3 rounded shadow-sm mt-3">
+                    <div class="font-weight-bold text-dark mb-2"><i class="fas fa-boxes mr-1"></i> Live Available Batches</div>
+                    <div id="modal_inventory_results_container" class="table-responsive">
+                        <div class="text-center py-3 text-muted">Click <b>Search Item</b> above to search matching stock batches.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-white border-top-0 py-3">
+                <button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-modern btn-submit" id="modal_confirm_update_pc_btn">
+                    <i class="fas fa-check"></i> Apply Selected Partcode
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     document.getElementById('purchaseorder_search').addEventListener('keyup', function() {
         var term = this.value.toLowerCase();
         document.querySelectorAll('#purchaseorder_list tbody tr').forEach(function(row) {
             row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+        });
+    });
+
+    let activePoId = null;
+
+    $(document).on('click', '.open-job-modal-btn', function() {
+        activePoId = $(this).data('po-id');
+        const tbody = $('#modal_job_table tbody');
+        tbody.empty().append('<tr><td colspan="3" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i> Fetching items...</td></tr>');
+        $('#modal_job_error_alert').addClass('d-none');
+        $('#jobCreationModal').modal('show');
+
+        $.ajax({
+            url: '/SMS/pk_get_po_items_for_job/',
+            method: 'GET',
+            data: { 'po_id': activePoId },
+            success: function(response) {
+                tbody.empty();
+                if (response.success && response.items.length > 0) {
+                    response.items.forEach(function(item) {
+                        const tr = $('<tr class="align-middle">');
+                        tr.append($('<td class="font-weight-bold text-dark" style="color: #000 !important; font-weight: 700;">').text(item.item_name));
+                        tr.append($('<td class="text-dark">').html(
+                            '<div class="small font-weight-bold" style="color: #475569;">Total: ' + item.ordered_qty + '</div>' +
+                            '<div class="badge badge-primary" style="background-color: var(--accent-blue);">Rem: ' + item.remaining_qty + '</div>'
+                        ));
+                        tr.append($('<td>').append(
+                            $('<input>').attr({
+                                'type': 'number', 'step': '0.01',
+                                'class': 'form-control form-control-modern modal-job-qty text-center',
+                                'data-id': item.id, 'data-max': item.remaining_qty,
+                                'value': item.remaining_qty, 'min': '0', 'max': item.remaining_qty,
+                                'style': 'height: 38px !important; border-radius: 8px;'
+                            })
+                        ));
+                        tbody.append(tr);
+                    });
+                } else {
+                    tbody.append('<tr><td colspan="3" class="text-center py-4 text-muted">No items available for job creation.</td></tr>');
+                }
+            },
+            error: function() {
+                tbody.html('<tr><td colspan="3" class="text-center py-4 text-danger">Error loading items.</td></tr>');
+            }
+        });
+    });
+
+    $('#confirm_batch_job_btn').on('click', function () {
+        const items = [];
+        let hasError = false;
+
+        $('.modal-job-qty').each(function () {
+            const qty = parseFloat($(this).val()) || 0;
+            const maxQty = parseFloat($(this).data('max')) || 0;
+            if (qty > maxQty) {
+                alert('Quantity exceeds balance for some items.');
+                hasError = true; return false;
+            }
+            if (qty > 0) { items.push({ 'id': $(this).data('id'), 'qty': qty }); }
+        });
+
+        if (hasError || items.length === 0) {
+            if(!hasError) alert('Please release at least one item.');
+            return;
+        }
+
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+
+        $.ajax({
+            url: '/SMS/pk_create_batch_job/',
+            method: 'POST',
+            data: JSON.stringify({ 'po_id': activePoId, 'items': items }),
+            contentType: 'application/json',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            success: function (response) {
+                if (response.success) { 
+                    window.location.href = response.redirect_url; 
+                } else { 
+                    $('#modal_job_error_text').html(response.message || 'Error creating job');
+                    $('#modal_job_error_alert').removeClass('d-none');
+                    $('#confirm_batch_job_btn').prop('disabled', false).html('<i class="fas fa-check-circle"></i> Create Job & Map Items'); 
+                }
+            },
+            error: function (xhr) {
+                $('#confirm_batch_job_btn').prop('disabled', false).html('<i class="fas fa-check-circle"></i> Create Job & Map Items');
+                let resp = xhr.responseJSON;
+                if (resp && resp.stock_alert && resp.insufficient_stock_items) {
+                    let html = '<div class="mb-2"><i class="fas fa-exclamation-circle text-warning mr-1"></i> <b>Insufficient Stock Alert!</b> Stock shortfall detected:</div>';
+                    html += '<table class="table table-sm table-bordered bg-white text-center small mb-3"><thead><tr class="bg-light"><th>Item</th><th>Part Code</th><th>Needed</th><th>Available</th><th>Shortfall</th><th>Action</th></tr></thead><tbody>';
+                    resp.insufficient_stock_items.forEach(function(stk) {
+                        html += '<tr id="stk_row_' + stk.quotation_id + '">';
+                        html += '<td><b>' + stk.item_name + '</b></td>';
+                        html += '<td><code class="bg-light px-2 py-1 text-danger font-weight-bold">' + stk.part_code + '</code></td>';
+                        html += '<td>' + stk.needed_qty + '</td>';
+                        html += '<td class="text-danger font-weight-bold">' + stk.available_qty + '</td>';
+                        html += '<td class="text-danger font-weight-bold">-' + stk.shortfall + '</td>';
+                        html += '<td><button type="button" class="btn btn-sm btn-primary py-0 px-2 change-partcode-btn" data-qid="' + stk.quotation_id + '" data-current="' + stk.part_code + '"><i class="fas fa-edit"></i> Change</button></td>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table>';
+                    html += '<div class="d-flex justify-content-between align-items-center"><span class="small text-muted"><i class="fas fa-paper-plane mr-1"></i> Stock Team has been notified.</span>';
+                    html += '<button type="button" class="btn btn-sm btn-warning font-weight-bold" id="force_release_job_btn"><i class="fas fa-arrow-right"></i> Proceed with Available Stock</button></div>';
+                    
+                    $('#modal_job_error_text').html(html);
+                    $('#modal_job_error_alert').removeClass('d-none');
+
+                    $('#force_release_job_btn').off('click').on('click', function() {
+                        $('#confirm_batch_job_btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+                        $.ajax({
+                            url: '/SMS/pk_create_batch_job/',
+                            method: 'POST',
+                            data: JSON.stringify({ 'po_id': activePoId, 'items': items, 'allow_stock_override': true }),
+                            contentType: 'application/json',
+                            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                            success: function (r) { if (r.success) window.location.href = r.redirect_url; }
+                        });
+                    });
+
+                    function fetchMasterPartDetails(partCodeVal) {
+                        if (!partCodeVal) return;
+                        $.ajax({
+                            url: '{% url "get_part_details" %}',
+                            data: { 'part_id': partCodeVal },
+                            success: function(res) {
+                                if (res && !res.error) {
+                                    $('#modal_stock_type').val(res.stock_type || '--Select--');
+                                    $('#modal_stock_desc').val(res.description || '--Select--');
+                                    $('#modal_dim_l').val(res.length || '0.0');
+                                    $('#modal_dim_w').val(res.width || '0.0');
+                                    $('#modal_dim_h').val(res.thickness || '0.0');
+                                    $('#modal_uom, #modal_purch_uom, #modal_cons_uom').val(res.uom_name || '--Select--');
+                                    $('#modal_dia_width').val(res.dia_width || '0.0');
+                                    if (res.part_id) {
+                                        $('#modal_selected_partcode_id').val(res.part_id);
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    $(document).off('click', '.change-partcode-btn').on('click', '.change-partcode-btn', function() {
+                        let qid = $(this).data('qid');
+                        let currentPc = $(this).data('current');
+                        $('#modal_target_quotation_id').val(qid);
+                        
+                        if (currentPc) {
+                            if ($('#modal_part_code_select option[value="' + currentPc + '"]').length === 0) {
+                                let newOption = new Option(currentPc, currentPc, true, true);
+                                $('#modal_part_code_select').empty().append(newOption);
+                            } else {
+                                $('#modal_part_code_select').val(currentPc);
+                            }
+                            fetchMasterPartDetails(currentPc);
+                        }
+
+                        $('#partCodeSearchModal').modal('show');
+                        
+                        if ($.fn.select2) {
+                            $('#modal_part_code_select').select2({
+                                ajax: {
+                                    url: "{% url 'get_part_code' %}",
+                                    dataType: 'json',
+                                    delay: 250,
+                                    data: function (params) { return { q: params.term }; },
+                                    processResults: function (data) {
+                                        return { results: data.map(item => ({ id: item.id, text: item.pc_code })) };
+                                    },
+                                    cache: true
+                                },
+                                dropdownParent: $('#partCodeSearchModal'),
+                                width: '100%',
+                                placeholder: "Type 2+ letters to search...",
+                                allowClear: true,
+                                minimumInputLength: 2
+                            });
+                        }
+
+                        // Auto-search available stock batches immediately
+                        setTimeout(function() {
+                            $('#modal_search_stock_btn').click();
+                        }, 200);
+                    });
+                } else {
+                    let errMsg = (resp && resp.message) ? resp.message : 'Failed to create job.';
+                    $('#modal_job_error_text').html(errMsg);
+                    $('#modal_job_error_alert').removeClass('d-none');
+                }
+            }
+        });
+    });
+
+    // Auto-search stock batches & fetch master specs when Part Code dropdown changes
+    $(document).on('change', '#modal_part_code_select', function() {
+        let pcVal = $(this).val();
+        if (pcVal) {
+            $.ajax({
+                url: '{% url "get_part_details" %}',
+                data: { 'part_id': pcVal },
+                success: function(res) {
+                    if (res && !res.error) {
+                        $('#modal_stock_type').val(res.stock_type || '--Select--');
+                        $('#modal_stock_desc').val(res.description || '--Select--');
+                        $('#modal_dim_l').val(res.length || '0.0');
+                        $('#modal_dim_w').val(res.width || '0.0');
+                        $('#modal_dim_h').val(res.thickness || '0.0');
+                        $('#modal_uom, #modal_purch_uom, #modal_cons_uom').val(res.uom_name || '--Select--');
+                        $('#modal_dia_width').val(res.dia_width || '0.0');
+                        if (res.part_id) {
+                            $('#modal_selected_partcode_id').val(res.part_id);
+                        }
+                    }
+                }
+            });
+        }
+        $('#modal_search_stock_btn').click();
+    });
+
+    // Modal Live Stock Search & Selection Handlers
+    $(document).on('click', '#modal_search_stock_btn', function() {
+        let partCodeVal = $('#modal_part_code_select').val();
+        let container = $('#modal_inventory_results_container');
+        container.html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin mr-2"></i> Searching available stock batches...</div>');
+
+        $.ajax({
+            url: '{% url "pk_item_search_page_costing" %}',
+            data: {
+                'part_code': partCodeVal,
+                'length_req': $('#modal_dim_l').val(),
+                'width_req': $('#modal_dim_w').val(),
+                'height_req': $('#modal_dim_h').val()
+            },
+            success: function(results) {
+                if (!results || results.length === 0) {
+                    container.html('<div class="text-center py-3 text-muted">No stock batches found matching search criteria.</div>');
+                    $('#modal_stock_purchase').val('--No Stock--');
+                    $('#modal_avail_qty').val('0');
+                    $('#modal_rate_unit').val('0.0');
+                    $('#modal_unit_cost, #modal_req_value').val('0.00');
+                    $('#modal_total_cost_display').text('₹0.00');
+                    return;
+                }
+                let html = '<table class="table table-hover table-sm text-center mb-0">';
+                html += '<thead class="bg-light"><tr><th>ID</th><th>Purchase Ref</th><th>Part Code</th><th>Description</th><th>Dimensions</th><th>Avail Qty</th><th>Rate</th><th>Select</th></tr></thead><tbody>';
+                results.forEach(function(row) {
+                    html += '<tr>';
+                    html += '<td>#' + row.id + '</td>';
+                    html += '<td><b>' + row.sp_purchase_num + '</b></td>';
+                    html += '<td><code class="bg-light px-2 py-1 text-primary font-weight-bold">' + row.sp_part_code__pc_code + '</code></td>';
+                    html += '<td class="text-left">' + row.sp_stock_description__stock_description + '</td>';
+                    html += '<td>' + row.sp_length + ' x ' + row.sp_width + ' x ' + row.sp_thick_height + '</td>';
+                    html += '<td class="font-weight-bold text-success">' + row.sp_quantity + '</td>';
+                    html += '<td class="font-weight-bold">₹' + row.sp_rate + '</td>';
+                    html += '<td><button type="button" class="btn btn-sm btn-outline-success modal-pick-stock-btn" data-pc-id="' + (row.partcode_id || row.sp_part_code__pc_code) + '" data-pc-code="' + row.sp_part_code__pc_code + '" data-stock-type="' + row.sp_stock_type__pk_stocktype + '" data-stock-desc="' + row.sp_stock_description__stock_description + '" data-purchase-num="' + row.sp_purchase_num + '" data-length="' + row.sp_length + '" data-width="' + row.sp_width + '" data-height="' + row.sp_thick_height + '" data-avail="' + row.sp_quantity + '" data-rate="' + row.sp_rate + '" data-uom="' + row.sp_uom__unit_of_measure + '"><i class="fas fa-check mr-1"></i> Select</button></td>';
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+                container.html(html);
+
+                // Auto-pick the first batch to populate form fields automatically
+                if ($('.modal-pick-stock-btn').length > 0) {
+                    $('.modal-pick-stock-btn').first().click();
+                }
+            },
+            error: function() {
+                container.html('<div class="text-center py-3 text-danger">Error fetching stock inventory.</div>');
+            }
+        });
+    });
+
+    $(document).on('click', '.modal-pick-stock-btn', function() {
+        let btn = $(this);
+        $('.modal-pick-stock-btn').removeClass('btn-success text-white').addClass('btn-outline-success');
+        btn.removeClass('btn-outline-success').addClass('btn-success text-white');
+
+        $('#modal_selected_partcode_id').val(btn.data('pc-code') || btn.data('pc-id'));
+        $('#modal_stock_type').val(btn.data('stock-type') || '--Select--');
+        $('#modal_stock_desc').val(btn.data('stock-desc') || '--Select--');
+        $('#modal_stock_purchase').val(btn.data('purchase-num') || '--Select--');
+        $('#modal_dim_l').val(btn.data('length') || '0.0');
+        $('#modal_dim_w').val(btn.data('width') || '0.0');
+        $('#modal_dim_h').val(btn.data('height') || '0.0');
+        $('#modal_uom, #modal_purch_uom, #modal_cons_uom').val(btn.data('uom') || '--Select--');
+        $('#modal_avail_qty').val(btn.data('avail') || '0');
+        $('#modal_rate_unit').val(btn.data('rate') || '0.0');
+        
+        let qty = parseFloat($('#modal_qty_req').val()) || 1;
+        let rate = parseFloat(btn.data('rate')) || 0;
+        let days = parseFloat($('#modal_days_hours').val()) || 1;
+        let total = qty * rate * days;
+        $('#modal_unit_cost, #modal_req_value').val((qty * rate).toFixed(2));
+        $('#modal_total_cost_display').text('₹' + total.toFixed(2));
+    });
+
+    $(document).on('input change', '#modal_qty_req, #modal_rate_unit, #modal_conversion, #modal_days_hours', function() {
+        let qty = parseFloat($('#modal_qty_req').val()) || 1;
+        let rate = parseFloat($('#modal_rate_unit').val()) || 0;
+        let days = parseFloat($('#modal_days_hours').val()) || 1;
+        let total = qty * rate * days;
+        $('#modal_unit_cost, #modal_req_value').val((qty * rate).toFixed(2));
+        $('#modal_total_cost_display').text('₹' + total.toFixed(2));
+    });
+
+    $(document).on('click', '#modal_confirm_update_pc_btn', function() {
+        let qid = $('#modal_target_quotation_id').val();
+        let newPcId = $('#modal_selected_partcode_id').val() || $('#modal_part_code_select').val();
+        if (!newPcId) {
+            alert('Please search and select a Part Code from the list.');
+            return;
+        }
+        $.ajax({
+            url: '/SMS/pk_update_quotation_partcode/',
+            method: 'POST',
+            data: JSON.stringify({ 'quotation_id': qid, 'new_part_code_id': newPcId }),
+            contentType: 'application/json',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            success: function(res) {
+                if (res.success) {
+                    $('#partCodeSearchModal').modal('hide');
+                    alert(res.message);
+                    $('#confirm_batch_job_btn').click();
+                } else {
+                    alert(res.message || 'Error updating part code.');
+                }
+            }
         });
     });
 </script>
