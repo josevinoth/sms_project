@@ -119,3 +119,16 @@ def is_tms_manager(user_id):
         )
     except Exception:
         return False
+
+
+def is_admin_user(request):
+    """
+    Returns True if current logged in user is a Django superuser/staff or has an Admin/Superuser role.
+    """
+    if not request.user or not request.user.is_authenticated:
+        return False
+    if request.user.is_superuser or request.user.is_staff:
+        return True
+    user_role = (request.session.get('ses_role') or '').lower()
+    return user_role in ['admin', 'super user', 'superuser']
+

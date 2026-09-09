@@ -381,9 +381,15 @@
                         <span class="small text-muted font-weight-bold">{{ data.enquiry.en_created_at|date:"h:i A" }}</span>
                     </td>
                     <td class="text-center">
+                        {% if "Cancel" in data.enquiry.en_status.status_name or "Cancel" in data.enquiry.en_status|stringformat:"s" %}
+                        <button class="btn-modern btn-submit py-1 px-3" disabled style="font-size: 0.8rem; border-radius: 8px; opacity: 0.5; cursor: not-allowed;" title="Editing disabled for cancelled status">
+                            <i class="far fa-edit"></i>
+                        </button>
+                        {% else %}
                         <a class="btn-modern btn-submit py-1 px-3" href="{% url 'enquirynote_update' data.enquiry.id %}" style="font-size: 0.8rem; text-decoration: none; border-radius: 8px;">
                             <i class="far fa-edit"></i>
                         </a>
+                        {% endif %}
                     </td>
                     <td><span class="badge badge-light p-2 border font-weight-bold" style="font-size: 0.95rem;">{{ data.enquiry.en_enquirynumber }}</span></td>
                     <td>{{ data.enquiry.en_customername }}</td>

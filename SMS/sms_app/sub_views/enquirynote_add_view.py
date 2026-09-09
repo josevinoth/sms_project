@@ -156,9 +156,55 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
         else:
             print("I am inside post edit Enquirynote")
             enquirynote = EnquirynoteInfo.objects.get(pk=enquirynote_id)
+            old_from = enquirynote.en_fromlocaion_id
+            old_to = enquirynote.en_tolocation_id
             form = EnquirynoteaddForm(request.POST, instance=enquirynote)
             if form.is_valid():
-                form.save()
+                updated_enquiry = form.save()
+                
+                # If location changed, update allotments with newly matched rates
+                if old_from != updated_enquiry.en_fromlocaion_id or old_to != updated_enquiry.en_tolocation_id:
+                    from .vehicle_allotment_view import sync_allotment_rate_to_trips
+                    from ..models import RtratemasterInfo
+                    
+                    allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=updated_enquiry)
+                    for allotment in allotments:
+                        vt_id = allotment.va_vehicletype_placed_id or allotment.va_vehicletype_id
+                        env_obj = Enquirynotevehicle.objects.filter(
+                            env_enquirynumber=updated_enquiry,
+                            env_vehicletype_id=vt_id
+                        ).first() if vt_id else None
+                        
+                        new_rate = 0.0
+                        if env_obj:
+                            if env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
+                                new_rate = float(env_obj.env_special_sale)
+                            elif env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+                                new_rate = float(env_obj.env_sale)
+                        
+                        if new_rate <= 0 and vt_id:
+                            rm = RtratemasterInfo.objects.filter(
+                                ro_customer=updated_enquiry.en_customername,
+                                ro_fromlocation=updated_enquiry.en_fromlocaion,
+                                ro_tolocation=updated_enquiry.en_tolocation,
+                                ro_vehicletype_id=vt_id
+                            ).order_by('-id').first()
+                            if not rm:
+                                rm = RtratemasterInfo.objects.filter(
+                                    ro_customer=updated_enquiry.en_customername,
+                                    ro_fromlocation=updated_enquiry.en_tolocation,
+                                    ro_tolocation=updated_enquiry.en_fromlocaion,
+                                    ro_vehicletype_id=vt_id
+                                ).order_by('-id').first()
+                            if rm and rm.ro_rate:
+                                new_rate = float(rm.ro_rate)
+                        
+                        if new_rate > 0:
+                            allotment.va_sale = new_rate
+                            allotment.va_special_sale = new_rate
+                            allotment.save(update_fields=['va_sale', 'va_special_sale'])
+                            sync_allotment_rate_to_trips(allotment)
+
                 print("Enquiry Main Form Saved")
                 messages.success(request, 'Record Updated Successfully')
                 return redirect(request.META.get('HTTP_REFERER', f'/SMS/enquirynote_update/{enquirynote_id}'))
