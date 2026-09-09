@@ -24,7 +24,7 @@ class TripdetailInfo(models.Model):
     tr_vehicletype_placed = models.ForeignKey(VehicletypeInfo, on_delete=models.CASCADE, default='',related_name='tr_vehicletype_placed', db_column='tr_vehicletype_placed')
     tr_vehicletype_selection_requested= models.BooleanField(blank=True,null=True)
     tr_vehicletype_selection_placed= models.BooleanField(blank=True,null=True)
-    tr_vehiclenumber = models.CharField(max_length=10,blank=True,null=True)
+    tr_vehiclenumber = models.CharField(max_length=11,blank=True,null=True)
     tr_drivername = models.CharField(max_length=100,null=True,blank=True)
     tr_driver_lic = models.CharField(max_length=100,null=True,blank=True)
     tr_drivernumber = models.CharField(max_length=30,null=True,blank=True)
@@ -71,8 +71,6 @@ class TripdetailInfo(models.Model):
 
     # Bill to Customer Checkboxes (Specifically for Trans Invoice)
     tc_tripcost_check = models.BooleanField(default=True)
-    tc_special_sell_check = models.BooleanField(default=False)
-    tc_special_sell = models.FloatField(default=0.0, null=True, blank=True)
     tc_parkingcost_check = models.BooleanField(default=False)
     tc_tollcost_check = models.BooleanField(default=False)
     tc_loadingcost_check = models.BooleanField(default=False)
