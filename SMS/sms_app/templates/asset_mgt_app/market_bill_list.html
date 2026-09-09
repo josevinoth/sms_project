@@ -141,26 +141,26 @@
                     <td>{{ forloop.counter }}</td>
                     <td>{{ bill.mb_bill_no }}</td>
                     <td>{{ bill.mb_voucher_no|default:"" }}</td>
-                    <td>{{ bill.mb_bill_date|date:"d-m-Y" }}</td>
+                    <td data-order="{{ bill.mb_bill_date|date:'Y-m-d'|default:'' }}">{{ bill.mb_bill_date|date:"d-m-Y" }}</td>
                     <td>{{ bill.mb_vendor }}</td>
                     <td></td> <!-- Placeholder for Branch -->
-                    <td>{{ bill.mb_trip_cost|floatformat:2 }}</td>
-                    <td>{{ bill.mb_loading_cost|floatformat:2 }}</td>
-                    <td>{{ bill.mb_unloading_cost|floatformat:2 }}</td>
-                    <td>{{ bill.mb_parking_cost|floatformat:2 }}</td>
-                    <td>{{ bill.mb_halting_days|default:0 }}</td>
-                    <td>{{ bill.mb_halting_cost|floatformat:2 }}</td>
-                    <td>{{ bill.mb_total_cost|floatformat:2 }}</td>
-                    <td>{{ bill.mb_tds_percent|floatformat:2|default:"0.00" }}</td>
-                    <td>{{ bill.mb_tds_amount|floatformat:2|default:"0.00" }}</td>
-                    <td>
+                    <td data-order="{{ bill.mb_trip_cost|default:0 }}">{{ bill.mb_trip_cost|floatformat:2 }}</td>
+                    <td data-order="{{ bill.mb_loading_cost|default:0 }}">{{ bill.mb_loading_cost|floatformat:2 }}</td>
+                    <td data-order="{{ bill.mb_unloading_cost|default:0 }}">{{ bill.mb_unloading_cost|floatformat:2 }}</td>
+                    <td data-order="{{ bill.mb_parking_cost|default:0 }}">{{ bill.mb_parking_cost|floatformat:2 }}</td>
+                    <td data-order="{{ bill.mb_halting_days|default:0 }}">{{ bill.mb_halting_days|default:0 }}</td>
+                    <td data-order="{{ bill.mb_halting_cost|default:0 }}">{{ bill.mb_halting_cost|floatformat:2 }}</td>
+                    <td data-order="{{ bill.mb_total_cost|default:0 }}">{{ bill.mb_total_cost|floatformat:2 }}</td>
+                    <td data-order="{{ bill.mb_tds_percent|default:0 }}">{{ bill.mb_tds_percent|floatformat:2|default:"0.00" }}</td>
+                    <td data-order="{{ bill.mb_tds_amount|default:0 }}">{{ bill.mb_tds_amount|floatformat:2|default:"0.00" }}</td>
+                    <td data-order="{% if bill.mb_payable_amount %}{{ bill.mb_payable_amount }}{% else %}{{ bill.mb_total_cost|default:0 }}{% endif %}">
                         {% if bill.mb_payable_amount %}
                             {{ bill.mb_payable_amount|floatformat:2 }}
                         {% else %}
                             {{ bill.mb_total_cost|floatformat:2 }}
                         {% endif %}
                     </td>
-                    <td>{{ bill.mb_created_at|date:"d-m-Y H:i" }}</td>
+                    <td data-order="{{ bill.mb_created_at|date:'Y-m-d H:i:s'|default:'' }}">{{ bill.mb_created_at|date:"d-m-Y H:i" }}</td>
                     <td>
                         {% if bill.mb_created_by %}
                         {{ bill.mb_created_by.first_name|default:bill.mb_created_by.username }}
@@ -171,7 +171,7 @@
                         {{ bill.mb_updated_by.first_name|default:bill.mb_updated_by.username }}
                         {% endif %}
                     </td>
-                    <td>{{ bill.mb_updated_at|date:"d-m-Y H:i" }}</td>
+                    <td data-order="{{ bill.mb_updated_at|date:'Y-m-d H:i:s'|default:'' }}">{{ bill.mb_updated_at|date:"d-m-Y H:i" }}</td>
                     <td class="text-center">
                         {% if bill.mb_attachment %}
                         <div class="d-inline-flex" style="gap: 6px;">

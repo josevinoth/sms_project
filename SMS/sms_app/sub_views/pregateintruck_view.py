@@ -396,14 +396,20 @@ def pregateintruck_list_ajax(request):
     length = int(request.GET.get('length', 10))
     search_value = request.GET.get('search[value]', '')
 
-    pregatein_number = request.GET.get('pregatein_number', '')
+    pre_gate_in = request.GET.get('pre_gate_in', '')
+    truck_number = request.GET.get('truck_number', '')
+    driver_name = request.GET.get('driver_name', '')
 
     queryset = Pregateintruckinfo.objects.select_related(
         'pregatein_number', 'pregatein_updated_by'
     ).all()
 
-    if pregatein_number:
-        queryset = queryset.filter(pregatein_number__gatein_pre_number__icontains=pregatein_number)
+    if pre_gate_in:
+        queryset = queryset.filter(pregatein_number__gatein_pre_number__icontains=pre_gate_in)
+    if truck_number:
+        queryset = queryset.filter(pregatein_truck_number__icontains=truck_number)
+    if driver_name:
+        queryset = queryset.filter(pregatein_driver__icontains=driver_name)
 
     if search_value:
         queryset = queryset.filter(
@@ -462,12 +468,12 @@ def pregateintruck_list_ajax(request):
         data.append({
             'edit': edit_btn,
             'id': item.id,
-            'gatein_pre_created_at': item.pregatein_created_at.strftime('%d-%m-%Y %I:%M %p') if item.pregatein_created_at else '',
+            'gatein_pre_created_at': timezone.localtime(item.pregatein_created_at).strftime('%d-%m-%Y %I:%M %p') if item.pregatein_created_at else '',
             'gatein_pre_number': str(pre_gatein.gatein_pre_number) if pre_gatein else '',
             'gatein_pre_branch': branch_name,
             'gatein_pre_truck_number': item.pregatein_truck_number or '',
             'gatein_pre_driver_name': item.pregatein_driver or '',
-            'gatein_pre_updated_at': item.pregatein_updated_at.strftime('%d-%m-%Y %I:%M %p') if item.pregatein_updated_at else '',
+            'gatein_pre_updated_at': timezone.localtime(item.pregatein_updated_at).strftime('%d-%m-%Y %I:%M %p') if item.pregatein_updated_at else '',
             'gatein_pre_updated_by': str(item.pregatein_updated_by) if item.pregatein_updated_by else '',
             'delete': delete_btn
         })

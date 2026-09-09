@@ -8,11 +8,9 @@
   table.report_details th { width: 30%; }
   table.report_details td { width: 70%; }
   hr.report_hrItem { border: 0; border-top: 1px solid #000; margin: 15px 0; }
-  .container-signatures { margin-top: 40px; overflow: hidden; }
-  .left-group { float: left; width: 260px; }
-  .center-group { clear: both; margin-top: 60px; text-align: center; font-weight: bold; }
-  img { max-height: 40px; border: 1px solid #000; }
-  .left-group div { margin-bottom: 20px; }
+  .container-signatures { margin-top: 5px; }
+  .center-group { margin-top: 60px; text-align: center; font-weight: bold; }
+  .sig-img { border: none; }
 </style>
 
 <!-- 1. Gate In Details -->
@@ -53,28 +51,30 @@
 <!-- 3. Signatures -->
 <hr class="report_hrItem"/>
 <div class="container-signatures">
-  <div class="left-group">
-    <div>
-      <strong>Driver Signature</strong><br>
-      {% if gatein.driver_signature_base64 %}
-        <img src="{{ gatein.driver_signature_base64 }}" alt="Driver Signature">
-      {% else %}
-        <span>No Signature</span>
-      {% endif %}
-    </div>
-    <div>
-      <strong>Supervisor Signature</strong><br>
-      {% if gatein.supervisor_signature_base64 %}
-        <img src="{{ gatein.supervisor_signature_base64 }}" alt="Supervisor Signature">
-      {% else %}
-        <span>No Signature</span>
-      {% endif %}
-    </div>
-  </div>
-</div>
-
-<!-- 4. Closing Message -->
-<div class="center-group">
-  <p>THANK YOU FOR YOUR BUSINESS!</p>
+  <table style="width: 100%; border: none;">
+    <tr>
+      <td style="width: 50%; text-align: left; padding-left: 50px; border: none; vertical-align: bottom;">
+        {% if gatein.driver_signature_base64 %}
+          <img src="{{ gatein.driver_signature_base64 }}" height="120" style="margin-bottom: 5px;"><br>
+        {% else %}
+          <span style="display:block; height:120px; line-height:120px;">No Signature</span><br>
+        {% endif %}
+        <strong>Driver Signature</strong>
+      </td>
+      <td style="width: 50%; text-align: left; padding-left: 50px; border: none; vertical-align: bottom;">
+        {% if gatein.supervisor_signature_base64 %}
+          <img src="{{ gatein.supervisor_signature_base64 }}" height="120" style="margin-bottom: 5px;"><br>
+        {% else %}
+          <span style="display:block; height:120px; line-height:120px;">No Signature</span><br>
+        {% endif %}
+        <strong>Supervisor Signature</strong>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="text-align: center; border: none; padding-top: 30px;">
+        <strong>THANK YOU FOR YOUR BUSINESS!</strong>
+      </td>
+    </tr>
+  </table>
 </div>
 {% endblock content %}

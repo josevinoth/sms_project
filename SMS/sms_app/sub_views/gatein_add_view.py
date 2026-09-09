@@ -1,3 +1,4 @@
+from django.utils import timezone
 from io import BytesIO
 from io import BytesIO
 from random import randint
@@ -351,10 +352,14 @@ def gatein_pdf(request, gatein_id=0, download=False):
     gatein.driver_signature_base64 = None
     if hasattr(gatein, "gatein_driver_signature") and gatein.gatein_driver_signature:
         gatein.driver_signature_base64 = get_base64_image(gatein.gatein_driver_signature)
+    elif gatein.gatein_truck_number_n and getattr(gatein.gatein_truck_number_n, "pregatein_driver_signature", None):
+        gatein.driver_signature_base64 = get_base64_image(gatein.gatein_truck_number_n.pregatein_driver_signature)
 
     gatein.supervisor_signature_base64 = None
     if hasattr(gatein, "gatein_supervisor_signature") and gatein.gatein_supervisor_signature:
         gatein.supervisor_signature_base64 = get_base64_image(gatein.gatein_supervisor_signature)
+    elif gatein.gatein_truck_number_n and getattr(gatein.gatein_truck_number_n, "pregatein_supervisor_signature", None):
+        gatein.supervisor_signature_base64 = get_base64_image(gatein.gatein_truck_number_n.pregatein_supervisor_signature)
 
     # Fetch warehouse goods info (matching by job number)
     warehouse_info = Warehouse_goods_info.objects.filter(
@@ -540,14 +545,14 @@ def gatein_list_ajax(request):
         data.append({
             'edit': edit_btn,
             'id': item.id,
-            'gatein_created_at': item.gatein_created_at.strftime('%Y-%m-%d %H:%M:%S') if item.gatein_created_at else '',
+            'gatein_created_at': timezone.localtime(item.gatein_created_at).strftime('%Y-%m-%d %H:%M:%S') if item.gatein_created_at else '',
             'gatein_pre_id': str(item.gatein_pre_id) if item.gatein_pre_id else 'None',
             'inward_pod': inward_pod,
             'gatepass': gatepass,
             'gatein_job_no': item.gatein_job_no or '',
             'gatein_invoice': item.gatein_invoice or '',
             'gatein_customer': str(item.gatein_customer) if item.gatein_customer else 'None',
-            'gatein_updated_at': item.gatein_updated_at.strftime('%Y-%m-%d %H:%M:%S') if item.gatein_updated_at else '',
+            'gatein_updated_at': timezone.localtime(item.gatein_updated_at).strftime('%Y-%m-%d %H:%M:%S') if item.gatein_updated_at else '',
             'gatein_updated_by': str(item.gatein_updated_by) if item.gatein_updated_by else 'None',
             'delete': delete_btn
         })

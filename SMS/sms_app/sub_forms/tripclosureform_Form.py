@@ -38,7 +38,7 @@ class TripclosureaddForm(forms.ModelForm):
             'tc_cancellation_check'
         ]
         vendor_check_fields = [
-            'tc_tripcost_vendor_check', 'tc_parkingcost_vendor_check', 'tc_tollcost_vendor_check',
+            'tc_parkingcost_vendor_check', 'tc_tollcost_vendor_check',
             'tc_loadingcost_vendor_check', 'tc_unloadingcost_vendor_check', 'tc_weighmentcost_vendor_check',
             'tc_supervisorcost_vendor_check', 'tc_handlingcost_vendor_check', 'tc_haltingcost_vendor_check',
             'tc_total_halting_cost_vendor_check', 'tc_rtocost_vendor_check', 'tc_betacost_vendor_check',

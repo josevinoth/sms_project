@@ -106,7 +106,7 @@
                                 {% render_field tripclosure_form.tc_tripcost id="tc_tripcost" readonly="readonly" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px; background-color: #e9ecef; pointer-events: none;" %}
                                 {% render_field tripclosure_form.tc_tripcost_check id="tc_tripcost_check" class="ml-2" style="width:16px; height:16px;" title="Bill to Customer" %}
                                 {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                {% render_field tripclosure_form.tc_tripcost_vendor_check id="tc_tripcost_vendor_check" class="ml-1" style="width:16px; height:16px; accent-color: #d97706;" title="Bill to Vendor" %}
+                                <span class="ml-1" style="width:16px; height:16px; display:inline-block;"></span>
                                 {% endif %}
                             </div>
                         </div>

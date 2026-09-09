@@ -119,9 +119,11 @@
             ajax: {
                 url: "{% url 'pregateintruck_list_ajax' %}",
                 type: "GET",
-                data: function(d) {
-                    d.pregatein_number = '{{ request.GET.pregatein_number|default:"" }}';
-                }
+                                  data: function(d) {
+                      d.pre_gate_in = '{{ request.GET.pre_gate_in|default:""|escapejs }}';
+                      d.truck_number = '{{ request.GET.truck_number|default:""|escapejs }}';
+                      d.driver_name = '{{ request.GET.driver_name|default:""|escapejs }}';
+                  }
             },
             columns: [
                 { data: 'edit', orderable: false, searchable: false },

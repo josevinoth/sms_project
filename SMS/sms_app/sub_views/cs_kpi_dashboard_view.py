@@ -15,6 +15,11 @@ from ..sub_models.user_ext_mod import User_extInfo
 from ..sub_models.location_info_mod import Location_info
 from ..sub_models.my_user_mod import MyUser
 from .general_utils import is_tms_manager
+from .trans_invoice_view import calculate_trip_invoice_total
+from .invoice_documents_view import get_enquiry_special_sell, get_enquiry_standard_sell
+from .tripclosure_add_view import get_allotment_sale_rate
+from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
+from collections import defaultdict
 
 CS_DEPARTMENT_ID = 4
 
@@ -157,13 +162,58 @@ def get_cs_kpi_dashboard_data(request):
     to_date = request.GET.get('to_date')
     branch_id = request.GET.get('branch_id')
 
-    # Custom Target Overrides from query params (if user changes targets)
-    cnote_target = int(request.GET.get('cnote_target', 30) or 30)
-    invoice_target_total = int(request.GET.get('invoice_target', 30) or 30)
-    pod_target_total = int(request.GET.get('pod_target', 30) or 30)
-    sow_target = int(request.GET.get('sow_target', 30) or 30)
-    appreciation_target = int(request.GET.get('appreciation_target', 1) or 1)
-    complaint_target = int(request.GET.get('complaint_target', 1) or 1)
+    # Determine the count of CS representatives for scaling targets
+    if employee_id and employee_id != 'all':
+        cs_count = 1
+    else:
+        if branch_id and branch_id != 'all':
+            cs_count = User_extInfo.objects.filter(
+                department_id=CS_DEPARTMENT_ID,
+                user__is_active=True,
+                emp_branch_id=branch_id
+            ).count()
+        else:
+            cs_count = User_extInfo.objects.filter(
+                department_id=CS_DEPARTMENT_ID,
+                user__is_active=True
+            ).count()
+        if cs_count == 0:
+            cs_count = 1
+
+    # Determine the count of working days in the selected date range
+    # (Matching BVM operational policy: except Sunday all are working days)
+    working_days_count = 1
+    if from_date and to_date:
+        try:
+            d_start = datetime.strptime(from_date, '%Y-%m-%d').date()
+            d_end = datetime.strptime(to_date, '%Y-%m-%d').date()
+            if d_start <= d_end:
+                w_count = 0
+                cur_d = d_start
+                while cur_d <= d_end:
+                    if cur_d.weekday() != 6:  # Exclude Sunday (6)
+                        w_count += 1
+                    cur_d += timedelta(days=1)
+                working_days_count = max(w_count, 1)
+        except Exception:
+            working_days_count = 1
+
+    # Base targets (per single CS representative per working day) scaled by CS count and working days
+    base_cnote_target = int(request.GET.get('cnote_target', 30) or 30)
+    base_invoice_target = int(request.GET.get('invoice_target', 30) or 30)
+    base_pod_target = int(request.GET.get('pod_target', 30) or 30)
+    base_sow_target = int(request.GET.get('sow_target', 30) or 30)
+    base_appreciation_target = int(request.GET.get('appreciation_target', 1) or 1)
+    base_complaint_target = int(request.GET.get('complaint_target', 1) or 1)
+
+    multiplier = cs_count * working_days_count
+
+    cnote_target = base_cnote_target * multiplier
+    invoice_target_total = base_invoice_target * multiplier
+    pod_target_total = base_pod_target * multiplier
+    sow_target = base_sow_target * multiplier
+    appreciation_target = base_appreciation_target * multiplier
+    complaint_target = base_complaint_target * multiplier
 
     # Base QuerySets
     enquiries_qs = EnquirynoteInfo.objects.all()
@@ -242,13 +292,40 @@ def get_cs_kpi_dashboard_data(request):
     # 8. Cancellation with Billing (tc_financestatus_id = 10)
     cancellation_with_billing = trips_qs.filter(tc_financestatus_id=10).count()
 
+    # Collect all invoiced IDs matching Invoice Pending Report logic
+    invoiced_trip_ids = list(TransInvoiceInfo.objects.filter(
+        ti_trip__isnull=False
+    ).values_list('ti_trip_id', flat=True))
+
+    invoiced_cons_ids = TransInvoiceInfo.objects.filter(
+        ti_consignment__isnull=False
+    ).values_list('ti_consignment_id', flat=True)
+
+    trips_from_cons = TripdetailInfo.objects.filter(
+        tr_consignmentnumber_id__in=invoiced_cons_ids
+    ).values_list('id', flat=True)
+
+    invoiced_goods_ids = TransInvoiceInfo.objects.filter(
+        ti_goods__isnull=False
+    ).values_list('ti_goods_id', flat=True)
+
+    cons_from_goods = ConsignmentgoodsInfo.objects.filter(
+        id__in=invoiced_goods_ids
+    ).values_list('cg_consignmentnumber_id', flat=True)
+
+    trips_from_goods = TripdetailInfo.objects.filter(
+        tr_consignmentnumber_id__in=cons_from_goods
+    ).values_list('id', flat=True)
+
+    all_invoiced_ids = set(invoiced_trip_ids) | set(trips_from_cons) | set(trips_from_goods)
+
     # 9. Ready For Invoice (tc_financestatus_id = 9 and not invoiced)
     ready_for_invoice = trips_qs.filter(
         tc_financestatus_id=9
-    ).exclude(transinvoiceinfo__isnull=False).count()
+    ).exclude(id__in=all_invoiced_ids).count()
 
-    # 10. Invoice Completed (Trips with TransInvoiceInfo)
-    invoiced_trips = trips_qs.filter(transinvoiceinfo__isnull=False).count()
+    # 10. Invoice Completed (Trips with TransInvoiceInfo or linked invoice)
+    invoiced_trips = trips_qs.filter(id__in=all_invoiced_ids).count()
 
     # Only return demo sample data if explicitly requested via query parameter ?is_sample=1
     is_sample_requested = (request.GET.get('is_sample') == '1')
@@ -381,6 +458,8 @@ def get_cs_kpi_dashboard_data(request):
             'pct': f"{cnote_pct}%",
             'code_color': cnote_code_color,
             'code_label': cnote_code_label,
+            'cs_count': cs_count,
+            'days_count': working_days_count,
             'is_header': False
         },
         {
@@ -395,6 +474,8 @@ def get_cs_kpi_dashboard_data(request):
             'sla_badge_text': sla_badge_text,
             'sla_badge_color': sla_badge_color,
             'sla_due_date': sla_due_date_str,
+            'cs_count': cs_count,
+            'days_count': working_days_count,
             'is_header': False
         },
         {
@@ -404,6 +485,8 @@ def get_cs_kpi_dashboard_data(request):
             'pct': f"{pod_pct}%",
             'code_color': pod_code_color,
             'code_label': pod_code_label,
+            'cs_count': cs_count,
+            'days_count': working_days_count,
             'is_header': False
         },
         {
@@ -413,6 +496,8 @@ def get_cs_kpi_dashboard_data(request):
             'pct': f"{sow_pct}%",
             'code_color': sow_code_color,
             'code_label': sow_code_label,
+            'cs_count': cs_count,
+            'days_count': working_days_count,
             'is_header': False
         },
         {
@@ -422,6 +507,8 @@ def get_cs_kpi_dashboard_data(request):
             'pct': f"{appreciation_pct}%",
             'code_color': appr_code_color,
             'code_label': appr_code_label,
+            'cs_count': cs_count,
+            'days_count': working_days_count,
             'is_header': False
         },
         {
@@ -431,6 +518,8 @@ def get_cs_kpi_dashboard_data(request):
             'pct': f"{complaints_pct}%",
             'code_color': comp_code_color,
             'code_label': comp_code_label,
+            'cs_count': cs_count,
+            'days_count': working_days_count,
             'is_header': False
         }
     ]
@@ -464,6 +553,182 @@ def get_cs_kpi_dashboard_data(request):
         'cnote_conv_pct': f"{cnote_conv_pct}%",
         'trip_start_pct': f"{trip_start_pct}%",
         'pod_comp_pct': f"{pod_comp_pct}%",
+    }
+
+    # 3. Revenue & Billing Calculation (Total Revenue, Total Value Billed, Value Unbilled)
+    # Value Unbilled is strictly calculated using the official Invoice Pending Report logic
+    # Total Value Billed fetches the total charges invoiced for the cohort C-Notes/trips
+    if is_sample_requested:
+        total_revenue = 450000.0
+        total_billed = 180000.0
+        total_unbilled = 270000.0
+    else:
+        def safe_num(val):
+            if val is None or val == '':
+                return 0.0
+            try:
+                return float(val)
+            except (ValueError, TypeError):
+                return 0.0
+
+        # Invoices map for billed trips / C-Notes
+        invoices_by_trip = dict(
+            TransInvoiceInfo.objects.filter(ti_trip__in=trips_qs)
+            .values_list('ti_trip_id', 'ti_total')
+        )
+        invoices_by_cons = dict(
+            TransInvoiceInfo.objects.filter(ti_consignment__in=cnotes_qs)
+            .exclude(ti_total=0).values_list('ti_consignment_id', 'ti_total')
+        )
+
+        total_billed = 0.0
+        for trip in trips_qs.filter(id__in=all_invoiced_ids):
+            inv_amt = invoices_by_trip.get(trip.id)
+            if inv_amt is None and trip.tr_consignmentnumber_id:
+                inv_amt = invoices_by_cons.get(trip.tr_consignmentnumber_id)
+
+            if inv_amt is not None and safe_num(inv_amt) > 0:
+                val = safe_num(inv_amt)
+            else:
+                val = calculate_trip_invoice_total(trip) or safe_num(trip.tc_tripcost)
+            total_billed += val
+
+        # Value Unbilled: Calculated inline using the SAME logic as Invoice Pending Report
+        # (no import from transport_reports_view needed - logic is self-contained here)
+        unbilled_trips_qs = trips_qs.exclude(id__in=all_invoiced_ids)
+
+        # Bulk-fetch allotments for unbilled trips
+        unbilled_enquiry_ids = set(unbilled_trips_qs.values_list('tr_enquirynumber_id', flat=True))
+        cnote_enquiry_ids = set(cnotes_qs.values_list('co_enquirynumber_id', flat=True))
+        all_enquiry_ids = unbilled_enquiry_ids | cnote_enquiry_ids
+
+        allotments_qs = Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber_id__in=all_enquiry_ids
+        ).select_related('va_vehicletype', 'va_vehicletype_placed', 'va_vehiclenumber')
+
+        allotment_map = defaultdict(list)
+        for a in allotments_qs:
+            allotment_map[a.va_enquirynumber_id].append(a)
+
+        total_unbilled = 0.0
+
+        for trip in unbilled_trips_qs:
+            # Resolve allotment for this trip
+            allotment = None
+            if trip.tr_enquirynumber_id in allotment_map:
+                al_list = allotment_map[trip.tr_enquirynumber_id]
+                if trip.tr_vehiclenumber:
+                    clean_veh = str(trip.tr_vehiclenumber).replace(' ', '').upper()
+                    for a in al_list:
+                        a_veh = ''
+                        if a.va_vehiclenumber:
+                            a_veh = str(a.va_vehiclenumber.vm_registrationnumber)
+                        elif a.va_vehiclenumber_mkt:
+                            a_veh = str(a.va_vehiclenumber_mkt)
+                        if a_veh.replace(' ', '').upper() == clean_veh:
+                            allotment = a
+                            break
+                    if not allotment and al_list:
+                        allotment = al_list[0]
+                elif al_list:
+                    allotment = al_list[0]
+
+            # Halting charge
+            halting_days = safe_num(trip.tc_no_of_days_halting)
+            if halting_days <= 0:
+                halting_days = 1.0
+            tc_tot_cost = safe_num(trip.tc_total_halting_cost)
+            tc_day_cost = safe_num(trip.tc_haltingcost)
+            tc_total_check = getattr(trip, 'tc_total_halting_cost_check', False)
+            tc_day_check = getattr(trip, 'tc_haltingcost_check', False)
+            if tc_total_check or tc_day_check:
+                if tc_tot_cost > 0:
+                    halting_val = tc_tot_cost
+                elif tc_day_cost > 0:
+                    halting_val = tc_day_cost * halting_days
+                else:
+                    halting_val = 0.0
+            else:
+                halting_val = 0.0
+
+            # Transport charge — same priority hierarchy as Invoice Pending Report
+            is_settled = trip.tc_financestatus_id in [7, 9]
+            is_special_sell_check = getattr(trip, 'tc_special_sell_check', False)
+            is_tripcost_check = getattr(trip, 'tc_tripcost_check', False)
+
+            if is_settled:
+                if is_special_sell_check:
+                    transport_val = safe_num(trip.tc_special_sell)
+                    if transport_val <= 0 and allotment and safe_num(allotment.va_special_sale) > 0:
+                        transport_val = safe_num(allotment.va_special_sale)
+                    if transport_val <= 0:
+                        transport_val = safe_num(get_enquiry_special_sell(trip))
+                elif is_tripcost_check:
+                    transport_val = safe_num(trip.tc_tripcost)
+                    if transport_val <= 0 and allotment and safe_num(allotment.va_sale) > 0:
+                        transport_val = safe_num(allotment.va_sale)
+                    if transport_val <= 0:
+                        transport_val = safe_num(get_enquiry_standard_sell(trip))
+                else:
+                    transport_val = 0.0
+            else:
+                if is_special_sell_check:
+                    transport_val = safe_num(trip.tc_special_sell)
+                    if transport_val <= 0 and allotment and safe_num(allotment.va_special_sale) > 0:
+                        transport_val = safe_num(allotment.va_special_sale)
+                    if transport_val <= 0:
+                        transport_val = safe_num(get_enquiry_special_sell(trip))
+                elif is_tripcost_check and safe_num(trip.tc_tripcost) > 0:
+                    transport_val = safe_num(trip.tc_tripcost)
+                else:
+                    if allotment and allotment.va_special_sale is not None and safe_num(allotment.va_special_sale) > 0:
+                        transport_val = safe_num(allotment.va_special_sale)
+                    elif allotment and allotment.va_sale is not None and safe_num(allotment.va_sale) > 0:
+                        transport_val = safe_num(allotment.va_sale)
+                    else:
+                        transport_val = safe_num(get_enquiry_special_sell(trip)) or safe_num(get_allotment_sale_rate(trip))
+
+            row_total = (
+                safe_num(transport_val) +
+                (safe_num(trip.tc_tollcost) if trip.tc_tollcost_check else 0) +
+                (safe_num(trip.tc_parkingcost) if trip.tc_parkingcost_check else 0) +
+                (safe_num(trip.tc_loadingcost) if trip.tc_loadingcost_check else 0) +
+                (safe_num(trip.tc_unloadingcost) if trip.tc_unloadingcost_check else 0) +
+                halting_val +
+                (safe_num(trip.tc_rtocost) if trip.tc_rtocost_check else 0) +
+                (safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0) +
+                (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0) +
+                (safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0)
+            )
+            if row_total <= 0:
+                row_total = safe_num(trip.tc_tripcost)
+            total_unbilled += row_total
+
+        # Include C-Notes without any trips (rate from allotment)
+        trips_cnote_ids = set(trips_qs.values_list('tr_consignmentnumber_id', flat=True))
+        cnotes_without_trip = cnotes_qs.exclude(id__in=trips_cnote_ids)
+        for cn in cnotes_without_trip:
+            al_list = allotment_map.get(cn.co_enquirynumber_id, [])
+            if al_list:
+                al = al_list[0]
+                rate = safe_num(al.va_special_sale) or safe_num(al.va_sale)
+                total_unbilled += rate
+
+        total_revenue = total_billed + total_unbilled
+
+
+    billed_share_pct = round((total_billed / total_revenue) * 100, 1) if total_revenue > 0 else 0.0
+    unbilled_share_pct = round((total_unbilled / total_revenue) * 100, 1) if total_revenue > 0 else 0.0
+
+    revenue_metrics = {
+        'total_revenue': round(total_revenue, 2),
+        'total_billed': round(total_billed, 2),
+        'value_unbilled': round(total_unbilled, 2),
+        'total_revenue_formatted': f"₹ {total_revenue:,.2f}",
+        'total_billed_formatted': f"₹ {total_billed:,.2f}",
+        'value_unbilled_formatted': f"₹ {total_unbilled:,.2f}",
+        'billed_share_pct': f"{billed_share_pct}%",
+        'unbilled_share_pct': f"{unbilled_share_pct}%",
     }
 
     # Monthly Calendar Map
@@ -549,6 +814,7 @@ def get_cs_kpi_dashboard_data(request):
         'status': 'success',
         'funnel': funnel_metrics,
         'kpi_rows': kpi_rows,
+        'revenue_metrics': revenue_metrics,
         'conversion': conversion_metrics,
         'calendar_data': calendar_map,
         'thresholds': {

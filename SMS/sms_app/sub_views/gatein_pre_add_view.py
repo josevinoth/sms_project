@@ -235,6 +235,9 @@ def pre_gatein_search(request):
         'branch_code': branch_code,
         'pending_count': pending_count,
         'total_count': total_count,
+        'pre_gate_in': pre_gate_in,
+        'truck_number': truck_number,
+        'driver_name': driver_name,
     }
 
     return render(request, "asset_mgt_app/gatein_pre_list.html", context)
