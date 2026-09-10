@@ -229,16 +229,22 @@
         box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
     }
 
-    /* TOP 4 KPI HIGHLIGHT CARDS */
+    /* TOP 5 KPI HIGHLIGHT CARDS */
     .cs-top-cards-row {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
         gap: 0.4rem;
         width: 100%;
         flex-shrink: 0;
     }
 
-    @media (max-width: 991px) {
+    @media (max-width: 1200px) {
+        .cs-top-cards-row {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
         .cs-top-cards-row {
             grid-template-columns: repeat(2, 1fr);
         }
@@ -281,6 +287,11 @@
     .card-bg-billing {
         background: linear-gradient(135deg, #0369a1 0%, #082f49 100%);
         border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .card-bg-revenue {
+        background: linear-gradient(135deg, #4c1d95 0%, #2e1065 100%);
+        border-color: rgba(168, 85, 247, 0.45);
     }
 
     .top-kpi-content {
@@ -539,19 +550,21 @@
         flex: 1;
         min-height: 0;
         overflow-y: auto;
-        gap: 6px;
-        padding: 4px;
+        gap: 8px;
+        padding: 6px;
     }
 
-    /* KPI Target Cards Grid & Semicircular Arc Gauges */
-    .kpi-panel-body {
+    .kpi-bottom-row {
         display: flex;
-        flex-direction: column;
+        gap: 8px;
         flex: 1;
         min-height: 0;
-        overflow-y: auto;
-        gap: 10px;
-        padding: 6px;
+    }
+
+    @media screen and (max-width: 991px) {
+        .kpi-bottom-row {
+            flex-direction: column;
+        }
     }
 
     .kpi-target-cards-grid {
@@ -1032,6 +1045,18 @@
             </div>
             <i class="fas fa-file-invoice-dollar top-kpi-icon"></i>
         </div>
+
+        <!-- Card 5: Total Revenue -->
+        <div class="top-kpi-card card-bg-revenue">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title"><i class="fas fa-coins" style="color:#c084fc;"></i> Total Revenue</span>
+                <div class="top-kpi-main-val">
+                    <span id="top-card-revenue" style="color:#f3e8ff; font-size:0.92rem;">₹ 0.00</span>
+                </div>
+                <div class="top-kpi-subtext">Billed: <strong id="top-card-billed-rate" style="color:#a7f3d0;">0.0%</strong> · Unbilled: <strong id="top-card-unbilled-rate" style="color:#fde68a;">0.0%</strong></div>
+            </div>
+            <i class="fas fa-rupee-sign top-kpi-icon"></i>
+        </div>
     </div>
 
     <!-- 3-Column Layout: Left (Lifecycle), Center (KPIs), Right (Interactive Calendar) -->
@@ -1211,25 +1236,50 @@
                     <!-- Populated dynamically via renderKpiTable() -->
                 </div>
 
-                <!-- Secondary Section: Display Metrics (Without Targets) -->
-                <div class="kpi-display-section">
-                    <div class="kpi-display-header">
-                        <span><i class="fas fa-clipboard-check text-info"></i> Additional Operational Tracking</span>
-                        <span style="font-size:0.63rem; opacity:0.75; text-transform:uppercase; letter-spacing:0.4px;">(Records & Documentation)</span>
+                <!-- Bottom Row: Additional Operational Tracking & Revenue & Billing Side-by-Side -->
+                <div class="kpi-bottom-row">
+                    <!-- Left: Additional Operational Tracking -->
+                    <div class="kpi-display-section" style="flex: 1.05;">
+                        <div class="kpi-display-header">
+                            <span><i class="fas fa-clipboard-check text-info"></i> Additional Operational Tracking</span>
+                            <span style="font-size:0.63rem; opacity:0.75; text-transform:uppercase; letter-spacing:0.4px;">(Records & Documentation)</span>
+                        </div>
+                        <div class="cs-table-wrap" style="flex:1;">
+                            <table class="cs-table kpi-display-table">
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th class="col-num" style="width: 85px;">Count / Log</th>
+                                        <th class="col-center" style="width: 90px;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="kpi-display-table-body">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="cs-table-wrap" style="flex:1;">
-                        <table class="cs-table kpi-display-table">
-                            <thead>
-                                <tr>
-                                    <th>Parameter</th>
-                                    <th class="col-num" style="width: 100px;">Count / Log</th>
-                                    <th class="col-center" style="width: 100px;">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="kpi-display-table-body">
-                                <!-- Populated dynamically -->
-                            </tbody>
-                        </table>
+
+                    <!-- Right: Revenue & Billing Tracking -->
+                    <div class="kpi-display-section" style="flex: 0.95;">
+                        <div class="kpi-display-header">
+                            <span><i class="fas fa-file-invoice-dollar text-warning"></i> Revenue & Billing</span>
+                            <span style="font-size:0.63rem; opacity:0.75; text-transform:uppercase; letter-spacing:0.4px;">(Financial Overview)</span>
+                        </div>
+                        <div class="cs-table-wrap" style="flex:1;">
+                            <table class="cs-table kpi-display-table">
+                                <thead>
+                                    <tr>
+                                        <th>Revenue Metric</th>
+                                        <th class="col-num" style="width: 110px;">Amount (₹)</th>
+                                        <th class="col-center" style="width: 95px;">Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="kpi-revenue-table-body">
+                                    <!-- Populated dynamically via renderKpiTable() -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1489,7 +1539,7 @@ $(document).ready(function() {
         updateDashboardData();
     });
 
-    function renderKpiTable(kpiRows) {
+    function renderKpiTable(kpiRows, revenueMetrics) {
         if (!kpiRows || kpiRows.length === 0) return;
 
         // Target KPIs are the first 3 items:
@@ -1550,7 +1600,7 @@ $(document).ready(function() {
             // Subtitle text extracting clean targets and achieved values
             let subtext = '';
             if (idx === 0) {
-                subtext = `<span>Target: <strong>30</strong></span><span>Done: <strong>${row.achieved}</strong></span>`;
+                subtext = `<span>Target: <strong>${row.target}</strong></span><span>Done: <strong>${row.achieved}</strong></span>`;
             } else if (idx === 1) {
                 let totalCnotes = row.cnotes_count !== undefined ? row.cnotes_count : (row.target || '0');
                 let aVal = row.achieved !== undefined ? row.achieved : '0';
@@ -1558,14 +1608,27 @@ $(document).ready(function() {
             } else if (idx === 2) {
                 let matchAchieved = row.achieved.match(/\((\d+)\)/);
                 let aVal = matchAchieved ? matchAchieved[1] : row.achieved;
-                subtext = `<span>Target: <strong>30</strong></span><span>Scanned: <strong>${aVal}</strong></span>`;
+                subtext = `<span>Target: <strong>${row.target}</strong></span><span>Scanned: <strong>${aVal}</strong></span>`;
             }
 
             let slaBadgeHtml = '';
             if (idx === 0) {
+                let badgeTitle = (row.days_count && row.days_count > 1) ? '⚡ Period Creation Target' : '⚡ Daily Creation Target';
+                let badgeSub = '';
+                if (row.days_count && row.days_count > 1) {
+                    if (row.cs_count && row.cs_count > 1) {
+                        badgeSub = `(${row.cs_count} Reps × ${row.days_count} Days × 30 = ${row.target})`;
+                    } else {
+                        badgeSub = `(${row.days_count} Working Days × 30 = ${row.target})`;
+                    }
+                } else {
+                    badgeSub = (row.cs_count && row.cs_count > 1)
+                        ? `(${row.cs_count} Reps × 30 = ${row.target})`
+                        : `(Target: ${row.target} C-Notes)`;
+                }
                 slaBadgeHtml = `
-                    <div class="kpi-sla-badge" style="background:rgba(56, 189, 248, 0.12); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.4);" title="Daily Creation Target">
-                        ⚡ Daily Creation Target<br><span style="font-size:0.63rem; opacity:0.9;">(Target: 30 C-Notes)</span>
+                    <div class="kpi-sla-badge" style="background:rgba(56, 189, 248, 0.12); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.4);" title="Creation Target">
+                        ${badgeTitle}<br><span style="font-size:0.63rem; opacity:0.9;">${badgeSub}</span>
                     </div>
                 `;
             } else if (idx === 1 && row.sla_badge_text) {
@@ -1577,9 +1640,22 @@ $(document).ready(function() {
                     </div>
                 `;
             } else if (idx === 2) {
+                let badgeTitle = (row.days_count && row.days_count > 1) ? '📑 Period Submission Target' : '📑 POD Submission Target';
+                let badgeSub = '';
+                if (row.days_count && row.days_count > 1) {
+                    if (row.cs_count && row.cs_count > 1) {
+                        badgeSub = `(${row.cs_count} Reps × ${row.days_count} Days × 30 = ${row.target})`;
+                    } else {
+                        badgeSub = `(${row.days_count} Working Days × 30 = ${row.target})`;
+                    }
+                } else {
+                    badgeSub = (row.cs_count && row.cs_count > 1)
+                        ? `(${row.cs_count} Reps × 30 = ${row.target})`
+                        : `(Target: ${row.target} PODs)`;
+                }
                 slaBadgeHtml = `
                     <div class="kpi-sla-badge" style="background:rgba(56, 189, 248, 0.12); color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.4);" title="POD Submission Target">
-                        📑 POD Submission Target<br><span style="font-size:0.63rem; opacity:0.9;">(Target: 30 PODs)</span>
+                        ${badgeTitle}<br><span style="font-size:0.63rem; opacity:0.9;">${badgeSub}</span>
                     </div>
                 `;
             }
@@ -1642,7 +1718,6 @@ $(document).ready(function() {
                     ? `<span class="status-pill pill-green"><i class="fas fa-check-circle"></i> Zero Claims</span>`
                     : `<span class="status-pill pill-red"><i class="fas fa-exclamation-triangle"></i> ${val} Claims</span>`;
             }
-
             displayHtml += `
                 <tr>
                     <td>
@@ -1657,6 +1732,48 @@ $(document).ready(function() {
             `;
         });
         $('#kpi-display-table-body').html(displayHtml);
+
+        // 3. Render Revenue & Billing Section
+        const rev = revenueMetrics || {};
+        const totalRevFormatted = rev.total_revenue_formatted || '₹ 0.00';
+        const totalBilledFormatted = rev.total_billed_formatted || '₹ 0.00';
+        const valueUnbilledFormatted = rev.value_unbilled_formatted || '₹ 0.00';
+        const billedSharePct = rev.billed_share_pct || '0.0%';
+        const unbilledSharePct = rev.unbilled_share_pct || '0.0%';
+
+        let revenueHtml = `
+            <tr>
+                <td>
+                    <div class="metric-name-wrap">
+                        <i class="fas fa-coins text-warning metric-icon"></i>
+                        <span style="font-weight:700; color:#f8fafc;">Total Revenue</span>
+                    </div>
+                </td>
+                <td class="col-num" style="font-weight:800; color:#38bdf8;">${totalRevFormatted}</td>
+                <td class="col-center"><span class="status-pill pill-blue"><i class="fas fa-chart-pie"></i> 100%</span></td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="metric-name-wrap">
+                        <i class="fas fa-file-invoice text-success metric-icon"></i>
+                        <span style="font-weight:600; color:#cbd5e1;">Total Value Billed</span>
+                    </div>
+                </td>
+                <td class="col-num" style="font-weight:800; color:#10b981;">${totalBilledFormatted}</td>
+                <td class="col-center"><span class="status-pill pill-green"><i class="fas fa-check-circle"></i> ${billedSharePct}</span></td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="metric-name-wrap">
+                        <i class="fas fa-hourglass-half text-danger metric-icon"></i>
+                        <span style="font-weight:600; color:#cbd5e1;">Value Unbilled</span>
+                    </div>
+                </td>
+                <td class="col-num" style="font-weight:800; color:#f59e0b;">${valueUnbilledFormatted}</td>
+                <td class="col-center"><span class="status-pill pill-orange"><i class="fas fa-clock"></i> ${unbilledSharePct}</span></td>
+            </tr>
+        `;
+        $('#kpi-revenue-table-body').html(revenueHtml);
     }
 
     function updateDashboardData() {
@@ -1698,7 +1815,7 @@ $(document).ready(function() {
                     $('#val-invoice-completed').text(f.invoice_completed);
                     $('#val-reconciliation-total').text(f.reconciliation_total);
 
-                    // Update Top 4 Highlight Cards
+                    // Update Top 5 Highlight Cards
                     $('#top-card-requested').text(f.veh_requested);
                     $('#top-card-allotted').text(f.veh_allotted);
                     $('#top-card-cnotes').text(f.cnotes_created);
@@ -1707,6 +1824,12 @@ $(document).ready(function() {
                     $('#top-card-ready').text(f.ready_for_invoice);
                     $('#top-card-pod').text(f.pod_scanned || 0);
 
+                    if (res.revenue_metrics) {
+                        $('#top-card-revenue').text(res.revenue_metrics.total_revenue_formatted || '₹ 0.00');
+                        $('#top-card-billed-rate').text(res.revenue_metrics.billed_share_pct || '0.0%');
+                        $('#top-card-unbilled-rate').text(res.revenue_metrics.unbilled_share_pct || '0.0%');
+                    }
+
                     if (res.conversion) {
                         $('#top-card-allot-rate').text(res.conversion.allotment_pct);
                         $('#top-card-cnote-rate').text(res.conversion.cnote_conv_pct);
@@ -1714,8 +1837,8 @@ $(document).ready(function() {
                         $('#top-card-pod-rate').text(res.conversion.pod_comp_pct);
                     }
 
-                    // Render KPI table
-                    renderKpiTable(res.kpi_rows);
+                    // Render KPI table and Revenue & Billing table
+                    renderKpiTable(res.kpi_rows, res.revenue_metrics);
 
                     // Update calendar map and re-render
                     if (res.calendar_data) {

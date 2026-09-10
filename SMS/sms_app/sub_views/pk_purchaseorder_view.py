@@ -437,6 +437,27 @@ def pk_create_batch_job(request):
         # If user did not pass override flag, warn user and offer Partcode change option
         allow_stock_override = data.get('allow_stock_override', False)
         if insufficient_stock_items and not allow_stock_override:
+            # Trigger email notification to Stock Team
+            try:
+                from .send_department_email import send_department_email
+                subject = f"STOCK SHORTFALL ALERT - Sales Order #{po.po_num or po.id}"
+                body = f"<h3>Stock Shortfall Alert for Sales Order #{po.po_num or po.id}</h3>"
+                body += f"<p>Customer: <b>{po.po_customer_name or po.po_customer_new_name}</b></p>"
+                body += "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse:collapse;'>"
+                body += "tr style='background:#f2f2f2;'><th>Item</th><th>Part Code</th><th>Description</th><th>Needed Qty</th><th>Avail Qty</th><th>Shortfall</th></tr>"
+                for item in insufficient_stock_items:
+                    body += f"<tr><td>{item['item_name']}</td><td><b>{item['part_code']}</b></td><td>{item['description']}</td><td>{item['needed_qty']}</td><td style='color:red;'>{item['available_qty']}</td><td style='color:red;'><b>-{item['shortfall']}</b></td></tr>"
+                body += "</table>"
+                body += "<p>Please restock or advise alternative materials.</p>"
+                
+                # Send email to Stock Department recipient list if configured
+                from django.conf import settings
+                stock_recipients = getattr(settings, 'STOCK_TEAM_EMAILS', [])
+                if stock_recipients:
+                    send_department_email('STOCK', subject, body, stock_recipients, email_type=1)
+            except Exception as mail_err:
+                print(f"Stock Team notification email error: {mail_err}")
+
             return JsonResponse({
                 'success': False,
                 'stock_alert': True,

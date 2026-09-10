@@ -71,10 +71,16 @@
 
     #tripsTable td input[type="number"][readonly] {
         background-color: var(--bg-page) !important;
-        border-style: dashed !important;
-        border-color: var(--border-light) !important;
+        border: 1px solid var(--border-light) !important;
         color: var(--text-muted) !important;
-        cursor: not-allowed;
+        cursor: not-allowed !important;
+    }
+
+    #tripsTable td input[type="number"][readonly]:focus {
+        background-color: var(--bg-page) !important;
+        border-color: var(--border-light) !important;
+        outline: none !important;
+        box-shadow: none !important;
     }
 
     /* Soft warnings for rows where standard cost differs from special cost */
@@ -91,6 +97,19 @@
     .market-bill-modern [style*="display: none"],
     .market-bill-modern [style*="display:none"] {
         display: none !important;
+    }
+
+    /* Style placeholders in trips table */
+    #tripsTable td input::placeholder {
+        color: #94a3b8 !important;
+        opacity: 0.85 !important;
+        font-weight: 500 !important;
+    }
+
+    /* Red highlight when required cost field is missing */
+    #tripsTable td input.is-invalid {
+        border: 2px solid #ef4444 !important;
+        background-color: #fef2f2 !important;
     }
 </style>
 
@@ -256,6 +275,7 @@
                 </div>
 
                 <!-- Control row -->
+                {% if not record.id %}
                 <div class="d-flex justify-content-between align-items-center flex-wrap mb-4" style="gap: 16px;">
                     
                     <div class="d-flex align-items-center" style="gap: 14px;">
@@ -268,7 +288,6 @@
                     </div>
 
                     <!-- Date Filter -->
-                    {% if not record.id %}
                     <div class="d-flex align-items-center flex-wrap" style="gap: 16px;">
                         <div class="d-flex align-items-center" style="gap: 8px;">
                             <label class="mb-0 form-label-modern" style="font-size: 0.72rem;">From</label>
@@ -282,16 +301,22 @@
                             Clear
                         </button>
                     </div>
-                    {% endif %}
 
                 </div>
+                {% endif %}
 
                 <!-- Table Container -->
                 <div class="table-container-modern p-1">
                     <table class="table modern-table" id="tripsTable">
                         <thead>
                             <tr>
-                                <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllTrips"></th>
+                                <th style="width: 40px; text-align: center;">
+                                    {% if not record.id %}
+                                    <input type="checkbox" id="selectAllTrips">
+                                    {% else %}
+                                    <i class="fas fa-check-circle text-success" title="Included in Bill"></i>
+                                    {% endif %}
+                                </th>
                                 <th>Cnote</th>
                                 <th>Vehicle No</th>
                                 <th>Veh Type</th>
@@ -310,8 +335,6 @@
                             </tr>
                         </thead>
                         <tbody id="tripsTableBody">
-                            {% if record.id %}
-                            <!-- EDIT Mode: Pre-populate with saved trips -->
                             {% if selected_trips_data %}
                             {% for trip in selected_trips_data %}
                             <tr class="added-row {% if trip.special_cost != trip.standard_cost %}text-danger{% endif %}">
@@ -323,7 +346,11 @@
                                         data-parking="{{ trip.parking_cost }}"
                                         data-halting-days="{{ trip.halting_days }}"
                                         data-halting-cost="{{ trip.halting_cost }}"
-                                        data-halting-rate="{{ trip.halting_rate }}">
+                                        data-halting-rate="{{ trip.halting_rate }}"
+                                        {% if record.id %}checked="checked" disabled="disabled" style="display: none;"{% endif %}>
+                                    {% if record.id %}
+                                    <i class="fas fa-check text-success"></i>
+                                    {% endif %}
                                 </td>
                                 <td>{{ trip.display_cnote }}</td>
                                 <td>{{ trip.vehicle_number }}</td>
@@ -336,42 +363,52 @@
                                     <input type="number" name="trip_cost_{{ trip.id }}"
                                         class="form-control trip-cost-input {% if trip.tc_tripcost_vendor_check %}vendor-highlighted{% endif %}"
                                         value="{{ trip.special_cost|default:0 }}" min="0" step="0.01"
-                                        readonly="readonly"
+                                        readonly="readonly" {% if record.id %}tabindex="-1"{% endif %}
                                         {% if trip.tc_tripcost_vendor_check %}title="📌 Billable to Vendor: Marked in Trip Closure"{% endif %}
                                         style="width: 100px;">
                                 </td>
                                 <td>
                                     <input type="number" name="loading_cost_{{ trip.id }}"
                                         class="form-control loading-cost-input {% if trip.tc_loadingcost_vendor_check %}vendor-highlighted{% endif %}"
-                                        value="{{ trip.loading_cost|default:0 }}" min="0" step="0.01"
+                                        value="{{ trip.loading_cost }}" placeholder="{{ trip.closure_loading_cost|floatformat:2 }}"
+                                        data-closure="{{ trip.closure_loading_cost|default:0 }}" min="0" step="0.01"
+                                        {% if record.id %}readonly="readonly" tabindex="-1"{% endif %}
                                         {% if trip.tc_loadingcost_vendor_check %}title="📌 Billable to Vendor: Marked in Trip Closure"{% endif %}
-                                        style="width: 80px;">
+                                        style="width: 85px;">
                                 </td>
                                 <td>
                                     <input type="number" name="unloading_cost_{{ trip.id }}"
                                         class="form-control unloading-cost-input {% if trip.tc_unloadingcost_vendor_check %}vendor-highlighted{% endif %}"
-                                        value="{{ trip.unloading_cost|default:0 }}" min="0" step="0.01"
+                                        value="{{ trip.unloading_cost }}" placeholder="{{ trip.closure_unloading_cost|floatformat:2 }}"
+                                        data-closure="{{ trip.closure_unloading_cost|default:0 }}" min="0" step="0.01"
+                                        {% if record.id %}readonly="readonly" tabindex="-1"{% endif %}
                                         {% if trip.tc_unloadingcost_vendor_check %}title="📌 Billable to Vendor: Marked in Trip Closure"{% endif %}
-                                        style="width: 80px;">
+                                        style="width: 85px;">
                                 </td>
                                 <td>
                                     <input type="number" name="parking_cost_{{ trip.id }}"
                                         class="form-control parking-cost-input {% if trip.tc_parkingcost_vendor_check %}vendor-highlighted{% endif %}"
-                                        value="{{ trip.parking_cost|default:0 }}" min="0" step="0.01"
+                                        value="{{ trip.parking_cost }}" placeholder="{{ trip.closure_parking_cost|floatformat:2 }}"
+                                        data-closure="{{ trip.closure_parking_cost|default:0 }}" min="0" step="0.01"
+                                        {% if record.id %}readonly="readonly" tabindex="-1"{% endif %}
                                         {% if trip.tc_parkingcost_vendor_check %}title="📌 Billable to Vendor: Marked in Trip Closure"{% endif %}
-                                        style="width: 80px;">
+                                        style="width: 85px;">
                                 </td>
                                 <td>
                                     <input type="number" name="halting_days_{{ trip.id }}"
                                         class="form-control halting-days-input {% if trip.tc_haltingcost_vendor_check %}vendor-highlighted{% endif %}"
-                                        value="{{ trip.halting_days }}" min="0"
+                                        value="{{ trip.halting_days }}" placeholder="{{ trip.closure_halting_days }}"
+                                        data-closure="{{ trip.closure_halting_days|default:0 }}" min="0"
+                                        {% if record.id %}readonly="readonly" tabindex="-1"{% endif %}
                                         {% if trip.tc_haltingcost_vendor_check %}title="📌 Billable to Vendor: Marked in Trip Closure"{% endif %}
                                         style="width: 70px;">
                                 </td>
                                 <td>
                                     <input type="number" name="halting_cost_{{ trip.id }}"
                                         class="form-control halting-cost-input {% if trip.tc_haltingcost_vendor_check %}vendor-highlighted{% endif %}"
-                                        value="{{ trip.halting_cost|default:0 }}" min="0" step="0.01"
+                                        value="{{ trip.halting_cost }}" placeholder="{{ trip.closure_halting_cost|floatformat:2 }}"
+                                        data-closure="{{ trip.closure_halting_cost|default:0 }}" min="0" step="0.01"
+                                        {% if record.id %}readonly="readonly" tabindex="-1"{% endif %}
                                         {% if trip.tc_haltingcost_vendor_check %}title="📌 Billable to Vendor: Marked in Trip Closure"{% endif %}
                                         style="width: 100px;">
                                 </td>
@@ -400,13 +437,7 @@
                             {% endfor %}
                             {% else %}
                             <tr>
-                                <td colspan="16" class="text-center text-muted">No trips found in this bill</td>
-                            </tr>
-                            {% endif %}
-                            {% else %}
-                            <!-- ADD Mode: Initial empty state -->
-                            <tr>
-                                <td colspan="16" class="text-center text-muted">Select a vendor to view trips</td>
+                                <td colspan="16" class="text-center text-muted">{% if record.id %}No trips found in this bill{% else %}Select a vendor to view trips{% endif %}</td>
                             </tr>
                             {% endif %}
                         </tbody>
@@ -436,6 +467,15 @@
 <script>
     // Store selected trip IDs
     let selectedTripIds = new Set();
+    let isFormSubmitting = false;
+
+    // Warn user before leaving or refreshing page if trips have been added
+    window.addEventListener('beforeunload', function (e) {
+        if (!isFormSubmitting && selectedTripIds && selectedTripIds.size > 0) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
 
     // Check if we are in EDIT mode using a safe method
     const isEditMode = document.getElementById("marketBillForm").dataset.isEdit === "true";
@@ -467,17 +507,24 @@
         const processRow = function (row) {
             const cb = row.querySelector("input[data-id]");
             const daysInput = row.querySelector(".halting-days-input");
-            const days = parseInt(daysInput?.value) || 0;
+            const daysVal = daysInput ? daysInput.value.trim() : "";
+            const days = daysVal !== "" ? (parseInt(daysVal) || 0) : 0;
 
             const haltingInput = row.querySelector(".halting-cost-input");
-            const haltingCost = parseFloat(haltingInput?.value) || 0;
+            const haltingVal = haltingInput ? haltingInput.value.trim() : "";
+            const haltingCost = haltingVal !== "" ? (parseFloat(haltingVal) || 0) : 0;
 
             const loadingInput = row.querySelector(".loading-cost-input");
-            const loadingCost = parseFloat(loadingInput?.value) || 0;
+            const loadingVal = loadingInput ? loadingInput.value.trim() : "";
+            const loadingCost = loadingVal !== "" ? (parseFloat(loadingVal) || 0) : 0;
+
             const unloadingInput = row.querySelector(".unloading-cost-input");
-            const unloadingCost = parseFloat(unloadingInput?.value) || 0;
+            const unloadingVal = unloadingInput ? unloadingInput.value.trim() : "";
+            const unloadingCost = unloadingVal !== "" ? (parseFloat(unloadingVal) || 0) : 0;
+
             const parkingInput = row.querySelector(".parking-cost-input");
-            const parkingCost = parseFloat(parkingInput?.value) || 0;
+            const parkingVal = parkingInput ? parkingInput.value.trim() : "";
+            const parkingCost = parkingVal !== "" ? (parseFloat(parkingVal) || 0) : 0;
 
             const tripInput = row.querySelector(".trip-cost-input");
             const special = parseFloat(tripInput?.value) || 0;
@@ -519,26 +566,27 @@
         document.getElementById("mb_selected_trips").value = Array.from(selectedTripIds).join(",");
     }
 
-    // Handle inputs change
-    document.addEventListener("change", function (e) {
-        if (e.target.classList.contains("halting-days-input")) {
-            const row = e.target.closest("tr");
-            const cb = row.querySelector("input[data-id]");
-            const rate = parseFloat(cb.dataset.haltingRate) || 0;
-            const days = parseInt(e.target.value) || 0;
-            const haltingInput = row.querySelector(".halting-cost-input");
-            if (haltingInput) {
-                haltingInput.value = (rate * days).toFixed(2);
+    // Handle inputs change & real-time input
+    function handleCostInputChange(e) {
+        if (e.target.classList.contains("loading-cost-input") ||
+            e.target.classList.contains("unloading-cost-input") ||
+            e.target.classList.contains("parking-cost-input") ||
+            e.target.classList.contains("halting-days-input") ||
+            e.target.classList.contains("halting-cost-input")) {
+            const closureVal = parseFloat(e.target.getAttribute('data-closure') || 0);
+            if (e.target.value.trim() !== "" || closureVal === 0) {
+                e.target.classList.remove("is-invalid");
+                e.target.style.removeProperty("border");
+                e.target.style.removeProperty("background-color");
             }
             updateTotals();
-        } else if (e.target.classList.contains("halting-cost-input") ||
-            e.target.classList.contains("parking-cost-input") ||
-            e.target.classList.contains("loading-cost-input") ||
-            e.target.classList.contains("trip-cost-input") ||
-            e.target.classList.contains("unloading-cost-input")) {
+        } else if (e.target.classList.contains("trip-cost-input")) {
             updateTotals();
         }
-    });
+    }
+
+    document.addEventListener("change", handleCostInputChange);
+    document.addEventListener("input", handleCostInputChange);
 
     // Function to calculate TDS Amount and Payable Amount
     function updateTdsAndPayable() {
@@ -689,6 +737,7 @@
 
     // ========== VENDOR CHANGE: LOAD TRIPS ==========
     $('#mb_vendor').on("change", function () {
+        if (isEditMode) return;
 
         const vendorId = this.value;
         const tbody = document.getElementById("tripsTableBody");
@@ -775,30 +824,30 @@
                     </td>
                     <td>
                         <input type="number" name="loading_cost_${trip.id}" class="form-control loading-cost-input ${trip.tc_loadingcost_vendor_check ? 'vendor-highlighted' : ''}" 
-                            value="${trip.loading_cost.toFixed(2)}" min="0" step="0.01"
-                            ${trip.tc_loadingcost_vendor_check ? 'title="📌 Billable to Vendor: Marked in Trip Closure"' : ''} style="width: 80px;">
+                            value="" placeholder="${trip.loading_cost.toFixed(2)}" data-closure="${trip.loading_cost}" min="0" step="0.01"
+                            ${trip.tc_loadingcost_vendor_check ? 'title="📌 Billable to Vendor: Marked in Trip Closure"' : ''} style="width: 85px;">
                     </td>
                     <td>
                         <input type="number" name="unloading_cost_${trip.id}" class="form-control unloading-cost-input ${trip.tc_unloadingcost_vendor_check ? 'vendor-highlighted' : ''}" 
-                            value="${trip.unloading_cost.toFixed(2)}" min="0" step="0.01"
-                            ${trip.tc_unloadingcost_vendor_check ? 'title="📌 Billable to Vendor: Marked in Trip Closure"' : ''} style="width: 80px;">
+                            value="" placeholder="${trip.unloading_cost.toFixed(2)}" data-closure="${trip.unloading_cost}" min="0" step="0.01"
+                            ${trip.tc_unloadingcost_vendor_check ? 'title="📌 Billable to Vendor: Marked in Trip Closure"' : ''} style="width: 85px;">
                     </td>
                     <td>
                         <input type="number" name="parking_cost_${trip.id}" class="form-control parking-cost-input ${trip.tc_parkingcost_vendor_check ? 'vendor-highlighted' : ''}" 
-                            value="${trip.parking_cost.toFixed(2)}" min="0" step="0.01"
-                            ${trip.tc_parkingcost_vendor_check ? 'title="📌 Billable to Vendor: Marked in Trip Closure"' : ''} style="width: 80px;">
+                            value="" placeholder="${trip.parking_cost.toFixed(2)}" data-closure="${trip.parking_cost}" min="0" step="0.01"
+                            ${trip.tc_parkingcost_vendor_check ? 'title="📌 Billable to Vendor: Marked in Trip Closure"' : ''} style="width: 85px;">
                     </td>
                     <td>
                         <input type="number" name="halting_days_${trip.id}" class="form-control halting-days-input ${trip.tc_haltingcost_vendor_check ? 'vendor-highlighted' : ''}" 
-                            value="${trip.halting_days}" min="0"
+                            value="" placeholder="${trip.halting_days}" data-closure="${trip.halting_days}" min="0"
                             ${trip.tc_haltingcost_vendor_check ? 'title="📌 Billable to Vendor: Marked in Trip Closure"' : ''} style="width: 70px;">
                     </td>
                     <td>
                         <input type="number" name="halting_cost_${trip.id}" class="form-control halting-cost-input ${trip.tc_haltingcost_vendor_check ? 'vendor-highlighted' : ''}" 
-                            value="${trip.halting_cost.toFixed(2)}" min="0" step="0.01"
+                            value="" placeholder="${trip.halting_cost.toFixed(2)}" data-closure="${trip.halting_cost}" min="0" step="0.01"
                             ${trip.tc_haltingcost_vendor_check ? 'title="📌 Billable to Vendor: Marked in Trip Closure"' : ''} style="width: 100px;">
                     </td>
-                    <td class="row-total-cost-cell">${(trip.special_cost + trip.loading_cost + trip.unloading_cost + trip.parking_cost + trip.halting_cost).toFixed(2)}</td>
+                    <td class="row-total-cost-cell">${trip.special_cost.toFixed(2)}</td>
                     <td class="text-center">
                         ${trip.special_cost !== trip.standard_cost ? `
                             <div class="d-flex flex-column align-items-center justify-content-center" style="gap: 4px;">
@@ -832,8 +881,13 @@
             });
     });
 
+    // In ADD mode: If vendor was already selected on page load and no trips are pre-rendered, reload trips
+    if (!isEditMode && $('#mb_vendor').val() && selectedTripIds.size === 0) {
+        $('#mb_vendor').trigger('change');
+    }
+
     // ========== SELECT ALL CHECKBOX ==========
-    document.getElementById("selectAllTrips").addEventListener("change", function () {
+    document.getElementById("selectAllTrips")?.addEventListener("change", function () {
         if (tripsDataTable) {
             tripsDataTable.$(".trip-checkbox").prop('checked', this.checked);
         } else {
@@ -876,7 +930,8 @@
             }
 
             updateTotals();
-            document.getElementById("selectAllTrips").checked = false;
+            const satEl = document.getElementById("selectAllTrips");
+            if (satEl) satEl.checked = false;
         });
     }
 
@@ -913,12 +968,130 @@
             }
 
             updateTotals();
-            document.getElementById("selectAllTrips").checked = false;
+            const satEl = document.getElementById("selectAllTrips");
+            if (satEl) satEl.checked = false;
         });
     }
 
-    // Intercept form submission to include inputs from paged-out rows in the DataTable
+    // Intercept form submission to validate required charges and include inputs from paged-out rows in the DataTable
     document.getElementById("marketBillForm").addEventListener("submit", function (e) {
+        // If no trips are selected yet, check if any checkboxes are currently checked
+        if (selectedTripIds.size === 0) {
+            let checkedCbs;
+            if (tripsDataTable) {
+                checkedCbs = tripsDataTable.$(".trip-checkbox:checked");
+            } else {
+                checkedCbs = document.querySelectorAll(".trip-checkbox:checked");
+            }
+            if (checkedCbs && checkedCbs.length > 0) {
+                const processAutoAdd = function (cb) {
+                    const tripId = cb.dataset ? cb.dataset.id : cb.getAttribute('data-id');
+                    if (tripId && !selectedTripIds.has(tripId)) {
+                        selectedTripIds.add(tripId);
+                        const row = cb.closest("tr");
+                        if (row) row.classList.add("added-row");
+                        cb.style.display = 'none';
+                        cb.checked = false;
+                    }
+                };
+                if (checkedCbs.each) {
+                    checkedCbs.each(function () { processAutoAdd(this); });
+                } else {
+                    checkedCbs.forEach(processAutoAdd);
+                }
+                updateTotals();
+            }
+        }
+
+        if (selectedTripIds.size === 0) {
+            e.preventDefault();
+            alert("Please select and add at least one trip to the Market Bill before submitting.");
+            return false;
+        }
+
+        // Validate that Loading, Unloading, Parking charges, Halting Days, and Halting Cost are explicitly entered for all selected trips
+        let missingInputs = [];
+        let firstInvalidInput = null;
+
+        selectedTripIds.forEach(tripId => {
+            let lInput, uInput, pInput, hInput, hcInput;
+            if (tripsDataTable) {
+                const lMatches = tripsDataTable.$('input[name="loading_cost_' + tripId + '"]');
+                const uMatches = tripsDataTable.$('input[name="unloading_cost_' + tripId + '"]');
+                const pMatches = tripsDataTable.$('input[name="parking_cost_' + tripId + '"]');
+                const hMatches = tripsDataTable.$('input[name="halting_days_' + tripId + '"]');
+                const hcMatches = tripsDataTable.$('input[name="halting_cost_' + tripId + '"]');
+                lInput = lMatches.length ? lMatches[0] : null;
+                uInput = uMatches.length ? uMatches[0] : null;
+                pInput = pMatches.length ? pMatches[0] : null;
+                hInput = hMatches.length ? hMatches[0] : null;
+                hcInput = hcMatches.length ? hcMatches[0] : null;
+            } else {
+                lInput = document.querySelector('input[name="loading_cost_' + tripId + '"]');
+                uInput = document.querySelector('input[name="unloading_cost_' + tripId + '"]');
+                pInput = document.querySelector('input[name="parking_cost_' + tripId + '"]');
+                hInput = document.querySelector('input[name="halting_days_' + tripId + '"]');
+                hcInput = document.querySelector('input[name="halting_cost_' + tripId + '"]');
+            }
+
+            [lInput, uInput, pInput, hInput, hcInput].forEach(inp => {
+                if (inp) {
+                    const closureVal = parseFloat(inp.getAttribute('data-closure') || 0);
+                    const val = inp.value.trim();
+                    const isMissing = (closureVal > 0 && val === "") || (val !== "" && isNaN(parseFloat(val)));
+                    if (isMissing) {
+                        missingInputs.push(inp);
+                        inp.classList.add("is-invalid");
+                        inp.style.setProperty("border", "2px solid #ef4444", "important");
+                        inp.style.setProperty("background-color", "#fef2f2", "important");
+                        if (!firstInvalidInput) {
+                            firstInvalidInput = inp;
+                        }
+                    } else {
+                        inp.classList.remove("is-invalid");
+                        inp.style.removeProperty("border");
+                        inp.style.removeProperty("background-color");
+                    }
+                }
+            });
+        });
+
+        if (missingInputs.length > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            alert("Please enter values for the highlighted charges that have amounts recorded in Trip Closure (enter 0 if none/disputed).");
+
+            if (firstInvalidInput) {
+                if (tripsDataTable) {
+                    const row = $(firstInvalidInput).closest('tr');
+                    if (row.length) {
+                        try {
+                            const rowIdx = tripsDataTable.row(row).index();
+                            if (rowIdx !== undefined && rowIdx !== null) {
+                                const pageLen = tripsDataTable.page.len() || 10;
+                                const page = Math.floor(rowIdx / pageLen);
+                                tripsDataTable.page(page).draw(false);
+                            }
+                        } catch (err) {
+                            console.warn("Could not jump to row page:", err);
+                        }
+                    }
+                }
+                setTimeout(function () {
+                    try {
+                        firstInvalidInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstInvalidInput.focus();
+                    } catch (e) {
+                        firstInvalidInput.focus();
+                    }
+                }, 150);
+            }
+            return false;
+        }
+
+        isFormSubmitting = true;
+
         // Disable submit button to prevent double-click submissions
         const submitBtn = this.querySelector('button[type="submit"]');
         if (submitBtn) {
