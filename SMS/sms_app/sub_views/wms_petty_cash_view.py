@@ -1,4 +1,4 @@
-﻿from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
@@ -10,9 +10,10 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from ..sub_models.wms_petty_cash_mod import WMSPettyCashInfo
 from ..sub_models.gatein_mod import Gatein_info
 from ..sub_models.credit_ledger_mod import CreditLedgerInfo
-from ..models import Business_Sol_info, Location_info, ExpenseCategoryInfo, iou_info, CustomerInfo
+from ..models import Business_Sol_info, Location_info, ExpenseCategoryInfo, iou_info, CustomerInfo, Warehouse_goods_info, UnitInfo
 from ..sub_forms.wms_petty_cash_form import WMSPettyCashForm
 from .general_utils import get_financial_year, get_session_branch_id
+
 
 def generate_wms_petty_cash_number(model_class, field_name, branch_obj=None):
     """
@@ -221,28 +222,146 @@ def wms_petty_cash_delete(request, wpc_id):
     return redirect('wms_petty_cash_list')
 
 
+def get_wms_customers_by_unit(request):
+    """
+    Fetch distinct customers for the selected Unit from Warehouse_goods_info.
+    If unit is empty or has no specific customers, return all active storage customers.
+    """
+    unit_name = request.GET.get('unit', '').strip()
+    customers_data = []
+
+    if unit_name:
+        cust_ids = Warehouse_goods_info.objects.filter(
+            wh_unit__unit_name__iexact=unit_name,
+            wh_customer_name__isnull=False
+        ).values_list('wh_customer_name_id', flat=True).distinct()
+
+        if cust_ids:
+            customers = CustomerInfo.objects.filter(id__in=cust_ids).order_by('cu_name')
+            customers_data = [{'id': c.id, 'name': c.cu_name} for c in customers]
+
+    # If no customers found specifically for unit, fallback to all storage customers
+    if not customers_data:
+        customers = CustomerInfo.objects.filter(cu_business_sol__bvm_business__icontains='Storage').order_by('cu_name')
+        if not customers.exists():
+            customers = CustomerInfo.objects.all().order_by('cu_name')
+        customers_data = [{'id': c.id, 'name': c.cu_name} for c in customers]
+
+    return JsonResponse({'status': 'success', 'customers': customers_data})
+
+
+def get_wms_jobs_by_customer(request):
+    """
+    Fetch distinct Job Numbers for the selected Unit and Customer from Warehouse_goods_info and Gatein_info.
+    """
+    unit_name = request.GET.get('unit', '').strip()
+    customer_id = request.GET.get('customer_id', '').strip()
+
+    if not customer_id:
+        return JsonResponse({'status': 'success', 'jobs': []})
+
+    filters = Q(wh_customer_name_id=customer_id)
+    if unit_name:
+        filters &= Q(wh_unit__unit_name__iexact=unit_name)
+
+    jobs = list(
+        Warehouse_goods_info.objects.filter(filters)
+        .exclude(wh_job_no__isnull=True)
+        .exclude(wh_job_no__exact='')
+        .values_list('wh_job_no', flat=True)
+        .distinct()
+        .order_by('-wh_job_no')[:200]
+    )
+
+    # Fallback to Gatein_info if no jobs in Warehouse_goods_info
+    if not jobs:
+        jobs = list(
+            Gatein_info.objects.filter(gatein_customer_id=customer_id)
+            .exclude(gatein_job_no__isnull=True)
+            .exclude(gatein_job_no__exact='')
+            .values_list('gatein_job_no', flat=True)
+            .distinct()
+            .order_by('-gatein_job_no')[:200]
+        )
+
+    return JsonResponse({'status': 'success', 'jobs': jobs})
+
+
 def get_wms_job_details(request):
     """
-    AJAX endpoint to fetch customer and business model from Job Number (Gatein_info)
+    AJAX endpoint to fetch full warehouse job details from Warehouse_goods_info / Gatein_info
     """
     job_no = request.GET.get('job_no', '').strip()
     if not job_no:
         return JsonResponse({'status': 'error', 'message': 'No job number provided'})
 
+    # 1. First check Warehouse_goods_info
+    wh_good = Warehouse_goods_info.objects.filter(
+        wh_job_no__iexact=job_no
+    ).select_related('wh_customer_name', 'wh_customer_type', 'wh_unit', 'wh_branch').first()
+
+    # Also lookup gatein for truck/driver if available
+    gatein = Gatein_info.objects.filter(gatein_job_no__iexact=job_no).first()
+
+    if wh_good:
+        checkin_date_str = wh_good.wh_checkin_time.strftime("%d-%m-%Y") if wh_good.wh_checkin_time else (gatein.gatein_arrival_date.strftime("%d-%m-%Y") if gatein and gatein.gatein_arrival_date else "")
+        return JsonResponse({
+            'status': 'success',
+            'job_no': wh_good.wh_job_no,
+            'customer_id': wh_good.wh_customer_name.id if wh_good.wh_customer_name else None,
+            'customer_name': wh_good.wh_customer_name.cu_name if wh_good.wh_customer_name else '',
+            'business_model_id': wh_good.wh_customer_type.id if wh_good.wh_customer_type else None,
+            'business_model_name': wh_good.wh_customer_type.tb_trbusinesstype if wh_good.wh_customer_type else '',
+            'unit_name': wh_good.wh_unit.unit_name if wh_good.wh_unit else '',
+            'invoice_no': wh_good.wh_goods_invoice or (gatein.gatein_invoice if gatein else ''),
+            'truck_no': gatein.gatein_truck_number if gatein else (wh_good.wh_truck_type.veh_type_name if wh_good.wh_truck_type else ''),
+            'driver_name': gatein.gatein_driver if gatein else '',
+            'shipper': wh_good.wh_consigner or (gatein.gatein_shipper if gatein else ''),
+            'consignee': wh_good.wh_consignee or (gatein.gatein_consignee if gatein else ''),
+            'qty': wh_good.wh_total_qty or (gatein.gatein_no_of_pkg if gatein else 0),
+            'weight': wh_good.wh_gross_weight or (gatein.gatein_actual_weight if gatein else 0.0),
+            'cbm': wh_good.wh_cbm or 0.0,
+            'date': checkin_date_str,
+            'invoice_amount': wh_good.wh_invoice_amount_inr or wh_good.wh_invoice_value or 0.0,
+            'handling_cost': wh_good.wh_handling_cost or 0.0,
+            'loading_cost': wh_good.wh_total_loading_cost or wh_good.wh_unloading_cost or 0.0,
+            'storage_cost': wh_good.wh_storage_cost_total or 0.0,
+            'total_cost': wh_good.wh_total_invoice_cost or 0.0,
+        })
+
+    # 2. Fallback to Gatein_info
     gatein = Gatein_info.objects.filter(
         Q(gatein_job_no__iexact=job_no) | Q(gatein_invoice__iexact=job_no)
     ).select_related('gatein_customer', 'gatein_customer_type').first()
 
     if gatein:
+        arrival_date_str = gatein.gatein_arrival_date.strftime("%d-%m-%Y") if gatein.gatein_arrival_date else ""
         return JsonResponse({
             'status': 'success',
+            'job_no': gatein.gatein_job_no,
             'customer_id': gatein.gatein_customer.id if gatein.gatein_customer else None,
             'customer_name': gatein.gatein_customer.cu_name if gatein.gatein_customer else '',
             'business_model_id': gatein.gatein_customer_type.id if gatein.gatein_customer_type else None,
             'business_model_name': gatein.gatein_customer_type.tb_trbusinesstype if gatein.gatein_customer_type else '',
+            'unit_name': '',
+            'invoice_no': gatein.gatein_invoice or '',
+            'truck_no': gatein.gatein_truck_number or '',
+            'driver_name': gatein.gatein_driver or '',
+            'shipper': gatein.gatein_shipper or '',
+            'consignee': gatein.gatein_consignee or '',
+            'qty': gatein.gatein_no_of_pkg or 0,
+            'weight': gatein.gatein_actual_weight or 0.0,
+            'cbm': 0.0,
+            'date': arrival_date_str,
+            'invoice_amount': 0.0,
+            'handling_cost': 0.0,
+            'loading_cost': 0.0,
+            'storage_cost': 0.0,
+            'total_cost': 0.0,
         })
     else:
         return JsonResponse({'status': 'not_found', 'message': 'Job number not found'})
+
 
 
 def wms_petty_cash_export_tally(request):

@@ -134,6 +134,23 @@
                             <label class="form-label-modern">Rate</label>
                             {% render_field form.ro_rate class="form-control form-control-modern" %}
                         </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Agreement Type</label>
+                            {% render_field form.ro_agreement_type class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Validity From</label>
+                            {% render_field form.ro_validity_from class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Validity To</label>
+                            {% render_field form.ro_validity_to class="form-control form-control-modern" %}
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Status</label>
+                            {% render_field form.ro_status class="form-control form-control-modern" %}
+                        </div>
                     </div>
                 </div>
 
@@ -166,6 +183,92 @@
         </div>
     </form>
 </div>
+
+    {% if form.instance.pk %}
+    <div class="modern-card mt-4" style="border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding: 24px; background: white;">
+        <div class="form-section-title mb-4" style="color: #2c3e50; font-weight: 700; font-size: 1.1rem; border-bottom: 2px solid #f1f4f8; padding-bottom: 12px; margin-bottom: 20px;">
+            <i class="fas fa-history mr-2" style="color: #3498db;"></i> Rate History
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover" style="font-size: 0.9rem; border-collapse: separate; border-spacing: 0;">
+                <thead style="background-color: #111827; color: #ffffff; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;">
+                    <tr>
+                        <th style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; border: none; padding: 14px 16px;">Date Changed</th>
+                        <th style="border: none; padding: 14px 16px;">Action</th>
+                        <th style="border: none; padding: 14px 16px;">Old Rate</th>
+                        <th style="border: none; padding: 14px 16px;">New Rate</th>
+                        <th style="border: none; padding: 14px 16px;">Old Agreement</th>
+                        <th style="border: none; padding: 14px 16px;">New Agreement</th>
+                        <th style="border: none; padding: 14px 16px;">Old Validity</th>
+                        <th style="border: none; padding: 14px 16px;">New Validity</th>
+                        <th style="border-top-right-radius: 8px; border-bottom-right-radius: 8px; border: none; padding: 14px 16px;">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody style="color: #334155;">
+                    {% for log in form.instance.history_logs.all %}
+                    <tr style="transition: all 0.2s; border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 16px; vertical-align: middle;">{{ log.changed_at|date:"d-m-Y H:i" }}</td>
+                        <td style="padding: 16px; vertical-align: middle;">
+                            <span style="padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; 
+                                {% if log.action_type == 'CREATE' %}background-color: #dcfce7; color: #166534;
+                                {% else %}background-color: #e0f2fe; color: #0369a1;{% endif %}">
+                                {{ log.action_type }}
+                            </span>
+                        </td>
+                        <td style="padding: 16px; vertical-align: middle; font-weight: 600; color: #000000;">{{ log.old_rate|default_if_none:"-" }}</td>
+                        <td style="padding: 16px; vertical-align: middle; font-weight: 600; color: #000000;">{{ log.new_rate|default_if_none:"-" }}</td>
+                        <td style="padding: 16px; vertical-align: middle; font-weight: 600; color: #000000;">{{ log.old_agreement_type.agreement_name|default_if_none:"-" }}</td>
+                        <td style="padding: 16px; vertical-align: middle; font-weight: 600; color: #000000;">{{ log.new_agreement_type.agreement_name|default_if_none:"-" }}</td>
+                        <td style="padding: 16px; vertical-align: middle; font-weight: 600; color: #000000;">
+                            {% if log.old_validity_from %}{{ log.old_validity_from|date:"d-m-Y" }} <br><small>to</small><br> {{ log.old_validity_to|date:"d-m-Y" }}
+                            {% else %}-{% endif %}
+                        </td>
+                        <td style="padding: 16px; vertical-align: middle; font-weight: 600; color: #000000;">
+                            {% if log.new_validity_from %}{{ log.new_validity_from|date:"d-m-Y" }} <br><small>to</small><br> {{ log.new_validity_to|date:"d-m-Y" }}
+                            {% else %}-{% endif %}
+                        </td>
+                        <td style="padding: 16px; vertical-align: middle; font-weight: 600; color: #000000;">{{ log.remarks|default_if_none:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center" style="padding: 40px; color: #94a3b8; font-style: italic;">No history records found for this route.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const validityToInput = document.getElementById('id_ro_validity_to');
+    const statusSelect = document.getElementById('id_ro_status');
+    
+    if (validityToInput && statusSelect) {
+        validityToInput.addEventListener('change', function() {
+            const selectedDateStr = this.value; // Format: YYYY-MM-DD
+            if (selectedDateStr) {
+                // Parse the selected date
+                const selectedDate = new Date(selectedDateStr);
+                selectedDate.setHours(0, 0, 0, 0);
+                
+                // Get today's date
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                // If the selected date is in the past, set to Inactive, else Active
+                if (selectedDate < today) {
+                    statusSelect.value = 'Inactive';
+                } else {
+                    statusSelect.value = 'Active';
+                }
+            }
+        });
+    }
+});
+</script>
+
 {% endblock content %}
 
 {% block extra_js %}

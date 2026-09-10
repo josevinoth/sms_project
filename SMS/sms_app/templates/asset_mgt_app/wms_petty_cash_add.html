@@ -1,4 +1,4 @@
-﻿{% extends "asset_mgt_app/base_modern.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
 
 {% block content %}
@@ -79,11 +79,6 @@
                         </div>
 
                         <div class="form-group-modern">
-                            <label class="form-label-modern">Job No</label>
-                            {% render_field form.wpc_job_no id="wpc_job_no" class="form-control form-control-modern" %}
-                        </div>
-
-                        <div class="form-group-modern">
                             <label class="form-label-modern">Customer Name</label>
                             {% render_field form.wpc_customer id="wpc_customer" class="form-control form-control-modern select2" %}
                         </div>
@@ -91,6 +86,16 @@
                         <div class="form-group-modern">
                             <label class="form-label-modern">Business Model</label>
                             {% render_field form.wpc_business_model id="wpc_business_model" class="form-control form-control-modern select2" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Job No</label>
+                            <select id="wpc_job_no" name="wpc_job_no" class="form-control form-control-modern select2">
+                                <option value="">--Select Job No--</option>
+                                {% if form.instance.wpc_job_no %}
+                                <option value="{{ form.instance.wpc_job_no }}" selected>{{ form.instance.wpc_job_no }}</option>
+                                {% endif %}
+                            </select>
                         </div>
 
                         <div class="form-group-modern">
@@ -151,15 +156,84 @@
                 </a>
             </div>
         </div>
+
+        <!-- ================= JOB DETAILS OVERVIEW TABLE ================= -->
+        <div id="job_details_container" class="mt-4" style="display:none;">
+            <div class="modern-header d-flex justify-content-between align-items-center mb-0" style="border-radius: 14px 14px 0 0; padding: 0.6rem 1.2rem;">
+                <h5 class="mb-0 text-white" style="font-size: 1.05rem; font-weight: 700; letter-spacing: 0.5px;">
+                    <i class="fas fa-warehouse mr-2"></i> Warehouse Job Overview
+                </h5>
+                <span id="table_job_no_badge" class="badge badge-pill badge-light px-3 py-2 font-weight-bold" style="font-size: 0.85rem; color: #0f172a; box-shadow: 0 2px 6px rgba(0,0,0,0.15);"></span>
+            </div>
+            <div class="table-container-modern shadow-sm" style="border-radius: 0 0 14px 14px; padding: 0.85rem 1rem;">
+                <div class="table-responsive">
+                    <table class="table modern-table mb-0" id="job_info_table">
+                        <thead>
+                            <tr>
+                                <th>Job No</th>
+                                <th>Invoice No</th>
+                                <th>Unit</th>
+                                <th>Customer</th>
+                                <th>Business Model</th>
+                                <th>Shipper</th>
+                                <th>Consignee</th>
+                                <th>Vehicle / Truck</th>
+                                <th>Driver</th>
+                                <th>Qty (Pkgs)</th>
+                                <th>Weight (Kg)</th>
+                                <th>CBM</th>
+                                <th>Date</th>
+                                <th>Invoice Value</th>
+                                <th>Storage Cost</th>
+                                <th>Handling Cost</th>
+                                <th>Loading Cost</th>
+                                <th>Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr id="job_info_row">
+                                <td id="td_job_no"><span class="badge badge-primary px-2 py-1" style="font-size: 0.8rem; letter-spacing: 0.3px;">-</span></td>
+                                <td id="td_invoice" class="font-weight-600">-</td>
+                                <td id="td_unit"><span class="badge badge-secondary px-2 py-1">-</span></td>
+                                <td id="td_customer" class="font-weight-bold text-dark">-</td>
+                                <td id="td_model"><span class="badge badge-info px-2 py-1">-</span></td>
+                                <td id="td_shipper">-</td>
+                                <td id="td_consignee">-</td>
+                                <td id="td_truck" class="font-weight-600">-</td>
+                                <td id="td_driver">-</td>
+                                <td id="td_qty" class="text-center font-weight-600">-</td>
+                                <td id="td_weight" class="text-center font-weight-600">-</td>
+                                <td id="td_cbm" class="text-center">-</td>
+                                <td id="td_date" class="font-weight-600">-</td>
+                                <td id="td_inv_amt" class="font-weight-bold text-dark">-</td>
+                                <td id="td_storage_cost">-</td>
+                                <td id="td_handling_cost">-</td>
+                                <td id="td_loading_cost">-</td>
+                                <td id="td_total_cost" class="font-weight-bold text-success" style="font-size: 0.9rem;">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </form>
 
 <script>
     $(document).ready(function() {
-        $('.select2').not('#wpc_to').select2({
+        // Initialize Select2 on select elements
+        $('.select2').not('#wpc_to, #wpc_job_no').select2({
             width: '100%',
             placeholder: '--Select--',
             allowClear: true
+        });
+
+        // Initialize Select2 on Job No with tag support (user can select or type custom)
+        $('#wpc_job_no').select2({
+            width: '100%',
+            placeholder: '--Select or Type Job No--',
+            allowClear: true,
+            tags: true
         });
 
         $('#wpc_to').select2({
@@ -206,24 +280,115 @@
             calculateAmounts();
         });
 
-        // Autocomplete/lookup Job No to fill Customer and Business Model
-        $('#wpc_job_no').on('blur change', function() {
-            var jobNo = $(this).val().trim();
-            if (jobNo) {
+        // ================= CASCADE 1: UNIT -> CUSTOMER LIST =================
+        $('#wpc_unit').change(function() {
+            var selectedUnit = $(this).val();
+            var currentCustVal = $('#wpc_customer').val();
+
+            $.ajax({
+                url: "{% url 'get_wms_customers_by_unit' %}",
+                data: { 'unit': selectedUnit },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        var $custSelect = $('#wpc_customer');
+                        $custSelect.empty();
+                        $custSelect.append(new Option('--Select--', ''));
+
+                        var foundCurrent = false;
+                        $.each(response.customers, function(index, cust) {
+                            var isSelected = (currentCustVal && String(currentCustVal) === String(cust.id));
+                            if (isSelected) foundCurrent = true;
+                            var opt = new Option(cust.name, cust.id, isSelected, isSelected);
+                            $custSelect.append(opt);
+                        });
+
+                        $custSelect.trigger('change');
+                    }
+                }
+            });
+        });
+
+        // ================= CASCADE 2: CUSTOMER -> JOB NO DROPDOWN LIST =================
+        $('#wpc_customer').change(function() {
+            var customerId = $(this).val();
+            var selectedUnit = $('#wpc_unit').val();
+            var currentJob = $('#wpc_job_no').val();
+
+            var $jobSelect = $('#wpc_job_no');
+            $jobSelect.empty();
+            $jobSelect.append(new Option('--Select or Type Job No--', ''));
+
+            if (customerId) {
                 $.ajax({
-                    url: "{% url 'get_wms_job_details' %}",
-                    data: { 'job_no': jobNo },
+                    url: "{% url 'get_wms_jobs_by_customer' %}",
+                    data: {
+                        'customer_id': customerId,
+                        'unit': selectedUnit
+                    },
                     success: function(response) {
                         if (response.status === 'success') {
-                            if (response.customer_id) {
-                                $('#wpc_customer').val(response.customer_id).trigger('change');
+                            var foundCurrentJob = false;
+                            $.each(response.jobs, function(index, job) {
+                                var isSel = (currentJob && currentJob === job);
+                                if (isSel) foundCurrentJob = true;
+                                $jobSelect.append(new Option(job, job, isSel, isSel));
+                            });
+                            if (currentJob && !foundCurrentJob) {
+                                $jobSelect.append(new Option(currentJob, currentJob, true, true));
                             }
-                            if (response.business_model_id) {
-                                $('#wpc_business_model').val(response.business_model_id).trigger('change');
-                            }
+                            $jobSelect.trigger('change');
                         }
                     }
                 });
+            } else {
+                $jobSelect.trigger('change');
+            }
+        });
+
+        // ================= AUTOFILL BUSINESS MODEL & SHOW JOB DETAILS TABLE =================
+        $('#wpc_job_no').on('change', function() {
+            var jobNo = $(this).val();
+            if (jobNo && jobNo.trim()) {
+                $.ajax({
+                    url: "{% url 'get_wms_job_details' %}",
+                    data: { 'job_no': jobNo.trim() },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            if (response.business_model_id) {
+                                $('#wpc_business_model').val(response.business_model_id).trigger('change');
+                            }
+                            // Populate and show the Job Details Table
+                            $('#table_job_no_badge').text(response.job_no || jobNo);
+                            $('#td_job_no').html('<span class="badge badge-primary px-2 py-1" style="font-size: 0.8rem; letter-spacing: 0.3px;">' + (response.job_no || jobNo) + '</span>');
+                            $('#td_invoice').text(response.invoice_no || '-');
+                            $('#td_unit').html('<span class="badge badge-secondary px-2 py-1">' + (response.unit_name || $('#wpc_unit').val() || '-') + '</span>');
+                            $('#td_customer').text(response.customer_name || $('#wpc_customer').find('option:selected').text() || '-');
+                            $('#td_model').html('<span class="badge badge-info px-2 py-1">' + (response.business_model_name || $('#wpc_business_model').find('option:selected').text() || '-') + '</span>');
+                            $('#td_shipper').text(response.shipper || '-');
+                            $('#td_consignee').text(response.consignee || '-');
+                            $('#td_truck').text(response.truck_no || '-');
+                            $('#td_driver').text(response.driver_name || '-');
+                            $('#td_qty').text(response.qty || '0');
+                            $('#td_weight').text(response.weight ? response.weight + ' kg' : '0');
+                            $('#td_cbm').text(response.cbm || '0');
+                            $('#td_date').text(response.date || '-');
+                            $('#td_inv_amt').text(response.invoice_amount ? '₹' + parseFloat(response.invoice_amount).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '₹0.00');
+                            $('#td_storage_cost').text(response.storage_cost ? '₹' + parseFloat(response.storage_cost).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '₹0.00');
+                            $('#td_handling_cost').text(response.handling_cost ? '₹' + parseFloat(response.handling_cost).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '₹0.00');
+                            $('#td_loading_cost').text(response.loading_cost ? '₹' + parseFloat(response.loading_cost).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '₹0.00');
+                            $('#td_total_cost').text(response.total_cost ? '₹' + parseFloat(response.total_cost).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '₹0.00');
+
+                            $('#job_details_container').slideDown();
+                        } else {
+                            $('#job_details_container').slideUp();
+                        }
+                    },
+                    error: function() {
+                        $('#job_details_container').slideUp();
+                    }
+                });
+            } else {
+                $('#job_details_container').slideUp();
             }
         });
 
@@ -315,6 +480,16 @@
 
         if ($('#wpc_credit_ledger').val()) {
             $('#wpc_credit_ledger').trigger('change');
+        }
+
+        // If unit is already selected on page load (e.g. edit mode), trigger change
+        if ($('#wpc_unit').val()) {
+            $('#wpc_unit').trigger('change');
+        }
+
+        // If job no is already selected on page load (e.g. edit mode), trigger change
+        if ($('#wpc_job_no').val()) {
+            $('#wpc_job_no').trigger('change');
         }
     });
 </script>
