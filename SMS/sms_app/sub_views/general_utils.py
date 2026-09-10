@@ -132,3 +132,42 @@ def is_admin_user(request):
     user_role = (request.session.get('ses_role') or '').lower()
     return user_role in ['admin', 'super user', 'superuser']
 
+
+FORWARD_TRIP_STATUS_MAP = {
+    # 8: Awaiting Trip Approval -> 8, 1 (Trip Started), 3 (Cancelled), 10 (Cancellation w/ Billing), 11 (Cancellation w/o Billing)
+    8: [8, 1, 3, 10, 11],
+    # 1: Trip Started -> 1, 2 (Trip Closed), 10, 11
+    1: [1, 2, 10, 11],
+    # 2: Trip Closed -> 2, 4 (Awaiting Trip Settlement), 10, 11
+    2: [2, 4, 10, 11],
+    # 4: Awaiting Trip Settlement -> 4, 7 (Trip Settled), 10, 11
+    4: [4, 7, 10, 11],
+    # 7: Trip Settled -> 7, 9 (Ready for Invoice)
+    7: [7, 9],
+    # 9: Ready for Invoice -> 9 (Invoice Completed is handled automatically upon invoice creation)
+    9: [9],
+    # 3, 10, 11: Cancelled states (locked for regular users)
+    3: [3],
+    10: [10],
+    11: [11],
+}
+
+def get_allowed_next_statuses(current_status_id, is_admin=False):
+    """
+    Returns a list of allowed status IDs that a trip can transition to.
+    If is_admin is True, returns None (indicating unrestricted transition permission).
+    """
+    if is_admin:
+        return None
+    if not current_status_id:
+        # Default starting statuses if new
+        return [8, 1, 3, 10, 11]
+    
+    try:
+        current_status_id = int(current_status_id)
+    except (ValueError, TypeError):
+        return None
+        
+    return FORWARD_TRIP_STATUS_MAP.get(current_status_id, [current_status_id])
+
+
