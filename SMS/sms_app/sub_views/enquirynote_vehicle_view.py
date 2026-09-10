@@ -36,11 +36,11 @@ def _get_master_sale_rate(enquiry, vehicletype_id, vehiclecategory_id=None):
 
 
 def _get_allotted_count(enquiry_id, vehicletype_id):
-    """Returns the number of vehicles allotted for a given enquiry and vehicle type."""
+    """Returns the number of ACTIVE vehicles allotted for a given enquiry and vehicle type (excluding replaced ones)."""
     return Vehicle_allotmentInfo.objects.filter(
         va_enquirynumber_id=enquiry_id,
         va_vehicletype_id=vehicletype_id
-    ).count()
+    ).exclude(va_status_id=2).count()
 
 
 def _get_other_requested_qty(enquiry_id, vehicletype_id, exclude_id=None):

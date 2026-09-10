@@ -37,7 +37,7 @@ def _build_env_delete_flags(enquiry_id, enquirynotevehicle_list):
         allotted = Vehicle_allotmentInfo.objects.filter(
             va_enquirynumber_id=enquiry_id,
             va_vehicletype_id=env.env_vehicletype_id
-        ).count()
+        ).exclude(va_status_id=2).count()
 
         # Allow delete only if not fully allotted
         can_delete = allotted < total_requested
@@ -461,6 +461,7 @@ def enquirynote_list(request):
 
     vehicle_allotted = (
         Vehicle_allotmentInfo.objects.filter(va_enquirynumber__in=enquiry_ids)
+        .exclude(va_status_id=2)
         .values('va_enquirynumber')
         .annotate(total_allotted=Count('id'))
     )
