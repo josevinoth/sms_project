@@ -1,4 +1,4 @@
-﻿{% extends "asset_mgt_app/base_modern.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -10,7 +10,7 @@
         </h3>
         <div class="d-flex" style="gap:10px;">
             <a href="{% url 'wms_petty_cash_export_tally' %}?wpc_number={{ search_wpc_number }}&search_date={{ search_date }}&from_date={{ from_date }}&to_date={{ to_date }}&search_unit={{ search_unit }}&search_branch={{ search_branch }}" class="btn-modern btn-submit" style="background: linear-gradient(135deg, #10b981, #059669); border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
-                <i class="fas fa-file-excel"></i> Export Excel
+                <i class="fas fa-file-excel"></i> Export Tally
             </a>
             <a href="{% url 'wms_petty_cash_insert' %}" class="btn-modern btn-submit" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
                 <i class="fas fa-plus"></i> Add New
@@ -46,7 +46,12 @@
 
             <div class="form-group-modern mb-0" style="flex: 0 0 150px;">
                 <label for="search_unit" class="form-label-modern">Units</label>
-                <input type="text" name="search_unit" id="search_unit" class="form-control form-control-modern" placeholder="Search Unit" value="{{ search_unit }}">
+                <select name="search_unit" id="search_unit" class="form-control form-control-modern">
+                    <option value="">All Units</option>
+                    {% for u in unit_list %}
+                    <option value="{{ u }}" {% if search_unit == u %}selected{% endif %}>{{ u }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
             {% if is_admin_or_supervisor %}
@@ -56,8 +61,6 @@
                     <option value="">All Branches</option>
                     <option value="BLR" {% if search_branch == 'BLR' %}selected{% endif %}>BLR</option>
                     <option value="MAA" {% if search_branch == 'MAA' %}selected{% endif %}>MAA</option>
-                    <option value="PNY" {% if search_branch == 'PNY' %}selected{% endif %}>PNY</option>
-                    <option value="HYD" {% if search_branch == 'HYD' %}selected{% endif %}>HYD</option>
                 </select>
             </div>
             {% endif %}
@@ -106,7 +109,6 @@
                         <th>Bill Amt</th>
                         <th>GST Amt</th>
                         <th>Total Amt</th>
-                        <th>Bill File</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -136,13 +138,6 @@
                         <td>₹{{ wpc.wpc_bill_amount|floatformat:2 }}</td>
                         <td>₹{{ wpc.wpc_gst_amount|floatformat:2 }}</td>
                         <td><strong class="text-success">₹{{ wpc.wpc_total_amount|floatformat:2 }}</strong></td>
-                        <td>
-                            {% if wpc.wpc_bill_attachment %}
-                            <a href="{{ wpc.wpc_bill_attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2" title="View Attachment"><i class="fas fa-file-pdf"></i> View</a>
-                            {% else %}
-                            -
-                            {% endif %}
-                        </td>
                         <td style="white-space: nowrap;">
                             <a href="{% url 'wms_petty_cash_update' wpc.id %}" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;" title="Edit"><i class="far fa-edit"></i></a>
                             <form action="{% url 'wms_petty_cash_delete' wpc.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this record?');" style="display:inline;">

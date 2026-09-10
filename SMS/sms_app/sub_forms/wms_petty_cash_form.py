@@ -1,4 +1,4 @@
-﻿from django import forms
+from django import forms
 from ..models import WMSPettyCashInfo, WMSExpenseTypeInfo, MyUser
 
 class WMSPettyCashForm(forms.ModelForm):
@@ -20,6 +20,13 @@ class WMSPettyCashForm(forms.ModelForm):
         if 'wpc_business' in self.fields:
             self.fields['wpc_business'].queryset = self.fields['wpc_business'].queryset.filter(
                 bvm_business__icontains='Storage'
+            )
+
+        if 'wpc_branch' in self.fields:
+            self.fields['wpc_branch'].queryset = self.fields['wpc_branch'].queryset.filter(
+                loc_name__icontains='MAA'
+            ) | self.fields['wpc_branch'].queryset.filter(
+                loc_name__icontains='BLR'
             )
 
         if 'wpc_category' in self.fields:

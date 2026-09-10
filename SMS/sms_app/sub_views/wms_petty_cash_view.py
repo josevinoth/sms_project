@@ -17,34 +17,36 @@ from .general_utils import get_financial_year, get_session_branch_id
 
 def generate_wms_petty_cash_number(model_class, field_name, branch_obj=None):
     """
-    Generates Voucher Number format: [BranchCode]-Wh-[MM]-[FY]-[Seq]
-    Example: Maa-Wh-08-26/27-01
+    Generates Voucher Number format in UPPERCASE: [BranchCode]-WH-[MM]-[FY]-[Seq]
+    Example: MAA-WH-09-26/27-01 or BLR-WH-09-26/27-01
     """
     fy = get_financial_year() # e.g. "26-27"
     fy_slash = fy.replace('-', '/') # "26/27"
     today = datetime.now()
-    month_str = today.strftime("%m") # "08"
+    month_str = today.strftime("%m") # "09"
 
-    branch_code = "Maa"
+    branch_code = "MAA"
     if branch_obj and branch_obj.loc_name:
         loc_name_upper = branch_obj.loc_name.upper()
         if "MAA" in loc_name_upper or "CHENNAI" in loc_name_upper:
-            branch_code = "Maa"
+            branch_code = "MAA"
         elif "BLR" in loc_name_upper or "BANGALORE" in loc_name_upper or "BENGALURU" in loc_name_upper:
-            branch_code = "Blr"
+            branch_code = "BLR"
         elif "PNY" in loc_name_upper or "PONDICHERRY" in loc_name_upper:
-            branch_code = "Pny"
+            branch_code = "PNY"
         elif "HYD" in loc_name_upper or "HYDERABAD" in loc_name_upper:
-            branch_code = "Hyd"
+            branch_code = "HYD"
         elif "CBE" in loc_name_upper or "COIMBATORE" in loc_name_upper:
-            branch_code = "Cbe"
+            branch_code = "CBE"
         else:
-            branch_code = branch_obj.loc_name.split()[-1].title()
+            branch_code = branch_obj.loc_name.split()[-1].upper()
 
-    prefix = f"{branch_code}-Wh-{month_str}-{fy_slash}-"
+    prefix = f"{branch_code}-WH-{month_str}-{fy_slash}-"
 
-    # fetch latest for this prefix
-    latest_obj = model_class.objects.filter(**{f"{field_name}__startswith": prefix}).order_by('-id').first()
+    # fetch latest for this prefix (case-insensitive check)
+    latest_obj = model_class.objects.filter(
+        Q(**{f"{field_name}__istartswith": prefix}) | Q(**{f"{field_name}__istartswith": f"{branch_code.title()}-Wh-{month_str}-{fy_slash}-"})
+    ).order_by('-id').first()
 
     if latest_obj:
         latest_num_str = getattr(latest_obj, field_name)
@@ -202,6 +204,8 @@ def wms_petty_cash_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    unit_list = list(UnitInfo.objects.values_list('unit_name', flat=True).distinct().order_by('unit_name'))
+
     context = {
         'wpc_list': page_obj,
         'search_wpc_number': wpc_number,
@@ -210,6 +214,7 @@ def wms_petty_cash_list(request):
         'to_date': to_date,
         'search_unit': search_unit,
         'search_branch': search_branch,
+        'unit_list': unit_list,
         'is_admin_or_supervisor': is_admin_or_supervisor,
     }
     return render(request, "asset_mgt_app/wms_petty_cash_list.html", context)
@@ -412,13 +417,11 @@ def wms_petty_cash_export_tally(request):
 
     wb = Workbook()
     ws = wb.active
-    ws.title = "WMS Petty Cash Export"
+    ws.title = "Tally Export"
 
     headers = [
-        "VOUCHER NUMBER", "TRANSACTION DATE", "BUSINESS", "BRANCH", 
-        "EXPENSES CATEGORY", "EXPENSES TYPE", "CREDIT LEDGER", "TO PERSON",
-        "UNIT", "JOB NO", "CUSTOMER NAME", "BUSINESS MODEL",
-        "BILL NO", "BILL AMOUNT", "GST %", "GST AMOUNT", "TOTAL AMOUNT", "REMARKS"
+        "DATE", "VOU. NO.", "DEBIT", "CREDIT", "PRIMARY COST CATEGORY", 
+        "CUSTOMER", "JOB NO", "VEH.NO.", "AMOUNT", "TO", "TRN DATE", "REMARKS"
     ]
     ws.append(headers)
 
@@ -432,31 +435,34 @@ def wms_petty_cash_export_tally(request):
     for wpc in wpc_list:
         date_str = wpc.wpc_transaction_date.strftime("%d-%m-%Y") if wpc.wpc_transaction_date else ""
         vou_no = wpc.wpc_number or ""
-        business = wpc.wpc_business.bvm_business if wpc.wpc_business else ""
-        branch = wpc.wpc_branch.loc_name if wpc.wpc_branch else ""
-        category = wpc.wpc_category.exp_category_name if wpc.wpc_category else ""
-        exp_type = wpc.wpc_expense_type.wms_exp_type_name if wpc.wpc_expense_type else ""
-        credit_ledger = wpc.wpc_credit_ledger.ledger_name if wpc.wpc_credit_ledger else ""
-        to_person = wpc.wpc_to.first_name if wpc.wpc_to else (wpc.wpc_to_manual or "")
-        unit = wpc.wpc_unit or ""
-        job_no = wpc.wpc_job_no or ""
+        debit = wpc.wpc_expense_type.wms_exp_type_name if wpc.wpc_expense_type else ""
+        credit = wpc.wpc_credit_ledger.ledger_name if wpc.wpc_credit_ledger else ""
+        primary_cost_cat = wpc.wpc_unit or ""
         customer = wpc.wpc_customer.cu_name if wpc.wpc_customer else ""
-        bus_model = wpc.wpc_business_model.tb_trbusinesstype if wpc.wpc_business_model else ""
-        bill_no = wpc.wpc_bill_no or ""
-        bill_amt = wpc.wpc_bill_amount or 0.0
-        gst_pct = wpc.wpc_gst_percentage or 0.0
-        gst_amt = wpc.wpc_gst_amount or 0.0
-        total_amt = wpc.wpc_total_amount or 0.0
+        job_no = wpc.wpc_job_no or ""
+
+        # Lookup vehicle number if available from Gatein or Goods
+        veh_no = "N/A(V)"
+        if job_no:
+            gatein = Gatein_info.objects.filter(gatein_job_no__iexact=job_no).first()
+            if gatein and gatein.gatein_truck_number:
+                veh_no = gatein.gatein_truck_number
+            else:
+                wh_good = Warehouse_goods_info.objects.filter(wh_job_no__iexact=job_no).select_related('wh_truck_type').first()
+                if wh_good and wh_good.wh_truck_type:
+                    veh_no = wh_good.wh_truck_type.veh_type_name
+
+        amount = wpc.wpc_total_amount or wpc.wpc_bill_amount or 0.0
+        to_person = wpc.wpc_to.first_name if wpc.wpc_to else (wpc.wpc_to_manual or "")
+        trn_date = wpc.wpc_transaction_date.strftime("%d-%b") if wpc.wpc_transaction_date else ""
         remarks = wpc.wpc_remarks or ""
 
         ws.append([
-            vou_no, date_str, business, branch,
-            category, exp_type, credit_ledger, to_person,
-            unit, job_no, customer, bus_model,
-            bill_no, bill_amt, gst_pct, gst_amt, total_amt, remarks
+            date_str, vou_no, debit, credit, primary_cost_cat,
+            customer, job_no, veh_no, amount, to_person, trn_date, remarks
         ])
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename="WMS_Petty_Cash_Export.xlsx"'
+    response['Content-Disposition'] = 'attachment; filename="WMS_Petty_Cash_Tally_Export.xlsx"'
     wb.save(response)
     return response
