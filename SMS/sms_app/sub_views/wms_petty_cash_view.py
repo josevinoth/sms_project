@@ -204,7 +204,8 @@ def wms_petty_cash_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    unit_list = list(UnitInfo.objects.values_list('unit_name', flat=True).distinct().order_by('unit_name'))
+    from ..sub_models.wms_petty_cash_mod import UNIT_CHOICES
+    unit_list = [choice[0] for choice in UNIT_CHOICES]
 
     context = {
         'wpc_list': page_obj,
