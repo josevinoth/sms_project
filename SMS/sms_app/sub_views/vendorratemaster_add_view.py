@@ -1,8 +1,9 @@
+import datetime
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from ..forms import VendorratemasteraddForm
-from ..models import VendorratemasterInfo1
+from ..models import VendorratemasterInfo1, MyUser, VendorratemasterHistory
 from django.shortcuts import render, redirect
 from django.db.models import Q
 from django.core.paginator import Paginator
@@ -16,6 +17,12 @@ def vendorratemaster_add(request,vendorratemaster_id=0):
             form = VendorratemasteraddForm()
         else:
             vendorratemaster = VendorratemasterInfo1.objects.get(pk=vendorratemaster_id)
+            
+            # Auto-expire check upon viewing the edit page
+            if vendorratemaster.vr1_validity_to and vendorratemaster.vr1_validity_to < datetime.date.today() and vendorratemaster.vr1_status == 'Active':
+                vendorratemaster.vr1_status = 'Inactive'
+                vendorratemaster.save(update_fields=['vr1_status'])
+                
             form = VendorratemasteraddForm(instance=vendorratemaster)
         return render(request, "asset_mgt_app/vendorratemaster_add.html", {'form': form,'first_name': first_name,'user_id':user_id,})
     else:
@@ -34,18 +41,49 @@ def vendorratemaster_add(request,vendorratemaster_id=0):
             if not VendorratemasterInfo1.objects.filter(vr1_fromlocation=vr1_fromlocation,vr1_tolocation=vr1_tolocation,vr1_vehicletype=vr1_vehicletype,vr1_vendor=vr1_vendor,vr1_vehiclecategory=vr1_vehiclecategory,vr1_touchpoint=vr1_touchpoint,vr1_touchpoint2=vr1_touchpoint2,vr1_touchpoint3=vr1_touchpoint3,vr1_touchpoint4=vr1_touchpoint4).exclude(id=vendorratemaster_id).exists():
                 if vendorratemaster_id == 0:
                     new_rate = form.save()
-                    print("Vendor Route Rate master Form saved")
+                    VendorratemasterHistory.objects.create(
+                        rate_master=new_rate,
+                        old_rate=None,
+                        new_rate=new_rate.vr1_rate,
+                        old_agreement_type=None,
+                        new_agreement_type=new_rate.vr1_agreement_type,
+                        old_validity_from=None,
+                        new_validity_from=new_rate.vr1_validity_from,
+                        old_validity_to=None,
+                        new_validity_to=new_rate.vr1_validity_to,
+                        action_type='CREATE',
+                        changed_by=MyUser.objects.filter(pk=user_id).first(),
+                        remarks="Initial creation"
+                    )
                     messages.success(request, 'Record Updated Successfully')
-                    #url = new_rate.get_absolute_url_trans_route_ratemaster()
-                    # return redirect(url)
                     return redirect('/SMS/vendorratemaster_list')
                 else:
                     vendorratemaster = VendorratemasterInfo1.objects.get(pk=vendorratemaster_id)
+                    old_rate_val = vendorratemaster.vr1_rate
+                    old_ag_type = vendorratemaster.vr1_agreement_type
+                    old_val_from = vendorratemaster.vr1_validity_from
+                    old_val_to = vendorratemaster.vr1_validity_to
+                    
                     form = VendorratemasteraddForm(request.POST, instance=vendorratemaster)
-                    form.save()
-                    print("Transport Route Rate master Form saved")
+                    updated_item = form.save()
+                    
+                    VendorratemasterHistory.objects.create(
+                        rate_master=updated_item,
+                        old_rate=old_rate_val,
+                        new_rate=updated_item.vr1_rate,
+                        old_agreement_type=old_ag_type,
+                        new_agreement_type=updated_item.vr1_agreement_type,
+                        old_validity_from=old_val_from,
+                        new_validity_from=updated_item.vr1_validity_from,
+                        old_validity_to=old_val_to,
+                        new_validity_to=updated_item.vr1_validity_to,
+                        action_type='UPDATE',
+                        changed_by=MyUser.objects.filter(pk=user_id).first(),
+                        remarks=f"Rate updated from ₹{old_rate_val} to ₹{updated_item.vr1_rate}" if old_rate_val != updated_item.vr1_rate else "Record updated"
+                    )
+                    
                     messages.success(request, 'Record Updated Successfully')
-                    return redirect(request.META['HTTP_REFERER'])
+                    return redirect('/SMS/vendorratemaster_list')
             else:
                 print("Vendor Route Rate master Form not saved - Duplicate found")
                 messages.error(request, 'Duplicate Record Found. Please enter a Unique Values.')

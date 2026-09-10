@@ -89,177 +89,228 @@
                 <!-- Column 3: Trip Charges & Status -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="form-section h-100 p-3">
-                        <div class="form-section-title mb-3 d-flex justify-content-between align-items-center" style="font-size:0.95rem;">
-                            <span><i class="fas fa-rupee-sign"></i> Trip Charges</span>
-                            <div class="d-flex align-items-center" style="gap: 6px;">
-                                <span title="Bill to Customer" style="font-size:0.65rem; text-transform:uppercase; opacity:0.8;">Bill Cust</span>
-                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                <span title="Bill to Vendor (Market Vehicles)" style="font-size:0.65rem; text-transform:uppercase; opacity:0.9; color: #d97706; font-weight: 700;">Bill Vend</span>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <!-- Trip Charges -->
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Trip Charges</label>
-                            <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_tripcost id="tc_tripcost" readonly="readonly" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px; background-color: #e9ecef; pointer-events: none;" %}
-                                {% render_field tripclosure_form.tc_tripcost_check id="tc_tripcost_check" class="ml-2" style="width:16px; height:16px;" title="Bill to Customer" %}
-                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                <span class="ml-1" style="width:16px; height:16px; display:inline-block;"></span>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Parking</label>
-                            <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_parkingcost class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
-                                {% render_field tripclosure_form.tc_parkingcost_check id="tc_parkingcost_check" class="ml-2" style="width:16px; height:16px;" title="Bill to Customer" %}
-                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                {% render_field tripclosure_form.tc_parkingcost_vendor_check id="tc_parkingcost_vendor_check" class="ml-1" style="width:16px; height:16px; accent-color: #d97706;" title="Bill to Vendor" %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 d-flex align-items-center w-50" style="line-height:1; font-size: 0.8rem;">
-                                Toll
-                                <button type="button" class="ml-1 p-0 text-primary" style="font-size:1rem; border: none; background: transparent; outline: none; cursor: pointer;" data-toggle="modal" data-target="#tollTxnModal" onclick="showTollTxnDialog(true)" title="View Toll Details"><i class="fas fa-eye"></i></button>
-                            </label>
-                            <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_tollcost class="form-control form-control-modern form-control-sm py-1" id="tc_tollcost" style="height:28px;" %}
-                                {% render_field tripclosure_form.tc_tollcost_check id="tc_tollcost_check" class="ml-2" style="width:16px; height:16px;" title="Bill to Customer" %}
-                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                {% render_field tripclosure_form.tc_tollcost_vendor_check id="tc_tollcost_vendor_check" class="ml-1" style="width:16px; height:16px; accent-color: #d97706;" title="Bill to Vendor" %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Loading</label>
-                            <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_loadingcost class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
-                                {% render_field tripclosure_form.tc_loadingcost_check id="tc_loadingcost_check" class="ml-2" style="width:16px; height:16px;" title="Bill to Customer" %}
-                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                {% render_field tripclosure_form.tc_loadingcost_vendor_check id="tc_loadingcost_vendor_check" class="ml-1" style="width:16px; height:16px; accent-color: #d97706;" title="Bill to Vendor" %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Unloading</label>
-                            <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_unloadingcost class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
-                                {% render_field tripclosure_form.tc_unloadingcost_check id="tc_unloadingcost_check" class="ml-2" style="width:16px; height:16px;" title="Bill to Customer" %}
-                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                {% render_field tripclosure_form.tc_unloadingcost_vendor_check id="tc_unloadingcost_vendor_check" class="ml-1" style="width:16px; height:16px; accent-color: #d97706;" title="Bill to Vendor" %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Weighment</label>
-                            <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_weighmentcost class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
-                                {% render_field tripclosure_form.tc_weighmentcost_check id="tc_weighmentcost_check" class="ml-2" style="width:16px; height:16px;" title="Bill to Customer" %}
-                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                {% render_field tripclosure_form.tc_weighmentcost_vendor_check id="tc_weighmentcost_vendor_check" class="ml-1" style="width:16px; height:16px; accent-color: #d97706;" title="Bill to Vendor" %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Supervisor</label>
-                            <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_supervisorcost class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
-                                {% render_field tripclosure_form.tc_supervisorcost_check id="tc_supervisorcost_check" class="ml-2" style="width:16px; height:16px;" title="Bill to Customer" %}
-                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                {% render_field tripclosure_form.tc_supervisorcost_vendor_check id="tc_supervisorcost_vendor_check" class="ml-1" style="width:16px; height:16px; accent-color: #d97706;" title="Bill to Vendor" %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Handling</label>
-                            <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_handlingcost id="tc_handlingcost" class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
-                                {% render_field tripclosure_form.tc_handlingcost_check id="tc_handlingcost_check" class="ml-2" style="width:16px; height:16px;" title="Bill to Customer" %}
-                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                {% render_field tripclosure_form.tc_handlingcost_vendor_check id="tc_handlingcost_vendor_check" class="ml-1" style="width:16px; height:16px; accent-color: #d97706;" title="Bill to Vendor" %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div id="handling_reason_container" class="align-items-center justify-content-between mb-2 d-none">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Handling Reason</label>
-                            <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_handlingcost_reason id="tc_handlingcost_reason" class="form-control form-control-modern form-control-sm py-1 w-100" style="height:28px;" placeholder="Reason for handling cost" %}
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Halting per day</label>
-                            <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_haltingcost id="tc_haltingcost" class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
-                                {% render_field tripclosure_form.tc_haltingcost_check id="tc_haltingcost_check" class="ml-2" style="width:16px; height:16px;" title="Bill to Customer" %}
-                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                {% render_field tripclosure_form.tc_haltingcost_vendor_check id="tc_haltingcost_vendor_check" class="ml-1" style="width:16px; height:16px; accent-color: #d97706;" title="Bill to Vendor" %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">No of Halting Days</label>
-                            <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_no_of_days_halting id="tc_no_of_days_halting" class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Total Halting</label>
-                            <div class="d-flex align-items-center w-50">
-                                <input type="text" name="tc_total_halting_cost" id="tc_total_halting_cost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px;" readonly value="{{ trip.tc_total_halting_cost|default:'0.00' }}">
-                                {% render_field tripclosure_form.tc_total_halting_cost_check id="tc_total_halting_cost_check" class="ml-2" style="width:16px; height:16px;" title="Bill to Customer" %}
-                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                {% render_field tripclosure_form.tc_total_halting_cost_vendor_check id="tc_total_halting_cost_vendor_check" class="ml-1" style="width:16px; height:16px; accent-color: #d97706;" title="Bill to Vendor" %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">RTO</label>
-                            <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_rtocost id="tc_rtocost" class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
-                                {% render_field tripclosure_form.tc_rtocost_check id="tc_rtocost_check" class="ml-2" style="width:16px; height:16px;" title="Bill to Customer" %}
-                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                {% render_field tripclosure_form.tc_rtocost_vendor_check id="tc_rtocost_vendor_check" class="ml-1" style="width:16px; height:16px; accent-color: #d97706;" title="Bill to Vendor" %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Batta</label>
-                            <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_betacost id="tc_betacost" class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
-                                {% render_field tripclosure_form.tc_betacost_check id="tc_betacost_check" class="ml-2" style="width:16px; height:16px;" title="Bill to Customer" %}
-                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                {% render_field tripclosure_form.tc_betacost_vendor_check id="tc_betacost_vendor_check" class="ml-1" style="width:16px; height:16px; accent-color: #d97706;" title="Bill to Vendor" %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Cancellation</label>
-                            <div class="d-flex align-items-center w-50">
-                                {% render_field tripclosure_form.tc_cancellation id="tc_cancellation" class="form-control form-control-modern form-control-sm py-1" style="height:28px;" %}
-                                {% render_field tripclosure_form.tc_cancellation_check id="tc_cancellation_check" class="ml-2" style="width:16px; height:16px;" title="Bill to Customer" %}
-                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
-                                {% render_field tripclosure_form.tc_cancellation_vendor_check id="tc_cancellation_vendor_check" class="ml-1" style="width:16px; height:16px; accent-color: #d97706;" title="Bill to Vendor" %}
-                                {% endif %}
-                            </div>
-                        </div>
-
+                        <div class="form-section-title mb-3 d-flex justify-content-between align-items-center" style="font-size:0.95rem;">
+                            <span><i class="fas fa-rupee-sign"></i> Trip Charges</span>
+                            <div class="d-flex align-items-center" style="flex-shrink: 0;">
+                                <div style="width: 30px; min-width: 30px; text-align: center; font-size: 0.62rem; font-weight: 700; line-height: 1.1; text-transform: uppercase;" title="Bill to Customer">Bill<br>Cust</div>
+                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
+                                <div style="width: 30px; min-width: 30px; text-align: center; font-size: 0.62rem; font-weight: 700; line-height: 1.1; text-transform: uppercase; color: #d97706;" title="Bill to Vendor (Market Vehicles)">Bill<br>Vend</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Trip Charges -->
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Trip Charges</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_tripcost id="tc_tripcost" readonly="readonly" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px; background-color: #e9ecef; pointer-events: none; flex: 1; min-width: 0;" %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_tripcost_check id="tc_tripcost_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
+                                </div>
+                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
+                                <div style="width: 30px; min-width: 30px; flex-shrink: 0;"></div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Parking</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_parkingcost class="form-control form-control-modern form-control-sm py-1" style="height:28px; flex: 1; min-width: 0;" %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_parkingcost_check id="tc_parkingcost_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
+                                </div>
+                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_parkingcost_vendor_check id="tc_parkingcost_vendor_check" style="width:16px; height:16px; cursor: pointer; margin: 0; accent-color: #d97706;" title="Bill to Vendor" %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 d-flex align-items-center w-50" style="line-height:1; font-size: 0.8rem;">
+                                Toll
+                                <button type="button" class="ml-1 p-0 text-primary" style="font-size:1rem; border: none; background: transparent; outline: none; cursor: pointer;" data-toggle="modal" data-target="#tollTxnModal" onclick="showTollTxnDialog(true)" title="View Toll Details"><i class="fas fa-eye"></i></button>
+                            </label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_tollcost class="form-control form-control-modern form-control-sm py-1" id="tc_tollcost" style="height:28px; flex: 1; min-width: 0;" %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_tollcost_check id="tc_tollcost_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
+                                </div>
+                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_tollcost_vendor_check id="tc_tollcost_vendor_check" style="width:16px; height:16px; cursor: pointer; margin: 0; accent-color: #d97706;" title="Bill to Vendor" %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Loading</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_loadingcost class="form-control form-control-modern form-control-sm py-1" style="height:28px; flex: 1; min-width: 0;" %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_loadingcost_check id="tc_loadingcost_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
+                                </div>
+                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_loadingcost_vendor_check id="tc_loadingcost_vendor_check" style="width:16px; height:16px; cursor: pointer; margin: 0; accent-color: #d97706;" title="Bill to Vendor" %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Unloading</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_unloadingcost class="form-control form-control-modern form-control-sm py-1" style="height:28px; flex: 1; min-width: 0;" %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_unloadingcost_check id="tc_unloadingcost_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
+                                </div>
+                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_unloadingcost_vendor_check id="tc_unloadingcost_vendor_check" style="width:16px; height:16px; cursor: pointer; margin: 0; accent-color: #d97706;" title="Bill to Vendor" %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Weighment</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_weighmentcost class="form-control form-control-modern form-control-sm py-1" style="height:28px; flex: 1; min-width: 0;" %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_weighmentcost_check id="tc_weighmentcost_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
+                                </div>
+                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_weighmentcost_vendor_check id="tc_weighmentcost_vendor_check" style="width:16px; height:16px; cursor: pointer; margin: 0; accent-color: #d97706;" title="Bill to Vendor" %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Supervisor</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_supervisorcost class="form-control form-control-modern form-control-sm py-1" style="height:28px; flex: 1; min-width: 0;" %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_supervisorcost_check id="tc_supervisorcost_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
+                                </div>
+                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_supervisorcost_vendor_check id="tc_supervisorcost_vendor_check" style="width:16px; height:16px; cursor: pointer; margin: 0; accent-color: #d97706;" title="Bill to Vendor" %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Handling</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_handlingcost id="tc_handlingcost" class="form-control form-control-modern form-control-sm py-1" style="height:28px; flex: 1; min-width: 0;" %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_handlingcost_check id="tc_handlingcost_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
+                                </div>
+                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_handlingcost_vendor_check id="tc_handlingcost_vendor_check" style="width:16px; height:16px; cursor: pointer; margin: 0; accent-color: #d97706;" title="Bill to Vendor" %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div id="handling_reason_container" class="align-items-center justify-content-between mb-2 d-none">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Handling Reason</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_handlingcost_reason id="tc_handlingcost_reason" class="form-control form-control-modern form-control-sm py-1 w-100" style="height:28px;" placeholder="Reason for handling cost" %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Halting per day</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_haltingcost id="tc_haltingcost" class="form-control form-control-modern form-control-sm py-1" style="height:28px; flex: 1; min-width: 0;" %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_haltingcost_check id="tc_haltingcost_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
+                                </div>
+                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_haltingcost_vendor_check id="tc_haltingcost_vendor_check" style="width:16px; height:16px; cursor: pointer; margin: 0; accent-color: #d97706;" title="Bill to Vendor" %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">No of Halting Days</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_no_of_days_halting id="tc_no_of_days_halting" class="form-control form-control-modern form-control-sm py-1" style="height:28px; flex: 1; min-width: 0;" %}
+                                <div style="width: {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}60px{% else %}30px{% endif %}; min-width: {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}60px{% else %}30px{% endif %}; flex-shrink: 0;"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Total Halting</label>
+                            <div class="d-flex align-items-center w-50">
+                                <input type="text" name="tc_total_halting_cost" id="tc_total_halting_cost" class="form-control form-control-modern form-control-sm disable_a_href py-1" style="height:28px; flex: 1; min-width: 0;" readonly value="{{ trip.tc_total_halting_cost|default:'0.00' }}">
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_total_halting_cost_check id="tc_total_halting_cost_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
+                                </div>
+                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_total_halting_cost_vendor_check id="tc_total_halting_cost_vendor_check" style="width:16px; height:16px; cursor: pointer; margin: 0; accent-color: #d97706;" title="Bill to Vendor" %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">RTO</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_rtocost id="tc_rtocost" class="form-control form-control-modern form-control-sm py-1" style="height:28px; flex: 1; min-width: 0;" %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_rtocost_check id="tc_rtocost_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
+                                </div>
+                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_rtocost_vendor_check id="tc_rtocost_vendor_check" style="width:16px; height:16px; cursor: pointer; margin: 0; accent-color: #d97706;" title="Bill to Vendor" %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Batta</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_betacost id="tc_betacost" class="form-control form-control-modern form-control-sm py-1" style="height:28px; flex: 1; min-width: 0;" %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_betacost_check id="tc_betacost_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
+                                </div>
+                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_betacost_vendor_check id="tc_betacost_vendor_check" style="width:16px; height:16px; cursor: pointer; margin: 0; accent-color: #d97706;" title="Bill to Vendor" %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern small mb-0 w-50" style="line-height:1; font-size: 0.8rem;">Cancellation</label>
+                            <div class="d-flex align-items-center w-50">
+                                {% render_field tripclosure_form.tc_cancellation id="tc_cancellation" class="form-control form-control-modern form-control-sm py-1" style="height:28px; flex: 1; min-width: 0;" %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_cancellation_check id="tc_cancellation_check" style="width:16px; height:16px; cursor: pointer; margin: 0;" title="Bill to Customer" %}
+                                </div>
+                                {% if trip.tr_vehiclesource_id == 3 or 'MARKET' in trip.tr_vehiclesource.ow_ownership|upper or 'MARKET' in trip.tr_vehiclesource|stringformat:"s"|upper or vehicle_source == 'MARKET' or vehicle_source == 'Market' %}
+                                <div style="width: 30px; min-width: 30px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;">
+                                    {% render_field tripclosure_form.tc_cancellation_vendor_check id="tc_cancellation_vendor_check" style="width:16px; height:16px; cursor: pointer; margin: 0; accent-color: #d97706;" title="Bill to Vendor" %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
                         <!-- Trip Status -->
                         <div class="form-group-modern mt-3 mb-0">
                             <label class="form-label-modern small mb-1 font-weight-bold">Trip Status</label>

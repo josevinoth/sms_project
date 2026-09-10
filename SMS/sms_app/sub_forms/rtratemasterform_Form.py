@@ -20,3 +20,7 @@ class RtratemasteraddForm(forms.ModelForm):
         self.fields['ro_touchpoint2'].empty_label = "--Select--"
         self.fields['ro_touchpoint3'].empty_label = "--Select--"
         self.fields['ro_touchpoint4'].empty_label = "--Select--"
+        self.fields['ro_agreement_type'].empty_label = "--Select--"
+        self.fields['ro_validity_from'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['ro_validity_to'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['ro_status'].empty_label = "--Select--" 

@@ -19,3 +19,7 @@ class VendorratemasteraddForm(forms.ModelForm):
         self.fields['vr1_touchpoint2'].empty_label = "--Select--"
         self.fields['vr1_touchpoint3'].empty_label = "--Select--"
         self.fields['vr1_touchpoint4'].empty_label = "--Select--"
+        self.fields['vr1_agreement_type'].empty_label = "--Select--"
+        self.fields['vr1_validity_from'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['vr1_validity_to'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['vr1_status'].empty_label = "--Select--" 
