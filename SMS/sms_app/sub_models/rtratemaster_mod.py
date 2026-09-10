@@ -19,6 +19,10 @@ class RtratemasterInfo(models.Model):
     ro_created_at = models.DateTimeField(null=True, auto_now_add=True)
     ro_updated_at = models.DateTimeField(null=True, auto_now=True)
     ro_updated_by = models.ForeignKey(MyUser, on_delete=models.CASCADE, null=True)
+    ro_agreement_type = models.ForeignKey('sms_app.AgreementType', on_delete=models.SET_NULL, null=True, blank=True)
+    ro_validity_from = models.DateField(null=True, blank=True)
+    ro_validity_to = models.DateField(null=True, blank=True)
+    ro_status = models.CharField(max_length=20, choices=[('Active', 'Active'), ('Inactive', 'Inactive')], default='Active')
     def __str__(self):
         return self.ro_rate
 

@@ -1,3 +1,4 @@
+import datetime
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -19,6 +20,12 @@ def rtratemaster_add(request, rtratemaster_id=0):
             form = RtratemasteraddForm()
         else:
             rtratemaster = RtratemasterInfo.objects.get(pk=rtratemaster_id)
+            
+            # Auto-expire check upon viewing the edit page
+            if rtratemaster.ro_validity_to and rtratemaster.ro_validity_to < datetime.date.today() and rtratemaster.ro_status == 'Active':
+                rtratemaster.ro_status = 'Inactive'
+                rtratemaster.save(update_fields=['ro_status'])
+                
             form = RtratemasteraddForm(instance=rtratemaster)
         return render(request, "asset_mgt_app/rtratemaster_add.html", {'form': form, 'first_name': first_name, 'user_id': user_id})
     else:
@@ -54,6 +61,12 @@ def rtratemaster_add(request, rtratemaster_id=0):
                         rate_master=new_rate,
                         old_rate=None,
                         new_rate=new_rate_val,
+                        old_agreement_type=None,
+                        new_agreement_type=new_rate.ro_agreement_type,
+                        old_validity_from=None,
+                        new_validity_from=new_rate.ro_validity_from,
+                        old_validity_to=None,
+                        new_validity_to=new_rate.ro_validity_to,
                         action_type='CREATE',
                         changed_by=curr_user or new_rate.ro_updated_by,
                         remarks="Initial creation"
@@ -63,6 +76,9 @@ def rtratemaster_add(request, rtratemaster_id=0):
                 else:
                     rtratemaster = RtratemasterInfo.objects.get(pk=rtratemaster_id)
                     old_rate_val = rtratemaster.ro_rate
+                    old_ag_type = rtratemaster.ro_agreement_type
+                    old_val_from = rtratemaster.ro_validity_from
+                    old_val_to = rtratemaster.ro_validity_to
                     form = RtratemasteraddForm(request.POST, instance=rtratemaster)
                     updated_item = form.save(commit=False)
                     if curr_user:
@@ -74,10 +90,15 @@ def rtratemaster_add(request, rtratemaster_id=0):
                         rate_master=updated_item,
                         old_rate=old_rate_val,
                         new_rate=new_rate_val,
+                        old_agreement_type=old_ag_type,
+                        new_agreement_type=updated_item.ro_agreement_type,
+                        old_validity_from=old_val_from,
+                        new_validity_from=updated_item.ro_validity_from,
+                        old_validity_to=old_val_to,
+                        new_validity_to=updated_item.ro_validity_to,
                         action_type='UPDATE',
                         changed_by=curr_user or updated_item.ro_updated_by,
-                        remarks=f"Rate updated from ₹{old_rate_val} to ₹{new_rate_val}" if old_rate_val != new_rate_val else "Record updated"
-                    )
+                        remarks=f"Rate updated from ₹{old_rate_val} to ₹{new_rate_val}" if old_rate_val != new_rate_val else "Record updated")
                     messages.success(request, 'Record Updated Successfully')
                     return redirect(request.META['HTTP_REFERER'])
             else:
@@ -161,4 +182,4 @@ def rtratemaster_history(request, rtratemaster_id):
 def rtratemaster_delete(request, rtratemaster_id):
     rtratemaster = RtratemasterInfo.objects.get(pk=rtratemaster_id)
     rtratemaster.delete()
-    return redirect('/SMS/rtratemaster_list')
+    return redirect('/SMS/rtratemaster_list')
