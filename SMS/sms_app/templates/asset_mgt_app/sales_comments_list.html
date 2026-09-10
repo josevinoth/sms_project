@@ -33,7 +33,7 @@
             
             <div class="d-flex align-items-center flex-wrap ml-auto" style="gap: 10px;">
                 <div class="d-flex align-items-center" style="gap: 6px;">
-                    <label for="from-date" class="mb-0 font-weight-bold form-label-modern" style="letter-spacing: 0.5px;">From:</label>
+                    <label for="from-date" class="mb-0 font-weight-bold form-label-modern" style="letter-spacing: 0.5px;">Call Date From:</label>
                     <input type="date" id="from-date" name="from_date" value="{{ from_date|default:'' }}" class="form-control form-control-modern" style="height: 38px; width: auto;">
                 </div>
                 <div class="d-flex align-items-center" style="gap: 6px;">
@@ -140,7 +140,8 @@
             </table>
         </div>
 
-        <!-- ══ Modern Pagination ══ -->
+        <!-- ══ Modern Pagination (Server) ══ -->
+        {% if page_obj.paginator.num_pages > 1 %}
         <div class="d-flex justify-content-between align-items-center flex-wrap mt-3 pt-3" style="border-top: 1px solid var(--border-light, #e2e8f0); gap: 10px;">
             <div class="text-muted font-weight-bold">
                 Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
@@ -159,6 +160,7 @@
                 {% endif %}
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 
@@ -174,12 +176,17 @@
 
 <script>
     $(document).ready(function() {
+        const hasDateFilter = {% if from_date or to_date %}true{% else %}false{% endif %};
+
         // Initialize DataTable
         var table = $('#sales_comments_list').DataTable({
             scrollY: "600px",
             scrollX: true,
             order: [[0, 'desc']],
-            dom: 'lBfrtip',
+            paging: !hasDateFilter,
+            pageLength: 50,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            dom: hasDateFilter ? 'Bfrti' : 'lBfrtip',
             buttons: ['copy', 'csv', 'excel', 'print'],
             initComplete: function() {
                 // Apply column search for each input field
@@ -217,6 +224,8 @@
         } else {
             url.searchParams.delete('to_date');
         }
+
+        url.searchParams.delete('page');
 
         window.location.href = url.toString();
     }

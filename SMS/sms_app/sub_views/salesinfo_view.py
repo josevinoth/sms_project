@@ -206,17 +206,20 @@ def sales_comments_list(request):
 
     sales_data_query = Sales_Comments_Info.objects.all()
     if from_date:
-        sales_data_query = sales_data_query.filter(sc_updated_at__date__gte=from_date)
+        sales_data_query = sales_data_query.filter(sc_date_of_call__gte=from_date)
     if to_date:
-        sales_data_query = sales_data_query.filter(sc_updated_at__date__lte=to_date)
+        sales_data_query = sales_data_query.filter(sc_date_of_call__lte=to_date)
     # Filtering based on role
     if role_id in [1, 3]:  # Role ID 1 & 3 should see all records
-        sales_comments_list = sales_data_query.order_by('-sc_created_at')  # Latest created at first
+        sales_comments_list = sales_data_query.order_by('-sc_date_of_call', '-sc_created_at')  # Latest date of call first
     else:
-        sales_comments_list = sales_data_query.filter(sc_updated_by=user_id).order_by('-sc_created_at')
+        sales_comments_list = sales_data_query.filter(sc_updated_by=user_id).order_by('-sc_date_of_call', '-sc_created_at')
 
     # Paginate results
-    paginator = Paginator(sales_comments_list, 10000)  # Large number to ensure all results load
+    if from_date or to_date:
+        paginator = Paginator(sales_comments_list, 10000)  # Load all results when date filter is used
+    else:
+        paginator = Paginator(sales_comments_list, 50)     # Paginate normally without date filter
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -285,21 +288,24 @@ def sales_comments_search(request):
     role_id = RoleInfo.objects.get(role_name=role).id
     sales_data_query = Sales_Comments_Info.objects.all()
     if from_date:
-        sales_data_query = sales_data_query.filter(sc_updated_at__date__gte=from_date)
+        sales_data_query = sales_data_query.filter(sc_date_of_call__gte=from_date)
     if to_date:
-        sales_data_query = sales_data_query.filter(sc_updated_at__date__lte=to_date)
+        sales_data_query = sales_data_query.filter(sc_date_of_call__lte=to_date)
     if not sales_number:
         sales_number = ""
 
     if role_id == 3:
-        sales_comments_list = (sales_data_query.filter(Q(sc_sales_number__s_sale_number__icontains=sales_number) | Q(sc_sales_number__s_sale_number__isnull=True))).order_by('-sc_created_at')
+        sales_comments_list = (sales_data_query.filter(Q(sc_sales_number__s_sale_number__icontains=sales_number) | Q(sc_sales_number__s_sale_number__isnull=True))).order_by('-sc_date_of_call', '-sc_created_at')
     elif role_id == 1:
-        sales_comments_list = (sales_data_query.filter(Q(sc_sales_number__s_sale_number__icontains=sales_number) | Q(sc_sales_number__s_sale_number__isnull=True))).order_by('-sc_created_at')
+        sales_comments_list = (sales_data_query.filter(Q(sc_sales_number__s_sale_number__icontains=sales_number) | Q(sc_sales_number__s_sale_number__isnull=True))).order_by('-sc_date_of_call', '-sc_created_at')
     else:
-        sales_comments_list = (sales_data_query.filter(Q(sc_sales_number__s_sale_number__icontains =sales_number,sc_updated_by=user_id)|Q(sc_sales_number__s_sale_number__isnull=True,sc_updated_by=user_id))).order_by('-sc_created_at')
+        sales_comments_list = (sales_data_query.filter(Q(sc_sales_number__s_sale_number__icontains =sales_number,sc_updated_by=user_id)|Q(sc_sales_number__s_sale_number__isnull=True,sc_updated_by=user_id))).order_by('-sc_date_of_call', '-sc_created_at')
 
     page_number = request.GET.get('page')
-    paginator = Paginator(sales_comments_list, 50)
+    if from_date or to_date:
+        paginator = Paginator(sales_comments_list, 10000)  # Load all results when date filter is used
+    else:
+        paginator = Paginator(sales_comments_list, 50)     # Paginate normally without date filter
     page_obj = paginator.get_page(page_number)
     context = {
         # 'sales_list': sales_list,

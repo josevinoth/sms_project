@@ -904,7 +904,7 @@ def vehicle_allotment_list(request):
 
     vehicle_allotted = Vehicle_allotmentInfo.objects.filter(
         va_enquirynumber__in=enquiry_ids
-    ).values('va_enquirynumber').annotate(total_allotted=Count('id'))
+    ).exclude(va_status_id=2).values('va_enquirynumber').annotate(total_allotted=Count('id'))
 
     vehicle_allotted_dict = {
         v['va_enquirynumber']: v['total_allotted'] for v in vehicle_allotted
