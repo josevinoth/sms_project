@@ -24,9 +24,7 @@ class WMSPettyCashForm(forms.ModelForm):
 
         if 'wpc_branch' in self.fields:
             self.fields['wpc_branch'].queryset = self.fields['wpc_branch'].queryset.filter(
-                loc_name__icontains='MAA'
-            ) | self.fields['wpc_branch'].queryset.filter(
-                loc_name__icontains='BLR'
+                loc_name__in=['BVM BLR', 'BVM MAA']
             )
 
         if 'wpc_category' in self.fields:
