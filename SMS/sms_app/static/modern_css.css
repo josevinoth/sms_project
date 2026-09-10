@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
+    color-scheme: light;
     /* Light Theme (Clean & Professional) */
     --primary-glow: linear-gradient(135deg, #2dd4bf 0%, #3b82f6 100%);
     --accent-emerald: #14b8a6;
@@ -16,6 +17,7 @@
     --bg-page: #f8fafc; /* Softer slate instead of mint */
     --bg-card: #ffffff;
     --bg-section: #ffffff;
+    --bg-body: #f8fafc;
     --text-main: #0f172a;
     --text-muted: #334155;
     --text-white: #ffffff;
@@ -48,10 +50,12 @@
 }
 
 [data-theme="dark"] {
+    color-scheme: dark;
     /* ── Backgrounds: Match customer portal glassmorphic look ── */
     --bg-page: #0f172a;
     --bg-card: rgba(255, 255, 255, 0.05); /* Transparent glass */
     --bg-section: rgba(255, 255, 255, 0.03);
+    --bg-body: rgba(255, 255, 255, 0.03);
 
     /* ── Typography ── */
     --text-main: #ffffff;         /* Increased brightness from f8fafc to pure white */
@@ -1891,7 +1895,9 @@ body, .modern-card, .form-section, .form-control-modern, .modern-table td, .tabl
 
 [data-theme="dark"] .select2-search--dropdown .select2-search__field::placeholder,
 [data-theme="dark"] .bs-searchbox .form-control::placeholder,
-[data-theme="dark"] .multiselect-search::placeholder {
+[data-theme="dark"] .multiselect-search::placeholder,
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
     color: rgba(255, 255, 255, 0.4) !important;
 }
 
