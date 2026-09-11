@@ -18,7 +18,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.urls import reverse
 import json
-from .general_utils import get_financial_year, get_branch_code, generate_next_number, get_session_branch_id
+from .general_utils import get_financial_year, get_branch_code, generate_next_number, get_session_branch_id, is_admin_user, get_allowed_next_statuses
 
 
 def format_email_date(dt):
@@ -377,10 +377,14 @@ def tripdetail_add(request, tripdetail_id=0):
                 print('status_selected (auto)', status_selected)
             except ObjectDoesNotExist:
                 status_selected = None
-            if status_selected == 8:
-                allowed_statuses = [8, 10, 11]
+            allowed_next = get_allowed_next_statuses(status_selected or trip_instance.tc_financestatus_id, is_admin=is_admin_user(request))
+            if allowed_next is not None:
+                allowed_statuses = allowed_next
             else:
-                allowed_statuses = [1, 2, 8, 10, 11]
+                if status_selected == 8:
+                    allowed_statuses = [8, 10, 11]
+                else:
+                    allowed_statuses = [1, 2, 8, 10, 11]
             if status_selected and status_selected not in allowed_statuses:
                 allowed_statuses.append(status_selected)
 
@@ -858,6 +862,17 @@ def tripdetail_add(request, tripdetail_id=0):
                 manual_status_id = request.POST.get('tc_financestatus')
                 if manual_status_id:
                     manual_status_id = int(manual_status_id)
+                    
+                    # Enforce Forward-Only Status Transition for Regular Users
+                    current_status_id = tripdetail.tc_financestatus_id or tripdetail.tr_operational_status_id
+                    allowed_statuses = get_allowed_next_statuses(current_status_id, is_admin=is_admin_user(request))
+                    if allowed_statuses is not None and manual_status_id not in allowed_statuses:
+                        curr_status_name = str(tripdetail.tc_financestatus) if tripdetail.tc_financestatus else str(current_status_id)
+                        target_status = Tripstatusinfo.objects.filter(id=manual_status_id).first()
+                        target_status_name = str(target_status) if target_status else str(manual_status_id)
+                        messages.error(request, f"Permission Denied: Non-admin users cannot revert trip status backward from '{curr_status_name}' to '{target_status_name}'.")
+                        return redirect(request.META.get('HTTP_REFERER', 'tripdetail_list'))
+
                     trip.tr_operational_status_id = manual_status_id
                     # Prevent reverting advanced finance statuses back to Trip Closed (2)
                     if manual_status_id == 2 and trip.tc_financestatus_id in [4, 5, 6, 7, 9]:

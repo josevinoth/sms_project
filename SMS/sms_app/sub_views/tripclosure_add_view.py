@@ -20,6 +20,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.urls import reverse
 from .invoice_documents_view import sync_closure_files_to_invoice
+from .general_utils import is_admin_user, get_allowed_next_statuses
 from ..sub_models.haltingcharges_mod import Haltingcharges
 from ..models import EnquirynoteInfo
 
@@ -230,8 +231,15 @@ def tripclosure_add(request, tripclosure_id=0):
             consignment_num = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).en_consignmentdetails
             tripclosure_form = TripclosureaddForm(instance=tripclosure)
             
-            # Restrict dropdown to "Awaiting Trip Settlement" (ID 4) and set default
-            tripclosure_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id=4)
+            allowed_ids = get_allowed_next_statuses(tripclosure.tc_financestatus_id, is_admin=is_admin_user(request))
+            if allowed_ids is not None:
+                # Filter queryset for regular users based on allowed forward transitions
+                valid_ids = [i for i in [4, 7, 9, 10, 11] if i in allowed_ids]
+                if not valid_ids:
+                    valid_ids = [tripclosure.tc_financestatus_id] if tripclosure.tc_financestatus_id else [4]
+                tripclosure_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=valid_ids)
+            else:
+                tripclosure_form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7, 9, 10, 11])
             tripclosure_form.fields['tc_financestatus'].empty_label = None
             if not tripclosure.tc_financestatus:
                 tripclosure_form.fields['tc_financestatus'].initial = Tripstatusinfo.objects.filter(id=4).first()
@@ -382,6 +390,18 @@ def tripclosure_add(request, tripclosure_id=0):
             tripclosurefiles_form = TripclosurefilesForm(request.POST, request.FILES, instance=tripclosure_files)
 
             if tripclosure_form.is_valid():
+                # Enforce Forward-Only Status Transition for Regular Users
+                posted_status_id = request.POST.get('tc_financestatus')
+                if posted_status_id:
+                    current_status_id = tripclosure.tc_financestatus_id
+                    allowed_statuses = get_allowed_next_statuses(current_status_id, is_admin=is_admin_user(request))
+                    if allowed_statuses is not None and int(posted_status_id) not in allowed_statuses:
+                        curr_status_name = str(tripclosure.tc_financestatus) if tripclosure.tc_financestatus else str(current_status_id)
+                        target_status = Tripstatusinfo.objects.filter(id=posted_status_id).first()
+                        target_status_name = str(target_status) if target_status else str(posted_status_id)
+                        messages.error(request, f"Permission Denied: Non-admin users cannot revert trip status backward from '{curr_status_name}' to '{target_status_name}'.")
+                        return redirect(request.META.get('HTTP_REFERER', 'tripclosure_list'))
+
                 tripclosure_form.save()
                 print("Trip Closure Main Form Saved")
 
