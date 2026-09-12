@@ -53,25 +53,25 @@
 <div class="container-signatures">
   <table style="width: 100%; border: none;">
     <tr>
-      <td style="width: 50%; text-align: left; padding-left: 50px; border: none; vertical-align: bottom; padding-top: 30px;">
+      <td style="width: 50%; text-align: left; padding-left: 50px; border: none; vertical-align: bottom; padding-top: 20px;">
         {% if gatein.driver_signature_base64 %}
           <img src="{{ gatein.driver_signature_base64 }}" height="80" style="margin-bottom: 5px;"><br>
         {% else %}
-          <span style="display:block; height:80px; line-height:80px;">No Signature</span><br>
+          <span style="color: #6c757d; font-style: italic;">No Signature</span><br><br>
         {% endif %}
         <strong>Driver Signature</strong>
       </td>
-      <td style="width: 50%; text-align: left; padding-left: 50px; border: none; vertical-align: bottom; padding-top: 30px;">
+      <td style="width: 50%; text-align: left; padding-left: 50px; border: none; vertical-align: bottom; padding-top: 20px;">
         {% if gatein.supervisor_signature_base64 %}
           <img src="{{ gatein.supervisor_signature_base64 }}" height="80" style="margin-bottom: 5px;"><br>
         {% else %}
-          <span style="display:block; height:80px; line-height:80px;">No Signature</span><br>
+          <span style="color: #6c757d; font-style: italic;">No Signature</span><br><br>
         {% endif %}
         <strong>Supervisor Signature</strong>
       </td>
     </tr>
     <tr>
-      <td colspan="2" style="text-align: center; border: none; padding-top: 40px;">
+      <td colspan="2" style="text-align: center; border: none; padding-top: 20px;">
         <strong>THANK YOU FOR YOUR BUSINESS!</strong>
       </td>
     </tr>
