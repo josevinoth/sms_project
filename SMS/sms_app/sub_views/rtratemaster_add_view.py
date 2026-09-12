@@ -9,8 +9,14 @@ from django.shortcuts import render, redirect
 from django.db.models import Q
 from django.core.paginator import Paginator
 
+from .general_utils import is_admin_user
+
 @login_required(login_url='login_page')
 def rtratemaster_add(request, rtratemaster_id=0):
+    if not is_admin_user(request):
+        messages.error(request, "Access Restricted: You do not have permission to add or modify Route Rate Master records.")
+        return redirect('home_page')
+
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     user_obj = MyUser.objects.filter(pk=user_id).first() if user_id else None
@@ -180,6 +186,9 @@ def rtratemaster_history(request, rtratemaster_id):
 # Delete rtratemaster
 @login_required(login_url='login_page')
 def rtratemaster_delete(request, rtratemaster_id):
+    if not is_admin_user(request):
+        messages.error(request, "Access Restricted: You do not have permission to delete Route Rate Master records.")
+        return redirect('home_page')
     rtratemaster = RtratemasterInfo.objects.get(pk=rtratemaster_id)
     rtratemaster.delete()
     return redirect('/SMS/rtratemaster_list')
