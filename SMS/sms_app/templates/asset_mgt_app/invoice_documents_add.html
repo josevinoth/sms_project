@@ -37,8 +37,8 @@
                             {% render_field tripclosure_form.tr_category id="tr_category" class="form-control form-control-modern form-control-sm disable_a_href" %}
                         </div>
                         <div class="form-group-modern mb-2">
-                            <label class="form-label-modern small mb-1">Customer Ref No</label>
-                            <input type="text" class="form-control form-control-modern form-control-sm" value="{{ live_customer_ref }}" readonly>
+                            <label class="form-label-modern small mb-1">Customer Ref No <span class="text-danger font-weight-bold">*</span></label>
+                            <input type="text" name="tr_customerref" id="live_customer_ref" class="form-control form-control-modern form-control-sm" value="{{ live_customer_ref }}" placeholder="Enter Customer Ref No" required>
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Type Requested</label>
@@ -601,6 +601,14 @@
 
         // Validate Special Sell only if lower than actual rate
         $("form").on("submit", function (e) {
+            // Validate Customer Ref No is mandatory
+            var customerRefVal = ($("#live_customer_ref").val() || "").trim();
+            if (!customerRefVal) {
+                e.preventDefault();
+                alert("Customer Ref No is mandatory. Form submission is only allowed when Customer Ref No has a value.");
+                return false;
+            }
+
             // Guard: ensure both are not checked at the same time
             if ($("#tc_tripcost_check").is(":checked") && $("#special_sell_check").is(":checked")) {
                 $("#special_sell_check").prop("checked", false);

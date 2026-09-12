@@ -617,8 +617,9 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
         va = va_map.get(trip.tr_enquirynumber_id)
 
         # If cancellation charges are applicable for a trip, trip charges should be 0
+        from sms_app.sub_views.transport_reports_view import get_tms_report_transport_charge
         cancellation_val = safe_num(trip.tc_cancellation)
-        effective_tripcost = 0.0 if cancellation_val > 0 else safe_num(trip.tc_tripcost)
+        effective_tripcost = 0.0 if cancellation_val > 0 else get_tms_report_transport_charge(trip, allotment=va)
 
         for cons_goods in goods_list:
             row = []
