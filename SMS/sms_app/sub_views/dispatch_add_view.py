@@ -113,21 +113,15 @@ def dispatch_add(request, dispatch_id=0):
 
             if dispatch_form.is_valid():
                 dispatch = dispatch_form.save(commit=False)
-                # Process driver signature
+                                # Process driver signature
                 driver_data = request.POST.get('driver_signature_data')
                 if driver_data:
-                    format, imgstr = driver_data.split(';base64,')
-                    ext = format.split('/')[-1]
-                    data = ContentFile(base64.b64decode(imgstr), name=f'driver_signature.{ext}')
-                    dispatch.dispatch_driver_signature = data
+                    dispatch.driver_sign_b64 = driver_data
 
                 # Process supervisor signature
                 supervisor_data = request.POST.get('supervisor_signature_data')
                 if supervisor_data:
-                    format, imgstr = supervisor_data.split(';base64,')
-                    ext = format.split('/')[-1]
-                    data = ContentFile(base64.b64decode(imgstr), name=f'supervisor_signature.{ext}')
-                    dispatch.dispatch_supervisor_signature = data
+                    dispatch.supervisor_sign_b64 = supervisor_data
 
                 dispatch.save()
                 print("Form Saved")
@@ -534,8 +528,8 @@ def dispatch_search(request):
 
     # Convert signatures to base64
     for d in dispatch_list:
-        d.driver_signature_base64 = get_base64_image(d.dispatch_driver_signature)
-        d.supervisor_signature_base64 = get_base64_image(d.dispatch_supervisor_signature)
+        d.driver_signature_base64 = d.driver_sign_b64
+        d.supervisor_signature_base64 = d.supervisor_sign_b64
 
     # Pagination
     page_number = request.GET.get('page')
@@ -608,8 +602,8 @@ def dispatch_gatepass_pdf(request, dispatch_id=0, download=False):
                                                                                                 flat=True).order_by(
         'id').first()
     for d in dispatch_details:
-        d.driver_signature_base64 = get_base64_image(d.dispatch_driver_signature)
-        d.supervisor_signature_base64 = get_base64_image(d.dispatch_supervisor_signature)
+        d.driver_signature_base64 = d.driver_sign_b64
+        d.supervisor_signature_base64 = d.supervisor_sign_b64
     context = {
         'dispatch_details': dispatch_details,
         'grouped_dispatch_details': grouped_details,

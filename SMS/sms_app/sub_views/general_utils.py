@@ -79,9 +79,18 @@ def generate_next_number(model_class, field_name, prefix, padding, filter_prefix
     return new_num
 
 import base64
+
 def get_base64_image(image_field):
     if not image_field:
         return None
+    try:
+        with image_field.open('rb') as img_file:
+            return 'data:image/png;base64,' + base64.b64encode(img_file.read()).decode('utf-8')
+    except Exception as e:
+        with open("C:/Users/Admin/PycharmProjects/sms_project_v1/SMS/signature_error.txt", "a") as err_file:
+            err_file.write(f"Error for {image_field}: {str(e)}\n")
+        return None
+
     try:
         with image_field.open('rb') as img_file:
             return 'data:image/png;base64,' + base64.b64encode(img_file.read()).decode('utf-8')
