@@ -2794,14 +2794,18 @@ def vendor_p_l_mkt_report_ajax_view(request):
         if t_id and t_id in trip_id_to_pk:
             expense_map.setdefault(t_id, []).append(e)
 
-    all_bills = MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips')
-    bill_no_map = {}
+    all_bills = MarketBillInfo.objects.all().only(
+        'mb_bill_no', 'mb_selected_trips', 'mb_trip_details',
+        'mb_trip_cost', 'mb_loading_cost', 'mb_unloading_cost',
+        'mb_parking_cost', 'mb_halting_cost', 'mb_total_cost', 'mb_vendor'
+    )
+    bill_obj_map = {}
     for b in all_bills:
         if b.mb_selected_trips:
             ids = [tid.strip() for tid in b.mb_selected_trips.split(',') if tid.strip()]
             for tid in ids:
                 try:
-                    bill_no_map[int(tid)] = b.mb_bill_no
+                    bill_obj_map[int(tid)] = b
                 except:
                     pass
 
@@ -2866,75 +2870,93 @@ def vendor_p_l_mkt_report_ajax_view(request):
                 selling_beta + selling_cancellation
         )
 
-        vendor_name = ""
+        mb_bill = bill_obj_map.get(trip.id)
+        bill_no_val = mb_bill.mb_bill_no if mb_bill else ""
+
+        if mb_bill and mb_bill.mb_vendor:
+            vendor_name = safe_str(mb_bill.mb_vendor)
+        elif allotment and allotment.va_vendor:
+            vendor_name = safe_str(allotment.va_vendor)
+        else:
+            vendor_name = "Market"
+
         buying_trip_cost = 0.0
-
-        if allotment:
-            vendor_name = safe_str(allotment.va_vendor) if allotment.va_vendor else "Market"
-        else:
-            vendor_name = "Market"
-
-
-
-        if allotment:
-            if allotment.va_vendor:
-                v_type_id = trip.tr_vehicletype_id or (trip.tr_vehicletype_placed_id if hasattr(trip, 'tr_vehicletype_placed_id') else None)
-                key = (trip.tr_departedlocation_id, trip.tr_reportedlocation_id, v_type_id, allotment.va_vendor_id)
-                rate_val = rate_map.get(key)
-                
-                if safe_num(allotment.va_specialbuy) > 0:
-                    buying_trip_cost = safe_num(allotment.va_specialbuy)
-                elif rate_val is not None:
-                    buying_trip_cost = safe_num(rate_val)
-                else:
-                    buying_trip_cost = 0.0
-            else:
-                buying_trip_cost = safe_num(allotment.va_specialbuy)
-        else:
-            vendor_name = "Market"
-
-        trip_expenses = expense_map.get(trip.id, [])
-
         buying_loading = buying_unloading = buying_weighment = buying_aai = 0.0
         buying_toll = buying_halting = buying_handling = buying_parking = buying_rto = buying_batta = 0.0
 
-        for e in trip_expenses:
-            buying_loading += safe_num(e.de_loadingcost)
-            buying_unloading += safe_num(e.de_unloadingcost)
-            buying_weighment += safe_num(e.de_weighmentcost)
-            buying_aai += safe_num(e.de_supervisorcost)
-            buying_parking += safe_num(e.de_parkingcost)
-            buying_rto += safe_num(e.de_rtocost)
-            buying_batta += safe_num(e.de_battacost)
+        if mb_bill:
+            # Pull Buying Trip Cost and Expenses from Market Bill
+            if mb_bill.mb_trip_details and str(trip.id) in mb_bill.mb_trip_details:
+                details = mb_bill.mb_trip_details[str(trip.id)]
+                buying_trip_cost = safe_num(details.get('trip_cost', 0))
+                buying_loading = safe_num(details.get('loading_cost', 0))
+                buying_unloading = safe_num(details.get('unloading_cost', 0))
+                buying_parking = safe_num(details.get('parking_cost', 0))
+                buying_halting = safe_num(details.get('halting_cost', 0))
+            else:
+                buying_trip_cost = safe_num(mb_bill.mb_trip_cost)
+                buying_loading = safe_num(mb_bill.mb_loading_cost)
+                buying_unloading = safe_num(mb_bill.mb_unloading_cost)
+                buying_parking = safe_num(mb_bill.mb_parking_cost)
+                buying_halting = safe_num(mb_bill.mb_halting_cost)
+        else:
+            # Fallback when trip does not have a Market Bill yet
+            if allotment:
+                if allotment.va_vendor:
+                    v_type_id = trip.tr_vehicletype_id or (trip.tr_vehicletype_placed_id if hasattr(trip, 'tr_vehicletype_placed_id') else None)
+                    key = (trip.tr_departedlocation_id, trip.tr_reportedlocation_id, v_type_id, allotment.va_vendor_id)
+                    rate_val = rate_map.get(key)
+                    
+                    if safe_num(allotment.va_specialbuy) > 0:
+                        buying_trip_cost = safe_num(allotment.va_specialbuy)
+                    elif rate_val is not None:
+                        buying_trip_cost = safe_num(rate_val)
+                    else:
+                        buying_trip_cost = 0.0
+                else:
+                    buying_trip_cost = safe_num(allotment.va_specialbuy)
+            else:
+                buying_trip_cost = 0.0
 
-            exp_type_str = str(e.de_expense_type).lower() if e.de_expense_type else ""
-            cost_val = safe_num(e.de_total_cost)
+            trip_expenses = expense_map.get(trip.id, [])
 
-            if "toll" in exp_type_str:
-                if not e.de_rtocost: buying_toll += cost_val
-            elif "halting" in exp_type_str:
-                buying_halting += cost_val
-            elif "handling" in exp_type_str or "supervisor" in exp_type_str:
-                if not e.de_supervisorcost: buying_handling += cost_val
-            elif "parking" in exp_type_str:
-                if not e.de_parkingcost: buying_parking += cost_val
-            elif "loading" in exp_type_str:
-                if not e.de_loadingcost: buying_loading += cost_val
-            elif "unloading" in exp_type_str:
-                if not e.de_unloadingcost: buying_unloading += cost_val
-            elif "weighment" in exp_type_str:
-                if not e.de_weighmentcost: buying_weighment += cost_val
-            elif "bata" in exp_type_str or "batta" in exp_type_str:
-                if not e.de_battacost: buying_batta += cost_val
+            for e in trip_expenses:
+                buying_loading += safe_num(e.de_loadingcost)
+                buying_unloading += safe_num(e.de_unloadingcost)
+                buying_weighment += safe_num(e.de_weighmentcost)
+                buying_aai += safe_num(e.de_supervisorcost)
+                buying_parking += safe_num(e.de_parkingcost)
+                buying_rto += safe_num(e.de_rtocost)
+                buying_batta += safe_num(e.de_battacost)
 
-        if trip.tr_vehiclesource_id == 3:  # MARKET
-            buying_loading += safe_num(trip.tc_loadingcost)
-            buying_unloading += safe_num(trip.tc_unloadingcost)
-            buying_weighment += safe_num(trip.tc_weighmentcost)
-            buying_aai += safe_num(trip.tc_supervisorcost)
-            buying_parking += safe_num(trip.tc_parkingcost)
-            buying_halting += (safe_num(trip.tc_haltingcost))
-            buying_handling += safe_num(trip.tc_handlingcost)
+                exp_type_str = str(e.de_expense_type).lower() if e.de_expense_type else ""
+                cost_val = safe_num(e.de_total_cost)
+
+                if "toll" in exp_type_str:
+                    if not e.de_rtocost: buying_toll += cost_val
+                elif "halting" in exp_type_str:
+                    buying_halting += cost_val
+                elif "handling" in exp_type_str or "supervisor" in exp_type_str:
+                    if not e.de_supervisorcost: buying_handling += cost_val
+                elif "parking" in exp_type_str:
+                    if not e.de_parkingcost: buying_parking += cost_val
+                elif "loading" in exp_type_str:
+                    if not e.de_loadingcost: buying_loading += cost_val
+                elif "unloading" in exp_type_str:
+                    if not e.de_unloadingcost: buying_unloading += cost_val
+                elif "weighment" in exp_type_str:
+                    if not e.de_weighmentcost: buying_weighment += cost_val
+                elif "bata" in exp_type_str or "batta" in exp_type_str:
+                    if not e.de_battacost: buying_batta += cost_val
+
+            if trip.tr_vehiclesource_id == 3:  # MARKET
+                buying_loading += safe_num(trip.tc_loadingcost)
+                buying_unloading += safe_num(trip.tc_unloadingcost)
+                buying_weighment += safe_num(trip.tc_weighmentcost)
+                buying_aai += safe_num(trip.tc_supervisorcost)
+                buying_parking += safe_num(trip.tc_parkingcost)
+                buying_halting += (safe_num(trip.tc_haltingcost))
+                buying_handling += safe_num(trip.tc_handlingcost)
 
         total_buying = (
                 buying_trip_cost + buying_loading + buying_unloading +
@@ -2971,7 +2993,7 @@ def vendor_p_l_mkt_report_ajax_view(request):
             total_selling,
             invoice_map.get(trip.id, ""),
             vendor_name,
-            bill_no_map.get(trip.id, ""),
+            bill_no_val,
             buying_trip_cost,
             buying_toll,
             buying_loading,
