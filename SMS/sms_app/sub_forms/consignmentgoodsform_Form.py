@@ -70,3 +70,19 @@ class ConsignmentgoodsaddForm(forms.ModelForm):
         else:
             self.fields['cg_consignee'].queryset = ConsigneeInfo.objects.none()
         self.fields['cg_consignmenttype'].empty_label = "--Select--"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        consignmenttype = cleaned_data.get('cg_consignmenttype')
+        if consignmenttype:
+            cons_type_name = str(consignmenttype).strip().lower()
+            if cons_type_name == "normal":
+                eway_att = cleaned_data.get('cg_ewaybill_att') or (self.instance and self.instance.cg_ewaybill_att)
+                invoice_att = cleaned_data.get('cg_invoice_att') or (self.instance and self.instance.cg_invoice_att)
+                otl_att = cleaned_data.get('cg_otl_att') or (self.instance and self.instance.cg_otl_att)
+
+                if not (eway_att or invoice_att or otl_att):
+                    raise forms.ValidationError(
+                        "At least one attachment (Eway Bill, Invoice, or OTL Attachment) is mandatory when Consignment Type is Normal."
+                    )
+        return cleaned_data
