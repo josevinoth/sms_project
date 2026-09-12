@@ -7,8 +7,8 @@
   table.report_details th, table.report_details td { border: 1px solid #000; padding: 5px 10px; text-align: left; }
   table.report_details th { width: 30%; }
   table.report_details td { width: 70%; }
-  hr.report_hrItem { border: 0; border-top: 1px solid #000; margin: 15px 0; }
-  .container-signatures { margin-top: 5px; }
+  hr.report_hrItem { border: 0; border-top: 1px solid #000; margin: 5px 0; }
+  .container-signatures { margin-top: 0px; }
   .center-group { margin-top: 60px; text-align: center; font-weight: bold; }
   .sig-img { border: none; }
 </style>
@@ -53,25 +53,25 @@
 <div class="container-signatures">
   <table style="width: 100%; border: none;">
     <tr>
-      <td style="width: 50%; text-align: left; padding-left: 50px; border: none; vertical-align: bottom;">
+      <td style="width: 50%; text-align: left; padding-left: 50px; border: none; vertical-align: bottom; padding-top: 30px;">
         {% if gatein.driver_signature_base64 %}
-          <img src="{{ gatein.driver_signature_base64 }}" height="120" style="margin-bottom: 5px;"><br>
+          <img src="{{ gatein.driver_signature_base64 }}" height="80" style="margin-bottom: 5px;"><br>
         {% else %}
-          <span style="display:block; height:120px; line-height:120px;">No Signature</span><br>
+          <span style="display:block; height:80px; line-height:80px;">No Signature</span><br>
         {% endif %}
         <strong>Driver Signature</strong>
       </td>
-      <td style="width: 50%; text-align: left; padding-left: 50px; border: none; vertical-align: bottom;">
+      <td style="width: 50%; text-align: left; padding-left: 50px; border: none; vertical-align: bottom; padding-top: 30px;">
         {% if gatein.supervisor_signature_base64 %}
-          <img src="{{ gatein.supervisor_signature_base64 }}" height="120" style="margin-bottom: 5px;"><br>
+          <img src="{{ gatein.supervisor_signature_base64 }}" height="80" style="margin-bottom: 5px;"><br>
         {% else %}
-          <span style="display:block; height:120px; line-height:120px;">No Signature</span><br>
+          <span style="display:block; height:80px; line-height:80px;">No Signature</span><br>
         {% endif %}
         <strong>Supervisor Signature</strong>
       </td>
     </tr>
     <tr>
-      <td colspan="2" style="text-align: center; border: none; padding-top: 30px;">
+      <td colspan="2" style="text-align: center; border: none; padding-top: 40px;">
         <strong>THANK YOU FOR YOUR BUSINESS!</strong>
       </td>
     </tr>
