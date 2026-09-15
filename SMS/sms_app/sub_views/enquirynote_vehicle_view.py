@@ -127,6 +127,10 @@ def enquirynotevehicle_add(request, enquirynotevehicle_id=0):
             form = EnquirynotevehicleForm(request.POST)
             if form.is_valid():
                 instance = form.save(commit=False)
+                if not instance.env_quantity or instance.env_quantity < 1:
+                    messages.error(request, 'Vehicle Quantity must be at least 1.')
+                    return redirect(request.META.get('HTTP_REFERER', f'/SMS/enquirynote_update/{enquiry_num_id}'))
+
                 # Auto-fetch master rate for env_sale from Route Rate Master
                 master_rate = _get_master_sale_rate(enquirynote, instance.env_vehicletype_id, instance.env_vehiclecategory_id)
                 if master_rate is not None:
@@ -151,8 +155,12 @@ def enquirynotevehicle_add(request, enquirynotevehicle_id=0):
                 messages.success(request, 'Record Updated Successfully')
                 return redirect('/SMS/enquirynotevehicle_insert/')
             else:
-                print("enquirynotevehicle Form is Not Valid")
-                messages.error(request, 'Record Not Updated Successfully')
+                print("enquirynotevehicle Form is Not Valid", form.errors)
+                err = form.errors.get('env_quantity')
+                if err:
+                    messages.error(request, str(err[0]))
+                else:
+                    messages.error(request, 'Record Not Updated Successfully')
                 return redirect(request.META.get('HTTP_REFERER', f'/SMS/enquirynote_update/{enquiry_num_id}'))
         else:
             try:
@@ -165,6 +173,10 @@ def enquirynotevehicle_add(request, enquirynotevehicle_id=0):
                     updated_instance = form.save(commit=False)
                     new_vehicletype_id = updated_instance.env_vehicletype_id
                     new_quantity = updated_instance.env_quantity or 0
+
+                    if new_quantity < 1:
+                        messages.error(request, 'Vehicle Quantity must be at least 1.')
+                        return redirect(request.META.get('HTTP_REFERER', f'/SMS/enquirynote_update/{enquiry_num_id}'))
 
                     # 1. If vehicle type changed, check the old type still has enough requested qty
                     if old_vehicletype_id != new_vehicletype_id:
@@ -212,8 +224,12 @@ def enquirynotevehicle_add(request, enquirynotevehicle_id=0):
                     print("enquirynotevehicle Form is Valid")
                     messages.success(request, 'Record Updated Successfully')
                 else:
-                    print("enquirynotevehicle Form is Not Valid")
-                    messages.error(request, 'Record Not Updated Successfully')
+                    print("enquirynotevehicle Form is Not Valid", form.errors)
+                    err = form.errors.get('env_quantity')
+                    if err:
+                        messages.error(request, str(err[0]))
+                    else:
+                        messages.error(request, 'Record Not Updated Successfully')
             except Enquirynotevehicle.DoesNotExist:
                 messages.error(request, 'Vehicle detail record not found.')
             return redirect(request.META.get('HTTP_REFERER', f'/SMS/enquirynote_update/{enquiry_num_id}'))
