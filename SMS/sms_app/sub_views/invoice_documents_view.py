@@ -176,7 +176,7 @@ def _try_merge_pdfs(inv_obj, closure_obj=None):
             if att.ta_file:
                 file_fields.append(att.ta_file)
 
-    IMAGE_EXTS = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif', '.webp')
+    IMAGE_EXTS = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif', '.webp', '.jfif')
     has_any = False
 
     try:
