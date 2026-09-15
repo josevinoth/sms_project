@@ -7,6 +7,7 @@ from ..sub_models.trip_status_mod import Tripstatusinfo
 from django.core.paginator import Paginator
 from django.db.models import Q, Exists, OuterRef
 from .invoice_documents_view import sync_closure_files_to_invoice
+from .general_utils import is_admin_user, get_allowed_next_statuses
 
 @login_required
 def trip_settlement_view(request):
@@ -225,7 +226,23 @@ def trip_settlement_edit(request, trip_id):
         form = TripSettlementForm(request.POST, request.FILES, instance=trip)
         files_form = TripclosurefilesForm(request.POST, request.FILES, instance=files_instance)
 
-        form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7])
+        allowed_ids = get_allowed_next_statuses(trip.tc_financestatus_id, is_admin=is_admin_user(request))
+        if allowed_ids is not None:
+            # Filter queryset for regular users based on allowed forward transitions (matching settlement context)
+            valid_settlement_ids = [i for i in [4, 7, 9, 10, 11] if i in allowed_ids]
+            form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=valid_settlement_ids)
+        else:
+            form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7, 9, 10, 11])
+
+        # Validate POST transition for non-admin users
+        posted_status_id = request.POST.get('tc_financestatus')
+        if posted_status_id and allowed_ids is not None:
+            try:
+                if int(posted_status_id) not in allowed_ids:
+                    messages.error(request, "Permission Denied: Non-admin users can only move trip status forward.")
+                    return redirect(request.META.get('HTTP_REFERER', 'trip_settlement_view'))
+            except (ValueError, TypeError):
+                pass
 
         # List of fields that SHOULD be editable during settlement
         editable_fields = [
@@ -285,7 +302,12 @@ def trip_settlement_edit(request, trip_id):
 
         files_form = TripclosurefilesForm(instance=files_instance)
 
-        form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7])
+        allowed_ids = get_allowed_next_statuses(trip.tc_financestatus_id, is_admin=is_admin_user(request))
+        if allowed_ids is not None:
+            valid_settlement_ids = [i for i in [4, 7, 9, 10, 11] if i in allowed_ids]
+            form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=valid_settlement_ids)
+        else:
+            form.fields['tc_financestatus'].queryset = Tripstatusinfo.objects.filter(id__in=[4, 7, 9, 10, 11])
 
         # List of fields that SHOULD be editable during settlement
         editable_fields = [

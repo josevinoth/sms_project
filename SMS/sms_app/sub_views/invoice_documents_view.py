@@ -655,9 +655,10 @@ def invoice_documents_add(request, trip_id):
             _copy_stored_file(invoice_doc.id_pod_doc, trip.td_pod)
         invoice_doc.save()
 
-    # Fields editable in the settlement form on this page (status and all charges except trip cost)
+    # Fields editable in the settlement form on this page (status, customer ref, and all charges except trip cost)
     editable_fields = [
         'tc_financestatus', 
+        'tr_customerref',
         'tc_parkingcost', 'tc_parkingcost_check',
         'tc_tollcost', 'tc_tollcost_check',
         'tc_loadingcost', 'tc_loadingcost_check',
@@ -696,6 +697,19 @@ def invoice_documents_add(request, trip_id):
         # All file-upload (closure) fields optional
         for field in files_form.fields:
             files_form.fields[field].required = False
+
+        # Validate Customer Ref No is mandatory
+        customer_ref_val = (request.POST.get('tr_customerref') or '').strip()
+        if not customer_ref_val:
+            customer_ref_val = (
+                trip.tr_consignmentnumber.co_cusrefnum
+                if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_cusrefnum
+                else trip.tr_customerref or ''
+            ).strip()
+
+        if not customer_ref_val:
+            messages.error(request, "Customer Ref No is mandatory. Form cannot be submitted without Customer Ref No.")
+            return redirect('invoice_documents_add', trip_id=trip_id)
 
         # Validate Special Sell cannot be less than actual/standard rate
         special_sell_val = request.POST.get('special_sell', '').strip()
@@ -748,6 +762,13 @@ def invoice_documents_add(request, trip_id):
                     setattr(trip_obj, f, f in request.POST)
                 else:
                     setattr(trip_obj, f, getattr(trip, f, False))
+
+            # Store customer ref on trip_obj and linked consignment
+            if customer_ref_val:
+                trip_obj.tr_customerref = customer_ref_val
+                if trip_obj.tr_consignmentnumber:
+                    trip_obj.tr_consignmentnumber.co_cusrefnum = customer_ref_val
+                    trip_obj.tr_consignmentnumber.save(update_fields=['co_cusrefnum'])
 
             # Store special sell on trip_obj if provided
             special_sell_val = request.POST.get('special_sell', '').strip() or settlement_form.cleaned_data.get('special_sell')

@@ -20,8 +20,8 @@
         
         <div class="modern-card" style="border-top:none; padding: 1rem !important;">
             <div class="row">
-                <!-- ========== COLUMN 1 ========== -->
-                <div class="col-12 col-md-4">
+                <!-- ========== COLUMN 1: GENERAL INFO ========== -->
+                <div class="col-12 col-md-3">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-info-circle"></i> GENERAL INFO</div>
 
@@ -49,6 +49,13 @@
                             <label class="form-label-modern">Transaction Date</label>
                             {% render_field form.wpc_transaction_date id="wpc_transaction_date" class="form-control form-control-modern" type="date" %}
                         </div>
+                    </div>
+                </div>
+                
+                <!-- ========== COLUMN 2: EXPENSE & LEDGER ========== -->
+                <div class="col-12 col-md-3">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-money-check-alt"></i> EXPENSE & LEDGER</div>
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">Expenses Type</label>
@@ -60,18 +67,23 @@
                             {% render_field form.wpc_credit_ledger id="wpc_credit_ledger" class="form-control form-control-modern" %}
                             <span id="ledger_balance_display" class="text-success font-weight-bold" style="font-size: 0.9rem; margin-top: 6px; display: block;"></span>
                         </div>
-                    </div>
-                </div>
-                
-                <!-- ========== COLUMN 2 ========== -->
-                <div class="col-12 col-md-4">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-warehouse"></i> WAREHOUSE DETAILS</div>
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">To Person</label>
                             {% render_field form.wpc_to id="wpc_to" class="form-control form-control-modern select2" %}
                         </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Remarks</label>
+                            {% render_field form.wpc_remarks id="wpc_remarks" class="form-control form-control-modern" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== COLUMN 3: WAREHOUSE & JOB ========== -->
+                <div class="col-12 col-md-3">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-warehouse"></i> WAREHOUSE & JOB</div>
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">Units</label>
@@ -97,16 +109,11 @@
                                 {% endif %}
                             </select>
                         </div>
-
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Remarks</label>
-                            {% render_field form.wpc_remarks id="wpc_remarks" class="form-control form-control-modern" %}
-                        </div>
                     </div>
                 </div>
 
-                <!-- ========== COLUMN 3 ========== -->
-                <div class="col-12 col-md-4">
+                <!-- ========== COLUMN 4: BILL & PAYMENT DETAILS ========== -->
+                <div class="col-12 col-md-3">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-file-invoice-dollar"></i> BILL & PAYMENT DETAILS</div>
 

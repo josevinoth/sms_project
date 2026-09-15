@@ -176,7 +176,7 @@
 		<div class="container-fluid">
 			<!-- Removed the old bg-info card wrappers, now using modern-card and form-section structures -->
 			<div class="modern-card" style="padding:1.5rem !important; border-top:none; box-shadow:none; background:transparent;">
-				<form method="POST" action="" enctype="multipart/form-data">
+				<form id="consignmentGoodsForm" method="POST" action="" enctype="multipart/form-data">
 					{% csrf_token %}
 					<div class="row row-compact" id="consignment_goods_id">
 						
@@ -991,6 +991,34 @@
 			applyConsignmentRules();
 			// apply on change
 			consType.addEventListener("change", applyConsignmentRules);
+		}
+
+		const goodsForm = document.getElementById("consignmentGoodsForm");
+		if (goodsForm) {
+			goodsForm.addEventListener("submit", function (e) {
+				if (!consType) return;
+				const selectedText = consType.options[consType.selectedIndex] ? consType.options[consType.selectedIndex].text.toLowerCase().trim() : "";
+				if (selectedText === "normal") {
+					const ewayFile = document.getElementById("cg_ewaybill_att");
+					const invoiceFile = document.getElementById("cg_invoice_att");
+					const otlFile = document.getElementById("cg_otl_att");
+
+					const hasEway = ewayFile && ewayFile.files && ewayFile.files.length > 0;
+					const hasInvoice = invoiceFile && invoiceFile.files && invoiceFile.files.length > 0;
+					const hasOtl = otlFile && otlFile.files && otlFile.files.length > 0;
+
+					// Check if editing existing instance attachments (links rendered on page if already attached)
+					const hasExistingEway = !!document.querySelector("a[href*='eway'], input[name='cg_ewaybill_att']");
+					const hasExistingInvoice = !!document.querySelector("a[href*='invoice']");
+					const hasExistingOtl = !!document.querySelector("a[href*='otl']");
+
+					if (!hasEway && !hasInvoice && !hasOtl && !hasExistingEway && !hasExistingInvoice && !hasExistingOtl) {
+						e.preventDefault();
+						alert("At least one attachment (Eway Bill, Invoice, or OTL Attachment) is mandatory when Consignment Type is Normal.");
+						return false;
+					}
+				}
+			});
 		}
 	});
 </script>
