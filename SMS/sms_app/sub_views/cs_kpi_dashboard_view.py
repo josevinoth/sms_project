@@ -4,7 +4,7 @@ from django.db.models import Count, Sum, Q, F
 from django.utils import timezone
 from datetime import datetime, date, timedelta
 
-from ..sub_models.tripdetail_mod import TripdetailInfo, TripAttachmentInfo
+from ..sub_models.tripdetail_mod import TripdetailInfo, TripAttachmentInfo, Trip_closure_files_Info
 from ..sub_models.enquirynote_mod import EnquirynoteInfo
 from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
 from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
@@ -420,9 +420,19 @@ def get_cs_kpi_dashboard_data(request):
         sla_badge_color = '#38bdf8'
 
     # KPI 3: POD SCAN
-    pod_scanned_count = trips_qs.filter(
-        Q(tc_pod_attachment__isnull=False) | Q(td_pod__isnull=False)
-    ).exclude(tc_pod_attachment='', td_pod='').count()
+    trip_numbers = list(trips_qs.values_list('tr_tripnumber', flat=True))
+    pod_trip_nums_ta = set(TripAttachmentInfo.objects.filter(
+        ta_tripnumber__in=trip_numbers,
+        ta_category='POD'
+    ).exclude(ta_file='').values_list('ta_tripnumber', flat=True))
+    pod_trip_nums_closure = set(Trip_closure_files_Info.objects.filter(
+        tcf_tripnumber__in=trip_numbers
+    ).exclude(tcf_pod__isnull=True).exclude(tcf_pod='').values_list('tcf_tripnumber', flat=True))
+    pod_trip_nums_direct = set(trips_qs.filter(
+        Q(tc_pod_attachment__isnull=False, tc_pod_attachment__gt='') |
+        Q(td_pod__isnull=False, td_pod__gt='')
+    ).values_list('tr_tripnumber', flat=True))
+    pod_scanned_count = len(pod_trip_nums_ta | pod_trip_nums_closure | pod_trip_nums_direct)
     if is_sample_requested:
         pod_scanned_count = 26
 

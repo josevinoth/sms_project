@@ -2164,7 +2164,7 @@ def generate_combined_pod_pdf(trip_num):
     from PIL import Image
     import pypdf
     from django.conf import settings
-    from sms_app.models import TripAttachmentInfo, Trip_closure_files_Info, TripdetailInfo
+    from sms_app.models import TripAttachmentInfo, Trip_closure_files_Info, TripdetailInfo, InvoiceDocumentInfo
 
     file_paths = []
     
@@ -2185,8 +2185,20 @@ def generate_combined_pod_pdf(trip_num):
 
     # 3. Gather from TripdetailInfo
     trip = TripdetailInfo.objects.filter(tr_tripnumber=trip_num).first()
-    if trip and trip.tc_pod_attachment:
-        fp = os.path.join(settings.MEDIA_ROOT, str(trip.tc_pod_attachment))
+    if trip:
+        if trip.tc_pod_attachment:
+            fp = os.path.join(settings.MEDIA_ROOT, str(trip.tc_pod_attachment))
+            if os.path.exists(fp) and fp not in file_paths:
+                file_paths.append(fp)
+        if trip.td_pod:
+            fp = os.path.join(settings.MEDIA_ROOT, str(trip.td_pod))
+            if os.path.exists(fp) and fp not in file_paths:
+                file_paths.append(fp)
+
+    # 4. Gather from InvoiceDocumentInfo
+    inv_doc = InvoiceDocumentInfo.objects.filter(id_tripnumber=trip_num).first()
+    if inv_doc and inv_doc.id_pod_doc:
+        fp = os.path.join(settings.MEDIA_ROOT, str(inv_doc.id_pod_doc))
         if os.path.exists(fp) and fp not in file_paths:
             file_paths.append(fp)
 
@@ -2194,10 +2206,11 @@ def generate_combined_pod_pdf(trip_num):
         return None
 
     writer = pypdf.PdfWriter()
+    IMAGE_EXTS = ['.jpg', '.jpeg', '.png', '.webp', '.bmp', '.jfif', '.tif', '.tiff', '.gif']
 
     for fp in file_paths:
         ext = os.path.splitext(fp)[1].lower()
-        if ext in ['.jpg', '.jpeg', '.png', '.webp', '.bmp']:
+        if ext in IMAGE_EXTS:
             try:
                 img = Image.open(fp)
                 if img.mode != 'RGB':

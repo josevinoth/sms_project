@@ -225,8 +225,7 @@
                         {% render_field form.pregatein_invoice_value id="pregatein_invoice_value" class="form-control form-control-modern" %}
                     </div>
                     <div class="form-group form-group-modern mb-2">
-                        <label class="form-label-modern field-label d-block">High Value Check List</label>
-                        {% render_field form.pregatein_high_value id="pregatein_high_value" class="form-control form-control-modern"  %}
+                        <label class="form-label-modern field-label d-block">High Value Check List</label>{% render_field form.pregatein_high_value id="pregatein_high_value" class="form-control form-control-modern" onchange="highvalue_enabler(); toggleHighvalueFields();" %}
                     </div>
                     <div class="form-group form-group-modern mb-2">
                         <label class="form-label-modern field-label d-block">Job Category</label>
@@ -475,6 +474,7 @@
     }
 
     highvalue_enabler();
+    toggleHighvalueFields();
 }
 
 // Attach events
@@ -557,16 +557,28 @@ document.getElementById("pregatein_invoice_value").addEventListener("input", che
   container_cd.style.display = "none";
   driverBtn.disabled = true;
   supervisorBtn.disabled = true;
+  driverBtn.style.opacity = "0.5";
+  driverBtn.style.cursor = "not-allowed";
+  supervisorBtn.style.opacity = "0.5";
+  supervisorBtn.style.cursor = "not-allowed";
 
   if (jn1==2 && jn7 === '3') {
     container.style.display = "block";
     driverBtn.disabled = false;
     supervisorBtn.disabled = false;
+    driverBtn.style.opacity = "1";
+    driverBtn.style.cursor = "pointer";
+    supervisorBtn.style.opacity = "1";
+    supervisorBtn.style.cursor = "pointer";
   } else if (jn7 === '2') {
     container.style.display = "block";
     container_cd.style.display = "block";
     driverBtn.disabled = false;
     supervisorBtn.disabled = false;
+    driverBtn.style.opacity = "1";
+    driverBtn.style.cursor = "pointer";
+    supervisorBtn.style.opacity = "1";
+    supervisorBtn.style.cursor = "pointer";
   }
   toggleGatePass()
 }
@@ -627,37 +639,27 @@ document.getElementById("pregatein_invoice_value").addEventListener("input", che
     }
   });
 
-  // Enable/disable signature buttons based on job category = 3
-  function toggleSignatureButtons() {
-    const jobCategorySelect = document.getElementById('pregatein_job_category');
-    if (!jobCategorySelect) return;
-    const val = jobCategorySelect.value;
-    const enabled = val === '3';
-
-    if (driverSignBtn) driverSignBtn.disabled = !enabled;
-    if (supervisorSignBtn) supervisorSignBtn.disabled = !enabled;
-  }
-
-  toggleSignatureButtons();
-
-  document.getElementById('pregatein_job_category')?.addEventListener('change', toggleSignatureButtons);
-
-  // Form submit validation
-  const form = document.querySelector('form'); // adjust if your form has an ID or specific selector
+  // Form submit validation for signatures
+  const form = document.querySelector('form');
   form?.addEventListener('submit', function(event) {
     const jobCategorySelect = document.getElementById('pregatein_job_category');
+    const highValueSelect = document.getElementById('pregatein_high_value');
     if (!jobCategorySelect) return;
+    
+    const jn7 = jobCategorySelect.value;
+    const jn1 = highValueSelect ? highValueSelect.value : "2";
 
-    if (jobCategorySelect.value === '3') {
-      if (!driverSignatureData.value) {
-        alert('Driver signature is required.');
+    // Same conditions that enable the buttons in toggleHighvalueFields
+    const signaturesRequired = (jn1 == '2' && jn7 === '3') || (jn7 === '2');
+
+    if (signaturesRequired) {
+      if (!document.getElementById("driver-signature-data").value) {
+        alert('Driver signature is required for this Job Category.');
         event.preventDefault();
-        return;
       }
-      if (!supervisorSignatureData.value) {
-        alert('Supervisor signature is required.');
+      else if (!document.getElementById("supervisor-signature-data").value) {
+        alert('Supervisor signature is required for this Job Category.');
         event.preventDefault();
-        return;
       }
     }
   });

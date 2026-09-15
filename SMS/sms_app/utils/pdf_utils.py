@@ -6,7 +6,7 @@ def merge_pdf_files(file_fields, output_name):
     Generic utility to merge PDF and image files from Django FileFields into a single PDF.
     Returns a tuple (bool, ContentFile or None)
     """
-    IMAGE_EXTS = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif', '.webp')
+    IMAGE_EXTS = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif', '.webp', '.jfif')
     has_any = False
 
     try:

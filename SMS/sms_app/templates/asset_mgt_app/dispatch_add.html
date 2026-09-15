@@ -198,8 +198,8 @@
                                     <i class="fas fa-pen-nib"></i> Driver Signature
                                 </button>
                                 <div id="driver-signature-preview" class="p-2 border rounded bg-white" style="min-width: 200px; min-height: 90px; display: flex; align-items: center; justify-content: center;">
-                                    {% if dispatch_form.instance.dispatch_driver_signature %}
-                                    <img src="{{ dispatch_form.instance.dispatch_driver_signature.url }}" alt="Driver Signature" class="img-fluid" style="max-height: 80px;">
+                                    {% if dispatch_form.instance.driver_sign_b64 %}
+                                    <img src="{{ dispatch_form.instance.driver_sign_b64 }}" alt="Driver Signature" class="img-fluid" style="max-height: 80px;">
                                     {% else %}
                                     <span class="text-muted small">No Signature</span>
                                     {% endif %}
@@ -213,8 +213,8 @@
                                     <i class="fas fa-pen-nib"></i> Supervisor Signature
                                 </button>
                                 <div id="supervisor-signature-preview" class="p-2 border rounded bg-white" style="min-width: 200px; min-height: 90px; display: flex; align-items: center; justify-content: center;">
-                                    {% if dispatch_form.instance.dispatch_supervisor_signature %}
-                                    <img src="{{ dispatch_form.instance.dispatch_supervisor_signature.url }}" alt="Supervisor Signature" class="img-fluid" style="max-height: 80px;">
+                                    {% if dispatch_form.instance.supervisor_sign_b64 %}
+                                    <img src="{{ dispatch_form.instance.supervisor_sign_b64 }}" alt="Supervisor Signature" class="img-fluid" style="max-height: 80px;">
                                     {% else %}
                                     <span class="text-muted small">No Signature</span>
                                     {% endif %}
