@@ -229,18 +229,18 @@
         box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
     }
 
-    /* TOP 5 KPI HIGHLIGHT CARDS */
+    /* TOP 8 KPI HIGHLIGHT CARDS */
     .cs-top-cards-row {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 0.4rem;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 0.35rem;
         width: 100%;
         flex-shrink: 0;
     }
 
-    @media (max-width: 1200px) {
+    @media (max-width: 1300px) {
         .cs-top-cards-row {
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
         }
     }
 
@@ -253,12 +253,12 @@
     .top-kpi-card {
         position: relative;
         border-radius: 6px;
-        padding: 0.35rem 0.55rem;
+        padding: 0.35rem 0.5rem;
         color: #fff;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        min-height: 48px;
+        min-height: 52px;
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
         overflow: hidden;
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -274,6 +274,11 @@
         border-color: rgba(59, 130, 246, 0.4);
     }
 
+    .card-bg-allot {
+        background: linear-gradient(135deg, #1e40af 0%, #172554 100%);
+        border-color: rgba(96, 165, 250, 0.4);
+    }
+
     .card-bg-cnote {
         background: linear-gradient(135deg, #854d0e 0%, #451a03 100%);
         border-color: rgba(234, 179, 8, 0.4);
@@ -284,8 +289,18 @@
         border-color: rgba(16, 185, 129, 0.4);
     }
 
+    .card-bg-closed {
+        background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%);
+        border-color: rgba(45, 212, 191, 0.4);
+    }
+
     .card-bg-billing {
         background: linear-gradient(135deg, #0369a1 0%, #082f49 100%);
+        border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .card-bg-pod {
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
         border-color: rgba(56, 189, 248, 0.4);
     }
 
@@ -298,6 +313,7 @@
         display: flex;
         flex-direction: column;
         z-index: 2;
+        min-width: 0;
     }
 
     .top-kpi-title {
@@ -306,10 +322,13 @@
         text-transform: uppercase;
         color: rgba(255, 255, 255, 0.8);
         letter-spacing: 0.3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .top-kpi-main-val {
-        font-size: 1.05rem;
+        font-size: 1.15rem;
         font-weight: 800;
         color: #ffffff;
         line-height: 1.15;
@@ -317,8 +336,11 @@
     }
 
     .top-kpi-subtext {
-        font-size: 0.58rem;
+        font-size: 0.56rem;
         color: rgba(255, 255, 255, 0.7);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .top-kpi-subtext strong {
@@ -327,11 +349,12 @@
     }
 
     .top-kpi-icon {
-        font-size: 1.5rem;
-        opacity: 0.25;
+        font-size: 1.35rem;
+        opacity: 0.2;
         position: absolute;
-        right: 0.5rem;
-        top: 0.5rem;
+        right: 0.4rem;
+        top: 0.4rem;
+        pointer-events: none;
     }
 
     /* 3-Column Main Content Grid */
@@ -993,67 +1016,100 @@
     </div>
 
 
-    <!-- 4 TOP KPI HIGHLIGHT CARDS (Moved to the Top) -->
+    <!-- 8 TOP KPI HIGHLIGHT CARDS -->
     <div class="cs-top-cards-row">
-        <!-- Card 1: Vehicle Demand & Allotment -->
+        <!-- Card 1: Vehicle Demanded -->
         <div class="top-kpi-card card-bg-demand">
             <div class="top-kpi-content">
-                <span class="top-kpi-title"><i class="fas fa-truck-pickup text-info"></i> Vehicle Demand & Allotment</span>
+                <span class="top-kpi-title"><i class="fas fa-truck-pickup text-info"></i> Vehicle Demanded</span>
                 <div class="top-kpi-main-val">
-                    <span id="top-card-requested">35</span> <span style="font-size:0.65rem; font-weight:500; opacity:0.8;">Req</span> / 
-                    <span id="top-card-allotted" style="color:#93c5fd;">34</span> <span style="font-size:0.65rem; font-weight:500; opacity:0.8;">Allot</span>
+                    <span id="top-card-requested">0</span>
                 </div>
-                <div class="top-kpi-subtext">Allotment Rate: <strong id="top-card-allot-rate" style="color:#86efac;">97.1%</strong></div>
+                <div class="top-kpi-subtext">Demands Placed</div>
             </div>
             <i class="fas fa-clipboard-list top-kpi-icon"></i>
         </div>
 
-        <!-- Card 2: Consignment Notes -->
+        <!-- Card 2: Vehicle Allotted -->
+        <div class="top-kpi-card card-bg-allot">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title"><i class="fas fa-truck-loading" style="color:#60a5fa;"></i> Vehicle Allotted</span>
+                <div class="top-kpi-main-val">
+                    <span id="top-card-allotted" style="color:#93c5fd;">0</span>
+                </div>
+                <div class="top-kpi-subtext">Allotment: <strong id="top-card-allot-rate" style="color:#86efac;">0.0%</strong></div>
+            </div>
+            <i class="fas fa-check-circle top-kpi-icon"></i>
+        </div>
+
+        <!-- Card 3: Consignment Notes -->
         <div class="top-kpi-card card-bg-cnote">
             <div class="top-kpi-content">
                 <span class="top-kpi-title"><i class="fas fa-file-invoice" style="color:#facc15;"></i> C-Notes Created</span>
                 <div class="top-kpi-main-val">
-                    <span id="top-card-cnotes" style="color:#fef08a;">32</span> <span style="font-size:0.65rem; font-weight:500; opacity:0.8;">Generated</span>
+                    <span id="top-card-cnotes" style="color:#fef08a;">0</span>
                 </div>
-                <div class="top-kpi-subtext">C-Note Conversion: <strong id="top-card-cnote-rate" style="color:#fde68a;">94.1%</strong></div>
+                <div class="top-kpi-subtext">Conversion: <strong id="top-card-cnote-rate" style="color:#fde68a;">0.0%</strong></div>
             </div>
             <i class="fas fa-file-signature top-kpi-icon"></i>
         </div>
 
-        <!-- Card 3: Active Trips & In-Transit -->
+        <!-- Card 4: Active Trips In Transit -->
         <div class="top-kpi-card card-bg-transit">
             <div class="top-kpi-content">
-                <span class="top-kpi-title"><i class="fas fa-route text-success"></i> Active Trips In Transit</span>
+                <span class="top-kpi-title"><i class="fas fa-route text-success"></i> Trips In Transit</span>
                 <div class="top-kpi-main-val">
-                    <span id="top-card-started" style="color:#86efac;">15</span> <span style="font-size:0.65rem; font-weight:500; opacity:0.8;">Transit</span> / 
-                    <span id="top-card-closed">5</span> <span style="font-size:0.65rem; font-weight:500; opacity:0.8;">Closed</span>
+                    <span id="top-card-started" style="color:#86efac;">0</span>
                 </div>
-                <div class="top-kpi-subtext">In-Transit Rate: <strong id="top-card-transit-rate" style="color:#c4b5fd;">0.0%</strong></div>
+                <div class="top-kpi-subtext">In-Transit: <strong id="top-card-transit-rate" style="color:#c4b5fd;">0.0%</strong></div>
             </div>
             <i class="fas fa-shipping-fast top-kpi-icon"></i>
         </div>
 
-        <!-- Card 4: Billing & Ready For Invoice -->
+        <!-- Card 5: Trips Closed -->
+        <div class="top-kpi-card card-bg-closed">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title"><i class="fas fa-flag-checkered" style="color:#2dd4bf;"></i> Trips Closed</span>
+                <div class="top-kpi-main-val">
+                    <span id="top-card-closed" style="color:#e2e8f0;">0</span>
+                </div>
+                <div class="top-kpi-subtext">Completed Trips</div>
+            </div>
+            <i class="fas fa-clipboard-check top-kpi-icon"></i>
+        </div>
+
+        <!-- Card 6: Ready For Invoice -->
         <div class="top-kpi-card card-bg-billing">
             <div class="top-kpi-content">
-                <span class="top-kpi-title"><i class="fas fa-receipt text-warning"></i> Ready For Invoice & POD</span>
+                <span class="top-kpi-title"><i class="fas fa-receipt text-warning"></i> Ready For Invoice</span>
                 <div class="top-kpi-main-val">
-                    <span id="top-card-ready" style="color:#67e8f9;">0</span> <span style="font-size:0.65rem; font-weight:500; opacity:0.8;">Ready</span> / 
-                    <span id="top-card-pod">0</span> <span style="font-size:0.65rem; font-weight:500; opacity:0.8;">PODs</span>
+                    <span id="top-card-ready" style="color:#67e8f9;">0</span>
                 </div>
-                <div class="top-kpi-subtext">POD Submission Rate: <strong id="top-card-pod-rate" style="color:#93c5fd;">0.0%</strong></div>
+                <div class="top-kpi-subtext">Pending Billing</div>
             </div>
             <i class="fas fa-file-invoice-dollar top-kpi-icon"></i>
         </div>
 
-        <!-- Card 5: Total Revenue -->
+        <!-- Card 7: POD Scanned -->
+        <div class="top-kpi-card card-bg-pod">
+            <div class="top-kpi-content">
+                <span class="top-kpi-title"><i class="fas fa-camera" style="color:#38bdf8;"></i> POD Scanned</span>
+                <div class="top-kpi-main-val">
+                    <span id="top-card-pod" style="color:#bae6fd;">0</span>
+                </div>
+                <div class="top-kpi-subtext">POD Rate: <strong id="top-card-pod-rate" style="color:#93c5fd;">0.0%</strong></div>
+            </div>
+            <i class="fas fa-file-contract top-kpi-icon"></i>
+        </div>
+
+        <!-- Card 8: Total Revenue -->
         <div class="top-kpi-card card-bg-revenue">
             <div class="top-kpi-content">
                 <span class="top-kpi-title"><i class="fas fa-coins" style="color:#c084fc;"></i> Total Revenue</span>
                 <div class="top-kpi-main-val">
                     <span id="top-card-revenue" style="color:#f3e8ff; font-size:0.92rem;">₹ 0.00</span>
                 </div>
-                <div class="top-kpi-subtext">Billed: <strong id="top-card-billed-rate" style="color:#a7f3d0;">0.0%</strong> · Unbilled: <strong id="top-card-unbilled-rate" style="color:#fde68a;">0.0%</strong></div>
+                <div class="top-kpi-subtext"><strong id="top-card-billed-rate" style="color:#a7f3d0;">0.0%</strong> Billed · <strong id="top-card-unbilled-rate" style="color:#fde68a;">0.0%</strong> Unbilled</div>
             </div>
             <i class="fas fa-rupee-sign top-kpi-icon"></i>
         </div>

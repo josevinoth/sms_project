@@ -21,7 +21,7 @@
             </div>
             <div class="col-md-1 col-sm-6 mb-2 mb-md-0">
                 <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Quantity</label>
-                {% render_field enquiryvechicle_form.env_quantity id="env_quantity" class="form-control form-control-modern disable_a_href" placeholder="0" style="height: 45px; padding: 0.5rem 1rem;" %}
+                {% render_field enquiryvechicle_form.env_quantity id="env_quantity" min="1" required="required" class="form-control form-control-modern disable_a_href" placeholder="Qty" style="height: 45px; padding: 0.5rem 1rem;" %}
             </div>
             <div class="col-md-2 col-sm-6 mb-2 mb-md-0">
                 <label class="form-label-modern small mb-1" style="font-size: 0.8rem; font-weight: 700;">Standard Sell</label>
@@ -179,8 +179,16 @@
             document.getElementById("env_enquirynumber").value =enquiry_num_id_val;
         }
 
-        // Enable env_enquirynumber, env_sale, env_special_sale on form submit and validate rate
+        // Enable env_enquirynumber, env_sale, env_special_sale on form submit and validate rate & quantity
         $('#enquirynotevehicle_add').on('submit', function(e) {
+            var qtyVal = parseInt($('#env_quantity').val(), 10);
+            if (isNaN(qtyVal) || qtyVal < 1) {
+                e.preventDefault();
+                alert('Vehicle Quantity must be at least 1.');
+                $('#env_quantity').focus();
+                return false;
+            }
+
             var saleVal = $('#env_sale').val();
             if (!saleVal || parseFloat(saleVal) <= 0 || isNaN(parseFloat(saleVal))) {
                 e.preventDefault();
@@ -190,6 +198,14 @@
             $('#env_enquirynumber').prop('disabled', false);
             $('#env_sale').prop('disabled', false);
             $('#env_special_sale').prop('disabled', false);
+        });
+
+        // Prevent negative or 0 values while typing
+        $('#env_quantity').on('input change', function() {
+            var valStr = $(this).val();
+            if (valStr !== '' && parseInt(valStr, 10) < 1) {
+                $(this).val('');
+            }
         });
 
         // Event listeners for vehicle type & category change
