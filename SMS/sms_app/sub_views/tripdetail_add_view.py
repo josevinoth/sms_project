@@ -210,7 +210,7 @@ def tripdetail_add(request, tripdetail_id=0):
             trip_list = TripdetailInfo.objects.select_related(
                 'tr_approval', 'tr_approval__ta_approval_status'
             ).filter(tr_enquirynumber=enquiry_num_id)
-            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8, 10, 11])
+            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8, 10, 11, 12])
 
             # ✅ Exclude already-used consignments for this enquiry
             used_consignments = TripdetailInfo.objects.filter(
@@ -291,7 +291,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 'status_list': status_list,
                 'consignment_list': consignment_list,
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
-                'status_selected': 1 if initial_data.get('tr_category') in [2, 3] else 8,
+                'status_selected': 1 if initial_data.get('tr_category') in [2, 3] else 12,
                 'location_locked': location_locked,
                 'allotted_vehicle_list': allotted_vehicle_list,
                 'allotted_vehicle_map_json': allotted_vehicle_map_json,
@@ -359,15 +359,25 @@ def tripdetail_add(request, tripdetail_id=0):
             ).filter(tr_enquirynumber=enquiry_num_id)
             trip_instance = TripdetailInfo.objects.get(pk=tripdetail_id)
             try:
+                has_consignment_goods = False
+                if trip_instance.tr_consignmentnumber_id:
+                    has_consignment_goods = ConsignmentgoodsInfo.objects.filter(
+                        cg_consignmentnumber=trip_instance.tr_consignmentnumber_id
+                    ).exists()
+
+                # Determine status_selected from database
                 if trip_instance.tc_financestatus and trip_instance.tc_financestatus.id in [10, 11]:
                     status_selected = trip_instance.tc_financestatus.id
                 elif trip_instance.tr_operational_status:
                     status_selected = trip_instance.tr_operational_status.id
                 else:
-                    status_selected = trip_instance.tc_financestatus.id if trip_instance.tc_financestatus else 8
-                    # Fallback mapping for older records
+                    status_selected = trip_instance.tc_financestatus.id if trip_instance.tc_financestatus else 12
                     if status_selected in [4, 5, 6, 7, 9]:
-                        status_selected = 2
+                        status_selected = 12
+
+                # ✅ If Consignment Goods do NOT exist yet, status MUST be Work In Progress (12), not Awaiting Trip Approval (8)
+                if not has_consignment_goods and status_selected in [8, 2]:
+                    status_selected = 12
 
                 # Auto-progress logic for Open/Started trips
                 if status_selected == 1:
@@ -623,20 +633,28 @@ def tripdetail_add(request, tripdetail_id=0):
                     Q(status__iexact='Closed') | Q(status__iexact='Trip Closed')).first()
                 status_pending = Tripstatusinfo.objects.filter(status__iexact='Pending Approval').first()
 
+                # Check if consignment goods exist
+                has_goods = False
+                if trip.tr_consignmentnumber_id:
+                    has_goods = ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=trip.tr_consignmentnumber_id).exists()
+
                 # Manual capture of status from POST
                 manual_status_id = request.POST.get('tc_financestatus')
                 if manual_status_id:
-                    trip.tc_financestatus_id = int(manual_status_id)
-                    trip.tr_operational_status_id = int(manual_status_id)  # Keep both fields in sync
+                    status_id_val = int(manual_status_id)
+                    if status_id_val == 8 and not has_goods:
+                        status_id_val = 2  # Work In Progress
+                    trip.tc_financestatus_id = status_id_val
+                    trip.tr_operational_status_id = status_id_val  # Keep both fields in sync
                 else:
                     if trip.tr_category_id in [2, 3]:
                         if status_open:
                             trip.tc_financestatus_id = status_open.id
                             trip.tr_operational_status_id = status_open.id  # Keep both fields in sync
                     else:
-                        if status_pending:
-                            trip.tc_financestatus_id = status_pending.id
-                            trip.tr_operational_status_id = status_pending.id  # Keep both fields in sync
+                        target_status = 8 if has_goods else 2
+                        trip.tc_financestatus_id = target_status
+                        trip.tr_operational_status_id = target_status  # Keep both fields in sync
 
                 if vehicle_allotment_id:
                     trip.tr_driver_master_id = va.va_driver_master_id
