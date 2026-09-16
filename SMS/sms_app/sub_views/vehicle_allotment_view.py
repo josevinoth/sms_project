@@ -768,9 +768,9 @@ def vehicle_allotment_list(request):
 
     # Filter by branch if user is not Admin/Superuser and has a branch
     if user_role and user_role.id != 1 and branch_code:
-        # Filter by branch
+        # Filter by branch based on Enquiry Number (which contains the branch code like _MAA_ or _BLR_)
         enquirynote_queryset = enquirynote_queryset.filter(
-            en_customername__cu_name__icontains=branch_code
+            en_enquirynumber__icontains=f"_{branch_code}_"
         )
 
     # -----------------------------
