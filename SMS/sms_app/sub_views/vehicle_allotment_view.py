@@ -912,7 +912,7 @@ def vehicle_allotment_list(request):
 
     vehicle_allotted = Vehicle_allotmentInfo.objects.filter(
         va_enquirynumber__in=enquiry_ids
-    ).exclude(va_status_id=2).values('va_enquirynumber').annotate(total_allotted=Count('id'))
+    ).exclude(va_status_id__in=[2, 3, 4, 5]).values('va_enquirynumber').annotate(total_allotted=Count('id'))
 
     vehicle_allotted_dict = {
         v['va_enquirynumber']: v['total_allotted'] for v in vehicle_allotted
@@ -1087,7 +1087,7 @@ def load_vehicle_number(request):
     ).exclude(
         va_enquirynumber_id__in=free_enquiry_ids
     ).exclude(
-        va_status_id__in=[2, 4, 5]
+        va_status_id__in=[2, 3, 4, 5]
     ).exclude(
         va_enquirynumber__en_status_id__in=[5, 8]
     ).exclude(va_vehiclenumber__isnull=True)
@@ -1219,7 +1219,7 @@ def vehicle_requested(request):
         allotted_qty = Vehicle_allotmentInfo.objects.filter(
             va_enquirynumber_id=enquiry_number,
             va_vehicletype_id=vehicle_type_id
-        ).count()
+        ).exclude(va_status_id__in=[2, 3, 4, 5]).count()
 
         remaining = requested_qty - allotted_qty
 
@@ -1248,7 +1248,7 @@ def get_remaining_quantity(request, enquiry_id, vehicle_type_id):
         allotted = Vehicle_allotmentInfo.objects.filter(
             va_enquirynumber_id=enquiry_id,
             va_vehicletype_id=vehicle_type_id
-        ).count()
+        ).exclude(va_status_id__in=[2, 3, 4, 5]).count()
 
         remaining = requested - allotted
         return JsonResponse({'remaining': max(remaining, 0)})
