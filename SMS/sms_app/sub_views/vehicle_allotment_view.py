@@ -16,7 +16,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import HttpResponse, JsonResponse
 from .send_department_email import send_department_email
-from .general_utils import get_branch_code, get_session_branch_id
+from .general_utils import get_branch_code, get_session_branch_id, is_admin_user
 
 import re
 from ..sub_models.vendor_info_mod import Vendor_info
@@ -292,6 +292,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
             'all_vehicletypes': VehicletypeInfo.objects.all(),
             'all_vendors': Vendor_info.objects.all(),
+            'is_admin': is_admin_user(request),
         })
 
     # ---------- UPDATE MODE (GET) ----------
@@ -324,6 +325,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
             'all_vehicletypes': VehicletypeInfo.objects.all(),
             'all_vendors': Vendor_info.objects.all(),
+            'is_admin': is_admin_user(request),
         })
 
     # ---------- POST SAVE (ADD + UPDATE) ----------
@@ -412,9 +414,14 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                     env_vehicletype_id=obj.va_vehicletype_id
                 ).aggregate(total=Sum('env_quantity'))['total'] or 0
 
+                # Exclude replacement/history statuses:
+                # 2=Vehicle Replaced, 3=Driver Replaced, 4=Vehicle Cancelled, 5=Trip Completed
+                EXCLUDE_FROM_COUNT_STATUSES = [2, 3, 4, 5]
                 already_allotted_count = Vehicle_allotmentInfo.objects.filter(
                     va_enquirynumber_id=enquiry_id,
                     va_vehicletype_id=obj.va_vehicletype_id
+                ).exclude(
+                    va_status_id__in=EXCLUDE_FROM_COUNT_STATUSES
                 ).count()
 
                 if already_allotted_count >= total_requested_for_type:
@@ -600,16 +607,17 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
 
             # 🔒 FREEZE PROTECTION: Always preserve original allotment & driver details on update.
             # Driver/Vehicle replacement MUST be done via the Replace Vehicle / Replace Driver modals.
-            obj.va_vehiclesource = va.va_vehiclesource
-            obj.va_vehiclenumber = va.va_vehiclenumber
-            obj.va_vehiclenumber_mkt = va.va_vehiclenumber_mkt
-            obj.va_vendor = va.va_vendor
-            obj.va_drivername = va.va_drivername
-            obj.va_drivernumber = va.va_drivernumber
-            obj.va_driver_lic = va.va_driver_lic
-            obj.va_driver_lic_expiry = va.va_driver_lic_expiry
-            obj.va_driver_master_id = va.va_driver_master_id
-            obj.va_created_at = va.va_created_at
+            if not is_admin_user(request):
+                obj.va_vehiclesource = va.va_vehiclesource
+                obj.va_vehiclenumber = va.va_vehiclenumber
+                obj.va_vehiclenumber_mkt = va.va_vehiclenumber_mkt
+                obj.va_vendor = va.va_vendor
+                obj.va_drivername = va.va_drivername
+                obj.va_drivernumber = va.va_drivernumber
+                obj.va_driver_lic = va.va_driver_lic
+                obj.va_driver_lic_expiry = va.va_driver_lic_expiry
+                obj.va_driver_master_id = va.va_driver_master_id
+                obj.va_created_at = va.va_created_at
 
             if request.user and request.user.is_authenticated:
                 obj.va_updated_by = request.user
@@ -1315,56 +1323,60 @@ def get_vendor_sale_rate(request):
     if not vehicle_id:
         return JsonResponse({'sale_rate': "0", 'special_sale_rate': "0"})
 
-    # Filter for the matching vendor rate
-    filter_kwargs = {
-        'ro_customer': enquiry.en_customername,
-        'ro_fromlocation': enquiry.en_fromlocaion,
-        'ro_tolocation': enquiry.en_tolocation,
-        'ro_vehicletype': vehicle_id,  # ForeignKey to vehicle type
-        'ro_touchpoint': enquiry.en_touchpoint,
-        'ro_touchpoint2': enquiry.en_touchpoint2,
-        'ro_touchpoint3': enquiry.en_touchpoint3,
-        'ro_touchpoint4': enquiry.en_touchpoint4
-    }
-    if enquiry.en_customerdepartment:
-        filter_kwargs['ro_customerdepartment'] = enquiry.en_customerdepartment
-    if vehicle_category_id:
-        filter_kwargs['ro_vehiclecategory_id'] = vehicle_category_id
+    try:
+        # Filter for the matching vendor rate
+        filter_kwargs = {
+            'ro_customer': enquiry.en_customername,
+            'ro_fromlocation': enquiry.en_fromlocaion,
+            'ro_tolocation': enquiry.en_tolocation,
+            'ro_vehicletype': vehicle_id,  # ForeignKey to vehicle type
+            'ro_touchpoint': enquiry.en_touchpoint,
+            'ro_touchpoint2': enquiry.en_touchpoint2,
+            'ro_touchpoint3': enquiry.en_touchpoint3,
+            'ro_touchpoint4': enquiry.en_touchpoint4
+        }
+        if enquiry.en_customerdepartment:
+            filter_kwargs['ro_customerdepartment'] = enquiry.en_customerdepartment
+        if vehicle_category_id and str(vehicle_category_id).strip() and str(vehicle_category_id).strip() != '0':
+            filter_kwargs['ro_vehiclecategory_id'] = str(vehicle_category_id).strip()
 
-    rate = RtratemasterInfo.objects.filter(**filter_kwargs).first()
-    if not rate and enquiry.en_customerdepartment:
-        filter_without_dept = {k: v for k, v in filter_kwargs.items() if k != 'ro_customerdepartment'}
-        rate = RtratemasterInfo.objects.filter(**filter_without_dept).first()
-    master_rate = str(rate.ro_rate) if rate and rate.ro_rate else "0"
+        rate = RtratemasterInfo.objects.filter(**filter_kwargs).first()
+        if not rate and enquiry.en_customerdepartment:
+            filter_without_dept = {k: v for k, v in filter_kwargs.items() if k != 'ro_customerdepartment'}
+            rate = RtratemasterInfo.objects.filter(**filter_without_dept).first()
+        master_rate = str(rate.ro_rate) if rate and rate.ro_rate else "0"
 
-    fetch_master_rate = request.GET.get('fetch_master_rate') == '1'
+        fetch_master_rate = request.GET.get('fetch_master_rate') == '1'
 
-    # Check if Enquirynotevehicle has standard sell & special sale configured for this enquiry
-    env_match = Enquirynotevehicle.objects.filter(
-        env_enquirynumber=enquiry,
-        env_vehicletype_id=vehicle_id
-    )
-    if vehicle_category_id:
-        env_match_cat = env_match.filter(env_vehiclecategory_id=vehicle_category_id)
-        if env_match_cat.exists():
-            env_match = env_match_cat
-    env_obj = env_match.first()
+        # Check if Enquirynotevehicle has standard sell & special sale configured for this enquiry
+        env_match = Enquirynotevehicle.objects.filter(
+            env_enquirynumber=enquiry,
+            env_vehicletype_id=vehicle_id
+        )
+        if vehicle_category_id and str(vehicle_category_id).strip() and str(vehicle_category_id).strip() != '0':
+            env_match_cat = env_match.filter(env_vehiclecategory_id=str(vehicle_category_id).strip())
+            if env_match_cat.exists():
+                env_match = env_match_cat
+        env_obj = env_match.first()
 
-    if not fetch_master_rate and env_obj and env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
-        sale_rate = str(env_obj.env_sale)
-    else:
-        sale_rate = master_rate
+        if not fetch_master_rate and env_obj and env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+            sale_rate = str(env_obj.env_sale)
+        else:
+            sale_rate = master_rate
 
-    if not fetch_master_rate and env_obj and env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
-        special_sale_rate = str(env_obj.env_special_sale)
-    else:
-        special_sale_rate = sale_rate
+        if not fetch_master_rate and env_obj and env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
+            special_sale_rate = str(env_obj.env_special_sale)
+        else:
+            special_sale_rate = sale_rate
 
-    return JsonResponse({
-        'master_rate': master_rate,
-        'sale_rate': sale_rate,
-        'special_sale_rate': special_sale_rate
-    })
+        return JsonResponse({
+            'master_rate': master_rate,
+            'sale_rate': sale_rate,
+            'special_sale_rate': special_sale_rate
+        })
+    except Exception as e:
+        print(f"Error in get_vendor_sale_rate: {e}")
+        return JsonResponse({'sale_rate': "0", 'special_sale_rate': "0", 'master_rate': "0"})
 
 
 @login_required(login_url='login_page')
@@ -1593,12 +1605,13 @@ def vehicle_allotment_replace(request, allotment_id):
                 if old_vehicle_num_check:
                     restricted_trips = restricted_trips.filter(tr_vehiclenumber=old_vehicle_num_check)
                 if restricted_trips.exists():
-                    blocked_trip = restricted_trips.first()
-                    status_name = blocked_trip.tc_financestatus.status if blocked_trip.tc_financestatus else "Financial Settlement/Invoicing"
-                    return JsonResponse({
-                        'success': False,
-                        'message': f"🚫 REPLACEMENT BLOCKED: Trip '{blocked_trip.tr_tripnumber or blocked_trip.id}' is currently in '{status_name}'. Vehicle replacement is not permitted after finance processing has started."
-                    })
+                    if not is_admin_user(request):
+                        blocked_trip = restricted_trips.first()
+                        status_name = blocked_trip.tc_financestatus.status if blocked_trip.tc_financestatus else "Financial Settlement/Invoicing"
+                        return JsonResponse({
+                            'success': False,
+                            'message': f"🚫 REPLACEMENT BLOCKED: Trip '{blocked_trip.tr_tripnumber or blocked_trip.id}' is currently in '{status_name}'. Vehicle replacement is not permitted after finance processing has started."
+                        })
 
                 # Get new details from POST
                 new_vehicle_source_id = request.POST.get('va_vehiclesource')
@@ -1759,12 +1772,13 @@ def vehicle_allotment_driver_replace(request, allotment_id):
                 if old_vehicle_num_check:
                     restricted_trips = restricted_trips.filter(tr_vehiclenumber=old_vehicle_num_check)
                 if restricted_trips.exists():
-                    blocked_trip = restricted_trips.first()
-                    status_name = blocked_trip.tc_financestatus.status if blocked_trip.tc_financestatus else "Financial Settlement/Invoicing"
-                    return JsonResponse({
-                        'success': False,
-                        'message': f"🚫 REPLACEMENT BLOCKED: Trip '{blocked_trip.tr_tripnumber or blocked_trip.id}' is currently in '{status_name}'. Driver replacement is not permitted after finance processing has started."
-                    })
+                    if not is_admin_user(request):
+                        blocked_trip = restricted_trips.first()
+                        status_name = blocked_trip.tc_financestatus.status if blocked_trip.tc_financestatus else "Financial Settlement/Invoicing"
+                        return JsonResponse({
+                            'success': False,
+                            'message': f"🚫 REPLACEMENT BLOCKED: Trip '{blocked_trip.tr_tripnumber or blocked_trip.id}' is currently in '{status_name}'. Driver replacement is not permitted after finance processing has started."
+                        })
 
                 # Get new details
                 new_driver_name = request.POST.get('va_drivername')

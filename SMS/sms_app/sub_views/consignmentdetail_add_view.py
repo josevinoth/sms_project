@@ -544,24 +544,25 @@ def consignmentdetail_list_ajax(request):
         4: 'co_consignmentnumber',
         5: 'co_consignmentdate',
         6: 'co_vehicelnumber',
-        7: 'co_fromlocaion__place_name',
-        8: 'co_tolocation__place_name',
-        9: 'cg_consignmentnumber__cg_consigner__consigner_name',
-        10: 'cg_consignmentnumber__cg_consignee__consignee_name',
-        11: 'cg_consignmentnumber__cg_consignerinvoice',
-        12: 'cg_consignmentnumber__cg_consignervalue',
-        13: 'cg_consignmentnumber__cg_valueininr',
-        14: 'cg_consignmentnumber__cg_qty',
-        15: 'cg_consignmentnumber__cg_weight',
-        16: 'cg_consignmentnumber__cg_ebillno',
-        17: 'cg_consignmentnumber__cg_consignerinvoice_date',
-        18: 'cg_consignmentnumber__cg_dateofvalidity',
-        19: 'co_containerdescription',
-        21: 'co_enquirynumber__en_movement_type__mt_movementtype',
-        22: 'co_status__status_title',
-        23: 'co_updated_at',
-        24: 'co_lastmodifiedby__first_name',
-        25: 'co_createdby__first_name',
+        # 7 is Vehicle Source, which we can't easily sort by right now
+        8: 'co_fromlocaion__place_name',
+        9: 'co_tolocation__place_name',
+        10: 'cg_consignmentnumber__cg_consigner__consigner_name',
+        11: 'cg_consignmentnumber__cg_consignee__consignee_name',
+        12: 'cg_consignmentnumber__cg_consignerinvoice',
+        13: 'cg_consignmentnumber__cg_consignervalue',
+        14: 'cg_consignmentnumber__cg_valueininr',
+        15: 'cg_consignmentnumber__cg_qty',
+        16: 'cg_consignmentnumber__cg_weight',
+        17: 'cg_consignmentnumber__cg_ebillno',
+        18: 'cg_consignmentnumber__cg_consignerinvoice_date',
+        19: 'cg_consignmentnumber__cg_dateofvalidity',
+        20: 'co_containerdescription',
+        22: 'co_enquirynumber__en_movement_type__mt_movementtype',
+        23: 'co_status__status_title',
+        24: 'co_updated_at',
+        25: 'co_lastmodifiedby__first_name',
+        26: 'co_createdby__first_name',
     }
     order_field = col_map.get(order_col, 'id')
     if order_dir == 'desc':
@@ -584,6 +585,14 @@ def consignmentdetail_list_ajax(request):
             inv['ti_inv_no'] or '',
             inv['ti_total'] or 0,
         )
+
+    from ..models import TripdetailInfo
+    trip_map = {}
+    for trip in TripdetailInfo.objects.filter(
+            tr_consignmentnumber_id__in=page_cons_ids
+    ).select_related('tr_vehiclesource'):
+        if trip.tr_vehiclesource:
+            trip_map[trip.tr_consignmentnumber_id] = trip.tr_vehiclesource.ow_ownership
 
     data = []
     # Fetch data
@@ -621,6 +630,7 @@ def consignmentdetail_list_ajax(request):
                     obj.co_enquirynumber and obj.co_enquirynumber.en_movement_type) else ''
 
         inv_no, inv_total = invoice_map.get(obj.id, ('', 0))
+        vehicle_source = trip_map.get(obj.id, '')
 
         data.append([
             obj.id,  # 0: ID
@@ -630,7 +640,8 @@ def consignmentdetail_list_ajax(request):
             obj.co_consignmentnumber or '',  # 4: Consignment Number
             obj.co_consignmentdate.strftime('%Y-%m-%d') if obj.co_consignmentdate else '',  # 5: Consignment Date
             obj.co_vehicelnumber or '',  # 6: Vehicle Number
-            display_from,  # 7: From Location
+            vehicle_source,  # 7: Vehicle Source
+            display_from,  # 8: From Location
             display_to,  # 8: To Location
             consigner,  # 9: Consigner
             consignee,  # 10: Consignee

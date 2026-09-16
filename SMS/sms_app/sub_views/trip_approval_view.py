@@ -28,13 +28,33 @@ def trip_approval_view(request):
         'tr_consignmentnumber__co_tolocation',
         'tr_approval',
         'tr_approval__ta_approval_status'
+    ).prefetch_related(
+        'tr_consignmentnumber__cg_consignmentnumber__cg_consignmenttype'
     ).filter(
         Q(tr_category=1),
-        Q(tr_departeddate__isnull=False),
+        Q(tr_dock_out_time__isnull=False),
         Q(tc_financestatus_id=8) | Q(tr_approval__ta_approval_status__id=3)
     ).exclude(
         tr_approval__ta_approval_status__id=1
     )
+
+    # Process trips to evaluate approval eligibility and exemptions
+    for trip in trip_list:
+        consignments = trip.tr_consignmentnumber.cg_consignmentnumber.all() if trip.tr_consignmentnumber else []
+        has_att = False
+        is_ex = False
+        
+        for c in consignments:
+            if c.cg_ewaybill_att or c.cg_invoice_att or c.cg_otl_att:
+                has_att = True
+            if c.cg_consignmenttype and c.cg_consignmenttype.consignment_type:
+                ctype = c.cg_consignmenttype.consignment_type.strip().lower()
+                if "sez" in ctype or "bonded" in ctype or "less value" in ctype:
+                    is_ex = True
+                    
+        # If no consignment records attached directly, check if category/type is exempt or normal
+        trip.can_approve = has_att or is_ex
+        trip.is_exempt = is_ex
 
     return render(request, "asset_mgt_app/trip_approval.html", {
         'trip_list': trip_list,
@@ -66,8 +86,8 @@ def update_trip_approval(request, trip_id):
             trip.tc_financestatus_id = 1
             trip.tr_operational_status_id = 1
             
-            # ✅ AUTOMATED EMAIL: Trip Started
-            if not trip.tr_trip_started_mail_sent:
+            # ✅ AUTOMATED EMAIL: Trip Started (only if Vehicle Started Date & Time is present)
+            if not trip.tr_trip_started_mail_sent and trip.tr_departeddate:
                 try:
                     # 1. Get Recipients from Emailmaster (Type 2)
                     enquiry = trip.tr_enquirynumber

@@ -112,8 +112,18 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
 
         form.fields['cg_description'].queryset = Stock_type.objects.all()
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Record  Updated Successfully')
+            goods_obj = form.save()
+            
+            # ✅ Auto-advance linked trip status to Awaiting Trip Approval (8) when goods are created/updated
+            if goods_obj and goods_obj.cg_consignmentnumber_id:
+                linked_trips = TripdetailInfo.objects.filter(tr_consignmentnumber_id=goods_obj.cg_consignmentnumber_id)
+                for trip in linked_trips:
+                    if trip.tc_financestatus_id in [1, 2]: # Open / Work In Progress
+                        trip.tc_financestatus_id = 8  # Awaiting Trip Approval
+                        trip.tr_operational_status_id = 8
+                        trip.save(update_fields=['tc_financestatus', 'tr_operational_status'])
+            
+            messages.success(request, 'Record Updated Successfully')
             print("Consignment Goods form is valid", form.errors)
             return redirect(request.META['HTTP_REFERER'])
         else:
