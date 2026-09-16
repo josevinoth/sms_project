@@ -1239,6 +1239,7 @@ urlpatterns = [
     path('invoice_documents_list/', views.invoice_documents_list, name='invoice_documents_list'),
     path('invoice_documents_list_ajax/', views.invoice_documents_list_ajax_view, name='invoice_documents_list_ajax'),
     path('invoice_documents_add/<int:trip_id>/', views.invoice_documents_add, name='invoice_documents_add'),
+    path('view_invoice_combined_pdf/<str:trip_num>/', views.view_invoice_combined_pdf, name='view_invoice_combined_pdf'),
     path('pk_tool_master_list/', views.pk_tool_master_list, name='pk_tool_master_list'),
     path('pk_tool_master_add/', views.pk_tool_master_add, name='pk_tool_master_add'),
     path('pk_tool_master_update/<int:tool_id>/', views.pk_tool_master_add, name='pk_tool_master_update'),
