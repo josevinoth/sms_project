@@ -7,7 +7,7 @@ from django.http import JsonResponse
 
 from ..forms import ConsignmentdetailaddForm, EnquirynoteaddForm, EnquirynotevehicleForm
 from ..models import Vehicle_allotmentInfo, User_extInfo, TripdetailInfo, ConsignmentdetailInfo, EnquirynoteInfo, \
-    Enquirynotevehicle, VehiclemasterInfo, Tripstatusinfo, DeletionLog, Trip_closure_files_Info, TripAttachmentInfo
+    Enquirynotevehicle, VehiclemasterInfo, Tripstatusinfo, DeletionLog, Trip_closure_files_Info, TripAttachmentInfo, ConsignmentgoodsInfo
 from django.urls import reverse
 from ..sub_models.trans_invoice_mod import TransInvoiceInfo
 from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
@@ -306,8 +306,11 @@ def enquirynote_list(request):
     # Efficiently get enquiry IDs
     enquiry_ids = [enq.id for enq in page_obj]
 
-    # Fetch related data
-    consignment_data = ConsignmentdetailInfo.objects.filter(co_enquirynumber_id__in=enquiry_ids)
+    # Fetch related data with precomputed goods counts
+    consignment_data = ConsignmentdetailInfo.objects.filter(
+        co_enquirynumber_id__in=enquiry_ids
+    ).annotate(goods_count=Count('cg_consignmentnumber'))
+
     vehicle_data = Vehicle_allotmentInfo.objects.filter(
         va_enquirynumber__in=enquiry_ids
     ).values_list('va_enquirynumber', 'va_vehiclenumber__vm_registrationnumber', 'va_vehiclenumber_mkt', 'va_status_id',
@@ -324,7 +327,8 @@ def enquirynote_list(request):
         'tc_financestatus',
         'tr_category__category',
         'tr_vehiclenumber',
-        'tc_cancellation_check'
+        'tc_cancellation_check',
+        'tr_dock_out_time'
     )
 
     # Find which trips already have a completed invoice
@@ -335,8 +339,7 @@ def enquirynote_list(request):
             is_woh=True
         ).values_list('ti_trip_id', flat=True)
     )
-
-    # Pre-build consignment dict to avoid N+1 queries
+    
     consignment_dict = {}
     for consignment in consignment_data:
         consignment_dict.setdefault(consignment.co_enquirynumber_id, []).append(consignment)
@@ -480,9 +483,16 @@ def enquirynote_list(request):
     )
     dock_out_count_dict = {d['tr_enquirynumber_id']: d['total_docked_out'] for d in docked_out_trips}
 
+    # Pre-fetch trips with goods info for Booking Note List display
+    trips_with_goods = set(
+        ConsignmentgoodsInfo.objects.filter(
+            cg_consignmentnumber__co_enquirynumber_id__in=enquiry_ids
+        ).values_list('cg_consignmentnumber__tripdetailinfo__id', flat=True).distinct()
+    )
+
     # Trip dict
     trip_dict = {}
-    for trip_id, enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num, tc_cancellation_check in trip_data:
+    for trip_id, enq_id, trip_cons, trip_num, trip_status, trip_status_id, trip_category, trip_veh_num, tc_cancellation_check, tr_dock_out_time in trip_data:
         # Check category safely
         cat_lower = trip_category.strip().lower() if trip_category else ""
 
@@ -499,8 +509,15 @@ def enquirynote_list(request):
         is_invoiced = trip_id in invoiced_trip_ids
         pod_info = trip_pod_map.get(trip_id, None) if cat_lower in ["business", "bussiness"] else None
 
+        # Display override: If trip status in DB is 8, keep status 8 if goods OR dock-out time exists
+        final_status_text = trip_status or ""
+        final_status_id = trip_status_id
+        if trip_status_id == 8 and trip_id not in trips_with_goods and not tr_dock_out_time:
+            final_status_text = "Work In Progress"
+            final_status_id = 12
+
         trip_dict.setdefault(enq_id, []).append(
-            (display_text, trip_num or "No Trip", trip_status or "", trip_status_id, display_veh_num, is_invoiced, pod_info)
+            (display_text, trip_num or "No Trip", final_status_text, final_status_id, display_veh_num, is_invoiced, pod_info)
         )
 
     # Build final data

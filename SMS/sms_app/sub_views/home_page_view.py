@@ -48,7 +48,7 @@ def home_page(request):
     total_dues = customer_rate_due_count
     approval_count = TripdetailInfo.objects.filter(
         Q(tr_category=1),
-        Q(tr_departeddate__isnull=False),
+        Q(tr_dock_out_time__isnull=False),
         Q(tc_financestatus_id=8) | Q(tr_approval__ta_approval_status__id=3)
     ).exclude(
         tr_approval__ta_approval_status__id=1

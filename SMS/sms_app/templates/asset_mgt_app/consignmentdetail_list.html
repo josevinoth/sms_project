@@ -80,6 +80,7 @@
                     <th>Consignment Number</th>
                     <th>Consignment Date</th>
                     <th>Vehicle Number</th>
+                    <th>Vehicle Source</th>
                     <th>From Location</th>
                     <th>To Location</th>
                     <th>Consigner</th>
@@ -150,6 +151,7 @@
                 { title: "Consignment Number" },
                 { title: "Consignment Date" },
                 { title: "Vehicle Number" },
+                { title: "Vehicle Source", orderable: false },
                 { title: "From Location" },
                 { title: "To Location" },
                 { title: "Consigner" },
@@ -176,13 +178,13 @@
             ],
             columnDefs: [
                 {
-                    targets: 28,
+                    targets: 29,
                     render: function (data, type, row) {
                         return '<a class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;" href="/SMS/consignmentdetail_update/' + data + '/"><i class="far fa-edit"></i></a>';
                     }
                 },
                 {
-                    targets: 29,
+                    targets: 30,
                     render: function (data, type, row) {
                         return '<form action="/SMS/consignmentdetail_delete/' + data + '/" method="post" onsubmit="let r = prompt(\'⚠️ Warning: You are about to delete this consignment.\\n\\nPlease provide a reason for this deletion:\'); if(r && r.trim() !== \'\'){ this.insertAdjacentHTML(\'beforeend\', \'<input type=\\\'hidden\\\' name=\\\'deletion_reason\\\' value=\\\'\' + r.replace(/\'/g, \'&apos;\') + \'\\\'>\'); return true; } else { alert(\'Deletion cancelled. A reason is required to delete records.\'); return false; }" style="display:inline;"><input type="hidden" name="csrfmiddlewaretoken" value="' + getCookie('csrftoken') + '"><button type="submit" class="btn-modern btn-cancel py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;"><i class="fas fa-trash-alt"></i></button></form>';
                     }

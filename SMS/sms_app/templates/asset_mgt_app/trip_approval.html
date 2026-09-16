@@ -186,23 +186,21 @@
 
                     <!-- Single Approval Form -->
                     <td class="text-center">
-                        {% with first_cons=consignments.first %}
                         <form method="post" action="{% url 'update_trip_approval' trip.id %}"
                             class="approval-form d-flex align-items-center justify-content-center" style="gap:5px;">
                             {% csrf_token %}
                             <input type="hidden" name="ta_approval_status" value="1">
 
-                            {% if not consignments %}
-                            <button type="button" class="btn btn-sm btn-secondary" disabled style="border-radius:6px; padding: 5px 12px; font-weight:600; font-size:0.8rem;"
-                                title="No consignment details found">Approve</button>
-                            <small class="text-danger d-block ml-1" style="font-size: 0.68rem; line-height: 1; font-weight:600;">Missing<br>Attachment</small>
-                            {% else %}
+                            {% if trip.can_approve %}
                             <button type="submit" class="btn btn-sm btn-success font-weight-bold" style="border-radius:6px; padding: 5px 14px; font-size:0.82rem; display:inline-flex; align-items:center; gap:5px;">
                                 <i class="fas fa-check-circle"></i> Approve
                             </button>
+                            {% else %}
+                            <button type="button" class="btn btn-sm btn-secondary" disabled style="border-radius:6px; padding: 5px 12px; font-weight:600; font-size:0.8rem;"
+                                title="Attachment mandatory for Normal Consignments">Approve</button>
+                            <small class="text-danger d-block ml-1" style="font-size: 0.68rem; line-height: 1; font-weight:600;">Missing<br>Attachment</small>
                             {% endif %}
                         </form>
-                        {% endwith %}
                     </td>
                 </tr>
                 {% endwith %}

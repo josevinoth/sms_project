@@ -210,7 +210,7 @@ def tripdetail_add(request, tripdetail_id=0):
             trip_list = TripdetailInfo.objects.select_related(
                 'tr_approval', 'tr_approval__ta_approval_status'
             ).filter(tr_enquirynumber=enquiry_num_id)
-            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8, 10, 11])
+            status_list = Tripstatusinfo.objects.filter(id__in=[1, 2, 8, 10, 11, 12])
 
             # ✅ Exclude already-used consignments for this enquiry
             used_consignments = TripdetailInfo.objects.filter(
@@ -291,7 +291,7 @@ def tripdetail_add(request, tripdetail_id=0):
                 'status_list': status_list,
                 'consignment_list': consignment_list,
                 'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
-                'status_selected': 1 if initial_data.get('tr_category') in [2, 3] else 8,
+                'status_selected': 1 if initial_data.get('tr_category') in [2, 3] else 12,
                 'location_locked': location_locked,
                 'allotted_vehicle_list': allotted_vehicle_list,
                 'allotted_vehicle_map_json': allotted_vehicle_map_json,
@@ -359,15 +359,26 @@ def tripdetail_add(request, tripdetail_id=0):
             ).filter(tr_enquirynumber=enquiry_num_id)
             trip_instance = TripdetailInfo.objects.get(pk=tripdetail_id)
             try:
+                has_consignment_goods = False
+                if trip_instance.tr_consignmentnumber_id:
+                    has_consignment_goods = ConsignmentgoodsInfo.objects.filter(
+                        cg_consignmentnumber=trip_instance.tr_consignmentnumber_id
+                    ).exists()
+
+                # Determine status_selected from database
                 if trip_instance.tc_financestatus and trip_instance.tc_financestatus.id in [10, 11]:
                     status_selected = trip_instance.tc_financestatus.id
                 elif trip_instance.tr_operational_status:
                     status_selected = trip_instance.tr_operational_status.id
                 else:
-                    status_selected = trip_instance.tc_financestatus.id if trip_instance.tc_financestatus else 8
-                    # Fallback mapping for older records
+                    status_selected = trip_instance.tc_financestatus.id if trip_instance.tc_financestatus else 12
                     if status_selected in [4, 5, 6, 7, 9]:
-                        status_selected = 2
+                        status_selected = 12
+
+                # ✅ Status is Awaiting Trip Approval (8) if dock-out time is recorded or consignment goods exist
+                has_dock_out = bool(trip_instance.tr_dock_out_time)
+                if not has_consignment_goods and not has_dock_out and status_selected in [8, 2]:
+                    status_selected = 12
 
                 # Auto-progress logic for Open/Started trips
                 if status_selected == 1:
@@ -428,6 +439,10 @@ def tripdetail_add(request, tripdetail_id=0):
             if trip_instance.tr_consignmentnumber:
                 has_consignment_goods = ConsignmentgoodsInfo.objects.filter(
                     cg_consignmentnumber=trip_instance.tr_consignmentnumber_id
+                ).exists()
+            if not has_consignment_goods and trip_instance.tr_tripnumber:
+                has_consignment_goods = TripAttachmentInfo.objects.filter(
+                    ta_tripnumber=trip_instance.tr_tripnumber
                 ).exists()
             has_vehicle_started = bool(trip_instance.tr_departeddate)
 
@@ -533,7 +548,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     'status_list': status_list,
                     'consignment_list': consignment_list,
                     'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
-                    'status_selected': request.POST.get('tc_financestatus') or 8,
+                    'status_selected': request.POST.get('tc_financestatus') or 12,
                 })
 
             if vehicle_allotment_id:
@@ -623,20 +638,28 @@ def tripdetail_add(request, tripdetail_id=0):
                     Q(status__iexact='Closed') | Q(status__iexact='Trip Closed')).first()
                 status_pending = Tripstatusinfo.objects.filter(status__iexact='Pending Approval').first()
 
+                # Check if consignment goods exist
+                has_goods = False
+                if trip.tr_consignmentnumber_id:
+                    has_goods = ConsignmentgoodsInfo.objects.filter(cg_consignmentnumber=trip.tr_consignmentnumber_id).exists()
+
                 # Manual capture of status from POST
                 manual_status_id = request.POST.get('tc_financestatus')
                 if manual_status_id:
-                    trip.tc_financestatus_id = int(manual_status_id)
-                    trip.tr_operational_status_id = int(manual_status_id)  # Keep both fields in sync
+                    status_id_val = int(manual_status_id)
+                    if status_id_val == 8 and not has_goods:
+                        status_id_val = 12  # Work In Progress
+                    trip.tc_financestatus_id = status_id_val
+                    trip.tr_operational_status_id = status_id_val  # Keep both fields in sync
                 else:
                     if trip.tr_category_id in [2, 3]:
                         if status_open:
                             trip.tc_financestatus_id = status_open.id
                             trip.tr_operational_status_id = status_open.id  # Keep both fields in sync
                     else:
-                        if status_pending:
-                            trip.tc_financestatus_id = status_pending.id
-                            trip.tr_operational_status_id = status_pending.id  # Keep both fields in sync
+                        target_status = 8 if has_goods else 12
+                        trip.tc_financestatus_id = target_status
+                        trip.tr_operational_status_id = target_status  # Keep both fields in sync
 
                 if vehicle_allotment_id:
                     trip.tr_driver_master_id = va.va_driver_master_id
@@ -716,8 +739,8 @@ def tripdetail_add(request, tripdetail_id=0):
                     if trip.tr_departedlocation and trip.tr_departeddate_pickup and not trip.tr_loading_report_mail_sent:
                         trigger_alert(trip_send_loading_report_mail, "Loading Reported")
 
-                    # 2. Trip Started
-                    if is_open and not trip.tr_trip_started_mail_sent:
+                    # 2. Trip Started (Triggers after Vehicle Started Date & Time is filled)
+                    if is_open and trip.tr_departeddate and not trip.tr_trip_started_mail_sent:
                         trigger_alert(trip_send_trip_started_mail, "Trip Started")
 
                     # 3. Unloading Reported
@@ -765,7 +788,7 @@ def tripdetail_add(request, tripdetail_id=0):
                     'status_list': status_list,
                     'consignment_list': consignment_list,
                     'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
-                    'status_selected': request.POST.get('tc_financestatus') or 8,
+                    'status_selected': request.POST.get('tc_financestatus') or 12,
                 })
 
         else:
@@ -880,6 +903,12 @@ def tripdetail_add(request, tripdetail_id=0):
                     else:
                         trip.tc_financestatus_id = manual_status_id
                 
+                # Auto-advance Business trips to Awaiting Trip Approval (8) when Dock-Out Time is saved
+                is_business = (trip.tr_category_id == 1) or (trip.tr_category and trip.tr_category.category.strip().lower() == 'business')
+                if is_business and trip.tr_dock_out_time and trip.tc_financestatus_id in [12, None]:
+                    trip.tc_financestatus_id = 8
+                    trip.tr_operational_status_id = 8
+
                 # Fallback: Sync operational status if missing or if manual_status_id was disabled in UI
                 if not trip.tr_operational_status_id and trip.tc_financestatus_id:
                     trip.tr_operational_status_id = trip.tc_financestatus_id
@@ -974,8 +1003,8 @@ def tripdetail_add(request, tripdetail_id=0):
                 # Fallback to IDs 1/2 if name lookup fails, but prioritize names
                 is_open = (status_open and trip.tc_financestatus_id == status_open.id) or (
                         not status_open and trip.tc_financestatus_id == 1)
-                is_closed = (status_closed and trip.tc_financestatus_id == status_closed.id) or (
-                        not status_closed and trip.tc_financestatus_id == 2)
+                is_closed = ((status_closed and trip.tc_financestatus_id == status_closed.id) or (
+                        not status_closed and trip.tc_financestatus_id == 2)) and bool(trip.tr_reporteddate or trip.tr_reportedlocation)
 
                 # ✅ Send email alerts ONLY for Business Trips (Category 1)
                 is_business_trip = (trip.tr_category_id == 1) or (trip.tr_category and trip.tr_category.category.strip().lower() == 'business')
@@ -984,15 +1013,15 @@ def tripdetail_add(request, tripdetail_id=0):
                     if trip.tr_departedlocation and trip.tr_departeddate_pickup and not trip.tr_loading_report_mail_sent:
                         trigger_alert(trip_send_loading_report_mail, "Loading Reported")
 
-                    # 2. Trip Started
-                    if is_open and not trip.tr_trip_started_mail_sent:
+                    # 2. Trip Started (Triggers after Vehicle Started Date & Time is filled)
+                    if is_open and trip.tr_departeddate and not trip.tr_trip_started_mail_sent:
                         trigger_alert(trip_send_trip_started_mail, "Trip Started")
 
                     # 3. Unloading Reported
                     if trip.tr_reportedlocation and trip.tr_reporteddate and not trip.tr_unloading_report_mail_sent:
                         trigger_alert(trip_send_unloading_report_mail, "Unloading Reported")
 
-                    # 4. Trip Closed
+                    # 4. Trip Closed - requires both status 2 AND actual unloading details
                     if is_closed and not trip.tr_trip_closed_mail_sent:
                         trigger_alert(trip_send_trip_closed_mail, "Trip Closed")
 
