@@ -88,25 +88,26 @@ def tripdetail_nav(request, tripdetail_id=0):
 def tripdetail_add(request, tripdetail_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID') or (request.user.id if request.user.is_authenticated else '')
+    enquiry_num_id = None
+
+    if tripdetail_id != 0:
+        try:
+            trip_obj = TripdetailInfo.objects.select_related('tr_enquirynumber').get(pk=tripdetail_id)
+            if trip_obj.tr_enquirynumber_id:
+                enquiry_num_id = trip_obj.tr_enquirynumber_id
+        except TripdetailInfo.DoesNotExist:
+            pass
 
     enq_id_param = request.GET.get('enq_id') or request.GET.get('enquiry_num_id')
-    if enq_id_param:
+    if not enquiry_num_id and enq_id_param:
         try:
             enquiry_num_id = int(enq_id_param)
         except (ValueError, TypeError):
             enquiry_num_id = None
-        if enquiry_num_id:
-            request.session['enquiry_num_id'] = enquiry_num_id
-            request.session['ses_enqiury_id'] = enquiry_num_id
-            try:
-                enquiry = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
-                request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
-            except ObjectDoesNotExist:
-                pass
-    else:
+
+    if not enquiry_num_id:
         enquiry_num_id = request.session.get('enquiry_num_id')
 
-    # Fallback to string-based session key if needed (though we should avoid this)
     if not enquiry_num_id:
         string_enq_num = request.session.get('ses_enqiury_id')
         if string_enq_num:
@@ -117,9 +118,13 @@ def tripdetail_add(request, tripdetail_id=0):
     # ✅ Always refresh session with current enquiry_num_id for consistency
     if enquiry_num_id:
         request.session['enquiry_num_id'] = enquiry_num_id
+        request.session['ses_enqiury_id'] = enquiry_num_id
+        try:
+            enquiry = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
+            request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
+        except ObjectDoesNotExist:
+            pass
     else:
-        # If no enquiry ID is found, inform the user and redirect to the list.
-        # This message will now be displayed and cleared once on the next page.
         messages.warning(request, "No enquiry number found in session. Please select an enquiry from the list first.")
         return redirect('enquirynote_list')
 
@@ -304,6 +309,11 @@ def tripdetail_add(request, tripdetail_id=0):
             enquiry_num = TripdetailInfo.objects.get(pk=tripdetail_id).tr_enquirynumber
             enquiry_num_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_num).id
             tripdetail = TripdetailInfo.objects.get(pk=tripdetail_id)
+
+            # ✅ Sync session keys to the trip's actual parent enquiry to prevent session drift
+            request.session['enquiry_num_id'] = enquiry_num_id
+            request.session['ses_enqiury_id'] = enquiry_num_id
+            request.session['ses_enqiury_num'] = enquiry_num.en_enquirynumber
 
             # ✅ Sync Driver/Vehicle info with LATEST Allotment if trip is not closed
             # (Statuses: 1: Open/Started, 8: Awaiting Approval)
