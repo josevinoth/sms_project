@@ -956,6 +956,12 @@ def tripdetail_add(request, tripdetail_id=0):
                         ta_category='POD'
                     )
 
+                try:
+                    from .invoice_documents_view import sync_closure_files_to_invoice
+                    sync_closure_files_to_invoice(request, trip, tripclosurefiles_form.instance)
+                except Exception as e:
+                    print(f"Error syncing closure files to invoice: {e}")
+
                 # ✅ AUTOMATED EMAIL TRIGGERS
                 def trigger_alert(alert_func, label):
                     try:
