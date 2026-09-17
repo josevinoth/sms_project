@@ -39,4 +39,4 @@ class ConsignmentgoodsInfo(models.Model):
 
 
     def __str__(self):
-        return self.cg_consignmentnumber
+        return str(self.cg_consignmentnumber) if self.cg_consignmentnumber else f"Goods #{self.id}"
