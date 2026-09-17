@@ -162,7 +162,7 @@
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Vehicle Source</label>
-										{% if va %}
+										{% if va and not is_admin %}
 										{% render_field vehicle_allotment_form.va_vehiclesource id="va_vehiclesource" onchange="market_vehicle_enable_disable()" class="form-control form-control-modern" disabled="disabled" %}
 										<input type="hidden" name="va_vehiclesource" value="{{ va.va_vehiclesource_id }}">
 										{% else %}
@@ -171,7 +171,7 @@
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Vehicle Number</label>
-										{% if va %}
+										{% if va and not is_admin %}
 										{% render_field vehicle_allotment_form.va_vehiclenumber id="va_vehiclenumber" class="form-control form-control-modern" disabled="disabled" %}
 										{% if va.va_vehiclenumber_id %}
 										<input type="hidden" name="va_vehiclenumber" value="{{ va.va_vehiclenumber_id }}">
@@ -182,7 +182,7 @@
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Vehicle Number (Market)</label>
-										{% if va %}
+										{% if va and not is_admin %}
 										{# {% render_field vehicle_allotment_form.va_vehiclenumber_mkt id="va_vehiclenumber_mkt" class="form-control form-control-modern market-input" maxlength="10" pattern="^[A-Za-z]{2}[0-9]{2}[A-Za-z]{0,2}[0-9]{4}$" title="Vehicle number format must be e.g. TN22AB4916 (2 letters, 2 digits, optional 1-2 letters, 4 digits)" placeholder="e.g. TN22AB4916" readonly="readonly" %} #}
 										{% render_field vehicle_allotment_form.va_vehiclenumber_mkt id="va_vehiclenumber_mkt" class="form-control form-control-modern market-input" placeholder="e.g. TN22AB4916" readonly="readonly" %}
 										{% else %}
@@ -205,7 +205,7 @@
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Vendor Name <span id="vendor_required_star" style="color:red; display:none">*</span></label>
-										{% if va %}
+										{% if va and not is_admin %}
 										{% render_field vehicle_allotment_form.va_vendor class="form-control form-control-modern" id="va_vendor" onchange="loadVendorBuyRate()" data-selected=vehicle_allotment_form.va_vendor.value disabled="disabled" %}
 										{% if va.va_vendor_id %}
 										<input type="hidden" name="va_vendor" value="{{ va.va_vendor_id }}">
@@ -216,7 +216,7 @@
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Driver Name <span id="driver_required_star" style="color:red; display:none">*</span></label>
-										{% if va %}
+										{% if va and not is_admin %}
 										{% render_field vehicle_allotment_form.va_drivername id="va_drivername" class="form-control form-control-modern disable_a_href" readonly="readonly" disabled="disabled" %}
 										<input type="hidden" name="va_drivername" value="{{ va.va_drivername|default:'' }}">
 										{% else %}
@@ -226,7 +226,7 @@
 									<input type="hidden" id="va_driver_master_id" name="va_driver_master_id" value="{{ va.va_driver_master_id|default:'' }}">
 									<div class="form-group-modern">
 										<label class="form-label-modern">Driver Number</label>
-										{% if va %}
+										{% if va and not is_admin %}
 										{% render_field vehicle_allotment_form.va_drivernumber id="va_drivernumber" pattern="\d{10}" maxlength="10" minlength="10" class="form-control form-control-modern disable_a_href" title="Driver Number must be exactly 10 digits" readonly="readonly" disabled="disabled" %}
 										<input type="hidden" name="va_drivernumber" value="{{ va.va_drivernumber|default:'' }}">
 										{% else %}
@@ -235,7 +235,7 @@
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Driver License</label>
-										{% if va %}
+										{% if va and not is_admin %}
 										{% render_field vehicle_allotment_form.va_driver_lic id="va_driver_lic" class="form-control form-control-modern disable_a_href" readonly="readonly" disabled="disabled" %}
 										<input type="hidden" name="va_driver_lic" value="{{ va.va_driver_lic|default:'' }}">
 										{% else %}
@@ -244,7 +244,7 @@
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">License Expiry</label>
-										{% if va %}
+										{% if va and not is_admin %}
 										{% render_field vehicle_allotment_form.va_driver_lic_expiry id="va_driver_lic_expiry" type="Date" class="form-control form-control-modern disable_a_href" readonly="readonly" disabled="disabled" style="pointer-events: none;" onkeydown="return false;" %}
 										<input type="hidden" name="va_driver_lic_expiry" value="{{ va.va_driver_lic_expiry|default:'' }}">
 										{% else %}
@@ -954,7 +954,7 @@ $(document).ready(function () {
 </script>
 <script>
 $(function () {
-    {% if not va %}
+    {% if not va or is_admin %}
     $("#va_drivername").autocomplete({
         minLength: 2,
         source: function (request, response) {

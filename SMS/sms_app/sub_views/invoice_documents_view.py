@@ -140,10 +140,15 @@ def _copy_stored_file(target_field, source_field):
 
 def _try_merge_pdfs(inv_obj, closure_obj=None):
     """
-    Merge all uploaded documents from both InvoiceDocumentInfo and Trip_closure_files_Info
-    into a single combined PDF.
-    Supports PDF files (via pypdf) and image files (via Pillow).
+    Merge all uploaded documents from InvoiceDocumentInfo, Trip_closure_files_Info,
+    TripdetailInfo, and TripAttachmentInfo into a single combined PDF.
+    Supports PDF files (via pypdf) and all image formats (via Pillow).
     """
+    if not inv_obj or not inv_obj.id_tripnumber:
+        return False
+
+    trip_num = str(inv_obj.id_tripnumber).strip()
+
     file_fields = [
         inv_obj.id_trip_cost_doc,
         inv_obj.id_parking_doc,
@@ -155,6 +160,11 @@ def _try_merge_pdfs(inv_obj, closure_obj=None):
         inv_obj.id_pod_doc,
         getattr(inv_obj, 'id_sell_rate_doc', None),
     ]
+
+    from ..sub_models.tripdetail_mod import Trip_closure_files_Info, TripdetailInfo
+
+    if not closure_obj:
+        closure_obj = Trip_closure_files_Info.objects.filter(tcf_tripnumber=trip_num).first()
 
     if closure_obj:
         file_fields.extend([
@@ -168,15 +178,21 @@ def _try_merge_pdfs(inv_obj, closure_obj=None):
             closure_obj.tcf_pod,
         ])
 
-    # Also collect multi-file attachments from TripAttachmentInfo
-    trip_num = getattr(inv_obj, 'id_tripnumber', None)
-    if trip_num:
-        multi_atts = TripAttachmentInfo.objects.filter(ta_tripnumber=trip_num)
-        for att in multi_atts:
-            if att.ta_file:
-                file_fields.append(att.ta_file)
+    # Also collect from TripdetailInfo (tc_pod_attachment, td_pod)
+    trip_record = TripdetailInfo.objects.filter(tr_tripnumber=trip_num).first()
+    if trip_record:
+        if trip_record.tc_pod_attachment:
+            file_fields.append(trip_record.tc_pod_attachment)
+        if trip_record.td_pod:
+            file_fields.append(trip_record.td_pod)
 
-    IMAGE_EXTS = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif', '.webp')
+    # Also collect multi-file attachments from TripAttachmentInfo
+    multi_atts = TripAttachmentInfo.objects.filter(ta_tripnumber=trip_num)
+    for att in multi_atts:
+        if att.ta_file:
+            file_fields.append(att.ta_file)
+
+    IMAGE_EXTS = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif', '.webp', '.jfif')
     has_any = False
 
     try:
@@ -226,11 +242,13 @@ def _try_merge_pdfs(inv_obj, closure_obj=None):
             output = io.BytesIO()
             writer.write(output)
             output.seek(0)
-            pdf_name = 'merged_{}.pdf'.format(inv_obj.id_tripnumber)
+            pdf_name = f'merged_{inv_obj.id_tripnumber}.pdf'
             inv_obj.id_merged_pdf.save(pdf_name, ContentFile(output.read()), save=True)
             print(f"Successfully merged documents for {inv_obj.id_tripnumber}")
+            return True
         else:
             print(f"No documents found to merge for {inv_obj.id_tripnumber}")
+            return False
 
     except Exception as e:
         print(f"Merge function robust error: {e}")
@@ -255,8 +273,10 @@ def _try_merge_pdfs(inv_obj, closure_obj=None):
                 pages[0].save(output, format='PDF', save_all=True, append_images=pages[1:])
                 output.seek(0)
                 inv_obj.id_merged_pdf.save(f"merged_{inv_obj.id_tripnumber}.pdf", ContentFile(output.read()), save=True)
+                return True
         except:
             pass
+        return False
 
 
 def sync_closure_files_to_invoice(request, trip, files_obj):
@@ -336,7 +356,49 @@ def sync_closure_files_to_invoice(request, trip, files_obj):
     if changed or not invoice_doc.pk or TripAttachmentInfo.objects.filter(ta_tripnumber=trip.tr_tripnumber).exists():
         invoice_doc.id_updated_by = request.user
         invoice_doc.save()
+        _try_merge_pdfs(invoice_doc, files_obj)
+
+@login_required
+def view_invoice_combined_pdf(request, trip_num):
+    """
+    Dynamic viewer/downloader for the Invoice Document combined PDF.
+    If the merged PDF is missing, cleared, or outdated, it regenerates it on-the-fly and serves it directly.
+    """
+    from django.http import HttpResponse
+    trip_num = str(trip_num).strip()
+    invoice_doc = InvoiceDocumentInfo.objects.filter(id_tripnumber=trip_num).first()
+    if not invoice_doc:
+        invoice_doc = InvoiceDocumentInfo.objects.create(id_tripnumber=trip_num, id_updated_by=request.user)
+    
+    # Try merging if not already present or if file does not exist on disk
+    if not invoice_doc.id_merged_pdf or not invoice_doc.id_merged_pdf.storage.exists(invoice_doc.id_merged_pdf.name):
         _try_merge_pdfs(invoice_doc)
+        invoice_doc.refresh_from_db()
+
+    if invoice_doc.id_merged_pdf and invoice_doc.id_merged_pdf.storage.exists(invoice_doc.id_merged_pdf.name):
+        try:
+            invoice_doc.id_merged_pdf.open('rb')
+            content = invoice_doc.id_merged_pdf.read()
+            invoice_doc.id_merged_pdf.close()
+            response = HttpResponse(content, content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="merged_{trip_num}.pdf"'
+            return response
+        except Exception as e:
+            print(f"Error serving merged PDF {invoice_doc.id_merged_pdf}: {e}")
+
+    # Fallback retry full merge
+    if _try_merge_pdfs(invoice_doc):
+        invoice_doc.refresh_from_db()
+        if invoice_doc.id_merged_pdf and invoice_doc.id_merged_pdf.storage.exists(invoice_doc.id_merged_pdf.name):
+            invoice_doc.id_merged_pdf.open('rb')
+            content = invoice_doc.id_merged_pdf.read()
+            invoice_doc.id_merged_pdf.close()
+            response = HttpResponse(content, content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="merged_{trip_num}.pdf"'
+            return response
+
+    messages.error(request, f"No documents found to generate combined PDF for trip '{trip_num}'.")
+    return redirect(request.META.get('HTTP_REFERER', 'invoice_documents_list'))
 
 @login_required
 def invoice_documents_list(request):
@@ -476,14 +538,50 @@ def invoice_documents_list_ajax_view(request):
         invoice_docs = InvoiceDocumentInfo.objects.filter(id_tripnumber__in=trip_numbers).select_related('id_status')
         invoice_doc_map = {doc.id_tripnumber: doc for doc in invoice_docs}
 
+        # Collect trip attachments and closure files for trips in current page
+        attachment_trips_set = set(TripAttachmentInfo.objects.filter(
+            ta_tripnumber__in=trip_numbers
+        ).values_list('ta_tripnumber', flat=True).distinct())
+
+        from ..sub_models.tripdetail_mod import Trip_closure_files_Info
+        closure_trips_with_files = set(Trip_closure_files_Info.objects.filter(
+            tcf_tripnumber__in=trip_numbers
+        ).filter(
+            (Q(tcf_trip_cost__isnull=False) & ~Q(tcf_trip_cost='')) |
+            (Q(tcf_parking_cost__isnull=False) & ~Q(tcf_parking_cost='')) |
+            (Q(tcf_toll_cost__isnull=False) & ~Q(tcf_toll_cost='')) |
+            (Q(tcf_loading_cost__isnull=False) & ~Q(tcf_loading_cost='')) |
+            (Q(tcf_unloading_cost__isnull=False) & ~Q(tcf_unloading_cost='')) |
+            (Q(tcf_weighment_cost__isnull=False) & ~Q(tcf_weighment_cost='')) |
+            (Q(tcf_handling_cost__isnull=False) & ~Q(tcf_handling_cost='')) |
+            (Q(tcf_pod__isnull=False) & ~Q(tcf_pod=''))
+        ).values_list('tcf_tripnumber', flat=True).distinct())
+
         data = []
         for idx, trip in enumerate(trip_list):
             doc = invoice_doc_map.get(trip.tr_tripnumber)
             
             invoice_status = doc.id_status.status if doc and doc.id_status else '-'
-            
-            if doc and doc.id_merged_pdf:
-                pdf_btn = f'<a href="{doc.id_merged_pdf.url}" target="_blank" class="btn-modern btn-highlight-cyan py-1 px-2 d-inline-flex align-items-center" style="font-size:0.8rem;text-decoration:none;border-radius:8px;gap:5px;"><i class="fas fa-file-pdf"></i> PDF</a>'
+
+            has_doc_files = bool(
+                doc and (
+                    doc.id_merged_pdf or
+                    doc.id_trip_cost_doc or doc.id_parking_doc or doc.id_toll_doc or
+                    doc.id_loading_doc or doc.id_unloading_doc or doc.id_weighment_doc or
+                    doc.id_handling_doc or doc.id_pod_doc or doc.id_sell_rate_doc
+                )
+            )
+            has_trip_files = bool(
+                (trip.tc_pod_attachment and trip.tc_pod_attachment.name) or
+                (trip.td_pod and trip.td_pod.name) or
+                (trip.tr_tripnumber in attachment_trips_set) or
+                (trip.tr_tripnumber in closure_trips_with_files)
+            )
+
+            if has_doc_files or has_trip_files:
+                from django.urls import reverse
+                view_url = reverse('view_invoice_combined_pdf', kwargs={'trip_num': trip.tr_tripnumber}) if trip.tr_tripnumber else '#'
+                pdf_btn = f'<a href="{view_url}" target="_blank" class="btn-modern btn-highlight-cyan py-1 px-2 d-inline-flex align-items-center" style="font-size:0.8rem;text-decoration:none;border-radius:8px;gap:5px;"><i class="fas fa-file-pdf"></i> PDF</a>'
             else:
                 pdf_btn = '<span style="color:var(--text-muted);font-size:0.85rem;font-style:italic;">Not generated</span>'
                 

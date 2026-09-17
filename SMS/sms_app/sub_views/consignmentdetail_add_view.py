@@ -36,7 +36,7 @@ def consignmentdetail_enquiry(request, enquiry_id, consignment_number):
     if consignment_number == 'none' or consignment_number == '':
         return redirect(f"{reverse('consignmentdetail_insert')}?enq_id={enquiry.id}")
     else:
-        return redirect('consignmentdetail_update', consignmentdetail_id=consignment_number)
+        return redirect(f"{reverse('consignmentdetail_update', kwargs={'consignmentdetail_id': consignment_number})}?enq_id={enquiry.id}")
 
 
 @login_required(login_url='login_page')
@@ -83,49 +83,46 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
         except (ValueError, TypeError):
             pass
 
-    if selected_trip_id:
-        trip_obj = TripdetailInfo.objects.filter(id=selected_trip_id).first()
-        if trip_obj:
-            # If clicking Add Consignment on a trip that ALREADY has a consignment linked,
-            # redirect to update that existing consignment directly instead of creating a new one or jumping to another trip!
-            if consignmentdetail_id == 0 and trip_obj.tr_consignmentnumber_id:
-                return redirect('consignmentdetail_update', consignmentdetail_id=trip_obj.tr_consignmentnumber_id)
-
-            if trip_obj.tr_enquirynumber_id:
-                enquiry_num_id = trip_obj.tr_enquirynumber_id
-                request.session['enquiry_num_id'] = enquiry_num_id
-                request.session['ses_enqiury_id'] = enquiry_num_id
-                if trip_obj.tr_enquirynumber:
-                    enquiry_num = trip_obj.tr_enquirynumber.en_enquirynumber
-                    request.session['ses_enqiury_num'] = enquiry_num
-
-    enq_id_param = request.GET.get('enq_id')
-    if enq_id_param:
-        try:
-            enquiry_num_id = int(enq_id_param)
-            request.session['enquiry_num_id'] = enquiry_num_id
-            request.session['ses_enqiury_id'] = enquiry_num_id
-            enquiry = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
-            request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
-            enquiry_num = enquiry.en_enquirynumber
-        except (ValueError, TypeError, ObjectDoesNotExist):
-            pass
-
-    if not enquiry_num_id:
-        # Prioritize 'enquiry_num_id' over the misspelled session key
-        enquiry_num_id = request.session.get('enquiry_num_id') or request.session.get('ses_enqiury_id')
-
+    # 1. Highest priority for existing consignment: use its own parent enquiry ID
     if consignmentdetail_id != 0:
         try:
             cons_obj = ConsignmentdetailInfo.objects.get(id=consignmentdetail_id)
             if cons_obj.co_enquirynumber_id:
                 enquiry_num_id = cons_obj.co_enquirynumber_id
-                request.session['enquiry_num_id'] = enquiry_num_id
-                request.session['ses_enqiury_id'] = enquiry_num_id
-                if cons_obj.co_enquirynumber:
-                    enquiry_num = cons_obj.co_enquirynumber.en_enquirynumber
-                    request.session['ses_enqiury_num'] = enquiry_num
         except ConsignmentdetailInfo.DoesNotExist:
+            pass
+
+    # 2. If creating new consignment via selected trip: load parent enquiry from trip
+    if not enquiry_num_id and selected_trip_id:
+        trip_obj = TripdetailInfo.objects.filter(id=selected_trip_id).first()
+        if trip_obj:
+            if consignmentdetail_id == 0 and trip_obj.tr_consignmentnumber_id:
+                return redirect(f"{reverse('consignmentdetail_update', kwargs={'consignmentdetail_id': trip_obj.tr_consignmentnumber_id})}?trip_id={selected_trip_id}&enq_id={trip_obj.tr_enquirynumber_id}")
+
+            if trip_obj.tr_enquirynumber_id:
+                enquiry_num_id = trip_obj.tr_enquirynumber_id
+
+    # 3. If explicit enq_id query parameter is passed
+    enq_id_param = request.GET.get('enq_id')
+    if not enquiry_num_id and enq_id_param:
+        try:
+            enquiry_num_id = int(enq_id_param)
+        except (ValueError, TypeError):
+            pass
+
+    # 4. Fallback to session
+    if not enquiry_num_id:
+        enquiry_num_id = request.session.get('enquiry_num_id') or request.session.get('ses_enqiury_id')
+
+    # ✅ Sync session keys to the resolved enquiry
+    if enquiry_num_id:
+        try:
+            enquiry = EnquirynoteInfo.objects.get(pk=enquiry_num_id)
+            enquiry_num = enquiry.en_enquirynumber
+            request.session['enquiry_num_id'] = enquiry.id
+            request.session['ses_enqiury_id'] = enquiry.id
+            request.session['ses_enqiury_num'] = enquiry.en_enquirynumber
+        except ObjectDoesNotExist:
             pass
 
     print("Enquiry Number:", enquiry_num)
@@ -182,8 +179,6 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                     con_det_form.initial['co_vehicelnumber'] = selected_vehicle_num
 
         eligible_filter = Q(tr_consignmentnumber_id=consignmentdetail_id) | Q(tr_consignmentnumber__isnull=True)
-        if selected_trip_id:
-            eligible_filter |= Q(id=selected_trip_id)
 
         eligible_trips = TripdetailInfo.objects.filter(
             tr_enquirynumber=enquiry_num_id
@@ -223,6 +218,9 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             vehicle_type = request.POST.get('vehicle_type_field')
             if consignmentdetail_id == 0:
                 consignment_detail = con_det_form.save(commit=False)
+                # Ensure co_enquirynumber_id is strictly set to enquiry_num_id
+                if enquiry_num_id:
+                    consignment_detail.co_enquirynumber_id = enquiry_num_id
 
                 # Enforce Consignment Limit based on requested vehicle quantity
                 from django.db.models import Sum
@@ -264,12 +262,12 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                 consignment_detail.co_createdby = request.user
                 consignment_detail.save()
 
-                # Link selected Trip to this consignment and inherit vehicle number
+                # Link selected Trip to this consignment and inherit vehicle number (validate same enquiry)
                 posted_trip_id = request.POST.get('co_tripnumber')
                 if posted_trip_id:
                     try:
                         t_id = int(posted_trip_id)
-                        trip_obj = TripdetailInfo.objects.filter(id=t_id).first()
+                        trip_obj = TripdetailInfo.objects.filter(id=t_id, tr_enquirynumber_id=enq_id).first()
                         if trip_obj:
                             trip_obj.tr_consignmentnumber = consignment_detail
                             trip_obj.save()
@@ -312,10 +310,16 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                             tr_updated_by=request.user
                         )
 
-                # Touch parent enquiry timestamp
+                # Touch parent enquiry timestamp & sync en_consignmentdetails
                 from django.utils import timezone
                 en_user = request.user if (request.user and request.user.is_authenticated) else None
-                EnquirynoteInfo.objects.filter(id=consignment_detail.co_enquirynumber_id).update(
+                consignmentdetail_list = list(
+                    ConsignmentdetailInfo.objects.filter(co_enquirynumber=enq_id)
+                    .values_list('co_consignmentnumber', flat=True)
+                )
+                consignmentdetail_list.sort()
+                EnquirynoteInfo.objects.filter(id=enq_id).update(
+                    en_consignmentdetails=consignmentdetail_list,
                     en_updatedon=timezone.now(),
                     en_updated_by=en_user
                 )
@@ -334,7 +338,7 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
                     if posted_trip_id:
                         try:
                             t_id = int(posted_trip_id)
-                            trip_obj = TripdetailInfo.objects.filter(id=t_id).first()
+                            trip_obj = TripdetailInfo.objects.filter(id=t_id, tr_enquirynumber_id=consignment_detail.co_enquirynumber_id).first()
                             if trip_obj:
                                 trip_obj.tr_consignmentnumber = consignment_detail
                                 trip_obj.save()
@@ -544,24 +548,25 @@ def consignmentdetail_list_ajax(request):
         4: 'co_consignmentnumber',
         5: 'co_consignmentdate',
         6: 'co_vehicelnumber',
-        7: 'co_fromlocaion__place_name',
-        8: 'co_tolocation__place_name',
-        9: 'cg_consignmentnumber__cg_consigner__consigner_name',
-        10: 'cg_consignmentnumber__cg_consignee__consignee_name',
-        11: 'cg_consignmentnumber__cg_consignerinvoice',
-        12: 'cg_consignmentnumber__cg_consignervalue',
-        13: 'cg_consignmentnumber__cg_valueininr',
-        14: 'cg_consignmentnumber__cg_qty',
-        15: 'cg_consignmentnumber__cg_weight',
-        16: 'cg_consignmentnumber__cg_ebillno',
-        17: 'cg_consignmentnumber__cg_consignerinvoice_date',
-        18: 'cg_consignmentnumber__cg_dateofvalidity',
-        19: 'co_containerdescription',
-        21: 'co_enquirynumber__en_movement_type__mt_movementtype',
-        22: 'co_status__status_title',
-        23: 'co_updated_at',
-        24: 'co_lastmodifiedby__first_name',
-        25: 'co_createdby__first_name',
+        # 7 is Vehicle Source, which we can't easily sort by right now
+        8: 'co_fromlocaion__place_name',
+        9: 'co_tolocation__place_name',
+        10: 'cg_consignmentnumber__cg_consigner__consigner_name',
+        11: 'cg_consignmentnumber__cg_consignee__consignee_name',
+        12: 'cg_consignmentnumber__cg_consignerinvoice',
+        13: 'cg_consignmentnumber__cg_consignervalue',
+        14: 'cg_consignmentnumber__cg_valueininr',
+        15: 'cg_consignmentnumber__cg_qty',
+        16: 'cg_consignmentnumber__cg_weight',
+        17: 'cg_consignmentnumber__cg_ebillno',
+        18: 'cg_consignmentnumber__cg_consignerinvoice_date',
+        19: 'cg_consignmentnumber__cg_dateofvalidity',
+        20: 'co_containerdescription',
+        22: 'co_enquirynumber__en_movement_type__mt_movementtype',
+        23: 'co_status__status_title',
+        24: 'co_updated_at',
+        25: 'co_lastmodifiedby__first_name',
+        26: 'co_createdby__first_name',
     }
     order_field = col_map.get(order_col, 'id')
     if order_dir == 'desc':
@@ -584,6 +589,14 @@ def consignmentdetail_list_ajax(request):
             inv['ti_inv_no'] or '',
             inv['ti_total'] or 0,
         )
+
+    from ..models import TripdetailInfo
+    trip_map = {}
+    for trip in TripdetailInfo.objects.filter(
+            tr_consignmentnumber_id__in=page_cons_ids
+    ).select_related('tr_vehiclesource'):
+        if trip.tr_vehiclesource:
+            trip_map[trip.tr_consignmentnumber_id] = trip.tr_vehiclesource.ow_ownership
 
     data = []
     # Fetch data
@@ -621,6 +634,7 @@ def consignmentdetail_list_ajax(request):
                     obj.co_enquirynumber and obj.co_enquirynumber.en_movement_type) else ''
 
         inv_no, inv_total = invoice_map.get(obj.id, ('', 0))
+        vehicle_source = trip_map.get(obj.id, '')
 
         data.append([
             obj.id,  # 0: ID
@@ -630,7 +644,8 @@ def consignmentdetail_list_ajax(request):
             obj.co_consignmentnumber or '',  # 4: Consignment Number
             obj.co_consignmentdate.strftime('%Y-%m-%d') if obj.co_consignmentdate else '',  # 5: Consignment Date
             obj.co_vehicelnumber or '',  # 6: Vehicle Number
-            display_from,  # 7: From Location
+            vehicle_source,  # 7: Vehicle Source
+            display_from,  # 8: From Location
             display_to,  # 8: To Location
             consigner,  # 9: Consigner
             consignee,  # 10: Consignee

@@ -471,9 +471,16 @@
                         {% endif %}
                             <!-- Always show existing consignments -->
                             {% for consignment in data.consignments %}
-                            <a class="badge p-2 mb-1 d-inline-block" href="{% url 'consignmentdetail_enquiry' data.enquiry.id consignment.id %}" style="text-decoration: none; background: rgba(14, 165, 233, 0.1); border: 1px solid #0ea5e9; color: #0284c7; font-weight: 600; font-size: 0.8rem;">
-                                <i class="fas fa-file-invoice"></i> {{ consignment.co_consignmentnumber }}
-                            </a><br>
+                            <div class="d-inline-flex align-items-center mb-1">
+                                <a class="badge p-2 d-inline-block" href="{% url 'consignmentdetail_enquiry' data.enquiry.id consignment.id %}" style="text-decoration: none; background: rgba(14, 165, 233, 0.1); border: 1px solid #0ea5e9; color: #0284c7; font-weight: 600; font-size: 0.8rem;">
+                                    <i class="fas fa-file-invoice"></i> {{ consignment.co_consignmentnumber }}
+                                </a>
+                                {% if consignment.goods_count == 0 %}
+                                <span class="badge badge-danger p-2 ml-1 d-inline-block" style="font-size: 0.72rem; border-radius: 6px; white-space: nowrap;" title="No Consignment Goods or document attachments saved for this CNote yet">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i> Goods Pending
+                                </span>
+                                {% endif %}
+                            </div><br>
                             {% endfor %}
                     </td>
 

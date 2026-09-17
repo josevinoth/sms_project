@@ -303,6 +303,7 @@
             <div class="modal-header bg-white py-3" style="border-bottom: 2px solid var(--border-light) !important;">
                 <h5 class="modal-title font-weight-bold text-dark" id="partCodeSearchModalLabel">
                     <i class="fas fa-search mr-2 text-primary"></i> Select Alternative Part Code & Stock
+                    <span class="badge badge-warning ml-3 px-3 py-2 text-dark font-weight-bold" id="modal_needed_qty_display" style="display:none; font-size: 0.85rem;"></span>
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -310,6 +311,7 @@
             </div>
             <div class="modal-body p-4 bg-light">
                 <input type="hidden" id="modal_target_quotation_id">
+                <input type="hidden" id="modal_target_needed_qty">
                 <input type="hidden" id="modal_selected_partcode_id">
                 
                 <div class="row row-compact mb-3">
@@ -599,7 +601,7 @@
                             html += '<td>' + stk.needed_qty + '</td>';
                             html += '<td class="text-danger font-weight-bold">' + stk.available_qty + '</td>';
                             html += '<td class="text-danger font-weight-bold">-' + stk.shortfall + '</td>';
-                            html += '<td><button type="button" class="btn btn-sm btn-primary py-0 px-2 change-partcode-btn" data-qid="' + stk.quotation_id + '" data-current="' + stk.part_code + '"><i class="fas fa-edit"></i> Change</button></td>';
+                            html += '<td><button type="button" class="btn btn-sm btn-primary py-0 px-2 change-partcode-btn" data-qid="' + stk.quotation_id + '" data-current="' + stk.part_code + '" data-needed="' + stk.needed_qty + '"><i class="fas fa-edit"></i> Change</button></td>';
                             html += '</tr>';
                         });
                         html += '</tbody></table>';
@@ -625,7 +627,16 @@
                         $(document).off('click', '.change-partcode-btn').on('click', '.change-partcode-btn', function() {
                             let qid = $(this).data('qid');
                             let currentPc = $(this).data('current');
+                            let neededQty = parseFloat($(this).data('needed')) || 0;
+
                             $('#modal_target_quotation_id').val(qid);
+                            $('#modal_target_needed_qty').val(neededQty);
+
+                            if (neededQty > 0) {
+                                $('#modal_needed_qty_display').html('<i class="fas fa-boxes mr-1"></i> Required Batch Qty: <b>' + neededQty + '</b>').show();
+                            } else {
+                                $('#modal_needed_qty_display').hide();
+                            }
 
                             if (currentPc) {
                                 if ($('#modal_part_code_select option[value="' + currentPc + '"]').length === 0) {
@@ -889,8 +900,21 @@ $(document).on('input change', '#modal_qty_req, #modal_rate_unit, #modal_convers
 $(document).on('click', '#modal_confirm_update_pc_btn', function() {
     let qid = $('#modal_target_quotation_id').val();
     let newPcId = $('#modal_selected_partcode_id').val() || $('#modal_part_code_select').val();
+    let neededQty = parseFloat($('#modal_target_needed_qty').val()) || 0;
+    let availQty = parseFloat($('#modal_avail_qty').val()) || 0;
+
     if (!newPcId) {
         alert('Please search and select a Part Code from the list.');
+        return;
+    }
+
+    if (neededQty > 0 && availQty < neededQty) {
+        alert('⚠️ STOCK RESTRICTION ALERT!\n\n' +
+              'Selected Part Code: ' + newPcId + '\n' +
+              'Available Stock: ' + availQty + '\n' +
+              'Required Batch Quantity: ' + neededQty + '\n\n' +
+              'You CANNOT select this Part Code because the available stock (' + availQty + ') is less than the required quantity (' + neededQty + ').\n' +
+              'Please select an alternative Part Code with at least ' + neededQty + ' available stock.');
         return;
     }
     $.ajax({
