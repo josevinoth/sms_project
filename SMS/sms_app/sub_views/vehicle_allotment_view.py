@@ -1384,10 +1384,14 @@ def vendor_filter(request):
             'vr1_vendor__vend_name'
         ).distinct()
 
-        vendor_list = [
-            {'id': v['vr1_vendor__id'], 'name': v['vr1_vendor__vend_name']}
-            for v in vendors
-        ]
+        # Deduplicate by vendor ID to prevent duplicates when multiple rate rows
+        # exist for the same vendor on the same route (e.g. different vehicle types)
+        seen = {}
+        for v in vendors:
+            vid = v['vr1_vendor__id']
+            if vid is not None and vid not in seen:
+                seen[vid] = v['vr1_vendor__vend_name']
+        vendor_list = [{'id': vid, 'name': name} for vid, name in seen.items()]
 
         return JsonResponse({'vendor_filter': vendor_list})
 
