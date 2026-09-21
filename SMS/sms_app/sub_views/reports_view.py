@@ -11,7 +11,7 @@ from django.db.models import Q, ExpressionWrapper, fields, F, DurationField
 from django.db.models.functions import Cast, Extract, TruncMonth
 from django.shortcuts import render
 from django.template.loader import get_template
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.utils.timezone import make_naive
 from xhtml2pdf import pisa
@@ -124,7 +124,6 @@ def space_utilization_reports(request):
         })
 
     if request.GET.get('draw'):
-        from django.http import JsonResponse
         draw = int(request.GET.get('draw', 1))
         start = int(request.GET.get('start', 0))
         length = int(request.GET.get('length', 10))
@@ -210,10 +209,8 @@ def stock_value_reports(request):
 
     if from_date and to_date:
         try:
-            from django.utils import timezone
             dt_from = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
             dt_to = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d")).replace(hour=23, minute=59, second=59)
-            from django.db.models import Q
             # Filter by either checkin or checkout being in the range, or currently in warehouse (similar to export logic)
             goods_list = goods_list.filter(
                 Q(wh_check_in_out__in=[1, 4], wh_checkout_time__isnull=True) |
@@ -223,7 +220,6 @@ def stock_value_reports(request):
             print("Error parsing dates in stock_value_reports:", e)
 
     if request.GET.get('draw') or request.POST.get('draw'):
-        from django.http import JsonResponse
         draw = int(request.GET.get('draw') or request.POST.get('draw') or 1)
         start = int(request.GET.get('start') or request.POST.get('start') or 0)
         length = int(request.GET.get('length') or request.POST.get('length') or 10)
@@ -313,7 +309,6 @@ def stock_value_reports(request):
         base_qs = base_qs.filter(wh_customer_name=customer_name)
 
     # Optimized 1-query aggregation
-    from django.db.models import Sum, Q
     aggs = base_qs.aggregate(
         maa_in=Sum('wh_invoice_amount_inr', filter=Q(wh_branch=2, wh_check_in_out=1)),
         blr_in=Sum('wh_invoice_amount_inr', filter=Q(wh_branch=1, wh_check_in_out=1))
@@ -379,7 +374,6 @@ def damage_reports_list(request):
         damage_reports_qs = damage_reports_qs.filter(dam_wh_job_num__in=list(matching_date_jobs))
 
     if request.GET.get('draw'):
-        from django.http import JsonResponse
         draw = int(request.GET.get('draw', 1))
         start = int(request.GET.get('start', 0))
         length = int(request.GET.get('length', 10))
@@ -533,7 +527,6 @@ def deviation_report(request):
         })
 
     if request.GET.get('draw'):
-        from django.http import JsonResponse
         draw = int(request.GET.get('draw', 1))
         start = int(request.GET.get('start', 0))
         length = int(request.GET.get('length', 10))
