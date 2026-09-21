@@ -468,8 +468,8 @@
         fetch('/SMS/get_trip_info/' + tripId + '/')
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    if (data.enquiry_id) {
+                    var currentEnqId = '{{ enquiry_num_id }}';
+                    if (data.enquiry_id && (!currentEnqId || $('#co_enquirynumber').val() == '' || $('#co_enquirynumber').val() == data.enquiry_id)) {
                         $('#co_enquirynumber').val(data.enquiry_id);
                     }
                     if (data.vehicle_num) {
