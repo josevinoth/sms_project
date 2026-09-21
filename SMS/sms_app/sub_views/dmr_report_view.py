@@ -454,7 +454,6 @@ ADDITIONAL_CUSTOMERS = [
 # Helper to normalize for matching
 def _safe_fmt(dt, fmt):
     if not dt: return ""
-    from django.utils import timezone
     from datetime import datetime
     try:
         if isinstance(dt, datetime):

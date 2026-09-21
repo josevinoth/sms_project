@@ -11,7 +11,7 @@ from django.db.models import Q, ExpressionWrapper, fields, F, DurationField
 from django.db.models.functions import Cast, Extract, TruncMonth
 from django.shortcuts import render
 from django.template.loader import get_template
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.utils.timezone import make_naive
 from xhtml2pdf import pisa
@@ -124,7 +124,6 @@ def space_utilization_reports(request):
         })
 
     if request.GET.get('draw'):
-        from django.http import JsonResponse
         draw = int(request.GET.get('draw', 1))
         start = int(request.GET.get('start', 0))
         length = int(request.GET.get('length', 10))
@@ -221,7 +220,6 @@ def stock_value_reports(request):
             print("Error parsing dates in stock_value_reports:", e)
 
     if request.GET.get('draw') or request.POST.get('draw'):
-        from django.http import JsonResponse
         draw = int(request.GET.get('draw') or request.POST.get('draw') or 1)
         start = int(request.GET.get('start') or request.POST.get('start') or 0)
         length = int(request.GET.get('length') or request.POST.get('length') or 10)
@@ -376,7 +374,6 @@ def damage_reports_list(request):
         damage_reports_qs = damage_reports_qs.filter(dam_wh_job_num__in=list(matching_date_jobs))
 
     if request.GET.get('draw'):
-        from django.http import JsonResponse
         draw = int(request.GET.get('draw', 1))
         start = int(request.GET.get('start', 0))
         length = int(request.GET.get('length', 10))
@@ -530,7 +527,6 @@ def deviation_report(request):
         })
 
     if request.GET.get('draw'):
-        from django.http import JsonResponse
         draw = int(request.GET.get('draw', 1))
         start = int(request.GET.get('start', 0))
         length = int(request.GET.get('length', 10))

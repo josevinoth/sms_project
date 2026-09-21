@@ -35,6 +35,12 @@ def branch_profit_loss(request):
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
 
+    # --- Default date range: current financial year (Apr 1 → today) ---
+    today = timezone.localdate()
+    fy_start_year = today.year if today.month >= 4 else today.year - 1
+    _default_from = timezone.make_aware(datetime(fy_start_year, 4, 1))
+    _default_to = timezone.make_aware(datetime(today.year, today.month, today.day, 23, 59, 59))
+
     expenses_filter = {}
     invoices_filter = {}
 
@@ -43,15 +49,20 @@ def branch_profit_loss(request):
         invoices_filter['wh_branch__loc_name'] = selected_branch
 
     expenses_filter['exp_ext_expense_number__exp_business__id'] = 1
+
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
-        expenses_filter['exp_ext_expense_number__exp_service_start_date__gte'] = from_date
-        invoices_filter['wh_voucher_id__bill_invoice_date__gte'] = from_date
+    else:
+        from_date = _default_from
+    expenses_filter['exp_ext_expense_number__exp_service_start_date__gte'] = from_date
+    invoices_filter['wh_voucher_id__bill_invoice_date__gte'] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
-        expenses_filter['exp_ext_expense_number__exp_service_start_date__lte'] = to_date
-        invoices_filter['wh_voucher_id__bill_invoice_date__lte'] = to_date
+    else:
+        to_date = _default_to
+    expenses_filter['exp_ext_expense_number__exp_service_start_date__lte'] = to_date
+    invoices_filter['wh_voucher_id__bill_invoice_date__lte'] = to_date
 
     expenses_data = (
         ExpenseExtinfo.objects.filter(**expenses_filter)
@@ -174,6 +185,12 @@ def branch_unit_profit_loss(request):
     from_date = request.GET.get('from_date')
     to_date = request.GET.get('to_date')
 
+    # --- Default date range: current financial year (Apr 1 → today) ---
+    today = timezone.localdate()
+    fy_start_year = today.year if today.month >= 4 else today.year - 1
+    _default_from = timezone.make_aware(datetime(fy_start_year, 4, 1))
+    _default_to = timezone.make_aware(datetime(today.year, today.month, today.day, 23, 59, 59))
+
     if selected_branch:
 
         units = UnitInfo.objects.filter(ui_branch_name__loc_name=selected_branch).distinct('unit_name')
@@ -195,13 +212,17 @@ def branch_unit_profit_loss(request):
 
     if from_date:
         from_date = timezone.make_aware(datetime.strptime(from_date, '%Y-%m-%d'))
-        expenses_filter['exp_ext_expense_number__exp_service_start_date__gte'] = from_date
-        invoices_filter['wh_voucher_id__bill_invoice_date__gte'] = from_date
+    else:
+        from_date = _default_from
+    expenses_filter['exp_ext_expense_number__exp_service_start_date__gte'] = from_date
+    invoices_filter['wh_voucher_id__bill_invoice_date__gte'] = from_date
 
     if to_date:
         to_date = timezone.make_aware(datetime.strptime(to_date, '%Y-%m-%d'))
-        expenses_filter['exp_ext_expense_number__exp_service_start_date__lte'] = to_date
-        invoices_filter['wh_voucher_id__bill_invoice_date__lte'] = to_date
+    else:
+        to_date = _default_to
+    expenses_filter['exp_ext_expense_number__exp_service_start_date__lte'] = to_date
+    invoices_filter['wh_voucher_id__bill_invoice_date__lte'] = to_date
 
     expenses_data = (
         ExpenseExtinfo.objects.filter(**expenses_filter)

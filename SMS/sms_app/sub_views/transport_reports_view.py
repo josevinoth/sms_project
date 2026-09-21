@@ -150,8 +150,6 @@ def get_tms_report_transport_charge(trip, inv=None, allotment=None, allotment_ma
 
 def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=None):
     from ..models import TripdetailInfo, DrivermasterInfo, DriverSalaryInfo, Fuelfillinginfo
-    from django.db.models import Q
-    from django.db.models.functions import Coalesce
     import re
     from sms_app.sub_views.dmr_report_view import safe_num
 
@@ -1087,8 +1085,6 @@ def vehicle_log_report_view(request):
 
 
 def vehicle_log_report_ajax_view(request):
-    from django.http import JsonResponse
-    from django.db.models import Q
     from ..models import Location_info, ConsignmentgoodsInfo, TripdetailInfo
 
     draw = safe_int(request.GET.get('draw'), 1)
@@ -1251,10 +1247,7 @@ def vehicle_log_report_ajax_view(request):
 @login_required(login_url='login_page')
 
 def trip_cancellation_report_ajax_view(request):
-    from django.http import JsonResponse
     from ..models import TripdetailInfo, Location_info
-    from django.db.models import Q
-
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
@@ -1376,7 +1369,6 @@ def trip_cancellation_report_ajax_view(request):
             
         def _fmt(dt):
             if not dt: return ""
-            from django.utils import timezone
             try:
                 dt = timezone.localtime(dt)
             except ValueError:
@@ -1572,7 +1564,6 @@ from django.contrib.auth.decorators import login_required
 @login_required(login_url='login_page')
 def vehicle_utilization_report_view(request):
     first_name = request.session.get('first_name')
-    from django.utils import timezone
     import calendar
 
     # -----------------------------
@@ -1806,11 +1797,7 @@ def vehicle_utilization_report_view(request):
 @login_required(login_url='login_page')
 
 def ref_no_pending_report_ajax_view(request):
-    from django.http import JsonResponse
     from ..models import TripdetailInfo
-    from django.db.models import Q
-    from django.db.models.functions import Trim
-
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
@@ -1882,7 +1869,6 @@ def ref_no_pending_report_ajax_view(request):
     # We will just write a small helper inside.
     def _fmt(dt):
         if not dt: return ""
-        from django.utils import timezone
         try:
             dt = timezone.localtime(dt)
         except ValueError:
@@ -2151,7 +2137,6 @@ def invoice_pending_report_ajax_view(request):
     from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
     from .invoice_documents_view import get_enquiry_special_sell, get_enquiry_standard_sell
     from .tripclosure_add_view import get_allotment_sale_rate
-    from django.http import JsonResponse
     from collections import defaultdict
 
     # DataTables params
@@ -2630,7 +2615,6 @@ def vendor_p_l_mkt_report_view(request):
 
 @login_required(login_url='login_page')
 def vendor_p_l_mkt_report_ajax_view(request):
-    from django.http import JsonResponse
     from ..models import Vehicle_allotmentInfo, TransInvoiceInfo, Driverexpense, VehiclemasterInfo, VehicletypeInfo,         MarketBillInfo, ConsignmentgoodsInfo, TripdetailInfo
     from ..sub_models.vendor_info_mod import Vendor_info
     from ..sub_models.vendorratemaster1_mod import VendorratemasterInfo1
@@ -3121,7 +3105,6 @@ def vendor_p_l_attached_report_view(request):
 
 @login_required(login_url='login_page')
 def vendor_p_l_attached_report_ajax_view(request):
-    from django.http import JsonResponse
     from ..models import Vehicle_allotmentInfo, TransInvoiceInfo, Driverexpense, VehiclemasterInfo, VehicletypeInfo,         MarketBillInfo, ConsignmentgoodsInfo, TripdetailInfo
     from ..sub_models.vendor_info_mod import Vendor_info
 
@@ -3929,10 +3912,7 @@ def whatsapp_delivery_status_report_view(request):
 
 @login_required(login_url='login_page')
 def whatsapp_delivery_status_report_ajax_view(request):
-    from django.http import JsonResponse
     from ..models import TripdetailInfo
-    from django.db.models import Q
-
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
@@ -4082,15 +4062,11 @@ def daily_trip_count_report_view(request):
         'all_branches': Location_info.objects.filter(id__in=[1, 2]).order_by('loc_name'),
         'vehicle_sources': OwnershipInfo.objects.filter(id__in=[1, 2]),
     })
-
-from django.http import JsonResponse
 from datetime import datetime
 
 @login_required(login_url='login_page')
 def daily_trip_count_report_ajax_view(request):
     from ..models import TripdetailInfo
-    from django.db.models import Q
-    
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
@@ -4257,8 +4233,6 @@ def own_vehicle_pl_report_view(request):
     vehicletype_id = request.GET.get('vehicletype', '').strip()
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
-
-    from django.http import JsonResponse
     is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
     data_rows = []
     summary_data = {}
@@ -5043,7 +5017,6 @@ def halting_report_view(request):
 
 
 def halting_report_ajax_view(request):
-    from django.http import JsonResponse
     from ..models import TripdetailInfo, Driverexpense, ConsignmentgoodsInfo
 
     draw = int(request.GET.get('draw', 1))
@@ -5514,12 +5487,9 @@ def diesel_vs_revenue_report_view(request):
 
 @login_required(login_url='login_page')
 def diesel_vs_revenue_report_ajax_view(request):
-    from django.http import JsonResponse
     from ..models import TripdetailInfo, Fuelfillinginfo, VehiclemasterInfo, Location_info, ConsignmentdetailInfo
     from ..sub_models.trans_invoice_mod import TransInvoiceInfo
     from ..sub_models.rtratemaster_mod import RtratemasterInfo
-    from django.db.models import Sum, Q
-    
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
@@ -5677,8 +5647,6 @@ def diesel_vs_revenue_report_ajax_view(request):
                 trip.tr_consignmentnumber and "MAA" in str(trip.tr_consignmentnumber)) else \
             ("Bangalore" if "BLR" in cust_name or (
                     trip.tr_consignmentnumber and "BLR" in str(trip.tr_consignmentnumber)) else "")
-
-        from django.utils import timezone
         display_date = trip.tr_departeddate_pickup
         if display_date and timezone.is_aware(display_date):
             display_date = timezone.localtime(display_date)
@@ -6126,8 +6094,6 @@ def driver_balance_report_view(request):
     Displays S.No, Driver Id, Branch, Driver name, and Balance.
     """
     from ..models import DrivermasterInfo, driver_settlement_info, User_extInfo, Location_info
-    from django.db.models import Sum
-
     first_name = request.session.get('first_name')
 
     # Filters
@@ -6240,10 +6206,7 @@ def pod_pending_report_view(request):
 @login_required(login_url='login_page')
 def pod_pending_report_ajax_view(request):
     """Server-side DataTables AJAX endpoint for POD Pending Report."""
-    from django.db.models import Q
     from datetime import date
-    from django.http import JsonResponse
-
     # DataTables params
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
@@ -6386,7 +6349,6 @@ def pod_pending_report_ajax_view(request):
 @login_required(login_url='login_page')
 def enquiry_pending_report_ajax_view(request):
     from ..models import EnquirynoteInfo, Enquirynotevehicle, Vehicle_allotmentInfo, ConsignmentdetailInfo
-    from django.db.models import Sum, Count, Q
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
@@ -6538,8 +6500,6 @@ def enquiry_pending_report_ajax_view(request):
 def get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date, to_date, selected_year,
                        customer_id=None, selected_month=None):
     from ..models import TripdetailInfo, Location_info
-    from django.db.models import Q
-
     # Sanitize all inputs to handle 'None' strings or empty values
     branch_id = branch_id if branch_id not in [None, 'None', '', '0'] else None
     trip_category_id = trip_category_id if trip_category_id not in [None, 'None', '', '0'] else None
@@ -6671,8 +6631,6 @@ def movementwise_pl_report_view(request):
 
 def movementwise_pl_report_ajax_view(request):
     try:
-        from django.http import JsonResponse
-        from django.db.models import Q
         from ..models import Location_info, OwnershipInfo, Driverexpense, TransInvoiceInfo, MarketBillInfo, \
             AttachedBillInfo, Vehicle_allotmentInfo, VendorratemasterInfo1
 
@@ -6861,8 +6819,6 @@ def movementwise_pl_report_ajax_view(request):
 
 def customerwise_pl_report_ajax_view(request):
     try:
-        from django.http import JsonResponse
-        from django.db.models import Q
         from ..models import TripdetailInfo, Location_info, OwnershipInfo, Driverexpense, MarketBillInfo, \
             AttachedBillInfo, Vehicle_allotmentInfo, TransInvoiceInfo
 
@@ -7075,8 +7031,6 @@ def customerwise_pl_report_view(request):
         Tr_triptype_Info, CustomerInfo, Driverexpense, MarketBillInfo,
         Vehicle_allotmentInfo, TransInvoiceInfo, AttachedBillInfo, VendorratemasterInfo1
     )
-    from django.db.models import Q
-
     headers = [
         "SNo", "Trip Date", "Cnote", "Customer Name", "From", "To",
         "Vehicle Source", "Vehicle No", "Veh Type", "Revenue",
@@ -7605,10 +7559,7 @@ def time_analysis_report_view(request):
 
 @login_required(login_url='login_page')
 def time_analysis_report_ajax_view(request):
-    from django.http import JsonResponse
     from ..models import TripdetailInfo, Vehicle_allotmentInfo, Location_info
-    from django.db.models import Q
-
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
@@ -7804,8 +7755,6 @@ def mileage_report_view(request):
 
     from ..models import VehiclemasterInfo, OwnershipInfo, Location_info
     from ..sub_models.fuelfilling_mod import Fuelfillinginfo
-    from django.db.models import Q, Max, Min, Sum
-
     # Only show Own vehicles (vm_ownership_id=1)
     vehicles = VehiclemasterInfo.objects.filter(vm_ownership_id=1)
 
@@ -7935,7 +7884,6 @@ def vendor_bills_pending_maintenance_report_view(request):
     if to_date:
         maintenance_records = maintenance_records.filter(mi_created_at__date__lte=to_date)
     if vendor_name:
-        from django.db.models import Q
         maintenance_records = maintenance_records.filter(
             Q(mi_vendor__vend_name__icontains=vendor_name) | Q(mi_technician__icontains=vendor_name)
         )
@@ -8010,7 +7958,6 @@ def vendor_bills_pending_mkt_att_report_view(request):
 
 @login_required(login_url='login_page')
 def vendor_bills_pending_mkt_att_report_ajax_view(request):
-    from django.http import JsonResponse
     from ..sub_models.trans_invoice_mod import TransInvoiceInfo
 
     draw = int(request.GET.get('draw', 1))
@@ -8928,8 +8875,6 @@ def trip_status_count_report_ajax_view(request):
     dmr_customer = request.GET.get('dmr_customer', '')
     
     from ..models import TripdetailInfo, Tripstatusinfo, ConsignmentdetailInfo, TransInvoiceInfo
-    from django.db.models import Count, Q, F
-    
     # Base query is Cnotes (ConsignmentdetailInfo)
     qs = ConsignmentdetailInfo.objects.all()
     
