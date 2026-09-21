@@ -7076,6 +7076,17 @@ def location_pl_report_view(request):
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
 
+    # --- Default date range: current financial year (Apr 1 → today) ---
+    today = timezone.localdate()
+    fy_start_year = today.year if today.month >= 4 else today.year - 1
+    _default_from = f"{fy_start_year}-04-01"
+    _default_to = today.strftime("%Y-%m-%d")
+
+    if not date_from:
+        date_from = _default_from
+    if not date_to:
+        date_to = _default_to
+
     branch_name = 'All Branches'
     if branch_id:
         try:
