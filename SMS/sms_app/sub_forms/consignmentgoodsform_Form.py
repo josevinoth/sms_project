@@ -85,4 +85,15 @@ class ConsignmentgoodsaddForm(forms.ModelForm):
                     raise forms.ValidationError(
                         "At least one attachment (Eway Bill, Invoice, or OTL Attachment) is mandatory when Consignment Type is Normal."
                     )
-        return cleaned_data
+        return cleaned_data
+
+    def clean_cg_consignmentnumber(self):
+        cg_consignmentnumber = self.cleaned_data.get('cg_consignmentnumber')
+        if not cg_consignmentnumber:
+            if self.instance and self.instance.cg_consignmentnumber_id:
+                return self.instance.cg_consignmentnumber
+            elif 'initial' in self.initial and self.initial.get('cg_consignmentnumber'):
+                init_id = self.initial.get('cg_consignmentnumber')
+                from ..models import ConsignmentdetailInfo
+                return ConsignmentdetailInfo.objects.filter(id=init_id).first()
+        return cg_consignmentnumber

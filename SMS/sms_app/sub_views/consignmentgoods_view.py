@@ -112,7 +112,11 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
 
         form.fields['cg_description'].queryset = Stock_type.objects.all()
         if form.is_valid():
-            goods_obj = form.save()
+            goods_obj = form.save(commit=False)
+            if not goods_obj.cg_consignmentnumber_id and consignment_detail_id:
+                goods_obj.cg_consignmentnumber_id = consignment_detail_id
+            goods_obj.save()
+            form.save_m2m()
             
             # ✅ Auto-advance linked trip status to Awaiting Trip Approval (8) when goods are created/updated
             if goods_obj and goods_obj.cg_consignmentnumber_id:
