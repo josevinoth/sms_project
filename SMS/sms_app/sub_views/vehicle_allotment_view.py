@@ -278,6 +278,10 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
         request.session['ses_enquiry_id'] = enquiry_id
         enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)  # ⬅ Fetch enquiry
 
+        req_veh = Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry_id).select_related('env_vehiclecategory').first()
+        req_category_name = req_veh.env_vehiclecategory.vc_vehiclecategory if (req_veh and req_veh.env_vehiclecategory) else ""
+        req_category_id = req_veh.env_vehiclecategory.id if (req_veh and req_veh.env_vehiclecategory) else ""
+
         return render(request, "asset_mgt_app/vehicle_allotment_add.html", {
             'first_name': first_name,
             'user_id': user_id,
@@ -290,6 +294,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             'customer_name': enquiry.en_customername.cu_name if enquiry.en_customername else "",
             'from_location': enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "",
             'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
+            'requested_vehicle_category': req_category_name,
+            'requested_vehicle_category_id': req_category_id,
             'all_vehicletypes': VehicletypeInfo.objects.all(),
             'all_vendors': Vendor_info.objects.all(),
             'is_admin': is_admin_user(request),
@@ -310,6 +316,18 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
 
         form = VehicleallotmentForm(instance=va)
 
+        req_veh = None
+        if va.va_vehicletype_id:
+            req_veh = Enquirynotevehicle.objects.filter(
+                env_enquirynumber=enquiry_id,
+                env_vehicletype_id=va.va_vehicletype_id
+            ).select_related('env_vehiclecategory').first()
+        if not req_veh:
+            req_veh = Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry_id).select_related('env_vehiclecategory').first()
+
+        req_category_name = req_veh.env_vehiclecategory.vc_vehiclecategory if (req_veh and req_veh.env_vehiclecategory) else ""
+        req_category_id = req_veh.env_vehiclecategory.id if (req_veh and req_veh.env_vehiclecategory) else ""
+
         return render(request, "asset_mgt_app/vehicle_allotment_add.html", {
             'first_name': first_name,
             'user_id': user_id,
@@ -323,6 +341,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             'customer_name': enquiry.en_customername.cu_name if enquiry.en_customername else "",
             'from_location': enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "",
             'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
+            'requested_vehicle_category': req_category_name,
+            'requested_vehicle_category_id': req_category_id,
             'all_vehicletypes': VehicletypeInfo.objects.all(),
             'all_vendors': Vendor_info.objects.all(),
             'is_admin': is_admin_user(request),
@@ -1213,7 +1233,7 @@ def vehicle_requested(request):
         vehicle_type_name = rv['env_vehicletype__vt_vehicletype']
         vehicle_category_id = rv.get('env_vehiclecategory__id', '')
         vehicle_category_name = rv.get('env_vehiclecategory__vc_vehiclecategory', '')
-        requested_qty = rv['requested_qty']
+        requested_qty = rv['requested_qty'] or 0
 
         # FIXED: Use va_enquirynumber_id instead of nested lookup
         allotted_qty = Vehicle_allotmentInfo.objects.filter(
@@ -1221,16 +1241,15 @@ def vehicle_requested(request):
             va_vehicletype_id=vehicle_type_id
         ).exclude(va_status_id__in=[2, 3, 4, 5]).count()
 
-        remaining = requested_qty - allotted_qty
+        remaining = max(0, requested_qty - allotted_qty)
 
-        if remaining > 0:
-            vehicle_list.append({
-                'id': vehicle_type_id,
-                'name': vehicle_type_name,
-                'category_id': vehicle_category_id,
-                'category_name': vehicle_category_name,
-                'remaining': remaining
-            })
+        vehicle_list.append({
+            'id': vehicle_type_id,
+            'name': vehicle_type_name,
+            'category_id': vehicle_category_id,
+            'category_name': vehicle_category_name,
+            'remaining': remaining
+        })
 
     return JsonResponse({'vehicles': vehicle_list})
 
@@ -1634,6 +1653,22 @@ def vehicle_allotment_replace(request, allotment_id):
 
                 if not reason:
                     return JsonResponse({'success': False, 'message': 'Reason for replacement is required.'})
+
+                # Validate that the replacement vehicle is not the same as the current vehicle
+                old_clean_veh = (old_vehicle_num_check or '').replace(' ', '').replace('-', '').upper()
+                new_clean_veh = ''
+                if str(new_vehicle_source_id) == '3' or new_vehicle_mkt:
+                    new_clean_veh = (new_vehicle_mkt or '').replace(' ', '').replace('-', '').upper()
+                elif new_vehicle_id:
+                    vm = VehiclemasterInfo.objects.filter(id=new_vehicle_id).first()
+                    if vm:
+                        new_clean_veh = (vm.vm_registrationnumber or '').replace(' ', '').replace('-', '').upper()
+
+                if old_clean_veh and new_clean_veh and old_clean_veh == new_clean_veh:
+                    return JsonResponse({
+                        'success': False,
+                        'message': f"🚫 Cannot replace vehicle with the same vehicle ({old_vehicle_num_check}). Please select or enter a different vehicle."
+                    })
 
                 # Validate Mandatory Driver License Expiry Date for Own and Attached vehicles
                 if str(new_vehicle_source_id) in ['1', '2']:

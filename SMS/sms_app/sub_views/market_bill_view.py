@@ -616,14 +616,23 @@ def get_trips_by_vendor(request):
             trip_date = timezone.localtime(trip.tr_created_at).strftime('%d-%m-%Y')
 
         # --- Cost Logic ---
-        # Fetch standard and special costs from allotment
+        # Fetch standard and special costs from allotment.
+        # In a replacement case the trip's vehicle number is updated to the NEW vehicle,
+        # so we MUST prefer the active (plain) allotment and NEVER pick the replaced one
+        # (va_status_id=2).  We order by -id so the most-recent (replacement) record wins.
         standard_cost = 0
         special_cost = 0
         allotment = Vehicle_allotmentInfo.objects.filter(
             Q(va_enquirynumber=trip.tr_enquirynumber),
             Q(va_vehiclenumber__vm_registrationnumber__iexact=trip.tr_vehiclenumber) | Q(va_vehiclenumber_mkt__iexact=trip.tr_vehiclenumber)
-        ).first()
+        ).exclude(va_status_id=2).order_by('-id').first()
         if not allotment:
+            # Fallback: try including any status but still exclude replaced
+            allotment = Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber=trip.tr_enquirynumber
+            ).exclude(va_status_id=2).order_by('-id').first()
+        if not allotment:
+            # Last resort: take the latest allotment regardless of status
             allotment = Vehicle_allotmentInfo.objects.filter(
                 va_enquirynumber=trip.tr_enquirynumber
             ).order_by('-id').first()

@@ -809,9 +809,16 @@ def invoice_documents_add(request, trip_id):
             messages.error(request, "Customer Ref No is mandatory. Form cannot be submitted without Customer Ref No.")
             return redirect('invoice_documents_add', trip_id=trip_id)
 
+        # Validate either Trip Charges or Special Sell must be checked
+        is_tripcost_checked = bool(request.POST.get('tc_tripcost_check'))
+        is_special_sell_checked = bool(request.POST.get('special_sell_check'))
+
+        if not is_tripcost_checked and not is_special_sell_checked:
+            messages.error(request, "Either Trip Charges or Special Sell must be checked to bill to the customer.")
+            return redirect('invoice_documents_add', trip_id=trip_id)
+
         # Validate Special Sell cannot be less than actual/standard rate
         special_sell_val = request.POST.get('special_sell', '').strip()
-        is_special_sell_checked = bool(request.POST.get('special_sell_check'))
 
         if is_special_sell_checked and special_sell_val not in ('', None):
             try:
