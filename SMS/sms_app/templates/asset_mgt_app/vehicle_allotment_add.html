@@ -1110,7 +1110,7 @@ $("#va_vehiclesource").on("change", function () {
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        <strong>Current Vehicle:</strong> {{ va.va_vehiclenumber|default:va.va_vehiclenumber_mkt }}
+                        <strong>Current Vehicle:</strong> <span id="modal_current_vehicle_display">{{ va.va_vehiclenumber|default:va.va_vehiclenumber_mkt }}</span>
                     </div>
                     
                     <div class="form-group">
@@ -1651,7 +1651,7 @@ $("#va_vehiclesource").on("change", function () {
         }
 
         // Validate that new vehicle is not the same as current vehicle
-        var currentVeh = "{{ va.va_vehiclenumber|default:va.va_vehiclenumber_mkt|escapejs }}".replace(/[\s-]/g, '').toUpperCase();
+        var currentVeh = ($("#modal_current_vehicle_display").text() || "").replace(/[\s-]/g, '').toUpperCase();
         var selectedVeh = "";
         if (source == "3") {
             selectedVeh = mktVehNo.replace(/[\s-]/g, '').toUpperCase();
