@@ -120,8 +120,8 @@
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Vehicle Category Requested</label>
-										<input type="text" id="va_vehiclecategory_requested" class="form-control form-control-modern disable_a_href" readonly="readonly">
-										<input type="hidden" id="va_vehiclecategory_id">
+										<input type="text" id="va_vehiclecategory_requested" class="form-control form-control-modern disable_a_href" readonly="readonly" value="{{ requested_vehicle_category|default:'' }}">
+										<input type="hidden" id="va_vehiclecategory_id" value="{{ requested_vehicle_category_id|default:'' }}">
 									</div>
 								</div>
 							</div>
@@ -458,8 +458,13 @@ function setDateFieldValue(selector, value) {
 				
 				if (selectedVal) {
 					var selectedOption = $dropdown.find("option:selected");
-					$("#va_vehiclecategory_requested").val(selectedOption.data("category-name") || "");
-					$("#va_vehiclecategory_id").val(selectedOption.data("category-id") || "");
+					var catName = selectedOption.data("category-name");
+					var catId = selectedOption.data("category-id");
+					if (catName !== undefined && catName !== "") {
+						$("#va_vehiclecategory_requested").val(catName);
+						$("#va_vehiclecategory_id").val(catId);
+					}
+					fetchVehicleQuantity(selectedVal);
 				}
 
 				$dropdown.off("change").on("change", function () {
@@ -496,19 +501,13 @@ function setDateFieldValue(selector, value) {
 </script>
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
-		if (window.location.href.includes("vehicle_allotment_insert")) {
+		if (window.location.href.includes("vehicle_allotment_insert") || window.location.href.includes("vehicle_allotment_update")) {
 			// Enable fields
 			$('#vehicle_allotment_id,#vehicle_allotment_submit_id')
 				.removeClass('disable_a_href')
 				.prop('disabled', false);
 			// Auto load requested vehicles for this enquiry
 			vehicle_requested();
-		}
-		else if (window.location.href.includes("vehicle_allotment_update")) {
-			// Enable fields
-			$('#vehicle_allotment_id,#vehicle_allotment_submit_id')
-				.removeClass('disable_a_href')
-				.prop('disabled', false);
 		}
 		else {
 			// Disable fields if on any other page
@@ -1649,6 +1648,22 @@ $("#va_vehiclesource").on("change", function () {
                 return;
             }
             */
+        }
+
+        // Validate that new vehicle is not the same as current vehicle
+        var currentVeh = "{{ va.va_vehiclenumber|default:va.va_vehiclenumber_mkt|escapejs }}".replace(/[\s-]/g, '').toUpperCase();
+        var selectedVeh = "";
+        if (source == "3") {
+            selectedVeh = mktVehNo.replace(/[\s-]/g, '').toUpperCase();
+        } else {
+            var selectedText = $("#modal_va_vehiclenumber option:selected").text().trim();
+            if (selectedText && selectedText !== "--Select--") {
+                selectedVeh = selectedText.replace(/[\s-]/g, '').toUpperCase();
+            }
+        }
+        if (currentVeh && selectedVeh && currentVeh === selectedVeh) {
+            alert("🚫 Replacement vehicle cannot be the same as the current vehicle (" + selectedVeh + "). Please select or enter a different vehicle.");
+            return;
         }
 
         var form = $(this);

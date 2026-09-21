@@ -667,6 +667,16 @@
                 return false;
             }
 
+            // Validate that either Trip Charges or Special Sell is checked
+            var isTripChargesChecked = $("#tc_tripcost_check").is(":checked");
+            var isSpecialSellChecked = $("#special_sell_check").is(":checked");
+            if (!isTripChargesChecked && !isSpecialSellChecked) {
+                e.preventDefault();
+                alert("Either Trip Charges or Special Sell must be checked before submitting the form.");
+                $("#tc_tripcost_check").focus();
+                return false;
+            }
+
             // Guard: ensure both are not checked at the same time
             if ($("#tc_tripcost_check").is(":checked") && $("#special_sell_check").is(":checked")) {
                 $("#special_sell_check").prop("checked", false);
