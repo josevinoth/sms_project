@@ -11,6 +11,7 @@ from ..forms import TripSettlementForm, TripclosurefilesForm
 from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
 from ..sub_forms.invoice_document_form import InvoiceDocumentForm
 from ..sub_models.trip_status_mod import Tripstatusinfo
+from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 
 
 def get_enquiry_special_sell(trip):
@@ -753,6 +754,13 @@ def invoice_documents_add(request, trip_id):
             _copy_stored_file(invoice_doc.id_pod_doc, trip.td_pod)
         invoice_doc.save()
 
+    # Fetch related ConsignmentgoodsInfo (first goods record for this consignment)
+    cnote_goods = None
+    if trip.tr_consignmentnumber:
+        cnote_goods = ConsignmentgoodsInfo.objects.filter(
+            cg_consignmentnumber=trip.tr_consignmentnumber
+        ).order_by('id').first()
+
     # Fields editable in the settlement form on this page (status, customer ref, and all charges except trip cost)
     editable_fields = [
         'tc_financestatus', 
@@ -796,17 +804,22 @@ def invoice_documents_add(request, trip_id):
         for field in files_form.fields:
             files_form.fields[field].required = False
 
-        # Validate Customer Ref No is mandatory
+        # Fetch reference fields from POST (all optional individually, but at least one is required)
         customer_ref_val = (request.POST.get('tr_customerref') or '').strip()
-        if not customer_ref_val:
-            customer_ref_val = (
-                trip.tr_consignmentnumber.co_cusrefnum
-                if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_cusrefnum
-                else trip.tr_customerref or ''
-            ).strip()
+        # Check if user ticked the boxes
+        want_consigner = bool(request.POST.get('use_consigner_invoice'))
+        want_hawb = bool(request.POST.get('use_hawb'))
+        want_mawb = bool(request.POST.get('use_mawb'))
 
-        if not customer_ref_val:
-            messages.error(request, "Customer Ref No is mandatory. Form cannot be submitted without Customer Ref No.")
+        consigner_invoice_val = cnote_goods.cg_consignerinvoice if cnote_goods else ''
+        hawb_val = cnote_goods.cg_hawbno if cnote_goods else ''
+        mawb_val = cnote_goods.cg_mawbno if cnote_goods else ''
+
+        # Validate: at least one reference is required
+        has_valid_ref = bool(customer_ref_val) or (want_consigner and consigner_invoice_val) or (want_hawb and hawb_val) or (want_mawb and mawb_val)
+        
+        if not has_valid_ref:
+            messages.error(request, "At least one reference field is required: Customer Ref No, Consigner Invoice, HAWB, or MAWB.")
             return redirect('invoice_documents_add', trip_id=trip_id)
 
         # Validate Special Sell cannot be less than actual/standard rate
@@ -862,11 +875,12 @@ def invoice_documents_add(request, trip_id):
                     setattr(trip_obj, f, getattr(trip, f, False))
 
             # Store customer ref on trip_obj and linked consignment
-            if customer_ref_val:
-                trip_obj.tr_customerref = customer_ref_val
-                if trip_obj.tr_consignmentnumber:
-                    trip_obj.tr_consignmentnumber.co_cusrefnum = customer_ref_val
-                    trip_obj.tr_consignmentnumber.save(update_fields=['co_cusrefnum'])
+            trip_obj.tr_customerref = customer_ref_val
+            if trip_obj.tr_consignmentnumber:
+                trip_obj.tr_consignmentnumber.co_cusrefnum = customer_ref_val
+                trip_obj.tr_consignmentnumber.save(update_fields=['co_cusrefnum'])
+
+
 
             # Store special sell on trip_obj if provided
             special_sell_val = request.POST.get('special_sell', '').strip() or settlement_form.cleaned_data.get('special_sell')
@@ -1143,5 +1157,10 @@ def invoice_documents_add(request, trip_id):
             if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_cusrefnum
             else trip.tr_customerref or ''
         ),
+        'cnote_consigner_invoice': cnote_goods.cg_consignerinvoice if cnote_goods else '',
+        'cnote_hawb': cnote_goods.cg_hawbno if cnote_goods else '',
+        'cnote_mawb': cnote_goods.cg_mawbno if cnote_goods else '',
         'attachments_by_cat': attachments_by_cat,
     })
+
+

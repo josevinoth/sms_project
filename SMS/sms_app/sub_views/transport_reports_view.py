@@ -590,7 +590,7 @@ TRIP_CANCELLATION_HEADERS = [
 REF_NO_PENDING_HEADERS = [
     "SNo", "Date", "Branch", "Customer Name", "C-Note", "Trip Code", "Department",
     "Start DateTime", "End DateTime", "From", "To", "Veh No", "Truck Type",
-    "Veh Source", "Trip Charges", "Toll charges", "AAI charges", "Loading charges",
+    "Veh Source", "Trip Charges", "Toll charges", "Parking Charges", "Loading charges",
     "Unloading Charges", "Weighment charges", "Halting Charges", "Handling Charges",
     "Selling (total)"
 ]
@@ -613,7 +613,7 @@ INVOICE_PENDING_HEADERS = [
 
 VENDOR_PL_HEADERS = [
     "S No", "Date", "Cnote", "From", "To", "Customer", "Veh No", "Veh Type",
-    "Trip Charges", "Toll charges", "AAI charges", "Loading charges", "Unloading Charges",
+    "Trip Charges", "Toll charges", "Parking Charges", "Loading charges", "Unloading Charges",
     "Weighment charges", "Halting Charges", "Handling Charges", "Selling",
     "Vendor Name", "Bill No", "Buy cost", "Toll Cost", "Parking Cost",
     "Loading cost", "Unloading cost", "Weighment cost", "Handling cost",
@@ -887,7 +887,7 @@ TIME_ANALYSIS_HEADERS = [
 
 VENDOR_PL_ATTACHED_HEADERS = [
     "S No", "Date", "Cnote", "From", "To", "Customer", "Veh No", "Veh Type",
-    "Trip Charges", "Toll charges", "AAI charges", "Loading charges", "Unloading Charges",
+    "Trip Charges", "Toll charges", "Parking Charges", "Loading charges", "Unloading Charges",
     "Weighment charges", "Halting Charges", "Handling Charges", "Selling",
     "Vendor Name", "Bill No", "Buy cost", "Toll Cost", "Parking Cost",
     "Loading cost", "Unloading cost", "Weighment cost", "Handling cost",
@@ -3479,7 +3479,7 @@ def vendor_p_l_attached_report_ajax_view(request):
             safe_str(trip.tr_vehicletype_placed or trip.tr_vehicletype),
             selling_trip,
             selling_toll,
-            selling_aai,
+            selling_parking,
             selling_loading,
             selling_unloading,
             selling_weighment,
@@ -9056,3 +9056,4 @@ def trip_status_count_report_ajax_view(request):
         "recordsFiltered": total_records,
         "data": data,
     })
+
