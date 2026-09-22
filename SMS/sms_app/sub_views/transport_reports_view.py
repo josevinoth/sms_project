@@ -2178,14 +2178,16 @@ def invoice_pending_report_ajax_view(request):
 
     # -------------------------
     trips = TripdetailInfo.objects.filter(
-        tr_category_id=1,
+        tr_category_id__in=[1, 3],
         tr_departeddate__date__gte='2026-06-01'
     ).filter(
         Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') |
-        Q(tr_consignmentnumber__co_consignmentnumber__icontains='BLR')
+        Q(tr_consignmentnumber__co_consignmentnumber__icontains='BLR') |
+        Q(tr_tripnumber__icontains='MAA') |
+        Q(tr_tripnumber__icontains='BLR')
     ).exclude(
-        # Exclude trips with no C-note UNLESS they are cancelled
-        Q(tr_consignmentnumber__isnull=True) & ~Q(tc_financestatus_id=3)
+        # Exclude trips with no C-note UNLESS they are cancelled (3, 10, 11)
+        Q(tr_consignmentnumber__isnull=True) & ~Q(tc_financestatus_id__in=[3, 10, 11])
     ).exclude(
         id__in=all_invoiced_ids
     ).select_related(
