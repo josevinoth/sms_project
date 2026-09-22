@@ -604,7 +604,7 @@ DRIVERS_ADVANCE_HEADERS = [
 ]
 
 INVOICE_PENDING_HEADERS = [
-    "SNo", "Branch", "Customer Short Name", "Planning Date", "Cnote No", "Trip No", "From", "To", "Dept",
+    "SNo", "Branch", "Customer Short Name", "Planning Date", "Cnote No", "From", "To", "Dept",
     "Veh No", "Veh Type", "Veh Source", "Consignee", "Reference No", "No. of Pcs", "Weight", "Trip Status",
     "Transportation Charges", "Toll Charges", "Parking Charges", "Loading Charges", "Unloading Charges",
     "Halting Charges", "Docket Charges", "Weighment Charges", "Handling Charges", "Cancellation Charges",
@@ -2481,8 +2481,7 @@ def invoice_pending_report_ajax_view(request):
             branch_name,
             safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
             display_date,
-            safe_str(cons.co_consignmentnumber) if cons else "",
-            safe_str(trip.tr_tripnumber),
+            safe_str(cons.co_consignmentnumber) if cons else safe_str(trip.tr_tripnumber),
             safe_str(trip.tr_departedlocation),
             safe_str(trip.tr_reportedlocation),
             safe_str(trip.tr_enquirynumber.en_customerdepartment) if trip.tr_enquirynumber else "",

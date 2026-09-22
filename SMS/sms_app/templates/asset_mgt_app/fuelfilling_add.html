@@ -10,21 +10,23 @@
 	}
 
 	.fuel-add-modern .form-grid-body {
-		padding: 1.25rem 1.5rem;
+		padding: 0.5rem 1rem;
 	}
 
 	.fuel-add-modern .form-control,
 	.fuel-add-modern .custom-select {
 		background: var(--input-bg, #ffffff) !important;
 		border: 1.5px solid var(--input-border, #cbd5e1) !important;
-		border-radius: 8px !important;
+		border-radius: 6px !important;
 		color: var(--text-main, #1e293b) !important;
 		font-weight: 600;
-		min-height: 38px;
+		min-height: 32px;
+		padding: 0.25rem 0.5rem;
+		font-size: 0.85rem;
 	}
 
 	.fuel-add-modern .form-group-modern {
-		margin-bottom: 1rem;
+		margin-bottom: 0.6rem;
 	}
 
 	.fuel-add-modern .form-label-modern {
@@ -38,12 +40,26 @@
 	}
 
 	.fuel-add-modern .form-section-title {
-		font-size: 0.9rem;
+		font-size: 0.85rem;
 		font-weight: 700;
 		color: var(--accent-blue, #0284c7);
-		margin-bottom: 1rem;
-		padding-bottom: 0.4rem;
+		margin-bottom: 0.5rem;
+		padding-bottom: 0.2rem;
 		border-bottom: 2px solid var(--border-color, #e2e8f0);
+	}
+
+	.select2-container .select2-selection--single {
+		height: 32px !important;
+		border: 1.5px solid var(--input-border, #cbd5e1) !important;
+		border-radius: 6px !important;
+	}
+	.select2-container--default .select2-selection--single .select2-selection__rendered {
+		line-height: 28px !important;
+		font-size: 0.85rem;
+		font-weight: 600;
+	}
+	.select2-container--default .select2-selection--single .select2-selection__arrow {
+		height: 30px !important;
 	}
 </style>
 
@@ -51,26 +67,41 @@
 	{% csrf_token %}
 	<div class="container-fluid px-3 py-2 fuel-add-modern">
 		<div class="modern-card legacy-form-card mb-3">
-			<div class="modern-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+			<div class="modern-header d-flex align-items-center justify-content-between flex-wrap gap-2" style="padding: 0.75rem 1.5rem;">
 				<div class="d-flex align-items-center gap-2">
 					<i class="fas fa-gas-pump fa-lg text-info mr-2"></i>
-					<h2 class="mb-0 text-white font-weight-bold" style="font-size: 1.3rem;">Add / Update Fuel Filling</h2>
+					<h2 class="mb-0 text-white font-weight-bold" style="font-size: 1.1rem;">Add / Update Fuel Filling</h2>
 				</div>
-				<a href="{% url 'fuelfilling_list' %}" class="btn-modern btn-highlight-cyan m-0 py-2 px-3">
+				<a href="{% url 'fuelfilling_list' %}" class="btn-modern btn-highlight-cyan m-0 py-1 px-3" style="font-size: 0.85rem;">
 					<i class="fas fa-arrow-left mr-1"></i> Back to List
 				</a>
 			</div>
 
 			<div class="form-grid-body">
 				<div class="row">
-					<!-- Left Column -->
-					<div class="col-md-6">
-						<div class="form-section-title"><i class="fas fa-truck mr-1"></i> Vehicle & Fuel Metrics</div>
+					<!-- Column 1 -->
+					<div class="col-md-4">
+						<div class="form-section-title"><i class="fas fa-truck mr-1"></i> Vehicle Info</div>
 						
 						<div class="form-group-modern">
 							<label class="form-label-modern">Vehicle Number <span class="text-danger">*</span></label>
-							{% render_field form.ff_vehicle_num id="ff_vehicle_num" class="form-control" %}
+							{% render_field form.ff_vehicle_num id="ff_vehicle_num" class="form-control select2" %}
 						</div>
+
+						<div class="form-group-modern">
+							<label class="form-label-modern">Date <span class="text-danger">*</span></label>
+							{% render_field form.ff_date id="ff_date" type="Date" class="form-control" %}
+						</div>
+
+						<div class="form-group-modern">
+							<label class="form-label-modern">Odometer Reading At Filling (Km)</label>
+							{% render_field form.ff_odometer_reading id="ff_odometer_reading" class="form-control" %}
+						</div>
+					</div>
+
+					<!-- Column 2 -->
+					<div class="col-md-4">
+						<div class="form-section-title"><i class="fas fa-gas-pump mr-1"></i> Fuel Metrics</div>
 
 						<div class="form-group-modern">
 							<label class="form-label-modern">Fuel Rate / Ltr <span class="text-danger">*</span></label>
@@ -86,20 +117,15 @@
 							<label class="form-label-modern">Fuel Price (LKR)</label>
 							{% render_field form.ff_fuel_price id="ff_fuel_price" class="form-control disable_a_href" %}
 						</div>
-
-						<div class="form-group-modern">
-							<label class="form-label-modern">Date <span class="text-danger">*</span></label>
-							{% render_field form.ff_date id="ff_date" type="Date" class="form-control" %}
-						</div>
 					</div>
 
-					<!-- Right Column -->
-					<div class="col-md-6">
-						<div class="form-section-title"><i class="fas fa-map-marker-alt mr-1"></i> Station & Location Info</div>
+					<!-- Column 3 -->
+					<div class="col-md-4">
+						<div class="form-section-title"><i class="fas fa-map-marker-alt mr-1"></i> Station Info</div>
 
 						<div class="form-group-modern">
 							<label class="form-label-modern">Bunk Name</label>
-							{% render_field form.ff_bunk_name id="ff_bunk_name" class="form-control" %}
+							{% render_field form.ff_bunk_name id="ff_bunk_name" class="form-control select2" %}
 						</div>
 
 						<div class="form-group-modern">
@@ -110,11 +136,6 @@
 						<div class="form-group-modern">
 							<label class="form-label-modern">State</label>
 							{% render_field form.ff_state id="ff_state" class="form-control disable_a_href" %}
-						</div>
-
-						<div class="form-group-modern">
-							<label class="form-label-modern">Odometer Reading At Filling (Km)</label>
-							{% render_field form.ff_odometer_reading id="ff_odometer_reading" class="form-control" %}
 						</div>
 
 						<div class="form-group-modern">
@@ -227,9 +248,13 @@
   }
 </script>
 <script>
-	$("#ff_vehicle_num").select2({
-    	width: 'resolve'
-    });
+  $(document).ready(function() {
+      $("#ff_vehicle_num").select2({
+          width: '100%'
+      });
+      $("#ff_bunk_name").select2({
+          width: '100%'
+      });
+  });
 </script>
-
 {% endblock content %}
