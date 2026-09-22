@@ -5,7 +5,7 @@ import calendar
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.core.paginator import Paginator
-from django.db.models import Q, F, Sum, Value, FloatField, Case, When, ExpressionWrapper
+from django.db.models import Q, F, Sum, Count, Value, FloatField, Case, When, ExpressionWrapper
 from django.db.models.functions import Coalesce, Trim, Upper
 from django.utils.safestring import mark_safe
 from ..models import TripdetailInfo, ConsignmentdetailInfo, CustomerInfo, CustomerdepartmentInfo, ConsignmentgoodsInfo, \
@@ -16,6 +16,7 @@ from ..sub_models.trans_customer_claims_mod import TransCustomerClaimsInfo
 from ..sub_forms.dmr_report_form import DmrForm
 from ..sub_models.location_info_mod import Location_info
 from ..models import VehiclemasterInfo
+from ..models import AttachedBillInfo, ConsignmentdetailInfo, ConsignmentgoodsInfo, CustomerInfo, DriverSalaryInfo, Driverexpense, DrivermasterInfo, EnquirynoteInfo, Enquirynotevehicle, ExpenseExtinfo, Fuelfillinginfo, Insurance_Info, Location_info, MaintenanceInfo, MarketBillInfo, OwnershipInfo, StatusList, TMSPettyCashInfo, Tr_triptype_Info, TransInvoiceInfo, Trip_category_info, TripdetailInfo, Tripstatusinfo, User_extInfo, Vehicle_allotmentInfo, VehiclemasterInfo, VehicletypeInfo, VendorratemasterInfo1, driver_settlement_info
 
 
 def safe_num(val):
@@ -149,7 +150,6 @@ def get_tms_report_transport_charge(trip, inv=None, allotment=None, allotment_ma
 
 
 def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=None):
-    from ..models import TripdetailInfo, DrivermasterInfo, DriverSalaryInfo, Fuelfillinginfo
     import re
     from sms_app.sub_views.dmr_report_view import safe_num
 
@@ -604,7 +604,7 @@ DRIVERS_ADVANCE_HEADERS = [
 ]
 
 INVOICE_PENDING_HEADERS = [
-    "SNo", "Branch", "Customer Short Name", "Planning Date", "Cnote No", "From", "To", "Dept",
+    "SNo", "Branch", "Customer Short Name", "Planning Date", "Cnote No", "Trip No", "From", "To", "Dept",
     "Veh No", "Veh Type", "Veh Source", "Consignee", "Reference No", "No. of Pcs", "Weight", "Trip Status",
     "Transportation Charges", "Toll Charges", "Parking Charges", "Loading Charges", "Unloading Charges",
     "Halting Charges", "Docket Charges", "Weighment Charges", "Handling Charges", "Cancellation Charges",
@@ -1064,7 +1064,6 @@ def vehicle_log_report_view(request):
         vm_ownership_id__in=[1, 2]
     ).order_by('vm_registrationnumber')
     
-    from ..models import OwnershipInfo
     ownerships = OwnershipInfo.objects.filter(id__in=[1, 2])
 
     return render(request, "asset_mgt_app/vehicle_log_report.html", {
@@ -1085,7 +1084,6 @@ def vehicle_log_report_view(request):
 
 
 def vehicle_log_report_ajax_view(request):
-    from ..models import Location_info, ConsignmentgoodsInfo, TripdetailInfo
 
     draw = safe_int(request.GET.get('draw'), 1)
     start = safe_int(request.GET.get('start'), 0)
@@ -1247,7 +1245,6 @@ def vehicle_log_report_ajax_view(request):
 @login_required(login_url='login_page')
 
 def trip_cancellation_report_ajax_view(request):
-    from ..models import TripdetailInfo, Location_info
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
@@ -1538,7 +1535,6 @@ def trip_cancellation_report_view(request):
             trip.tc_cancellation,
             "Cancellation with Billing" if trip.tc_financestatus_id == 10 else ("Cancellation without Billing" if trip.tc_financestatus_id == 11 else safe_str(trip.tr_remarks)),
         ])
-    from ..models import Location_info, VehiclemasterInfo
     return render(request, "asset_mgt_app/trip_cancellation_report.html", {
         'first_name': first_name,
         'form': form,
@@ -1797,7 +1793,6 @@ def vehicle_utilization_report_view(request):
 @login_required(login_url='login_page')
 
 def ref_no_pending_report_ajax_view(request):
-    from ..models import TripdetailInfo
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
@@ -1979,7 +1974,6 @@ def ref_no_pending_report_ajax_view(request):
 
 def ref_no_pending_report_view(request):
     first_name = request.session.get('first_name')
-    from ..models import VehiclemasterInfo
     if request.method == "POST":
         form = DmrForm(request.POST)
         customer_id = request.POST.get('dmr_customer')
@@ -2017,7 +2011,6 @@ def ref_no_pending_report_view(request):
 @login_required(login_url='login_page')
 def drivers_advance_report_view(request):
     first_name = request.session.get('first_name')
-    from ..models import Driverexpense, User_extInfo, DrivermasterInfo
     from datetime import datetime
 
     # Get filter parameters
@@ -2115,7 +2108,6 @@ def invoice_pending_report_view(request):
     # (Synced and re-applied)
     form = DmrForm()
 
-    from ..models import Location_info, OwnershipInfo
     from ..sub_models.trip_status_mod import Tripstatusinfo
 
     context = {
@@ -2133,7 +2125,6 @@ def invoice_pending_report_view(request):
 @login_required(login_url='login_page')
 def invoice_pending_report_ajax_view(request):
     """Server-side DataTables AJAX endpoint for Invoice Pending Report (Synced)."""
-    from ..models import TransInvoiceInfo, ConsignmentgoodsInfo, Vehicle_allotmentInfo
     from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
     from .invoice_documents_view import get_enquiry_special_sell, get_enquiry_standard_sell
     from .tripclosure_add_view import get_allotment_sale_rate
@@ -2193,7 +2184,8 @@ def invoice_pending_report_ajax_view(request):
         Q(tr_consignmentnumber__co_consignmentnumber__icontains='MAA') |
         Q(tr_consignmentnumber__co_consignmentnumber__icontains='BLR')
     ).exclude(
-        tr_consignmentnumber__isnull=True
+        # Exclude trips with no C-note UNLESS they are cancelled
+        Q(tr_consignmentnumber__isnull=True) & ~Q(tc_financestatus_id=3)
     ).exclude(
         id__in=all_invoiced_ids
     ).select_related(
@@ -2391,12 +2383,14 @@ def invoice_pending_report_ajax_view(request):
         g_data = goods_map.get(trip.tr_consignmentnumber_id) if trip.tr_consignmentnumber_id else None
         inv_status = invoice_doc_map.get(trip.tr_tripnumber, "-") if trip.tr_tripnumber else "-"
 
-        # Branch
+        # Branch — use C-note first, fallback to trip number for trips without C-note
         branch_name = "OTH"
         cnote_str = str(cons.co_consignmentnumber if cons else "").upper()
-        if 'MAA' in cnote_str:
+        trip_num_str = str(trip.tr_tripnumber or "").upper()
+        ref_str = cnote_str or trip_num_str
+        if 'MAA' in ref_str:
             branch_name = 'MAA'
-        elif 'BLR' in cnote_str:
+        elif 'BLR' in ref_str:
             branch_name = 'BLR'
 
         # Date selection logic (strictly using tr_departeddate as the planning date, which is started date at loading point)
@@ -2465,6 +2459,7 @@ def invoice_pending_report_ajax_view(request):
             (safe_num(trip.tc_rtocost) if trip.tc_rtocost_check else 0) +
             (safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0) +
             (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0) +
+            (safe_num(trip.tc_supervisorcost) if trip.tc_supervisorcost_check else 0) +
             (safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0)
         )
 
@@ -2473,12 +2468,19 @@ def invoice_pending_report_ajax_view(request):
         qty_val = g_data['total_qty'] if g_data else 0
         weight_val = g_data['total_weight'] if g_data else 0.0
 
+        # Handling Charges = handling + supervisor (combined, same as invoice table)
+        handling_combined = (
+            (safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0) +
+            (safe_num(trip.tc_supervisorcost) if trip.tc_supervisorcost_check else 0)
+        )
+
         data.append([
             idx,
             branch_name,
             safe_str(trip.tr_enquirynumber.en_customername) if trip.tr_enquirynumber else "",
             display_date,
             safe_str(cons.co_consignmentnumber) if cons else "",
+            safe_str(trip.tr_tripnumber),
             safe_str(trip.tr_departedlocation),
             safe_str(trip.tr_reportedlocation),
             safe_str(trip.tr_enquirynumber.en_customerdepartment) if trip.tr_enquirynumber else "",
@@ -2498,7 +2500,7 @@ def invoice_pending_report_ajax_view(request):
             halting_val,
             safe_num(trip.tc_rtocost) if trip.tc_rtocost_check else 0,
             safe_num(trip.tc_weighmentcost) if trip.tc_weighmentcost_check else 0,
-            safe_num(trip.tc_handlingcost) if trip.tc_handlingcost_check else 0,
+            handling_combined,
             safe_num(trip.tc_cancellation) if trip.tc_cancellation_check else 0,
             round(safe_num(row_total), 2),
         ])
@@ -2515,7 +2517,6 @@ def invoice_pending_report_ajax_view(request):
 def vendor_p_l_mkt_report_view(request):
     first_name = request.session.get('first_name')
 
-    from ..models import Vehicle_allotmentInfo, VehiclemasterInfo, TripdetailInfo
     from ..sub_models.vendor_info_mod import Vendor_info
 
     if request.method == "POST":
@@ -2615,7 +2616,6 @@ def vendor_p_l_mkt_report_view(request):
 
 @login_required(login_url='login_page')
 def vendor_p_l_mkt_report_ajax_view(request):
-    from ..models import Vehicle_allotmentInfo, TransInvoiceInfo, Driverexpense, VehiclemasterInfo, VehicletypeInfo,         MarketBillInfo, ConsignmentgoodsInfo, TripdetailInfo
     from ..sub_models.vendor_info_mod import Vendor_info
     from ..sub_models.vendorratemaster1_mod import VendorratemasterInfo1
 
@@ -3003,7 +3003,6 @@ def vendor_p_l_mkt_report_ajax_view(request):
 def vendor_p_l_attached_report_view(request):
     first_name = request.session.get('first_name')
 
-    from ..models import Vehicle_allotmentInfo, VehiclemasterInfo, TripdetailInfo
     from ..sub_models.vendor_info_mod import Vendor_info
 
     if request.method == "POST":
@@ -3105,7 +3104,6 @@ def vendor_p_l_attached_report_view(request):
 
 @login_required(login_url='login_page')
 def vendor_p_l_attached_report_ajax_view(request):
-    from ..models import Vehicle_allotmentInfo, TransInvoiceInfo, Driverexpense, VehiclemasterInfo, VehicletypeInfo,         MarketBillInfo, ConsignmentgoodsInfo, TripdetailInfo
     from ..sub_models.vendor_info_mod import Vendor_info
 
     draw = int(request.GET.get('draw', 1))
@@ -3291,7 +3289,6 @@ def vendor_p_l_attached_report_ajax_view(request):
                     bill_no_map[tid] = b.mb_bill_no
 
     attached_bill_map = {}
-    from ..models import AttachedBillInfo
     ab_bills = AttachedBillInfo.objects.all().only(
         'ab_bill_no', 'ab_selected_trips', 'ab_buy_cost', 'ab_total_km_run',
         'ab_from_date', 'ab_to_date', 'ab_vehicle_number_id', 'ab_toll_cost'
@@ -3309,7 +3306,6 @@ def vendor_p_l_attached_report_ajax_view(request):
                     bill_no_map[tid] = b.ab_bill_no
                     attached_bill_map[tid] = b
 
-    from ..models import VehiclemasterInfo
     vehicles = VehiclemasterInfo.objects.filter(vm_ownership_id=2).select_related('vm_vendor')
     veh_map = {v.vm_registrationnumber.replace(" ","").upper(): v for v in vehicles if v.vm_registrationnumber}
 
@@ -3777,7 +3773,6 @@ def vendor_p_l_attached_report_ajax_view(request):
 
 @login_required(login_url='login_page')
 def get_pl_vehicles_by_vendor(request):
-    from ..models import Vehicle_allotmentInfo, VehiclemasterInfo, TripdetailInfo
     vendor_id = request.GET.get('vendor_id', '').strip()
     source_id = request.GET.get('source_id', '').strip()
 
@@ -3890,7 +3885,6 @@ def whatsapp_delivery_status_report_view(request):
         vehicle_search = ""
 
     # Context only - data populated via AJAX
-    from ..models import OwnershipInfo, Location_info, VehiclemasterInfo
     return render(request, "asset_mgt_app/whatsapp_delivery_status_report.html", {
         'first_name': first_name,
         'form': form,
@@ -3912,7 +3906,6 @@ def whatsapp_delivery_status_report_view(request):
 
 @login_required(login_url='login_page')
 def whatsapp_delivery_status_report_ajax_view(request):
-    from ..models import TripdetailInfo
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
@@ -4043,7 +4036,6 @@ def whatsapp_delivery_status_report_ajax_view(request):
 
 def daily_trip_count_report_view(request):
     first_name = request.session.get('first_name')
-    from ..models import OwnershipInfo, Location_info, VehiclemasterInfo
 
     if request.method == "POST" or request.method == "GET":
         form = DmrForm(request.GET if request.method == "GET" else request.POST)
@@ -4066,7 +4058,6 @@ from datetime import datetime
 
 @login_required(login_url='login_page')
 def daily_trip_count_report_ajax_view(request):
-    from ..models import TripdetailInfo
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
@@ -4216,11 +4207,6 @@ def daily_trip_count_report_ajax_view(request):
 
 @login_required(login_url='login_page')
 def own_vehicle_pl_report_view(request):
-    from ..models import (
-        TripdetailInfo, Driverexpense, MarketBillInfo, AttachedBillInfo,
-        Vehicle_allotmentInfo, VendorratemasterInfo1, TransInvoiceInfo,
-        DriverSalaryInfo, DrivermasterInfo
-    )
     first_name = request.session.get('first_name')
 
     # -------------------------------
@@ -4296,7 +4282,6 @@ def own_vehicle_pl_report_view(request):
         trips_list = list(trips.order_by('-tr_created_at'))
         trip_ids = [t.id for t in trips_list]
 
-        from ..models import TransInvoiceInfo
         invoices = TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_ids)
         invoice_obj_map = {i.ti_trip_id: i for i in invoices}
 
@@ -4355,7 +4340,6 @@ def own_vehicle_pl_report_view(request):
 
         consignment_keys = [str(t.tr_consignmentnumber).strip() for t in trips_list if t.tr_consignmentnumber]
 
-        from ..models import TMSPettyCashInfo
         petty_cash_records = TMSPettyCashInfo.objects.filter(tpc_job_no__in=consignment_keys).select_related('tpc_expense_type')
 
         petty_cash_map = {}
@@ -4753,7 +4737,6 @@ def own_vehicle_pl_report_view(request):
                 maintenance_cost += safe_num(mb.mnb_total_amount)
 
         # General Expenses from ExpenseExtinfo
-        from ..models import ExpenseExtinfo
         general_expenses = 0.0
 
         ext_expenses = ExpenseExtinfo.objects.filter(exp_ext_vehicle_source__ow_ownership__icontains='own')
@@ -4981,7 +4964,6 @@ def claim_pending_report_view(request):
 @login_required(login_url='login_page')
 def halting_report_view(request):
     first_name = request.session.get('first_name')
-    from ..models import Location_info, OwnershipInfo
     from ..sub_forms.dmr_report_form import DmrForm
     from datetime import datetime
 
@@ -5017,7 +4999,6 @@ def halting_report_view(request):
 
 
 def halting_report_ajax_view(request):
-    from ..models import TripdetailInfo, Driverexpense, ConsignmentgoodsInfo
 
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
@@ -5151,7 +5132,6 @@ def halting_report_ajax_view(request):
 @login_required(login_url='login_page')
 def maintenance_report_view(request):
     first_name = request.session.get('first_name')
-    from ..models import MaintenanceInfo, VehiclemasterInfo
     from ..sub_models.branch_mod import Branch
     from datetime import datetime
 
@@ -5289,7 +5269,6 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.db.models.functions import Upper, Trim
 
-from ..models import Insurance_Info, VehiclemasterInfo, Location_info
 
 
 @login_required(login_url='login_page')
@@ -5444,7 +5423,6 @@ def insurance_renewal_report_view(request):
 @login_required(login_url='login_page')
 def diesel_vs_revenue_report_view(request):
     first_name = request.session.get('first_name')
-    from ..models import TripdetailInfo, Fuelfillinginfo, VehiclemasterInfo, Location_info, ConsignmentdetailInfo
     
     if request.method == "POST":
         form = DmrForm(request.POST)
@@ -5487,7 +5465,6 @@ def diesel_vs_revenue_report_view(request):
 
 @login_required(login_url='login_page')
 def diesel_vs_revenue_report_ajax_view(request):
-    from ..models import TripdetailInfo, Fuelfillinginfo, VehiclemasterInfo, Location_info, ConsignmentdetailInfo
     from ..sub_models.trans_invoice_mod import TransInvoiceInfo
     from ..sub_models.rtratemaster_mod import RtratemasterInfo
     draw = int(request.GET.get('draw', 1))
@@ -5769,7 +5746,6 @@ def diesel_vs_revenue_report_ajax_view(request):
 
 def own_vs_market_sales_report_view(request):
     first_name = request.session.get('first_name')
-    from ..models import TripdetailInfo, Vehicle_allotmentInfo
     from datetime import datetime
 
     if request.method == "POST":
@@ -5968,7 +5944,6 @@ def own_vs_market_sales_report_view(request):
 
 @login_required(login_url='login_page')
 def enquiry_pending_report_view(request):
-    from ..models import EnquirynoteInfo, Enquirynotevehicle, Vehicle_allotmentInfo, ConsignmentdetailInfo, StatusList
     first_name = request.session.get('first_name')
 
     if request.method == "POST":
@@ -6093,7 +6068,6 @@ def driver_balance_report_view(request):
     """
     Displays S.No, Driver Id, Branch, Driver name, and Balance.
     """
-    from ..models import DrivermasterInfo, driver_settlement_info, User_extInfo, Location_info
     first_name = request.session.get('first_name')
 
     # Filters
@@ -6117,7 +6091,6 @@ def driver_balance_report_view(request):
     data_rows = []
     for idx, driver in enumerate(drivers_qs.order_by('dm_name'), start=1):
         # Calculate Balance: Advance - Expense from Driverexpense within the date range
-        from ..models import Driverexpense
 
         expenses_qs = Driverexpense.objects.filter(de_driver_id__driver=driver)
 
@@ -6190,7 +6163,6 @@ def driver_balance_report_view(request):
 def pod_pending_report_view(request):
     first_name = request.session.get('first_name')
 
-    from ..models import Location_info, OwnershipInfo, Tr_triptype_Info
     return render(request, "asset_mgt_app/pod_pending_report.html", {
         'first_name': first_name,
         'headers': POD_PENDING_REPORT_HEADERS,
@@ -6348,7 +6320,6 @@ def pod_pending_report_ajax_view(request):
 
 @login_required(login_url='login_page')
 def enquiry_pending_report_ajax_view(request):
-    from ..models import EnquirynoteInfo, Enquirynotevehicle, Vehicle_allotmentInfo, ConsignmentdetailInfo
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
@@ -6499,7 +6470,6 @@ def enquiry_pending_report_ajax_view(request):
 
 def get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date, to_date, selected_year,
                        customer_id=None, selected_month=None):
-    from ..models import TripdetailInfo, Location_info
     # Sanitize all inputs to handle 'None' strings or empty values
     branch_id = branch_id if branch_id not in [None, 'None', '', '0'] else None
     trip_category_id = trip_category_id if trip_category_id not in [None, 'None', '', '0'] else None
@@ -6585,8 +6555,6 @@ def get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date
 @login_required(login_url='login_page')
 def movementwise_pl_report_view(request):
     from sms_app.sub_models.tr_triptype_mod import Tr_triptype_Info
-    from ..models import Driverexpense, MarketBillInfo, Vehicle_allotmentInfo, TransInvoiceInfo, AttachedBillInfo, \
-        VendorratemasterInfo1
 
     first_name = request.session.get('first_name')
     if request.method == "POST":
@@ -6607,7 +6575,6 @@ def movementwise_pl_report_view(request):
         "Expenses", "Profit", "Profit %"
     ]
 
-    from ..models import Location_info, OwnershipInfo, Tr_triptype_Info
     return render(request, "asset_mgt_app/movementwise_pl_report.html", {
         'first_name': first_name,
         'headers': headers,
@@ -6631,8 +6598,6 @@ def movementwise_pl_report_view(request):
 
 def movementwise_pl_report_ajax_view(request):
     try:
-        from ..models import Location_info, OwnershipInfo, Driverexpense, TransInvoiceInfo, MarketBillInfo, \
-            AttachedBillInfo, Vehicle_allotmentInfo, VendorratemasterInfo1
 
         draw = safe_int(request.GET.get('draw'), 1)
         start = safe_int(request.GET.get('start'), 0)
@@ -6819,8 +6784,6 @@ def movementwise_pl_report_ajax_view(request):
 
 def customerwise_pl_report_ajax_view(request):
     try:
-        from ..models import TripdetailInfo, Location_info, OwnershipInfo, Driverexpense, MarketBillInfo, \
-            AttachedBillInfo, Vehicle_allotmentInfo, TransInvoiceInfo
 
         draw = safe_int(request.GET.get('draw'), 1)
         start = safe_int(request.GET.get('start'), 0)
@@ -7026,11 +6989,6 @@ def customerwise_pl_report_view(request):
     to_date = request.POST.get('to_date')
     selected_year = request.POST.get('year')
 
-    from ..models import (
-        TripdetailInfo, Location_info, OwnershipInfo, Trip_category_info,
-        Tr_triptype_Info, CustomerInfo, Driverexpense, MarketBillInfo,
-        Vehicle_allotmentInfo, TransInvoiceInfo, AttachedBillInfo, VendorratemasterInfo1
-    )
     headers = [
         "SNo", "Trip Date", "Cnote", "Customer Name", "From", "To",
         "Vehicle Source", "Vehicle No", "Veh Type", "Revenue",
@@ -7065,9 +7023,6 @@ def customerwise_pl_report_view(request):
 @login_required(login_url='login_page')
 def location_pl_report_view(request):
     first_name = request.session.get('first_name')
-    from ..models import TripdetailInfo, TransInvoiceInfo, Driverexpense, VehiclemasterInfo, VehicletypeInfo, \
-        MarketBillInfo, ConsignmentgoodsInfo, Vehicle_allotmentInfo, Location_info, VendorratemasterInfo1, \
-        AttachedBillInfo
     from ..forms import DmrForm
 
     form = DmrForm(request.GET or None)
@@ -7548,7 +7503,6 @@ def time_analysis_report_view(request):
         branch_id = ''
         vehicle_search = ''
 
-    from ..models import VehiclemasterInfo
     all_vehicles = VehiclemasterInfo.objects.filter(
         vm_ownership_id__in=[1, 2]
     ).order_by('vm_registrationnumber')
@@ -7570,7 +7524,6 @@ def time_analysis_report_view(request):
 
 @login_required(login_url='login_page')
 def time_analysis_report_ajax_view(request):
-    from ..models import TripdetailInfo, Vehicle_allotmentInfo, Location_info
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
@@ -7764,7 +7717,6 @@ def mileage_report_view(request):
     from_date = request.POST.get('from_date')
     to_date = request.POST.get('to_date')
 
-    from ..models import VehiclemasterInfo, OwnershipInfo, Location_info
     from ..sub_models.fuelfilling_mod import Fuelfillinginfo
     # Only show Own vehicles (vm_ownership_id=1)
     vehicles = VehiclemasterInfo.objects.filter(vm_ownership_id=1)
@@ -8885,7 +8837,6 @@ def trip_status_count_report_ajax_view(request):
     branch = request.GET.get('branch', '')
     dmr_customer = request.GET.get('dmr_customer', '')
     
-    from ..models import TripdetailInfo, Tripstatusinfo, ConsignmentdetailInfo, TransInvoiceInfo
     # Base query is Cnotes (ConsignmentdetailInfo)
     qs = ConsignmentdetailInfo.objects.all()
     

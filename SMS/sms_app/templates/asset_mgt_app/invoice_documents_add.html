@@ -635,13 +635,13 @@
         // Validate Special Sell only if lower than actual rate
         $("form").on("submit", function (e) {
                         // --- At-least-one reference field validation ---
-            var wantConsigner = #check_consigner_invoice.is(':checked');
-            var wantHawb = #check_hawb.is(':checked');
-            var wantMawb = #check_mawb.is(':checked');
+            var wantConsigner = $('#check_consigner_invoice').is(':checked');
+            var wantHawb = $('#check_hawb').is(':checked');
+            var wantMawb = $('#check_mawb').is(':checked');
             
-            var hasConsigner = #has_consigner_invoice.val() === '1';
-            var hasHawbDB = #has_hawb.val() === '1';
-            var hasMawbDB = #has_mawb.val() === '1';
+            var hasConsigner = $('#has_consigner_invoice').val() === '1';
+            var hasHawbDB = $('#has_hawb').val() === '1';
+            var hasMawbDB = $('#has_mawb').val() === '1';
 
             if (wantConsigner && !hasConsigner) {
                 e.preventDefault();
@@ -659,11 +659,11 @@
                 return false;
             }
 
-            var customerRef = (#live_customer_ref.val() || "").trim();
+            var customerRef = ($('#live_customer_ref').val() || "").trim();
             if (!customerRef && !wantConsigner && !wantHawb && !wantMawb) {
                 e.preventDefault();
                 alert("At least one reference is required: Customer Ref No, or tick Consigner Invoice / HAWB / MAWB (if they have values).");
-                #live_customer_ref.focus();
+                $('#live_customer_ref').focus();
                 return false;
             }
 
