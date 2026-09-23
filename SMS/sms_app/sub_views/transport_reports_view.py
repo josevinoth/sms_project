@@ -88,21 +88,22 @@ def get_tms_report_transport_charge(trip, inv=None, allotment=None, allotment_ma
     Standardized Transportation / Trip Charge calculation for TMS reports (except Attached P/L):
     - If invoice exists with transportation charges > 0, return that.
     - If settled / ready for invoice (tc_financestatus_id in [7, 9]):
-      - If special sell checked (tc_special_sell_check), return tc_special_sell (fallback to allotment / enquiry).
-      - Elif tripcost checked (tc_tripcost_check), return tc_tripcost (fallback to allotment / enquiry).
+      - If special sell checked (tc_special_sell_check), return tc_special_sell
+        (fallback: Enquirynotevehicle env_special_sale → env_sale).
+      - Elif tripcost checked (tc_tripcost_check), return tc_tripcost
+        (fallback: Enquirynotevehicle env_sale → env_special_sale).
       - Else return 0.0 (both unchecked).
     - For unsettled trips:
-      - If special sell checked, return tc_special_sell (fallback to allotment / enquiry).
+      - If special sell checked, return tc_special_sell (fallback: Enquirynotevehicle).
       - Elif tripcost checked and > 0, return tc_tripcost.
-      - Else pull Special Sell (va_special_sale) from Vehicle Allotment page (fallback to standard sell / enquiry).
+      - Else pull from Enquirynotevehicle (env_special_sale → env_sale).
+    NOTE: va_sale / va_special_sale on Vehicle_allotmentInfo are LEGACY columns 
+    and are now NULL for all new allotments. Do NOT use them as a primary source.
     """
     if not trip:
         return 0.0
     if inv and getattr(inv, 'ti_transportation_charges', None) is not None and safe_num(inv.ti_transportation_charges) > 0:
         return safe_num(inv.ti_transportation_charges)
-    
-    if allotment is None:
-        allotment = resolve_trip_allotment(trip, allotment_map)
 
     from .invoice_documents_view import get_enquiry_special_sell, get_enquiry_standard_sell
     from .tripclosure_add_view import get_allotment_sale_rate
@@ -114,15 +115,11 @@ def get_tms_report_transport_charge(trip, inv=None, allotment=None, allotment_ma
     if is_settled:
         if is_special_sell_check:
             val = safe_num(trip.tc_special_sell)
-            if val <= 0 and allotment and safe_num(allotment.va_special_sale) > 0:
-                val = safe_num(allotment.va_special_sale)
             if val <= 0:
                 val = safe_num(get_enquiry_special_sell(trip))
             return val
         elif is_tripcost_check:
             val = safe_num(trip.tc_tripcost)
-            if val <= 0 and allotment and safe_num(allotment.va_sale) > 0:
-                val = safe_num(allotment.va_sale)
             if val <= 0:
                 val = safe_num(get_enquiry_standard_sell(trip))
             return val
@@ -132,20 +129,17 @@ def get_tms_report_transport_charge(trip, inv=None, allotment=None, allotment_ma
         # Unsettled trips
         if is_special_sell_check:
             val = safe_num(trip.tc_special_sell)
-            if val <= 0 and allotment and safe_num(allotment.va_special_sale) > 0:
-                val = safe_num(allotment.va_special_sale)
             if val <= 0:
                 val = safe_num(get_enquiry_special_sell(trip))
             return val
         elif is_tripcost_check and safe_num(trip.tc_tripcost) > 0:
             return safe_num(trip.tc_tripcost)
         else:
-            if allotment and getattr(allotment, 'va_special_sale', None) is not None and safe_num(allotment.va_special_sale) > 0:
-                return safe_num(allotment.va_special_sale)
-            elif allotment and getattr(allotment, 'va_sale', None) is not None and safe_num(allotment.va_sale) > 0:
-                return safe_num(allotment.va_sale)
-            else:
-                return safe_num(get_enquiry_special_sell(trip)) or safe_num(get_allotment_sale_rate(trip))
+            # Primary: Enquirynotevehicle (env_special_sale → env_sale)
+            val = safe_num(get_enquiry_special_sell(trip))
+            if val <= 0:
+                val = safe_num(get_allotment_sale_rate(trip))
+            return val
 
 
 def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=None):

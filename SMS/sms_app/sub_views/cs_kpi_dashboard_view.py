@@ -669,14 +669,10 @@ def get_cs_kpi_dashboard_data(request):
             if is_settled:
                 if is_special_sell_check:
                     transport_val = safe_num(trip.tc_special_sell)
-                    if transport_val <= 0 and allotment and safe_num(allotment.va_special_sale) > 0:
-                        transport_val = safe_num(allotment.va_special_sale)
                     if transport_val <= 0:
                         transport_val = safe_num(get_enquiry_special_sell(trip))
                 elif is_tripcost_check:
                     transport_val = safe_num(trip.tc_tripcost)
-                    if transport_val <= 0 and allotment and safe_num(allotment.va_sale) > 0:
-                        transport_val = safe_num(allotment.va_sale)
                     if transport_val <= 0:
                         transport_val = safe_num(get_enquiry_standard_sell(trip))
                 else:
@@ -684,19 +680,13 @@ def get_cs_kpi_dashboard_data(request):
             else:
                 if is_special_sell_check:
                     transport_val = safe_num(trip.tc_special_sell)
-                    if transport_val <= 0 and allotment and safe_num(allotment.va_special_sale) > 0:
-                        transport_val = safe_num(allotment.va_special_sale)
                     if transport_val <= 0:
                         transport_val = safe_num(get_enquiry_special_sell(trip))
                 elif is_tripcost_check and safe_num(trip.tc_tripcost) > 0:
                     transport_val = safe_num(trip.tc_tripcost)
                 else:
-                    if allotment and allotment.va_special_sale is not None and safe_num(allotment.va_special_sale) > 0:
-                        transport_val = safe_num(allotment.va_special_sale)
-                    elif allotment and allotment.va_sale is not None and safe_num(allotment.va_sale) > 0:
-                        transport_val = safe_num(allotment.va_sale)
-                    else:
-                        transport_val = safe_num(get_enquiry_special_sell(trip)) or safe_num(get_allotment_sale_rate(trip))
+                    # Primary: Enquirynotevehicle (va_sale/va_special_sale are now NULL for new allotments)
+                    transport_val = safe_num(get_enquiry_special_sell(trip)) or safe_num(get_allotment_sale_rate(trip))
 
             row_total = (
                 safe_num(transport_val) +
@@ -714,14 +704,26 @@ def get_cs_kpi_dashboard_data(request):
                 row_total = safe_num(trip.tc_tripcost)
             total_unbilled += row_total
 
-        # Include C-Notes without any trips (rate from allotment)
+        # Include C-Notes without any trips (rate from Enquirynotevehicle)
         trips_cnote_ids = set(trips_qs.values_list('tr_consignmentnumber_id', flat=True))
         cnotes_without_trip = cnotes_qs.exclude(id__in=trips_cnote_ids)
         for cn in cnotes_without_trip:
             al_list = allotment_map.get(cn.co_enquirynumber_id, [])
             if al_list:
                 al = al_list[0]
-                rate = safe_num(al.va_special_sale) or safe_num(al.va_sale)
+                # Fetch from Enquirynotevehicle first; va_sale/va_special_sale are NULL for new allotments
+                from ..models import Enquirynotevehicle
+                vt_id = getattr(al, 'va_vehicletype_placed_id', None) or getattr(al, 'va_vehicletype_id', None)
+                rate = 0.0
+                if vt_id:
+                    env = Enquirynotevehicle.objects.filter(
+                        env_enquirynumber_id=cn.co_enquirynumber_id,
+                        env_vehicletype_id=vt_id
+                    ).first()
+                    if env:
+                        rate = float(env.env_special_sale or env.env_sale or 0)
+                if rate <= 0:
+                    rate = safe_num(al.va_special_sale) or safe_num(al.va_sale)
                 total_unbilled += rate
 
         total_revenue = total_billed + total_unbilled

@@ -325,6 +325,7 @@ urlpatterns = [
     path('rtratemaster_history/<int:rtratemaster_id>/', views.rtratemaster_history, name='rtratemaster_history'),
     path('rtratemaster_history/<int:rtratemaster_id>', views.rtratemaster_history),
     path('rtratemaster_delete/<int:rtratemaster_id>/', views.rtratemaster_delete, name='rtratemaster_delete'),
+    path('rtratemaster_update_enquiry_rates/', views.rtratemaster_update_enquiry_rates, name='rtratemaster_update_enquiry_rates'),
     # Delete rtratemaster
     path('gstexcepmtion_list/', views.gstexcepmtion_list, name='gstexcepmtion_list'),  # List gstexcepmtion,
     path('gstexcepmtion_insert', views.gstexcepmtion_add, name='gstexcepmtion_insert'),  # Add gstexcepmtion
@@ -978,6 +979,8 @@ urlpatterns = [
     path('backfill-one/', views.backfill_one_record, name='backfill_one_record'),
     path('backfill-all/', views.backfill_all_records, name='backfill_all_records'),
     path('backfill_weight/', views.backfill_goods_weight, name='backfill_goods_weight'),
+    path('backfill_enquiry_sell_rates/', views.backfill_enquiry_sell_rates, name='backfill_enquiry_sell_rates'),
+
     path('get_fastag_toll_cost_ajax/', views.get_fastag_toll_cost_ajax, name='get_fastag_toll_cost_ajax'),
     path('vendor_filter/', views.vendor_filter, name='vendor_filter'),
     path('consignmentgoods/<int:pk>/upload/<str:att_type>/', views.consignmentgoods_upload_attachment,

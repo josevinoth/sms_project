@@ -30,17 +30,41 @@ VEHICLE_NUMBER_REGEX = re.compile(r'^[A-Za-z]{2}[0-9]{2}[A-Za-z]{0,2}[0-9]{4}$')
 
 def sync_allotment_rate_to_trips(allotment_obj):
     """
-    Syncs the effective sell rate from Vehicle_allotmentInfo to related TripdetailInfo records.
-    Special Sell takes priority if > 0, otherwise falls back to Standard Sell.
+    Syncs the effective sell rate to related TripdetailInfo records.
+    Primary source: Enquirynotevehicle (env_special_sale / env_sale) matched by enquiry + vehicle type.
+    Historical fallback: va_special_sale / va_sale from Vehicle_allotmentInfo.
     """
     if not allotment_obj or not allotment_obj.va_enquirynumber_id:
         return
 
+    from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
+
     effective_rate = 0.0
-    if allotment_obj.va_special_sale is not None and float(allotment_obj.va_special_sale) > 0:
-        effective_rate = float(allotment_obj.va_special_sale)
-    elif allotment_obj.va_sale is not None and float(allotment_obj.va_sale) > 0:
-        effective_rate = float(allotment_obj.va_sale)
+
+    # 1. Primary: Enquirynotevehicle matched by enquiry + vehicle type placed/requested
+    vt_placed_id = allotment_obj.va_vehicletype_placed_id or allotment_obj.va_vehicletype_id
+    vt_req_id = allotment_obj.va_vehicletype_id
+    enquiry_id = allotment_obj.va_enquirynumber_id
+
+    for vt_id in filter(None, [vt_placed_id, vt_req_id]):
+        env_obj = Enquirynotevehicle.objects.filter(
+            env_enquirynumber_id=enquiry_id,
+            env_vehicletype_id=vt_id
+        ).first()
+        if env_obj:
+            if env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
+                effective_rate = float(env_obj.env_special_sale)
+                break
+            if env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+                effective_rate = float(env_obj.env_sale)
+                break
+
+    # 2. Historical fallback: va_special_sale / va_sale
+    if effective_rate <= 0:
+        if allotment_obj.va_special_sale is not None and float(allotment_obj.va_special_sale) > 0:
+            effective_rate = float(allotment_obj.va_special_sale)
+        elif allotment_obj.va_sale is not None and float(allotment_obj.va_sale) > 0:
+            effective_rate = float(allotment_obj.va_sale)
 
     if effective_rate <= 0:
         return
@@ -51,7 +75,7 @@ def sync_allotment_rate_to_trips(allotment_obj):
     elif allotment_obj.va_vehiclenumber_mkt:
         veh_no = allotment_obj.va_vehiclenumber_mkt.strip()
 
-    trips = TripdetailInfo.objects.filter(tr_enquirynumber_id=allotment_obj.va_enquirynumber_id)
+    trips = TripdetailInfo.objects.filter(tr_enquirynumber_id=enquiry_id)
     if veh_no:
         clean_veh = veh_no.replace(' ', '').replace('-', '').upper()
         for t in trips:
@@ -309,7 +333,19 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
         enquiry = va.va_enquirynumber  # ⬅ Fetch enquiry
 
         form = VehicleallotmentForm(instance=va)
-
+        
+        # Override legacy DB values to always display live rate from Enquiry Note
+        env = Enquirynotevehicle.objects.filter(
+            env_enquirynumber_id=enquiry_id,
+            env_vehicletype_id=va.va_vehicletype_placed_id or va.va_vehicletype_id
+        ).first()
+        if env:
+            form.initial['va_sale'] = env.env_sale
+            form.initial['va_special_sale'] = env.env_special_sale
+            # Override on the instance as well so the template directly rendering {{ va.va_sale }} gets the live rate
+            va.va_sale = env.env_sale
+            va.va_special_sale = env.env_special_sale
+            
         return render(request, "asset_mgt_app/vehicle_allotment_add.html", {
             'first_name': first_name,
             'user_id': user_id,
@@ -517,38 +553,25 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 obj.va_standardbuy = None
                 obj.va_specialbuy = None
 
-            # Auto-fill va_sale from RtratemasterInfo if left blank or 0
-            if not obj.va_sale or float(obj.va_sale) == 0:
-                enquiry_obj = obj.va_enquirynumber
-                vt_id = obj.va_vehicletype_placed_id or obj.va_vehicletype_id
-                if enquiry_obj and vt_id:
-                    rm = RtratemasterInfo.objects.filter(
-                        ro_customer=enquiry_obj.en_customername,
-                        ro_customerdepartment=enquiry_obj.en_customerdepartment,
-                        ro_fromlocation=enquiry_obj.en_fromlocaion,
-                        ro_tolocation=enquiry_obj.en_tolocation,
-                        ro_vehicletype_id=vt_id
-                    ).first()
-                    if not rm:
-                        rm = RtratemasterInfo.objects.filter(
-                            ro_customer=enquiry_obj.en_customername,
-                            ro_fromlocation=enquiry_obj.en_fromlocaion,
-                            ro_tolocation=enquiry_obj.en_tolocation,
-                            ro_vehicletype_id=vt_id
-                        ).first()
-                    if rm and rm.ro_rate:
-                        obj.va_sale = float(rm.ro_rate)
+            # 🔥 Phase 3: Force redundant sell rate fields to None so they stop saving to Vehicle Allotment
+            obj.va_sale = None
+            obj.va_special_sale = None
 
-            # Auto-fill va_special_sale from va_sale if left blank or 0
-            if not obj.va_special_sale or float(obj.va_special_sale) == 0:
-                if obj.va_sale and float(obj.va_sale) > 0:
-                    obj.va_special_sale = float(obj.va_sale)
-
-            # Check for rate approval
-            if float(obj.va_special_sale or 0) < float(obj.va_sale or 0):
-                rate_approval_status = Replacementstatus.objects.filter(id=6).first()
-                if rate_approval_status:
-                    obj.va_status = rate_approval_status
+            # Rate Approval check now uses the parent Enquirynotevehicle rates
+            enquiry_obj = obj.va_enquirynumber
+            vt_id = obj.va_vehicletype_placed_id or obj.va_vehicletype_id
+            if enquiry_obj and vt_id:
+                enq_veh = Enquirynotevehicle.objects.filter(
+                    env_enquirynumber=enquiry_obj,
+                    env_vehicletype_id=vt_id
+                ).first()
+                if enq_veh:
+                    env_sale = float(enq_veh.env_sale or 0)
+                    env_spec = float(enq_veh.env_special_sale or 0)
+                    if 0 < env_spec < env_sale:
+                        rate_approval_status = Replacementstatus.objects.filter(id=6).first()
+                        if rate_approval_status:
+                            obj.va_status = rate_approval_status
             
             # ✅ SAVE
             obj.save()
@@ -585,7 +608,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             else:
                 messages.success(request, "Vehicle Allotment Saved Successfully")
 
-            return redirect('vehicle_allotment_update', vehicle_allotment_id=obj.id)
+            return redirect('vehicle_allotment_insert', enquiry_id=enquiry_id)
+
 
         # ------------------
         # UPDATE MODE
@@ -679,16 +703,25 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                 obj.va_standardbuy = None
                 obj.va_specialbuy = None
 
-            # Auto-fill va_special_sale from va_sale if left blank or 0
-            if not obj.va_special_sale or float(obj.va_special_sale) == 0:
-                if obj.va_sale and float(obj.va_sale) > 0:
-                    obj.va_special_sale = float(obj.va_sale)
+            # 🔥 Phase 3: Force redundant sell rate fields to None so they stop saving to Vehicle Allotment
+            obj.va_sale = None
+            obj.va_special_sale = None
 
-            # Check for rate approval
-            if float(obj.va_special_sale or 0) < float(obj.va_sale or 0):
-                rate_approval_status = Replacementstatus.objects.filter(id=6).first()
-                if rate_approval_status:
-                    obj.va_status = rate_approval_status
+            # Rate Approval check now uses the parent Enquirynotevehicle rates
+            enquiry_obj = obj.va_enquirynumber
+            vt_id = obj.va_vehicletype_placed_id or obj.va_vehicletype_id
+            if enquiry_obj and vt_id:
+                enq_veh = Enquirynotevehicle.objects.filter(
+                    env_enquirynumber=enquiry_obj,
+                    env_vehicletype_id=vt_id
+                ).first()
+                if enq_veh:
+                    env_sale = float(enq_veh.env_sale or 0)
+                    env_spec = float(enq_veh.env_special_sale or 0)
+                    if 0 < env_spec < env_sale:
+                        rate_approval_status = Replacementstatus.objects.filter(id=6).first()
+                        if rate_approval_status:
+                            obj.va_status = rate_approval_status
 
             obj.save()
             sync_allotment_rate_to_trips(obj)

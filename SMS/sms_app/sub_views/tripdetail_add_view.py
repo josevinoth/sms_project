@@ -387,13 +387,8 @@ def tripdetail_add(request, tripdetail_id=0):
 
                 # ✅ Status is Awaiting Trip Approval (8) if dock-out time is recorded or consignment goods exist
                 has_dock_out = bool(trip_instance.tr_dock_out_time)
-                if not has_consignment_goods and not has_dock_out and status_selected in [8, 2]:
+                if not has_consignment_goods and not has_dock_out and status_selected == 8:
                     status_selected = 12
-
-                # Auto-progress logic for Open/Started trips
-                if status_selected == 1:
-                    if trip_instance.tr_reporteddate_pickup:
-                        status_selected = 2  # Trip Closed
 
                 print('status_selected (auto)', status_selected)
             except ObjectDoesNotExist:
@@ -700,16 +695,8 @@ def tripdetail_add(request, tripdetail_id=0):
                         recipients = get_auto_recipients(trip)
 
                         if not recipients:
-                            if label == "Trip Started":
-                                messages.error(request, "This customer don't have mail please add mail to start the trip.")
-                                # Revert to Awaiting Trip Approval so unloading details stay frozen
-                                # Keep BOTH status fields in sync to avoid vehicle showing as busy
-                                trip.tc_financestatus_id = 8
-                                trip.tr_operational_status_id = 8
-                                trip.save(update_fields=['tc_financestatus', 'tr_operational_status'])
-                            else:
-                                display_label = "starting trip" if label == "Loading Reported" else label
-                                messages.error(request, f"This customer don't have mail please add mail for {display_label}.")
+                            display_label = "starting trip" if label == "Loading Reported" else label
+                            messages.warning(request, f"Customer email not configured: skipped sending '{label}' alert.")
                             return
 
                         response = alert_func(request)
@@ -972,14 +959,8 @@ def tripdetail_add(request, tripdetail_id=0):
                         recipients = get_auto_recipients(trip)
 
                         if not recipients:
-                            if label == "Trip Started":
-                                messages.error(request, "This customer don't have mail please add mail to start the trip.")
-                                # Revert to Trip Open so unloading details stay frozen
-                                trip.tc_financestatus_id = 8
-                                trip.save(update_fields=['tc_financestatus'])
-                            else:
-                                display_label = "starting trip" if label == "Loading Reported" else label
-                                messages.error(request, f"This customer don't have mail please add mail for {display_label}.")
+                            display_label = "starting trip" if label == "Loading Reported" else label
+                            messages.warning(request, f"Customer email not configured: skipped sending '{label}' alert.")
                             return
 
                         response = alert_func(request)

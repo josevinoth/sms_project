@@ -200,9 +200,8 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
                                 new_rate = float(rm.ro_rate)
                         
                         if new_rate > 0:
-                            allotment.va_sale = new_rate
-                            allotment.va_special_sale = new_rate
-                            allotment.save(update_fields=['va_sale', 'va_special_sale'])
+                            # Phase 3: Do NOT write to va_sale/va_special_sale (now NULL for new allotments).
+                            # sync_allotment_rate_to_trips reads from Enquirynotevehicle directly.
                             sync_allotment_rate_to_trips(allotment)
 
                 print("Enquiry Main Form Saved")

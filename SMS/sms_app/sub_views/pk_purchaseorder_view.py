@@ -450,11 +450,15 @@ def pk_create_batch_job(request):
                 body += "</table>"
                 body += "<p>Please restock or advise alternative materials.</p>"
                 
-                # Send email to Stock Department recipient list if configured
+                # Send email - use recipient from request if provided, else fall back to settings
                 from django.conf import settings
+                extra_recipient = data.get('stock_alert_email', '').strip()
                 stock_recipients = getattr(settings, 'STOCK_TEAM_EMAILS', [])
+                if extra_recipient:
+                    if extra_recipient not in stock_recipients:
+                        stock_recipients = list(stock_recipients) + [extra_recipient]
                 if stock_recipients:
-                    send_department_email('STOCK', subject, body, stock_recipients, email_type=1)
+                    send_department_email('itadmin', subject, body, stock_recipients, email_type=1)
             except Exception as mail_err:
                 print(f"Stock Team notification email error: {mail_err}")
 

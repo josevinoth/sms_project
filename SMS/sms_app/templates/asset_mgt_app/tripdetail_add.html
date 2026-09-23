@@ -647,23 +647,11 @@ document.addEventListener("DOMContentLoaded", function () {
 		}
 
 		// ----------------------
-		// 1.5️⃣ Hide specific statuses based on approval
+		// 1.5️⃣ Keep status options visible and enabled
 		// ----------------------
 		$('#tc_financestatus option').each(function() {
-			var optText = $(this).text().trim().toLowerCase();
-			if (optText === 'trip started' || optText === 'trip closed') {
-				// Hide if Category is 1 and trip is not approved
-				if (categoryValue === "1" && !tripApprovalApproved) {
-					$(this).hide();
-					$(this).prop('disabled', true);
-					if (tripStatus.value === $(this).val()) {
-						tripStatus.value = "8";
-					}
-				} else {
-					$(this).show();
-					$(this).prop('disabled', false);
-				}
-			}
+			$(this).show();
+			$(this).prop('disabled', false);
 		});
 		// ----------------------
 		// ----------------------
@@ -744,8 +732,8 @@ document.addEventListener("DOMContentLoaded", function () {
 			if (!g_locationLocked) {
 				$("#tr_departedlocation").prop("disabled", false).removeClass('disable_a_href');
 			}
-			$("#tr_departeddate").prop("disabled", false).removeClass('disable_a_href');
-			$("#tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
+			// Vehicle Started is always enabled for empty trips (no dock sequence needed)
+			$("#tr_departeddate, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
 
 			// Unloading section fields
 			$("#tr_reportedlocation").prop("disabled", false).removeClass('disable_a_href');
@@ -757,28 +745,21 @@ document.addEventListener("DOMContentLoaded", function () {
 				this.style.removeProperty('display');
 			});
 
-			let tripStatusVal = document.getElementById('tc_financestatus').value;
-			let isAwaitingVal = (tripStatusVal === "8" || tripStatusVal === "");
-
-			// ✅ RE-LOCK stage-2 loading fields when switching BACK to Business
-			// These were unlocked while category was Empty / Business Empty
-			if (isAwaitingVal) {
-				$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time")
-					.prop("disabled", true).addClass('disable_a_href')
-					.removeAttr("required");
-				if (tripStatusVal === "1" || tripStatusVal === "2" || tripStatusVal === "8") {
-					$("#tr_departeddate, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
-				} else {
-					$("#tr_departeddate, #tr_reportedkm_pickup").prop("disabled", true).addClass('disable_a_href');
-				}
-				// Also re-lock unloading fields that were unlocked for Empty trips
-				$("#tr_reportedlocation, #tr_reporteddate, #tr_reportedkm, #tr_departeddate_delivery, #tr_unloading_time, #tr_reporteddate_pickup, #tr_reportedkm_delivery")
-					.prop("disabled", true).addClass('disable_a_href')
-					.removeAttr("required");
-				// Ensure stage-1 loading fields stay open
-				$("#tr_departedlocation, #tr_departeddate_pickup, #tr_departedkm")
-					.prop("disabled", false).removeClass('disable_a_href');
-			}
+			// ✅ RE-LOCK all loading fields when switching BACK to Business
+			// Vehicle Started gate is handled by syncVehicleStartedFields
+			$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time")
+				.prop("disabled", true).addClass('disable_a_href')
+				.removeAttr("required");
+			// Also re-lock unloading fields that were unlocked for Empty trips
+			$("#tr_reportedlocation, #tr_reporteddate, #tr_reportedkm, #tr_departeddate_delivery, #tr_unloading_time, #tr_reporteddate_pickup, #tr_reportedkm_delivery")
+				.prop("disabled", true).addClass('disable_a_href')
+				.removeAttr("required");
+			// Ensure stage-1 loading fields stay open
+			$("#tr_departedlocation, #tr_departeddate_pickup, #tr_departedkm")
+				.prop("disabled", false).removeClass('disable_a_href');
+			
+			// Re-apply strict Vehicle Started gate based on current status
+			syncVehicleStartedFields();
 
 			emptyDateFields.forEach(id => {
 				let el = document.getElementById(id);
@@ -926,22 +907,50 @@ document.addEventListener("DOMContentLoaded", function () {
 	var g_unloadingDockOutSaved = {% if trip_instance.tr_unloading_time %}true{% else %}false{% endif %};
 
 
-	// ---- Helper Functions to be accessible globally ----
-	function enableLoadingFields() {
-		$("#tr_loading_time, #tr_dock_in_time, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
+	// ---- Stage helper: unlock Loading dock fields (Dock-In, Dock-Out) ----
+	function enableLoadingDockFields() {
+		// Stage 2: Dock-In always unlocks once Vehicle Reported Date is saved
+		$("#tr_loading_time, #tr_dock_in_time").prop("disabled", false).removeClass('disable_a_href');
 		if (g_dockInSaved) {
+			// Stage 3: Dock-Out unlocks only after Dock-In is saved
 			$("#tr_dock_out_time").prop("disabled", false).removeClass('disable_a_href');
 		} else {
 			$("#tr_dock_out_time").prop("disabled", true).addClass('disable_a_href');
 		}
-		// Make date fields mandatory
-		if($("#tr_category").val() !== "2" && $("#tr_category").val() !== "3") {
+		if ($("#tr_category").val() !== "2" && $("#tr_category").val() !== "3") {
 			$("#tr_loading_time, #tr_dock_in_time").prop("required", true);
 			if (g_dockInSaved) {
 				$("#tr_dock_out_time").prop("required", true);
 			}
 		}
-		$("#tr_departeddate").prop("required", true);
+	}
+
+	// ---- Stage helper: unlock Vehicle Started Date & Time + KM ----
+	// ONLY allowed when Trip Status = "Trip Started" (1) ----
+	function syncVehicleStartedFields() {
+		var status = parseInt($("#tc_financestatus").val(), 10);
+		var cat = $("#tr_category").val();
+
+		// For category 1 (Business): only unlock on Trip Started status
+		if (cat !== "2" && cat !== "3") {
+			if (status === 1) {
+				$("#tr_departeddate, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
+				$("#tr_departeddate").prop("required", true);
+			} else {
+				// Awaiting Approval, WIP, Closed, Cancelled, etc. → always locked
+				$("#tr_departeddate, #tr_reportedkm_pickup").prop("disabled", true).addClass('disable_a_href');
+				$("#tr_departeddate").removeAttr("required");
+			}
+		} else {
+			// Empty trips (cat 2/3): always enabled (no dock sequence needed)
+			$("#tr_departeddate, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
+		}
+	}
+
+	// ---- Legacy call used by status-change handler ----
+	function enableLoadingFields() {
+		enableLoadingDockFields();
+		syncVehicleStartedFields();
 	}
 	function enableUnloadingStage1() {
 		$("#tr_reportedlocation, #tr_reporteddate, #tr_reportedkm").prop("disabled", false).removeClass('disable_a_href');
@@ -1000,23 +1009,18 @@ document.addEventListener("DOMContentLoaded", function () {
 		});
 
 		function lockLoadingFieldsInitially() {
+			// Stage 0 → Stage 1: From Location, Vehicle Reported Date/KM always enabled (entry point)
 			$("#tr_departedlocation, #tr_departeddate_pickup, #tr_departedkm").prop("disabled", false).removeClass('disable_a_href');
+
+			// Everything downstream starts locked
+			$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time, #tr_departeddate, #tr_reportedkm_pickup").prop("disabled", true).addClass('disable_a_href');
+			$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time, #tr_departeddate").removeAttr("required");
+
 			if ($("#tr_category").val() !== "2" && $("#tr_category").val() !== "3") {
 				$("#tr_departeddate_pickup").prop("required", true);
-				$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time, #tr_reportedkm_pickup").prop("disabled", true).addClass('disable_a_href');
-				let currentStatus = $("#tc_financestatus").val();
-				if (currentStatus === "1" || currentStatus === 1 || currentStatus === "2" || currentStatus === 2 || currentStatus === "8" || currentStatus === 8) {
-					$("#tr_departeddate, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
-				} else {
-					$("#tr_departeddate").prop("disabled", true).addClass('disable_a_href');
-				}
 			} else {
 				$("#tr_departeddate_pickup").removeAttr("required");
-				$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time").prop("disabled", true).addClass('disable_a_href');
-				$("#tr_departeddate, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
 			}
-
-			$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time, #tr_departeddate").removeAttr("required");
 		}
 
 		function lockUnloadingFields() {
@@ -1049,11 +1053,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
 			if (!tripId) return;
 
-			// ✅ Backend now handles automatic Email Alerts for 1, 2, 3, 4.
-			// No need to show modal automatically on status change.
-
+			// Always re-sync Vehicle Started fields when status changes
+			// (Dock fields remain as-is based on saved state)
 			if (status == "1") {
 				enableLoadingFields();
+			} else {
+				// Just re-apply the vehicle started gate — don't re-lock dock fields
+				syncVehicleStartedFields();
 			}
 			validateStatusRestriction();
 		});
@@ -1099,16 +1105,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
 		// ---- 6. Initialization Logic ----
 		function initializeWorkflow() {
-			let status = $("#tc_financestatus").val();
+			var status = parseInt($("#tc_financestatus").val(), 10);
 			var cat = $("#tr_category").val();
 
+			// Step 1: Lock everything to baseline
 			lockLoadingFieldsInitially();
 			lockUnloadingFields();
 
-			if ((status !== "8" && status !== "") || g_pickupDateSaved) {
-				enableLoadingFields();
+			// Step 2: If Vehicle Reported Date is saved, unlock dock fields (Stage 2/3)
+			if (g_pickupDateSaved) {
+				enableLoadingDockFields();
 			}
-			// Enable unloading ONLY when Vehicle Started Date & Time is saved (or for Empty trips cat 2/3)
+
+			// Step 3: Vehicle Started Date & KM – gate strictly on Trip Started (1)
+			syncVehicleStartedFields();
+
+			// Step 4: Enable unloading section only when Vehicle Started Date is saved
 			if (cat === "2" || cat === "3" || g_hasLoadingStartedSaved) {
 				enableUnloadingStage1();
 			}
@@ -1128,6 +1140,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 		trip_type();
 		trip_status_update();
+		// ✅ Final gate: always re-apply Vehicle Started lock based on status
+		// This overrides anything that trip_type() or trip_status_update() may have enabled
+		syncVehicleStartedFields();
 	});
 
 	function trip_status_update() {
