@@ -37,13 +37,46 @@
                             {% render_field tripclosure_form.tr_category id="tr_category" class="form-control form-control-modern form-control-sm disable_a_href" %}
                         </div>
                         <div class="form-group-modern mb-2">
-                            <label class="form-label-modern small mb-1">Customer Ref No <span class="text-danger font-weight-bold">*</span></label>
-                            <input type="text" name="tr_customerref" id="live_customer_ref" class="form-control form-control-modern form-control-sm" value="{{ live_customer_ref }}" placeholder="Enter Customer Ref No" required>
+                            <label class="form-label-modern small mb-1">Customer Ref No</label>
+                            <input type="text" name="tr_customerref" id="live_customer_ref" class="form-control form-control-modern form-control-sm" value="{{ live_customer_ref }}" placeholder="Enter Customer Ref No">
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Type Requested</label>
                             {% render_field tripclosure_form.tr_vehicletype id="tr_vehicletype" class="form-control form-control-modern form-control-sm disable_a_href" %}
                         </div>
+
+                        <!-- CNotes Reference Status (read-only) -->
+                        <div class="mt-2 mb-1" style="border-top:1px dashed #ccc; padding-top:8px;">
+                            <small class="text-muted font-weight-bold">CNotes Reference Info</small>
+                        </div>
+
+                        <!-- Consigner Invoice status -->
+                        <div class="d-flex align-items-center justify-content-between mb-2 px-1">
+                            <label for="check_consigner_invoice" class="form-label-modern small mb-0 w-75" style="line-height:1; font-size:0.8rem; cursor:pointer; text-transform:uppercase;">Consigner Invoice</label>
+                            <div class="d-flex align-items-center justify-content-end w-25">
+                                <input type="checkbox" id="check_consigner_invoice" name="use_consigner_invoice" style="cursor:pointer; width:15px; height:15px;">
+                            </div>
+                        </div>
+
+                        <!-- HAWB status -->
+                        <div class="d-flex align-items-center justify-content-between mb-2 px-1">
+                            <label for="check_hawb" class="form-label-modern small mb-0 w-75" style="line-height:1; font-size:0.8rem; cursor:pointer; text-transform:uppercase;">HAWB</label>
+                            <div class="d-flex align-items-center justify-content-end w-25">
+                                <input type="checkbox" id="check_hawb" name="use_hawb" style="cursor:pointer; width:15px; height:15px;">
+                            </div>
+                        </div>
+
+                        <!-- MAWB status -->
+                        <div class="d-flex align-items-center justify-content-between mb-2 px-1">
+                            <label for="check_mawb" class="form-label-modern small mb-0 w-75" style="line-height:1; font-size:0.8rem; cursor:pointer; text-transform:uppercase;">MAWB</label>
+                            <div class="d-flex align-items-center justify-content-end w-25">
+                                <input type="checkbox" id="check_mawb" name="use_mawb" style="cursor:pointer; width:15px; height:15px;">
+                            </div>
+                        </div>
+                        <!-- Hidden flags for JS validation -->
+                        <input type="hidden" id="has_consigner_invoice" value="{{ cnote_consigner_invoice|yesno:'1,0' }}">
+                        <input type="hidden" id="has_hawb" value="{{ cnote_hawb|yesno:'1,0' }}">
+                        <input type="hidden" id="has_mawb" value="{{ cnote_mawb|yesno:'1,0' }}">
                     </div>
                 </div>
                 <!-- Column 2: Vehicle & Route Info -->
@@ -476,7 +509,7 @@
             {% if messages %}
             <div class="message-container my-3 text-center">
                 {% for message in messages %}
-                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-2 px-4 d-inline-block shadow-sm rounded-lg">
+                <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} py-2 px-4 d-inline-block shadow-sm rounded-lg" style="font-size:1.15rem; font-weight:600;">
                     <i class="fas fa-info-circle mr-1"></i> {{ message }}
                 </div>
                 {% endfor %}
@@ -601,11 +634,46 @@
 
         // Validate Special Sell only if lower than actual rate
         $("form").on("submit", function (e) {
-            // Validate Customer Ref No is mandatory
-            var customerRefVal = ($("#live_customer_ref").val() || "").trim();
-            if (!customerRefVal) {
+                        // --- At-least-one reference field validation ---
+            var wantConsigner = $('#check_consigner_invoice').is(':checked');
+            var wantHawb = $('#check_hawb').is(':checked');
+            var wantMawb = $('#check_mawb').is(':checked');
+            
+            var hasConsigner = $('#has_consigner_invoice').val() === '1';
+            var hasHawbDB = $('#has_hawb').val() === '1';
+            var hasMawbDB = $('#has_mawb').val() === '1';
+
+            if (wantConsigner && !hasConsigner) {
                 e.preventDefault();
-                alert("Customer Ref No is mandatory. Form submission is only allowed when Customer Ref No has a value.");
+                alert("Consigner Invoice doesn't have a value in CNote.");
+                return false;
+            }
+            if (wantHawb && !hasHawbDB) {
+                e.preventDefault();
+                alert("HAWB doesn't have a value in CNote.");
+                return false;
+            }
+            if (wantMawb && !hasMawbDB) {
+                e.preventDefault();
+                alert("MAWB doesn't have a value in CNote.");
+                return false;
+            }
+
+            var customerRef = ($('#live_customer_ref').val() || "").trim();
+            if (!customerRef && !wantConsigner && !wantHawb && !wantMawb) {
+                e.preventDefault();
+                alert("At least one reference is required: Customer Ref No, or tick Consigner Invoice / HAWB / MAWB (if they have values).");
+                $('#live_customer_ref').focus();
+                return false;
+            }
+
+            // Validate that either Trip Charges or Special Sell is checked
+            var isTripChargesChecked = $("#tc_tripcost_check").is(":checked");
+            var isSpecialSellChecked = $("#special_sell_check").is(":checked");
+            if (!isTripChargesChecked && !isSpecialSellChecked) {
+                e.preventDefault();
+                alert("Either Trip Charges or Special Sell must be checked before submitting the form.");
+                $("#tc_tripcost_check").focus();
                 return false;
             }
 
@@ -661,3 +729,13 @@ function deleteTcAtt(attId) {
 }
 </script>
 {% endblock content %}
+
+
+
+
+
+
+
+
+
+

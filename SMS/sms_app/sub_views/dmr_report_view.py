@@ -174,14 +174,14 @@ DMR_TEMPLATES = {
         "S.NO", "DATE", "BVM JOB NO", "BVM LR NO", "USER NAME", "SHIPPER NAME", "HBL NO/REFERENCE NO",
         "TRANSPORT BILL TO", "VEHICLE NO", "VEHICLE TYPE", "DRIVER NAME", "DRIVER NAMBER", "FROM",
         "TO", "DIVISION", "SUM OF PIECES", "WEIGHT", "HALTING CHARGES", "LOADING CHARGES",
-        "UNLOADING CHARGES", "WEIGHMENT CHARGES", "AAI S.NO.", "AAI CHARGES", "TRIP COST",
+        "UNLOADING CHARGES", "WEIGHMENT CHARGES", "AAI S.NO.", "PARKING CHARGES", "TRIP COST",
         "TOTAL COST", "E-WAY BILL", "BVM INVOICE", "SEAL NO", "REMARK", "POD", "C NOTE"
     ],
     "DSV": [
         "S.NO", "DATE", "BVM JOB NO", "BVM LR NO", "USER NAME", "SHIPPER NAME", "HBL NO/REFERENCE NO",
         "TRANSPORT BILL TO", "VEHICLE NO", "VEHICLE TYPE", "DRIVER NAME", "DRIVER NAMBER", "FROM",
         "TO", "DIVISION", "SUM OF PIECES", "WEIGHT", "HALTING CHARGES", "LOADING CHARGES",
-        "UNLOADING CHARGES", "WEIGHMENT CHARGES", "AAI S.NO.", "AAI CHARGES", "TRIP COST",
+        "UNLOADING CHARGES", "WEIGHMENT CHARGES", "AAI S.NO.", "PARKING CHARGES", "TRIP COST",
         "TOTAL COST", "E-WAY BILL", "BVM INVOICE", "SEAL NO", "REMARK", "POD", "C NOTE"
     ],
     "DSV DD REPORT": [
@@ -249,7 +249,7 @@ DMR_TEMPLATES = {
         "Air AIR IMPORT &Air AIR EXPORT  &  Ocean AIR EXPORT & DOM",
         "Shipper", "From", "To", "PCS", "Weight", "INVOICE NO", "PO #;",
         "MAWB", "HAWB", "Vehicle Number", "VEHILE  SIZE", "TRIPCOST",
-        "TOLL PASS", "AAI charges", "UnLoading charges", "Loading charges",
+        "TOLL PASS", "PARKING CHARGES", "UnLoading charges", "Loading charges",
         "Halting charge", "Handling charges", "Total charges", "BVM IN", "UPDATE STATUS"
     ],
     "FEDEX BLR": [
@@ -257,7 +257,7 @@ DMR_TEMPLATES = {
         "Air AIR IMPORT &Air AIR EXPORT  &  Ocean AIR EXPORT & DOM",
         "Shipper", "From", "To", "PCS", "Weight", "INVOICE NO",
         "Vehicle Number", "VEHILE  SIZE", "TRIPCOST", "TOLL PASS",
-        "AAI charges", "UnLoading charges", "Loading charges", "Halting charge",
+        "PARKING CHARGES", "UnLoading charges", "Loading charges", "Halting charge",
         "Handling charges", "Total charges", "BVM IN", "UPDATE STATUS"
     ],
     "GEODIS BLR": [
@@ -265,7 +265,7 @@ DMR_TEMPLATES = {
         "Air AIR IMPORT &Air AIR EXPORT  &  Ocean AIR EXPORT & DOM",
         "Shipper", "From", "To", "PCS", "Weight", "INVOICE NO", "HAWB",
         "Vehicle Number", "VEHILE  SIZE", "TRIPCOST", "TOLL PASS",
-        "AAI charges", "UnLoading charges", "Loading charges", "Halting charge",
+        "PARKING CHARGES", "UnLoading charges", "Loading charges", "Halting charge",
         "Handling charges", "Total charges", "BVM IN"
     ]
 }
@@ -454,7 +454,6 @@ ADDITIONAL_CUSTOMERS = [
 # Helper to normalize for matching
 def _safe_fmt(dt, fmt):
     if not dt: return ""
-    from django.utils import timezone
     from datetime import datetime
     try:
         if isinstance(dt, datetime):
@@ -866,7 +865,7 @@ def get_dmr_rows(trips, headers, template_key, customer_name):
                 if hh == "toll pass":
                     row.append(safe_num(trip.tc_tollcost));
                     continue
-                if hh == "aai charges":
+                if hh == "PARKING CHARGES":
                     row.append(safe_num(trip.tc_supervisorcost));
                     continue
                 if hh == "supervisor charges":
@@ -1512,4 +1511,5 @@ def trip_report_ajax(request):
         'data': data_rows,
         'headers': headers,
     })
+
 
