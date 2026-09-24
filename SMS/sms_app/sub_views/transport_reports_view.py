@@ -4196,8 +4196,17 @@ def own_vehicle_pl_report_view(request):
     vehicle_number = request.GET.get('vehicle_search')
     branch_id = request.GET.get('branch', '').strip()
     vehicletype_id = request.GET.get('vehicletype', '').strip()
+    from datetime import date
+    today = date.today()
+    first_day = today.replace(day=1)
+    
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
+    
+    # If no dates are provided, default to current month to prevent 504 Gateway Timeout
+    if not date_from and not date_to:
+        date_from = first_day.strftime('%Y-%m-%d')
+        date_to = today.strftime('%Y-%m-%d')
     is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
     data_rows = []
     summary_data = {}
