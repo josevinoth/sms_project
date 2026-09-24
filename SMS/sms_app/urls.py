@@ -1154,6 +1154,9 @@ urlpatterns = [
     path('stock_maintenance_delete/<int:pk>/', views.stock_maintenance_delete, name='stock_maintenance_delete'),
     path('stock_usage_breakdown/', views.stock_usage_breakdown, name='stock_usage_breakdown'),
     path('trans-invoice/excel/<path:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
+    path('trans-invoice/ann1-pdf/<path:invoice_no>/', views.trans_invoice_ann1_pdf, name='trans_invoice_ann1_pdf'),
+    path('trans-invoice/upload-pdf/', views.trans_invoice_upload_pdf, name='trans_invoice_upload_pdf'),
+    path('trans-invoice/combined-pdf/<path:invoice_no>/', views.trans_invoice_combined_pdf, name='trans_invoice_combined_pdf'),
     path('trans-invoice/tally-excel/<path:invoice_no>/', views.trans_invoice_tally_excel, name='trans_invoice_tally_excel'),
     path("maintenance/pdf/<int:id>/",views.maintenance_pdf,name="maintenance_pdf"),
     path('vehicle_log_report/', views.vehicle_log_report_view, name='vehicle_log_report'),
@@ -1259,9 +1262,11 @@ urlpatterns = [
     path('packing_delivery_delete/<int:delivery_id>/', views.delivery_challan_delete, name='packing_delivery_delete'),
     path('packing_delivery_pdf/<int:delivery_id>/', views.delivery_challan_pdf, name='packing_delivery_pdf'),
     path('deletion_log_list/', views.deletion_log_list, name='deletion_log_list'),
-
-    # PMS Manpower Consumption
     path('add_manpower_consumption/', views.add_manpower_consumption, name='add_manpower_consumption'),
     path('delete_manpower_consumption/', views.delete_manpower_consumption, name='delete_manpower_consumption'),
     path('get_manpower_consumption_logs/', views.get_manpower_consumption_logs, name='get_manpower_consumption_logs'),
+    path('fetch_invoice_submission_details/', views.fetch_invoice_submission_details, name='fetch_invoice_submission_details'),
+    path('ar_submit_selected_invoices/', views.ar_submit_selected_invoices, name='ar_submit_selected_invoices'),
+    path('ar_preview_combined_pdf/', views.ar_preview_combined_pdf, name='ar_preview_combined_pdf'),
+    path('ar_export_selected_excel/', views.ar_export_selected_excel, name='ar_export_selected_excel'),
 ]
