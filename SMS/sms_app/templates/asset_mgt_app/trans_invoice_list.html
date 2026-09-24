@@ -4,159 +4,288 @@
 
 {% block extra_css %}
 <style>
-    /* Fix header zoom/wrap issue */
+    /* Table header and cell styling for compact full-screen view without scrolling */
     #trans_invoice_list thead th {
+        vertical-align: middle !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.2px;
+        padding: 0.45rem 0.3rem !important;
+        line-height: 1.2 !important;
+        text-align: center;
+        white-space: nowrap !important;
+    }
+    #trans_invoice_list thead th:nth-child(1),
+    #trans_invoice_list thead th:nth-child(2),
+    #trans_invoice_list thead th:nth-child(3),
+    #trans_invoice_list thead th:nth-child(4) {
+        text-align: left;
+    }
+    #trans_invoice_list tbody td {
         white-space: nowrap !important;
         vertical-align: middle !important;
         font-size: 0.78rem !important;
-        padding: 0.55rem 0.7rem !important;
+        padding: 0.38rem 0.3rem !important;
     }
-    #trans_invoice_list tbody td {
-        vertical-align: middle !important;
+    #trans_invoice_list .action-icon {
+        font-size: 1.15rem !important;
+        display: inline-block;
+        vertical-align: middle;
+        line-height: 1;
+    }
+    .replace-pdf-btn {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #64748b !important;
+        padding: 0 2px !important;
         font-size: 0.82rem !important;
-        padding: 0.45rem 0.7rem !important;
+        cursor: pointer;
+        vertical-align: middle;
+        line-height: 1;
+        transition: color 0.15s ease;
     }
-    /* Match header width to body in scrollX mode */
-    .dataTables_scrollHeadInner,
-    .dataTables_scrollHeadInner table {
-        width: 100% !important;
+    .replace-pdf-btn:hover {
+        color: var(--accent-blue, #2563eb) !important;
+    }
+    .btn-modern-upload {
+        background: rgba(37, 99, 235, 0.08) !important;
+        border: 1px solid rgba(37, 99, 235, 0.25) !important;
+        color: #2563eb !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        border-radius: 4px !important;
+        padding: 2px 5px !important;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        box-shadow: none !important;
+        line-height: 1.2;
+        transition: all 0.2s ease;
+    }
+    .btn-modern-upload:hover {
+        background: #2563eb !important;
+        color: #ffffff !important;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid py-3 px-3">
 
     <!-- ══ Page Header ══ -->
-    <div class="modern-list-header d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+    <div class="modern-list-header d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0 text-white" style="font-size:1.35rem; font-weight:700; letter-spacing:0.5px;">
             <i class="fas fa-file-invoice-dollar mr-2"></i> Transport Invoice List
         </h3>
         <div class="d-flex" style="gap:10px;">
-            <a href="{% url 'trans_invoice_add' %}" class="btn btn-submit" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+            <a href="{% url 'trans_invoice_add' %}" class="btn btn-submit" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.45rem 1.1rem; font-size:0.88rem; text-decoration:none;">
                 <i class="fas fa-plus"></i> Add Invoice
             </a>
-            <a href="{% url 'home_page' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+            <a href="{% url 'home_page' %}" class="btn btn-cancel" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.45rem 1.1rem; font-size:0.88rem; text-decoration:none;">
                 <i class="fas fa-arrow-left"></i> Back
             </a>
         </div>
     </div>
 
     <!-- ══ Table Container ══ -->
-    <div class="table-container-modern p-4">
-        <table id="trans_invoice_list" class="table table-striped table-bordered modern-table w-100">
-            <thead>
-                <tr>
-                    <th>Invoice Date</th>
-                    <th>Invoice No</th>
-                    <th>Customer</th>
-                    <th>Customer Short Name</th>
-                    <th>GST IN</th>
-                    <th>State</th>
-                    <th>Total Charges</th>
-                    <th class="text-center">Invoice Documents</th>
-                    <th class="text-center">CNote PDF</th>
-                    <th class="text-center">Tally to Excel</th>
-                    <th class="text-center">Excel</th>
-                    <th class="text-center">Edit</th>
-                    <th class="text-center">Delete</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for invoice in trans_invoice_list %}
-                <tr>
-                    <td>{{ invoice.ti_inv_date|date:"d/m/Y" }}</td>
-                    <td>
-                        <span style="font-size:0.82rem; font-weight:600; color:var(--accent-blue);">
-                            {{ invoice.ti_inv_no }}
-                        </span>
-                    </td>
-                    <td>{{ invoice.ti_customer_short_name }}</td>
-                    <td>{{ invoice.ti_customer }}</td>
-                    <td>{{ invoice.ti_gst_in }}</td>
-                    <td>{{ invoice.ti_state }}</td>
-                    <td>
-                        <span class="badge badge-pill" style="background:#3a9e96; color:#fff; font-size:0.85rem; padding:5px 12px;">
-                            &#8377; {{ invoice.ti_total|floatformat:2 }}
-                        </span>
-                    </td>
+    <div class="table-container-modern p-3">
+        <div class="table-responsive">
+            <table id="trans_invoice_list" class="table table-striped table-bordered modern-table w-100 mb-0">
+                <thead>
+                    <tr>
+                        <th style="min-width:76px;">Invoice Date</th>
+                        <th style="min-width:105px;">Invoice No</th>
+                        <th style="min-width:85px;">Customer<br>Short Name</th>
+                        <th style="min-width:80px;">Total Charges</th>
+                        <th class="text-center" style="width:36px;">Ann-1</th>
+                        <th class="text-center" style="width:36px;">Ann-2</th>
+                        <th class="text-center" style="width:36px;">Ann-3</th>
+                        <th class="text-center" style="width:36px;">Excel</th>
+                        <th class="text-center" style="min-width:55px;">Tally to<br>Excel</th>
+                        <th class="text-center" style="min-width:60px;">Combined<br>PDF</th>
+                        <th class="text-center" style="min-width:58px;">Invoice</th>
+                        <th class="text-center" style="min-width:75px;">Submission<br>Date</th>
+                        <th class="text-center" style="width:32px;">Edit</th>
+                        <th class="text-center" style="width:32px;">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in trans_invoice_list %}
+                    <tr>
+                        <td>{{ invoice.ti_inv_date|date:"d/m/Y" }}</td>
+                        <td>
+                            <span style="font-size:0.82rem; font-weight:600; color:var(--accent-blue);">
+                                {{ invoice.ti_inv_no }}
+                            </span>
+                        </td>
+                        <td>{{ invoice.ti_customer }}</td>
+                        <td>
+                            <span class="badge badge-pill" style="background:#3a9e96; color:#fff; font-size:0.78rem; padding:3px 8px; font-weight:600;">
+                                &#8377; {{ invoice.ti_total|floatformat:2 }}
+                            </span>
+                        </td>
 
-                    <!-- Invoice Documents -->
-                    <td class="text-center">
-                        {% if invoice.ti_merged_pdf %}
-                        <a href="{{ invoice.ti_merged_pdf.url }}" target="_blank"
-                           style="color:#e05252; font-size:1.5rem;" title="View PDF">
-                            <i class="fas fa-file-pdf"></i>
-                        </a>
-                        {% else %}
-                        <span class="text-muted">—</span>
-                        {% endif %}
-                    </td>
+                        <!-- Ann-1 (PDF) -->
+                        <td class="text-center">
+                            <a href="{% url 'trans_invoice_ann1_pdf' invoice.ti_inv_no %}" target="_blank"
+                               class="action-icon" style="color:#0284c7;" title="Download Ann-1 (PDF)">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                        </td>
 
-                    <!-- CNote PDF -->
-                    <td class="text-center">
-                        {% if invoice.has_cnote %}
-                        <a href="{% url 'trans_invoice_cnote_pdf' invoice.id %}" target="_blank"
-                           style="color:#d97706; font-size:1.5rem;" title="Download Combined CNote PDF">
-                            <i class="fas fa-file-pdf"></i>
-                        </a>
-                        {% else %}
-                        <span class="text-muted">—</span>
-                        {% endif %}
-                    </td>
+                        <!-- Ann-2 (CNote PDF) -->
+                        <td class="text-center">
+                            {% if invoice.has_cnote %}
+                            <a href="{% url 'trans_invoice_cnote_pdf' invoice.id %}" target="_blank"
+                               class="action-icon" style="color:#d97706;" title="Download Ann-2 (Combined CNote PDF)">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
 
-                    <!-- Tally to Excel -->
-                    <td class="text-center">
-                        <a href="{% url 'trans_invoice_tally_excel' invoice.ti_inv_no %}"
-                           style="color:#8f6cc4; font-size:1.5rem;" title="Tally to Excel">
-                            <i class="fas fa-file-invoice"></i>
-                        </a>
-                    </td>
+                        <!-- Ann-3 (Invoice Documents) -->
+                        <td class="text-center">
+                            {% if invoice.ti_merged_pdf %}
+                            <a href="{{ invoice.ti_merged_pdf.url }}" target="_blank"
+                               class="action-icon" style="color:#e05252;" title="View Ann-3 (Invoice Documents)">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
 
-                    <!-- Excel -->
-                    <td class="text-center">
-                        <a href="{% url 'trans_invoice_excel' invoice.ti_inv_no %}"
-                           style="color:#4d9e72; font-size:1.5rem;" title="Download Excel">
-                            <i class="fas fa-file-excel"></i>
-                        </a>
-                    </td>
+                        <!-- Excel Export -->
+                        <td class="text-center">
+                            <a href="{% url 'trans_invoice_excel' invoice.ti_inv_no %}"
+                               class="action-icon" style="color:#10b981;" title="Download Excel">
+                                <i class="far fa-file-excel"></i>
+                            </a>
+                        </td>
 
-                    <!-- Edit -->
-                    <td class="text-center">
-                        <a href="{% url 'trans_invoice_edit' invoice.id %}"
-                           style="color:#3b82f6; font-size:1.5rem;" title="Edit Invoice">
-                            <i class="far fa-edit"></i>
-                        </a>
-                    </td>
+                        <!-- Tally to Excel -->
+                        <td class="text-center">
+                            <a href="{% url 'trans_invoice_tally_excel' invoice.ti_inv_no %}"
+                               class="action-icon" style="color:#8f6cc4;" title="Tally to Excel">
+                                <i class="fas fa-file-invoice"></i>
+                            </a>
+                        </td>
 
-                    <!-- Delete -->
-                    <td class="text-center">
-                        <form action="{% url 'trans_invoice_delete' invoice.id %}" method="post"
-                              onsubmit="return confirm('Are you sure you want to delete this invoice?');"
-                              style="display:inline; margin:0;">
-                            {% csrf_token %}
-                            <button type="submit"
-                                    style="background:none; border:none; padding:0; cursor:pointer; color:#e05252; font-size:1.5rem;"
-                                    title="Delete Invoice">
-                                <i class="fas fa-trash-alt"></i>
+                        <!-- Combined PDF -->
+                        <td class="text-center">
+                            <a href="{% url 'trans_invoice_combined_pdf' invoice.ti_inv_no %}" target="_blank"
+                               class="action-icon" style="color:#6366f1;" title="Generate & Download Combined PDF (Invoice + Ann-1 + Ann-2 + Ann-3)">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                        </td>
+
+                        <!-- Invoice (PDF Upload & Preview) -->
+                        <td class="text-center" style="white-space: nowrap;">
+                            {% if invoice.ti_invoice_pdf %}
+                            <a href="{{ invoice.ti_invoice_pdf.url }}" target="_blank"
+                               class="action-icon" style="color:#e05252;" title="View Uploaded Invoice PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                            <button type="button" class="upload-invoice-btn replace-pdf-btn"
+                                    data-id="{{ invoice.id }}" data-inv="{{ invoice.ti_inv_no }}"
+                                    title="Replace Invoice PDF">
+                                <i class="fas fa-upload"></i>
                             </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
+                            {% else %}
+                            <button type="button" class="upload-invoice-btn btn-modern-upload"
+                                    data-id="{{ invoice.id }}" data-inv="{{ invoice.ti_inv_no }}"
+                                    title="Upload Invoice PDF">
+                                <i class="fas fa-cloud-upload-alt mr-1"></i> Upload
+                            </button>
+                            {% endif %}
+                        </td>
+
+                        <!-- Submission Date -->
+                        <td class="text-center" style="white-space: nowrap;">
+                            {% if invoice.ti_submission_date %}
+                            <span style="font-size:0.8rem; font-weight:600; color:var(--text-main);">
+                                {{ invoice.ti_submission_date|date:"d/m/Y" }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Edit -->
+                        <td class="text-center">
+                            <a href="{% url 'trans_invoice_edit' invoice.id %}"
+                               class="action-icon" style="color:#3b82f6;" title="Edit Invoice">
+                                <i class="far fa-edit"></i>
+                            </a>
+                        </td>
+
+                        <!-- Delete -->
+                        <td class="text-center">
+                            <form action="{% url 'trans_invoice_delete' invoice.id %}" method="post"
+                                  onsubmit="return confirm('Are you sure you want to delete this invoice?');"
+                                  style="display:inline; margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-icon"
+                                        style="background:none; border:none; padding:0; cursor:pointer; color:#e05252;"
+                                        title="Delete Invoice">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
         </table>
+        </div>
     </div>
 
+</div>
+
+<!-- ══ Upload Invoice PDF Modal ══ -->
+<div class="modal fade" id="uploadInvoiceModal" tabindex="-1" aria-labelledby="uploadInvoiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius: 16px; overflow: hidden; border: 1px solid var(--border-light); background: var(--bg-card); color: var(--text-main);">
+            <form action="{% url 'trans_invoice_upload_pdf' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="invoice_id" id="uploadModalInvoiceId">
+                <div class="modal-header" style="background: var(--primary-glow); border-bottom: none; padding: 1.25rem 1.5rem;">
+                    <h5 class="modal-title text-white" id="uploadInvoiceModalLabel" style="font-weight: 700; font-family: 'Outfit';">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i> Upload Invoice PDF
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.8; outline: none; border: none; background: transparent;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="padding: 1.5rem;">
+                    <p style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">
+                        Invoice No: <span id="uploadModalInvoiceNo" style="color: var(--accent-blue);"></span>
+                    </p>
+                    <div class="form-group-modern mb-0">
+                        <label for="invoice_pdf" class="form-label-modern" style="font-size:0.85rem; font-weight:600; margin-bottom:6px; display:block;">Select PDF File</label>
+                        <input type="file" class="form-control-file" name="invoice_pdf" id="invoice_pdf" accept="application/pdf" required style="font-size:0.88rem;">
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: none; padding: 1rem 1.5rem;">
+                    <button type="button" class="btn btn-cancel" data-dismiss="modal" style="border-radius:8px;">Cancel</button>
+                    <button type="submit" class="btn btn-submit" style="border-radius:8px;">
+                        <i class="fas fa-upload mr-1"></i> Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock content %}
 
 {% block extra_js %}
 <script>
     $(document).ready(function () {
-        $('#trans_invoice_list').DataTable({
-            scrollX: true,
-            autoWidth: true,
+        var table = $('#trans_invoice_list').DataTable({
+            scrollX: false,
+            autoWidth: false,
             responsive: false,
             order: [],
             pageLength: 10,
@@ -164,10 +293,19 @@
             dom: '<"d-flex justify-content-between align-items-center mb-2"l><"d-flex justify-content-between align-items-center mb-2"Bf>rtip',
             buttons: ['copy', 'csv', 'excel', 'print'],
             columnDefs: [
-                { targets: [7, 8, 9, 10, 11, 12], width: '60px', className: 'text-center' },
-                { targets: [0], width: '90px' },
-                { targets: [4], width: '130px' },
+                { targets: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13], className: 'text-center' },
+                { targets: [4, 5, 6, 7, 8, 9, 10, 12, 13], orderable: false }
             ]
+        });
+
+        // Trigger upload modal
+        $(document).on('click', '.upload-invoice-btn', function () {
+            var invId = $(this).data('id');
+            var invNo = $(this).data('inv');
+            $('#uploadModalInvoiceId').val(invId);
+            $('#uploadModalInvoiceNo').text(invNo);
+            $('#invoice_pdf').val('');
+            $('#uploadInvoiceModal').modal('show');
         });
     });
 </script>

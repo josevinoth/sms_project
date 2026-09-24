@@ -1,164 +1,1077 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load static %}
+
+{% block title %}Accounts Receivable List | BVM Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Metric Cards */
+    .metric-card {
+        border-radius: 12px;
+        padding: 1rem 1.2rem;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    [data-theme="dark"] .metric-card {
+        background: #132238;
+        border-color: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    }
+    .metric-title {
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+    }
+    [data-theme="dark"] .metric-title {
+        color: #94a3b8;
+    }
+    .metric-value {
+        font-size: 1.45rem;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.1;
+    }
+    [data-theme="dark"] .metric-value {
+        color: #f8fafc;
+    }
+    .metric-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    /* Product Badges */
+    .badge-product-trans {
+        background: linear-gradient(135deg, #1d4ed8, #2563eb);
+        color: #ffffff !important;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 6px;
+    }
+    .badge-product-pack {
+        background: linear-gradient(135deg, #0f766e, #0d9488);
+        color: #ffffff !important;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 6px;
+    }
+
+    /* Status Badges */
+    .badge-status-submitted {
+        background: rgba(16, 185, 129, 0.15);
+        color: #059669 !important;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        font-size: 0.68rem;
+        font-weight: 600;
+        padding: 2px 5px;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+    .badge-status-pending {
+        background: rgba(245, 158, 11, 0.15);
+        color: #d97706 !important;
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        font-size: 0.68rem;
+        font-weight: 600;
+        padding: 2px 5px;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+
+    /* Aging / Due Status Badges for Invoice Number */
+    .badge-aging {
+        display: inline-block;
+        padding: 2px 5px !important;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 0.72rem !important;
+        letter-spacing: 0.2px;
+        white-space: nowrap;
+    }
+    .badge-aging-not-due {
+        background: #ecfdf5 !important;
+        color: #059669 !important;
+        border: 1px solid #10b981 !important;
+    }
+    .badge-aging-due {
+        background: #fffbeb !important;
+        color: #d97706 !important;
+        border: 1px solid #f59e0b !important;
+    }
+    .badge-aging-overdue {
+        background: #fef2f2 !important;
+        color: #dc2626 !important;
+        border: 1px solid #ef4444 !important;
+    }
+    .badge-aging-legend {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.74rem;
+    }
+
+    /* Table & Checkbox Styling */
+    #ar_list_table {
+        width: 100% !important;
+        border-collapse: separate !important;
+        border-spacing: 0 4px !important;
+    }
+    #ar_list_table thead th {
+        vertical-align: middle !important;
+        padding: 0.45rem 0.4rem !important;
+    }
+    #ar_list_table tbody td {
+        vertical-align: middle !important;
+        padding: 0.35rem 0.4rem !important;
+        line-height: 1.25 !important;
+    }
+    #ar_list_table tbody td.col-cust-name {
+        word-break: break-word;
+        min-width: 90px;
+        max-width: 190px;
+        line-height: 1.15;
+    }
+    #ar_list_table tbody td.col-nowrap {
+        white-space: nowrap !important;
+    }
+    .row-selected td {
+        background-color: rgba(37, 99, 235, 0.08) !important;
+    }
+    .dataTables_wrapper .dataTables_length {
+        margin-right: 15px !important;
+        margin-bottom: 0 !important;
+    }
+    .dataTables_wrapper .dataTables_length label {
+        display: flex !important;
+        align-items: center !important;
+        margin-bottom: 0 !important;
+        font-size: 0.85rem !important;
+        color: #475569 !important;
+    }
+    .dataTables_wrapper .dataTables_length select {
+        margin: 0 6px !important;
+        height: 31px !important;
+        border-radius: 6px !important;
+        font-size: 0.82rem !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+    .dataTables_wrapper .dt-buttons {
+        margin-bottom: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+    .dataTables_wrapper .dt-buttons .btn,
+    .dataTables_wrapper .dt-buttons button.dt-button {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #334155 !important;
+        font-size: 0.76rem !important;
+        font-weight: 600 !important;
+        border-radius: 6px !important;
+        padding: 4px 11px !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+        transition: all 0.15s ease !important;
+    }
+    .dataTables_wrapper .dt-buttons .btn:hover,
+    .dataTables_wrapper .dt-buttons button.dt-button:hover {
+        background: #e2e8f0 !important;
+        border-color: #94a3b8 !important;
+        color: #0f172a !important;
+    }
+    .invoice-checkbox {
+        width: 17px;
+        height: 17px;
+        cursor: pointer;
+        accent-color: #2563eb;
+    }
+
+    /* Action Buttons */
+    .btn-export-trigger {
+        background: linear-gradient(135deg, #059669, #10b981);
+        color: white !important;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1.1rem;
+        font-weight: 600;
+        font-size: 0.88rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+        transition: all 0.2s ease;
+    }
+    .btn-export-trigger:hover:not(:disabled) {
+        background: linear-gradient(135deg, #047857, #059669);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        transform: translateY(-1px);
+    }
+    .btn-export-trigger:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    /* Filter Bar */
+    .filter-pill {
+        border-radius: 20px;
+        padding: 4px 14px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        color: #475569;
+    }
+    .filter-pill.active {
+        background: #001f3f;
+        color: #ffffff;
+        border-color: #001f3f;
+    }
+    [data-theme="dark"] .filter-pill {
+        background: #1e293b;
+        color: #cbd5e1;
+        border-color: #334155;
+    }
+    [data-theme="dark"] .filter-pill.active {
+        background: #38bdf8;
+        color: #0f172a;
+        border-color: #38bdf8;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid" style="padding:15px;">
-    <div class="row">
-        <div class="col-5"></div>
-        <div class="col-2 rounded text-center bg-info">
-            <h3>Accounts Receivable List</h3>
+<div class="container-fluid py-3">
+
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mb-0 text-white font-weight-bold" style="font-size: 1.35rem; letter-spacing: 0.5px;">
+                <i class="fas fa-file-invoice-dollar mr-2 text-warning"></i> Accounts Receivable List
+            </h3>
+            <span class="text-white-50 small">Auto-fetched invoices tracking from Transport</span>
         </div>
-        <div class="col-5"></div>
+        <div class="d-flex align-items-center" style="gap: 8px;">
+            <!-- Export Selected Button -->
+            <button type="button" id="btnExportSelected" class="btn-export-trigger" disabled>
+                <i class="fas fa-paper-plane"></i> Submit & Export Selected
+                <span id="selectedCountBadge" class="badge badge-light ml-1" style="font-size: 0.78rem;">0</span>
+            </button>
+            <a href="{% url 'ar_insert' %}" class="btn btn-primary font-weight-bold" style="border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.88rem;">
+                <i class="fas fa-plus mr-1"></i> Add AR
+            </a>
+            <a href="{% url 'home_page' %}" class="btn btn-outline-light font-weight-bold" style="border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.88rem;">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+        </div>
     </div>
-</div>
 
-<div class="container-fluid row">
-    <div class="col-md-1">
-      <a href="{% url 'home_page' %}" class="btn btn-primary btn-block btn-lg">
-        <i class="fas fa-arrow-left"></i> Back
-      </a>
+    <!-- ══ KPI Summary Cards ══ -->
+    <div class="row mb-3">
+        <div class="col-12 col-md-4 mb-2 mb-md-0">
+            <div class="metric-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="metric-title">Total Invoices</div>
+                    <div class="metric-value">{{ metrics.total_invoices|default:"0" }}</div>
+                </div>
+                <div class="metric-icon" style="background: rgba(37, 99, 235, 0.1); color: #2563eb;">
+                    <i class="fas fa-receipt"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 mb-2 mb-md-0">
+            <div class="metric-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="metric-title">Total AR Value</div>
+                    <div class="metric-value" style="color: #059669;">&#8377; {{ metrics.total_value|floatformat:2 }}</div>
+                </div>
+                <div class="metric-icon" style="background: rgba(16, 185, 129, 0.1); color: #059669;">
+                    <i class="fas fa-rupee-sign"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 mb-2 mb-md-0">
+            <div class="metric-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="metric-title">Transport Invoices</div>
+                    <div class="metric-value">{{ metrics.trans_count|default:"0" }}</div>
+                </div>
+                <div class="metric-icon" style="background: rgba(14, 165, 233, 0.1); color: #0284c7;">
+                    <i class="fas fa-truck"></i>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="col-md-1">
-      <a href="{% url 'ar_insert' %}" class="btn btn-success btn-block btn-lg">
-        <i class="fas fa-plus"></i> Add
-      </a>
-    </div>
-</div>
-<hr>
 
-<div class="container-fluid">
-    <table id="ar_list" class="table table-striped table-bordered">
-        <thead class="thead-dark">
-            <!-- Filter Input Row -->
-            <tr>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Created On"></th>
-                <th><select class="form-control filter-select"><option value="">All</option></select></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Product"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Branch"></th>
-                <th><input type="date" class="form-control filter-input"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Invoice Number"></th>
-                <th><input type="date" class="form-control filter-input"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Customer Name"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Search Department"></th>
-                <th><input type="number" class="form-control filter-input" placeholder="Service Value"></th>
-                <th><input type="number" class="form-control filter-input" placeholder="CGST"></th>
-                <th><input type="number" class="form-control filter-input" placeholder="SGST"></th>
-                <th><input type="number" class="form-control filter-input" placeholder="IGST"></th>
-                <th><input type="number" class="form-control filter-input" placeholder="Amount"></th>
-                <th><input type="date" class="form-control filter-input"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Invoice Sent To"></th>
-                <th><input type="number" class="form-control filter-input" placeholder="Due (Operation)"></th>
-                <th><input type="number" class="form-control filter-input" placeholder="Due (Submission)"></th>
-                <th><input type="date" class="form-control filter-input"></th>
-                <th><input type="number" class="form-control filter-input" placeholder="Payment Received"></th>
-                <th><input type="number" class="form-control filter-input" placeholder="TDS"></th>
-                <th><input type="date" class="form-control filter-input"></th>
-                <th><input type="date" class="form-control filter-input"></th>
-                <th><input type="date" class="form-control filter-input"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Sales Executive"></th>
-                <th><select class="form-control filter-select"><option value="">All</option></select></th>
-                <th><input type="date" class="form-control filter-input"></th>
-                <th><input type="text" class="form-control filter-input" placeholder="Updated By"></th>
-                <th></th>
-                <th></th>
-            </tr>
-            <!-- Column Headers -->
-            <tr>
-                <th>Created On</th>
-                <th>Company</th>
-                <th>Product</th>
-                <th>Branch</th>
-                <th>Operation Date</th>
-                <th>Invoice Number</th>
-                <th>Invoice Date</th>
-                <th>Customer Name</th>
-                <th>Customer Department</th>
-                <th>Service Value</th>
-                <th>CGST</th>
-                <th>SGST</th>
-                <th>IGST</th>
-                <th>Amount (INR)</th>
-                <th>Submission Date</th>
-                <th>Invoice Sent To</th>
-                <th>Due From Operation Date</th>
-                <th>Due From Submission Date</th>
-                <th>Due Payment Received Date</th>
-                <th>Payment Received Amount</th>
-                <th>TDS</th>
-                <th>Receipt From Operation Date</th>
-                <th>Receipt From Invoice Date</th>
-                <th>Receipt From Submission Date</th>
-                <th>Sales Executive</th>
-                <th>Status</th>
-                <th>Updated On</th>
-                <th>Updated By</th>
-                <th>Edit</th>
-                <th>Delete</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for arinfo in ar_list %}
+    <!-- ══ Quick Filter Pills ══ -->
+    <div class="card mb-3 p-3 shadow-sm" style="border-radius: 10px; border: 1px solid rgba(0,0,0,0.06);">
+        <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap: 12px;">
+            <div class="d-flex flex-wrap align-items-center" style="gap: 8px;">
+                <span class="font-weight-bold text-muted small mr-1"><i class="fas fa-filter mr-1"></i> Quick Filter Status:</span>
+                <span class="filter-pill" data-filter-type="status" data-value="">All Statuses</span>
+                <span class="filter-pill" data-filter-type="status" data-value="Submitted"><i class="fas fa-check-circle mr-1"></i> Submitted</span>
+                <span class="filter-pill active" data-filter-type="status" data-value="Not Submitted"><i class="fas fa-paper-plane mr-1"></i> Not Submitted</span>
+            </div>
+            <div class="d-flex align-items-center" style="gap: 6px;">
+                <span class="small text-muted" id="selectedInfoText">No items selected</span>
+                <button type="button" class="btn btn-sm btn-link text-danger p-0" id="btnClearSelection" style="display: none; font-size: 0.8rem;">
+                    (Clear)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Main Table ══ -->
+    <div class="table-container-modern p-3">
+        <!-- ══ Aging Color Code Legend ══ -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 p-2 px-3 rounded" style="background: rgba(0,0,0,0.02); border: 1px solid var(--border-light); font-size: 0.74rem;">
+            <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+                <span class="font-weight-bold text-dark small"><i class="fas fa-palette mr-1 text-primary"></i> Invoice Aging Color Code:</span>
+                <span class="badge-aging-legend badge-aging-not-due" style="background-color: #ecfdf5 !important; color: #059669 !important; border: 1px solid #10b981 !important; border-radius: 6px; padding: 3px 8px; font-weight: 600; display: inline-flex; align-items: center;" title="Days since submission is within customer credit days">
+                    <i class="fas fa-circle mr-1" style="font-size: 0.55rem; color: #059669;"></i> Not Due <span class="font-weight-normal ml-1" style="color: #047857;">(Days &le; Credit Days)</span>
+                </span>
+                <span class="badge-aging-legend badge-aging-due" style="background-color: #fffbeb !important; color: #d97706 !important; border: 1px solid #f59e0b !important; border-radius: 6px; padding: 3px 8px; font-weight: 600; display: inline-flex; align-items: center;" title="Days exceeds credit days up to 2x credit days">
+                    <i class="fas fa-circle mr-1" style="font-size: 0.55rem; color: #d97706;"></i> Due <span class="font-weight-normal ml-1" style="color: #b45309;">(Up to 2&times; Credit Days)</span>
+                </span>
+                <span class="badge-aging-legend badge-aging-overdue" style="background-color: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #ef4444 !important; border-radius: 6px; padding: 3px 8px; font-weight: 600; display: inline-flex; align-items: center;" title="Days exceeds 2x credit days">
+                    <i class="fas fa-circle mr-1" style="font-size: 0.55rem; color: #dc2626;"></i> Overdue <span class="font-weight-normal ml-1" style="color: #b91c1c;">(&gt; 2&times; Credit Days)</span>
+                </span>
+            </div>
+            <div class="text-muted small">
+                <i class="fas fa-info-circle mr-1 text-info"></i> Color applied to Invoice Number for Submitted invoices based on customer master credit days
+            </div>
+        </div>
+
+        <table id="ar_list_table" class="table modern-table w-100">
+            <thead>
                 <tr>
-                    <td>{{ arinfo.ar_created_at }}</td>
-                    <td>{{ arinfo.ar_company }}</td>
-                    <td>{{ arinfo.ar_product }}</td>
-                    <td>{{ arinfo.ar_branch }}</td>
-                    <td>{{ arinfo.ar_operation_date }}</td>
-                    <td>{{ arinfo.ar_invoice_num }}</td>
-                    <td>{{ arinfo.ar_invoice_date }}</td>
-                    <td>{{ arinfo.ar_customer_name }}</td>
-                    <td>{{ arinfo.ar_customer_dept }}</td>
-                    <td>{{ arinfo.ar_service_value }}</td>
-                    <td>{{ arinfo.ar_cgst }}</td>
-                    <td>{{ arinfo.ar_sgst }}</td>
-                    <td>{{ arinfo.ar_igst }}</td>
-                    <td>{{ arinfo.ar_amount }}</td>
-                    <td>{{ arinfo.ar_submission_date }}</td>
-                    <td>{{ arinfo.ar_invoice_sent_to }}</td>
-                    <td>{{ arinfo.ar_due_from_operation_date }}</td>
-                    <td>{{ arinfo.ar_due_from_submission_date }}</td>
-                    <td>{{ arinfo.ar_due_payment_received_date }}</td>
-                    <td>{{ arinfo.ar_payment_received_amount }}</td>
-                    <td>{{ arinfo.ar_tds }}</td>
-                    <td>{{ arinfo.ar_rec_from_operation_date }}</td>
-                    <td>{{ arinfo.ar_rec_from_invoice_date }}</td>
-                    <td>{{ arinfo.ar_rec_from_submission_date }}</td>
-                    <td>{{ arinfo.ar_sales_person }}</td>
-                    <td>{{ arinfo.ar_status }}</td>
-                    <td>{{ arinfo.ar_updated_at }}</td>
-                    <td>{{ arinfo.ar_updated_by }}</td>
-                    <td>
-                        <a class="btn btn-primary" href="{% url 'ar_update' arinfo.id %}">
-                            <i class="far fa-edit"></i>
-                        </a>
+                    <th style="width: 35px; text-align: center;">
+                        <input type="checkbox" id="checkAll" class="invoice-checkbox" title="Select All Visible">
+                    </th>
+                    <th>Company</th>
+                    <th>Product</th>
+                    <th>Branch</th>
+                    <th class="text-center">Op Date</th>
+                    <th class="text-center">Invoice No</th>
+                    <th class="text-center">Inv Date</th>
+                    <th>Customer</th>
+                    <th>Dept</th>
+                    <th class="text-right">Service Val</th>
+                    <th class="text-right">CGST</th>
+                    <th class="text-right">SGST</th>
+                    <th class="text-right">IGST</th>
+                    <th class="text-right">Amount</th>
+                    <th class="text-center">Due (Op)</th>
+                    <th class="text-center">Sub Date</th>
+                    <th class="text-center">Sub To</th>
+                    <th>Sales</th>
+                    <th class="text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in ar_list %}
+                <tr id="row_{{ item.unique_id }}" data-id="{{ item.unique_id }}" data-customer-id="{{ item.customer_id|default:'' }}" data-status="{% if item.submission_date or item.status == 'Submitted' %}Submitted{% else %}Not Submitted{% endif %}" data-has-pdf="{% if item.has_invoice_pdf %}1{% else %}0{% endif %}">
+                    <!-- 0: Checkbox Column -->
+                    <td class="text-center" style="padding: 3px 2px !important;">
+                        <input type="checkbox" class="invoice-checkbox row-select"
+                               value="{{ item.unique_id }}"
+                               data-inv="{{ item.invoice_num }}"
+                               data-cust="{{ item.customer_name }}"
+                               data-amt="{{ item.amount }}"
+                               data-status="{% if item.submission_date or item.status == 'Submitted' %}Submitted{% else %}Not Submitted{% endif %}"
+                               data-has-pdf="{% if item.has_invoice_pdf %}1{% else %}0{% endif %}">
                     </td>
-                    <td>
-                        <form action="{% url 'ar_delete' arinfo.id %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </form>
+
+                    <!-- 1: Company -->
+                    <td class="font-weight-bold">{{ item.company|default:"-" }}</td>
+
+                    <!-- 2: Product -->
+                    <td class="text-center">{{ item.product|default:"-" }}</td>
+
+                    <!-- 3: Branch -->
+                    <td class="text-center">{{ item.branch|default:"-" }}</td>
+
+                    <!-- 4: Operation Date -->
+                    <td class="text-center col-nowrap">{{ item.operation_date|date:"d/m/Y"|default:"-" }}</td>
+
+                    <!-- 5: Invoice Number -->
+                    <td class="col-inv-no">
+                        {% if item.aging %}
+                            <span class="badge-aging {{ item.aging.badge_class }}" style="background-color: {{ item.aging.bg_color }} !important; color: {{ item.aging.color }} !important; border: 1px solid {{ item.aging.border_color }} !important; display: inline-block; padding: 2px 5px !important; border-radius: 4px; font-weight: 700; font-size: 0.72rem !important;" title="{{ item.aging.status_label }}: {{ item.aging.days }} days since submission (Credit Days: {{ item.aging.credit_days }})">
+                                {{ item.invoice_num }}
+                            </span>
+                        {% else %}
+                            <span class="font-weight-bold text-primary" style="font-size:0.75rem;">
+                                {{ item.invoice_num }}
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- 6: Invoice Date -->
+                    <td class="text-center col-nowrap">{{ item.invoice_date|date:"d/m/Y"|default:"-" }}</td>
+
+                    <!-- 7: Customer Name -->
+                    <td class="col-cust-name">
+                        <span class="font-weight-bold" title="{{ item.customer_name }}">{{ item.customer_name }}</span>
+                    </td>
+
+                    <!-- 8: Customer Department -->
+                    <td>{{ item.customer_dept|default:"-" }}</td>
+
+                    <!-- 9: Service Value -->
+                    <td class="text-right col-nowrap">&#8377; {{ item.service_value|floatformat:2 }}</td>
+
+                    <!-- 10: CGST -->
+                    <td class="text-right col-nowrap">&#8377; {{ item.cgst|floatformat:2 }}</td>
+
+                    <!-- 11: SGST -->
+                    <td class="text-right col-nowrap">&#8377; {{ item.sgst|floatformat:2 }}</td>
+
+                    <!-- 12: IGST -->
+                    <td class="text-right col-nowrap">&#8377; {{ item.igst|floatformat:2 }}</td>
+
+                    <!-- 13: Amount -->
+                    <td class="text-right col-nowrap font-weight-bold text-success" style="font-size:0.76rem;">
+                        &#8377; {{ item.amount|floatformat:2 }}
+                    </td>
+
+                    <!-- 14: Due from Operation -->
+                    <td class="text-center">{{ item.due_from_operation_date|default:"-" }}</td>
+
+                    <!-- 15: Submitted Date -->
+                    <td class="text-center col-nowrap">
+                        {% if item.submission_date %}
+                            <span class="font-weight-bold text-success" style="font-size:0.74rem;">
+                                {{ item.submission_date|date:"d/m/Y" }}
+                            </span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <!-- 16: Submitted To -->
+                    <td class="text-center">
+                        {% if item.submitted_to %}
+                            <span title="{{ item.submitted_to }}">{{ item.submitted_to }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <!-- 17: Sales Executive -->
+                    <td>{{ item.sales_person|default:"-" }}</td>
+
+                    <!-- 18: Status -->
+                    <td class="col-status text-center col-nowrap" data-search="{% if item.submission_date or item.status == 'Submitted' %}Submitted{% else %}Not Submitted{% endif %}" data-filter="{% if item.submission_date or item.status == 'Submitted' %}Submitted{% else %}Not Submitted{% endif %}">
+                        {% if item.submission_date or item.status == 'Submitted' %}
+                            <span class="badge-status-submitted"><i class="fas fa-check-circle mr-1"></i> Submitted</span>
+                        {% else %}
+                            <span class="badge badge-secondary" style="font-size: 0.68rem; padding: 2px 5px;"><i class="fas fa-paper-plane mr-1"></i> Not Submitted</span>
+                        {% endif %}
                     </td>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
 </div>
 
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- ══ SUBMISSION & EXPORT CONFIRMATION MODAL POPUP ═════════════════════ -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 14px; border: none; box-shadow: 0 15px 40px rgba(0,0,0,0.25);">
+            <!-- Modal Header -->
+            <div class="modal-header" style="background: #001f3f; color: white; border-top-left-radius: 14px; border-top-right-radius: 14px; padding: 1rem 1.4rem;">
+                <h5 class="modal-title font-weight-bold" id="exportModalLabel">
+                    <i class="fas fa-paper-plane mr-2 text-warning"></i> <span id="modal_title_text">Confirm Invoice Submission</span>
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.9;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="exportSubmissionForm" method="POST" action="{% url 'ar_submit_selected_invoices' %}">
+                {% csrf_token %}
+                <input type="hidden" name="selected_ids" id="modal_hidden_selected_ids">
+                <input type="hidden" name="mail_type" id="modal_hidden_mail_type" value="submission">
+
+                <div class="modal-body p-4">
+                    <!-- Loading Spinner Overlay -->
+                    <div id="modalLoadingState" class="text-center py-4" style="display: none;">
+                        <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <div class="mt-2 text-muted font-weight-bold">Auto-fetching recipient & invoice details...</div>
+                    </div>
+
+                    <div id="modalMainContent">
+                        <!-- Summary Alert Banner -->
+                        <div class="alert alert-primary d-flex align-items-center justify-content-between mb-3" style="border-radius: 10px; border-left: 5px solid #1d4ed8;">
+                            <div>
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Selected <strong id="modal_invoice_count">0</strong> invoices
+                            </div>
+                            <div>
+                                Total: <strong id="modal_total_amount" class="text-success" style="font-size: 1.05rem;">&#8377; 0.00</strong>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Submitted Date Field -->
+                            <div class="col-md-6 mb-3">
+                                <label class="font-weight-bold text-dark small" for="modal_submitted_date">
+                                    <i class="far fa-calendar-alt text-primary mr-1"></i> Submitted Date: <span class="text-danger submission-required">*</span>
+                                </label>
+                                <input type="date" class="form-control" id="modal_submitted_date" name="submitted_date" style="border-radius: 8px; font-size: 0.9rem;">
+                            </div>
+
+                            <!-- Submitted To Field -->
+                            <div class="col-md-6 mb-3">
+                                <label class="font-weight-bold text-dark small" for="modal_submitted_to">
+                                    <i class="fas fa-user-check text-primary mr-1"></i> Submitted To: <span class="text-danger submission-required">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="modal_submitted_to" name="submitted_to"
+                                       style="border-radius: 8px; font-size: 0.9rem;">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- To Emails Field -->
+                            <div class="col-md-6 mb-3">
+                                <label class="font-weight-bold text-dark small" for="modal_to_emails">
+                                    <i class="fas fa-envelope text-primary mr-1"></i> To: <span class="text-danger">*</span>
+                                </label>
+                                <textarea class="form-control" id="modal_to_emails" name="to_emails" rows="2" required
+                                          style="border-radius: 8px; font-size: 0.88rem;"></textarea>
+                            </div>
+
+                            <!-- Cc Emails Field -->
+                            <div class="col-md-6 mb-3">
+                                <label class="font-weight-bold text-dark small" for="modal_cc_emails">
+                                    <i class="fas fa-copy text-primary mr-1"></i> Cc:
+                                </label>
+                                <textarea class="form-control" id="modal_cc_emails" name="cc_emails" rows="2"
+                                          style="border-radius: 8px; font-size: 0.88rem;"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Subject Field -->
+                            <div class="col-md-12 mb-3">
+                                <label class="font-weight-bold text-dark small" for="modal_mail_subject">
+                                    <i class="fas fa-heading text-primary mr-1"></i> Subject: <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control font-weight-bold" id="modal_mail_subject" name="mail_subject" required
+                                       style="border-radius: 8px; font-size: 0.9rem;">
+                            </div>
+
+                            <!-- Mail Content Box -->
+                            <div class="col-md-12 mb-3">
+                                <label class="font-weight-bold text-dark small" for="modal_mail_body">
+                                    <i class="fas fa-envelope-open-text text-primary mr-1"></i> Mail Content:
+                                </label>
+                                <textarea class="form-control" id="modal_mail_body" name="mail_body" rows="6"
+                                          style="border-radius: 8px; font-size: 0.88rem; line-height: 1.5; font-family: inherit;"></textarea>
+                                <div class="d-flex justify-content-end align-items-center mt-1">
+                                    <small id="modal_pdf_badge" class="badge badge-light border text-primary" style="display: none;">
+                                        <i class="fas fa-paperclip mr-1"></i> Combined PDF attached
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Selected Invoices List Preview -->
+                        <div class="mt-1">
+                            <label class="font-weight-bold text-dark small mb-1">
+                                <i class="fas fa-list mr-1 text-secondary"></i> Selected Invoices Preview:
+                            </label>
+                            <div class="table-responsive border rounded" style="max-height: 160px; overflow-y: auto;">
+                                <table class="table table-sm table-hover mb-0" style="font-size: 0.8rem;">
+                                    <thead class="bg-light sticky-top">
+                                        <tr>
+                                            <th>Invoice No</th>
+                                            <th>Invoice Date</th>
+                                            <th>Customer</th>
+                                            <th>Department</th>
+                                            <th class="text-right">Amount (INR)</th>
+                                            <th id="modal_pdf_col_header" class="text-center" style="width: 85px; display: none;">PDF</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="modal_invoices_tbody">
+                                        <!-- Injected dynamically via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer bg-light d-flex justify-content-between align-items-center" style="border-bottom-left-radius: 14px; border-bottom-right-radius: 14px; padding: 0.85rem 1.4rem;">
+                    <div id="modal_pdf_btn_wrapper" style="display: none;">
+                        <a id="btnModalPreviewCombinedPdf" href="#" target="_blank" class="btn btn-outline-danger font-weight-bold" style="border-radius: 8px; font-size: 0.85rem;">
+                            <i class="fas fa-file-pdf mr-1"></i> Preview Combined PDF
+                        </a>
+                    </div>
+                    <div class="ml-auto">
+                        <button type="button" class="btn btn-secondary font-weight-bold mr-2" data-dismiss="modal" style="border-radius: 8px;">
+                            Cancel
+                        </button>
+                        <button type="submit" id="btnConfirmExport" class="btn btn-success font-weight-bold" style="border-radius: 8px; padding: 0.5rem 1.4rem;">
+                            <i class="fas fa-check-circle mr-1"></i> <span id="btnConfirmExportText">Submit Invoices</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block extra_js %}
 <script>
-    $(document).ready(function() {
-        var table = $('#ar_list').DataTable({
-            scrollX: true,
-            dom: 'lBfrtip',
-            buttons: ['copy', 'csv', 'excel', 'print'],
-            initComplete: function () {
-                var api = this.api();
-                $('.filter-input, .filter-select').on('keyup change', function () {
-                    api.column($(this).parent().index()).search(this.value).draw();
-                });
+$(document).ready(function() {
+    // ══════════════════════════════════════════════════════════════════════
+    // 1. Initialize DataTable
+    // ══════════════════════════════════════════════════════════════════════
+    var table = $('#ar_list_table').DataTable({
+        scrollX: false,
+        autoWidth: false,
+        dom: '<"d-flex justify-content-between align-items-center flex-wrap mb-2"<"d-flex align-items-center flex-wrap"lB>f>rtip',
+        buttons: ['copy', 'csv', 'excel', 'print'],
+        order: [[6, 'desc']], // Order by column 6: Invoice Date descending
+        columnDefs: [
+            { targets: 0, orderable: false, searchable: false, width: "35px" },
+            { targets: [9, 10, 11, 12, 13], className: "text-right" },
+            { targets: [0, 4, 5, 6, 14, 15, 16, 18], className: "text-center" }
+        ],
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+        language: {
+            search: "",
+            searchPlaceholder: "Search any column...",
+            lengthMenu: "Show _MENU_ entries"
+        }
+    });
+
+    function clearSelections() {
+        selectedIds.clear();
+        $('#ar_list_table tbody .row-select').prop('checked', false);
+        $('#ar_list_table tbody tr').removeClass('row-selected');
+        $('#checkAll').prop('checked', false);
+        updateSelectionUI();
+    }
+
+    // Apply default filter: show Not Submitted on page load with exact regex
+    table.column(18).search('^Not Submitted$', true, false).draw();
+
+    // ══════════════════════════════════════════════════════════════════════
+    // 2. Selection Management
+    // ══════════════════════════════════════════════════════════════════════
+    var selectedIds = new Set();
+
+    function updateSelectionUI() {
+        var count = selectedIds.size;
+        $('#selectedCountBadge').text(count);
+        $('#btnExportSelected').prop('disabled', count === 0);
+
+        if (count > 0) {
+            $('#selectedInfoText').html('<strong class="text-primary">' + count + '</strong> item(s) selected');
+            $('#btnClearSelection').show();
+        } else {
+            $('#selectedInfoText').text('No items selected');
+            $('#btnClearSelection').hide();
+        }
+
+        // Check if all visible checkboxes on current page are checked
+        var allChecked = true;
+        var visibleBoxes = $('#ar_list_table tbody .row-select');
+        if (visibleBoxes.length === 0) {
+            allChecked = false;
+        } else {
+            visibleBoxes.each(function() {
+                if (!selectedIds.has($(this).val())) {
+                    allChecked = false;
+                    return false;
+                }
+            });
+        }
+        $('#checkAll').prop('checked', allChecked);
+    }
+
+    // Row checkbox click / change validation
+    $('#ar_list_table').on('change', '.row-select', function() {
+        var val = $(this).val();
+        var tr = $(this).closest('tr');
+        var isChecked = $(this).is(':checked');
+
+        if (isChecked) {
+            var status = $(this).attr('data-status') || tr.attr('data-status') || '';
+            var hasPdf = $(this).attr('data-has-pdf') || tr.attr('data-has-pdf') || '';
+            var invNo = $(this).attr('data-inv') || val;
+
+            if (status === 'Not Submitted' && hasPdf !== '1') {
+                $(this).prop('checked', false);
+                tr.removeClass('row-selected');
+                selectedIds.delete(val);
+                updateSelectionUI();
+                alert("The selected invoice (" + invNo + ") doesn't have an invoice file.");
+                return false;
+            }
+
+            selectedIds.add(val);
+            tr.addClass('row-selected');
+        } else {
+            selectedIds.delete(val);
+            tr.removeClass('row-selected');
+        }
+        updateSelectionUI();
+    });
+
+    // Header Check All with validation for Not Submitted invoices without PDF
+    $('#checkAll').on('change', function() {
+        var isChecked = $(this).is(':checked');
+        var missingInvoices = [];
+
+        $('#ar_list_table tbody .row-select').each(function() {
+            var val = $(this).val();
+            var tr = $(this).closest('tr');
+            var status = $(this).attr('data-status') || tr.attr('data-status') || '';
+            var hasPdf = $(this).attr('data-has-pdf') || tr.attr('data-has-pdf') || '';
+            var invNo = $(this).attr('data-inv') || val;
+
+            if (isChecked) {
+                if (status === 'Not Submitted' && hasPdf !== '1') {
+                    $(this).prop('checked', false);
+                    tr.removeClass('row-selected');
+                    selectedIds.delete(val);
+                    missingInvoices.push(invNo);
+                    return;
+                }
+                $(this).prop('checked', true);
+                selectedIds.add(val);
+                tr.addClass('row-selected');
+            } else {
+                $(this).prop('checked', false);
+                selectedIds.delete(val);
+                tr.removeClass('row-selected');
+            }
+        });
+        updateSelectionUI();
+
+        if (isChecked && missingInvoices.length > 0) {
+            var previewList = missingInvoices.slice(0, 3).join(', ');
+            var moreText = missingInvoices.length > 3 ? (' and ' + (missingInvoices.length - 3) + ' more') : '';
+            alert(missingInvoices.length + " invoice(s) (" + previewList + moreText + ") don't have an invoice file.");
+        }
+    });
+
+    // Clear Selection Link
+    $('#btnClearSelection').on('click', function() {
+        clearSelections();
+    });
+
+    // Re-apply checkbox states on DataTable redraw (page change, search, sort)
+    table.on('draw', function() {
+        $('#ar_list_table tbody .row-select').each(function() {
+            var val = $(this).val();
+            var tr = $(this).closest('tr');
+            if (selectedIds.has(val)) {
+                $(this).prop('checked', true);
+                tr.addClass('row-selected');
+            } else {
+                $(this).prop('checked', false);
+                tr.removeClass('row-selected');
+            }
+        });
+        updateSelectionUI();
+    });
+
+    // ══════════════════════════════════════════════════════════════════════
+    // 3. Quick Filter Pills (Product & Status)
+    // ══════════════════════════════════════════════════════════════════════
+    $('.filter-pill').on('click', function() {
+        var filterType = $(this).data('filter-type');
+        var filterVal = $(this).data('value');
+
+        // Toggle active class among siblings
+        $('[data-filter-type="' + filterType + '"]').removeClass('active');
+        $(this).addClass('active');
+
+        if (filterType === 'product') {
+            table.column(2).search(filterVal).draw();
+        } else if (filterType === 'status') {
+            // Column 18 is Status - exact match regex so Submitted doesn't match Not Submitted
+            if (filterVal === 'Submitted') {
+                table.column(18).search('^Submitted$', true, false).draw();
+            } else if (filterVal === 'Not Submitted') {
+                table.column(18).search('^Not Submitted$', true, false).draw();
+            } else {
+                table.column(18).search('', true, false).draw();
+            }
+            // Clear selections when switching status filter so submitted & not submitted are not mixed
+            clearSelections();
+        }
+    });
+
+    // ══════════════════════════════════════════════════════════════════════
+    // 4. Export Modal Trigger & Auto-fetch
+    // ══════════════════════════════════════════════════════════════════════
+    $('#btnExportSelected').on('click', function() {
+        // Collect any checked checkboxes currently on DOM
+        $('#ar_list_table tbody .row-select:checked').each(function() {
+            selectedIds.add($(this).val());
+        });
+
+        if (selectedIds.size === 0) return;
+
+        // Check consistency: cannot mix Submitted and Not Submitted
+        var hasSubmitted = false;
+        var hasNotSubmitted = false;
+        var missingPdfInvoices = [];
+
+        selectedIds.forEach(function(id) {
+            var tr = $('#row_' + id);
+            if (tr.length) {
+                var s = tr.find('.col-status').attr('data-search') || tr.find('.col-status').text();
+                var cb = tr.find('.row-select');
+                var hasPdf = cb.attr('data-has-pdf') || tr.attr('data-has-pdf');
+                var invNo = cb.attr('data-inv') || id;
+
+                if (s.indexOf('Not Submitted') !== -1) {
+                    hasNotSubmitted = true;
+                    if (hasPdf !== '1') {
+                        missingPdfInvoices.push(invNo);
+                    }
+                } else if (s.indexOf('Submitted') !== -1) {
+                    hasSubmitted = true;
+                }
+            }
+        });
+
+        if (hasSubmitted && hasNotSubmitted) {
+            alert('Cannot process Submitted and Not Submitted invoices together. Please select invoices of the same status.');
+            return;
+        }
+
+        if (missingPdfInvoices.length > 0) {
+            alert("The selected invoice (" + missingPdfInvoices.join(', ') + ") doesn't have an invoice file.");
+            return;
+        }
+
+        var idsArray = Array.from(selectedIds);
+        $('#modal_hidden_selected_ids').val(idsArray.join(','));
+
+        // Reset PDF controls visibility until mail_type is determined
+        $('#modal_pdf_btn_wrapper').hide();
+        $('#modal_pdf_col_header').hide();
+
+        // Show modal and loading state
+        $('#modalLoadingState').show();
+        $('#modalMainContent').hide();
+        $('#exportModal').modal('show');
+
+        // Fetch details from backend via AJAX
+        $.ajax({
+            url: "{% url 'fetch_invoice_submission_details' %}",
+            type: "GET",
+            data: { ids: idsArray.join(',') },
+            dataType: "json",
+            success: function(response) {
+                $('#modalLoadingState').hide();
+                $('#modalMainContent').show();
+
+                if (response.success) {
+                    $('#modal_invoice_count').text(response.count);
+                    $('#modal_total_amount').html('&#8377; ' + parseFloat(response.total_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                    $('#modal_hidden_mail_type').val(response.mail_type || 'submission');
+                    $('#modal_submitted_date').val(response.submission_date || '');
+                    $('#modal_submitted_to').val(response.submitted_to || '');
+                    $('#modal_to_emails').val(response.to_emails || '');
+                    $('#modal_cc_emails').val(response.cc_emails || '');
+                    $('#modal_mail_subject').val(response.subject || '');
+                    $('#modal_mail_body').val(response.body || '');
+
+                    if (response.mail_type === 'outstanding') {
+                        $('#modal_title_text').text('Send Outstanding Followup');
+                        $('#btnConfirmExportText').text('Send Followup Mail');
+                        $('#btnConfirmExport').removeClass('btn-success').addClass('btn-primary');
+                        $('.submission-required').hide();
+                        $('#modal_pdf_badge').hide();
+                        $('#modal_pdf_btn_wrapper').hide();
+                        $('#modal_pdf_col_header').hide();
+                    } else {
+                        $('#modal_title_text').text('Confirm Invoice Submission');
+                        $('#btnConfirmExportText').text('Submit Invoices');
+                        $('#btnConfirmExport').removeClass('btn-primary').addClass('btn-success');
+                        $('.submission-required').show();
+                        $('#modal_pdf_badge').show();
+
+                        // Show Preview Combined PDF button & column ONLY for submissions
+                        var previewCombinedUrl = "{% url 'ar_preview_combined_pdf' %}?ids=" + encodeURIComponent(idsArray.join(','));
+                        $('#btnModalPreviewCombinedPdf').attr('href', previewCombinedUrl);
+                        $('#modal_pdf_btn_wrapper').show();
+                        $('#modal_pdf_col_header').show();
+                    }
+
+                    // Render preview rows with Invoice Date & Department (and PDF link only for submissions)
+                    var tbody = $('#modal_invoices_tbody');
+                    tbody.empty();
+                    if (response.invoices && response.invoices.length > 0) {
+                        response.invoices.forEach(function(inv) {
+                            var pdfCellHtml = '';
+                            if (response.mail_type !== 'outstanding') {
+                                var singlePdfUrl = "{% url 'ar_preview_combined_pdf' %}?ids=" + encodeURIComponent(inv.id);
+                                pdfCellHtml = '<td class="text-center">' +
+                                    '<a href="' + singlePdfUrl + '" target="_blank" class="btn btn-xs btn-outline-danger font-weight-bold" style="font-size:0.75rem; padding: 2px 8px; border-radius: 6px;" title="View combined PDF for this invoice">' +
+                                        '<i class="fas fa-file-pdf mr-1"></i> View' +
+                                    '</a>' +
+                                '</td>';
+                            }
+                            var invCellHtml = '<span class="font-weight-bold">' + inv.inv_no + '</span>';
+                            if (inv.aging) {
+                                invCellHtml = '<span class="badge-aging ' + inv.aging.badge_class + '" style="background-color: ' + inv.aging.bg_color + ' !important; color: ' + inv.aging.color + ' !important; border: 1px solid ' + inv.aging.border_color + ' !important; display: inline-block; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.82rem;" title="' + inv.aging.status_label + ' (' + inv.aging.days + ' days)">' + inv.inv_no + '</span>';
+                            }
+                            tbody.append(
+                                '<tr>' +
+                                    '<td>' + invCellHtml + '</td>' +
+                                    '<td>' + (inv.inv_date || '-') + '</td>' +
+                                    '<td>' + inv.customer + '</td>' +
+                                    '<td>' + (inv.department || '-') + '</td>' +
+                                    '<td class="text-right font-weight-bold">&#8377; ' + parseFloat(inv.amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2}) + '</td>' +
+                                    pdfCellHtml +
+                                '</tr>'
+                            );
+                        });
+                    }
+                } else {
+                    $('#exportModal').modal('hide');
+                    alert('Error: ' + (response.msg || 'Failed to fetch details'));
+                }
+            },
+            error: function(xhr, status, err) {
+                $('#modalLoadingState').hide();
+                $('#modalMainContent').show();
+                $('#exportModal').modal('hide');
+                alert('Network or server error while fetching submission details.');
             }
         });
     });
-</script>
 
-{% endblock content %}
+    // ══════════════════════════════════════════════════════════════════════
+    // 5. Modal Form Submission (AJAX - Save without file download)
+    // ══════════════════════════════════════════════════════════════════════
+    $('#exportSubmissionForm').on('submit', function(e) {
+        e.preventDefault();
+
+        var mailType = $('#modal_hidden_mail_type').val();
+        var toEmailsVal = $('#modal_to_emails').val().trim();
+        if (!toEmailsVal) {
+            alert('Please enter at least one recipient email in the To field.');
+            $('#modal_to_emails').focus();
+            return false;
+        }
+
+        var submittedToVal = $('#modal_submitted_to').val().trim();
+        if (mailType !== 'outstanding' && !submittedToVal) {
+            alert('Submitted To is a required field. Please enter Submitted To before submitting.');
+            $('#modal_submitted_to').focus();
+            return false;
+        }
+
+        var btn = $('#btnConfirmExport');
+        var originalBtnHtml = btn.html();
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Submitting...');
+
+        $.ajax({
+            url: $(this).attr('action'),
+            type: "POST",
+            data: $(this).serialize(),
+            dataType: "json",
+            success: function(response) {
+                btn.prop('disabled', false).html(originalBtnHtml);
+
+                if (response.success) {
+                    var newBadgeHtml = '<span class="badge-status-submitted"><i class="fas fa-check-circle mr-1"></i> Submitted</span>';
+                    var formattedSubDate = response.submission_date ? response.submission_date.split('-').reverse().join('/') : '';
+                    var subDateHtml = formattedSubDate ? '<span class="font-weight-bold text-success" style="font-size:0.74rem;">' + formattedSubDate + '</span>' : '-';
+                    var subToHtml = response.submitted_to ? '<span title="' + response.submitted_to + '">' + response.submitted_to + '</span>' : '-';
+
+                    // Update DataTables cell data so filtering and values work immediately
+                    selectedIds.forEach(function(id) {
+                        var tr = $('#row_' + id);
+                        if (tr.length) {
+                            tr.attr('data-status', 'Submitted');
+                            var rowCb = tr.find('.row-select');
+                            if (rowCb.length) {
+                                rowCb.attr('data-status', 'Submitted');
+                            }
+                            var statusTd = tr.find('.col-status');
+                            if (statusTd.length) {
+                                statusTd.attr('data-search', 'Submitted');
+                                statusTd.attr('data-filter', 'Submitted');
+                                table.cell(statusTd).data(newBadgeHtml);
+                            }
+                            var cells = tr.find('td');
+                            if (cells.length > 16 && response.mail_type !== 'outstanding') {
+                                // Update invoice number badge to Not Due (0 days since submission)
+                                var invNoVal = rowCb.attr('data-inv') || cells.eq(5).text().trim();
+                                var newInvBadgeHtml = '<span class="badge-aging badge-aging-not-due" style="background-color: #ecfdf5 !important; color: #059669 !important; border: 1px solid #10b981 !important; display: inline-block; padding: 2px 5px !important; border-radius: 4px; font-weight: 700; font-size: 0.72rem !important;" title="Not Due: 0 days since submission">' + invNoVal + '</span>';
+                                table.cell(cells.eq(5)).data(newInvBadgeHtml);
+
+                                table.cell(cells.eq(15)).data(subDateHtml);
+                                table.cell(cells.eq(16)).data(subToHtml);
+                            }
+                        }
+                    });
+                    table.draw(false);
+
+                    // Clear selection
+                    selectedIds.clear();
+                    $('#ar_list_table tbody .row-select').prop('checked', false);
+                    $('#ar_list_table tbody tr').removeClass('row-selected');
+                    $('#checkAll').prop('checked', false);
+                    updateSelectionUI();
+
+                    $('#exportModal').modal('hide');
+
+                    // Show success feedback message
+                    alert(response.msg || 'Invoices processed successfully!');
+                } else {
+                    alert('Error: ' + (response.msg || 'Failed to submit invoices.'));
+                }
+            },
+            error: function(xhr, status, err) {
+                btn.prop('disabled', false).html(originalBtnHtml);
+                alert('Network or server error while submitting invoices.');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+

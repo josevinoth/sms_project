@@ -1,0 +1,347 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+
+<form method="POST" id="pms_petty_cash_add" action="" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <div class="container-fluid">
+        <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+                <i class="fas fa-money-bill-wave mr-2"></i> Add/Update PMS Petty Cash
+            </h3>
+            <div>
+                <a href="{% url 'pms_petty_cash_list' %}" class="btn btn-highlight" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+        
+        <div class="modern-card" style="border-top:none; padding: 1rem !important;">
+            <div class="row">
+                <!-- ========== COLUMN 1: GENERAL INFO ========== -->
+                <div class="col-12 col-md-3">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-info-circle"></i> GENERAL INFO</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Business</label>
+                            {% render_field form.ppc_business id="ppc_business" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Branch</label>
+                            {% render_field form.ppc_branch id="ppc_branch" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Expenses Category</label>
+                            {% render_field form.ppc_category id="ppc_category" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Voucher Number</label>
+                            <input type="text" id="ppc_number" name="ppc_number" class="form-control form-control-modern disable_a_href bg-secondary text-white" placeholder="Auto generated" readonly="readonly" value="{{ form.instance.ppc_number|default_if_none:'' }}">
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Date</label>
+                            {% render_field form.ppc_date id="ppc_date" class="form-control form-control-modern" type="date" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== COLUMN 2: EXPENSE & LEDGER ========== -->
+                <div class="col-12 col-md-3">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-money-check-alt"></i> EXPENSE & LEDGER</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Expenses Type</label>
+                            {% render_field form.ppc_expense_type id="ppc_expense_type" class="form-control form-control-modern select2" %}
+                        </div>
+                        
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Amount</label>
+                            {% render_field form.ppc_amount id="ppc_amount" class="form-control form-control-modern" type="number" step="0.01" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Credit Ledger</label>
+                            {% render_field form.ppc_credit_ledger id="ppc_credit_ledger" class="form-control form-control-modern" %}
+                            <span id="ledger_balance_display" class="text-success font-weight-bold" style="font-size: 0.9rem; margin-top: 6px; display: block;"></span>
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">To Person</label>
+                            {% render_field form.ppc_to id="ppc_to" class="form-control form-control-modern select2" %}
+                        </div>
+
+                        <div class="form-group-modern" id="manual_person_div" style="display: none; margin-top: 10px;">
+                            <label class="form-label-modern">Enter Name Manually</label>
+                            {% render_field form.ppc_to_manual id="ppc_to_manual" class="form-control form-control-modern" placeholder="Enter manual name" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== COLUMN 3: WAREHOUSE & JOB ========== -->
+                <div class="col-12 col-md-3">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-warehouse"></i> WAREHOUSE & JOB</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Transaction Date</label>
+                            {% render_field form.ppc_transaction_date id="ppc_transaction_date" class="form-control form-control-modern" type="date" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Units</label>
+                            {% render_field form.ppc_unit id="ppc_unit" class="form-control form-control-modern select2" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Customer Name</label>
+                            {% render_field form.ppc_customer id="ppc_customer" class="form-control form-control-modern select2" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Job No</label>
+                            <select id="ppc_job_no" name="ppc_job_no" class="form-control form-control-modern select2">
+                                <option value="">--Select or Type Job No--</option>
+                                {% if form.instance.ppc_job_no %}
+                                <option value="{{ form.instance.ppc_job_no }}" selected>{{ form.instance.ppc_job_no }}</option>
+                                {% endif %}
+                            </select>
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Remarks</label>
+                            {% render_field form.ppc_remarks id="ppc_remarks" class="form-control form-control-modern" rows="3" %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== COLUMN 4: BILL & PAYMENT DETAILS ========== -->
+                <div class="col-12 col-md-3">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-file-invoice-dollar"></i> BILL & PAYMENT DETAILS</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Bill No</label>
+                            {% render_field form.ppc_bill_no id="ppc_bill_no" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Bill Amount</label>
+                            {% render_field form.ppc_bill_amount id="ppc_bill_amount" class="form-control form-control-modern" type="number" step="0.01" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">GST %</label>
+                            {% render_field form.ppc_gst_percentage id="ppc_gst_percentage" class="form-control form-control-modern" type="number" step="0.01" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">GST Amount</label>
+                            {% render_field form.ppc_gst_amount id="ppc_gst_amount" class="form-control form-control-modern" type="number" step="0.01" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Total Amount</label>
+                            {% render_field form.ppc_total_amount id="ppc_total_amount" class="form-control form-control-modern" type="number" step="0.01" readonly="readonly" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Bill Attachment</label>
+                            {% render_field form.ppc_bill_attachment id="ppc_bill_attachment" class="form-control form-control-modern" style="padding: 3px;" %}
+                            {% if form.instance.ppc_bill_attachment %}
+                                <div class="mt-2">
+                                    <a href="{{ form.instance.ppc_bill_attachment.url }}" target="_blank" class="badge badge-info" style="font-size: 0.85rem;"><i class="fas fa-eye"></i> View Current File</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- End row -->
+        </div> <!-- End modern-card -->
+
+                <!-- ========== JOB DETAILS TABLE (PMS) ========== -->
+        <div id="job_details_container" class="mt-4" style="display:none;">
+            <div class="modern-header d-flex justify-content-between align-items-center mb-0" style="border-radius: 14px 14px 0 0; padding: 0.6rem 1.2rem;">
+                <h5 class="mb-0 text-white" style="font-size: 1.05rem; font-weight: 700; letter-spacing: 0.5px;">
+                    <i class="fas fa-box-open mr-2"></i> Package Job Overview
+                </h5>
+                <span id="table_job_no_badge" class="badge badge-pill badge-light px-3 py-2 font-weight-bold" style="font-size: 0.85rem; color: #0f172a; box-shadow: 0 2px 6px rgba(0,0,0,0.15);"></span>
+            </div>
+            <div class="table-container-modern shadow-sm" style="border-radius: 0 0 14px 14px; padding: 0.85rem 1rem;">
+                <div class="table-responsive">
+                    <table class="table modern-table mb-0" id="job_info_table">
+                        <thead>
+                            <tr>
+                                <th>Job No</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Pack Type</th>
+                                <th>No of Box</th>
+                                <th>Reference</th>
+                                <th>Bill Amount</th>
+                                <th>Expense</th>
+                                <th>Prod Status</th>
+                                <th>QC Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr id="job_info_row">
+                                <td id="td_job_no"><span class="badge badge-primary px-2 py-1" style="font-size: 0.8rem; letter-spacing: 0.3px;">-</span></td>
+                                <td id="td_date">-</td>
+                                <td id="td_customer" class="font-weight-bold text-dark">-</td>
+                                <td id="td_pack_type">-</td>
+                                <td id="td_no_box" class="text-center font-weight-600">-</td>
+                                <td id="td_reference">-</td>
+                                <td id="td_bill_amount" class="text-right">-</td>
+                                <td id="td_expense" class="text-right">-</td>
+                                <td id="td_prod_status"><span class="badge badge-info px-2 py-1">-</span></td>
+                                <td id="td_qc_status"><span class="badge badge-info px-2 py-1">-</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Action Bar -->
+        <div class="bottom-action-bar mt-4">
+            <button type="submit" class="btn btn-warning font-weight-bold px-5 py-2" style="border-radius:25px; color:#fff;">
+                <i class="fas fa-check mr-2"></i> SUBMIT
+            </button>
+            <a href="{% url 'pms_petty_cash_list' %}" class="btn btn-outline-secondary font-weight-bold px-5 py-2" style="border-radius:25px;">
+                <i class="fas fa-times mr-2"></i> CANCEL
+            </a>
+        </div>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        // Initialize Select2 on select elements, except those with tags
+        $('.select2').not('#ppc_to, #ppc_job_no').select2({
+            
+            width: '100%',
+            allowClear: true
+        });
+
+        // Initialize Select2 on Job No with tag support (user can select or type custom)
+        $('#ppc_job_no').select2({
+            
+            width: '100%',
+            placeholder: '--Select or Type Job No--',
+            allowClear: true,
+            tags: true
+        });
+
+        $('#ppc_to').select2({
+            
+            width: '100%',
+            placeholder: '--Select--',
+            allowClear: true,
+            tags: true,
+            createTag: function (params) {
+                var term = $.trim(params.term);
+                if (term === '') {
+                    return null;
+                }
+                return {
+                    id: term,
+                    text: term,
+                    newTag: true
+                }
+            }
+        });
+
+        // To Person Manual Logic - not really needed if we use tags: true, but keeping it for compatibility
+        function checkManualPerson() {
+            var selectedVal = $("#ppc_to").val();
+            if (selectedVal === "Other") {
+                $("#manual_person_div").slideDown();
+            } else {
+                $("#manual_person_div").slideUp();
+                $("#ppc_to_manual").val("");
+            }
+        }
+
+        $("#ppc_to").on("change", function () {
+            checkManualPerson();
+        });
+
+        checkManualPerson();
+
+        // ================= CASCADE 2: CUSTOMER -> JOB NO DROPDOWN =================
+        $('#ppc_customer').change(function() {
+            var customerId = $(this).val();
+            var selectedUnit = $('#ppc_unit').val();
+            var $jobSelect = $('#ppc_job_no');
+            
+            $jobSelect.empty();
+            $jobSelect.append(new Option('--Select or Type Job No--', ''));
+            
+            if (customerId) {
+                $.ajax({
+                    url: "/SMS/get_pms_jobs_by_customer/", 
+                    data: {
+                        'customer_id': customerId,
+                        'unit': selectedUnit
+                    },
+                    success: function(response) {
+                        if (response.jobs) {
+                            $.each(response.jobs, function(index, job) {
+                                $jobSelect.append(new Option(job.job_no, job.job_no));
+                            });
+                        }
+                    }
+                });
+            }
+        });
+
+        // ================= CASCADE 3: JOB NO -> JOB DETAILS TABLE =================
+        $('#ppc_job_no').change(function() {
+            var jobNo = $(this).val();
+            
+            if (jobNo) {
+                $.ajax({
+                    url: "/SMS/get_pms_job_details/", 
+                    data: { 'job_no': jobNo },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $('#table_job_no_badge').text(response.job_no || jobNo);
+                            $('#td_job_no').html('<span class="badge badge-primary px-2 py-1" style="font-size: 0.8rem; letter-spacing: 0.3px;">' + (response.job_no || jobNo) + '</span>');
+                            $('#td_date').text(response.date || '-');
+                            $('#td_customer').text(response.customer || '-');
+                            $('#td_pack_type').text(response.pack_type || '-');
+                            $('#td_no_box').text(response.no_box || '-');
+                            $('#td_reference').text(response.reference || '-');
+                            $('#td_bill_amount').text(response.bill_amount ? '₹' + parseFloat(response.bill_amount).toLocaleString('en-IN', {minimumFractionDigits: 2}) : '-');
+                            $('#td_expense').text(response.expense ? '₹' + parseFloat(response.expense).toLocaleString('en-IN', {minimumFractionDigits: 2}) : '-');
+                            $('#td_prod_status').html('<span class="badge badge-info px-2 py-1">' + (response.prod_status || '-') + '</span>');
+                            $('#td_qc_status').html('<span class="badge badge-info px-2 py-1">' + (response.qc_status || '-') + '</span>');
+                            
+                            $('#job_details_container').slideDown();
+                        } else {
+                            $('#job_details_container').slideUp();
+                        }
+                    },
+                    error: function() {
+                        $('#job_details_container').slideUp();
+                    }
+                });
+            } else {
+                $('#job_details_container').slideUp();
+            }
+        });
+    });
+</script>
+{% endblock %}
+
