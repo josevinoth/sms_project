@@ -247,7 +247,7 @@ $(document).ready(function() {
     const unit = document.getElementById('unit-filter').value;
     const bay = document.getElementById('bay-filter').value;
     const businessmodel = document.getElementById('businessmodel-filter').value;
-    const url = new URL(window.location.href);
+    const url = new URL(window.location.pathname + window.location.search);
 
 
     if (branch) {
@@ -276,7 +276,7 @@ $(document).ready(function() {
 
      console.log(url.toString());
 
-    window.location.href = url.toString();
+    window.location.pathname + window.location.search = url.toString();
 }
 
 </script>

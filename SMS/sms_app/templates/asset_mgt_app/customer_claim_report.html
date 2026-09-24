@@ -127,7 +127,7 @@
     function updateFilters() {
         const fromDate = document.getElementById('from-date').value;
         const toDate = document.getElementById('to-date').value;
-        const url = new URL(window.location.href);
+        const url = new URL(window.location.pathname + window.location.search);
 
         if (fromDate) {
             url.searchParams.set('from_date', fromDate);
@@ -141,7 +141,7 @@
             url.searchParams.delete('to_date');
         }
 
-        window.location.href = url.toString();
+        window.location.pathname + window.location.search = url.toString();
     }
 
     // Auto apply on change

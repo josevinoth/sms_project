@@ -85,10 +85,10 @@
                     </div>
                 </div>
 
-                <!-- ========== COLUMN 3: WAREHOUSE & JOB ========== -->
+                <!-- ========== COLUMN 3: PACKAGE & JOB ========== -->
                 <div class="col-12 col-md-3">
                     <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-warehouse"></i> WAREHOUSE & JOB</div>
+                        <div class="form-section-title"><i class="fas fa-box-open"></i> PACKAGE & JOB</div>
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">Transaction Date</label>
@@ -342,6 +342,24 @@
             }
         });
     });
+
+
+        // Real-time calculation for GST Amount and Total Amount
+        function calculateAmounts() {
+            var billAmt = parseFloat($('#ppc_bill_amount').val()) || 0;
+            var gstPct = parseFloat($('#ppc_gst_percentage').val()) || 0;
+
+            var gstAmt = (billAmt * gstPct) / 100;
+            var totalAmt = billAmt + gstAmt;
+
+            $('#ppc_gst_amount').val(gstAmt.toFixed(2));
+            $('#ppc_total_amount').val(totalAmt.toFixed(2));
+        }
+
+        $('#ppc_bill_amount, #ppc_gst_percentage').on('input change', function() {
+            calculateAmounts();
+        });
+
 </script>
 {% endblock %}
 

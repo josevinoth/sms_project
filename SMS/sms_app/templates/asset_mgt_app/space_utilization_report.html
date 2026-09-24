@@ -95,7 +95,7 @@
         var table = $('#space_utilization_report').DataTable({
             serverSide: true,
             ajax: {
-                url: window.location.href,
+                url: window.location.pathname + window.location.search,
                 type: 'GET'
             },
             deferRender: true,

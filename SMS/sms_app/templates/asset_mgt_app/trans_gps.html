@@ -749,7 +749,7 @@
       const resetBtn = document.createElement("button");
       resetBtn.textContent = "Show All Vehicles";
       resetBtn.className = "btn btn-warning my-2";
-      resetBtn.onclick = () => window.location.href = window.location.pathname;
+      resetBtn.onclick = () => window.location.pathname + window.location.search = window.location.pathname;
       document.querySelector(".d-flex.justify-content-between").appendChild(resetBtn);
     }
   });
