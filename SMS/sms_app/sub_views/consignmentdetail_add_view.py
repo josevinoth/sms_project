@@ -110,7 +110,16 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
         except (ValueError, TypeError):
             pass
 
-    # 4. Fallback to session
+    # 4. Extract from POST payload if it's a POST request (most reliable for forms)
+    if not enquiry_num_id and request.method == "POST":
+        posted_enq_id = request.POST.get('co_enquirynumber')
+        if posted_enq_id:
+            try:
+                enquiry_num_id = int(posted_enq_id)
+            except (ValueError, TypeError):
+                pass
+
+    # 5. Fallback to session
     if not enquiry_num_id:
         enquiry_num_id = request.session.get('enquiry_num_id') or request.session.get('ses_enqiury_id')
 

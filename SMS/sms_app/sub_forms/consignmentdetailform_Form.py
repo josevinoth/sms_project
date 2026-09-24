@@ -9,7 +9,7 @@ class ConsignmentdetailaddForm(forms.ModelForm):
 
     class Meta:
         model = ConsignmentdetailInfo
-        fields = '__all__'
+        exclude = ['co_createdby']
 
     def __init__(self, *args, **kwargs):
         super(ConsignmentdetailaddForm, self).__init__(*args, **kwargs)

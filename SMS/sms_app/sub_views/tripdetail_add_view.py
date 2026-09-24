@@ -105,6 +105,14 @@ def tripdetail_add(request, tripdetail_id=0):
         except (ValueError, TypeError):
             enquiry_num_id = None
 
+    if not enquiry_num_id and request.method == "POST":
+        posted_enq = request.POST.get('tr_enquirynumber')
+        if posted_enq:
+            try:
+                enquiry_num_id = int(posted_enq)
+            except (ValueError, TypeError):
+                pass
+
     if not enquiry_num_id:
         enquiry_num_id = request.session.get('enquiry_num_id')
 
