@@ -544,13 +544,13 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
-		if (window.location.href.includes("tripdetail_insert")) {
+		if (window.location.pathname + window.location.search.includes("tripdetail_insert")) {
 			// Enable fields
 			$('#tripdetail_id,#tripdetail_submit_id')
 				.removeClass('disable_a_href')
 				.prop('disabled', false);
 		}
-		else if (window.location.href.includes("tripdetail_update")) {
+		else if (window.location.pathname + window.location.search.includes("tripdetail_update")) {
 			// Enable fields
 			$('#tripdetail_id, #tripdetail_submit_id, #tr_consignmentnumber, #tr_vehiclenumber, #tr_drivername, #tr_drivernumber, #tr_driver_lic, #tr_vehiclesource, #tr_vehicletype, #tr_vehicletype_placed')
 				.prop('disabled', false)

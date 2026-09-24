@@ -512,7 +512,7 @@ function setDateFieldValue(selector, value) {
 </script>
 <script>
 	document.addEventListener("DOMContentLoaded", function () {
-		if (window.location.href.includes("vehicle_allotment_insert")) {
+		if (window.location.pathname + window.location.search.includes("vehicle_allotment_insert")) {
 			// Enable fields
 			$('#vehicle_allotment_id,#vehicle_allotment_submit_id')
 				.removeClass('disable_a_href')
@@ -520,7 +520,7 @@ function setDateFieldValue(selector, value) {
 			// Auto load requested vehicles for this enquiry
 			vehicle_requested();
 		}
-		else if (window.location.href.includes("vehicle_allotment_update")) {
+		else if (window.location.pathname + window.location.search.includes("vehicle_allotment_update")) {
 			// Enable fields
 			$('#vehicle_allotment_id,#vehicle_allotment_submit_id')
 				.removeClass('disable_a_href')
@@ -1685,7 +1685,7 @@ $("#va_vehiclesource").on("change", function () {
                         alert(data.alert_msg);
                     }
                     if (data.new_id) {
-                        window.location.href = "/SMS/vehicle_allotment_update/" + data.new_id + "/";
+                        window.location.pathname + window.location.search = "/SMS/vehicle_allotment_update/" + data.new_id + "/";
                     } else {
                         location.reload();
                     }
@@ -1762,7 +1762,7 @@ $("#va_vehiclesource").on("change", function () {
             success: function (data) {
                 if (data.success) {
                     if (data.new_id) {
-                        window.location.href = "/SMS/vehicle_allotment_update/" + data.new_id + "/";
+                        window.location.pathname + window.location.search = "/SMS/vehicle_allotment_update/" + data.new_id + "/";
                     } else {
                         location.reload();
                     }

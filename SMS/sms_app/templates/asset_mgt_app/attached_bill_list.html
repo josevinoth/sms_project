@@ -359,7 +359,7 @@
     $('#exportExcelBtn').on('click', function() {
         var billId = $('#billSummaryModal').data('bill-id');
         if (billId) {
-            window.location.href = '/SMS/attached_bill_summary_excel/' + billId + '/';
+            window.location.pathname + window.location.search = '/SMS/attached_bill_summary_excel/' + billId + '/';
         }
     });
 </script>

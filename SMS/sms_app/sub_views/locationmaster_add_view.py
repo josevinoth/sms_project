@@ -135,8 +135,7 @@ def locationmaster_list(request):
     return render(request,"asset_mgt_app/locationmaster_list.html",context)
 
 #Calculate warehouse area and volume
-@login_required(login_url='login_page')
-def warehousevolme_area_calc(request):
+def warehousevolme_area_calc(request=None):
     print("Inside warehousevolme_area_calc")
     # Fetch all LocationmasterInfo objects once
     warehouse_objects = list(LocationmasterInfo.objects.all())

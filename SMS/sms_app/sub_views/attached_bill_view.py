@@ -233,10 +233,26 @@ def get_attached_vehicle_details(request):
             if already_billed:
                 filters &= ~Q(tr_tripnumber__in=already_billed)
 
+            trip_dates = set()
+            for t in all_period_trips:
+                t_start_dt = t.tr_departeddate_pickup or t.tr_departeddate
+                t_end_dt = t.tr_reporteddate_pickup or t.tr_reporteddate
+                
+                if not t_start_dt and not t_end_dt:
+                    continue
+                
+                from django.utils import timezone
+                t_start = timezone.localtime(t_start_dt).date() if t_start_dt else f_dt_obj
+                t_end = timezone.localtime(t_end_dt).date() if t_end_dt else t_start
+                
+                temp_date = t_start
+                while temp_date <= t_end:
+                    trip_dates.add(temp_date)
+                    temp_date += timedelta(days=1)
+
             # Trips table stays category 1 only — this list is what gets billed per-trip,
             # Empty/Business Empty trips aren't individually billable line items.
             trips = TripdetailInfo.objects.filter(filters).filter(tr_category_id=1).order_by('tr_departeddate')
-            trip_dates = set()
 
             for trip in trips:
                 # Per-trip KM logic updated to match Vehicle Log Report
@@ -250,16 +266,6 @@ def get_attached_vehicle_details(request):
 
                 from django.utils import timezone
                 trip_dte = timezone.localtime(trip.tr_departeddate).date() if trip.tr_departeddate else None
-
-                if trip.tr_departeddate:
-                    from django.utils import timezone
-                    start_date = timezone.localtime(trip.tr_departeddate).date()
-                    end_dt_val = (trip.tr_reporteddate_delivery or trip.tr_reporteddate or trip.tr_departeddate)
-                    end_date_val = timezone.localtime(end_dt_val).date()
-                    temp_date = start_date
-                    while temp_date <= end_date_val:
-                        trip_dates.add(temp_date)
-                        temp_date += timedelta(days=1)
 
                 # Filter trips for the table display to just the current period
                 if trip_dte and f_dt_obj <= trip_dte <= t_dt_obj:
@@ -292,19 +298,8 @@ def get_attached_vehicle_details(request):
                         leave_dates_set.add(curr)
                     curr += timedelta(days=1)
 
-                # Sunday rule: Sunday only counts as leave if BOTH Saturday and Monday are also leave
-                leave_days_count = 0
-                for d in sorted(leave_dates_set):
-                    if d.weekday() == 6:  # Sunday
-                        saturday = d - timedelta(days=1)
-                        monday = d + timedelta(days=1)
-                        # Only count Sunday as leave if both Saturday and Monday are also leave
-                        sat_is_leave = saturday < f_dt_obj or saturday in leave_dates_set
-                        mon_is_leave = monday > t_dt_obj or monday in leave_dates_set
-                        if sat_is_leave and mon_is_leave:
-                            leave_days_count += 1
-                    else:
-                        leave_days_count += 1
+                # Exclude ALL Sundays from Leave Days count
+                leave_days_count = sum(1 for d in leave_dates_set if d.weekday() != 6)
                 data['leave_days'] = leave_days_count
         else:
             data['total_km_run'] = 0

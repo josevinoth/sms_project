@@ -825,7 +825,7 @@ BVM Warehouse Team`;
 <script>
 $(document).ready(function() {
     // Enable seamless multi-add on the Insert page without reloading the entire page
-    if (window.location.href.indexOf('goods_insert') !== -1) {
+    if (window.location.pathname + window.location.search.indexOf('goods_insert') !== -1) {
         $('#goods_add').on('submit', function(e) {
             e.preventDefault(); // Prevent standard full-page submit
             var form = $(this);

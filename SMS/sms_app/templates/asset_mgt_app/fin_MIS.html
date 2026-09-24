@@ -450,7 +450,7 @@
     const year = document.getElementById('year').value;
     const fromDate = document.getElementById('from-date').value;
     const toDate = document.getElementById('to-date').value;
-    const url = new URL(window.location.href);
+    const url = new URL(window.location.pathname + window.location.search);
 
     if (branch) {
         url.searchParams.set('branch', branch);
@@ -490,7 +490,7 @@
     }
 
     console.log(url.toString());
-    window.location.href = url.toString();
+    window.location.pathname + window.location.search = url.toString();
 }
 </script>
 {% endblock content %}

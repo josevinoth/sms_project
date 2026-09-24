@@ -152,7 +152,7 @@ $(document).ready(function () {
     const table = $('#own_vehicle_pl_report_table').DataTable({
         processing: true,
         ajax: {
-            url: window.location.href,
+            url: window.location.pathname + window.location.search,
             type: 'GET',
             data: function (d) {
                 d.ajax = 1;

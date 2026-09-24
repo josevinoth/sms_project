@@ -171,7 +171,7 @@
         var table = $('#stock_value_report').DataTable({
             serverSide: true,
             ajax: {
-                url: window.location.href,
+                url: window.location.pathname + window.location.search,
                 type: 'GET',
                 data: function(d) {
                     d.ds_customer = $('#ds_customer').val();
