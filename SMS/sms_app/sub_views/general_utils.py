@@ -159,6 +159,8 @@ FORWARD_TRIP_STATUS_MAP = {
     3: [3],
     10: [10],
     11: [11],
+    # 12: Work In Progress -> 12, 8 (Awaiting Approval), 1 (Trip Started), 3, 10, 11
+    12: [12, 8, 1, 3, 10, 11],
 }
 
 def get_allowed_next_statuses(current_status_id, is_admin=False):
