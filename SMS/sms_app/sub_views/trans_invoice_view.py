@@ -56,7 +56,8 @@ def _sync_trans_invoice_pdf(invoice_no, customer_id):
     pdf_fields = [doc.id_merged_pdf for doc in trip_docs if doc.id_merged_pdf]
     
     if pdf_fields:
-        success, pdf_file = merge_pdf_files(pdf_fields, f"invoice_{invoice_no}.pdf")
+        clean_inv_no = str(invoice_no).replace('/', '_').replace('\\', '_')
+        success, pdf_file = merge_pdf_files(pdf_fields, f"Ann-3_{clean_inv_no}.pdf")
         if success:
             master_inv.ti_merged_pdf.save(pdf_file.name, pdf_file, save=True)
     else:
@@ -534,6 +535,8 @@ def attach_goods_totals(items, is_trip=False):
             item.total_goods_weight = getattr(item.ti_goods, 'cg_weight', 0.0) if hasattr(item, 'ti_goods') and item.ti_goods else 0.0
             item.all_hawb_no = str(getattr(item.ti_goods, 'cg_hawbno', '') or '') if hasattr(item, 'ti_goods') and item.ti_goods else ''
             item.all_consignee = str(getattr(item.ti_goods, 'cg_consignee', '') or '') if hasattr(item, 'ti_goods') and item.ti_goods else ''
+            item.all_consigner_invoice = str(getattr(item.ti_goods, 'cg_consignerinvoice', '') or '') if hasattr(item, 'ti_goods') and item.ti_goods else ''
+            item.all_mawb_no = str(getattr(item.ti_goods, 'cg_mawbno', '') or '') if hasattr(item, 'ti_goods') and item.ti_goods else ''
             item.hawb_items = [h.strip() for h in str(getattr(item.ti_goods, 'cg_hawbno', '') or '').replace('/', ',').split(',') if h.strip()]
         return items
 
@@ -553,6 +556,8 @@ def attach_goods_totals(items, is_trip=False):
                 'total_weight': 0.0,
                 'hawb_list': [],
                 'consignee_list': [],
+                'consigner_invoice_list': [],
+                'mawb_list': [],
             }
         data = goods_map[cid]
         data['total_qty'] += (g.cg_qty or 0)
@@ -572,6 +577,18 @@ def attach_goods_totals(items, is_trip=False):
             if c_name and c_name not in data['consignee_list']:
                 data['consignee_list'].append(c_name)
 
+        # Collect Consignee Invoice / Consigner Invoice
+        if g.cg_consignerinvoice:
+            inv_clean = str(g.cg_consignerinvoice).strip()
+            if inv_clean and inv_clean not in data['consigner_invoice_list']:
+                data['consigner_invoice_list'].append(inv_clean)
+
+        # Collect MAWB numbers
+        if g.cg_mawbno:
+            mawb_clean = str(g.cg_mawbno).strip()
+            if mawb_clean and mawb_clean not in data['mawb_list']:
+                data['mawb_list'].append(mawb_clean)
+
     for item in items:
         if is_trip:
             cid = item.tr_consignmentnumber_id if item.tr_consignmentnumber else None
@@ -584,18 +601,24 @@ def attach_goods_totals(items, is_trip=False):
             item.total_goods_weight = d['total_weight']
             item.all_hawb_no = ", ".join(d['hawb_list'])
             item.all_consignee = ", ".join(d['consignee_list'])
+            item.all_consigner_invoice = ", ".join(d['consigner_invoice_list'])
+            item.all_mawb_no = ", ".join(d['mawb_list'])
             item.hawb_items = d['hawb_list']
         elif hasattr(item, 'ti_goods') and item.ti_goods:
             item.total_goods_qty = item.ti_goods.cg_qty or 0
             item.total_goods_weight = item.ti_goods.cg_weight or 0.0
             item.all_hawb_no = str(item.ti_goods.cg_hawbno or '')
             item.all_consignee = str(item.ti_goods.cg_consignee or '')
+            item.all_consigner_invoice = str(item.ti_goods.cg_consignerinvoice or '')
+            item.all_mawb_no = str(item.ti_goods.cg_mawbno or '')
             item.hawb_items = [h.strip() for h in str(item.ti_goods.cg_hawbno or '').replace('/', ',').split(',') if h.strip()]
         else:
             item.total_goods_qty = 0
             item.total_goods_weight = 0.0
             item.all_hawb_no = ""
             item.all_consignee = ""
+            item.all_consigner_invoice = ""
+            item.all_mawb_no = ""
             item.hawb_items = []
 
     return items
@@ -756,8 +779,17 @@ def trans_invoice_list(request):
 
     cnote_inv_keys = set(woh_cnote_items)
 
+    # Pre-fetch submission dates in case set on WOH records
+    woh_sub_dates = dict(
+        TransInvoiceInfo.objects.filter(
+            ti_submission_date__isnull=False
+        ).values_list('ti_inv_no', 'ti_submission_date')
+    )
+
     for invoice in queryset:
         invoice.has_cnote = (invoice.ti_inv_no, invoice.ti_customer_id) in cnote_inv_keys
+        if not invoice.ti_submission_date and invoice.ti_inv_no in woh_sub_dates:
+            invoice.ti_submission_date = woh_sub_dates[invoice.ti_inv_no]
 
     return render(
         request,
@@ -770,11 +802,22 @@ def trans_invoice_list(request):
 
 
 # ==================================================
-# DOWNLOAD COMBINED CNOTE PDF FOR INVOICE
+# DOWNLOAD COMBINED CNOTE PDF FOR INVOICE (ANN-2)
 # ==================================================
-@login_required(login_url='login_page')
-def trans_invoice_cnote_pdf(request, invoice_id):
-    master_inv = get_object_or_404(TransInvoiceInfo, pk=invoice_id, is_woh=False)
+def _render_cnote_pdf_bytes(master_inv):
+    """
+    Renders Ann-2 (Combined Consignment Notes PDF) into raw bytes.
+    Accepts either a TransInvoiceInfo instance, or an invoice PK or invoice_no string.
+    """
+    if isinstance(master_inv, (int, str)) and str(master_inv).isdigit():
+        master_inv = TransInvoiceInfo.objects.filter(pk=master_inv).first()
+    elif isinstance(master_inv, str):
+        master_inv = TransInvoiceInfo.objects.filter(ti_inv_no=master_inv, is_woh=False).first()
+        if not master_inv:
+            master_inv = TransInvoiceInfo.objects.filter(ti_inv_no=master_inv).first()
+
+    if not master_inv:
+        return None
 
     woh_items = TransInvoiceInfo.objects.filter(
         ti_inv_no=master_inv.ti_inv_no,
@@ -791,7 +834,7 @@ def trans_invoice_cnote_pdf(request, invoice_id):
             consignments.append(cons)
 
     if not consignments:
-        return HttpResponse("No Consignment Notes found for the trip(s) in this invoice.", content_type="text/plain")
+        return None
 
     pdf_writer = PdfWriter()
     has_pages = False
@@ -870,16 +913,24 @@ def trans_invoice_cnote_pdf(request, invoice_id):
                 has_pages = True
 
     if not has_pages:
-        return HttpResponse("Failed to generate PDF for consignment notes.", content_type="text/plain")
+        return None
 
     output = io.BytesIO()
     pdf_writer.write(output)
-    output.seek(0)
+    return output.getvalue()
+
+
+@login_required(login_url='login_page')
+def trans_invoice_cnote_pdf(request, invoice_id):
+    master_inv = get_object_or_404(TransInvoiceInfo, pk=invoice_id, is_woh=False)
+    pdf_bytes = _render_cnote_pdf_bytes(master_inv)
+    if not pdf_bytes:
+        return HttpResponse("No Consignment Notes found for the trip(s) in this invoice.", content_type="text/plain")
 
     clean_inv_no = (master_inv.ti_inv_no or "").replace('/', '_').replace('\\', '_')
-    filename = f"Combined_CNote_{clean_inv_no}.pdf"
+    filename = f"Ann-2_{clean_inv_no}.pdf"
 
-    response = HttpResponse(output.read(), content_type='application/pdf')
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{filename}"'
     return response
 
@@ -1313,6 +1364,432 @@ def trans_invoice_add_woh(request):
     return JsonResponse({'status': 'success'})
 
 
+def _clean_str(val):
+    if val is None or str(val).strip().lower() in ('none', '', 'nan'):
+        return "-"
+    return str(val).strip()
+
+
+def _wrap_breaks(val, max_chunk=12):
+    if val is None or str(val).strip().lower() in ('none', '', 'nan'):
+        return "-"
+    s = str(val).strip()
+    s = s.replace('/', '/ ').replace(',', ', ').replace('_', '_ ')
+    words = s.split(' ')
+    result = []
+    for w in words:
+        while len(w) > max_chunk:
+            result.append(w[:max_chunk])
+            w = w[max_chunk:]
+        if w:
+            result.append(w)
+    return ' '.join(result)
+
+
+def _amount_to_words(amount):
+    try:
+        from num2words import num2words
+        amount = float(amount or 0.0)
+        rupees = int(amount)
+        paise = int(round((amount - rupees) * 100))
+        text = num2words(rupees, lang='en_IN').title() + ' Rupees'
+        if paise > 0:
+            text += ' And ' + num2words(paise, lang='en_IN').title() + ' Paise'
+        return text + ' Only'
+    except Exception:
+        return f"{amount:,.2f}"
+
+
+def _render_ann1_pdf_bytes(invoice_no):
+    """
+    Renders Ann-1 (Billing Statement PDF) into raw bytes.
+    """
+    master_inv = TransInvoiceInfo.objects.filter(ti_inv_no=invoice_no, is_woh=False).first()
+    if not master_inv:
+        master_inv = TransInvoiceInfo.objects.filter(ti_inv_no=invoice_no).first()
+
+    if not master_inv:
+        return None
+
+    customer = master_inv.ti_customer
+    qs = TransInvoiceInfo.objects.filter(
+        ti_customer=customer, ti_inv_no=invoice_no, is_woh=True
+    ).select_related("ti_customer", "ti_trip", "ti_consignment", "ti_goods")
+
+    trips = [obj.ti_trip for obj in qs if obj.ti_trip]
+    attach_vehicle_category_to_trips(trips)
+    attach_invoice_veh_type_to_trips(trips)
+
+    items = list(qs)
+
+    # Pre-fetch all goods rows for all consignments in one query
+    cons_ids = []
+    for obj in items:
+        cid = obj.ti_consignment_id or (
+            obj.ti_trip.tr_consignmentnumber_id if obj.ti_trip and obj.ti_trip.tr_consignmentnumber else None
+        )
+        if cid:
+            cons_ids.append(cid)
+
+    goods_map = {}  # cid -> list of ConsignmentgoodsInfo
+    if cons_ids:
+        for g in (ConsignmentgoodsInfo.objects
+                  .filter(cg_consignmentnumber_id__in=cons_ids)
+                  .select_related('cg_consignee')
+                  .order_by('id')):
+            cid = g.cg_consignmentnumber_id
+            goods_map.setdefault(cid, []).append(g)
+
+    trips_data = []
+    tot_qty = 0
+    tot_weight = 0.0
+    tot_transport = 0.0
+    tot_toll = 0.0
+    tot_parking = 0.0
+    tot_loading = 0.0
+    tot_unloading = 0.0
+    tot_halting = 0.0
+    tot_weighment = 0.0
+    tot_handling = 0.0
+    tot_cancellation = 0.0
+    tot_grand = 0.0
+    tot_halting_days = 0
+
+    for idx, obj in enumerate(items, 1):
+        trip = obj.ti_trip
+
+        # Strictly check Bill to Customer checkboxes - charges are only fetched if checked
+        if trip:
+            transport = float(get_trip_transport_charge(trip) or 0.0)
+            toll = float(trip.tc_tollcost or 0.0) if trip.tc_tollcost_check else 0.0
+            parking = float(trip.tc_parkingcost or 0.0) if trip.tc_parkingcost_check else 0.0
+            loading = float(trip.tc_loadingcost or 0.0) if trip.tc_loadingcost_check else 0.0
+            unloading = float(trip.tc_unloadingcost or 0.0) if trip.tc_unloadingcost_check else 0.0
+            halting = float(get_trip_halting_charge(trip) or 0.0)
+            weighment = float(trip.tc_weighmentcost or 0.0) if trip.tc_weighmentcost_check else 0.0
+            handling = ((float(trip.tc_handlingcost or 0.0) if trip.tc_handlingcost_check else 0.0) +
+                        (float(trip.tc_supervisorcost or 0.0) if trip.tc_supervisorcost_check else 0.0))
+            cancellation = float(trip.tc_cancellation or 0.0) if trip.tc_cancellation_check else 0.0
+            halting_days = int(trip.tc_no_of_days_halting or 0) if (trip.tc_haltingcost_check or trip.tc_total_halting_cost_check or halting > 0) else 0
+        else:
+            transport = float(obj.ti_transportation_charges or 0.0)
+            toll = float(obj.ti_toll_charges or 0.0)
+            parking = float(obj.ti_parking_charges or 0.0)
+            loading = float(obj.ti_loading_charges or 0.0)
+            unloading = float(obj.ti_unloading_charges or 0.0)
+            halting = float(obj.ti_halting_charges or 0.0)
+            weighment = float(obj.ti_weighment_charges or 0.0)
+            handling = float(obj.ti_handling_charges or 0.0)
+            cancellation = float(obj.ti_cancellation_charges or 0.0)
+            halting_days = 0
+
+        total_val = (
+            transport + toll + parking + loading + unloading +
+            halting + weighment + handling + cancellation
+        )
+
+        # Resolve consignment id for goods lookup
+        cid = obj.ti_consignment_id or (
+            obj.ti_trip.tr_consignmentnumber_id if obj.ti_trip and obj.ti_trip.tr_consignmentnumber else None
+        )
+        raw_goods = goods_map.get(cid, []) if cid else []
+        if not raw_goods and obj.ti_goods:
+            raw_goods = [obj.ti_goods]
+
+        goods_rows = []
+        for g in raw_goods:
+            goods_rows.append({
+                'consignee': _clean_str(g.cg_consignee),
+                'consignee_inv': _wrap_breaks(str(g.cg_consignerinvoice or '')),
+                'hawb': _clean_str(g.cg_hawbno),
+                'mawb': _clean_str(g.cg_mawbno),
+                'qty': g.cg_qty or 0,
+                'weight': float(g.cg_weight or 0.0),
+            })
+
+        if not goods_rows:
+            goods_rows = [{
+                'consignee': '-', 'consignee_inv': '-',
+                'hawb': '-', 'mawb': '-', 'qty': 0, 'weight': 0.0,
+            }]
+
+        trip_qty = sum(r['qty'] for r in goods_rows)
+        trip_weight = sum(r['weight'] for r in goods_rows)
+
+        tot_qty += trip_qty
+        tot_weight += trip_weight
+        tot_transport += transport
+        tot_toll += toll
+        tot_parking += parking
+        tot_loading += loading
+        tot_unloading += unloading
+        tot_halting += halting
+        tot_weighment += weighment
+        tot_handling += handling
+        tot_cancellation += cancellation
+        tot_grand += total_val
+        tot_halting_days += halting_days
+
+        cnote_raw = str(obj.ti_consignment.co_consignmentnumber) if obj.ti_consignment and obj.ti_consignment.co_consignmentnumber else ""
+        ref_raw = str(obj.ti_consignment.co_cusrefnum) if obj.ti_consignment and obj.ti_consignment.co_cusrefnum else ""
+        veh_type_raw = (
+            obj.ti_trip.invoice_veh_type if obj.ti_trip and hasattr(obj.ti_trip, 'invoice_veh_type') and obj.ti_trip.invoice_veh_type
+            else (str(obj.ti_trip.tr_vehicletype) if obj.ti_trip and obj.ti_trip.tr_vehicletype else "")
+        )
+        veh_category_raw = (
+            str(obj.ti_trip.vehicle_category) if obj.ti_trip and hasattr(obj.ti_trip, 'vehicle_category') and obj.ti_trip.vehicle_category
+            else ""
+        )
+
+        date_str = "-"
+        if obj.ti_trip and obj.ti_trip.tr_enquirynumber and obj.ti_trip.tr_enquirynumber.en_pickupdatetime:
+            date_str = obj.ti_trip.tr_enquirynumber.en_pickupdatetime.strftime('%d/%m/%y')
+
+        trips_data.append({
+            'sno': idx,
+            'planning_date': date_str,
+            'cnote': _wrap_breaks(cnote_raw),
+            'from_loc': _clean_str(obj.ti_trip.tr_departedlocation if obj.ti_trip else ""),
+            'to_loc': _clean_str(obj.ti_trip.tr_reportedlocation if obj.ti_trip else ""),
+            'dept': _clean_str(obj.ti_department),
+            'veh_no': _clean_str(obj.ti_trip.tr_vehiclenumber if obj.ti_trip else ""),
+            'veh_type': _clean_str(veh_type_raw),
+            'veh_category': _clean_str(veh_category_raw),
+            'ref_no': _wrap_breaks(ref_raw),
+            'goods_rows': goods_rows,
+            'goods_count': len(goods_rows),
+            'trip_qty': trip_qty,
+            'trip_weight': trip_weight,
+            'transport': transport,
+            'toll': toll,
+            'parking': parking,
+            'loading': loading,
+            'unloading': unloading,
+            'halting': halting,
+            'weighment': weighment,
+            'handling': handling,
+            'cancellation': cancellation,
+            'total': total_val,
+            'halting_days': halting_days,
+        })
+
+    tot_other = tot_toll + tot_parking + tot_loading + tot_unloading + tot_weighment + tot_handling + tot_cancellation
+
+    # Only display charges columns if at least one trip has a non-zero value
+    show_transport = any(abs(t['transport']) > 0.001 for t in trips_data) or abs(tot_transport) > 0.001
+    show_toll = any(abs(t['toll']) > 0.001 for t in trips_data) or abs(tot_toll) > 0.001
+    show_parking = any(abs(t['parking']) > 0.001 for t in trips_data) or abs(tot_parking) > 0.001
+    show_loading = any(abs(t['loading']) > 0.001 for t in trips_data) or abs(tot_loading) > 0.001
+    show_unloading = any(abs(t['unloading']) > 0.001 for t in trips_data) or abs(tot_unloading) > 0.001
+    show_halting = any(abs(t['halting']) > 0.001 for t in trips_data) or abs(tot_halting) > 0.001
+    show_weighment = any(abs(t['weighment']) > 0.001 for t in trips_data) or abs(tot_weighment) > 0.001
+    show_handling = any(abs(t['handling']) > 0.001 for t in trips_data) or abs(tot_handling) > 0.001
+    show_cancellation = any(abs(t['cancellation']) > 0.001 for t in trips_data) or abs(tot_cancellation) > 0.001
+    show_halting_days = (tot_halting_days > 0) or show_halting
+
+    col_count = 15  # base non-charge columns
+    if show_transport: col_count += 1
+    if show_toll: col_count += 1
+    if show_parking: col_count += 1
+    if show_loading: col_count += 1
+    if show_unloading: col_count += 1
+    if show_halting: col_count += 1
+    if show_weighment: col_count += 1
+    if show_handling: col_count += 1
+    if show_cancellation: col_count += 1
+    col_count += 1  # Total column is always present
+    if show_halting_days: col_count += 1
+
+    context = {
+        'master_inv': master_inv,
+        'customer': customer,
+        'trips_data': trips_data,
+        'show_transport': show_transport,
+        'show_toll': show_toll,
+        'show_parking': show_parking,
+        'show_loading': show_loading,
+        'show_unloading': show_unloading,
+        'show_halting': show_halting,
+        'show_weighment': show_weighment,
+        'show_handling': show_handling,
+        'show_cancellation': show_cancellation,
+        'show_halting_days': show_halting_days,
+        'col_count': col_count,
+        'tot_qty': tot_qty,
+        'tot_weight': tot_weight,
+        'tot_transport': tot_transport,
+        'tot_halting': tot_halting,
+        'tot_toll': tot_toll,
+        'tot_parking': tot_parking,
+        'tot_toll_parking': tot_toll + tot_parking,
+        'tot_loading': tot_loading,
+        'tot_unloading': tot_unloading,
+        'tot_loading_unloading': tot_loading + tot_unloading,
+        'tot_handling': tot_handling,
+        'tot_weighment': tot_weighment,
+        'tot_cancellation': tot_cancellation,
+        'tot_handling_other': tot_handling + tot_weighment + tot_cancellation,
+        'tot_other': tot_other,
+        'tot_grand': tot_grand,
+        'tot_halting_days': tot_halting_days,
+        'amount_in_words': _amount_to_words(tot_grand),
+    }
+
+    template_path = 'asset_mgt_app/trans_invoice_ann1_pdf.html'
+    template = get_template(template_path)
+    html = template.render(context)
+
+    pdf_buffer = io.BytesIO()
+    pisa_status = pisa.CreatePDF(html, dest=pdf_buffer)
+    if pisa_status.err:
+        return None
+
+    return pdf_buffer.getvalue()
+
+
+@login_required(login_url='login_page')
+def trans_invoice_ann1_pdf(request, invoice_no):
+    pdf_bytes = _render_ann1_pdf_bytes(invoice_no)
+    if not pdf_bytes:
+        return HttpResponse("Invoice not found or error generating Ann-1 PDF.", content_type="text/plain")
+
+    clean_inv_no = str(invoice_no).replace('/', '_').replace('\\', '_')
+    filename = f"Ann-1_{clean_inv_no}.pdf"
+
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    return response
+
+
+@login_required(login_url='login_page')
+def trans_invoice_upload_pdf(request):
+    """
+    Uploads primary invoice PDF for a master transport invoice.
+    """
+    if request.method == 'POST':
+        invoice_id = request.POST.get('invoice_id')
+        pdf_file = request.FILES.get('invoice_pdf')
+
+        if not invoice_id or not pdf_file:
+            messages.error(request, "Please select a valid PDF file to upload.")
+            return redirect('trans_invoice_list')
+
+        if not pdf_file.name.lower().endswith('.pdf'):
+            messages.error(request, "Only PDF files are allowed.")
+            return redirect('trans_invoice_list')
+
+        master_inv = get_object_or_404(TransInvoiceInfo, pk=invoice_id)
+        master_inv.ti_invoice_pdf = pdf_file
+        master_inv.save()
+
+        # Also sync ti_invoice_pdf file name to associated WOH records
+        TransInvoiceInfo.objects.filter(
+            ti_inv_no=master_inv.ti_inv_no,
+            ti_customer=master_inv.ti_customer,
+            is_woh=True
+        ).update(ti_invoice_pdf=master_inv.ti_invoice_pdf.name)
+
+        messages.success(request, f"Invoice PDF uploaded successfully for {master_inv.ti_inv_no}.")
+        return redirect('trans_invoice_list')
+
+    return redirect('trans_invoice_list')
+
+
+@login_required(login_url='login_page')
+def trans_invoice_combined_pdf(request, invoice_no):
+    """
+    Merges all attachments in strict sequence:
+    1. Invoice (Uploaded PDF)
+    2. Ann-1 (Billing Statement PDF)
+    3. Ann-2 (Combined CNote PDF)
+    4. Ann-3 (Invoice Documents PDF)
+    """
+    master_inv = TransInvoiceInfo.objects.filter(ti_inv_no=invoice_no, is_woh=False).first()
+    if not master_inv:
+        master_inv = TransInvoiceInfo.objects.filter(ti_inv_no=invoice_no).first()
+
+    if not master_inv:
+        return HttpResponse("Invoice not found.", content_type="text/plain")
+
+    # Refresh/sync Ann-3 merged PDF to ensure up-to-date document attachments
+    try:
+        _sync_trans_invoice_pdf(master_inv.ti_inv_no, master_inv.ti_customer_id)
+        master_inv.refresh_from_db()
+    except Exception:
+        pass
+
+    combined_writer = PdfWriter()
+    has_any_pages = False
+
+    # 1. Primary Invoice PDF (Uploaded)
+    if master_inv.ti_invoice_pdf:
+        try:
+            master_inv.ti_invoice_pdf.open('rb')
+            reader = PdfReader(master_inv.ti_invoice_pdf)
+            for page in reader.pages:
+                combined_writer.add_page(page)
+                has_any_pages = True
+        except Exception:
+            pass
+        finally:
+            try:
+                master_inv.ti_invoice_pdf.close()
+            except Exception:
+                pass
+
+    # 2. Ann-1 PDF (Billing Statement)
+    ann1_bytes = _render_ann1_pdf_bytes(invoice_no)
+    if ann1_bytes:
+        try:
+            reader = PdfReader(io.BytesIO(ann1_bytes))
+            for page in reader.pages:
+                combined_writer.add_page(page)
+                has_any_pages = True
+        except Exception:
+            pass
+
+    # 3. Ann-2 PDF (Combined CNote)
+    ann2_bytes = _render_cnote_pdf_bytes(master_inv)
+    if ann2_bytes:
+        try:
+            reader = PdfReader(io.BytesIO(ann2_bytes))
+            for page in reader.pages:
+                combined_writer.add_page(page)
+                has_any_pages = True
+        except Exception:
+            pass
+
+    # 4. Ann-3 PDF (Invoice Documents)
+    if master_inv.ti_merged_pdf:
+        try:
+            master_inv.ti_merged_pdf.open('rb')
+            reader = PdfReader(master_inv.ti_merged_pdf)
+            for page in reader.pages:
+                combined_writer.add_page(page)
+                has_any_pages = True
+        except Exception:
+            pass
+        finally:
+            try:
+                master_inv.ti_merged_pdf.close()
+            except Exception:
+                pass
+
+    if not has_any_pages:
+        return HttpResponse("No documents available to combine for this invoice.", content_type="text/plain")
+
+    output = io.BytesIO()
+    combined_writer.write(output)
+    output.seek(0)
+
+    clean_inv_no = str(invoice_no).replace('/', '_').replace('\\', '_')
+    filename = f"Combined_Invoice_{clean_inv_no}.pdf"
+
+    response = HttpResponse(output.read(), content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    return response
+
+
 def trans_invoice_excel(request, invoice_no):
     first_record = TransInvoiceInfo.objects.filter(ti_inv_no=invoice_no).first()
     if not first_record:
@@ -1347,7 +1824,9 @@ def trans_invoice_excel(request, invoice_no):
         "Veh Reported Date & Time at unloading Point",
         "Trip Closed Date & Time at Unloading Point",
         "Consignee",
+        "Consignee Invoice number",
         "Reference No",
+        "MAWB number",
         "HAWB No",
         "No.of Pcs",
         "Weight",
@@ -1381,6 +1860,11 @@ def trans_invoice_excel(request, invoice_no):
 
     ws.column_dimensions["A"].width = 18
     for col in "HIJK": ws.column_dimensions[col].width = 25
+    ws.column_dimensions["M"].width = 25
+    ws.column_dimensions["N"].width = 25
+    ws.column_dimensions["O"].width = 20
+    ws.column_dimensions["P"].width = 20
+    ws.column_dimensions["Q"].width = 20
 
     def safe(val): return val if val is not None else ""
 
@@ -1434,7 +1918,9 @@ def trans_invoice_excel(request, invoice_no):
             safe(obj.ti_trip.tr_reporteddate.strftime('%d/%m/%Y %H:%M') if obj.ti_trip and obj.ti_trip.tr_reporteddate else ""),
             safe(obj.ti_trip.tr_reporteddate_pickup.strftime('%d/%m/%Y %H:%M') if obj.ti_trip and obj.ti_trip.tr_reporteddate_pickup else ""),
             safe(str(obj.all_consignee if hasattr(obj, 'all_consignee') and obj.all_consignee else (obj.ti_goods.cg_consignee if obj.ti_goods else ""))),
+            safe(str(obj.all_consigner_invoice if hasattr(obj, 'all_consigner_invoice') and obj.all_consigner_invoice else (obj.ti_goods.cg_consignerinvoice if obj.ti_goods else ""))),
             safe(str(obj.ti_consignment.co_cusrefnum) if obj.ti_consignment else ""),
+            safe(str(obj.all_mawb_no if hasattr(obj, 'all_mawb_no') and obj.all_mawb_no else (obj.ti_goods.cg_mawbno if obj.ti_goods else ""))),
             safe(str(obj.all_hawb_no if hasattr(obj, 'all_hawb_no') and obj.all_hawb_no else (obj.ti_goods.cg_hawbno if obj.ti_goods else ""))),
             safe(str(obj.total_goods_qty if hasattr(obj, 'total_goods_qty') and obj.total_goods_qty is not None else (obj.ti_goods.cg_qty if obj.ti_goods else ""))),
             safe(str(obj.total_goods_weight if hasattr(obj, 'total_goods_weight') and obj.total_goods_weight is not None else (obj.ti_goods.cg_weight if obj.ti_goods else ""))),
@@ -1482,8 +1968,9 @@ def trans_invoice_excel(request, invoice_no):
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)
+    clean_inv_no = str(invoice_no).replace('/', '_').replace('\\', '_')
     response = HttpResponse(buffer.getvalue(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    response["Content-Disposition"] = f'attachment; filename="Excel_Export_{customer.cu_nameshort or customer.id}.xlsx"'
+    response["Content-Disposition"] = f'attachment; filename="Excel_Export_{clean_inv_no}.xlsx"'
     return response
 
 

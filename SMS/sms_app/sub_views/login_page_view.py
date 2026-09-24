@@ -6,6 +6,9 @@ from django.http import JsonResponse
 from ..models import User_extInfo, UnitInfo
 
 def login_page(request):
+    if request.user.is_authenticated:
+        messages.warning(request, f"You are already logged in as {request.user.first_name or request.user.username}. Please log out first before switching accounts.")
+        return redirect('home_page')
     units = []
     username = ''
     if request.method == 'POST':

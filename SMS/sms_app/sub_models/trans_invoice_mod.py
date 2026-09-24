@@ -30,6 +30,9 @@ class TransInvoiceInfo(models.Model):
     ti_department = models.CharField(max_length=100,null=True,blank=True)
     ti_branch = models.CharField(max_length=50,null=True,blank=True)
     ti_merged_pdf = models.FileField(upload_to='TransportInvoices/Merged/', null=True, blank=True)
+    ti_invoice_pdf = models.FileField(upload_to='TransportInvoices/Invoices/', null=True, blank=True)
+    ti_submission_date = models.DateField(null=True, blank=True)
+    ti_submitted_to = models.CharField(max_length=200, null=True, blank=True)
 
     # 🔹 CONDITIONAL FIELDS (Manual Entry Only)
     ti_aai_sno = models.CharField(max_length=100, null=True, blank=True)  # DSV
