@@ -325,6 +325,7 @@ urlpatterns = [
     path('rtratemaster_history/<int:rtratemaster_id>/', views.rtratemaster_history, name='rtratemaster_history'),
     path('rtratemaster_history/<int:rtratemaster_id>', views.rtratemaster_history),
     path('rtratemaster_delete/<int:rtratemaster_id>/', views.rtratemaster_delete, name='rtratemaster_delete'),
+    path('rtratemaster_update_enquiry_rates/', views.rtratemaster_update_enquiry_rates, name='rtratemaster_update_enquiry_rates'),
     # Delete rtratemaster
     path('gstexcepmtion_list/', views.gstexcepmtion_list, name='gstexcepmtion_list'),  # List gstexcepmtion,
     path('gstexcepmtion_insert', views.gstexcepmtion_add, name='gstexcepmtion_insert'),  # Add gstexcepmtion
@@ -445,10 +446,17 @@ urlpatterns = [
     path('wms_petty_cash_update/<int:wpc_id>/', views.wms_petty_cash_add, name='wms_petty_cash_update'),
     path('wms_petty_cash_delete/<int:wpc_id>/', views.wms_petty_cash_delete, name='wms_petty_cash_delete'),
     path('wms_petty_cash_export_tally/', views.wms_petty_cash_export_tally, name='wms_petty_cash_export_tally'),
+    path('pms_petty_cash_list/', views.pms_petty_cash_list, name='pms_petty_cash_list'),
+    path('pms_petty_cash_insert/', views.pms_petty_cash_add, name='pms_petty_cash_insert'),
+    path('pms_petty_cash_update/<int:ppc_id>/', views.pms_petty_cash_add, name='pms_petty_cash_update'),
+    path('pms_petty_cash_delete/<int:ppc_id>/', views.pms_petty_cash_delete, name='pms_petty_cash_delete'),
+    path('pms_petty_cash_export_tally/', views.pms_petty_cash_export_tally, name='pms_petty_cash_export_tally'),
     path('get_wms_job_details/', views.get_wms_job_details, name='get_wms_job_details'),
     path('get_wms_customers_by_unit/', views.get_wms_customers_by_unit, name='get_wms_customers_by_unit'),
     path('get_wms_jobs_by_customer/', views.get_wms_jobs_by_customer, name='get_wms_jobs_by_customer'),
-    path('pms_petty_cash_insert/', views.expense_add, {'is_petty_cash': True, 'petty_cash_type': 'pms'}, name='pms_petty_cash_insert'),  # PMS Petty cash insert
+    path('get_pms_job_details/', views.get_pms_job_details, name='get_pms_job_details'),
+    path('get_pms_customers_by_unit/', views.get_pms_customers_by_unit, name='get_pms_customers_by_unit'),
+    path('get_pms_jobs_by_customer/', views.get_pms_jobs_by_customer, name='get_pms_jobs_by_customer'),
     path('expense_update/<int:expense_id>', views.expense_add, name='expense_update'),  # update expense
     path('expense_delete/<int:expense_id>', views.expense_delete, name='expense_delete'),  # delete expense
     path('expense_search/', views.expense_search, name='expense_search'),  # search expense
@@ -978,6 +986,8 @@ urlpatterns = [
     path('backfill-one/', views.backfill_one_record, name='backfill_one_record'),
     path('backfill-all/', views.backfill_all_records, name='backfill_all_records'),
     path('backfill_weight/', views.backfill_goods_weight, name='backfill_goods_weight'),
+    path('backfill_enquiry_sell_rates/', views.backfill_enquiry_sell_rates, name='backfill_enquiry_sell_rates'),
+
     path('get_fastag_toll_cost_ajax/', views.get_fastag_toll_cost_ajax, name='get_fastag_toll_cost_ajax'),
     path('vendor_filter/', views.vendor_filter, name='vendor_filter'),
     path('consignmentgoods/<int:pk>/upload/<str:att_type>/', views.consignmentgoods_upload_attachment,

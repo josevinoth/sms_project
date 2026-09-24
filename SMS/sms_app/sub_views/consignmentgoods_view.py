@@ -36,7 +36,21 @@ def consignee_select2_search(request):
 def consignmentgoods_add(request, consignmentgoods_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    consignment_detail_id = request.session.get('ses_consignment_detail_id')
+    
+    # Prioritize explicit parameters over global session to prevent cross-tab bleed
+    consignment_detail_id = request.GET.get('c_id')
+    if not consignment_detail_id and request.method == "POST":
+        consignment_detail_id = request.POST.get('cg_consignmentnumber')
+        
+    if not consignment_detail_id:
+        consignment_detail_id = request.session.get('ses_consignment_detail_id')
+    else:
+        try:
+            consignment_detail_id = int(consignment_detail_id)
+            request.session['ses_consignment_detail_id'] = consignment_detail_id
+        except (ValueError, TypeError):
+            consignment_detail_id = request.session.get('ses_consignment_detail_id')
+
     print('consignment_detail_id', consignment_detail_id)
     if request.method == "GET":
         existing_invoices = (

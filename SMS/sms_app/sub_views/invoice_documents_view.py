@@ -11,6 +11,7 @@ from ..forms import TripSettlementForm, TripclosurefilesForm
 from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
 from ..sub_forms.invoice_document_form import InvoiceDocumentForm
 from ..sub_models.trip_status_mod import Tripstatusinfo
+from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
 
 
 def get_enquiry_special_sell(trip):
@@ -753,6 +754,13 @@ def invoice_documents_add(request, trip_id):
             _copy_stored_file(invoice_doc.id_pod_doc, trip.td_pod)
         invoice_doc.save()
 
+    # Fetch related ConsignmentgoodsInfo (first goods record for this consignment)
+    cnote_goods = None
+    if trip.tr_consignmentnumber:
+        cnote_goods = ConsignmentgoodsInfo.objects.filter(
+            cg_consignmentnumber=trip.tr_consignmentnumber
+        ).order_by('id').first()
+
     # Fields editable in the settlement form on this page (status, customer ref, and all charges except trip cost)
     editable_fields = [
         'tc_financestatus', 
@@ -768,7 +776,7 @@ def invoice_documents_add(request, trip_id):
         'tc_rtocost', 'tc_rtocost_check',
         'tc_betacost', 'tc_betacost_check',
         'tc_cancellation', 'tc_cancellation_check',
-        'tc_tripcost_check',
+        'tc_tripcost', 'tc_tripcost_check',
         'tc_special_sell_check', 'tc_special_sell',
         'special_sell', 'special_sell_check',
     ]
@@ -796,17 +804,22 @@ def invoice_documents_add(request, trip_id):
         for field in files_form.fields:
             files_form.fields[field].required = False
 
-        # Validate Customer Ref No is mandatory
+        # Fetch reference fields from POST (all optional individually, but at least one is required)
         customer_ref_val = (request.POST.get('tr_customerref') or '').strip()
-        if not customer_ref_val:
-            customer_ref_val = (
-                trip.tr_consignmentnumber.co_cusrefnum
-                if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_cusrefnum
-                else trip.tr_customerref or ''
-            ).strip()
+        # Check if user ticked the boxes
+        want_consigner = bool(request.POST.get('use_consigner_invoice'))
+        want_hawb = bool(request.POST.get('use_hawb'))
+        want_mawb = bool(request.POST.get('use_mawb'))
 
-        if not customer_ref_val:
-            messages.error(request, "Customer Ref No is mandatory. Form cannot be submitted without Customer Ref No.")
+        consigner_invoice_val = cnote_goods.cg_consignerinvoice if cnote_goods else ''
+        hawb_val = cnote_goods.cg_hawbno if cnote_goods else ''
+        mawb_val = cnote_goods.cg_mawbno if cnote_goods else ''
+
+        # Validate: at least one reference is required
+        has_valid_ref = bool(customer_ref_val) or (want_consigner and consigner_invoice_val) or (want_hawb and hawb_val) or (want_mawb and mawb_val)
+        
+        if not has_valid_ref:
+            messages.error(request, "At least one reference field is required: Customer Ref No, Consigner Invoice, HAWB, or MAWB.")
             return redirect('invoice_documents_add', trip_id=trip_id)
 
         # Validate either Trip Charges or Special Sell must be checked
@@ -869,11 +882,12 @@ def invoice_documents_add(request, trip_id):
                     setattr(trip_obj, f, getattr(trip, f, False))
 
             # Store customer ref on trip_obj and linked consignment
-            if customer_ref_val:
-                trip_obj.tr_customerref = customer_ref_val
-                if trip_obj.tr_consignmentnumber:
-                    trip_obj.tr_consignmentnumber.co_cusrefnum = customer_ref_val
-                    trip_obj.tr_consignmentnumber.save(update_fields=['co_cusrefnum'])
+            trip_obj.tr_customerref = customer_ref_val
+            if trip_obj.tr_consignmentnumber:
+                trip_obj.tr_consignmentnumber.co_cusrefnum = customer_ref_val
+                trip_obj.tr_consignmentnumber.save(update_fields=['co_cusrefnum'])
+
+
 
             # Store special sell on trip_obj if provided
             special_sell_val = request.POST.get('special_sell', '').strip() or settlement_form.cleaned_data.get('special_sell')
@@ -888,40 +902,8 @@ def invoice_documents_add(request, trip_id):
             trip_obj.tr_updated_by = request.user
             trip_obj.save()
 
-            # Save updated special sell directly back to Enquiry Note / Allotment if provided
-            if special_sell_val not in (None, ''):
-                try:
-                    special_sell_num = float(special_sell_val)
-                    enquiry = trip_obj.tr_enquirynumber
-                    vt_placed_id = getattr(trip_obj, 'tr_vehicletype_placed_id', None)
-                    vt_req_id = getattr(trip_obj, 'tr_vehicletype_id', None)
-                    if vt_placed_id:
-                        Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry, env_vehicletype_id=vt_placed_id).update(env_special_sale=special_sell_num)
-                    elif vt_req_id:
-                        Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry, env_vehicletype_id=vt_req_id).update(env_special_sale=special_sell_num)
-                    else:
-                        Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry).update(env_special_sale=special_sell_num)
 
-                    # Also update allotment if exists
-                    allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry)
-                    target_veh = (trip_obj.tr_vehiclenumber or '').strip().replace(' ', '').replace('-', '').upper()
-                    updated_allotment = False
-                    if allotments.exists() and target_veh:
-                        for a in allotments:
-                            reg = ''
-                            if a.va_vehiclenumber and getattr(a.va_vehiclenumber, 'vm_registrationnumber', None):
-                                reg = a.va_vehiclenumber.vm_registrationnumber.strip().replace(' ', '').replace('-', '').upper()
-                            elif a.va_vehiclenumber_mkt:
-                                reg = a.va_vehiclenumber_mkt.strip().replace(' ', '').replace('-', '').upper()
-                            if reg == target_veh:
-                                a.va_special_sale = special_sell_num
-                                a.save(update_fields=['va_special_sale'])
-                                updated_allotment = True
-                                break
-                    if not updated_allotment and allotments.exists():
-                        allotments.filter(id=allotments.first().id).update(va_special_sale=special_sell_num)
-                except (ValueError, TypeError) as e:
-                    print(f"Error updating special sell value: {e}")
+
 
             # Save closure files if any
             files_obj = files_form.save(commit=False)
@@ -1030,7 +1012,26 @@ def invoice_documents_add(request, trip_id):
             return redirect('invoice_documents_list')
 
     else:
+        # Calculate dynamic sell rates before form instantiation so they render if DB is blank
+        calculated_special_sell = (
+            float(trip.tc_special_sell)
+            if getattr(trip, 'tc_special_sell', None) is not None and float(trip.tc_special_sell) > 0
+            else get_enquiry_special_sell(trip)
+        )
+        calculated_actual_sell = (
+            float(trip.tc_tripcost)
+            if getattr(trip, 'tc_tripcost', None) is not None and float(trip.tc_tripcost) > 0
+            else get_enquiry_standard_sell(trip)
+        )
+        
+        # Override the model instance values purely for display purposes
+        trip.tc_special_sell = calculated_special_sell
+        trip.tc_tripcost = calculated_actual_sell
+        
         settlement_form = TripSettlementForm(instance=trip)
+        if 'special_sell' in settlement_form.fields:
+            settlement_form.fields['special_sell'].initial = calculated_special_sell
+        
         files_form = TripclosurefilesForm(instance=files_instance)
 
         # Map Ready for Invoice status by its ID 9
@@ -1101,14 +1102,8 @@ def invoice_documents_add(request, trip_id):
     # Sell value for display
     from .tripclosure_add_view import get_allotment_sale_rate
     va_sale = get_allotment_sale_rate(trip)
-    special_sell = (
-        float(trip.tc_special_sell)
-        if getattr(trip, 'tc_special_sell', None) is not None and float(trip.tc_special_sell) > 0
-        else get_enquiry_special_sell(trip)
-    )
-    actual_sell_rate = get_enquiry_standard_sell(trip) or (float(trip.tc_tripcost) if trip.tc_tripcost else 0.0)
-    if 'special_sell' in settlement_form.fields:
-        settlement_form.fields['special_sell'].initial = special_sell
+    
+    # Checkboxes state
     is_special_sell_checked = getattr(trip, 'tc_special_sell_check', False)
     is_tripcost_checked = getattr(trip, 'tc_tripcost_check', True)
     if is_special_sell_checked:
@@ -1117,9 +1112,10 @@ def invoice_documents_add(request, trip_id):
         settlement_form.fields['tc_tripcost_check'].initial = is_tripcost_checked
     if 'special_sell_check' in settlement_form.fields:
         settlement_form.fields['special_sell_check'].initial = is_special_sell_checked
+    
     is_sell_rate_doc_required = check_sell_rate_doc_required(
         trip,
-        special_sell_val=special_sell,
+        special_sell_val=trip.tc_special_sell,
         is_special_sell_checked=is_special_sell_checked
     )
 
@@ -1142,13 +1138,18 @@ def invoice_documents_add(request, trip_id):
             trip.tr_enquirynumber.en_enquirynumber if trip.tr_enquirynumber else ''
         ),
         'va_sale': va_sale,
-        'special_sell': special_sell,
-        'actual_sell_rate': actual_sell_rate,
+        'special_sell': trip.tc_special_sell,
+        'actual_sell_rate': trip.tc_tripcost,
         'is_sell_rate_doc_required': is_sell_rate_doc_required,
         'live_customer_ref': (
             trip.tr_consignmentnumber.co_cusrefnum
             if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_cusrefnum
             else trip.tr_customerref or ''
         ),
+        'cnote_consigner_invoice': cnote_goods.cg_consignerinvoice if cnote_goods else '',
+        'cnote_hawb': cnote_goods.cg_hawbno if cnote_goods else '',
+        'cnote_mawb': cnote_goods.cg_mawbno if cnote_goods else '',
         'attachments_by_cat': attachments_by_cat,
     })
+
+

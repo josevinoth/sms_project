@@ -269,6 +269,245 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- ============================================================ -->
+<!-- Affected Enquiries Modal (shown after validity_to reduction) -->
+<!-- ============================================================ -->
+{% if affected_enquiries %}
+<div class="modal fade" id="affectedEnquiriesModal" tabindex="-1" role="dialog" aria-labelledby="affectedEnquiriesModalLabel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document" style="max-width: 95vw; width: 95vw; margin: 20px auto;">
+        <div class="modal-content" style="border-radius: 16px; overflow: hidden;">
+
+            <!-- Modal Header -->
+            <div class="modal-header" style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; padding: 16px 20px;">
+                <div>
+                    <h5 class="modal-title mb-1" id="affectedEnquiriesModalLabel" style="font-weight: 700; font-size: 1.1rem;">
+                        <i class="fas fa-exclamation-triangle mr-2" style="color: #f59e0b;"></i>
+                        Rate Change Detected – Affected Enquiries
+                    </h5>
+                    <div style="font-size: 0.85rem; opacity: 0.9;">
+                        {% if validity_from %}Validity Period: <strong>{{ validity_from }}</strong> to <strong>{{ validity_to }}</strong> &nbsp;|&nbsp;{% endif %}
+                        Old Rate: <span style="background: #ef4444; padding: 2px 8px; border-radius: 20px; font-weight: 700;">₹{{ old_rate }}</span>
+                        &nbsp;→&nbsp; New Rate: <span style="background: #22c55e; padding: 2px 8px; border-radius: 20px; font-weight: 700;">₹{{ new_rate }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+    .affected-row:hover { background-color: #f0f7ff !important; }
+    .differ-row { background-color: #fee2e2 !important; }
+</style>
+<!-- Modal Body -->
+            <div class="modal-body" style="padding: 0; max-height: 65vh; overflow-y: auto;">
+                <div style="padding: 10px 16px; background: #fff8e1; border-bottom: 1px solid #fde68a; font-size: 0.82rem; color: #92400e;">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    The following enquiries fall within the uncovered period. Select which rates to update and click <strong>Update Selected</strong>.
+                    
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table class="table mb-0" style="font-size: 0.80rem; border-collapse: collapse; width: 100%;">
+                        <thead style="background: #111827; color: white; position: sticky; top: 0; z-index: 10;">
+                            <tr>
+                                <th style="padding: 6px 4px; text-align: center; vertical-align: middle; width: 40px;">
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.75rem;">
+                                        <span>All</span>
+                                        <input type="checkbox" id="selectAllRows" title="Select All Rows" style="margin:0;">
+                                    </div>
+                                </th>
+                                <th style="padding: 8px 8px; white-space: nowrap; vertical-align: middle;">Enquiry No</th>
+                                <th style="padding: 8px 8px; white-space: nowrap; vertical-align: middle;">Customer</th>
+                                <th style="padding: 8px 8px; white-space: nowrap; vertical-align: middle;">From</th>
+                                <th style="padding: 8px 8px; white-space: nowrap; vertical-align: middle;">To</th>
+                                <th style="padding: 8px 8px; white-space: nowrap; vertical-align: middle;">Vehicle Type</th>
+                                <th style="padding: 8px 8px; white-space: nowrap; vertical-align: middle;">Pickup Date</th>
+                                <th style="padding: 8px 8px; text-align: right; white-space: nowrap; vertical-align: middle;">Sell Rate</th>
+                                <th style="padding: 8px 8px; text-align: right; white-space: nowrap; vertical-align: middle;">Spl. Sell</th>
+                                <th style="padding: 6px 4px; text-align: center; vertical-align: middle; width: 60px;">
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.75rem;">
+                                        <span style="white-space: nowrap;">Upd. Sell</span>
+                                        <input type="checkbox" id="selectAllSell" title="Select/Deselect All Sell" style="margin:0;">
+                                    </div>
+                                </th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody id="affectedEnquiriesBody">
+                            {% for enq in affected_enquiries %}
+                            <tr class="affected-row {% if not enq.same_rates %}differ-row{% endif %}" data-env-id="{{ enq.env_id }}" style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;">
+                                <td style="padding: 6px 8px; text-align: center;">
+                                    <input type="checkbox" class="row-select" checked>
+                                </td>
+                                <td style="padding: 6px 8px; font-weight: 600; color: #1e40af; white-space: nowrap;">{{ enq.enquiry_no }}</td>
+                                <td style="padding: 6px 8px; white-space: nowrap;">{{ enq.customer }}</td>
+                                <td style="padding: 6px 8px; white-space: nowrap;">{{ enq.from_location }}</td>
+                                <td style="padding: 6px 8px; white-space: nowrap;">{{ enq.to_location }}</td>
+                                <td style="padding: 6px 8px; white-space: nowrap;">{{ enq.vehicle_type }}</td>
+                                <td style="padding: 6px 8px; white-space: nowrap;">{{ enq.pickup_date }}</td>
+                                <td style="padding: 6px 8px; text-align: right; font-weight: 600; color: #dc2626; white-space: nowrap;">
+                                    {% if enq.env_sale %}₹{{ enq.env_sale|floatformat:0 }}{% else %}-{% endif %}
+                                </td>
+                                <td style="padding: 6px 8px; text-align: right; font-weight: 600; white-space: nowrap;
+                                    color: #64748b;">
+                                    {% if enq.env_special_sale %}₹{{ enq.env_special_sale|floatformat:0 }}{% else %}-{% endif %}
+                                    
+                                </td>
+                                <td style="padding: 6px 8px; text-align: center;">
+                                    <input type="checkbox" class="sell-check" checked>
+                                </td>
+                                
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 12px 20px; flex-wrap: wrap; gap: 10px; justify-content: space-between;">
+                <div style="font-size: 0.82rem; color: #64748b;">
+                    <span id="selectedCount">{{ affected_enquiries|length }}</span> of {{ affected_enquiries|length }} rows selected
+                </div>
+                <div class="d-flex align-items-center" style="gap: 10px; flex-wrap: wrap;">
+                    <!-- Editable New Rate Input -->
+                    <div class="d-flex align-items-center" style="gap: 6px;">
+                        <label style="font-size: 0.82rem; font-weight: 600; color: #374151; margin: 0; white-space: nowrap;">
+                            Update Rate To ₹
+                        </label>
+                        <input type="number" id="newRateInput" value="{{ new_rate|default:'' }}"
+                               min="0" step="1"
+                               style="width: 110px; border: 2px solid #3b82f6; border-radius: 8px; padding: 5px 10px; font-size: 0.9rem; font-weight: 700; color: #1e40af; text-align: center;"
+                               placeholder="Enter rate">
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" id="skipRateUpdateBtn" style="border-radius: 8px; padding: 7px 20px;">
+                        <i class="fas fa-times mr-1"></i> Skip
+                    </button>
+                    <button type="button" class="btn btn-success btn-sm" id="updateRatesBtn" style="border-radius: 8px; padding: 7px 20px; font-weight: 600;">
+                        <i class="fas fa-check mr-1"></i> Update Selected
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#affectedEnquiriesModal').modal('show');
+
+    function updateSelectedCount() {
+        var checked = $('.row-select:checked').length;
+        $('#selectedCount').text(checked);
+    }
+
+    $('#selectAllRows').on('change', function() {
+        var checked = $(this).is(':checked');
+        $('.row-select').prop('checked', checked);
+        $('.affected-row').each(function() {
+            var row = $(this);
+            
+            if (checked) {
+                row.find('.sell-check').prop('checked', true);
+                
+            } else {
+                row.find('.sell-check').prop('checked', false);
+                
+            }
+        });
+        updateSelectedCount();
+    });
+
+    $(document).on('change', '.row-select', function() {
+        var row = $(this).closest('tr');
+        var checked = $(this).is(':checked');
+        
+        row.find('.sell-check').prop('checked', checked);
+        
+        updateSelectedCount();
+    });
+
+    $('#selectAllSell').on('change', function() {
+        $('.sell-check').prop('checked', $(this).is(':checked'));
+    });
+
+    $('#affectedEnquiriesBody tr').hover(
+        function() { $(this).css('background', '#f0f7ff'); },
+        function() { $(this).css('background', ''); }
+    );
+
+    $('#skipRateUpdateBtn').on('click', function() {
+        $('#affectedEnquiriesModal').modal('hide');
+    });
+
+    $('#updateRatesBtn').on('click', function() {
+        var newRate = parseFloat($('#newRateInput').val());
+        if (!newRate || newRate <= 0) {
+            alert('Please enter a valid rate before updating.');
+            $('#newRateInput').focus();
+            return;
+        }
+
+        var updateSellIds = [];
+        var updateSpecialIds = [];
+
+        $('.affected-row').each(function() {
+            var row = $(this);
+            if (!row.find('.row-select').is(':checked')) return;
+            var envId = parseInt(row.data('env-id'));
+            
+            // Check if this row had identical Sell and Special Sell rates
+            var sameRates = false;
+            if (row.hasClass('differ-row') === false) {
+                sameRates = true; // In our template, if they differ we add differ-row class
+            }
+            
+            if (row.find('.sell-check').is(':checked')) {
+                updateSellIds.push(envId);
+                // Automatically update special sell too if they were identical!
+                if (sameRates) {
+                    updateSpecialIds.push(envId);
+                }
+            }
+        });
+
+        if (updateSellIds.length === 0) {
+            alert('Please select at least one record to update.');
+            return;
+        }
+
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Updating...');
+
+        $.ajax({
+            url: '{% url "rtratemaster_update_enquiry_rates" %}',
+            method: 'POST',
+            contentType: 'application/json',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            data: JSON.stringify({
+                new_rate: newRate,
+                update_sell: updateSellIds,
+                update_special: updateSpecialIds
+            }),
+            success: function(resp) {
+                if (resp.success) {
+                    $('#affectedEnquiriesModal').modal('hide');
+                    var toast = $('<div class="alert alert-success" style="position:fixed;top:20px;right:20px;z-index:9999;min-width:320px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.15);"><i class="fas fa-check-circle mr-2"></i>' + resp.message + '</div>');
+                    $('body').append(toast);
+                    setTimeout(function() { toast.fadeOut(400, function() { $(this).remove(); }); }, 4000);
+                } else {
+                    alert('Error: ' + (resp.error || 'Unknown error'));
+                    btn.prop('disabled', false).html('<i class="fas fa-check mr-1"></i> Update Selected');
+                }
+            },
+            error: function(xhr) {
+                alert('Server error: ' + xhr.responseText);
+                btn.prop('disabled', false).html('<i class="fas fa-check mr-1"></i> Update Selected');
+            }
+        });
+    });
+});
+</script>
+{% endif %}
+
 {% endblock content %}
 
 {% block extra_js %}

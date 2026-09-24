@@ -29,20 +29,57 @@ from django.core.paginator import Paginator
 
 def get_allotment_sale_rate(trip):
     """
-    Match Enquiry Number and Vehicle Number in Vehicle_allotmentInfo.
-    Pull cost from Special Sell (va_special_sale) first, fallback to Standard Sell (va_sale).
-    If allotment rates are missing/0, fallback to Route Rate Master (RtratemasterInfo).
+    Get the sell rate for a trip.
+    Primary Source: Enquirynotevehicle (env_special_sale or env_sale) matched by Enquiry + Vehicle Type.
+    Secondary Fallback: Vehicle_allotmentInfo (va_special_sale or va_sale).
+    Tertiary Fallback: RtratemasterInfo (Route Rate Master).
     """
     if not trip or not trip.tr_enquirynumber:
         return 0.0
 
+    enquiry = trip.tr_enquirynumber
+    vt_placed_id = getattr(trip, 'tr_vehicletype_placed_id', None)
+    vt_req_id = getattr(trip, 'tr_vehicletype_id', None)
+
+    from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
+
+    # 1. Primary: Check Enquirynotevehicle by Enquiry + Vehicle Type
+    if vt_placed_id:
+        env_obj = Enquirynotevehicle.objects.filter(
+            env_enquirynumber=enquiry,
+            env_vehicletype_id=vt_placed_id
+        ).first()
+        if env_obj:
+            if env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
+                return float(env_obj.env_special_sale)
+            if env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+                return float(env_obj.env_sale)
+
+    if vt_req_id:
+        env_obj = Enquirynotevehicle.objects.filter(
+            env_enquirynumber=enquiry,
+            env_vehicletype_id=vt_req_id
+        ).first()
+        if env_obj:
+            if env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
+                return float(env_obj.env_special_sale)
+            if env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+                return float(env_obj.env_sale)
+
+    env_obj = Enquirynotevehicle.objects.filter(env_enquirynumber=enquiry).first()
+    if env_obj:
+        if env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
+            return float(env_obj.env_special_sale)
+        if env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+            return float(env_obj.env_sale)
+
+    # 2. Historical Fallback: Vehicle_allotmentInfo
     allotments = Vehicle_allotmentInfo.objects.filter(
         va_enquirynumber=trip.tr_enquirynumber
     ).select_related('va_vehiclenumber')
 
     target_veh = (trip.tr_vehiclenumber or '').strip().replace(' ', '').replace('-', '').upper()
 
-    # 1. Match by Enquiry Number + Vehicle Number in Allotments
     if allotments.exists() and target_veh:
         for a in allotments:
             reg = ''
@@ -57,7 +94,6 @@ def get_allotment_sale_rate(trip):
                 if a.va_sale is not None and float(a.va_sale) > 0:
                     return float(a.va_sale)
 
-    # 2. Fallback: match any allotment for this enquiry that has va_special_sale or va_sale
     if allotments.exists():
         for a in allotments:
             if a.va_special_sale is not None and float(a.va_special_sale) > 0:
@@ -65,11 +101,10 @@ def get_allotment_sale_rate(trip):
             if a.va_sale is not None and float(a.va_sale) > 0:
                 return float(a.va_sale)
 
-    # 3. Fallback: Query Route Rate Master (RtratemasterInfo) for this Enquiry + Vehicle Type
-    enquiry = trip.tr_enquirynumber
+    # 3. Fallback: Query Route Rate Master (RtratemasterInfo)
     from_loc_id = getattr(trip, 'tr_departedlocation_id', None) or getattr(enquiry, 'en_fromlocaion_id', None)
     to_loc_id = getattr(trip, 'tr_reportedlocation_id', None) or getattr(enquiry, 'en_tolocation_id', None)
-    vt_id = getattr(trip, 'tr_vehicletype_placed_id', None) or getattr(trip, 'tr_vehicletype_id', None) or getattr(enquiry, 'en_vehicledetails_id', None)
+    vt_id = vt_placed_id or vt_req_id or getattr(enquiry, 'en_vehicledetails_id', None)
     customer = getattr(enquiry, 'en_customername', None)
     dept = getattr(enquiry, 'en_customerdepartment', None)
 
@@ -83,17 +118,18 @@ def get_allotment_sale_rate(trip):
             rate_filter['ro_vehicletype_id'] = vt_id
 
         if dept:
-            dept_filter = dict(rate_filter)
-            dept_filter['ro_customerdepartment'] = dept
-            rt_match = RtratemasterInfo.objects.filter(**dept_filter).first()
-            if rt_match and rt_match.ro_rate:
-                return float(rt_match.ro_rate)
+            rate_filter['ro_customerdepartment'] = dept
 
-        rt_match = RtratemasterInfo.objects.filter(**rate_filter).first()
-        if rt_match and rt_match.ro_rate:
-            return float(rt_match.ro_rate)
+        rate = RtratemasterInfo.objects.filter(**rate_filter).first()
+        if not rate and dept:
+            rate_filter.pop('ro_customerdepartment', None)
+            rate = RtratemasterInfo.objects.filter(**rate_filter).first()
+
+        if rate and rate.ro_rate:
+            return float(rate.ro_rate)
 
     return 0.0
+
 
 
 
@@ -289,14 +325,12 @@ def tripclosure_add(request, tripclosure_id=0):
             )
             status_list = list(Tripstatusinfo.objects.filter(id__in=[4, 5, 6, 7]))
 
-            # Fetch Sell value robustly from allotment (Special Sell > Standard Sell > Route Rate Master)
+            # Fetch Sell value from Enquirynotevehicle (READ ONLY — no DB write here)
+            # Boss rule: rate is written ONLY at Enquiry Note. Changes go through Invoice Documents.
             va_sale = get_allotment_sale_rate(trip)
 
-            # Always sync Trip Charges from allotment rate if available (> 0)
+            # Only populate the form display — never save tc_tripcost here
             if va_sale and va_sale > 0:
-                if trip.tc_tripcost != va_sale:
-                    trip.tc_tripcost = va_sale
-                    trip.save(update_fields=['tc_tripcost'])
                 tripclosure_form.initial['tc_tripcost'] = va_sale
             elif not trip.tc_tripcost or trip.tc_tripcost == 0.0:
                 tripclosure_form.initial['tc_tripcost'] = va_sale
@@ -402,7 +436,12 @@ def tripclosure_add(request, tripclosure_id=0):
                         messages.error(request, f"Permission Denied: Non-admin users cannot revert trip status backward from '{curr_status_name}' to '{target_status_name}'.")
                         return redirect(request.META.get('HTTP_REFERER', 'tripclosure_list'))
 
-                tripclosure_form.save()
+                obj = tripclosure_form.save(commit=False)
+                # 🔒 BOSS RULE PROTECTION: Trip Closure must NEVER overwrite the trip cost in the DB.
+                # If the user overrode it in Invoice Documents, we must preserve that override.
+                obj.tc_tripcost = tripclosure.tc_tripcost
+                obj.save()
+                
                 print("Trip Closure Main Form Saved")
 
                 # Sync checked/unchecked charge amounts to any linked TransInvoiceInfo record

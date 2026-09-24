@@ -201,7 +201,7 @@ def get_attached_vehicle_details(request):
             Q(tr_departeddate__date__lte=to_date_str)
         )
 
-        if filters:
+        if filters and f_dt_obj and t_dt_obj:
             bill_id = request.GET.get('bill_id')
             billed_trips_query = AttachedBillInfo.objects.all()
             if bill_id:

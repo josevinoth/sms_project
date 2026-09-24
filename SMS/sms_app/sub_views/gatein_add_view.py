@@ -525,14 +525,14 @@ def gatein_list_ajax(request):
                 <a href="{url}" target="_blank" style="background: #38bdf8; color: #ffffff; border: none; padding: 7px 0; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; text-decoration: none; text-align: center; display: block; width: 100%; line-height: 1.2;">VIEW</a>
                 <form method="post" action="{upload_url}" enctype="multipart/form-data" style="margin: 0; padding: 0; width: 100%;">
                     <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
-                    <label style="background: #fbbf24; color: #ffffff; border: none; border-top: 1px solid rgba(255,255,255,0.3); padding: 7px 0; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; text-align: center; cursor: pointer; display: block; width: 100%; margin: 0; line-height: 1.2;">RE-ATTACH<input type="file" name="gatein_invoice_att" style="display: none;" onchange="this.form.submit()"></label>
+                    <label style="background: #fbbf24; color: #ffffff; border: none; border-top: 1px solid rgba(255,255,255,0.3); padding: 7px 0; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; text-align: center; cursor: pointer; display: block; width: 100%; margin: 0; line-height: 1.2;">RE-ATTACH<input type="file" name="attachment" style="display: none;" onchange="this.form.submit()"></label>
                 </form>
             </div>'''
         else:
             upload_url = reverse('gatein_upload_attachment', args=[item.id, 'invoice'])
             inward_pod = f'''<form method="post" action="{upload_url}" enctype="multipart/form-data" style="margin: 0; padding: 0; width: 100px;">
                 <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
-                <label style="background: #fbbf24; color: #ffffff; border: none; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 7px 0; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; text-align: center; cursor: pointer; display: block; width: 100%; margin: 0; line-height: 1.2;">UPLOAD<input type="file" name="gatein_invoice_att" style="display: none;" onchange="this.form.submit()"></label>
+                <label style="background: #fbbf24; color: #ffffff; border: none; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 7px 0; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; text-align: center; cursor: pointer; display: block; width: 100%; margin: 0; line-height: 1.2;">UPLOAD<input type="file" name="attachment" style="display: none;" onchange="this.form.submit()"></label>
             </form>'''
 
         gatepass_url = reverse('gatein_pdf_download', args=[item.id])

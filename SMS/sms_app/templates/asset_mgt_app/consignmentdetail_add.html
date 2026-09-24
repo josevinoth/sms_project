@@ -314,7 +314,7 @@
                 <i class="fas fa-boxes"></i> Add Consignment Goods
                 <i class="fas fa-angle-down" style="font-size:0.95rem;"></i>
             </span>
-            <a href="{% url 'consignmentgoods_insert' %}"
+            <a href="{% url 'consignmentgoods_insert' %}?c_id={{consignmentdetail_id}}"
                class="btn-modern btn-submit py-2 px-4"
                style="font-size:0.9rem; text-decoration:none; border-radius:10px;
                       background:var(--accent-emerald); box-shadow:0 4px 15px rgba(20,184,166,0.2);">

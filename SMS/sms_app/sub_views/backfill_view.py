@@ -105,3 +105,87 @@ def backfill_goods_weight(request):
 
     messages.success(request, f"Backfilled weight for {updated_count} records.")
     return redirect('backfill_preview')
+
+
+def backfill_enquiry_sell_rates_logic():
+    """
+    Backfills missing env_sale and env_special_sale in Enquirynotevehicle from:
+    1. Vehicle_allotmentInfo (va_sale & va_special_sale) matching enquiry + vehicle type.
+    2. RtratemasterInfo (Route Rate Master) if no allotment exists.
+    Returns (updated_count, skipped_count)
+    """
+    from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
+    from ..sub_models.vehicle_allotment_mod import Vehicle_allotmentInfo
+    from ..models import RtratemasterInfo
+    from django.db.models import Q
+
+    env_records = Enquirynotevehicle.objects.filter(
+        Q(env_sale__isnull=True) | Q(env_sale=0)
+    )
+
+    updated_count = 0
+    skipped_count = 0
+
+    for env in env_records:
+        enquiry = env.env_enquirynumber
+        vt_id = env.env_vehicletype_id
+        if not enquiry or not vt_id:
+            skipped_count += 1
+            continue
+
+        sale_rate = None
+        special_sale_rate = None
+
+        # 1. Match in Vehicle_allotmentInfo
+        allotments = Vehicle_allotmentInfo.objects.filter(
+            va_enquirynumber=enquiry,
+            va_vehicletype_id=vt_id
+        )
+        if not allotments.exists():
+            allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=enquiry)
+
+        for a in allotments:
+            if a.va_sale is not None and float(a.va_sale) > 0:
+                sale_rate = float(a.va_sale)
+            if a.va_special_sale is not None and float(a.va_special_sale) > 0:
+                special_sale_rate = float(a.va_special_sale)
+            if sale_rate:
+                break
+
+        # 2. Fallback to RtratemasterInfo
+        if not sale_rate:
+            filter_kwargs = {
+                'ro_customer': enquiry.en_customername,
+                'ro_fromlocation': enquiry.en_fromlocaion,
+                'ro_tolocation': enquiry.en_tolocation,
+                'ro_vehicletype_id': vt_id,
+            }
+            if enquiry.en_customerdepartment:
+                filter_kwargs['ro_customerdepartment'] = enquiry.en_customerdepartment
+            if env.env_vehiclecategory_id:
+                filter_kwargs['ro_vehiclecategory_id'] = env.env_vehiclecategory_id
+
+            rate = RtratemasterInfo.objects.filter(**filter_kwargs).first()
+            if not rate and enquiry.en_customerdepartment:
+                filter_without_dept = {k: v for k, v in filter_kwargs.items() if k != 'ro_customerdepartment'}
+                rate = RtratemasterInfo.objects.filter(**filter_without_dept).first()
+
+            if rate and rate.ro_rate:
+                sale_rate = float(rate.ro_rate)
+
+        if sale_rate:
+            env.env_sale = sale_rate
+            env.env_special_sale = special_sale_rate or sale_rate
+            env.save(update_fields=['env_sale', 'env_special_sale'])
+            updated_count += 1
+        else:
+            skipped_count += 1
+
+    return updated_count, skipped_count
+
+
+def backfill_enquiry_sell_rates(request):
+    updated, skipped = backfill_enquiry_sell_rates_logic()
+    messages.success(request, f"Backfilled sell rates for {updated} Enquiry Vehicle records ({skipped} skipped/unmatched).")
+    return redirect('backfill_preview')
+

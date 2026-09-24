@@ -62,7 +62,7 @@
     <th><input class="form-control filter-input" placeholder="Search State"></th>
     <th><input class="form-control filter-input" placeholder="Search Pincode"></th>-->
                 <!--<th><input class="form-control filter-input" placeholder="Search INV NO"></th>-->
-                <!--<th><input class="form-control filter-input" placeholder="Search TRIP NO"></th>-->
+                <th><input class="form-control filter-input" placeholder="Search Trip No"></th>
                 <th><input class="form-control filter-input" placeholder="Search Branch"></th>
                 <!-- <th><input class="form-control filter-input" placeholder="Search Vehicle Source"></th>-->
                 <th><input class="form-control filter-input" placeholder="Search Customer Short Name"></th>
@@ -116,7 +116,7 @@
             <th>State</th>
             <th>Pincode</th>-->
                 <!-- <th>INV NO</th>-->
-                <!-- <th>TRIP NO</th>-->
+                <th>Trip No</th>
                 <th>Branch</th>
                 <!--  <th>Vehicle Source</th>-->
                 <th>Customer Short Name</th>
@@ -170,6 +170,9 @@
 
                 <!-- INV NO (not generated yet, show placeholder) -->
                 <!--<td>-</td>-->
+
+                <!-- Trip No -->
+                <td>{{ inv.tr_tripnumber|default:"-" }}</td>
 
                 <!-- Branch (from enquiry / department if needed) -->
                 <td>{{ inv.tr_enquirynumber.en_customerdepartment }}</td>
@@ -295,8 +298,8 @@
     $(document).ready(function () {
 
         const TABLE_ID = '#trans_invoice_master_list';
-        const PLANNING_DATE_COL = 3;
-        const DEPT_COL = 7;
+        const PLANNING_DATE_COL = 4;
+        const DEPT_COL = 8;
 
 
         let table = new DataTable(TABLE_ID, {
