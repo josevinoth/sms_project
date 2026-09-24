@@ -1248,11 +1248,18 @@ def vehicle_requested(request):
         vehicle_category_name = rv.get('env_vehiclecategory__vc_vehiclecategory', '')
         requested_qty = rv['requested_qty']
 
+        allotment_id = request.GET.get('allotment_id')
+        
         # FIXED: Use va_enquirynumber_id instead of nested lookup
-        allotted_qty = Vehicle_allotmentInfo.objects.filter(
+        allotments_qs = Vehicle_allotmentInfo.objects.filter(
             va_enquirynumber_id=enquiry_number,
             va_vehicletype_id=vehicle_type_id
-        ).exclude(va_status_id__in=[2, 3, 4, 5]).count()
+        ).exclude(va_status_id__in=[2, 3, 4, 5])
+        
+        if allotment_id:
+            allotments_qs = allotments_qs.exclude(id=allotment_id)
+            
+        allotted_qty = allotments_qs.count()
 
         remaining = requested_qty - allotted_qty
 
