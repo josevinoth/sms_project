@@ -114,7 +114,12 @@ def get_trip_transport_charge(t):
         from .invoice_documents_view import get_enquiry_special_sell
         return float(get_enquiry_special_sell(t) or 0.0)
     elif getattr(t, 'tc_tripcost_check', False):
-        return float(t.tc_tripcost or 0.0)
+        val = float(t.tc_tripcost or 0.0)
+        if val <= 0:
+            from .invoice_documents_view import get_enquiry_standard_sell
+            val = float(get_enquiry_standard_sell(t) or 0.0)
+        return val
+    
     return 0.0
 
 

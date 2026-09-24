@@ -191,7 +191,7 @@
 						</div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Started Date & Time</label>
-                            {% if not trip_instance.id or has_consignment_goods or status_selected == 1 or status_selected == 2 or status_selected == 8 or trip_instance.tc_financestatus_id == 1 or trip_instance.tc_financestatus_id == 2 or trip_instance.tc_financestatus_id == 8 or trip_instance.tr_category_id == 2 or trip_instance.tr_category_id == 3 or 'empty' in trip_instance.tr_category.category|lower %}
+                            {% if not trip_instance.id or has_consignment_goods or status_selected == 1 or trip_instance.tc_financestatus_id == 1 or trip_instance.tr_category_id == 2 or trip_instance.tr_category_id == 3 or 'empty' in trip_instance.tr_category.category|lower %}
                                 {% render_field trip_det_form.tr_departeddate id="tr_departeddate" type="datetime-local" max="2099-12-31T23:59" class="form-control form-control-modern form-control-sm" %}
                             {% else %}
                                 {% render_field trip_det_form.tr_departeddate id="tr_departeddate" type="datetime-local" max="2099-12-31T23:59" class="form-control form-control-modern form-control-sm" disabled="disabled" readonly="readonly" %}
@@ -200,7 +200,7 @@
                         </div>
                         <div class="form-group-modern mb-2">
                             <label class="form-label-modern small mb-1">Vehicle Started KM</label>
-                            {% if not trip_instance.id or has_consignment_goods or status_selected == 1 or status_selected == 2 or status_selected == 8 or trip_instance.tc_financestatus_id == 1 or trip_instance.tc_financestatus_id == 2 or trip_instance.tc_financestatus_id == 8 or trip_instance.tr_category_id == 2 or trip_instance.tr_category_id == 3 or 'empty' in trip_instance.tr_category.category|lower %}
+                            {% if not trip_instance.id or has_consignment_goods or status_selected == 1 or trip_instance.tc_financestatus_id == 1 or trip_instance.tr_category_id == 2 or trip_instance.tr_category_id == 3 or 'empty' in trip_instance.tr_category.category|lower %}
                                 {% render_field trip_det_form.tr_reportedkm_pickup id="tr_reportedkm_pickup" class="form-control form-control-modern form-control-sm" %}
                             {% else %}
                                 {% render_field trip_det_form.tr_reportedkm_pickup id="tr_reportedkm_pickup" class="form-control form-control-modern form-control-sm" disabled="disabled" readonly="readonly" %}
@@ -555,11 +555,11 @@ document.addEventListener("DOMContentLoaded", function () {
 			$('#tripdetail_id, #tripdetail_submit_id, #tr_consignmentnumber, #tr_vehiclenumber, #tr_drivername, #tr_drivernumber, #tr_driver_lic, #tr_vehiclesource, #tr_vehicletype, #tr_vehicletype_placed')
 				.prop('disabled', false)
 				.prop('readonly', false);
-				
+
 			// ✅ Restore the "locked" look (green color) but allow clicks on the dropdown
 			$('#tr_vehiclenumber, #tr_drivername, #tr_drivernumber, #tr_driver_lic, #tr_vehiclesource, #tr_vehicletype, #tr_vehicletype_placed')
 				.addClass('disable_a_href');
-				
+
 			// Keep consignment number interactive but with the color if possible
 			$('#tr_consignmentnumber').css('background-color', '#CCFFCC');
 
@@ -585,7 +585,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		var categoryText = '';
 		try { categoryText = $('#tr_category option:selected').text().trim().toLowerCase(); } catch (e) { categoryText = ''; }
 		var tripStatus = document.getElementById('tc_financestatus').value;
-		
+
 		// Enable POD only during/after Unloading (Trip Closed = 2, Trip Settled = 3, Ready for Invoice = 4, Finance Approved = 7, etc)
 		var allowedStatuses = ["2", "3", "4", "7", "9"];
 		if (categoryValue == "1" && categoryText.indexOf('empty') === -1 && allowedStatuses.includes(tripStatus)) {
@@ -763,14 +763,9 @@ document.addEventListener("DOMContentLoaded", function () {
 			// ✅ RE-LOCK stage-2 loading fields when switching BACK to Business
 			// These were unlocked while category was Empty / Business Empty
 			if (isAwaitingVal) {
-				$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time")
+				$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time, #tr_departeddate, #tr_reportedkm_pickup")
 					.prop("disabled", true).addClass('disable_a_href')
 					.removeAttr("required");
-				if (tripStatusVal === "1" || tripStatusVal === "2" || tripStatusVal === "8") {
-					$("#tr_departeddate, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
-				} else {
-					$("#tr_departeddate, #tr_reportedkm_pickup").prop("disabled", true).addClass('disable_a_href');
-				}
 				// Also re-lock unloading fields that were unlocked for Empty trips
 				$("#tr_reportedlocation, #tr_reporteddate, #tr_reportedkm, #tr_departeddate_delivery, #tr_unloading_time, #tr_reporteddate_pickup, #tr_reportedkm_delivery")
 					.prop("disabled", true).addClass('disable_a_href')
@@ -1005,8 +1000,8 @@ document.addEventListener("DOMContentLoaded", function () {
 				$("#tr_departeddate_pickup").prop("required", true);
 				$("#tr_loading_time, #tr_dock_in_time, #tr_dock_out_time, #tr_reportedkm_pickup").prop("disabled", true).addClass('disable_a_href');
 				let currentStatus = $("#tc_financestatus").val();
-				if (currentStatus === "1" || currentStatus === 1 || currentStatus === "2" || currentStatus === 2 || currentStatus === "8" || currentStatus === 8) {
-					$("#tr_departeddate, #tr_reportedkm_pickup").prop("disabled", false).removeClass('disable_a_href');
+				if (currentStatus === "1" || currentStatus === 1) {
+					$("#tr_departeddate").prop("disabled", false).removeClass('disable_a_href');
 				} else {
 					$("#tr_departeddate").prop("disabled", true).addClass('disable_a_href');
 				}

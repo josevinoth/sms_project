@@ -65,6 +65,7 @@
                 <th>Planning Date</th>
 
                 <th>Cnote No</th>
+                <th>Trip No</th>
                 <th>From</th>
                 <th>To</th>
                 <th>Dept</th>
@@ -139,6 +140,8 @@
                     -
                     {% endif %}
                 </td>
+                <!-- ================= TRIP NO ================= -->
+                <td>{{ trip.tr_tripnumber|default:"-" }}</td>
                 <td>{{ trip.tr_departedlocation|default:"-" }}</td>
                 <td>{{ trip.tr_reportedlocation|default:"-" }}</td>
                 <td>{{ trip.tr_enquirynumber.en_customerdepartment|default:"-" }}</td>

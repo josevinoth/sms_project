@@ -205,8 +205,8 @@ def enquirynotevehicle_add(request, enquirynotevehicle_id=0):
                     master_rate = _get_master_sale_rate(enquirynote, new_vehicletype_id, updated_instance.env_vehiclecategory_id)
                     if master_rate is not None:
                         updated_instance.env_sale = master_rate
-                        # If special sale was left blank/0 or matched previous standard sale, sync it too
-                        if not updated_instance.env_special_sale or float(updated_instance.env_special_sale) == 0 or (old_sale is not None and old_special_sale == old_sale):
+                        # Only auto-fill special sale if it's completely blank or 0
+                        if not updated_instance.env_special_sale or float(updated_instance.env_special_sale) == 0:
                             updated_instance.env_special_sale = master_rate
                     else:
                         # Auto-fill env_special_sale from env_sale if left blank or 0
