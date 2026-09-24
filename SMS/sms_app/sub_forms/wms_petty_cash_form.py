@@ -38,9 +38,10 @@ class WMSPettyCashForm(forms.ModelForm):
         if 'wpc_credit_ledger' in self.fields:
             self.fields['wpc_credit_ledger'].queryset = self.fields['wpc_credit_ledger'].queryset.filter(
                 ledger_name__icontains='WH'
-            ).exclude(
-                ledger_name__icontains='Admin'
-            )
+            ).exclude(ledger_name__icontains='Admin')
+
+        if 'wpc_customer' in self.fields:
+            self.fields['wpc_customer'].queryset = self.fields['wpc_customer'].queryset.filter(cu_name__icontains='(W)')
 
         # Add select2 class to dropdown fields
         select2_fields = [

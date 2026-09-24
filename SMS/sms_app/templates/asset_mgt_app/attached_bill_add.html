@@ -322,10 +322,10 @@
                 tbody.empty().append('<tr><td colspan="12" class="text-center text-muted">Please select both From Date and To Date to load trips</td></tr>');
                 $('#id_ab_total_km_run').val(0);
                 calculateAmounts();
-                return;
+                // We don't return here so that the vehicle_type can still be fetched
+            } else {
+                tbody.empty().append('<tr><td colspan="12" class="text-center">Loading trips... <i class="fas fa-spinner fa-spin"></i></td></tr>');
             }
-
-            tbody.empty().append('<tr><td colspan="12" class="text-center">Loading trips... <i class="fas fa-spinner fa-spin"></i></td></tr>');
 
             $.ajax({
                 url: "{% url 'get_attached_vehicle_details' %}",
@@ -341,12 +341,12 @@
                     if (vehicle_id) {
                         $('#id_ab_vehicle_type').val(data.vehicle_type);
                         if (!isInitialLoad) {
-                            var monthly_buy_cost = parseFloat(data.buy_cost) || 0;
-                            var monthly_agreed_km = parseFloat(data.agreed_km) || 0;
-                            var prorated_buy_cost = monthly_buy_cost;
-                            var prorated_agreed_km = monthly_agreed_km;
-                            
                             if (from_date && to_date) {
+                                var monthly_buy_cost = parseFloat(data.buy_cost) || 0;
+                                var monthly_agreed_km = parseFloat(data.agreed_km) || 0;
+                                var prorated_buy_cost = monthly_buy_cost;
+                                var prorated_agreed_km = monthly_agreed_km;
+                                
                                 var sDt = new Date(from_date);
                                 var eDt = new Date(to_date);
                                 
@@ -357,16 +357,19 @@
                                     prorated_buy_cost = (monthly_buy_cost / dInMonth) * dDays;
                                     prorated_agreed_km = (monthly_agreed_km / dInMonth) * dDays;
                                 }
+                                
+                                $('#id_ab_buy_cost').val(prorated_buy_cost.toFixed(2));
+                                $('#id_ab_agreed_km').val(prorated_agreed_km.toFixed(2));
+                            } else {
+                                $('#id_ab_buy_cost').val('0.00');
+                                $('#id_ab_agreed_km').val('0.00');
                             }
-                            
-                            $('#id_ab_buy_cost').val(prorated_buy_cost.toFixed(2));
-                            $('#id_ab_agreed_km').val(prorated_agreed_km.toFixed(2));
                         }
                         extraKmRate = data.extra_km_rate || 0;
                     }
                     // Always update Total KM Run from backend — even if 0 — so
                     // changing to a shorter date range properly clears the stale value.
-                    if (data.total_km_run !== undefined) {
+                    if (!isInitialLoad && data.total_km_run !== undefined) {
                         $('#id_ab_total_km_run').val(data.total_km_run);
                     }
                     // Auto-fill leave days

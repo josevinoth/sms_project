@@ -21,7 +21,7 @@
         <div class="modern-card" style="border-top:none; padding: 1rem !important;">
             <div class="row">
                 <!-- ========== COLUMN 1 ========== -->
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-3">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-info-circle"></i> GENERAL INFO</div>
 
@@ -49,6 +49,13 @@
                             <label class="form-label-modern">Transaction Date</label>
                             {% render_field form.tpc_transaction_date id="tpc_transaction_date" class="form-control form-control-modern" type="date" %}
                         </div>
+                    </div>
+                </div>
+                
+                <!-- ========== COLUMN 2 ========== -->
+                <div class="col-12 col-md-3">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-money-check-alt"></i> EXPENSE & LEDGER</div>
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">Expenses Type</label>
@@ -65,37 +72,22 @@
                             {% render_field form.tpc_credit_ledger id="tpc_credit_ledger" class="form-control form-control-modern" %}
                             <span id="ledger_balance_display" class="text-success font-weight-bold" style="font-size: 0.9rem; margin-top: 6px; display: block;"></span>
                         </div>
-                    </div>
-                </div>
-                
-                <!-- ========== COLUMN 2 ========== -->
-                <div class="col-12 col-md-4">
-                    <div class="form-section h-100">
-                        <div class="form-section-title"><i class="fas fa-truck"></i> TRIP DETAILS</div>
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">To Person</label>
                             {% render_field form.tpc_to id="tpc_to" class="form-control form-control-modern select2" %}
                         </div>
+                    </div>
+                </div>
+
+                <!-- ========== COLUMN 3 ========== -->
+                <div class="col-12 col-md-3">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-truck"></i> TRIP DETAILS</div>
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">Trip Date</label>
                             {% render_field form.tpc_trip_date id="tpc_trip_date" class="form-control form-control-modern" type="date" %}
-                        </div>
-
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Job No (Cnote No)</label>
-                            {% render_field form.tpc_job_no id="tpc_job_no" class="form-control form-control-modern" %}
-                        </div>
-
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Customer</label>
-                            {% render_field form.tpc_customer id="tpc_customer" class="form-control form-control-modern" %}
-                        </div>
-
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Vehicle Source</label>
-                            {% render_field form.tpc_vehicle_source id="tpc_vehicle_source" class="form-control form-control-modern" %}
                         </div>
 
                         <div class="form-group-modern">
@@ -104,21 +96,26 @@
                         </div>
 
                         <div class="form-group-modern">
-                            <label class="form-label-modern">From Location</label>
-                            <input type="text" id="tpc_from_location" class="form-control form-control-modern" value="{{ from_location }}" readonly>
+                            <label class="form-label-modern">Customer</label>
+                            {% render_field form.tpc_customer id="tpc_customer" class="form-control form-control-modern" %}
                         </div>
 
                         <div class="form-group-modern">
-                            <label class="form-label-modern">To Location</label>
-                            <input type="text" id="tpc_to_location" class="form-control form-control-modern" value="{{ to_location }}" readonly>
+                            <label class="form-label-modern">Job No (Cnote No)</label>
+                            {% render_field form.tpc_job_no id="tpc_job_no" class="form-control form-control-modern" %}
                         </div>
                     </div>
                 </div>
 
-                <!-- ========== COLUMN 3 ========== -->
-                <div class="col-12 col-md-4">
+                <!-- ========== COLUMN 4 ========== -->
+                <div class="col-12 col-md-3">
                     <div class="form-section h-100">
                         <div class="form-section-title"><i class="fas fa-info"></i> ADDITIONAL DETAILS</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Vehicle Source</label>
+                            {% render_field form.tpc_vehicle_source id="tpc_vehicle_source" class="form-control form-control-modern" %}
+                        </div>
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">Vehicle No.</label>
@@ -130,6 +127,15 @@
                             {% render_field form.tpc_driver_name id="tpc_driver_name" class="form-control form-control-modern" %}
                         </div>
 
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">From Location</label>
+                            <input type="text" id="tpc_from_location" class="form-control form-control-modern" value="{{ from_location }}" readonly>
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">To Location</label>
+                            <input type="text" id="tpc_to_location" class="form-control form-control-modern" value="{{ to_location }}" readonly>
+                        </div>
                     </div>
                 </div>
             </div>

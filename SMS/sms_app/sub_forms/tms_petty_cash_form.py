@@ -29,9 +29,10 @@ class TMSPettyCashForm(forms.ModelForm):
         if 'tpc_credit_ledger' in self.fields:
             self.fields['tpc_credit_ledger'].queryset = self.fields['tpc_credit_ledger'].queryset.filter(
                 ledger_name__icontains='Trans'
-            ).exclude(
-                ledger_name__icontains='Admin'
-            )
+            ).exclude(ledger_name__icontains='Admin')
+
+        if 'tpc_customer' in self.fields:
+            self.fields['tpc_customer'].queryset = self.fields['tpc_customer'].queryset.filter(cu_name__icontains='(T)')
         
         # Add select2 class to some fields
         select2_fields = [
