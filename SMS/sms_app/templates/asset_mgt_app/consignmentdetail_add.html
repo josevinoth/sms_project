@@ -315,7 +315,7 @@
                 <i class="fas fa-angle-down" style="font-size:0.95rem;"></i>
             </span>
             <a href="{% url 'consignmentgoods_insert' %}?c_id={{consignmentdetail_id}}"
-               class="btn-modern btn-submit py-2 px-4"
+               class="btn-modern btn-submit py-2 px-4 {% if not consignmentdetail_id or consignmentdetail_id == 0 or consignmentdetail_id == '0' %}disable_a_href{% endif %}"
                style="font-size:0.9rem; text-decoration:none; border-radius:10px;
                       background:var(--accent-emerald); box-shadow:0 4px 15px rgba(20,184,166,0.2);">
                 <i class="fas fa-plus"></i> Add
