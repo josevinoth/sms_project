@@ -329,6 +329,10 @@ def trans_invoice_add(request):
             # NEW: enforce UNIQUE invoice number on add page
             # If an invoice number is provided and already exists (case-insensitive), do not save.
             # -------------------------
+            if request.user.is_authenticated:
+                invoice.ti_created_by = request.user
+                invoice.ti_updated_by = request.user
+
             inv_no = (invoice.ti_inv_no or "").strip()
             if inv_no:
                 # Check existence across the table (case-insensitive)
@@ -715,6 +719,9 @@ def trans_invoice_edit(request, invoice_id):
                 invoice.ti_branch = ""
                 invoice.ti_state = ""
 
+            if request.user.is_authenticated:
+                invoice.ti_updated_by = request.user
+
             invoice.save()
             messages.success(request, "Transportation Invoice Updated Successfully!")
             # Trigger PDF merge
@@ -767,6 +774,7 @@ def trans_invoice_list(request):
     queryset = list(
         TransInvoiceInfo.objects
         .filter(is_woh=False)
+        .select_related('ti_customer', 'ti_created_by', 'ti_updated_by')
         .order_by('-id')
     )
 
@@ -1587,7 +1595,16 @@ def _render_ann1_pdf_bytes(invoice_no):
     show_cancellation = any(abs(t['cancellation']) > 0.001 for t in trips_data) or abs(tot_cancellation) > 0.001
     show_halting_days = (tot_halting_days > 0) or show_halting
 
-    col_count = 15  # base non-charge columns
+    # Check if MAWB No has any meaningful value across all trips
+    def _has_meaningful_mawb(v):
+        if not v:
+            return False
+        return str(v).strip() not in ('', '-', '--', 'None', 'none', 'null', 'nan', 'N/A', 'n/a', 'NA', 'na')
+
+    show_mawb = any(_has_meaningful_mawb(g.get('mawb')) for t in trips_data for g in t.get('goods_rows', []))
+
+    col_count = 14  # base non-charge columns without MAWB
+    if show_mawb: col_count += 1
     if show_transport: col_count += 1
     if show_toll: col_count += 1
     if show_parking: col_count += 1
@@ -1604,6 +1621,7 @@ def _render_ann1_pdf_bytes(invoice_no):
         'master_inv': master_inv,
         'customer': customer,
         'trips_data': trips_data,
+        'show_mawb': show_mawb,
         'show_transport': show_transport,
         'show_toll': show_toll,
         'show_parking': show_parking,
@@ -1680,6 +1698,8 @@ def trans_invoice_upload_pdf(request):
 
         master_inv = get_object_or_404(TransInvoiceInfo, pk=invoice_id)
         master_inv.ti_invoice_pdf = pdf_file
+        if request.user.is_authenticated:
+            master_inv.ti_updated_by = request.user
         master_inv.save()
 
         # Also sync ti_invoice_pdf file name to associated WOH records

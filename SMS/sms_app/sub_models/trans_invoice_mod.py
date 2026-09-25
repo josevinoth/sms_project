@@ -1,5 +1,6 @@
 from django.db import models
 from ..models import CustomerInfo, TripdetailInfo, ConsignmentdetailInfo, ConsignmentgoodsInfo
+from ..sub_models.my_user_mod import MyUser
 from .dbs_rate_mod import Dbs_rate
 from .sow_choice_mod import Sow_choice
 
@@ -38,6 +39,12 @@ class TransInvoiceInfo(models.Model):
     ti_aai_sno = models.CharField(max_length=100, null=True, blank=True)  # DSV
     ti_type_of_rate = models.ForeignKey(Dbs_rate, on_delete=models.SET_NULL, null=True, blank=True)  # DBS
     ti_sow = models.ForeignKey(Sow_choice, on_delete=models.SET_NULL, null=True, blank=True)  # EIPL
+
+    # 🔹 AUDIT FIELDS
+    ti_created_at = models.DateTimeField(auto_now_add=True, null=True)
+    ti_created_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='ti_created_by', db_column='ti_created_by')
+    ti_updated_at = models.DateTimeField(auto_now=True, null=True)
+    ti_updated_by = models.ForeignKey(MyUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='ti_updated_by', db_column='ti_updated_by')
     
     # Autofilled fields removed - now pulled from database:
     # - ti_eway_bill_no → goods.cg_ebillno
