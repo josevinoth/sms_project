@@ -527,21 +527,33 @@ def attach_goods_totals(items, is_trip=False):
     cons_ids = []
     for item in items:
         if is_trip:
-            cid = item.tr_consignmentnumber_id if item.tr_consignmentnumber else None
+            cid = getattr(item, 'tr_consignmentnumber_id', None)
         else:
-            cid = item.ti_consignment_id or (item.ti_trip.tr_consignmentnumber_id if item.ti_trip else None)
+            cid = getattr(item, 'ti_consignment_id', None) or (
+                item.ti_trip.tr_consignmentnumber_id if getattr(item, 'ti_trip', None) else None
+            )
         if cid:
             cons_ids.append(cid)
 
     if not cons_ids:
         for item in items:
-            item.total_goods_qty = getattr(item.ti_goods, 'cg_qty', 0) if hasattr(item, 'ti_goods') and item.ti_goods else 0
-            item.total_goods_weight = getattr(item.ti_goods, 'cg_weight', 0.0) if hasattr(item, 'ti_goods') and item.ti_goods else 0.0
-            item.all_hawb_no = str(getattr(item.ti_goods, 'cg_hawbno', '') or '') if hasattr(item, 'ti_goods') and item.ti_goods else ''
-            item.all_consignee = str(getattr(item.ti_goods, 'cg_consignee', '') or '') if hasattr(item, 'ti_goods') and item.ti_goods else ''
-            item.all_consigner_invoice = str(getattr(item.ti_goods, 'cg_consignerinvoice', '') or '') if hasattr(item, 'ti_goods') and item.ti_goods else ''
-            item.all_mawb_no = str(getattr(item.ti_goods, 'cg_mawbno', '') or '') if hasattr(item, 'ti_goods') and item.ti_goods else ''
-            item.hawb_items = [h.strip() for h in str(getattr(item.ti_goods, 'cg_hawbno', '') or '').replace('/', ',').split(',') if h.strip()]
+            ti_goods = getattr(item, 'ti_goods', None)
+            if ti_goods:
+                item.total_goods_qty = getattr(ti_goods, 'cg_qty', 0) or 0
+                item.total_goods_weight = getattr(ti_goods, 'cg_weight', 0.0) or 0.0
+                item.all_hawb_no = str(getattr(ti_goods, 'cg_hawbno', '') or '')
+                item.all_consignee = str(getattr(ti_goods, 'cg_consignee', '') or '')
+                item.all_consigner_invoice = str(getattr(ti_goods, 'cg_consignerinvoice', '') or '')
+                item.all_mawb_no = str(getattr(ti_goods, 'cg_mawbno', '') or '')
+                item.hawb_items = [h.strip() for h in str(getattr(ti_goods, 'cg_hawbno', '') or '').replace('/', ',').split(',') if h.strip()]
+            else:
+                item.total_goods_qty = 0
+                item.total_goods_weight = 0.0
+                item.all_hawb_no = ''
+                item.all_consignee = ''
+                item.all_consigner_invoice = ''
+                item.all_mawb_no = ''
+                item.hawb_items = []
         return items
 
     goods_records = (
@@ -595,9 +607,11 @@ def attach_goods_totals(items, is_trip=False):
 
     for item in items:
         if is_trip:
-            cid = item.tr_consignmentnumber_id if item.tr_consignmentnumber else None
+            cid = getattr(item, 'tr_consignmentnumber_id', None)
         else:
-            cid = item.ti_consignment_id or (item.ti_trip.tr_consignmentnumber_id if item.ti_trip else None)
+            cid = getattr(item, 'ti_consignment_id', None) or (
+                item.ti_trip.tr_consignmentnumber_id if getattr(item, 'ti_trip', None) else None
+            )
 
         if cid and cid in goods_map:
             d = goods_map[cid]
@@ -608,14 +622,15 @@ def attach_goods_totals(items, is_trip=False):
             item.all_consigner_invoice = ", ".join(d['consigner_invoice_list'])
             item.all_mawb_no = ", ".join(d['mawb_list'])
             item.hawb_items = d['hawb_list']
-        elif hasattr(item, 'ti_goods') and item.ti_goods:
-            item.total_goods_qty = item.ti_goods.cg_qty or 0
-            item.total_goods_weight = item.ti_goods.cg_weight or 0.0
-            item.all_hawb_no = str(item.ti_goods.cg_hawbno or '')
-            item.all_consignee = str(item.ti_goods.cg_consignee or '')
-            item.all_consigner_invoice = str(item.ti_goods.cg_consignerinvoice or '')
-            item.all_mawb_no = str(item.ti_goods.cg_mawbno or '')
-            item.hawb_items = [h.strip() for h in str(item.ti_goods.cg_hawbno or '').replace('/', ',').split(',') if h.strip()]
+        elif getattr(item, 'ti_goods', None):
+            ti_goods = item.ti_goods
+            item.total_goods_qty = getattr(ti_goods, 'cg_qty', 0) or 0
+            item.total_goods_weight = getattr(ti_goods, 'cg_weight', 0.0) or 0.0
+            item.all_hawb_no = str(getattr(ti_goods, 'cg_hawbno', '') or '')
+            item.all_consignee = str(getattr(ti_goods, 'cg_consignee', '') or '')
+            item.all_consigner_invoice = str(getattr(ti_goods, 'cg_consignerinvoice', '') or '')
+            item.all_mawb_no = str(getattr(ti_goods, 'cg_mawbno', '') or '')
+            item.hawb_items = [h.strip() for h in str(getattr(ti_goods, 'cg_hawbno', '') or '').replace('/', ',').split(',') if h.strip()]
         else:
             item.total_goods_qty = 0
             item.total_goods_weight = 0.0
