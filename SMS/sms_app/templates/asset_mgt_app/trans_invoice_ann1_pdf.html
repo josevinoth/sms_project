@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ANN-1 - {{ master_inv.ti_inv_no }}</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 3mm 4mm 3mm 4mm;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 4.8pt;
+            color: #1e293b;
+            line-height: 1.1;
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* ── Header Styles ── */
+        .header-table {
+            margin-bottom: 3px;
+            border-bottom: 1.5pt solid #0284c7;
+            padding-bottom: 2px;
+        }
+        .header-table td {
+            vertical-align: middle;
+            border: none;
+            padding: 1px 2px;
+        }
+
+        .company-title {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #0f172a;
+            letter-spacing: 0.5px;
+        }
+        .company-sub {
+            font-size: 6pt;
+            color: #475569;
+            margin-top: 1px;
+        }
+
+        .ann1-badge {
+            border: 1pt solid #0284c7;
+            background-color: #f0f9ff;
+            text-align: center;
+            padding: 2px 4px;
+        }
+        .ann1-title {
+            font-size: 9pt;
+            font-weight: bold;
+            color: #0369a1;
+            letter-spacing: 0.5px;
+        }
+        .ann1-subtitle {
+            font-size: 5.5pt;
+            font-weight: bold;
+            color: #334155;
+            margin-top: 1px;
+        }
+
+        /* ── Meta Box ── */
+        .meta-table {
+            margin-bottom: 3px;
+            border: 0.5pt solid #cbd5e1;
+            background-color: #f8fafc;
+        }
+        .meta-table td {
+            border: 0.5pt solid #cbd5e1;
+            padding: 2px 3px;
+            font-size: 6pt;
+            vertical-align: middle;
+        }
+        .meta-label {
+            font-weight: bold;
+            color: #475569;
+        }
+        .meta-val {
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        /* ── Main Data Grid ── */
+        .data-table {
+            margin-bottom: 3px;
+        }
+        .data-table th {
+            background-color: #e2e8f0;
+            color: #0f172a;
+            font-weight: bold;
+            font-size: {% if col_count <= 18 %}5.2pt{% elif col_count <= 22 %}4.8pt{% else %}4.3pt{% endif %};
+            text-align: center;
+            padding: {% if col_count <= 18 %}2.5pt 1pt{% else %}2pt 0.5pt{% endif %};
+            border: 0.5pt solid #94a3b8;
+            vertical-align: middle;
+            line-height: 1.05;
+        }
+        .data-table td {
+            border: 0.5pt solid #cbd5e1;
+            padding: {% if col_count <= 18 %}2pt 1.5pt{% else %}1.5pt 1pt{% endif %};
+            font-size: {% if col_count <= 18 %}5.2pt{% elif col_count <= 22 %}4.8pt{% else %}4.5pt{% endif %};
+            vertical-align: middle;
+            line-height: 1.1;
+        }
+
+        .trip-row-even td {
+            background-color: #ffffff;
+        }
+        .trip-row-odd td {
+            background-color: #f8fafc;
+        }
+
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        .bold { font-weight: bold; }
+
+        .total-row td {
+            background-color: #e2e8f0 !important;
+            font-weight: bold;
+            border-top: 1pt solid #475569;
+            border-bottom: 1pt solid #475569;
+            font-size: {% if col_count <= 18 %}5.4pt{% elif col_count <= 22 %}5pt{% else %}4.8pt{% endif %};
+            padding: 2pt 1pt;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- ══ Letterhead Header ══ -->
+    <table class="header-table">
+        <tr>
+            <td width="13%" style="text-align: left;">
+                <img src="media/Company_Logo.png" height="34" alt="BVM Logo">
+            </td>
+            <td width="62%" style="text-align: center;">
+                <div class="company-title">BVM TRANS SOLUTIONS PRIVATE LIMITED</div>
+                <div class="company-sub">No. 70, Adam Nagar Road, Nagalkeni, Chrompet, Chennai - 600 044</div>
+                <div class="company-sub">
+                    <span class="bold">GSTIN:</span> 33AAKCB7123L1ZL &nbsp;|&nbsp;
+                    <span class="bold">Email:</span> transport@bvmtranssolutions.com &nbsp;|&nbsp;
+                    <span class="bold">Web:</span> www.thebvmgroup.com
+                </div>
+            </td>
+            <td width="25%" style="text-align: right;">
+                <div class="ann1-badge">
+                    <div class="ann1-title">ANNEXURE - 1</div>
+                    <div class="ann1-subtitle">TRIP BILLING STATEMENT</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- ══ Invoice & Customer Metadata ══ -->
+    <table class="meta-table">
+        <tr>
+            <td width="17%">
+                <span class="meta-label">Invoice No:</span>
+                <span class="meta-val" style="color:#0284c7;">{{ master_inv.ti_inv_no }}</span>
+            </td>
+            <td width="14%">
+                <span class="meta-label">Date:</span>
+                <span class="meta-val">{{ master_inv.ti_inv_date|date:"d/m/Y" }}</span>
+            </td>
+            <td width="31%">
+                <span class="meta-label">Customer:</span>
+                <span class="meta-val">{{ customer.cu_name }}{% if customer.cu_nameshort %} ({{ customer.cu_nameshort }}){% endif %}</span>
+            </td>
+            <td width="16%">
+                <span class="meta-label">GSTIN:</span>
+                <span class="meta-val">{{ master_inv.ti_gst_in|default:"-" }}</span>
+            </td>
+            <td width="12%">
+                <span class="meta-label">State:</span>
+                <span class="meta-val">{{ master_inv.ti_state|default:"-" }}</span>
+            </td>
+            <td width="10%" style="text-align: center;">
+                <span class="meta-label">Trips:</span>
+                <span class="meta-val">{{ trips_data|length }}</span>
+            </td>
+        </tr>
+    </table>
+
+    <!-- ══ Tabular Data Grid ══ -->
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Planning Date</th>
+                <th>Cnote No</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Dept</th>
+                <th>Veh No</th>
+                <th>Veh Type</th>
+                <th>Veh Category</th>
+                <th>Consignee</th>
+                <th>Consignee inv no</th>
+                <th>Reference No</th>
+                <th>HAWB No</th>
+                <th>MAWB No</th>
+                <th>No.of Pcs</th>
+                <th>Weight</th>
+                {% if show_transport %}
+                <th>Transportation Charges</th>
+                {% endif %}
+                {% if show_toll %}
+                <th>Toll Charges</th>
+                {% endif %}
+                {% if show_parking %}
+                <th>Parking Charges</th>
+                {% endif %}
+                {% if show_loading %}
+                <th>Loading Charges</th>
+                {% endif %}
+                {% if show_unloading %}
+                <th>Unloading Charges</th>
+                {% endif %}
+                {% if show_halting %}
+                <th>Halting Charges</th>
+                {% endif %}
+                {% if show_weighment %}
+                <th>Weighment Charges</th>
+                {% endif %}
+                {% if show_handling %}
+                <th>Transportation Handling Charges</th>
+                {% endif %}
+                {% if show_cancellation %}
+                <th>Cancellation Charges</th>
+                {% endif %}
+                <th>Total</th>
+                {% if show_halting_days %}
+                <th>No. of Halting Days</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in trips_data %}
+            {% cycle 'trip-row-even' 'trip-row-odd' as trip_row_class silent %}
+            {% with first_g=t.goods_rows.0 %}
+            <tr class="{{ trip_row_class }}">
+                <td rowspan="{{ t.goods_count }}" class="text-center">{{ t.planning_date|default:"-" }}</td>
+                <td rowspan="{{ t.goods_count }}" class="text-center bold" style="color:#0369a1;">{{ t.cnote|default:"-" }}</td>
+                <td rowspan="{{ t.goods_count }}" class="text-left">{{ t.from_loc|default:"-" }}</td>
+                <td rowspan="{{ t.goods_count }}" class="text-left">{{ t.to_loc|default:"-" }}</td>
+                <td rowspan="{{ t.goods_count }}" class="text-center">{{ t.dept|default:"-" }}</td>
+                <td rowspan="{{ t.goods_count }}" class="text-center bold">{{ t.veh_no|default:"-" }}</td>
+                <td rowspan="{{ t.goods_count }}" class="text-center">{{ t.veh_type|default:"-" }}</td>
+                <td rowspan="{{ t.goods_count }}" class="text-center">{{ t.veh_category|default:"-" }}</td>
+
+                <!-- Goods line item 1 -->
+                <td class="text-left">{{ first_g.consignee|default:"-" }}</td>
+                <td class="text-left">{{ first_g.consignee_inv|default:"-" }}</td>
+
+                <td rowspan="{{ t.goods_count }}" class="text-left">{{ t.ref_no|default:"-" }}</td>
+
+                <td class="text-center">{{ first_g.hawb|default:"-" }}</td>
+                <td class="text-center">{{ first_g.mawb|default:"-" }}</td>
+                <td class="text-center bold">{{ first_g.qty }}</td>
+                <td class="text-right">{{ first_g.weight|floatformat:2 }}</td>
+
+                <!-- Trip charges (strictly checked Bill to Customer) -->
+                {% if show_transport %}
+                <td rowspan="{{ t.goods_count }}" class="text-right">{{ t.transport|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_toll %}
+                <td rowspan="{{ t.goods_count }}" class="text-right">{{ t.toll|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_parking %}
+                <td rowspan="{{ t.goods_count }}" class="text-right">{{ t.parking|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_loading %}
+                <td rowspan="{{ t.goods_count }}" class="text-right">{{ t.loading|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_unloading %}
+                <td rowspan="{{ t.goods_count }}" class="text-right">{{ t.unloading|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_halting %}
+                <td rowspan="{{ t.goods_count }}" class="text-right">{{ t.halting|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_weighment %}
+                <td rowspan="{{ t.goods_count }}" class="text-right">{{ t.weighment|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_handling %}
+                <td rowspan="{{ t.goods_count }}" class="text-right">{{ t.handling|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_cancellation %}
+                <td rowspan="{{ t.goods_count }}" class="text-right">{{ t.cancellation|floatformat:2 }}</td>
+                {% endif %}
+                <td rowspan="{{ t.goods_count }}" class="text-right bold" style="color:#0f172a;">{{ t.total|floatformat:2 }}</td>
+                {% if show_halting_days %}
+                <td rowspan="{{ t.goods_count }}" class="text-center">{{ t.halting_days }}</td>
+                {% endif %}
+            </tr>
+            {% for g in t.goods_rows|slice:"1:" %}
+            <tr class="{{ trip_row_class }}">
+                <td class="text-left">{{ g.consignee|default:"-" }}</td>
+                <td class="text-left">{{ g.consignee_inv|default:"-" }}</td>
+                <td class="text-center">{{ g.hawb|default:"-" }}</td>
+                <td class="text-center">{{ g.mawb|default:"-" }}</td>
+                <td class="text-center bold">{{ g.qty }}</td>
+                <td class="text-right">{{ g.weight|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+            {% endwith %}
+            {% empty %}
+            <tr>
+                <td colspan="{{ col_count }}" class="text-center" style="padding: 12px;">No trip details found for this invoice.</td>
+            </tr>
+            {% endfor %}
+
+            <!-- Total Row -->
+            <tr class="total-row">
+                <td colspan="13" class="text-right bold">TOTAL:</td>
+                <td class="text-center bold">{{ tot_qty }}</td>
+                <td class="text-right bold">{{ tot_weight|floatformat:2 }}</td>
+                {% if show_transport %}
+                <td class="text-right bold">{{ tot_transport|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_toll %}
+                <td class="text-right bold">{{ tot_toll|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_parking %}
+                <td class="text-right bold">{{ tot_parking|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_loading %}
+                <td class="text-right bold">{{ tot_loading|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_unloading %}
+                <td class="text-right bold">{{ tot_unloading|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_halting %}
+                <td class="text-right bold">{{ tot_halting|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_weighment %}
+                <td class="text-right bold">{{ tot_weighment|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_handling %}
+                <td class="text-right bold">{{ tot_handling|floatformat:2 }}</td>
+                {% endif %}
+                {% if show_cancellation %}
+                <td class="text-right bold">{{ tot_cancellation|floatformat:2 }}</td>
+                {% endif %}
+                <td class="text-right bold" style="color:#0284c7;">{{ tot_grand|floatformat:2 }}</td>
+                {% if show_halting_days %}
+                <td class="text-center bold">{{ tot_halting_days }}</td>
+                {% endif %}
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>
