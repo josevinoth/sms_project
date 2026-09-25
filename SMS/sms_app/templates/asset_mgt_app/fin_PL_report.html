@@ -155,7 +155,7 @@
     const businessmodel = document.getElementById('businessmodel-filter').value;
     const fromDate = document.getElementById('from-date').value;
     const toDate = document.getElementById('to-date').value;
-    const url = new URL(window.location.pathname + window.location.search);
+    const url = new URL(window.location.href);
 
 
     if (branch) {
@@ -191,7 +191,7 @@
 
     console.log(url.toString());
 
-    window.location.pathname + window.location.search = url.toString();
+    window.location.href = url.toString();
 }
 
 </script>

@@ -149,7 +149,7 @@
         });
 
         $('#clearBtn').on('click', function() {
-            window.location.pathname + window.location.search = "{% url 'daily_trip_count_report' %}";
+            window.location.href = "{% url 'daily_trip_count_report' %}";
         });
     });
 </script>

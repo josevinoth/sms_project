@@ -417,7 +417,7 @@
                 headers: { 'X-CSRFToken': '{{ csrf_token }}' },
                 success: function (response) {
                     if (response.success) {
-                        window.location.pathname + window.location.search = response.redirect_url;
+                        window.location.href = response.redirect_url;
                     } else {
                         $('#modal_job_error_text').html(response.message || 'Error creating job');
                         $('#modal_job_error_alert').removeClass('d-none');
@@ -456,7 +456,7 @@
                             data: JSON.stringify({ 'po_id': activePoId, 'items': items, 'allow_stock_override': true }),
                             contentType: 'application/json',
                             headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-                            success: function (r) { if (r.success) window.location.pathname + window.location.search = r.redirect_url; }
+                            success: function (r) { if (r.success) window.location.href = r.redirect_url; }
                         });
                     });
 

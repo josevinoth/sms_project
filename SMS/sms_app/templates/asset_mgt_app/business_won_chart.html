@@ -343,7 +343,7 @@
         const toDate = document.getElementById('to-date').value;
         const company = document.getElementById('company-filter').value;
         const branch = document.getElementById('branch-filter').value;
-        const url = new URL(window.location.pathname + window.location.search);
+        const url = new URL(window.location.href);
 
         if (salesperson) {
             url.searchParams.set('salesperson', salesperson);
@@ -371,7 +371,7 @@
             url.searchParams.delete('branch');
         }
 
-        window.location.pathname + window.location.search = url.toString();
+        window.location.href = url.toString();
     }
 </script>
 

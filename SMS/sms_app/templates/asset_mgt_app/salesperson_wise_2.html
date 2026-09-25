@@ -267,7 +267,7 @@
         const salesperson = document.getElementById('salesperson-filter').value;
         const fromDate = document.getElementById('from-date').value;
         const toDate = document.getElementById('to-date').value;
-        const url = new URL(window.location.pathname + window.location.search);
+        const url = new URL(window.location.href);
 
         if (salesperson) {
             url.searchParams.set('salesperson', salesperson);
@@ -287,7 +287,7 @@
             url.searchParams.delete('to_date');
         }
 
-        window.location.pathname + window.location.search = url.toString();
+        window.location.href = url.toString();
     }
 </script>
 {% endblock content %}

@@ -317,7 +317,7 @@ function handleStatusChange(element) {
             if (response.status === 'success') {
                 row.css('background-color', '#dcfce7'); 
                 setTimeout(function() {
-                    window.location.pathname + window.location.search = window.location.pathname + "?refresh=" + new Date().getTime();
+                    window.location.href = window.location.pathname + "?refresh=" + new Date().getTime();
                 }, 400);
             } else {
                 alert('Error: ' + response.message);
@@ -356,7 +356,7 @@ $(document).on('click', '.force-save-btn', function() {
             if (response.status === 'success') {
                 row.css('background-color', '#dcfce7');
                 setTimeout(function() {
-                    window.location.pathname + window.location.search = window.location.pathname + "?refresh=" + new Date().getTime();
+                    window.location.href = window.location.pathname + "?refresh=" + new Date().getTime();
                 }, 400);
             } else {
                 alert('Error: ' + response.message);
@@ -423,7 +423,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         // Redirect to QC add page with job param (existing view handles get_job_details_for_qc via ajax or querystring)
                         var url = '/SMS/pk_quality_check_add/?job_no=' + encodeURIComponent(jobNo);
-                        window.location.pathname + window.location.search = url;
+                        window.location.href = url;
                     });
 
                     // Insert into QC column cell (append so existing badges remain)
