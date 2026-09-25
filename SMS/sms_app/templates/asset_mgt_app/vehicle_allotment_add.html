@@ -445,6 +445,7 @@ function setDateFieldValue(selector, value) {
 			type: 'GET',
 			data: {
 				'enquiry_number': enquiry_number,
+				'allotment_id': '{{ vehicle_allotment_form.instance.id|default:"" }}',
 			},
 			success: function (data) {
 				var vehicles = data.vehicles;

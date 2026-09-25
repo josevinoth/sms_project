@@ -52,6 +52,11 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             consignment_detail_id = request.session.get('ses_consignment_detail_id')
 
     print('consignment_detail_id', consignment_detail_id)
+    
+    if not consignment_detail_id or str(consignment_detail_id) == '0':
+        messages.error(request, "Please save the Consignment Details first before adding Consignment Goods.")
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
     if request.method == "GET":
         existing_invoices = (
             ConsignmentgoodsInfo.objects

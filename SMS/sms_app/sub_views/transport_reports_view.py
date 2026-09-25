@@ -570,7 +570,7 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill, prorat
 # -------------------------
 
 VEHICLE_LOG_HEADERS = [
-    "SNo", "Date", "Trip Sheet No.", "Vehicle No.", "Start Date", "End Date", "Starting Time", "Closing Time",
+    "SNo", "Date", "Trip Sheet No.", "Vehicle No.", "Reported Loading", "Started Loading", "Reported Unloading", "Started Unloading",
     "Start Km.", "Closing Km.", "Used Km.", "Starting Place", "Closing Place",
     "Cnote No", "Customer", "Shipper", "Driver Name"
 ]
@@ -1200,22 +1200,15 @@ def vehicle_log_report_ajax_view(request):
         closing_km = trip.tr_reportedkm_delivery if trip.tr_reportedkm_delivery else (trip.tr_reportedkm or 0)
         used_km = vehicle_log_used_km(trip)
 
-        from_date_display = _fmt_dt(trip.tr_departeddate, date_only=True) if trip.tr_departeddate else (
-            _fmt_dt(trip.tr_departeddate_pickup, date_only=True) if trip.tr_departeddate_pickup else ""
-        )
-        to_date_display = _fmt_dt(trip.tr_reporteddate_delivery, date_only=True) if trip.tr_reporteddate_delivery else (
-            _fmt_dt(trip.tr_reporteddate, date_only=True) if trip.tr_reporteddate else ""
-        )
-
         data_rows.append([
             idx,
             _fmt_dt(display_date, date_only=True),
             safe_str(trip.tr_tripnumber),
             safe_str(trip.tr_vehiclenumber),
-            from_date_display,
-            to_date_display,
-            _fmt_dt(trip.tr_departeddate)[11:] if trip.tr_departeddate else "",
-            _fmt_dt(trip.tr_reporteddate)[11:] if trip.tr_reporteddate else "",
+            _fmt_dt(trip.tr_departeddate_pickup),  # Reported Loading
+            _fmt_dt(trip.tr_departeddate),         # Started Loading
+            _fmt_dt(trip.tr_reporteddate),         # Reported Unloading
+            _fmt_dt(trip.tr_reporteddate_pickup),  # Started Unloading
             safe_str(start_km),
             safe_str(closing_km),
             safe_str(used_km),
@@ -1674,10 +1667,11 @@ def vehicle_utilization_report_view(request):
         utilized_days_set = set()  # Using a set of dates to avoid double counting overlapping trips
 
         for trip in veh_trips:
-            # Multi-field fallback for start and end
-            t_start_dt = trip['tr_departeddate'] or trip['tr_loading_time'] or trip['tr_departeddate_pickup'] or trip[
-                'tr_reporteddate']
-            t_end_dt = trip['tr_reporteddate'] or trip['tr_reporteddate_pickup'] or trip['tr_unloading_time']
+            # Calculate utilization based on the 4 log report columns
+            # Start: Reported Loading (fallback to Started Loading)
+            t_start_dt = trip.get('tr_departeddate_pickup') or trip.get('tr_departeddate')
+            # End: Started Unloading (fallback to Reported Unloading)
+            t_end_dt = trip.get('tr_reporteddate_pickup') or trip.get('tr_reporteddate')
 
             if not t_start_dt and not t_end_dt:
                 continue  # Skip drafts with no activity dates
@@ -1696,16 +1690,6 @@ def vehicle_utilization_report_view(request):
                 while curr <= eff_end:
                     utilized_days_set.add(curr)
                     curr += timezone.timedelta(days=1)
-
-            # Add Halting Days as additional utilized dates following the end date
-            halting_days = trip.get('tc_no_of_days_halting') or 0
-            if halting_days > 0:
-                # Start adding halting dates from the day after t_end
-                curr_h = t_end + timezone.timedelta(days=1)
-                for _ in range(halting_days):
-                    if month_start <= curr_h <= month_end:
-                        utilized_days_set.add(curr_h)
-                    curr_h += timezone.timedelta(days=1)
 
         utilized_days_count = len(utilized_days_set)
 
@@ -4212,8 +4196,17 @@ def own_vehicle_pl_report_view(request):
     vehicle_number = request.GET.get('vehicle_search')
     branch_id = request.GET.get('branch', '').strip()
     vehicletype_id = request.GET.get('vehicletype', '').strip()
+    from datetime import date
+    today = date.today()
+    first_day = today.replace(day=1)
+    
     date_from = request.GET.get('date_from', '').strip()
     date_to = request.GET.get('date_to', '').strip()
+    
+    # If no dates are provided, default to current month to prevent 504 Gateway Timeout
+    if not date_from and not date_to:
+        date_from = first_day.strftime('%Y-%m-%d')
+        date_to = today.strftime('%Y-%m-%d')
     is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
     data_rows = []
     summary_data = {}
