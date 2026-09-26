@@ -205,7 +205,9 @@
                 <th>Consignee inv no</th>
                 <th>Reference No</th>
                 <th>HAWB No</th>
+                {% if show_mawb %}
                 <th>MAWB No</th>
+                {% endif %}
                 <th>No.of Pcs</th>
                 <th>Weight</th>
                 {% if show_transport %}
@@ -262,7 +264,9 @@
                 <td rowspan="{{ t.goods_count }}" class="text-left">{{ t.ref_no|default:"-" }}</td>
 
                 <td class="text-center">{{ first_g.hawb|default:"-" }}</td>
+                {% if show_mawb %}
                 <td class="text-center">{{ first_g.mawb|default:"-" }}</td>
+                {% endif %}
                 <td class="text-center bold">{{ first_g.qty }}</td>
                 <td class="text-right">{{ first_g.weight|floatformat:2 }}</td>
 
@@ -304,7 +308,9 @@
                 <td class="text-left">{{ g.consignee|default:"-" }}</td>
                 <td class="text-left">{{ g.consignee_inv|default:"-" }}</td>
                 <td class="text-center">{{ g.hawb|default:"-" }}</td>
+                {% if show_mawb %}
                 <td class="text-center">{{ g.mawb|default:"-" }}</td>
+                {% endif %}
                 <td class="text-center bold">{{ g.qty }}</td>
                 <td class="text-right">{{ g.weight|floatformat:2 }}</td>
             </tr>
@@ -318,7 +324,7 @@
 
             <!-- Total Row -->
             <tr class="total-row">
-                <td colspan="13" class="text-right bold">TOTAL:</td>
+                <td colspan="{% if show_mawb %}13{% else %}12{% endif %}" class="text-right bold">TOTAL:</td>
                 <td class="text-center bold">{{ tot_qty }}</td>
                 <td class="text-right bold">{{ tot_weight|floatformat:2 }}</td>
                 {% if show_transport %}
