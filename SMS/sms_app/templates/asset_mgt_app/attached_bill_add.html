@@ -18,6 +18,24 @@
     #attachedBillForm .form-label-modern {
         margin-bottom: 0.15rem;
     }
+    /* Select2 overrides for modern theme */
+    .select2-container .select2-selection--single {
+        height: 38px !important;
+        border-radius: 8px !important;
+        border: 1px solid #ced4da !important;
+        display: flex;
+        align-items: center;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 24px !important;
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding-left: 0.8rem;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+        right: 5px;
+    }
 </style>
 
 <form id="attachedBillForm" method="POST">
@@ -256,9 +274,19 @@
 
 <script>
     $(document).ready(function () {
+        // Initialize Select2 for Vendor Name
+        $('#id_ab_vendor').select2({
+            placeholder: "--Select--",
+            width: '100%'
+        });
 
         var isInitialLoad = {% if record %}true{% else %}false{% endif %};
         
+        window.isLeaveDaysManuallyChanged = (parseInt($('#id_ab_leave_days').val()) > 0);
+        $(document).on('input', '#id_ab_leave_days', function() {
+            window.isLeaveDaysManuallyChanged = true;
+        });
+
         // Lock Extra KM and Leave Amount to prevent editing (but keep Total KM unlocked for manual override)
         $('#id_ab_extra_km_run').prop('readonly', true).addClass('disable_a_href');
         $('#id_ab_leave_amount').prop('readonly', true).addClass('disable_a_href');
@@ -374,7 +402,9 @@
                     }
                     // Auto-fill leave days
                     if (!isInitialLoad && data.leave_days !== undefined) {
-                        $('#id_ab_leave_days').val(data.leave_days);
+                        if (!window.isLeaveDaysManuallyChanged) {
+                            $('#id_ab_leave_days').val(data.leave_days);
+                        }
                     }
 
                     // Populate Trips Table FIRST, then calculate amounts so rows exist in DOM
@@ -443,6 +473,7 @@
             $('#id_ab_agreed_km').val('0');
             $('#id_ab_total_km_run').val('0');
             $('#id_ab_leave_days').val('0');
+            window.isLeaveDaysManuallyChanged = false;
             calculateAmounts();
         }
     });
