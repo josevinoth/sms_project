@@ -81,7 +81,7 @@
         $('#invoice_list').DataTable({
             serverSide: true,
             ajax: {
-                url: window.location.pathname + window.location.search,
+                url: window.location.href,
                 type: 'GET'
             },
             deferRender: true,

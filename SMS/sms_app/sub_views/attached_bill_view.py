@@ -216,7 +216,8 @@ def get_attached_vehicle_details(request):
             # This ensures Total KM always matches the Vehicle Log Report (all trips
             # for the vehicle in the period, regardless of billing status).
             all_period_trips = TripdetailInfo.objects.filter(filters).filter(
-                tr_category_id__in=[1, 2, 3]  # Regular + Empty + Business Empty
+                tr_category_id__in=[1, 2, 3],  # Regular + Empty + Business Empty
+                tc_financestatus_id__in=[2, 4, 5, 6, 7, 9]
             )
             total_km_run_sum = 0
             for t in all_period_trips:
@@ -252,7 +253,11 @@ def get_attached_vehicle_details(request):
 
             # Trips table stays category 1 only — this list is what gets billed per-trip,
             # Empty/Business Empty trips aren't individually billable line items.
-            trips = TripdetailInfo.objects.filter(filters).filter(tr_category_id=1).order_by('tr_departeddate')
+            # We also filter by financestatus so 'Trip Started' etc. are excluded (matches P&L report).
+            trips = TripdetailInfo.objects.filter(filters).filter(
+                tr_category_id=1,
+                tc_financestatus_id__in=[2, 4, 5, 6, 7, 9]
+            ).order_by('tr_departeddate')
 
             for trip in trips:
                 # Per-trip KM logic updated to match Vehicle Log Report
@@ -538,10 +543,21 @@ def attached_bill_summary(request, id):
         days_in_month = (to_date - from_date).days + 1
     # --- Use SAVED bill fields for reliable values ---
     contract_amount = float(bill.ab_buy_cost or 0)
+    leave_days = bill.ab_leave_days or 0
+    leave_amount = float(bill.ab_leave_amount or 0)
+    agreed_km      = float(bill.ab_agreed_km or 0)
+    total_km_saved = float(bill.ab_total_km_run or 0)   # saved total KM from ADD/EDIT
+    extra_km       = float(bill.ab_extra_km_run or 0)
+    extra_km_amount = float(bill.ab_extra_km_amount or 0)
+    toll_cost      = float(bill.ab_toll_cost or 0)
+    actual_amount  = float(bill.ab_bill_amount or 0)
     
-    # Recalculate working_days and leave_days based on the new 100% days rule
-    working_days = days_in_month  # Denominator is now all days in the month
-    leave_per_day = (contract_amount / working_days) if working_days > 0 else 0
+    # Recalculate working_days for calculation vs display
+    # Denominator for leave_per_day is now all days in the month (100% days rule)
+    calc_working_days = days_in_month  
+    leave_per_day = (contract_amount / calc_working_days) if calc_working_days > 0 else 0
+    
+    # Display working days will be calculated from actual vehicle log (trip dates) below
 
     # Fetch ALL trips for this vehicle in the expanded range to calculate leave days correctly
     all_trip_dates = set()
@@ -563,6 +579,10 @@ def attached_bill_summary(request, id):
                     all_trip_dates.add(curr_t)
                     curr_t += timedelta(days=1)
 
+        # Filter all_trip_dates to only those within the billed period
+        billed_trip_dates = {d for d in all_trip_dates if from_date <= d <= to_date}
+        display_working_days = len(billed_trip_dates)
+
         # Compute actual empty KM (category 2 or 3) matching Total KM run period
         km_filters = Q(tr_vehiclenumber=vehicle.vm_registrationnumber)
         km_filters &= (
@@ -573,7 +593,10 @@ def attached_bill_summary(request, id):
             Q(tr_loading_time__date__range=[from_date, to_date]) |
             Q(tr_unloading_time__date__range=[from_date, to_date])
         )
-        all_km_trips = TripdetailInfo.objects.filter(km_filters).filter(tr_vehiclesource_id__in=[1, 2])
+        all_km_trips = TripdetailInfo.objects.filter(km_filters).filter(
+            tr_vehiclesource_id__in=[1, 2],
+            tc_financestatus_id__in=[2, 4, 5, 6, 7, 9]
+        )
         for t in all_km_trips:
             if t.tr_category_id in [2, 3]:
                 s_km = t.tr_reportedkm_pickup if t.tr_reportedkm_pickup else (t.tr_departedkm or 0)
@@ -585,16 +608,8 @@ def attached_bill_summary(request, id):
                             actual_empty_km += diff
                         elif t.tr_category_id == 3:
                             actual_business_empty_km += diff
-
-    # Use the reliably saved leave days and amount
-    leave_days = bill.ab_leave_days or 0
-    leave_amount = float(bill.ab_leave_amount or 0)
-    agreed_km      = float(bill.ab_agreed_km or 0)
-    total_km_saved = float(bill.ab_total_km_run or 0)   # saved total KM from ADD/EDIT
-    extra_km       = float(bill.ab_extra_km_run or 0)
-    extra_km_amount = float(bill.ab_extra_km_amount or 0)
-    toll_cost      = float(bill.ab_toll_cost or 0)
-    actual_amount  = float(bill.ab_bill_amount or 0)
+    else:
+        display_working_days = max(0, days_in_month - leave_days)
 
     # --- Fetch selected trips ONLY ---
     selected_trip_numbers = [t.strip() for t in (bill.ab_selected_trips or '').split(',') if t.strip()]
@@ -638,16 +653,16 @@ def attached_bill_summary(request, id):
             if d.weekday() != 6:  # Exclude Sundays (0=Monday, 6=Sunday)
                 summary_billed_trip_dates.add(d)
 
-    # Use saved total_km_run
-    display_total_km = total_km_saved
-
-    days_run   = len(summary_billed_trip_dates)
-    trip_ratio = round(total_trips / days_run, 2) if days_run else 0
-    trip_index = f"{total_trips} TRIPS / {days_run} DAYS RUN = {trip_ratio} TRIPS/DAY" if days_run else f"{total_trips} TRIPS"
-
     # --- Empty KM = from DB trips with category 2 or 3 ---
     empty_km           = actual_empty_km
     business_empty_km  = actual_business_empty_km
+
+    business_km = trip_km_run
+    display_total_km = business_km + empty_km + business_empty_km
+
+    days_run   = display_working_days
+    trip_ratio = round(total_trips / days_run, 2) if days_run > 0 else 0
+    trip_index = f"{total_trips} TRIPS / {days_run} WORKING DAYS = {trip_ratio} TRIPS/DAY" if days_run > 0 else f"{total_trips} TRIPS"
 
     per_km_amount      = ((actual_amount - toll_cost) / total_km_saved) if total_km_saved > 0 else 0
     empty_km_buy_cost  = per_km_amount * empty_km
@@ -656,12 +671,64 @@ def attached_bill_summary(request, id):
     loaded_buy_cost    = per_km_amount * loaded_km
 
     # --- Selling = sum of all trip charges billed to customer ---
+    from .transport_reports_view import get_tms_report_transport_charge
+    from ..models import TransInvoiceInfo, Vehicle_allotmentInfo
+    
+    def safe_num(val):
+        try:
+            return float(val) if val else 0.0
+        except (ValueError, TypeError):
+            return 0.0
+
+    # Fetch invoices and allotments for the trips in this bill to accurately compute Selling
+    trip_ids = [t.id for t in trips]
+    invoices = {inv.ti_trip_id: inv for inv in TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_ids)}
+    enq_ids = [t.tr_enquirynumber_id for t in trips]
+    allotments_qs = Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=enq_ids).select_related('va_vehiclenumber')
+    va_map = {}
+    for va in allotments_qs:
+        eq_id = va.va_enquirynumber_id
+        v_no = va.va_vehiclenumber.vm_registrationnumber.replace(" ", "").upper() if va.va_vehiclenumber else ""
+        if v_no:
+            va_map[(eq_id, v_no)] = va
+        if eq_id not in va_map or va.va_vendor:
+            va_map[eq_id] = va
+
     selling = 0.0
     for t in trips:
-        selling += (float(t.tc_tripcost or 0) + float(t.tc_tollcost or 0) +
-                    float(t.tc_supervisorcost or 0) + float(t.tc_loadingcost or 0) +
-                    float(t.tc_unloadingcost or 0) + float(t.tc_weighmentcost or 0) +
-                    float(t.tc_haltingcost or 0) + float(t.tc_handlingcost or 0))
+        inv = invoices.get(t.id)
+        clean_veh_no = t.tr_vehiclenumber.replace(" ", "").upper() if t.tr_vehiclenumber else ""
+        allotment = va_map.get((t.tr_enquirynumber_id, clean_veh_no)) or va_map.get(t.tr_enquirynumber_id)
+        
+        selling_trip = get_tms_report_transport_charge(t, inv=inv, allotment=allotment)
+        selling_toll = safe_num(inv.ti_toll_charges) if inv else (safe_num(t.tc_tollcost) if getattr(t, 'tc_tollcost_check', True) else 0.0)
+        selling_parking = safe_num(inv.ti_parking_charges) if inv else (safe_num(t.tc_parkingcost) if getattr(t, 'tc_parkingcost_check', True) else 0.0)
+        selling_loading = safe_num(inv.ti_loading_charges) if inv else (safe_num(t.tc_loadingcost) if getattr(t, 'tc_loadingcost_check', True) else 0.0)
+        selling_unloading = safe_num(inv.ti_unloading_charges) if inv else (safe_num(t.tc_unloadingcost) if getattr(t, 'tc_unloadingcost_check', True) else 0.0)
+        selling_weighment = safe_num(inv.ti_weighment_charges) if inv else (safe_num(t.tc_weighmentcost) if getattr(t, 'tc_weighmentcost_check', True) else 0.0)
+        selling_handling = safe_num(inv.ti_handling_charges) if inv else (safe_num(t.tc_handlingcost) if getattr(t, 'tc_handlingcost_check', True) else 0.0)
+        
+        halting_days = safe_num(t.tc_no_of_days_halting)
+        if inv:
+            selling_halting = safe_num(inv.ti_halting_charges)
+        elif getattr(t, 'tc_total_halting_cost_check', False) and safe_num(t.tc_total_halting_cost) > 0:
+            selling_halting = safe_num(t.tc_total_halting_cost)
+        elif getattr(t, 'tc_haltingcost_check', False) and safe_num(t.tc_haltingcost) > 0:
+            selling_halting = safe_num(t.tc_haltingcost) * halting_days
+        else:
+            selling_halting = 0.0
+            
+        selling_aai = safe_num(inv.ti_docket_charges) if inv else (safe_num(t.tc_supervisorcost) if getattr(t, 'tc_supervisorcost_check', True) else 0.0)
+        selling_rto = safe_num(t.tc_rtocost) if getattr(t, 'tc_rtocost_check', True) else 0.0
+        selling_beta = safe_num(t.tc_betacost) if getattr(t, 'tc_betacost_check', True) else 0.0
+        selling_cancellation = safe_num(inv.ti_cancellation_charges) if inv else (safe_num(t.tc_cancellation) if getattr(t, 'tc_cancellation_check', True) else 0.0)
+
+        selling += (
+            selling_trip + selling_toll + selling_parking + selling_loading +
+            selling_unloading + selling_weighment + selling_handling +
+            selling_halting + selling_aai + selling_rto +
+            selling_beta + selling_cancellation
+        )
 
     # --- Buying = actual bill amount paid to vendor ---
     buying = actual_amount
@@ -681,7 +748,7 @@ def attached_bill_summary(request, id):
         'vehicle_no':   vehicle.vm_registrationnumber if vehicle else '',
         'vehicle_type': str(vehicle.vm_vehicletype) if vehicle and vehicle.vm_vehicletype else '',
         'days_in_month': days_in_month,
-        'working_days':  working_days,
+        'working_days':  display_working_days,
         'leave_days':    leave_days,
         'contract_amount': round(contract_amount, 2),
         'toll_cost':       round(toll_cost, 2),
@@ -692,6 +759,7 @@ def attached_bill_summary(request, id):
         'actual_amount':   round(actual_amount, 2),
         'total_trips': total_trips,
         'trip_index':  trip_index,
+        'business_km': round(business_km, 2),
         'total_km':    round(display_total_km, 2),
         'agreed_km':   round(agreed_km, 2),
         'empty_km':              round(empty_km, 2),
@@ -778,25 +846,26 @@ def attached_bill_summary_excel(request, id):
         [12, 'ACTUAL AMT',                    format_num(data.get('actual_amount', 0))],
         [13, 'TOTAL TRIPS',                   str(data.get('total_trips', 0)) + ' TRIPS'],
         [14, 'TRIP INDEX',                    data.get('trip_index', '')],
-        [15, 'TOTAL KM',                      f"{data.get('total_km', 0)} KM / {data.get('agreed_km', 0)} KM"],
-        [16, 'EMPTY KM',                      format_num(data.get('empty_km', 0))],
-        [17, 'EMPTY KM BUY COST',             format_num(data.get('empty_km_buy_cost', 0))],
-        [18, 'BUSINESS EMPTY KM',             format_num(data.get('business_empty_km', 0))],
-        [19, 'BUSINESS EMPTY KM BUY COST',    format_num(data.get('business_empty_km_buy_cost', 0))],
-        [20, 'BUY COST',                      format_num(data.get('buy_cost', 0))],
-        [21, 'SELLING',                       format_num(data.get('selling', 0))],
-        [22, 'BUYING',                        format_num(data.get('buying', 0))],
-        [23, 'PROFIT',                        format_num(data.get('profit', 0))],
-        [24, 'SELLING %',                     f"{data.get('sell_pct', 0)}%"],
-        [25, 'BUYING %',                      f"{data.get('buy_pct', 0)}%"],
+        [15, 'BUSINESS KM',                   format_num(data.get('business_km', 0))],
+        [16, 'TOTAL KM',                      f"{data.get('total_km', 0)} KM / {data.get('agreed_km', 0)} KM"],
+        [17, 'EMPTY KM',                      format_num(data.get('empty_km', 0))],
+        [18, 'EMPTY KM BUY COST',             format_num(data.get('empty_km_buy_cost', 0))],
+        [19, 'BUSINESS EMPTY KM',             format_num(data.get('business_empty_km', 0))],
+        [20, 'BUSINESS EMPTY KM BUY COST',    format_num(data.get('business_empty_km_buy_cost', 0))],
+        [21, 'BUSINESS COST',                 format_num(data.get('buy_cost', 0))],
+        [22, 'SELLING',                       format_num(data.get('selling', 0))],
+        [23, 'BUYING',                        format_num(data.get('buying', 0))],
+        [24, 'PROFIT',                        format_num(data.get('profit', 0))],
+        [25, 'SELLING %',                     f"{data.get('sell_pct', 0)}%"],
+        [26, 'BUYING %',                      f"{data.get('buy_pct', 0)}%"],
     ]
 
     for row_data in rows:
         ws.append(row_data)
 
-    # Style Profit row (row 23 maps to data row 25 in Excel since 1 for header + 1 for col names = 2)
+    # Style Profit row (row 24 maps to data row 26 in Excel since 1 for header + 1 for col names = 2)
     for col in ['A', 'B', 'C']:
-        cell = ws[col + '25']
+        cell = ws[col + '26']
         cell.fill = PatternFill("solid", fgColor="D4EDDA")
         cell.font = Font(bold=True)
     

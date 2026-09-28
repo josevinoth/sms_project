@@ -329,6 +329,10 @@ def trans_invoice_add(request):
             # NEW: enforce UNIQUE invoice number on add page
             # If an invoice number is provided and already exists (case-insensitive), do not save.
             # -------------------------
+            if request.user.is_authenticated:
+                invoice.ti_created_by = request.user
+                invoice.ti_updated_by = request.user
+
             inv_no = (invoice.ti_inv_no or "").strip()
             if inv_no:
                 # Check existence across the table (case-insensitive)
@@ -523,21 +527,33 @@ def attach_goods_totals(items, is_trip=False):
     cons_ids = []
     for item in items:
         if is_trip:
-            cid = item.tr_consignmentnumber_id if item.tr_consignmentnumber else None
+            cid = getattr(item, 'tr_consignmentnumber_id', None)
         else:
-            cid = item.ti_consignment_id or (item.ti_trip.tr_consignmentnumber_id if item.ti_trip else None)
+            cid = getattr(item, 'ti_consignment_id', None) or (
+                item.ti_trip.tr_consignmentnumber_id if getattr(item, 'ti_trip', None) else None
+            )
         if cid:
             cons_ids.append(cid)
 
     if not cons_ids:
         for item in items:
-            item.total_goods_qty = getattr(item.ti_goods, 'cg_qty', 0) if hasattr(item, 'ti_goods') and item.ti_goods else 0
-            item.total_goods_weight = getattr(item.ti_goods, 'cg_weight', 0.0) if hasattr(item, 'ti_goods') and item.ti_goods else 0.0
-            item.all_hawb_no = str(getattr(item.ti_goods, 'cg_hawbno', '') or '') if hasattr(item, 'ti_goods') and item.ti_goods else ''
-            item.all_consignee = str(getattr(item.ti_goods, 'cg_consignee', '') or '') if hasattr(item, 'ti_goods') and item.ti_goods else ''
-            item.all_consigner_invoice = str(getattr(item.ti_goods, 'cg_consignerinvoice', '') or '') if hasattr(item, 'ti_goods') and item.ti_goods else ''
-            item.all_mawb_no = str(getattr(item.ti_goods, 'cg_mawbno', '') or '') if hasattr(item, 'ti_goods') and item.ti_goods else ''
-            item.hawb_items = [h.strip() for h in str(getattr(item.ti_goods, 'cg_hawbno', '') or '').replace('/', ',').split(',') if h.strip()]
+            ti_goods = getattr(item, 'ti_goods', None)
+            if ti_goods:
+                item.total_goods_qty = getattr(ti_goods, 'cg_qty', 0) or 0
+                item.total_goods_weight = getattr(ti_goods, 'cg_weight', 0.0) or 0.0
+                item.all_hawb_no = str(getattr(ti_goods, 'cg_hawbno', '') or '')
+                item.all_consignee = str(getattr(ti_goods, 'cg_consignee', '') or '')
+                item.all_consigner_invoice = str(getattr(ti_goods, 'cg_consignerinvoice', '') or '')
+                item.all_mawb_no = str(getattr(ti_goods, 'cg_mawbno', '') or '')
+                item.hawb_items = [h.strip() for h in str(getattr(ti_goods, 'cg_hawbno', '') or '').replace('/', ',').split(',') if h.strip()]
+            else:
+                item.total_goods_qty = 0
+                item.total_goods_weight = 0.0
+                item.all_hawb_no = ''
+                item.all_consignee = ''
+                item.all_consigner_invoice = ''
+                item.all_mawb_no = ''
+                item.hawb_items = []
         return items
 
     goods_records = (
@@ -591,9 +607,11 @@ def attach_goods_totals(items, is_trip=False):
 
     for item in items:
         if is_trip:
-            cid = item.tr_consignmentnumber_id if item.tr_consignmentnumber else None
+            cid = getattr(item, 'tr_consignmentnumber_id', None)
         else:
-            cid = item.ti_consignment_id or (item.ti_trip.tr_consignmentnumber_id if item.ti_trip else None)
+            cid = getattr(item, 'ti_consignment_id', None) or (
+                item.ti_trip.tr_consignmentnumber_id if getattr(item, 'ti_trip', None) else None
+            )
 
         if cid and cid in goods_map:
             d = goods_map[cid]
@@ -604,14 +622,15 @@ def attach_goods_totals(items, is_trip=False):
             item.all_consigner_invoice = ", ".join(d['consigner_invoice_list'])
             item.all_mawb_no = ", ".join(d['mawb_list'])
             item.hawb_items = d['hawb_list']
-        elif hasattr(item, 'ti_goods') and item.ti_goods:
-            item.total_goods_qty = item.ti_goods.cg_qty or 0
-            item.total_goods_weight = item.ti_goods.cg_weight or 0.0
-            item.all_hawb_no = str(item.ti_goods.cg_hawbno or '')
-            item.all_consignee = str(item.ti_goods.cg_consignee or '')
-            item.all_consigner_invoice = str(item.ti_goods.cg_consignerinvoice or '')
-            item.all_mawb_no = str(item.ti_goods.cg_mawbno or '')
-            item.hawb_items = [h.strip() for h in str(item.ti_goods.cg_hawbno or '').replace('/', ',').split(',') if h.strip()]
+        elif getattr(item, 'ti_goods', None):
+            ti_goods = item.ti_goods
+            item.total_goods_qty = getattr(ti_goods, 'cg_qty', 0) or 0
+            item.total_goods_weight = getattr(ti_goods, 'cg_weight', 0.0) or 0.0
+            item.all_hawb_no = str(getattr(ti_goods, 'cg_hawbno', '') or '')
+            item.all_consignee = str(getattr(ti_goods, 'cg_consignee', '') or '')
+            item.all_consigner_invoice = str(getattr(ti_goods, 'cg_consignerinvoice', '') or '')
+            item.all_mawb_no = str(getattr(ti_goods, 'cg_mawbno', '') or '')
+            item.hawb_items = [h.strip() for h in str(getattr(ti_goods, 'cg_hawbno', '') or '').replace('/', ',').split(',') if h.strip()]
         else:
             item.total_goods_qty = 0
             item.total_goods_weight = 0.0
@@ -715,6 +734,9 @@ def trans_invoice_edit(request, invoice_id):
                 invoice.ti_branch = ""
                 invoice.ti_state = ""
 
+            if request.user.is_authenticated:
+                invoice.ti_updated_by = request.user
+
             invoice.save()
             messages.success(request, "Transportation Invoice Updated Successfully!")
             # Trigger PDF merge
@@ -767,6 +789,7 @@ def trans_invoice_list(request):
     queryset = list(
         TransInvoiceInfo.objects
         .filter(is_woh=False)
+        .select_related('ti_customer', 'ti_created_by', 'ti_updated_by')
         .order_by('-id')
     )
 
@@ -1587,7 +1610,16 @@ def _render_ann1_pdf_bytes(invoice_no):
     show_cancellation = any(abs(t['cancellation']) > 0.001 for t in trips_data) or abs(tot_cancellation) > 0.001
     show_halting_days = (tot_halting_days > 0) or show_halting
 
-    col_count = 15  # base non-charge columns
+    # Check if MAWB No has any meaningful value across all trips
+    def _has_meaningful_mawb(v):
+        if not v:
+            return False
+        return str(v).strip() not in ('', '-', '--', 'None', 'none', 'null', 'nan', 'N/A', 'n/a', 'NA', 'na')
+
+    show_mawb = any(_has_meaningful_mawb(g.get('mawb')) for t in trips_data for g in t.get('goods_rows', []))
+
+    col_count = 14  # base non-charge columns without MAWB
+    if show_mawb: col_count += 1
     if show_transport: col_count += 1
     if show_toll: col_count += 1
     if show_parking: col_count += 1
@@ -1604,6 +1636,7 @@ def _render_ann1_pdf_bytes(invoice_no):
         'master_inv': master_inv,
         'customer': customer,
         'trips_data': trips_data,
+        'show_mawb': show_mawb,
         'show_transport': show_transport,
         'show_toll': show_toll,
         'show_parking': show_parking,
@@ -1680,6 +1713,8 @@ def trans_invoice_upload_pdf(request):
 
         master_inv = get_object_or_404(TransInvoiceInfo, pk=invoice_id)
         master_inv.ti_invoice_pdf = pdf_file
+        if request.user.is_authenticated:
+            master_inv.ti_updated_by = request.user
         master_inv.save()
 
         # Also sync ti_invoice_pdf file name to associated WOH records

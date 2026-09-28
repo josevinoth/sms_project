@@ -125,6 +125,7 @@ def pms_petty_cash_add(request, ppc_id=0):
             total_amt = round(bill_amt + gst_amt, 2)
             post_data['ppc_gst_amount'] = str(gst_amt)
             post_data['ppc_total_amount'] = str(total_amt)
+            post_data['ppc_amount'] = str(total_amt) # Map to Tally's field
         except Exception:
             pass
 

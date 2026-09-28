@@ -18,8 +18,32 @@
     #trans_invoice_list thead th:nth-child(1),
     #trans_invoice_list thead th:nth-child(2),
     #trans_invoice_list thead th:nth-child(3),
-    #trans_invoice_list thead th:nth-child(4) {
+    #trans_invoice_list thead th:nth-child(4),
+    #trans_invoice_list thead th:nth-child(16),
+    #trans_invoice_list thead th:nth-child(18) {
         text-align: left;
+    }
+    #trans_invoice_list {
+        width: 100% !important;
+        min-width: calc(100% + 530px) !important;
+    }
+    #trans_invoice_list th:nth-child(15),
+    #trans_invoice_list td:nth-child(15),
+    #trans_invoice_list th:nth-child(17),
+    #trans_invoice_list td:nth-child(17) {
+        width: 135px !important;
+        min-width: 135px !important;
+    }
+    #trans_invoice_list th:nth-child(16),
+    #trans_invoice_list td:nth-child(16),
+    #trans_invoice_list th:nth-child(18),
+    #trans_invoice_list td:nth-child(18) {
+        width: 125px !important;
+        min-width: 125px !important;
+    }
+    .table-responsive {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
     }
     #trans_invoice_list tbody td {
         white-space: nowrap !important;
@@ -90,26 +114,29 @@
 
     <!-- ══ Table Container ══ -->
     <div class="table-container-modern p-3">
-        <div class="table-responsive">
-            <table id="trans_invoice_list" class="table table-striped table-bordered modern-table w-100 mb-0">
-                <thead>
-                    <tr>
-                        <th style="min-width:76px;">Invoice Date</th>
-                        <th style="min-width:105px;">Invoice No</th>
-                        <th style="min-width:85px;">Customer<br>Short Name</th>
-                        <th style="min-width:80px;">Total Charges</th>
-                        <th class="text-center" style="width:36px;">Ann-1</th>
-                        <th class="text-center" style="width:36px;">Ann-2</th>
-                        <th class="text-center" style="width:36px;">Ann-3</th>
-                        <th class="text-center" style="width:36px;">Excel</th>
-                        <th class="text-center" style="min-width:55px;">Tally to<br>Excel</th>
-                        <th class="text-center" style="min-width:60px;">Combined<br>PDF</th>
-                        <th class="text-center" style="min-width:58px;">Invoice</th>
-                        <th class="text-center" style="min-width:75px;">Submission<br>Date</th>
-                        <th class="text-center" style="width:32px;">Edit</th>
-                        <th class="text-center" style="width:32px;">Delete</th>
-                    </tr>
-                </thead>
+        <table id="trans_invoice_list" class="table table-striped table-bordered modern-table w-100 mb-0">
+            <thead>
+                <tr>
+                    <th style="min-width:76px;">Invoice Date</th>
+                    <th style="min-width:105px;">Invoice No</th>
+                    <th style="min-width:85px;">Customer<br>Short Name</th>
+                    <th style="min-width:80px;">Total Charges</th>
+                    <th class="text-center" style="width:36px;">Ann-1</th>
+                    <th class="text-center" style="width:36px;">Ann-2</th>
+                    <th class="text-center" style="width:36px;">Ann-3</th>
+                    <th class="text-center" style="width:36px;">Excel</th>
+                    <th class="text-center" style="min-width:55px;">Tally to<br>Excel</th>
+                    <th class="text-center" style="min-width:60px;">Combined<br>PDF</th>
+                    <th class="text-center" style="min-width:58px;">Invoice</th>
+                    <th class="text-center" style="min-width:75px;">Submission<br>Date</th>
+                    <th class="text-center" style="width:32px;">Edit</th>
+                    <th class="text-center th-delete" style="width:32px;">Delete</th>
+                    <th class="text-center th-created-date" style="min-width:115px;">Created Date</th>
+                    <th style="min-width:105px;">Created By</th>
+                    <th class="text-center" style="min-width:115px;">Updated Date</th>
+                    <th style="min-width:105px;">Updated By</th>
+                </tr>
+            </thead>
                 <tbody>
                     {% for invoice in trans_invoice_list %}
                     <tr>
@@ -235,11 +262,54 @@
                                 </button>
                             </form>
                         </td>
+
+                        <!-- Created Date -->
+                        <td class="text-center">
+                            {% if invoice.ti_created_at %}
+                            <span style="font-size:0.8rem; font-weight:600; color:var(--text-main);">
+                                {{ invoice.ti_created_at|date:"d/m/Y H:i" }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Created By -->
+                        <td>
+                            {% if invoice.ti_created_by %}
+                            <span style="font-size:0.8rem; font-weight:600; color:var(--text-main);">
+                                {{ invoice.ti_created_by.first_name|default:invoice.ti_created_by.username }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Updated Date -->
+                        <td class="text-center">
+                            {% if invoice.ti_updated_at %}
+                            <span style="font-size:0.8rem; font-weight:600; color:var(--text-main);">
+                                {{ invoice.ti_updated_at|date:"d/m/Y H:i" }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Updated By -->
+                        <td>
+                            {% if invoice.ti_updated_by %}
+                            <span style="font-size:0.8rem; font-weight:600; color:var(--text-main);">
+                                {{ invoice.ti_updated_by.first_name|default:invoice.ti_updated_by.username }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
         </table>
-        </div>
     </div>
 
 </div>
@@ -290,12 +360,50 @@
             order: [],
             pageLength: 10,
             lengthMenu: [5, 10, 25, 50, 100],
-            dom: '<"d-flex justify-content-between align-items-center mb-2"l><"d-flex justify-content-between align-items-center mb-2"Bf>rtip',
+            dom: '<"d-flex justify-content-between align-items-center mb-2"l><"d-flex justify-content-between align-items-center mb-2"Bf><"table-responsive"t><"d-flex justify-content-between align-items-center mt-2"ip>',
             buttons: ['copy', 'csv', 'excel', 'print'],
             columnDefs: [
-                { targets: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13], className: 'text-center' },
+                { targets: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16], className: 'text-center' },
                 { targets: [4, 5, 6, 7, 8, 9, 10, 12, 13], orderable: false }
             ]
+        });
+
+        // Precisely align Delete column to right edge on default view
+        function alignDeleteColumn() {
+            var $table = $('#trans_invoice_list');
+            var $wrapper = $table.closest('.table-responsive');
+            if (!$wrapper.length || !$wrapper[0]) return;
+
+            // Only calibrate when at the initial leftmost scroll position
+            if ($wrapper.scrollLeft() !== 0) return;
+
+            var $deleteTh = $table.find('thead th.th-delete');
+            if (!$deleteTh.length) {
+                $deleteTh = $table.find('thead th:nth-child(14)');
+            }
+            if (!$deleteTh.length || !$deleteTh[0]) return;
+
+            var containerRight = $wrapper[0].getBoundingClientRect().right;
+            var deleteRight = $deleteTh[0].getBoundingClientRect().right;
+            var diff = containerRight - deleteRight;
+
+            // If Delete ends before container edge (allowing Created Date to peek in),
+            // or if Delete is pushed past container edge, calibrate min-width precisely:
+            if (Math.abs(diff) > 2) {
+                var currentWidth = $table.outerWidth();
+                var newWidth = Math.round(currentWidth + diff);
+                $table.css('min-width', newWidth + 'px');
+            }
+        }
+
+        setTimeout(alignDeleteColumn, 50);
+        setTimeout(alignDeleteColumn, 250);
+        table.on('draw', function () {
+            setTimeout(alignDeleteColumn, 50);
+        });
+        $(window).on('resize', function () {
+            $('#trans_invoice_list').css('min-width', 'calc(100% + 530px)');
+            setTimeout(alignDeleteColumn, 50);
         });
 
         // Trigger upload modal

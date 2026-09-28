@@ -311,7 +311,7 @@
         const fromDate = document.getElementById('from-date').value;
         const toDate = document.getElementById('to-date').value;
 
-        const url = new URL(window.location.pathname + window.location.search);
+        const url = new URL(window.location.href);
 
         if (teammember) {
             url.searchParams.set('teammember', teammember);
@@ -347,7 +347,7 @@
             url.searchParams.delete('to_date');
         }
 
-        window.location.pathname + window.location.search = url.toString();
+        window.location.href = url.toString();
     }
 </script>
 

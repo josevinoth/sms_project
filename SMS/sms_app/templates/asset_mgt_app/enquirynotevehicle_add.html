@@ -234,7 +234,7 @@
 <script>
   document.addEventListener("DOMContentLoaded", function () {
       // Check if the current URL contains 'enquirynotevehicle_insert' or 'enquirynotevehicle_update'
-      if (window.location.pathname + window.location.search.includes("enquirynotevehicle_insert") || window.location.pathname + window.location.search.includes("enquirynotevehicle_update")) {
+      if (window.location.href.includes("enquirynotevehicle_insert") || window.location.href.includes("enquirynotevehicle_update")) {
           // Enable editable fields
           $('#env_vehicletype, #env_vehiclecategory, #env_quantity, #env_special_sale')
               .removeClass('disable_a_href')

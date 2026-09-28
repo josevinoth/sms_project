@@ -164,7 +164,7 @@
             return;
         }
         var url = "{% url 'fuelfilling_export_excel' %}?date_from=" + date_from + "&date_to=" + date_to + "&vehicle_id=" + vehicle_id;
-        window.location.pathname + window.location.search = url;
+        window.location.href = url;
     }
 
     window.addEventListener('load', function() {

@@ -610,12 +610,12 @@
         if (toDate) url.searchParams.set('to_date', toDate);
         if (vehicleSource) url.searchParams.set('vehicle_source', vehicleSource);
 
-        window.location.pathname + window.location.search = url.toString();
+        window.location.href = url.toString();
     }
 
     function clearFilters() {
         const currentYear = new Date().getFullYear();
-        window.location.pathname + window.location.search = window.location.pathname + "?year=" + currentYear;
+        window.location.href = window.location.pathname + "?year=" + currentYear;
     }
 </script>
 

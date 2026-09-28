@@ -551,7 +551,7 @@
                 url: '/SMS/pk_create_batch_job/', method: 'POST',
                 data: JSON.stringify({ 'po_id': $("#cs_customer_po").val(), 'pack_type': $('input[name="modal_pack_type"]:checked').val(), 'items': items }),
                 contentType: 'application/json', headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-                success: function (r) { if(r.success) window.location.pathname + window.location.search = r.redirect_url; else alert(r.message); }
+                success: function (r) { if(r.success) window.location.href = r.redirect_url; else alert(r.message); }
             });
         });
     });
