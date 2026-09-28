@@ -764,7 +764,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             else:
                 messages.success(request, "Vehicle Allotment Updated Successfully")
 
-            return redirect('vehicle_allotment_update', vehicle_allotment_id=obj.id)
+            return redirect('vehicle_allotment_insert', enquiry_id=orig_enquiry_id)
 
     # fallback return
     return redirect('enquirynote_list')
@@ -1241,6 +1241,12 @@ def vehicle_requested(request):
 
     vehicle_list = []
 
+    # Fetch the enquiry once for rate lookups
+    try:
+        enquiry = EnquirynoteInfo.objects.get(id=enquiry_number)
+    except EnquirynoteInfo.DoesNotExist:
+        enquiry = None
+
     for rv in requested_vehicles:
         vehicle_type_id = rv['env_vehicletype__id']
         vehicle_type_name = rv['env_vehicletype__vt_vehicletype']
@@ -1263,16 +1269,64 @@ def vehicle_requested(request):
 
         remaining = requested_qty - allotted_qty
 
+        # --- Inline sell rate lookup (avoids a second AJAX round-trip) ---
+        sale_rate = "0"
+        special_sale_rate = "0"
+        if enquiry and vehicle_type_id:
+            try:
+                # 1. Try Enquirynotevehicle first (most specific)
+                env_qs = Enquirynotevehicle.objects.filter(
+                    env_enquirynumber=enquiry,
+                    env_vehicletype_id=vehicle_type_id
+                )
+                if vehicle_category_id:
+                    env_cat = env_qs.filter(env_vehiclecategory_id=vehicle_category_id)
+                    if env_cat.exists():
+                        env_qs = env_cat
+                env_obj = env_qs.first()
+
+                if env_obj and env_obj.env_sale and float(env_obj.env_sale) > 0:
+                    sale_rate = str(env_obj.env_sale)
+                    special_sale_rate = str(env_obj.env_special_sale) if env_obj.env_special_sale and float(env_obj.env_special_sale) > 0 else sale_rate
+                else:
+                    # 2. Fallback to route rate master
+                    filter_kwargs = {
+                        'ro_customer': enquiry.en_customername,
+                        'ro_fromlocation': enquiry.en_fromlocaion,
+                        'ro_tolocation': enquiry.en_tolocation,
+                        'ro_vehicletype': vehicle_type_id,
+                        'ro_touchpoint': enquiry.en_touchpoint,
+                        'ro_touchpoint2': enquiry.en_touchpoint2,
+                        'ro_touchpoint3': enquiry.en_touchpoint3,
+                        'ro_touchpoint4': enquiry.en_touchpoint4,
+                    }
+                    if enquiry.en_customerdepartment:
+                        filter_kwargs['ro_customerdepartment'] = enquiry.en_customerdepartment
+                    if vehicle_category_id:
+                        filter_kwargs['ro_vehiclecategory_id'] = vehicle_category_id
+                    rate = RtratemasterInfo.objects.filter(**filter_kwargs).first()
+                    if not rate and enquiry.en_customerdepartment:
+                        filter_no_dept = {k: v for k, v in filter_kwargs.items() if k != 'ro_customerdepartment'}
+                        rate = RtratemasterInfo.objects.filter(**filter_no_dept).first()
+                    if rate and rate.ro_rate:
+                        sale_rate = str(rate.ro_rate)
+                        special_sale_rate = str(rate.ro_rate)
+            except Exception:
+                pass
+
         if remaining > 0:
             vehicle_list.append({
                 'id': vehicle_type_id,
                 'name': vehicle_type_name,
                 'category_id': vehicle_category_id,
                 'category_name': vehicle_category_name,
-                'remaining': remaining
+                'remaining': remaining,
+                'sale_rate': sale_rate,
+                'special_sale_rate': special_sale_rate,
             })
 
     return JsonResponse({'vehicles': vehicle_list})
+
 
 
 def get_remaining_quantity(request, enquiry_id, vehicle_type_id):

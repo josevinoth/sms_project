@@ -526,7 +526,7 @@ def fetch_invoice_submission_details(request):
         default_submitted_to = existing_tos[0] if existing_tos else ''
     else:
         mail_type = 'submission'
-        default_subject = "Invoice Submission"
+        default_subject = "Regarding Invoice Submission"
         default_body = (
             "Dear Team,\n\n"
             "Please find the attached invoice details for your further process\n\n"
@@ -705,7 +705,7 @@ def ar_submit_selected_invoices(request):
                 print('Error submitting AR invoice:', e)
 
     # Subject and Mail Content
-    subject = mail_subject or ("Outstanding Followup" if mail_type == 'outstanding' else "Invoice Submission")
+    subject = mail_subject or ("Outstanding Followup" if mail_type == 'outstanding' else "Regarding Invoice Submission")
 
     if not mail_body:
         if mail_type == 'outstanding':
@@ -771,7 +771,7 @@ def ar_submit_selected_invoices(request):
             <td style="padding: 8px 12px; border: 1px solid #cbd5e1;">{row['customer']}</td>
             <td style="padding: 8px 12px; border: 1px solid #cbd5e1;">{row['department']}</td>
             {status_col_td}
-            <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: right; font-weight: bold;">&#8377; {row['amount']:,.2f}</td>
+            <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: right; font-weight: bold; white-space: nowrap;">&#8377;&nbsp;{row['amount']:,.2f}</td>
         </tr>
         """
 
@@ -781,7 +781,6 @@ def ar_submit_selected_invoices(request):
     html_body = f"""
     <html>
     <body style="font-family: Arial, sans-serif; color: #1e293b; line-height: 1.5; padding: 10px;">
-        <h2 style="color: #001f3f; margin-bottom: 16px;">{subject}</h2>
         {formatted_body_html}
         {sub_info_html}
         {aging_legend_html}
@@ -803,7 +802,7 @@ def ar_submit_selected_invoices(request):
             <tfoot>
                 <tr style="background-color: #f8fafc; font-weight: bold;">
                     <td colspan="{colspan_val}" style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: right;">Total Amount:</td>
-                    <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: right; color: #059669;">&#8377; {total_amt:,.2f}</td>
+                    <td style="padding: 8px 12px; border: 1px solid #cbd5e1; text-align: right; color: #059669; white-space: nowrap;">&#8377;&nbsp;{total_amt:,.2f}</td>
                 </tr>
             </tfoot>
         </table>
@@ -815,34 +814,52 @@ def ar_submit_selected_invoices(request):
 
     email_sent = False
     try:
-        from django.core.mail import EmailMessage
+        from django.core.mail import EmailMessage, get_connection
         from django.conf import settings
 
-        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', 'noreply@bvm.com')
+        ar_connection = get_connection(
+            backend='django.core.mail.backends.smtp.EmailBackend',
+            host=getattr(settings, 'AR_EMAIL_HOST', 'smtp.office365.com'),
+            port=getattr(settings, 'AR_EMAIL_PORT', 587),
+            username=getattr(settings, 'AR_EMAIL_HOST_USER', 'Accountsreceivable@thebvmgroup.com'),
+            password=getattr(settings, 'AR_EMAIL_HOST_PASSWORD', ''),
+            use_tls=getattr(settings, 'AR_EMAIL_USE_TLS', True),
+        )
+        from_email = getattr(settings, 'AR_EMAIL_HOST_USER', 'Accountsreceivable@thebvmgroup.com')
         msg = EmailMessage(
             subject=subject,
             body=html_body,
             from_email=from_email,
             to=to_recipients,
-            cc=cc_recipients
+            cc=cc_recipients,
+            connection=ar_connection,
         )
         msg.content_subtype = 'html'
 
-        # Attach combined PDF ONLY for invoice submission (NOT for outstanding followup)
+        # Attach individual PDF per invoice named after the invoice number
         if mail_type != 'outstanding' and trans_inv_nos:
-            try:
-                pdf_bytes = _build_combined_pdf_for_invoices(trans_inv_nos)
-                if pdf_bytes:
-                    clean_first = trans_inv_nos[0].replace('/', '_').replace('\\', '_')
-                    pdf_filename = "Combined_Invoices.pdf" if len(trans_inv_nos) > 1 else f"Invoice_{clean_first}.pdf"
-                    msg.attach(pdf_filename, pdf_bytes, 'application/pdf')
-            except Exception as e:
-                print('Error attaching combined PDF:', e)
+            for inv_no in trans_inv_nos:
+                try:
+                    pdf_bytes = _build_combined_pdf_for_invoices([inv_no])
+                    if pdf_bytes:
+                        clean_inv = inv_no.replace('/', '_').replace('\\', '_')
+                        pdf_filename = f"Invoice_{clean_inv}.pdf"
+                        msg.attach(pdf_filename, pdf_bytes, 'application/pdf')
+                except Exception as e:
+                    print(f'Error attaching PDF for {inv_no}:', e)
 
-        msg.send(fail_silently=True)
-        email_sent = True
+        try:
+            msg.send(fail_silently=False)
+            email_sent = True
+            print(f'[AR Email] Sent successfully from {from_email} to {to_recipients} cc={cc_recipients}')
+        except Exception as send_err:
+            import traceback
+            print(f'[AR Email] SEND FAILED: {send_err}')
+            traceback.print_exc()
     except Exception as e:
-        print('Error sending invoice submission email:', e)
+        import traceback
+        print(f'[AR Email] CONNECTION/BUILD FAILED: {e}')
+        traceback.print_exc()
 
     if mail_type == 'outstanding':
         msg_str = f'Successfully sent Outstanding Followup email for {len(preview_rows)} invoice(s).'

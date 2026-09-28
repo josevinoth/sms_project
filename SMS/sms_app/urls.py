@@ -755,6 +755,7 @@ urlpatterns = [
     path('pk_retrival_delete/<int:retrival_id>', views.pk_retrival_delete, name='pk_retrival_delete'),
     # delete retrival
     path('pk_retrival_cancel/', views.pK_retrival_cancel, name='pk_retrival_cancel'),  # cancel retrival
+    path('pk_retrival_multi_update/', views.pk_retrival_multi_update, name='pk_retrival_multi_update'),
     path('pk_acceptance_list/', views.pk_acceptance_list, name='pk_acceptance_list'),  # List acceptance
     path('pk_acceptance_accept_group/', views.pk_acceptance_accept_group, name='pk_acceptance_accept_group'),
     path('pk_acceptance_update/<int:retrival_id>', views.pk_acceptance_add, name='pk_acceptance_update'),

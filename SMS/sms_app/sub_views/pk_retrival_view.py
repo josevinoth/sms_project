@@ -145,7 +145,7 @@ def pk_retrival_add(request, retrival_id=0):
 @login_required(login_url='login_page')
 def pk_retrival_list(request):
     first_name = request.session.get('first_name')
-    retrival_queryset = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_status__in=[1, 3]).order_by('-id')
+    retrival_queryset = PkcostingInfo.objects.filter(ct_cost_type=8, ct_stock_status__in=[1, 3]).order_by('-ct_job_no', 'ct_part_code', '-id')
 
     grouped_retrival = {}
     for item in retrival_queryset:
@@ -198,3 +198,90 @@ def pK_retrival_cancel(request):
     assessment_num_val = request.session.get('na_assessment_id')
     retrival_summary_id=PkquotationsummaryInfo.objects.get(qs_assessment_num=assessment_num_val).id
     return redirect('/SMS/pk_retrivalsummary_update/' + str(retrival_summary_id))
+
+@login_required(login_url='login_page')
+def pk_retrival_multi_update(request):
+    if request.method == "POST":
+        try:
+            import json
+            from datetime import datetime
+            from django.http import JsonResponse
+            data = json.loads(request.body)
+            retrival_id = data.get('retrival_id')
+            selections = data.get('selections', [])
+            user_id = request.session.get('ses_userID')
+
+            if not retrival_id or not selections:
+                return JsonResponse({'success': False, 'message': 'Missing data'})
+
+            original_retrival = PkcostingInfo.objects.get(pk=retrival_id)
+            total_remaining_req = float(original_retrival.ct_quantity_req or 0) * float(original_retrival.ct_na_quantity or 1)
+
+            # 1. STRICT BACKEND VALIDATION: Prevent negative stock
+            for sel in selections:
+                stock_id = sel.get('stock_id')
+                qty = float(sel.get('qty', 0))
+                if qty <= 0:
+                    continue
+                stock_purchase_obj = StockMaintenance.objects.get(id=stock_id)
+                available_qty = _available_qty_for_stock_entry(stock_purchase_obj)
+                # Allow a tiny float margin (0.001) for rounding issues, but strictly block over-retrieving
+                if qty > (available_qty + 0.001):
+                    return JsonResponse({
+                        'success': False, 
+                        'message': f"Critical Stock Error: You requested {qty} from {stock_purchase_obj.sm_stock_purchase_number}, but only {available_qty} is available! Retrieval blocked to prevent negative stock."
+                    })
+
+            # 2. PROCEED WITH CLONING AND RETRIEVAL
+            first = True
+            for sel in selections:
+                stock_id = sel.get('stock_id')
+                qty = float(sel.get('qty', 0))
+                rate = float(sel.get('rate', 0))
+
+                if qty <= 0:
+                    continue
+
+                stock_purchase_obj = StockMaintenance.objects.get(id=stock_id)
+                ref_no = stock_purchase_obj.sm_stock_purchase_number or stock_purchase_obj.sm_invoice_no or f"SM-{stock_id}"
+
+                # Create or update PkcostingInfo
+                if first:
+                    ret_obj = original_retrival
+                    first = False
+                else:
+                    ret_obj = PkcostingInfo.objects.get(pk=retrival_id)
+                    ret_obj.pk = None # Clone it
+                
+                # If per-job quantity was stored in ct_quantity_req, adjust it based on na_quantity ratio
+                na_qty = float(ret_obj.ct_na_quantity or 1)
+                ret_obj.ct_quantity_req = qty / na_qty
+                ret_obj.ct_rate = rate
+                # Calculate cost based on type
+                if ret_obj.ct_cost_type.id == 8 and ret_obj.ct_stock_type and ret_obj.ct_stock_type.id == 1:
+                    # Wood: CFT * Rate
+                    ret_obj.ct_total_cost = float(ret_obj.ct_cft or 0) * qty * rate
+                else:
+                    ret_obj.ct_total_cost = qty * rate
+                
+                ret_obj.ct_stock_purchase_number = stock_purchase_obj
+                ret_obj.ct_stock_status_id = 2 # Supplied
+                ret_obj.save()
+
+                # Deduct stock (create Type 2)
+                if not StockMaintenance.objects.filter(sm_stock_type_id=2, sm_invoice_no=ref_no, sm_description__endswith=f"(Costing ID: {ret_obj.id})").exists():
+                    StockMaintenance.objects.create(
+                        sm_stock_type_id=2, # Retrieval
+                        sm_invoice_date=datetime.now().date(),
+                        sm_invoice_no=ref_no, 
+                        sm_description=f"Retrieved for Assessment {ret_obj.ct_assessment_num.na_assessment_num if ret_obj.ct_assessment_num else 'N/A'} (Costing ID: {ret_obj.id})",
+                        sm_partcode=stock_purchase_obj.sm_partcode,
+                        sm_count=qty,
+                        sm_uom=stock_purchase_obj.sm_uom,
+                        sm_updated_by_id=user_id
+                    )
+
+            return JsonResponse({'success': True, 'message': 'Successfully processed multiple retrievals.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    return JsonResponse({'success': False, 'message': 'Invalid request'})
