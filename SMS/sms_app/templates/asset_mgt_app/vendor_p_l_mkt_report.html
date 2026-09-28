@@ -30,65 +30,78 @@
 
 <!-- Modern Filter Form -->
 <div class="form-section">
-    <form onsubmit="event.preventDefault(); $('#vendor_p_l_report_table').DataTable().ajax.reload();" class="row g-3 align-items-end" id="report-filter-form">
+    <form onsubmit="event.preventDefault(); $('#vendor_p_l_report_table').DataTable().ajax.reload();" id="report-filter-form">
         {% csrf_token %}
+        <div class="row align-items-end mb-2">
+            <div class="col-md-2 mb-2">
+                <label class="form-label font-weight-bold">Vendor Name</label>
+                <select name="vendor_id" id="vendor_select" class="form-control form-control-modern select2">
+                    <option value="">Select Vendor</option>
+                    {% for v in all_vendors %}
+                    <option value="{{ v.id }}" {% if v.id == vendor_id %}selected{% endif %}>{{ v.vend_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-        <div class="col-md-2 mb-2">
-            <label class="form-label font-weight-bold">Vendor Name</label>
-            <select name="vendor_id" id="vendor_select" class="form-control form-control-modern select2">
-                <option value="">Select Vendor</option>
-                {% for v in all_vendors %}
-                <option value="{{ v.id }}" {% if v.id == vendor_id %}selected{% endif %}>{{ v.vend_name }}</option>
-                {% endfor %}
-            </select>
+            <div class="col-md-2 mb-2">
+                <label class="form-label font-weight-bold">Vehicle No</label>
+                <select name="veh_no" id="vehicle_number" class="form-control form-control-modern select2">
+                    <option value="">Select Vehicle</option>
+                    {% for v in vehicle_numbers %}
+                    <option value="{{ v }}" {% if v == veh_no %}selected{% endif %}>{{ v }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2 mb-2">
+                <label class="form-label font-weight-bold">From Date</label>
+                <input type="date" name="date_from" class="form-control form-control-modern" value="{{ date_from }}">
+            </div>
+
+            <div class="col-md-2 mb-2">
+                <label class="form-label font-weight-bold">To Date</label>
+                <input type="date" name="date_to" class="form-control form-control-modern" value="{{ date_to }}">
+            </div>
+
+            <div class="col-md-2 mb-2">
+                <label class="form-label font-weight-bold">From Location</label>
+                {% render_field form.from_location class="form-control form-control-modern select2" value=from_loc_id %}
+            </div>
+
+            <div class="col-md-2 mb-2">
+                <label class="form-label font-weight-bold">To Location</label>
+                {% render_field form.to_location class="form-control form-control-modern select2" value=to_loc_id %}
+            </div>
+
+            <div class="col-md-2 mb-2">
+                <label class="form-label font-weight-bold">Branch</label>
+                <select name="branch" class="form-control form-control-modern select2">
+                    <option value="">-- All --</option>
+                    <option value="MAA" {% if branch == 'MAA' %}selected{% endif %}>MAA</option>
+                    <option value="BLR" {% if branch == 'BLR' %}selected{% endif %}>BLR</option>
+                </select>
+            </div>
+
+            <div class="col-md-2 mb-2">
+                <label class="form-label font-weight-bold">Vehicle Type</label>
+                <select name="vehicle_type" id="vehicle_type" class="form-control form-control-modern select2">
+                    <option value="">Select Category</option>
+                    {% for vt in vehicle_types %}
+                    <option value="{{ vt.id }}" {% if vehicle_type == vt.id|stringformat:"s" %}selected{% endif %}>{{ vt.vt_vehicletype }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
 
-        <div class="col-md-2 mb-2">
-            <label class="form-label font-weight-bold">Vehicle No</label>
-            <select name="veh_no" id="vehicle_number" class="form-control form-control-modern select2">
-                <option value="">Select Vehicle</option>
-                {% for v in vehicle_numbers %}
-                <option value="{{ v }}" {% if v == veh_no %}selected{% endif %}>{{ v }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="col-md-2 mb-2">
-            <label class="form-label font-weight-bold">From Date</label>
-            <input type="date" name="date_from" class="form-control form-control-modern" value="{{ date_from }}">
-        </div>
-
-        <div class="col-md-2 mb-2">
-            <label class="form-label font-weight-bold">To Date</label>
-            <input type="date" name="date_to" class="form-control form-control-modern" value="{{ date_to }}">
-        </div>
-
-        <div class="col-md-2 mb-2">
-            <label class="form-label font-weight-bold">From Location</label>
-            {% render_field form.from_location class="form-control form-control-modern select2" value=from_loc_id %}
-        </div>
-
-        <div class="col-md-2 mb-2">
-            <label class="form-label font-weight-bold">To Location</label>
-            {% render_field form.to_location class="form-control form-control-modern select2" value=to_loc_id %}
-        </div>
-
-        <div class="col-md-2 mb-2">
-            <label class="form-label font-weight-bold">Branch</label>
-            <select name="branch" class="form-control form-control-modern select2">
-                <option value="">-- All --</option>
-                <option value="MAA" {% if branch == 'MAA' %}selected{% endif %}>MAA</option>
-                <option value="BLR" {% if branch == 'BLR' %}selected{% endif %}>BLR</option>
-            </select>
-        </div>
-
-        <div class="col-md-2 mb-2 d-flex gap-2">
-            <button type="submit" class="btn btn-primary btn-block mr-1">
-                <i class="fas fa-filter mr-1"></i> Filter
-            </button>
-            <a href="{% url 'vendor_p_l_mkt_report' %}" class="btn btn-outline-secondary">
-                <i class="fas fa-undo"></i>
-            </a>
+        <div class="row align-items-end">
+            <div class="col-md-12 d-flex justify-content-end gap-2 mt-2">
+                <button type="submit" class="btn btn-primary mr-1">
+                    <i class="fas fa-filter mr-1"></i> Filter
+                </button>
+                <a href="{% url 'vendor_p_l_mkt_report' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-undo"></i>
+                </a>
+            </div>
         </div>
     </form>
 </div>
@@ -113,7 +126,11 @@
 <script>
     $(document).ready(function () {
         $('.select2').select2({
-            width: '100%'
+            width: '100%',
+            allowClear: true,
+            placeholder: function(){
+                $(this).data('placeholder');
+            }
         });
 
         $('#vendor_select').on('change', function () {
@@ -153,6 +170,7 @@
                     d.from_location = $('select[name="from_location"]').val();
                     d.to_location = $('select[name="to_location"]').val();
                     d.branch = $('select[name="branch"]').val();
+                    d.vehicle_type = $('#vehicle_type').val();
                 }
             },
             scrollX: true,
