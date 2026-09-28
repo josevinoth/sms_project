@@ -257,6 +257,15 @@ def get_cs_kpi_dashboard_data(request):
 
     cnotes_created = cnotes_qs.count()
 
+    # Veh Allotted but No C-Note Generated (Count of allotted vehicles per enquiry that don't have a C-Note yet)
+    allots_by_enq = dict(allotment_qs.values('va_enquirynumber_id').annotate(cnt=Count('id')).values_list('va_enquirynumber_id', 'cnt'))
+    cnotes_by_enq = dict(cnotes_qs.values('co_enquirynumber_id').annotate(cnt=Count('id')).values_list('co_enquirynumber_id', 'cnt'))
+    veh_allotted_no_cnote = 0
+    for eid, a_cnt in allots_by_enq.items():
+        c_cnt = cnotes_by_enq.get(eid, 0)
+        if a_cnt > c_cnt:
+            veh_allotted_no_cnote += (a_cnt - c_cnt)
+
     # Trips linked to these C-Notes
     trips_qs = TripdetailInfo.objects.filter(
         tr_consignmentnumber__in=cnotes_qs
@@ -266,31 +275,6 @@ def get_cs_kpi_dashboard_data(request):
     cnotes_with_trip_ids = set(
         trips_qs.values_list('tr_consignmentnumber_id', flat=True)
     )
-
-    # Breakdown Categories:
-    # 1. Not Associated with Trip
-    not_associated_with_trip = cnotes_qs.exclude(id__in=cnotes_with_trip_ids).count()
-
-    # 2. Awaiting Trip Approval (tc_financestatus_id = 8)
-    awaiting_trip_approval = trips_qs.filter(tc_financestatus_id=8).count()
-
-    # 3. Trip Started (tc_financestatus_id = 1 or tr_operational_status_id = 1)
-    trip_started = trips_qs.filter(Q(tc_financestatus_id=1) | Q(tr_operational_status_id=1)).count()
-
-    # 4. Trip Closed (tc_financestatus_id = 2 or tr_operational_status_id = 2)
-    trip_closed = trips_qs.filter(Q(tc_financestatus_id=2) | Q(tr_operational_status_id=2)).count()
-
-    # 5. Awaiting Trip Settlement (tc_financestatus_id = 4)
-    awaiting_trip_settlement = trips_qs.filter(tc_financestatus_id=4).count()
-
-    # 6. Trip Settled (tc_financestatus_id = 7)
-    trip_settled = trips_qs.filter(tc_financestatus_id=7).count()
-
-    # 7. Cancellation without Billing (tc_financestatus_id = 11)
-    cancellation_without_billing = trips_qs.filter(tc_financestatus_id=11).count()
-
-    # 8. Cancellation with Billing (tc_financestatus_id = 10)
-    cancellation_with_billing = trips_qs.filter(tc_financestatus_id=10).count()
 
     # Collect all invoiced IDs matching Invoice Pending Report logic
     invoiced_trip_ids = list(TransInvoiceInfo.objects.filter(
@@ -319,10 +303,36 @@ def get_cs_kpi_dashboard_data(request):
 
     all_invoiced_ids = set(invoiced_trip_ids) | set(trips_from_cons) | set(trips_from_goods)
 
-    # 9. Ready For Invoice (tc_financestatus_id = 9 and not invoiced)
-    ready_for_invoice = trips_qs.filter(
-        tc_financestatus_id=9
-    ).exclude(id__in=all_invoiced_ids).count()
+    # Non-invoiced trips partitioned cleanly across mutually exclusive lifecycle stages
+    non_invoiced_trips = trips_qs.exclude(id__in=all_invoiced_ids)
+
+    # Breakdown Categories (Sum equals total C-Notes for full reconciliation):
+    # 1. Not Associated with Trip
+    not_associated_with_trip = cnotes_qs.exclude(id__in=cnotes_with_trip_ids).count()
+
+    # 2. Awaiting Trip Approval (tc_financestatus_id = 8)
+    awaiting_trip_approval = non_invoiced_trips.filter(tc_financestatus_id=8).count()
+
+    # 3. Trip Started (tc_financestatus_id = 1)
+    trip_started = non_invoiced_trips.filter(tc_financestatus_id=1).count()
+
+    # 4. Trip Closed (tc_financestatus_id = 2)
+    trip_closed = non_invoiced_trips.filter(tc_financestatus_id=2).count()
+
+    # 5. Awaiting Trip Settlement (tc_financestatus_id = 4)
+    awaiting_trip_settlement = non_invoiced_trips.filter(tc_financestatus_id=4).count()
+
+    # 6. Trip Settled (tc_financestatus_id = 7)
+    trip_settled = non_invoiced_trips.filter(tc_financestatus_id=7).count()
+
+    # 7. Cancellation without Billing (tc_financestatus_id = 11)
+    cancellation_without_billing = non_invoiced_trips.filter(tc_financestatus_id=11).count()
+
+    # 8. Cancellation with Billing (tc_financestatus_id = 10)
+    cancellation_with_billing = non_invoiced_trips.filter(tc_financestatus_id=10).count()
+
+    # 9. Ready For Invoice (tc_financestatus_id = 9)
+    ready_for_invoice = non_invoiced_trips.filter(tc_financestatus_id=9).count()
 
     # 10. Invoice Completed (Trips with TransInvoiceInfo or linked invoice)
     invoiced_trips = trips_qs.filter(id__in=all_invoiced_ids).count()
@@ -334,6 +344,7 @@ def get_cs_kpi_dashboard_data(request):
         veh_requested = 35
         veh_not_allotted = 1
         veh_allotted = 34
+        veh_allotted_no_cnote = 2
         cnotes_created = 32
         not_associated_with_trip = 2
         awaiting_trip_approval = 2
@@ -538,6 +549,7 @@ def get_cs_kpi_dashboard_data(request):
         'veh_requested': veh_requested,
         'veh_not_allotted': veh_not_allotted,
         'veh_allotted': veh_allotted,
+        'veh_allotted_no_cnote': veh_allotted_no_cnote,
         'cnotes_created': cnotes_created,
         'not_associated_with_trip': not_associated_with_trip,
         'awaiting_trip_approval': awaiting_trip_approval,
@@ -712,7 +724,6 @@ def get_cs_kpi_dashboard_data(request):
             if al_list:
                 al = al_list[0]
                 # Fetch from Enquirynotevehicle first; va_sale/va_special_sale are NULL for new allotments
-                from ..models import Enquirynotevehicle
                 vt_id = getattr(al, 'va_vehicletype_placed_id', None) or getattr(al, 'va_vehicletype_id', None)
                 rate = 0.0
                 if vt_id:
