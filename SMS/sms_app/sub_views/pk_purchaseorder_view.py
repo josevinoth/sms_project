@@ -389,6 +389,24 @@ def pk_create_batch_job(request):
 
         po = get_object_or_404(PkpurchaseorderInfo, id=po_id)
 
+        # 0. STRICT VALIDATION: Ensure ALL packing materials in the quotation have a GRN (Stock ID) mapped
+        for entry in items:
+            pod_id = entry['id']
+            job_qty = float(entry['qty'])
+            if job_qty <= 0:
+                continue
+            
+            pod = POdimension.objects.get(id=pod_id)
+            # Check packing materials (cost_type = 8)
+            quotations = PkquotationInfo.objects.filter(pkqt_requirement=pod.pod_nad, pkqt_cost_type_id=8)
+            for q in quotations:
+                if not q.pkqt_stock_purchase_number:
+                    part_desc = q.pkqt_part_code.pc_code if q.pkqt_part_code else "Material"
+                    return JsonResponse({
+                        'success': False,
+                        'message': f"Cannot create job! Part Code '{part_desc}' (inside Item: {pod.pod_item}) is missing a GRN (Stock ID). Please map the GRN in the quotation before creating this job."
+                    }, status=400)
+
         # Validate live stock availability for material part codes (Cost Type 8)
         po_dimension_ids = [it['id'] for it in items]
         selected_pods = POdimension.objects.filter(id__in=po_dimension_ids)
@@ -411,15 +429,32 @@ def pk_create_batch_job(request):
                 per_item_req = float(q.pkqt_quantity_req or q.pkqt_quantity or 1.0)
                 total_needed = per_item_req * job_qty
                 
-                # Sum available stock from StockMaintenance
-                batches = StockMaintenance.objects.filter(
+                # Optimised: calculate available stock in 3 bulk queries instead of 3 per batch
+                # 1. Total purchased (type=1)
+                purchased_total = StockMaintenance.objects.filter(
                     sm_partcode=part_code_obj,
                     sm_stock_type_id=1
-                )
-                avail_qty = 0.0
-                from .pk_costing_view import _available_qty_for_stock_entry
-                for b in batches:
-                    avail_qty += _available_qty_for_stock_entry(b)
+                ).aggregate(total=Sum('sm_count'))['total'] or 0.0
+                
+                # 2. Total retrieved/consumed (type=2) - linked back to type=1 via invoice no
+                purchased_invoice_nos = list(StockMaintenance.objects.filter(
+                    sm_partcode=part_code_obj,
+                    sm_stock_type_id=1
+                ).values_list('sm_invoice_no', flat=True))
+                
+                retrieved_total = StockMaintenance.objects.filter(
+                    sm_partcode=part_code_obj,
+                    sm_stock_type_id=2,
+                    sm_invoice_no__in=purchased_invoice_nos
+                ).aggregate(total=Sum('sm_count'))['total'] or 0.0
+                
+                # 3. Total vendor-returned (type=3)
+                vendor_returned_total = StockMaintenance.objects.filter(
+                    sm_partcode=part_code_obj,
+                    sm_stock_type_id=3
+                ).aggregate(total=Sum('sm_count'))['total'] or 0.0
+                
+                avail_qty = max(0.0, float(purchased_total) - abs(float(retrieved_total)) - abs(float(vendor_returned_total)))
                 
                 if avail_qty < total_needed:
                     insufficient_stock_items.append({
@@ -451,14 +486,9 @@ def pk_create_batch_job(request):
                 body += "<p>Please restock or advise alternative materials.</p>"
                 
                 # Send email - use recipient from request if provided, else fall back to settings
-                from django.conf import settings
                 extra_recipient = data.get('stock_alert_email', '').strip()
-                stock_recipients = getattr(settings, 'STOCK_TEAM_EMAILS', [])
                 if extra_recipient:
-                    if extra_recipient not in stock_recipients:
-                        stock_recipients = list(stock_recipients) + [extra_recipient]
-                if stock_recipients:
-                    send_department_email('itadmin', subject, body, stock_recipients, email_type=1)
+                    send_department_email('itadmin', subject, body, [extra_recipient], email_type=1)
             except Exception as mail_err:
                 print(f"Stock Team notification email error: {mail_err}")
 

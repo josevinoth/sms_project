@@ -139,6 +139,8 @@ def pk_quotationsummary_add(request, pk_quotationsummary_id=0):
                 qs_material_cost=material_cost,
                 qs_transport_cost=transport_cost
             )
+            quotationsummary.refresh_from_db()
+            form = PkquotationsummaryForm(instance=quotationsummary)
 
             # Fetch linked POs for the hub
             linked_pos = PkpurchaseorderInfo.objects.filter(po_quotation_num=pk_quotationsummary_id)

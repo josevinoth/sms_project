@@ -204,6 +204,35 @@
     </div>
 </div>
 
+
+<!-- Multi-Select Stock Modal -->
+<div class="modal fade" id="multiStockModal" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light border-bottom-0 pb-3">
+                <h5 class="modal-title font-weight-bold text-dark">
+                    <i class="fas fa-boxes mr-2 text-primary"></i> Select Stock to Retrieve
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body bg-light pt-0">
+                <div class="alert alert-info py-2 small mb-3">
+                    <i class="fas fa-info-circle mr-1"></i> You can select multiple stock batches to fulfill the requested quantity.
+                </div>
+                <div id="multiStockModalBody"></div>
+            </div>
+            <div class="modal-footer bg-white border-top-0 py-3">
+                <button type="button" class="btn-modern btn-cancel" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-modern btn-submit" id="confirm_multi_stock_btn">
+                    <i class="fas fa-check"></i> Apply Selected Stocks
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock content %}
 
 {% block extra_js %}
@@ -313,26 +342,91 @@
                 if (results.length === 0) {
                     // Let DataTables handle empty state
                 } else {
+                    tableHtml = '<div class="table-container-modern p-0 overflow-hidden"><table id="stockTable" class="table modern-table text-center">';
+                    tableHtml += '<thead><tr>';
+                    tableHtml += '<th><i class="fas fa-check-square text-muted"></i></th>';
+                    tableHtml += '<th>Purchase No</th><th>Part Code</th><th>Description</th><th>Dim (L x W x H)</th><th>Available</th><th>Rate</th><th>Qty to Take</th>';
+                    tableHtml += '</tr></thead><tbody>';
                     for (var i = 0; i < results.length; i++) {
                         var row = results[i];
                         tableHtml += '<tr class="modern-tr">';
-                        tableHtml += '<td>' + row.id + '</td>';
+                        tableHtml += '<td><input type="checkbox" class="multi-stock-checkbox" data-id="' + row.id + '" data-rate="' + row.sp_rate + '" data-avail="' + row.sp_quantity + '"></td>';
                         tableHtml += '<td>' + row.sp_purchase_num + '</td>';
                         tableHtml += '<td>' + row.sp_part_code__pc_code + '</td>';
                         tableHtml += '<td class="text-left font-weight-bold">' + row.sp_stock_description__stock_description + '</td>';
                         tableHtml += '<td>' + row.sp_length + ' x ' + row.sp_width + ' x ' + row.sp_thick_height + '</td>';
-                        tableHtml += '<td class="font-weight-bold">' + row.sp_quantity + '</td>';
+                        tableHtml += '<td class="font-weight-bold available-qty">' + row.sp_quantity + '</td>';
                         tableHtml += '<td>₹' + row.sp_rate + '</td>';
-                        tableHtml += '<td><button type="button" class="btn-modern btn-submit py-1 px-3 select-stock" style="font-size:0.75rem;" ' +
-                            'data-id="' + row.id + '" ' +
-                            'data-rate="' + row.sp_rate + '"' +
-                            '>SELECT</button></td>';
+                        tableHtml += '<td><input type="number" class="form-control form-control-sm multi-stock-qty" style="width: 80px;" disabled max="' + row.sp_quantity + '"></td>';
                         tableHtml += '</tr>';
                     }
+                    tableHtml += '</tbody></table></div>';
                 }
-                tableHtml += '</tbody></table></div>';
-                includeContainer.html(tableHtml);
-                $('#stockTable').DataTable({ pageLength: 5, searching: false });
+                $('#multiStockModalBody').html(tableHtml);
+                includeContainer.empty(); // clear loading
+                
+                // Initialize DataTable
+                var table = $('#stockTable').DataTable({ pageLength: 5, searching: false, autoWidth: false });
+                
+                $('#multiStockModal').modal('show');
+                
+                // Adjust widths once the modal is fully visible
+                $('#multiStockModal').on('shown.bs.modal', function () {
+                    table.columns.adjust().draw();
+                });
+                
+                // Checkbox toggle logic & auto-calculation
+                $('.multi-stock-checkbox').on('change', function() {
+                    var qtyInput = $(this).closest('tr').find('.multi-stock-qty');
+                    
+                    if ($(this).is(':checked')) {
+                        var total_req = parseFloat($("#total_req_qty").val()) || parseFloat($("#ct_quantity_req").val()) || 0;
+                        var currently_taken = 0;
+                        $('.multi-stock-qty:not(:disabled)').each(function() {
+                            if (this !== qtyInput[0]) {
+                                currently_taken += parseFloat($(this).val()) || 0;
+                            }
+                        });
+                        
+                        var remaining_needed = total_req - currently_taken;
+                        if (remaining_needed <= 0 && total_req > 0) {
+                            alert("You have already selected enough stock to fulfill the requested quantity of " + total_req);
+                            $(this).prop('checked', false);
+                            return;
+                        }
+                        
+                        var available = parseFloat($(this).data('avail')) || 0;
+                        var to_take = total_req > 0 ? Math.min(remaining_needed, available) : available;
+                        
+                        qtyInput.prop('disabled', false).val(to_take).focus();
+                    } else {
+                        qtyInput.prop('disabled', true).val('');
+                    }
+                });
+
+                // Validation to prevent exceeding requested qty when typing manually
+                $('.multi-stock-qty').on('input', function() {
+                    var max = parseFloat($(this).attr('max'));
+                    var val = parseFloat($(this).val()) || 0;
+                    if (val > max) {
+                        $(this).val(max);
+                        val = max;
+                    }
+                    
+                    var total_req = parseFloat($("#total_req_qty").val()) || parseFloat($("#ct_quantity_req").val()) || 0;
+                    if (total_req > 0) {
+                        var currently_taken = 0;
+                        $('.multi-stock-qty:not(:disabled)').each(function() {
+                            currently_taken += parseFloat($(this).val()) || 0;
+                        });
+                        
+                        if (currently_taken > total_req) {
+                            var excess = currently_taken - total_req;
+                            var new_val = Math.max(0, val - excess);
+                            $(this).val(new_val);
+                        }
+                    }
+                });
             }
         });
     }
@@ -344,5 +438,66 @@
         $("#ct_rate").val(rate);
         change_cost_type();
     });
+
+    // Multi-stock confirm button
+    $('#confirm_multi_stock_btn').on('click', function() {
+        var selections = [];
+        var total_taken = 0;
+        
+        $('.multi-stock-checkbox:checked').each(function() {
+            var stockId = $(this).data('id');
+            var rate = $(this).data('rate');
+            var qty = parseFloat($(this).closest('tr').find('.multi-stock-qty').val()) || 0;
+            if (qty > 0) {
+                selections.push({ stock_id: stockId, rate: rate, qty: qty });
+                total_taken += qty;
+            }
+        });
+        
+        if (selections.length === 0) {
+            alert("Please select at least one stock batch.");
+            return;
+        }
+        
+        var required_qty = parseFloat($("#total_req_qty").val()) || parseFloat($("#ct_quantity_req").val()) || 0;
+        if (total_taken > required_qty && required_qty > 0) {
+            alert("Warning: You selected " + total_taken + " but only need " + required_qty + ".");
+        }
+        
+        var retrival_id = '{{ form.instance.id }}' || '0';
+        if (retrival_id === '0' || !retrival_id) {
+            // New retrieval mode - fallback to single select logic (first selected)
+            $("#ct_stock_purchase_number").val(selections[0].stock_id);
+            $("#ct_rate").val(selections[0].rate);
+            $('#multiStockModal').modal('hide');
+            change_cost_type();
+            return;
+        }
+        
+        // Multi-update via AJAX
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+        
+        $.ajax({
+            url: '/SMS/pk_retrival_multi_update/',
+            method: 'POST',
+            data: JSON.stringify({ 'retrival_id': retrival_id, 'selections': selections }),
+            contentType: 'application/json',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            success: function(res) {
+                if (res.success) {
+                    window.location.href = '/SMS/pk_retrival_list/';
+                } else {
+                    alert(res.message);
+                    btn.prop('disabled', false).html('<i class="fas fa-check"></i> Apply Selected Stocks');
+                }
+            },
+            error: function() {
+                alert("An error occurred.");
+                btn.prop('disabled', false).html('<i class="fas fa-check"></i> Apply Selected Stocks');
+            }
+        });
+    });
+
 </script>
 {% endblock extra_js %}
