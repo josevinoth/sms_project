@@ -413,42 +413,28 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill, prorat
         tc_tripcost = tc_tollcost = tc_supervisorcost = tc_loadingcost = tc_unloadingcost = tc_weighmentcost = tc_haltingcost = tc_handlingcost = tc_parkingcost = tc_rtocost = tc_betacost = tc_cancellation = 0.0
     else:
         tc_tripcost = get_tms_report_transport_charge(trip, inv=inv, allotment=va_info)
-        tc_tollcost = (safe_num(trip.tc_tollcost) if (
-                getattr(trip, 'tc_tollcost_check', True) and safe_num(trip.tc_tollcost) > 0) else (
-            safe_num(inv.ti_toll_charges) if inv else 0.0))
-        tc_supervisorcost = (safe_num(trip.tc_supervisorcost) if (
-                getattr(trip, 'tc_supervisorcost_check', True) and safe_num(trip.tc_supervisorcost) > 0) else (
-            safe_num(inv.ti_docket_charges) if inv else 0.0))
-        tc_loadingcost = (safe_num(trip.tc_loadingcost) if (
-                getattr(trip, 'tc_loadingcost_check', True) and safe_num(trip.tc_loadingcost) > 0) else (
-            safe_num(inv.ti_loading_charges) if inv else 0.0))
-        tc_unloadingcost = (safe_num(trip.tc_unloadingcost) if (
-                getattr(trip, 'tc_unloadingcost_check', True) and safe_num(trip.tc_unloadingcost) > 0) else (
-            safe_num(inv.ti_unloading_charges) if inv else 0.0))
-        tc_weighmentcost = (safe_num(trip.tc_weighmentcost) if (
-                getattr(trip, 'tc_weighmentcost_check', True) and safe_num(trip.tc_weighmentcost) > 0) else (
-            safe_num(inv.ti_weighment_charges) if inv else 0.0))
+        tc_tollcost = safe_num(inv.ti_toll_charges) if inv else (safe_num(trip.tc_tollcost) if getattr(trip, 'tc_tollcost_check', True) else 0.0)
+        tc_supervisorcost = safe_num(inv.ti_docket_charges) if inv else (safe_num(trip.tc_supervisorcost) if getattr(trip, 'tc_supervisorcost_check', True) else 0.0)
+        tc_loadingcost = safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if getattr(trip, 'tc_loadingcost_check', True) else 0.0)
+        tc_unloadingcost = safe_num(inv.ti_unloading_charges) if inv else (safe_num(trip.tc_unloadingcost) if getattr(trip, 'tc_unloadingcost_check', True) else 0.0)
+        tc_weighmentcost = safe_num(inv.ti_weighment_charges) if inv else (safe_num(trip.tc_weighmentcost) if getattr(trip, 'tc_weighmentcost_check', True) else 0.0)
 
         # Halting Logic
         halting_days = safe_num(trip.tc_no_of_days_halting)
-        if getattr(trip, 'tc_total_halting_cost_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
+        if inv:
+            tc_haltingcost = safe_num(inv.ti_halting_charges)
+        elif getattr(trip, 'tc_total_halting_cost_check', False) and safe_num(trip.tc_total_halting_cost) > 0:
             tc_haltingcost = safe_num(trip.tc_total_halting_cost)
         elif getattr(trip, 'tc_haltingcost_check', False) and safe_num(trip.tc_haltingcost) > 0:
             tc_haltingcost = safe_num(trip.tc_haltingcost) * halting_days
-        elif inv:
-            tc_haltingcost = safe_num(inv.ti_halting_charges)
         else:
             tc_haltingcost = 0.0
 
-        tc_handlingcost = (safe_num(trip.tc_handlingcost) if (
-                getattr(trip, 'tc_handlingcost_check', True) and safe_num(trip.tc_handlingcost) > 0) else (
-            safe_num(inv.ti_handling_charges) if inv else 0.0))
-        tc_parkingcost = (safe_num(trip.tc_parkingcost) if (
-                getattr(trip, 'tc_parkingcost_check', True) and safe_num(trip.tc_parkingcost) > 0) else (
-            safe_num(inv.ti_parking_charges) if inv else 0.0))
+        tc_handlingcost = safe_num(inv.ti_handling_charges) if inv else (safe_num(trip.tc_handlingcost) if getattr(trip, 'tc_handlingcost_check', True) else 0.0)
+        tc_parkingcost = safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if getattr(trip, 'tc_parkingcost_check', True) else 0.0)
         tc_rtocost = safe_num(trip.tc_rtocost) if getattr(trip, 'tc_rtocost_check', True) else 0.0
         tc_betacost = safe_num(trip.tc_betacost) if getattr(trip, 'tc_betacost_check', True) else 0.0
-        tc_cancellation = safe_num(trip.tc_cancellation) if getattr(trip, 'tc_cancellation_check', True) else 0.0
+        tc_cancellation = safe_num(inv.ti_cancellation_charges) if inv else (safe_num(trip.tc_cancellation) if getattr(trip, 'tc_cancellation_check', True) else 0.0)
 
     total_selling = (tc_tripcost + tc_tollcost + tc_supervisorcost + tc_loadingcost + tc_unloadingcost +
                      tc_weighmentcost + tc_haltingcost + tc_handlingcost + tc_parkingcost +
@@ -3164,13 +3150,12 @@ def vendor_p_l_attached_report_ajax_view(request):
         trips = trips.filter(tr_vehicletype_id=vehicle_type_id)
 
     if vendor_id:
-        enquiries_with_vendor = Vehicle_allotmentInfo.objects.filter(va_vendor__isnull=False).values_list('va_enquirynumber_id', flat=True)
         enquiries_for_this_vendor = Vehicle_allotmentInfo.objects.filter(va_vendor_id=vendor_id).values_list('va_enquirynumber_id', flat=True)
         vendor_vehicles = VehiclemasterInfo.objects.filter(vm_vendor_id=vendor_id).values_list('vm_registrationnumber', flat=True)
 
         trips = trips.filter(
             Q(tr_enquirynumber_id__in=enquiries_for_this_vendor) |
-            (~Q(tr_enquirynumber_id__in=enquiries_with_vendor) & Q(tr_vehiclenumber__in=vendor_vehicles))
+            Q(tr_vehiclenumber__in=vendor_vehicles)
         )
 
     if veh_no:
@@ -6467,7 +6452,7 @@ def get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date
     selected_month = selected_month if selected_month not in [None, 'None', '', '0'] else None
 
     trips = TripdetailInfo.objects.filter(
-        Q(tc_financestatus_id__in=[1, 2, 3, 4, 7, 9])
+        Q(tc_financestatus_id__in=[1, 2, 3, 4, 5, 6, 7, 9])
     ).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
@@ -6602,7 +6587,7 @@ def movementwise_pl_report_ajax_view(request):
         # Base queryset
         base_trips = get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date, to_date,
                                         selected_year)
-        base_trips = base_trips.filter(tr_category_id=1, tc_financestatus_id__in=[7, 9])
+        base_trips = base_trips.filter(tr_category_id=1, tc_financestatus_id__in=[2, 4, 5, 6, 7, 9])
         trips = base_trips
 
         records_total = trips.order_by().values('id').count()
@@ -6790,7 +6775,7 @@ def customerwise_pl_report_ajax_view(request):
         base_trips = get_filtered_trips(branch_id, trip_category_id, vehicle_source_id, from_date, to_date,
                                         selected_year,
                                         customer_id=customer_id)
-        base_trips = base_trips.filter(tr_category_id=1, tc_financestatus_id__in=[7, 9])
+        base_trips = base_trips.filter(tr_category_id=1, tc_financestatus_id__in=[2, 4, 5, 6, 7, 9])
         trips = base_trips
 
         records_total = trips.order_by().values('id').count()

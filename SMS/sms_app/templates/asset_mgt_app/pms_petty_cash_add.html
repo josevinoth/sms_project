@@ -62,7 +62,7 @@
                             {% render_field form.ppc_expense_type id="ppc_expense_type" class="form-control form-control-modern select2" %}
                         </div>
                         
-                        <div class="form-group-modern">
+                        <div class="form-group-modern" style="display:none;">
                             <label class="form-label-modern">Amount</label>
                             {% render_field form.ppc_amount id="ppc_amount" class="form-control form-control-modern" type="number" step="0.01" %}
                         </div>
@@ -133,7 +133,7 @@
                         </div>
 
                         <div class="form-group-modern">
-                            <label class="form-label-modern">Bill Amount</label>
+                            <label class="form-label-modern">Amount</label>
                             {% render_field form.ppc_bill_amount id="ppc_bill_amount" class="form-control form-control-modern" type="number" step="0.01" %}
                         </div>
 
@@ -341,7 +341,29 @@
                 $('#job_details_container').slideUp();
             }
         });
+
+        // Automatically fetch job details if Job No is pre-filled (Edit Mode)
+        if ($('#ppc_job_no').val()) {
+            $('#ppc_job_no').trigger('change');
+        }
     });
+
+        // Real-time calculation for GST Amount and Total Amount
+        function calculateAmounts() {
+            var billAmt = parseFloat($('#ppc_bill_amount').val()) || 0;
+            var gstPct = parseFloat($('#ppc_gst_percentage').val()) || 0;
+
+            var gstAmt = (billAmt * gstPct) / 100;
+            var totalAmt = billAmt + gstAmt;
+
+            $('#ppc_gst_amount').val(gstAmt.toFixed(2));
+            $('#ppc_total_amount').val(totalAmt.toFixed(2));
+        }
+
+        $('#ppc_bill_amount, #ppc_gst_percentage').on('input change', function() {
+            calculateAmounts();
+        });
+
 </script>
 {% endblock %}
 

@@ -278,7 +278,7 @@
 <!-- ================= DATATABLE SCRIPT ================= -->
 <script>
     $(document).ready(function () {
-        $('#attachedBillTable').DataTable({
+        var t = $('#attachedBillTable').DataTable({
             scrollX: true,
             autoWidth: false,
             responsive: false,
@@ -295,8 +295,22 @@
             ],
             pageLength: 10,
             lengthMenu: [5, 10, 25, 50, 100],
-            order: [[17, 'desc']] // Sort by Created On by default (index adjusted due to added TDS columns)
+            order: [], // Preserve backend order by default
+            columnDefs: [
+                {
+                    searchable: false,
+                    orderable: false,
+                    targets: 0
+                }
+            ]
         });
+
+        // Always keep S.No sequentially numbered regardless of sorting or filtering
+        t.on('order.dt search.dt', function () {
+            t.column(0, {search:'applied', order:'applied'}).nodes().each( function (cell, i) {
+                cell.innerHTML = i+1;
+            });
+        }).draw();
 
         // ===== Summary Button Click =====
         $(document).on('click', '.summary-btn', function () {
@@ -328,23 +342,24 @@
                         [12, 'ACTUAL AMT',                    d.actual_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
                         [13, 'TOTAL TRIPS',                   d.total_trips + ' TRIPS'],
                         [14, 'TRIP INDEX',                    d.trip_index],
-                        [15, 'TOTAL KM',                      d.total_km + ' KM / ' + d.agreed_km + ' KM'],
-                        [16, 'EMPTY KM',                      d.empty_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [17, 'EMPTY KM BUY COST',             d.empty_km_buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [18, 'BUSINESS EMPTY KM',             d.business_empty_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [19, 'BUSINESS EMPTY KM BUY COST',    d.business_empty_km_buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [20, 'BUY COST',                      d.buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [21, 'SELLING',                       d.selling.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [22, 'BUYING',                        d.buying.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [23, 'PROFIT',                        d.profit.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [24, 'SELLING %',                     d.sell_pct + '%'],
-                        [25, 'BUYING %',                      d.buy_pct + '%'],
+                        [15, 'BUSINESS KM',                   d.business_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [16, 'TOTAL KM',                      d.total_km + ' KM / ' + d.agreed_km + ' KM'],
+                        [17, 'EMPTY KM',                      d.empty_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [18, 'EMPTY KM BUY COST',             d.empty_km_buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [19, 'BUSINESS EMPTY KM',             d.business_empty_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [20, 'BUSINESS EMPTY KM BUY COST',    d.business_empty_km_buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [21, 'BUSINESS COST',                 d.buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [22, 'SELLING',                       d.selling.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [23, 'BUYING',                        d.buying.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [24, 'PROFIT',                        d.profit.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [25, 'SELLING %',                     d.sell_pct + '%'],
+                        [26, 'BUYING %',                      d.buy_pct + '%'],
                     ];
 
                     var html = '';
                     rows.forEach(function (r) {
                         var rowStyle = '';
-                        if (r[0] === 23) rowStyle = 'style="background:#d4edda; font-weight:700;"'; // profit row
+                        if (r[0] === 24) rowStyle = 'style="background:#d4edda; font-weight:700;"'; // profit row
                         html += '<tr ' + rowStyle + '><td class="text-center font-weight-bold">' + r[0] + '</td><td class="font-weight-bold">' + r[1] + ':</td><td>' + r[2] + '</td></tr>';
                     });
                     tbody.html(html);
