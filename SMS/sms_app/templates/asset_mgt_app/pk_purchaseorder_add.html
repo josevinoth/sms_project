@@ -220,7 +220,7 @@
                 <table class="table modern-table text-center">
                     <thead>
                         <tr>
-                            <th>Costing ID</th>
+                            <th>Job No</th>
                             <th>Estimation Type</th>
                             <th>Total Cost</th>
                             <th>Final Cost (GST)</th>
@@ -230,7 +230,7 @@
                     <tbody>
                         {% for cs in linked_costings %}
                         <tr class="modern-tr">
-                            <td class="font-weight-bold">#{{ cs.cs_costing_num|default:cs.id }}</td>
+                            <td class="font-weight-bold">{{ cs.cs_job_no|default:cs.id }}</td>
                             <td><span class="badge badge-info">{{ cs.get_cs_estimation_type_display }}</span></td>
                             <td class="font-weight-bold">{{ cs.cs_total_cost_wm }}</td>
                             <td class="font-weight-bold text-success">{{ cs.cs_final_cost }}</td>

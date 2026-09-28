@@ -464,7 +464,15 @@ function setDateFieldValue(selector, value) {
 					$dropdown.append("<option value='" + v.id + "' data-category-id='" + v.category_id + "' data-category-name='" + v.category_name + "' " + isSelected + ">" + v.name + "</option>");
 				});
 
-				
+					// Build a map of vehicle_type_id -> rates for instant lookup (no 2nd AJAX needed)
+				var vehicleRateMap = {};
+				vehicles.forEach(function(v) {
+					vehicleRateMap[String(v.id)] = {
+						sale_rate: v.sale_rate || "0",
+						special_sale_rate: v.special_sale_rate || v.sale_rate || "0"
+					};
+				});
+
 				if (selectedVal) {
 					// Force the dropdown to recognize the value (helpful for other listeners)
 					$dropdown.val(selectedVal);
@@ -475,8 +483,19 @@ function setDateFieldValue(selector, value) {
 					// Update the quantity display for the auto-selected vehicle
 					fetchVehicleQuantity(selectedVal);
 					
-					// Auto-load sell rate from parent Enquiry for the selected vehicle type (no checkbox needed)
-					loadEnquirySellRate(true);
+					// Instantly set sell rate from embedded data (no extra AJAX round-trip)
+					var rates = vehicleRateMap[String(selectedVal)];
+					if (rates && rates.sale_rate && rates.sale_rate !== "0") {
+						if (!$('#va_sale').val() || $('#va_sale').val() === "0" || $('#va_sale').val() === "0.0") {
+							$('#va_sale').val(rates.sale_rate);
+						}
+						if (!$('#va_special_sale').val() || $('#va_special_sale').val() === "0" || $('#va_special_sale').val() === "0.0") {
+							$('#va_special_sale').val(rates.special_sale_rate);
+						}
+						calculateProfit();
+					} else {
+						loadEnquirySellRate(true);
+					}
 				}
 
 				$dropdown.off("change").on("change", function () {
@@ -487,8 +506,23 @@ function setDateFieldValue(selector, value) {
 
 					if (vehicleTypeId) {
 						fetchVehicleQuantity(vehicleTypeId);
+
+						// Instantly update sell rate from pre-fetched map (fixes stale rate on second selection)
+						var rates = vehicleRateMap[String(vehicleTypeId)];
+						if (rates && rates.sale_rate && rates.sale_rate !== "0") {
+							$('#va_sale').val(rates.sale_rate);
+							$('#va_special_sale').val(rates.special_sale_rate);
+							calculateProfit();
+						} else {
+							$('#va_sale').val('');
+							$('#va_special_sale').val('');
+							loadEnquirySellRate(false);
+						}
 					} else {
 						$("#vehicle_quantity_display").text("0");
+						$('#va_sale').val('');
+						$('#va_special_sale').val('');
+						calculateProfit();
 					}
 				});
 			},
@@ -874,13 +908,15 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
         // -----------------------------------------
-        // 3️⃣ SELL RATE REQUIRED
+        // 3️⃣ SELL RATE REQUIRED (Made non-mandatory)
         // -----------------------------------------
+        /*
         if (sellRate === "" || sellRate === "0") {
             event.preventDefault();
             alert("Sell Rate is required. Please assign a Sell Rate before submitting.");
             return false;
         }
+        */
         // -----------------------------------------
         // 4️⃣ MARKET VEHICLE (ID = 3) → VENDOR REQUIRED
         // -----------------------------------------
