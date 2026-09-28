@@ -8,6 +8,44 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 
 
+def recalculate_dependent_costs(assessment_id, request=None):
+    from django.db.models import Sum, F
+    from ..models import PkquotationInfo
+    
+    # Calculate total_cft_display dynamically for the assessment (Wood ONLY)
+    aggregate_cft = PkquotationInfo.objects.filter(
+        pkqt_assessment_num=assessment_id,
+        pkqt_cost_type=8,
+        pkqt_stock_type=1
+    ).aggregate(total=Sum(F('pkqt_sqrt_req') * F('pkqt_na_quantity')))['total']
+    
+    total_cft = round(aggregate_cft, 3) if aggregate_cft is not None else 0.0
+    if request:
+        request.session['total_cft_display'] = total_cft
+
+    # Find HT Cost entries for this assessment and recalculate them automatically
+    ht_costs = PkquotationInfo.objects.filter(
+        pkqt_assessment_num=assessment_id,
+        pkqt_cost_type=5
+    )
+    for ht in ht_costs:
+        na_quantity = float(ht.pkqt_na_quantity or 1)
+        rate = float(ht.pkqt_rate or 0)
+        
+        # Unit CFT per box
+        unit_cft = total_cft / na_quantity if na_quantity else 0
+        
+        # Cost per box
+        totalCost = rate * unit_cft
+        
+        # Total cost for all boxes
+        totalboxCost = totalCost * na_quantity
+        
+        ht.pkqt_sqrt_req = round(unit_cft, 3)
+        ht.pkqt_total_cost = round(totalCost, 2)
+        ht.pkqt_totalbox_cost = round(totalboxCost, 2)
+        ht.save()
+
 @transaction.atomic
 @login_required(login_url='login_page')
 def pk_quotation_add(request, quotation_id=0):
@@ -209,9 +247,11 @@ def pk_quotation_add(request, quotation_id=0):
 
                     messages.warning(request, 'Stock saved without Stock Purchase Number')
             else:
-                form.save()
+                quotation = form.save()
 
                 messages.success(request, 'Quotation Updated Successfully')
+
+            recalculate_dependent_costs(quotation.pkqt_assessment_num.id, request)
 
             # Store selected values in session after a successful form save for continuous entry
             if form.cleaned_data.get('pkqt_cost_type'):
@@ -257,7 +297,9 @@ def pk_quotation_list(request):
 @login_required(login_url='login_page')
 def pk_quotation_delete(request,quotation_id):
     quotation = PkquotationInfo.objects.get(pk=quotation_id)
+    assessment_id = quotation.pkqt_assessment_num.id
     quotation.delete()
+    recalculate_dependent_costs(assessment_id, request)
     # return redirect('/SMS/pK_quotation_cancel')
     return redirect(request.META['HTTP_REFERER'])
 

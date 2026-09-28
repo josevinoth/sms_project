@@ -237,7 +237,7 @@
                                 </div>
                                 <div class="col-6 pl-1">
                                     <div class="form-group-modern" id="total_cft">
-                                        <label class="form-label-modern">Total CFT</label>
+                                        <label class="form-label-modern">Proj. Total CFT</label>
                                         {% render_field form.pkqt_total_cft_display id="pkqt_total_cft_display" value=total_cft_display onchange="change_cost_type()" class="form-control form-control-modern disable_a_href" %}
                                     </div>
                                 </div>
@@ -434,6 +434,16 @@
         var part_code_elem = document.getElementById("pkqt_part_code");
         var part_code_val = part_code_elem ? part_code_elem.value : '';
         var req_label_elem = $('#req_value_label');
+        
+        if (jn == 8) {
+            $('#pkqt_part_code').prop('disabled', false);
+        } else {
+            if ($('#pkqt_part_code').val()) {
+                $('#pkqt_part_code').val(null).trigger('change.select2');
+            }
+            $('#pkqt_part_code').prop('disabled', true);
+        }
+        
         if (jn == 8) {
             var jn1 = document.getElementById("pkqt_stock_type").value;
             if (jn1 == 1 || jn1 == 5) {
@@ -574,10 +584,13 @@
             var total_cft = parseFloat(document.getElementById("pkqt_total_cft_display").value) || 0;
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
             
-            document.getElementById("pkqt_cft_sqft_req").innerText = total_cft.toFixed(2);
+            if (document.getElementById("pkqt_cft_sqft_req")) { document.getElementById("pkqt_cft_sqft_req").innerText = total_cft.toFixed(2); }
             
             // If total_cft is the project total, we divide by na_quantity to get unit cost per box
             var unit_cft = total_cft / na_quantity;
+            if (document.getElementById("pkqt_sqrt_req")) {
+                document.getElementById("pkqt_sqrt_req").value = unit_cft.toFixed(3);
+            }
             var totalCost = rate * unit_cft;
             
             document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);

@@ -120,7 +120,7 @@ def pk_acceptance_add(request,retrival_id=0):
 @login_required(login_url='login_page')
 def pk_acceptance_list(request):
     first_name = request.session.get('first_name')
-    acceptance_queryset = PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=2).order_by('-id')
+    acceptance_queryset = PkcostingInfo.objects.filter(ct_cost_type=8,ct_stock_status=2).order_by('-ct_job_no', 'ct_part_code', '-id')
 
     grouped_acceptance = {}
     for item in acceptance_queryset:
