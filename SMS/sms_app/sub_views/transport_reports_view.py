@@ -3372,10 +3372,31 @@ def vendor_p_l_attached_report_ajax_view(request):
                     buying_trip_cost = round(vm_buycost_val / trip_count, 2)
 
         buying_loading = buying_unloading = buying_weighment = buying_aai = 0.0
-        buying_toll = safe_num(trip.tc_tollcost) if att_bill else 0.0
-        if att_bill and buying_toll == 0.0 and safe_num(att_bill.ab_toll_cost) > 0.0:
-            buying_toll = round(safe_num(att_bill.ab_toll_cost) / (total_trips or 1), 2)
+        
+        buying_toll = 0.0
+        if att_bill:
+            if att_bill.ab_trip_costs:
+                try:
+                    import json
+                    saved_costs = json.loads(att_bill.ab_trip_costs)
+                    if str(trip.id) in saved_costs:
+                        buying_toll = float(saved_costs[str(trip.id)].get('toll', 0.0))
+                except Exception:
+                    pass
+            if buying_toll == 0.0:
+                buying_toll = safe_num(trip.tc_tollcost)
+            if buying_toll == 0.0 and safe_num(att_bill.ab_toll_cost) > 0.0:
+                buying_toll = round(safe_num(att_bill.ab_toll_cost) / (total_trips or 1), 2)
+                
         buying_halting = buying_handling = buying_parking = buying_rto = buying_batta = 0.0
+        if att_bill and att_bill.ab_trip_costs:
+            try:
+                import json
+                saved_costs = json.loads(att_bill.ab_trip_costs)
+                if str(trip.id) in saved_costs:
+                    buying_parking = float(saved_costs[str(trip.id)].get('parking', 0.0))
+            except Exception:
+                pass
 
         for e in trip_expenses:
             buying_loading += safe_num(e.de_loadingcost)

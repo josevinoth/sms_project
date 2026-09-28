@@ -287,28 +287,29 @@
         <form method="get" action="{% url 'enquirynote_list' %}">
             <h5 class="mb-3 text-main font-weight-bold" style="font-size: 1.1rem;"><i class="fas fa-filter text-info mr-2"></i> Filter & Search Records</h5>
             <div class="row align-items-end">
-                <div class="col-md-2 col-sm-6 mb-3 mb-md-0">
+                <div class="col-md-2 col-sm-6 mb-3">
                     <label class="form-label-modern small mb-1">Enquiry Number</label>
                     <input type="text" class="form-control form-control-modern" placeholder="Enquiry No" name="enquiry_number" value="{{ enquiry_number }}">
                 </div>
-                <div class="col-md-2 col-sm-6 mb-3 mb-md-0">
+                <div class="col-md-2 col-sm-6 mb-3">
                     <label class="form-label-modern small mb-1">Consignment Number</label>
                     <input type="text" class="form-control form-control-modern" placeholder="Consignment No" name="consignment_number" value="{{ consignment_number }}">
                 </div>
-                <div class="col-md-2 col-sm-6 mb-3 mb-md-0 position-relative">
+                <div class="col-md-2 col-sm-6 mb-3 position-relative">
                     <label class="form-label-modern small mb-1">Vehicle Number</label>
                     <input type="text" class="form-control form-control-modern" id="vehicle_number_filter" placeholder="Vehicle No" name="vehicle_number" value="{{ vehicle_number }}" autocomplete="off">
                     <div id="vehicle_dropdown" class="dropdown-menu shadow-lg w-100" style="display:none; max-height: 250px; overflow-y: auto; position: absolute; z-index: 1050; top: 100%; left: 0;"></div>
                 </div>
-                <div class="col-md-2 col-sm-6 mb-3 mb-md-0">
+                <div class="col-md-2 col-sm-6 mb-3">
                     <label class="form-label-modern small mb-1">From Date</label>
                     <input type="date" class="form-control form-control-modern" name="date_from" value="{{ date_from }}">
                 </div>
-                <div class="col-md-2 col-sm-6 mb-3 mb-md-0">
+                <div class="col-md-2 col-sm-6 mb-3">
                     <label class="form-label-modern small mb-1">To Date</label>
                     <input type="date" class="form-control form-control-modern" name="date_to" value="{{ date_to }}">
                 </div>
-                <div class="col-md-2 col-sm-12 d-flex gap-2">
+                
+                <div class="col-md-2 col-sm-12 d-flex gap-2 mb-3">
                     <button class="btn-modern btn-submit py-2 px-3 w-100" type="submit" style="font-size: 0.95rem; height: 52px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
                         <i class="fa fa-search"></i> Search
                     </button>
@@ -316,6 +317,20 @@
                         <i class="fa fa-times-circle"></i> Clear
                     </a>
                 </div>
+
+                {% if role.role_name|lower != 'admin' and role.role_name|lower != 'super user' and role.role_name|lower != 'superuser' %}
+                <div class="col-md-2 col-sm-6 mb-3">
+                    <label class="form-label-modern small mb-1">User</label>
+                    <select class="form-control form-control-modern" name="created_by">
+                        {% for c_user in cs_users %}
+                            {% if c_user.user %}
+                                <option value="{{ c_user.user.id }}" {% if not created_by or created_by == c_user.user.id|stringformat:"s" %}selected{% endif %}>{{ c_user.user.first_name }} {{ c_user.user.last_name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                        <option value="all" {% if created_by == 'all' %}selected{% endif %}>All</option>
+                    </select>
+                </div>
+                {% endif %}
             </div>
         </form>
     </div>
