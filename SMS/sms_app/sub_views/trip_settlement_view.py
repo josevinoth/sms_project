@@ -5,6 +5,7 @@ from ..models import  TripdetailInfo,Trip_closure_files_Info, Vehicle_allotmentI
 from ..forms import TripSettlementForm,TripclosurefilesForm
 from ..sub_models.trip_status_mod import Tripstatusinfo
 from django.core.paginator import Paginator
+from django.utils import timezone
 from django.db.models import Q, Exists, OuterRef
 from .invoice_documents_view import sync_closure_files_to_invoice
 from .general_utils import is_admin_user, get_allowed_next_statuses
@@ -300,7 +301,7 @@ def trip_settlement_edit(request, trip_id):
         if trip.tr_enquirynumber:
             form.fields['customer_name'].initial = str(trip.tr_enquirynumber.en_customername)
         if trip.tr_departeddate_pickup:
-            form.fields['trip_date'].initial = trip.tr_departeddate_pickup.strftime('%d-%m-%Y')
+            form.fields['trip_date'].initial = timezone.localtime(trip.tr_departeddate_pickup).strftime('%d-%m-%Y')
 
         files_form = TripclosurefilesForm(instance=files_instance)
 

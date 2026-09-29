@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
 
 from ..models import TripdetailInfo, Trip_closure_files_Info, Vehicle_allotmentInfo, TripAttachmentInfo, Enquirynotevehicle
 from ..forms import TripSettlementForm, TripclosurefilesForm
@@ -599,7 +600,7 @@ def invoice_documents_list_ajax_view(request):
                 str(trip.tr_vehiclenumber) if trip.tr_vehiclenumber else '',
                 str(trip.tr_departedlocation) if trip.tr_departedlocation else '',
                 str(trip.tr_reportedlocation) if trip.tr_reportedlocation else '',
-                trip.tr_departeddate_pickup.strftime("%d-%m-%Y") if trip.tr_departeddate_pickup else '',
+                timezone.localtime(trip.tr_departeddate_pickup).strftime("%d-%m-%Y") if trip.tr_departeddate_pickup else '',
                 invoice_status,
                 pdf_btn,
                 edit_btn
@@ -1061,7 +1062,7 @@ def invoice_documents_add(request, trip_id):
             )
         if trip.tr_departeddate_pickup:
             settlement_form.fields['trip_date'].initial = (
-                trip.tr_departeddate_pickup.strftime('%d-%m-%Y')
+                timezone.localtime(trip.tr_departeddate_pickup).strftime('%d-%m-%Y')
             )
 
         # Only show 'Ready for Invoice' (ID 9) and the current status
