@@ -604,7 +604,7 @@ VENDOR_PL_MKT_MKT_HEADERS = [
     "S No", "Date", "Cnote", "From", "To", "Customer", "Veh No", "Veh Type",
     "Trip Charges", "Toll charges", "Loading charges",
     "Unloading Charges", "Weighment charges", "Halting Charges", "Handling Charges", "Parking Charges",
-    "Selling", "BVM Inv no.", "Vendor Name", "Bill No", "Trip Cost",
+    "Selling", "Invoice No", "Vendor Name", "Bill No", "Trip Cost",
     "Toll Expenses", "Loading Expenses", "Unloading Expenses",
     "Weighment Expenses", "Halting Expenses", "Handling Expenses", "Parking Expenses",
     "Buying", "Profit", "Profit % with Selling", "Profit % with Buying"
@@ -868,7 +868,7 @@ TIME_ANALYSIS_HEADERS = [
 VENDOR_PL_ATTACHED_HEADERS = [
     "S No", "Date", "Cnote", "From", "To", "Customer", "Veh No", "Veh Type",
     "Trip Charges", "Toll charges", "Parking Charges", "Loading charges", "Unloading Charges",
-    "Weighment charges", "Halting Charges", "Handling Charges", "Selling",
+    "Weighment charges", "Halting Charges", "Handling Charges", "Selling", "Invoice No",
     "Vendor Name", "Bill No", "Buy cost", "Toll Cost", "Parking Cost",
     "Loading cost", "Unloading cost", "Weighment cost", "Handling cost",
     "Halting cost", "RTO cost", "Batta cost",
@@ -3116,7 +3116,7 @@ def vendor_p_l_attached_report_ajax_view(request):
     trips = TripdetailInfo.objects.filter(
         tc_financestatus_id__in=[2, 4, 5, 6, 7, 9],
         tr_vehiclesource_id=2,  # 2 = ATTACHED
-    ).select_related(
+    ).exclude(tr_category_id__in=[2, 3]).select_related(
         'tr_enquirynumber',
         'tr_enquirynumber__en_customername',
         'tr_enquirynumber__en_customerdepartment',
@@ -3482,6 +3482,7 @@ def vendor_p_l_attached_report_ajax_view(request):
             selling_halting,
             selling_handling,
             total_selling,
+            safe_str(inv.ti_inv_no) if inv else "",
             vendor_name,
             b_no,
             buying_trip_cost,
@@ -8132,7 +8133,7 @@ def vendor_bills_pending_mkt_att_report_ajax_view(request):
         veh_no = (a.va_vehiclenumber.vm_registrationnumber if a.va_vehiclenumber else (
                 a.va_vehiclenumber_mkt or "")).lower().strip()
         key = (a.va_enquirynumber_id, veh_no)
-        if key not in allotment_map:
+        if key not in allotment_map or a.id > allotment_map[key].id:
             allotment_map[key] = a
         if a.va_enquirynumber_id not in enquiry_allotment_map or a.id > enquiry_allotment_map[a.va_enquirynumber_id].id:
             enquiry_allotment_map[a.va_enquirynumber_id] = a
