@@ -51,6 +51,23 @@ class GatepassreturnForm(forms.ModelForm):
         self.fields['gp_transporter_name'].empty_label = "--Select--"
         self.fields['gp_veh_type'].empty_label = "--Select--"
         
+        # Enforce mandatory fields at the form level
+        mandatory_fields = [
+            'gp_customer_name', 
+            'gp_job_no', 
+            'gp_customer_po', 
+            'gp_transporter_name', 
+            'gp_veh_no', 
+            'gp_driver_name', 
+            'gp_driver_mobile_no',
+            'gp_s_name',
+            'gp_document_category'
+        ]
+        for field in mandatory_fields:
+            if field in self.fields:
+                self.fields[field].required = True
+
+        
         # Initial choices
         choices = [('', '--Select--')]
         
