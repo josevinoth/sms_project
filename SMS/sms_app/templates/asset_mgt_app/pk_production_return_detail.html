@@ -1,274 +1,196 @@
 {% extends "asset_mgt_app/base_modern.html" %}
+{% load static %}
 {% block content %}
 <style>
-.return-card {
-    background: var(--bg-card, #1e2a38);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 14px;
-    transition: border-color 0.2s;
-}
-.return-card.has-return {
-    border-color: #e67e22;
-    box-shadow: 0 0 0 2px rgba(230,126,34,0.18);
-}
-.return-card.has-return-onsite-good { border-color: #28a745; }
-.dim-label { font-size: 0.72rem; color: #aaa; margin-bottom: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-.dim-input { height: 34px !important; font-size: 0.9rem !important; border-radius: 6px !important; text-align: center; }
-.dim-sep { align-self: center; color: #aaa; font-weight: bold; padding: 0 2px; margin-top: 18px; }
-.return-type-badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; }
-.info-chip { background: rgba(255,255,255,0.06); border-radius: 6px; padding: 3px 8px; font-size: 0.78rem; }
+.modern-table th { background: #2c3e50; color: white; border: none; font-size: 0.85rem; text-transform: uppercase; padding: 12px 15px; }
+.modern-table td { vertical-align: middle; border-color: rgba(255,255,255,0.05); padding: 10px 15px; }
+.modern-tr { background: rgba(255,255,255,0.02); transition: background 0.2s; }
+.modern-tr:hover { background: rgba(255,255,255,0.05); }
+.qty-input { background: rgba(0,0,0,0.2) !important; color: white !important; text-align: center; }
 </style>
 
-<div class="container-fluid py-4">
-
-    <!-- Page Header -->
+<div class="container-fluid mt-4">
     <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
-        <h2 class="mb-0 text-white"><i class="fas fa-undo-alt mr-2"></i> Process Return — Job: <span style="color:#e67e22;">{{ job_no }}</span></h2>
+        <h2 class="mb-0 text-white"><i class="fas fa-undo-alt mr-2"></i> Process Return — Job: <span style="color:#3498db;">{{ job_no }}</span></h2>
         <a href="{% url 'pk_production_return_list' %}" class="btn-modern btn-cancel py-2 px-4" style="font-size:1rem; text-decoration:none;">
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>
 
-    <!-- Info Banner -->
-    <div class="alert border-0 py-2 mb-3" style="background:rgba(23,162,184,0.12); border-left: 4px solid #17a2b8 !important;">
-        <i class="fas fa-info-circle mr-2 text-info"></i>
-        <small class="font-weight-bold">
-            For each item, enter the <strong>Return Qty</strong>.
-            If returning a partial/offcut piece, also fill in its exact <strong>Return Dimensions (L × W × H)</strong>.
-            Leave qty as 0 to skip an item.
-        </small>
-        {% if is_onsite %}
-        <span class="return-type-badge ml-2" style="background:#e67e22; color:#fff;">🚚 On-Site Job — split Good / Damaged</span>
-        {% endif %}
+    <div class="alert border-0 py-2 mb-4" style="background:rgba(52, 152, 219, 0.12); border-left: 4px solid #3498db !important;">
+        <i class="fas fa-info-circle mr-2" style="color:#3498db;"></i>
+        <small class="text-dark">Enter the Return Qty (Good/Dmg). The <strong>Used Qty</strong> is automatically calculated as (Total Issued - Returned).</small>
     </div>
+
+    {% if messages %}
+    {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }} py-2 mb-3">{{ msg }}</div>
+    {% endfor %}
+    {% endif %}
 
     <form method="POST" action="{% url 'pk_production_return_submit' job_no %}">
         {% csrf_token %}
-
-        <!-- Search Box -->
-        <div class="mb-4">
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #aaa;"><i class="fas fa-search"></i></span>
-                </div>
-                <input type="text" id="searchInput" class="form-control form-control-modern" placeholder="Search by item description, part code, or GRN..." onkeyup="filterItems()" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); color: inherit;">
-            </div>
-        </div>
-
-        {% for item in material_items %}
-        <div class="return-card" id="card_{{ item.id }}">
-            <div class="row align-items-center">
-
-                <!-- LEFT SIDE: Original Info -->
-                <div class="col-md-6 border-right" style="border-right: 1px solid rgba(255,255,255,0.1);">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div>
-                            <span class="font-weight-bold mr-2" style="font-size:1.05rem;">{{ forloop.counter }}.</span>
-                            <span class="font-weight-bold" style="font-size:1.05rem; color:inherit;">{{ item.ct_stock_description|default:"—" }}</span>
-                            <div class="mt-2 d-flex flex-wrap gap-1">
-                                {% if item.ct_part_code %}
-                                <span class="badge badge-secondary info-chip">{{ item.ct_part_code }}</span>
-                                {% endif %}
-                                <span class="info-chip text-muted">{{ item.ct_cost_type }}</span>
-                                {% if item.ct_uom %}
-                                <span class="info-chip" style="color:#17a2b8;">{{ item.ct_uom }}</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <small class="text-muted d-block mb-1">GRN / Ref:</small>
-                            {% if item.ct_grn %}
-                                <span class="badge badge-light border">{{ item.ct_grn.sm_stock_purchase_number }}</span>
-                            {% elif item.ct_stock_purchase_number %}
-                                <span class="badge badge-light border">{{ item.ct_stock_purchase_number.sm_stock_purchase_number }}</span>
-                            {% else %}
-                                <span class="text-muted">—</span>
-                            {% endif %}
-                        </div>
-                    </div>
+        <div class="table-container-modern mb-4">
+            <div class="table-responsive">
+                <table class="table modern-table text-center mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">S.No</th>
+                            <th style="width: 15%;">Partcode</th>
+                            <th class="text-left" style="width: 25%;">Description</th>
+                            
+                            <th style="width: 10%;">Qty</th>
+                            <th style="width: 10%;">Qty Used</th>
+                            <th style="width: 15%;">Return Dims (L x W x H)</th>
+                            <th style="width: 15%;">Return Qty (Good / Dmg)</th>
+                            <th style="width: 5%;">Split</th>
+                            
+                        </tr>
+                    </thead>
                     
-                    <div class="d-flex justify-content-between align-items-center bg-dark p-2 rounded" style="background: rgba(0,0,0,0.2) !important;">
-                        <div class="text-center px-2">
-                            <div class="dim-label">Orig Dims</div>
-                            <strong style="font-size:0.95rem; color:#e67e22;">
-                                {% if item.ct_length_req > 0 %}
-                                    {{ item.ct_length_req }} × {{ item.ct_width_req }} × {{ item.ct_height_req }}
-                                {% else %}
-                                    — × — × —
+                    
+                    {% for item in grouped_items %}
+                    <tbody id="split_container_{{ item.part_code }}">
+                        <tr class="modern-tr" id="row_{{ item.part_code }}">
+                            <td class="text-muted">{{ forloop.counter }}</td>
+                            <td class="font-weight-bold">{{ item.part_code }}</td>
+                            <td class="text-left">
+                                <strong class="text-dark" style="font-size:1.05rem;">{{ item.description|default:"-" }}</strong>
+                                <small class="text-muted ml-2">{{ item.cost_type }}</small>
+                                {% if item.grn %}
+                                <br><small class="text-info">GRN: {{ item.grn }}</small>
                                 {% endif %}
-                            </strong>
-                        </div>
-                        <div class="text-center px-2 border-left border-secondary" style="border-color: rgba(255,255,255,0.1) !important;">
-                            <div class="dim-label">Issued Qty</div>
-                            <strong style="font-size:1.1rem; color:#27ae60;">{{ item.ct_na_quantity }}</strong>
-                        </div>
-                        <div class="text-center px-2 border-left border-secondary" style="border-color: rgba(255,255,255,0.1) !important;">
-                            <div class="dim-label">Rate</div>
-                            <strong style="font-size:0.95rem;">₹{{ item.ct_rate }}</strong>
-                        </div>
-                        <div class="text-center px-2 border-left border-secondary" style="border-color: rgba(255,255,255,0.1) !important;">
-                            <div class="dim-label">Total Cost</div>
-                            <strong style="font-size:0.95rem;">₹{{ item.ct_totalbox_cost }}</strong>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- RIGHT SIDE: Inputs -->
-                <div class="col-md-6 pl-md-4 mt-3 mt-md-0">
-                    <div id="split_container_{{ item.id }}">
-                        <!-- Base Return Row -->
-                        <div class="row align-items-center mb-2 split-row" id="split_row_{{ item.id }}_0">
-                            <!-- Only show dimensions if item has required dimensions -->
-                            {% if item.ct_length_req > 0 %}
-                            <div class="col-6">
-                                <div class="input-group input-group-sm">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="fas fa-ruler-combined"></i></span>
-                                    </div>
-                                    <input type="number" step="0.01" name="return_l_{{ item.id }}[]" class="form-control" placeholder="L" value="{{ item.ct_length_req }}">
-                                    <input type="number" step="0.01" name="return_w_{{ item.id }}[]" class="form-control" placeholder="W" value="{{ item.ct_width_req }}">
-                                    <input type="number" step="0.01" name="return_h_{{ item.id }}[]" class="form-control" placeholder="H" value="{{ item.ct_height_req }}">
+                                <input type="hidden" name="ids_csv_{{ item.part_code }}" value="{{ item.ids_csv }}">
+                            </td>
+                            
+                            <td>
+                                <strong class="text-primary" style="font-size:1.2rem;" id="issued_qty_{{ item.part_code }}">{{ item.total_qty }}</strong>
+                            </td>
+                            <td>
+                                <strong class="text-warning" style="font-size:1.2rem;" id="used_qty_{{ item.part_code }}">{{ item.total_qty }}</strong>
+                            </td>
+                            <td>
+                                {% if item.length > 0 %}
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <input type="number" step="0.01" name="return_l_{{ item.part_code }}" class="form-control form-control-sm qty-input" style="width:60px" placeholder="L" value="{{ item.length }}">
+                                    <input type="number" step="0.01" name="return_w_{{ item.part_code }}" class="form-control form-control-sm qty-input" style="width:60px" placeholder="W" value="{{ item.width }}">
+                                    <input type="number" step="0.01" name="return_h_{{ item.part_code }}" class="form-control form-control-sm qty-input" style="width:60px" placeholder="H" value="{{ item.height }}">
                                 </div>
-                            </div>
-                            <div class="col-6">
-                            {% else %}
-                            <div class="col-12">
-                            {% endif %}
-                                <div class="d-flex gap-2">
-                                    <div class="input-group input-group-sm flex-fill">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text text-success"><i class="fas fa-check-circle mr-1"></i> Good</span>
-                                        </div>
-                                        <input type="number" step="0.01" id="good_qty_{{ item.id }}" name="good_qty_{{ item.id }}[]" class="form-control text-center" placeholder="0" value="0" min="0" onkeyup="updateCard({{ item.id }})">
-                                    </div>
-                                    <div class="input-group input-group-sm flex-fill">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text text-danger"><i class="fas fa-times-circle mr-1"></i> Dmg</span>
-                                        </div>
-                                        <input type="number" step="0.01" id="damaged_qty_{{ item.id }}" name="damaged_qty_{{ item.id }}[]" class="form-control text-center" placeholder="0" value="0" min="0" onkeyup="updateCard({{ item.id }})">
-                                    </div>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <input type="number" step="0.01" name="return_qty_good_{{ item.part_code }}" class="form-control form-control-sm qty-input border-success" style="width:70px" placeholder="Good" value="0" min="0" onkeyup="updateUsed('{{ item.part_code }}')" onchange="updateUsed('{{ item.part_code }}')">
+                                    <input type="number" step="0.01" name="return_qty_damaged_{{ item.part_code }}" class="form-control form-control-sm qty-input border-danger" style="width:70px" placeholder="Dmg" value="0" min="0" onkeyup="updateUsed('{{ item.part_code }}')" onchange="updateUsed('{{ item.part_code }}')">
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% if item.ct_length_req > 0 %}
-                    <div class="text-right mt-1">
-                        <button type="button" class="btn btn-sm" style="font-size: 0.75rem; color: #17a2b8; background: transparent; border: 1px dashed #17a2b8;" onclick="splitItem({{ item.id }})">
-                            <i class="fas fa-plus"></i> Split Return (for Offcuts)
-                        </button>
-                    </div>
-                    {% endif %}
-                </div>
-
+                            </td>
+                            <td>
+                                {% if item.length > 0 %}
+                                <button type="button" class="btn btn-sm btn-outline-info py-1 px-2" onclick="splitTableRow('{{ item.part_code }}')" title="Split for Offcuts"><i class="fas fa-cut"></i></button>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                    {% empty %}
+                        <tbody><tr><td colspan="7" class="text-muted py-4"><i class="fas fa-box-open fa-2x mb-3" style="opacity:0.4;"></i><br>No accepted material items found for this job.</td></tr>
+                    {% endfor %}
+                    </tbody>
+    </table>
             </div>
         </div>
-        {% empty %}
-        <div class="table-container-modern p-4 text-center text-muted">
-            <i class="fas fa-box-open fa-2x mb-3" style="opacity:0.4;"></i>
-            <div>No accepted material items found for this job.</div>
-            <small>Please ensure materials have been added in the Costing stage and accepted at the Acceptance Queue.</small>
-        </div>
-        {% endfor %}
 
-        {% if material_items %}
-        <div class="d-flex justify-content-end mt-4 gap-2">
+        <div class="d-flex justify-content-end mt-4 gap-2 mb-5">
             <a href="{% url 'pk_production_return_list' %}" class="btn-modern btn-cancel py-2 px-4 mr-2" style="text-decoration:none;">
                 <i class="fas fa-times"></i> Cancel
             </a>
-            <button type="submit" class="btn-modern btn-submit py-2 px-5"
-                    style="background: #e67e22; border-color: #e67e22; font-size:1rem;"
-                    onclick="return confirm('Submit return? This will return stock to inventory.')">
+            <button type="submit" class="btn-modern btn-submit py-2 px-5" style="background: #e67e22; border-color: #e67e22; font-size:1rem;" onclick="return confirm('Submit return? This will return stock to inventory.')">
                 <i class="fas fa-undo-alt mr-2"></i> Submit Return
             </button>
         </div>
-        {% endif %}
     </form>
 </div>
 
 <script>
-function updateCard(id) {
-    const card = document.getElementById('card_' + id);
-    const goodQty = parseFloat(document.getElementById('good_qty_' + id)?.value || 0);
-    const damagedQty = parseFloat(document.getElementById('damaged_qty_' + id)?.value || 0);
-    const returnQty = parseFloat(document.getElementById('return_qty_' + id)?.value || 0);
-
-    if (goodQty > 0 || damagedQty > 0 || returnQty > 0) {
-        card.classList.add('has-return');
-    } else {
-        card.classList.remove('has-return');
-    }
-}
-
-function filterItems() {
-    const input = document.getElementById('searchInput').value.toLowerCase();
-    const cards = document.getElementsByClassName('return-card');
+function updateUsed(id) {
+    const issuedEl = document.getElementById('issued_qty_' + id);
+    const usedEl = document.getElementById('used_qty_' + id);
+    if (!issuedEl || !usedEl) return;
     
-    for (let i = 0; i < cards.length; i++) {
-        const cardText = cards[i].innerText.toLowerCase();
-        if (cardText.includes(input)) {
-            cards[i].style.display = '';
-        } else {
-            cards[i].style.display = 'none';
-        }
-    }
+    const issuedQty = parseFloat(issuedEl.innerText || 0);
+    
+    let totalReturn = 0;
+    
+    const mainGood = document.querySelector('input[name="return_qty_good_' + id + '"]');
+    const mainDmg = document.querySelector('input[name="return_qty_damaged_' + id + '"]');
+    totalReturn += (parseFloat(mainGood ? mainGood.value : 0) || 0);
+    totalReturn += (parseFloat(mainDmg ? mainDmg.value : 0) || 0);
+    
+    const splitGoods = document.querySelectorAll('input[name^="return_qty_good_' + id + '_split"]');
+    const splitDmgs = document.querySelectorAll('input[name^="return_qty_damaged_' + id + '_split"]');
+    
+    splitGoods.forEach(input => totalReturn += (parseFloat(input.value) || 0));
+    splitDmgs.forEach(input => totalReturn += (parseFloat(input.value) || 0));
+    
+    let used = issuedQty - totalReturn;
+    if (used < 0) used = 0;
+    
+    usedEl.innerText = used;
 }
 
-function calcFraction(id, origL, origW, origH, rate) {
-    // Feature disabled: Cost Credit UI removed as per user request.
-}
-
-// Keep track of split index to generate unique IDs
 let splitCounters = {};
 
-function splitItem(id) {
-    if (!splitCounters[id]) {
-        splitCounters[id] = 1;
-    } else {
-        splitCounters[id]++;
-    }
+function splitTableRow(id) {
+    if (!splitCounters[id]) splitCounters[id] = 1;
+    else splitCounters[id]++;
     
     let splitId = id + '_split' + splitCounters[id];
-    let container = document.getElementById('split_container_' + id);
+    let tbody = document.getElementById('split_container_' + id);
+    if (!tbody) {
+        console.error('Tbody not found for split_container_' + id);
+        return;
+    }
     
-    // Get the first row in the container
-    let originalRow = container.querySelector('.split-row');
+    let tr = document.createElement('tr');
+    tr.className = 'modern-tr split-row';
+    tr.id = 'split_row_' + splitId;
     
-    // Clone it
-    let newRow = originalRow.cloneNode(true);
-    
-    // Update inputs inside the new row
-    let inputs = newRow.querySelectorAll('input');
-    inputs.forEach(input => {
-        // Reset value
-        input.value = '';
-        
-        // Update name
-        if (input.name.includes('_' + id)) {
-            input.name = input.name.replace('_' + id, '_' + splitId);
-        }
-        
-        // Update id if exists
-        if (input.id) {
-            input.id = input.id.replace('_' + id, '_' + splitId);
-        }
-        
-        // Update onkeyup function reference
-        if (input.hasAttribute('onkeyup')) {
-            // Keep the same visual update tied to the original item ID
-            input.setAttribute('onkeyup', 'updateCard(' + id + ')');
-        }
-    });
-    
-    // Add a delete button to the new row
-    let deleteBtn = document.createElement('div');
-    deleteBtn.className = 'col-12 text-right mt-1 mb-3';
-    deleteBtn.innerHTML = '<button type="button" class="btn btn-sm text-danger p-0" title="Remove Split" onclick="this.closest(\'.split-row\').nextElementSibling.remove(); this.closest(\'.split-row\').remove()"><i class="fas fa-trash"></i> Remove this split</button>';
-    
-    // Append to container
-    container.appendChild(newRow);
-    container.appendChild(deleteBtn);
+    let html = `
+        <td class="text-muted border-top-0"></td>
+        <td class="border-top-0 font-weight-bold text-dark">${id}</td>
+        <td class="border-top-0"><span class="badge badge-info">Offcut / Split</span></td>
+        <td class="border-top-0"></td>
+        <td class="border-top-0"></td>
+        <td class="border-top-0">
+            <div class="d-flex gap-1 justify-content-center">
+                <input type="number" step="0.01" name="return_l_${splitId}" class="form-control form-control-sm qty-input text-dark" style="width:60px" placeholder="L">
+                <input type="number" step="0.01" name="return_w_${splitId}" class="form-control form-control-sm qty-input text-dark" style="width:60px" placeholder="W">
+                <input type="number" step="0.01" name="return_h_${splitId}" class="form-control form-control-sm qty-input text-dark" style="width:60px" placeholder="H">
+            </div>
+        </td>
+        <td class="border-top-0">
+            <div class="d-flex gap-1 justify-content-center">
+                <input type="number" step="0.01" name="return_qty_good_${splitId}" class="form-control form-control-sm qty-input border-success text-dark" style="width:70px" placeholder="Good" value="0" min="0" onkeyup="updateUsed('${id}')" onchange="updateUsed('${id}')">
+                <input type="number" step="0.01" name="return_qty_damaged_${splitId}" class="form-control form-control-sm qty-input border-danger text-dark" style="width:70px" placeholder="Dmg" value="0" min="0" onkeyup="updateUsed('${id}')" onchange="updateUsed('${id}')">
+            </div>
+        </td>
+        <td class="border-top-0">
+            <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2" onclick="removeSplitRow('${splitId}', '${id}')" title="Remove"><i class="fas fa-times"></i></button>
+        </td>
+    `;
+    tr.innerHTML = html;
+    tbody.appendChild(tr);
+}
+
+function removeSplitRow(splitId, itemId) {
+    let row = document.getElementById('split_row_' + splitId);
+    if (row) {
+        row.remove();
+        updateUsed(itemId); // recalculate used
+    }
 }
 </script>
 {% endblock %}

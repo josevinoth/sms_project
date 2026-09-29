@@ -1,3 +1,4 @@
+from django.db.models import Sum
 from django.contrib.auth.decorators import login_required
 from ..forms import GatepassreturnForm
 from ..models import PackingGateReturn, Warehouse_goods_info, POdimension, User, PkpurchaseorderInfo, PkcostingsummaryInfo, CustomerInfo, PkneedassessmentInfo, PkcostingInfo
@@ -26,6 +27,11 @@ def gate_return_add(request, gate_id=0):
                 costing = PkcostingsummaryInfo.objects.filter(cs_job_no=job_no).first()
                 if costing:
                     pack_type = Packingjobs.objects.filter(pj_job_no=job_no).values_list('pj_pack_type', flat=True).first() or 'In-House'
+                    
+                    loc = costing.cs_assessment_num.na_packing_field.packing_field if costing.cs_assessment_num and costing.cs_assessment_num.na_packing_field else ''
+                    if 'onsite' in loc.lower():
+                        pack_type = 'On-Site'
+                        
                     po_obj = PkpurchaseorderInfo.objects.filter(po_assessment_num=costing.cs_assessment_num).first()
                     initial_data = {
                         'gp_job_no': job_no,
@@ -44,10 +50,30 @@ def gate_return_add(request, gate_id=0):
             form = GatepassreturnForm(initial=initial_data)
             assessment_id = request.session.get('na_assessment_id') or (costing.cs_assessment_num.id if job_no and costing else None)
             
+            gatepassreturn_list = None
+            if job_no and costing:
+                assess_ids = PkcostingInfo.objects.filter(
+                    ct_job_no=job_no
+                ).values_list('ct_assessment_num', flat=True).distinct()
+                from sms_app.sub_models.po_dimension_mod import POdimension
+                gatepassreturn_list = POdimension.objects.filter(
+                    pod_assess_num__in=assess_ids, 
+                    pod_po_num=costing.cs_customer_po
+                )
+            # Attach job qty to each dimension (do NOT sum, just take the first matching BOM row's target qty)
+            for po_dim in gatepassreturn_list:
+                costing_item = PkcostingInfo.objects.filter(ct_job_no=job_no, ct_po_dimension=po_dim).first()
+                if costing_item:
+                    po_dim.job_qty = costing_item.ct_na_quantity or costing_item.ct_quantity
+                else:
+                    po_dim.job_qty = 0
+
+
             context = {
                 'form':form,
                 'first_name': first_name,
                 'gate_list': gate_list,
+                'gatepassreturn_list': gatepassreturn_list,
                 'assessment_id': assessment_id,
                 'current_step': 'gate_pass',
                 'tracker_flags': get_tracker_flags(assessment_id),
@@ -68,6 +94,14 @@ def gate_return_add(request, gate_id=0):
                 pod_assess_num__in=assess_ids, 
                 pod_po_num=gate.gp_customer_po
             )
+            # Attach job qty to each dimension (do NOT sum, just take the first matching BOM row's target qty)
+            for po_dim in gatepassreturn_list:
+                costing_item = PkcostingInfo.objects.filter(ct_job_no=gate.gp_job_no, ct_po_dimension=po_dim).first()
+                if costing_item:
+                    po_dim.job_qty = costing_item.ct_na_quantity or costing_item.ct_quantity
+                else:
+                    po_dim.job_qty = 0
+
             
             assessment_id = request.session.get('na_assessment_id') or (assess_ids[0] if assess_ids else None)
             
@@ -347,8 +381,15 @@ def gate_pass_get_job_details(request):
         
         # Packing Type & Document Category
         pack_type = Packingjobs.objects.filter(pj_job_no=job_no).values_list('pj_pack_type', flat=True).first() or 'In-House'
-        data['pack_type'] = pack_type
-        data['document_category'] = 'Delivery Challan' if 'On-Site' in pack_type else 'Gate Pass'
+        loc = costing.cs_assessment_num.na_packing_field.packing_field if costing.cs_assessment_num and costing.cs_assessment_num.na_packing_field else ''
+        
+        # Override if Location is explicitly Onsite
+        if 'onsite' in loc.lower():
+            data['pack_type'] = 'On-Site'
+            data['document_category'] = 'Delivery Challan'
+        else:
+            data['pack_type'] = pack_type
+            data['document_category'] = 'Delivery Challan' if 'On-Site' in pack_type else 'Gate Pass'
         
         # Reference Fields from Costing
         data['customer_gstin'] = costing.cs_customer_name.cu_gst if costing.cs_customer_name else ''

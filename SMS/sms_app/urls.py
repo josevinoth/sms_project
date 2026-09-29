@@ -34,6 +34,7 @@ urlpatterns = [
     path('pk_production_return_edit_save/<str:job_no>/', views.pk_production_return_edit_save, name='pk_production_return_edit_save'),
     path('pk_production_return_reset/<str:job_no>/', views.pk_production_return_reset, name='pk_production_return_reset'),
     path('pk_return_acceptance_list/', views.pk_return_acceptance_list, name='pk_return_acceptance_list'),
+    path('pk_production_return_pdf/<str:job_no>/', views.pk_production_return_pdf, name='pk_production_return_pdf'),
     path('pk_accept_production_return/<str:job_no>/', views.pk_accept_production_return, name='pk_accept_production_return'),
     path('pk_reject_production_return/<str:job_no>/', views.pk_reject_production_return, name='pk_reject_production_return'),
     path('pk_purchase_return_list/', views.pk_purchase_return_list, name='pk_purchase_return_list'),
