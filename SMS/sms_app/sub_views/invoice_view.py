@@ -717,26 +717,38 @@ def invoice_add(request, invoice_id=0):
                 
                 # Automatically recalculate and save invoice totals
                 goods_qs = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
-                calculate_and_apply_invoice_totals(request, invoice, goods_qs)
+                result = calculate_and_apply_invoice_totals(request, invoice, goods_qs)
+                
+                if isinstance(result, HttpResponse):
+                    return result
 
                 messages.success(request, 'Record Added Successfully!')
+                return redirect('/SMS/invoice_list')
             else:
                 messages.error(request, 'Check all mandatory fields!')
-            return redirect('/SMS/invoice_list')
+                context = {
+                    'invoice_form': invoice_form,
+                    'first_name': first_name,
+                    'user_id': user_id,
+                }
+                return render(request, "asset_mgt_app/invoice_add.html", context)
         else:
             invoice = BilingInfo.objects.get(pk=invoice_id)
             invoice_form = InvoiceaddForm(request.POST, instance=invoice)
             if invoice_form.is_valid():
                 invoice = invoice_form.save()  # Save the updated form data (including bill_total_post_gst)
-                messages.success(request, 'Invoice Amount Updated and Saved Successfully!')
                 voucher_num_val = invoice.bill_invoice_ref
                 # update total invoice cost and link by ID in warehouse goods table
                 Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).update(wh_voucher_id=invoice)
                 
                 # Automatically recalculate and save invoice totals
                 goods_qs = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val)
-                calculate_and_apply_invoice_totals(request, invoice, goods_qs)
+                result = calculate_and_apply_invoice_totals(request, invoice, goods_qs)
+                
+                if isinstance(result, HttpResponse):
+                    return result
 
+                messages.success(request, 'Invoice Amount Updated and Saved Successfully!')
                 stock_id = list(
                     Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num_val).values_list('id', flat=True))
                 total_invoice_cost = invoice.bill_total_pre_gst
@@ -749,7 +761,27 @@ def invoice_add(request, invoice_id=0):
                         Warehouse_goods_info.objects.filter(pk=stock_id[i]).update(wh_total_invoice_cost=0)
             else:
                 messages.error(request, 'Check all mandatory fields!')
-            return redirect(request.META['HTTP_REFERER'])
+                voucher_num = invoice.bill_invoice_ref
+                goods_qs = Warehouse_goods_info.objects.filter(wh_voucher_num=voucher_num)
+                context = {
+                    'invoice_form': invoice_form,
+                    'first_name': first_name,
+                    'user_id': user_id,
+                    'shipper_invoice_list': goods_qs,
+                    'weight_sum': invoice.bill_weight or 0,
+                    'no_of_days': invoice.bill_no_of_days or 0,
+                    'no_of_pieces': invoice.bill_no_of_pallets or 0,
+                    'crane_time': invoice.bill_tot_crane_time or 0,
+                    'forklift_time': invoice.bill_tot_forklift_time or 0,
+                    'min_check_in_time': str(invoice.bill_start_date) if invoice.bill_start_date else '',
+                    'max_check_out_time': str(invoice.bill_end_date) if invoice.bill_end_date else '',
+                    'total_loading_cost': invoice.bill_loading_charge or 0,
+                    'wh_storage_cost_sum': invoice.bill_wh_storage_charges or 0,
+                    'crane_cost_sum': invoice.bill_tot_crane_charges or 0,
+                    'forklift_cost_sum': invoice.bill_tot_forklift_charges or 0,
+                    'customer_type_id': invoice.bill_customer_type.id if invoice.bill_customer_type else 0,
+                }
+                return render(request, "asset_mgt_app/invoice_add.html", context)
             # return redirect('/SMS/invoice_list')
 
 

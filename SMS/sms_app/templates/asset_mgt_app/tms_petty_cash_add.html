@@ -5,6 +5,7 @@
 
 <form method="POST" id="tms_petty_cash_add" action="">
     {% csrf_token %}
+    <input type="hidden" name="tpc_receiver_signature" id="id_tpc_receiver_signature" value="{{ tms_petty_cash.tpc_receiver_signature|default_if_none:'' }}">
     
     <div class="container-fluid">
         <div class="modern-header d-flex justify-content-between align-items-center mb-4">
@@ -46,7 +47,7 @@
                         </div>
 
                         <div class="form-group-modern">
-                            <label class="form-label-modern">Transaction Date</label>
+                            <label class="form-label-modern">Voucher Date</label>
                             {% render_field form.tpc_transaction_date id="tpc_transaction_date" class="form-control form-control-modern" type="date" %}
                         </div>
                     </div>
@@ -142,9 +143,14 @@
             
             <!-- ================= ACTION BUTTONS ================= -->
             <div class="action-row mt-4 d-flex justify-content-between">
-                <button type="submit" class="btn-modern btn-highlight">
-                    <i class="fas fa-check"></i> Submit
-                </button>
+                <div class="d-flex" style="gap: 15px;">
+                    <button type="submit" class="btn-modern btn-highlight">
+                        <i class="fas fa-check"></i> Submit
+                    </button>
+                    <button type="button" class="btn-modern" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;" data-toggle="modal" data-target="#signatureModal">
+                        <i class="fas fa-signature"></i> Digital Signature
+                    </button>
+                </div>
                 <a href="{% url 'tms_petty_cash_list' %}" class="btn-modern btn-cancel">
                     <i class="fas fa-times"></i> Cancel
                 </a>
@@ -514,5 +520,82 @@
         color: #495057;
     }
 </style>
+
+
+<!-- Signature Modal -->
+<div class="modal fade" id="signatureModal" tabindex="-1" aria-labelledby="signatureModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="signatureModalLabel">Receiver Digital Signature</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center">
+        <div style="border: 2px dashed #ccc; padding: 5px; display: inline-block; background: #fff; border-radius: 8px;">
+            <canvas id="signature-pad" width="400" height="200" style="touch-action: none;"></canvas>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <button type="button" class="btn btn-secondary" id="clear-signature">Clear</button>
+        <div>
+            <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="save-signature">Save Signature</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var canvas = document.getElementById('signature-pad');
+        if (!canvas) return;
+        var signaturePad = new SignaturePad(canvas, {
+            backgroundColor: 'rgba(255, 255, 255, 0)',
+            penColor: 'rgb(0, 0, 0)',
+            minWidth: 2,
+            maxWidth: 4
+        });
+
+        $('#clear-signature').on('click', function() {
+            signaturePad.clear();
+        });
+
+        $('#save-signature').on('click', function() {
+            if (signaturePad.isEmpty()) {
+                alert('Please provide a signature first.');
+            } else {
+                var dataURL = signaturePad.toDataURL('image/png');
+                $('#id_tpc_receiver_signature').val(dataURL);
+                $('#signatureModal').modal('hide');
+                
+                var btn = $('button[data-target="#signatureModal"]');
+                btn.removeClass('btn-modern').addClass('btn-modern btn-success');
+                btn.html('<i class="fas fa-check-circle"></i> Signature Saved');
+            }
+        });
+        
+        if ($('#id_tpc_receiver_signature').val()) {
+            var btn = $('button[data-target="#signatureModal"]');
+            btn.removeClass('btn-modern').addClass('btn-modern btn-success');
+            btn.html('<i class="fas fa-check-circle"></i> Signature Captured');
+            
+            // Load the saved signature onto the canvas
+            signaturePad.fromDataURL($('#id_tpc_receiver_signature').val());
+        }
+        
+        // Ensure canvas renders correctly when modal opens
+        $('#signatureModal').on('shown.bs.modal', function () {
+            if ($('#id_tpc_receiver_signature').val()) {
+                signaturePad.fromDataURL($('#id_tpc_receiver_signature').val());
+            }
+        });
+
+    });
+</script>
 
 {% endblock %}

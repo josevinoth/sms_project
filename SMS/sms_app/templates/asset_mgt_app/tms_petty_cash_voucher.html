@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Voucher - {{ tpc.tpc_number }}</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .voucher-container {
+            width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border: 2px solid #333;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .logo-placeholder {
+            width: 100px;
+            height: 80px;
+            background-color: #eee;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            color: #555;
+            margin-right: 20px;
+        }
+        .company-info {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .company-info h1 {
+            margin: 0;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .company-info p {
+            margin: 5px 0 0;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+        .voucher-title {
+            text-align: center;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+        .row-inline {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 17px;
+        }
+        .field {
+            display: flex;
+            align-items: baseline;
+            flex-grow: 1;
+            margin-right: 20px;
+        }
+        .field:last-child {
+            margin-right: 0;
+        }
+        .label {
+            font-weight: bold;
+            margin-right: 10px;
+            white-space: nowrap;
+        }
+        .value {
+            border-bottom: 1px dotted #333;
+            flex-grow: 1;
+            padding: 0 5px;
+            min-height: 20px;
+        }
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 60px;
+            font-size: 17px;
+            font-weight: bold;
+        }
+        .signature-box {
+            text-align: center;
+            width: 18%;
+        }
+        .signature-line {
+            border-bottom: 1px dotted #333;
+            height: 40px;
+            margin-bottom: 5px;
+            position: relative;
+        }
+        .signature-img {
+            max-height: 50px;
+            max-width: 100%;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        @media print {
+            body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+            .voucher-container {
+                box-shadow: none;
+                border: 2px solid #333;
+                width: 100%;
+                max-width: 800px;
+            }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+    <div class="voucher-container">
+        <div class="header" style="display: flex; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; min-height: 140px;">
+            <div style="width: 25%; display: flex; justify-content: flex-start;">
+                <img src="/media/logo4.0.png" alt="BVM Logo" style="max-height: 140px; max-width: 100%;">
+            </div>
+            <div class="company-info" style="width: 50%; text-align: center;">
+                <h1>BVM TRANS SOLUTIONS PRIVATE LIMITED</h1>
+                <p>No. 70, Adam Nagar Road, Nagalkeni, Chrompet, Chennai - 600 044.</p>
+            </div>
+            <div style="width: 25%;"></div>
+        </div>
+        
+        <div class="voucher-title">PAYMENT VOUCHER</div>
+        
+        <div class="row-inline">
+            <div class="field" style="max-width: 40%;">
+                <span class="label">No.</span>
+                <span class="value">{{ tpc.tpc_number|default_if_none:"" }}</span>
+            </div>
+            <div class="field" style="max-width: 40%; justify-content: flex-end;">
+                <span class="label">Date :</span>
+                <span class="value">{{ tpc.tpc_transaction_date|date:"d-m-Y" }}</span>
+            </div>
+        </div>
+        
+        <div class="row-inline">
+            <div class="field">
+                <span class="label">Amount Rs.</span>
+                <span class="value">{{ tpc.tpc_amount|default_if_none:"0.0" }}</span>
+                <span class="label" style="margin-left: 10px;">(Rs.</span>
+                <span class="value">{{ amount_in_words }}</span>
+                <span>)</span>
+            </div>
+        </div>
+        
+        <div class="row-inline">
+            <div class="field">
+                <span class="label">Head of Accounts..</span>
+                <span class="value">{{ tpc.tpc_expense_type.tms_exp_type_name|default_if_none:"" }}</span>
+            </div>
+        </div>
+        
+        <div class="row-inline">
+            <div class="field">
+                <span class="label">Payment to..</span>
+                <span class="value">{{ payment_to }}</span>
+            </div>
+        </div>
+        
+        <div class="row-inline">
+            <div class="field" style="width: 50%;">
+                <span class="label">for Job No..</span>
+                <span class="value">{{ tpc.tpc_job_no|default_if_none:"" }}</span>
+            </div>
+            <div class="field" style="width: 50%;">
+                <span class="label">Vehicle No..</span>
+                <span class="value">{{ tpc.tpc_vehicle_number.vm_registrationnumber|default_if_none:"" }}</span>
+            </div>
+        </div>
+        
+        <div class="row-inline">
+            <div class="field" style="width: 50%;">
+                <span class="label">Job Date..</span>
+                <span class="value">{{ tpc.tpc_trip_date|date:"d-m-Y" }}</span>
+            </div>
+            <div class="field" style="width: 50%;">
+                <span class="label">Customer..</span>
+                <span class="value">{{ tpc.tpc_customer.cu_name|default_if_none:"" }}</span>
+            </div>
+        </div>
+        
+        <div class="row-inline">
+            <div class="field">
+                <span class="label">Narration..</span>
+                <span class="value">{% if tpc.tpc_remarks and "Auto-generated" not in tpc.tpc_remarks %}{{ tpc.tpc_remarks }}{% endif %}</span>
+            </div>
+        </div>
+        
+        <div class="signatures">
+            <div class="signature-box">
+                <div class="signature-line">
+                    <span style="font-weight: normal; font-size: 12px; position: absolute; bottom: 5px; left: 0;">{{ tpc.tpc_created_by.first_name|default_if_none:tpc.tpc_created_by.username }}</span>
+                </div>
+                Prepared
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                Checked
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                Verified
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                Approved
+            </div>
+            <div class="signature-box">
+                <div class="signature-line">
+                    {% if tpc.tpc_receiver_signature %}
+                    <img src="{{ tpc.tpc_receiver_signature }}" class="signature-img" alt="Signature">
+                    {% endif %}
+                </div>
+                Receiver's Signature
+            </div>
+        </div>
+    </div>
+</body>
+</html>

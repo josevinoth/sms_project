@@ -274,6 +274,9 @@ def tms_petty_cash_list(request):
                 updated_by,
                 tpc.tpc_updated_at.strftime("%Y-%m-%d %H:%M") if tpc.tpc_updated_at else "-",
                 f'''<div class="d-flex justify-content-center" style="gap: 5px;">
+                    <a href="/SMS/tms_petty_cash_voucher_print/{tpc.id}/" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #0dcaf0; color: white; border-color: #0dcaf0;" title="Print Voucher">
+                        <i class="fas fa-print"></i>
+                    </a>
                     <a href="{edit_url}" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;">
                         <i class="far fa-edit"></i>
                     </a>
@@ -304,6 +307,44 @@ def tms_petty_cash_list(request):
         'is_admin_or_supervisor': is_admin_or_supervisor,
     }
     return render(request, "asset_mgt_app/tms_petty_cash_list.html", context)
+
+
+def number_to_words(n):
+    if n == 0 or n is None: return 'Zero'
+    ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
+    tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+    def _convert(num):
+        if num < 20: return ones[num]
+        elif num < 100: return tens[num // 10] + ('' if num % 10 == 0 else ' ' + ones[num % 10])
+        elif num < 1000: return ones[num // 100] + ' Hundred' + ('' if num % 100 == 0 else ' ' + _convert(num % 100))
+        elif num < 100000: return _convert(num // 1000) + ' Thousand' + ('' if num % 1000 == 0 else ' ' + _convert(num % 1000))
+        elif num < 10000000: return _convert(num // 100000) + ' Lakh' + ('' if num % 100000 == 0 else ' ' + _convert(num % 100000))
+        else: return _convert(num // 10000000) + ' Crore' + ('' if num % 10000000 == 0 else ' ' + _convert(num % 10000000))
+    try:
+        n_int = int(n)
+        return _convert(n_int) + ' Only'
+    except:
+        return ''
+
+def tms_petty_cash_voucher_print(request, tpc_id):
+    tpc = get_object_or_404(TMSPettyCashInfo, pk=tpc_id)
+    amount_in_words = number_to_words(tpc.tpc_amount or 0)
+    
+    # Determine the 'Payment to' value based on available fields
+    payment_to = ''
+    if tpc.tpc_to_manual:
+        payment_to = tpc.tpc_to_manual
+    elif tpc.tpc_driver_name:
+        payment_to = tpc.tpc_driver_name.dm_name
+    elif tpc.tpc_to:
+        payment_to = tpc.tpc_to.first_name or tpc.tpc_to.username
+        
+    context = {
+        'tpc': tpc,
+        'amount_in_words': amount_in_words,
+        'payment_to': payment_to,
+    }
+    return render(request, 'asset_mgt_app/tms_petty_cash_voucher.html', context)
 
 def tms_petty_cash_delete(request, tpc_id):
     tpc = get_object_or_404(TMSPettyCashInfo, pk=tpc_id)

@@ -438,6 +438,7 @@ urlpatterns = [
     path('petty_cash_insert/', views.tms_petty_cash_add, name='petty_cash_insert'),  # TMS Petty cash insert
     path('petty_cash_insert/<int:tpc_id>/', views.tms_petty_cash_add, name='tms_petty_cash_update'),
     path('tms_petty_cash_list/', views.tms_petty_cash_list, name='tms_petty_cash_list'),
+    path('tms_petty_cash_voucher_print/<int:tpc_id>/', views.tms_petty_cash_voucher_print, name='tms_petty_cash_voucher_print'),
     path('tms_petty_cash_delete/<int:tpc_id>/', views.tms_petty_cash_delete, name='tms_petty_cash_delete'),
     path('tms_petty_cash_export_tally/', views.tms_petty_cash_export_tally, name='tms_petty_cash_export_tally'),
     path('get_tms_trips_by_date/', views.get_tms_trips_by_date, name='get_tms_trips_by_date'),
