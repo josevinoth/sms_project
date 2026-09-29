@@ -26,6 +26,24 @@ def attached_bill_add(request):
         if form.is_valid():
             obj = form.save(commit=False)
             obj.ab_created_by = request.user
+            
+            # Extract and store separate trip toll/parking costs as JSON
+            import json
+            trip_costs = {}
+            for key, value in request.POST.items():
+                if key.startswith('trip_toll_cost_'):
+                    trip_id = key.split('_')[-1]
+                    parking_val = request.POST.get(f'trip_parking_cost_{trip_id}', '0')
+                    try:
+                        toll = float(value) if value else 0.0
+                        parking = float(parking_val) if parking_val else 0.0
+                        trip_costs[str(trip_id)] = {'toll': toll, 'parking': parking}
+                    except ValueError:
+                        pass
+            
+            if trip_costs:
+                obj.ab_trip_costs = json.dumps(trip_costs)
+                
             obj.save()
 
             messages.success(request, "Attached Bill saved successfully.")
@@ -94,6 +112,26 @@ def attached_bill_edit(request, id):
         if form.is_valid():
             obj = form.save(commit=False)
             obj.ab_updated_by = request.user
+            
+            # Extract and store separate trip toll/parking costs as JSON
+            import json
+            trip_costs = {}
+            for key, value in request.POST.items():
+                if key.startswith('trip_toll_cost_'):
+                    trip_id = key.split('_')[-1]
+                    parking_val = request.POST.get(f'trip_parking_cost_{trip_id}', '0')
+                    try:
+                        toll = float(value) if value else 0.0
+                        parking = float(parking_val) if parking_val else 0.0
+                        trip_costs[str(trip_id)] = {'toll': toll, 'parking': parking}
+                    except ValueError:
+                        pass
+            
+            if trip_costs:
+                obj.ab_trip_costs = json.dumps(trip_costs)
+            else:
+                obj.ab_trip_costs = ""
+                
             obj.save()
 
             messages.success(request, "Attached Bill updated successfully.")
@@ -259,6 +297,16 @@ def get_attached_vehicle_details(request):
                 tc_financestatus_id__in=[2, 4, 5, 6, 7, 9]
             ).order_by('tr_departeddate')
 
+            saved_costs = {}
+            if bill_id:
+                try:
+                    bill_record = AttachedBillInfo.objects.get(id=bill_id)
+                    if bill_record.ab_trip_costs:
+                        import json
+                        saved_costs = json.loads(bill_record.ab_trip_costs)
+                except Exception:
+                    pass
+
             for trip in trips:
                 # Per-trip KM logic updated to match Vehicle Log Report
                 start_km = trip.tr_reportedkm_pickup if trip.tr_reportedkm_pickup else (trip.tr_departedkm or 0)
@@ -272,9 +320,18 @@ def get_attached_vehicle_details(request):
                 from django.utils import timezone
                 trip_dte = timezone.localtime(trip.tr_departeddate).date() if trip.tr_departeddate else None
 
-                # Filter trips for the table display to just the current period
                 if trip_dte and f_dt_obj <= trip_dte <= t_dt_obj:
                     customer_name = trip.tr_enquirynumber.en_customername.cu_name if trip.tr_enquirynumber and trip.tr_enquirynumber.en_customername else "N/A"
+                    
+                    # Override toll and parking if we have saved values in the bill
+                    toll_c = float(trip.tc_tollcost or 0)
+                    parking_c = float(trip.tc_parkingcost or 0)
+                    
+                    trip_id_str = str(trip.id)
+                    if trip_id_str in saved_costs:
+                        toll_c = float(saved_costs[trip_id_str].get('toll', 0))
+                        parking_c = float(saved_costs[trip_id_str].get('parking', 0))
+                            
                     data['trips'].append({
                         'id': trip.id,
                         'trip_date': timezone.localtime(trip.tr_departeddate).strftime('%d-%m-%Y') if trip.tr_departeddate else "",
@@ -286,8 +343,8 @@ def get_attached_vehicle_details(request):
                         'trip_km': km,
                         'selling_cost': float(trip.tc_tripcost or 0),
                         'buy_cost': 0.0, # Will be calculated on frontend from header distribution
-                        'parking_cost': float(trip.tc_parkingcost or 0),
-                        'toll_cost': float(trip.tc_tollcost or 0),
+                        'parking_cost': parking_c,
+                        'toll_cost': toll_c,
                         'total_buy_cost': 0.0 # Will be calculated on frontend
                     })
 

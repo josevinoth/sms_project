@@ -2496,6 +2496,7 @@ def vendor_p_l_mkt_report_view(request):
     branch = request.POST.get('branch', '').strip()
     vendor_id = request.POST.get('vendor_id', '').strip()
     veh_no = (request.POST.get('veh_no') or request.GET.get('veh_no', '')).strip()
+    vehicle_type = request.POST.get('vehicle_type') or request.GET.get('vehicle_type', '')
 
     # Fetch only vendors that have been used in MARKET vehicle allotments (source 3)
     # or have MARKET vehicles in master (ownership 3)
@@ -2562,6 +2563,9 @@ def vendor_p_l_mkt_report_view(request):
             v.strip().upper() for v in list(va_mkt_veh) + list(va_mast_veh) + list(vm_mast_veh) + list(trip_mkt_veh)
             if v and str(v).strip() and str(v).strip().lower() != 'null'
         })
+        
+    from ..sub_models.vehicletype_mod import VehicletypeInfo
+    vehicle_types = VehicletypeInfo.objects.all().order_by('vt_vehicletype')
 
     return render(request, "asset_mgt_app/vendor_p_l_mkt_report.html", {
         'first_name': first_name,
@@ -2574,8 +2578,10 @@ def vendor_p_l_mkt_report_view(request):
         'branch': branch,
         'vendor_id': int(vendor_id) if vendor_id else None,
         'veh_no': veh_no,
+        'vehicle_type': vehicle_type,
         'all_vendors': all_vendors,
         'vehicle_numbers': vehicle_numbers,
+        'vehicle_types': vehicle_types,
     })
 
 
@@ -2651,6 +2657,10 @@ def vendor_p_l_mkt_report_ajax_view(request):
 
     if to_loc_id:
         trips = trips.filter(tr_reportedlocation_id=to_loc_id)
+
+    vehicle_type_id = request.GET.get('vehicle_type', '').strip()
+    if vehicle_type_id:
+        trips = trips.filter(tr_vehicletype_id=vehicle_type_id)
 
     if branch == 'MAA':
         trips = trips.filter(tr_consignmentnumber__co_consignmentnumber__icontains='MAA')
@@ -3161,8 +3171,8 @@ def vendor_p_l_attached_report_ajax_view(request):
     if veh_no:
         trips = trips.filter(tr_vehiclenumber__icontains=veh_no)
 
-    # Branch trips_listing for the DataTable table display (Category 1 only)
-    trips_listing = trips.filter(tr_category_id=1)
+    # Use all trips for the DataTable display so empty trips (Cat 2/3) are visible
+    trips_listing = trips
     records_total = trips_listing.count()
 
     if search_value:
@@ -3372,10 +3382,36 @@ def vendor_p_l_attached_report_ajax_view(request):
                     buying_trip_cost = round(vm_buycost_val / trip_count, 2)
 
         buying_loading = buying_unloading = buying_weighment = buying_aai = 0.0
-        buying_toll = safe_num(trip.tc_tollcost) if att_bill else 0.0
-        if att_bill and buying_toll == 0.0 and safe_num(att_bill.ab_toll_cost) > 0.0:
-            buying_toll = round(safe_num(att_bill.ab_toll_cost) / (total_trips or 1), 2)
+        
+        buying_toll = 0.0
+        if att_bill:
+            has_trip_costs = False
+            if att_bill.ab_trip_costs:
+                try:
+                    import json
+                    saved_costs = json.loads(att_bill.ab_trip_costs)
+                    if isinstance(saved_costs, dict) and len(saved_costs) > 0:
+                        has_trip_costs = True
+                        if str(trip.id) in saved_costs:
+                            buying_toll = float(saved_costs[str(trip.id)].get('toll', 0.0))
+                except Exception:
+                    pass
+            
+            if not has_trip_costs:
+                if buying_toll == 0.0:
+                    buying_toll = safe_num(trip.tc_tollcost)
+                if buying_toll == 0.0 and safe_num(att_bill.ab_toll_cost) > 0.0:
+                    buying_toll = round(safe_num(att_bill.ab_toll_cost) / (total_trips or 1), 2)
+                
         buying_halting = buying_handling = buying_parking = buying_rto = buying_batta = 0.0
+        if att_bill and att_bill.ab_trip_costs:
+            try:
+                import json
+                saved_costs = json.loads(att_bill.ab_trip_costs)
+                if str(trip.id) in saved_costs:
+                    buying_parking = float(saved_costs[str(trip.id)].get('parking', 0.0))
+            except Exception:
+                pass
 
         for e in trip_expenses:
             buying_loading += safe_num(e.de_loadingcost)
@@ -3462,9 +3498,8 @@ def vendor_p_l_attached_report_ajax_view(request):
             round(profit, 2),
             f"{round(profit_pct_selling, 2)}%",
         ]
-        if trip.tr_category_id not in [2, 3]:
-            row[0] = start + len(data) + 1
-            data.append(row)
+        row[0] = start + len(data) + 1
+        data.append(row)
 
     # -------------------------------
     # SUMMARY AGGREGATION
@@ -3522,9 +3557,6 @@ def vendor_p_l_attached_report_ajax_view(request):
         elif trip.tr_category_id == 3:
             business_empty_km_val += trip_km
 
-        if trip.tr_category_id in [2, 3]:
-            continue
-
         inv = inv_map.get(trip.id)
         clean_veh_no = trip.tr_vehiclenumber.replace(" ", "").upper() if trip.tr_vehiclenumber else ""
         allotment = va_map.get((trip.tr_enquirynumber_id, clean_veh_no))
@@ -3548,7 +3580,7 @@ def vendor_p_l_attached_report_ajax_view(request):
             selling_weighment = selling_halting = selling_handling = selling_parking = 0.0
             selling_rto = selling_beta = selling_cancellation = 0.0
         else:
-            selling_trip = safe_num(inv.ti_transportation_charges) if inv else (safe_num(trip.tc_tripcost) if getattr(trip, 'tc_tripcost_check', True) else 0.0)
+            selling_trip = get_tms_report_transport_charge(trip, inv=inv, allotment=allotment)
             selling_toll = safe_num(inv.ti_toll_charges) if inv else (safe_num(trip.tc_tollcost) if getattr(trip, 'tc_tollcost_check', True) else 0.0)
             selling_parking = safe_num(inv.ti_parking_charges) if inv else (safe_num(trip.tc_parkingcost) if getattr(trip, 'tc_parkingcost_check', True) else 0.0)
             selling_loading = safe_num(inv.ti_loading_charges) if inv else (safe_num(trip.tc_loadingcost) if getattr(trip, 'tc_loadingcost_check', True) else 0.0)
@@ -3614,10 +3646,28 @@ def vendor_p_l_attached_report_ajax_view(request):
                     buying_trip_cost = round(vm_buycost_val / trip_count, 2)
 
         buying_loading = buying_unloading = buying_weighment = buying_aai = 0.0
-        buying_toll = safe_num(trip.tc_tollcost) if att_bill else 0.0
-        if att_bill and buying_toll == 0.0 and safe_num(att_bill.ab_toll_cost) > 0.0:
-            buying_toll = round(safe_num(att_bill.ab_toll_cost) / (total_trips_ab or 1), 2)
+        
+        buying_toll = 0.0
         buying_halting = buying_handling = buying_parking = buying_rto = buying_batta = 0.0
+        if att_bill:
+            has_trip_costs = False
+            if att_bill.ab_trip_costs:
+                try:
+                    import json
+                    saved_costs = json.loads(att_bill.ab_trip_costs)
+                    if isinstance(saved_costs, dict) and len(saved_costs) > 0:
+                        has_trip_costs = True
+                        if str(trip.id) in saved_costs:
+                            buying_toll = float(saved_costs[str(trip.id)].get('toll', 0.0))
+                            buying_parking = float(saved_costs[str(trip.id)].get('parking', 0.0))
+                except Exception:
+                    pass
+            
+            if not has_trip_costs:
+                if buying_toll == 0.0:
+                    buying_toll = safe_num(trip.tc_tollcost)
+                if buying_toll == 0.0 and safe_num(att_bill.ab_toll_cost) > 0.0:
+                    buying_toll = round(safe_num(att_bill.ab_toll_cost) / (total_trips_ab or 1), 2)
 
         for e in trip_expenses:
             buying_loading += safe_num(e.de_loadingcost)

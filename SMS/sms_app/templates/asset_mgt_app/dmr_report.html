@@ -421,6 +421,8 @@ function currentTableHeaders() {
 $(document).ready(function () {
     // Initialize select2 for filter form
     $('#dmr_filter_form select').select2({
+            allowClear: true,
+            placeholder: "Select an option",
         width: '100%'
     });
 
