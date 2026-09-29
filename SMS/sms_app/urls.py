@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 from . import views
 from .sub_views.pk_purchaseorder_view import pk_create_batch_job, pk_get_po_items_for_job
 from .sub_views.tms_dashboard_view import tms_dashboard, get_tms_dashboard_data
+from .sub_views.ar_receipt_view import ar_receipt_list
 
 urlpatterns = [
     path('pk_create_batch_job/', pk_create_batch_job, name='pk_create_batch_job'),
@@ -500,6 +501,7 @@ urlpatterns = [
     # update packingjobs
     path('packingjobs_delete/<int:packingjobs_id>', views.packingjobs_delete, name='packingjobs_delete'),
     # delete packingjobs
+    path('ar_receipt_list/', views.ar_receipt_list, name='ar_receipt_list'),  # AR Receipt List
     path('ar_list/', views.ar_list, name='ar_list'),  # List ar
     path('ar_insert/', views.ar_add, name='ar_insert'),  # Add ar
     path('ar_update/<int:ar_id>', views.ar_add, name='ar_update'),  # update ar

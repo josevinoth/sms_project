@@ -1,321 +1,752 @@
-{% extends "asset_mgt_app/base.html" %}
-{% load widget_tweaks %}
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load static %}
+
+{% block title %}Add AR Payment Receipt | BVM Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ══ Form Styles ══ */
+    .form-label-custom {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.35rem;
+        display: block;
+    }
+    .form-control-custom {
+        height: 38px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        font-size: 0.88rem;
+        padding: 0.4rem 0.75rem;
+        background-color: #ffffff;
+        color: #0f172a;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    .form-control-custom:focus {
+        border-color: #2563eb;
+        outline: 0;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+    .form-control-custom[readonly] {
+        background-color: #f8fafc;
+        cursor: not-allowed;
+    }
+
+    /* ══ Section Card ══ */
+    .receipt-card {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+        margin-bottom: 1.5rem;
+    }
+    .receipt-card-header {
+        padding: 0.85rem 1.25rem;
+        border-bottom: 1px solid #e2e8f0;
+        background: #ffffff;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+    }
+
+    /* ══ Table Styling ══ */
+    .modern-table {
+        width: 100% !important;
+        border-collapse: separate !important;
+        border-spacing: 0 4px !important;
+    }
+    .modern-table thead th {
+        vertical-align: middle !important;
+        padding: 0.45rem 0.4rem !important;
+        font-size: 0.76rem !important;
+        letter-spacing: 0.3px !important;
+        white-space: nowrap !important;
+        background-color: #0f172a;
+        color: #ffffff;
+    }
+    .modern-table tbody td {
+        vertical-align: middle !important;
+        padding: 0.35rem 0.4rem !important;
+        line-height: 1.25 !important;
+        font-size: 0.8rem !important;
+    }
+    .modern-table tfoot td {
+        vertical-align: middle !important;
+        padding: 0.45rem 0.4rem !important;
+        font-size: 0.8rem !important;
+    }
+    .col-nowrap {
+        white-space: nowrap !important;
+    }
+    .invoice-checkbox {
+        width: 17px;
+        height: 17px;
+        cursor: pointer;
+        accent-color: #2563eb;
+    }
+
+    /* ══ Badge Styles ══ */
+    .badge-status-sub {
+        background: rgba(16, 185, 129, 0.15);
+        color: #059669 !important;
+        border: 1px solid rgba(16, 185, 129, 0.35);
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-{% load crispy_forms_tags %}
-<form method="POST" action="" id="ar_add" data-branches-url="{% url 'load_units' %}">
-	{% csrf_token %}
-	<div class="row">
-		<div class="col">
-			<div class="container-fluid">
-				<div class="card text-white bg-info mb-3" style="max-width: 100%;">
-					<div class="card-header text-center"><h3>Add/Update Account Receivable </h3></div>
-					<div class="card-body bg-light" >
-						<div class="row">
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" id="">Company</span>
-									</div>
-									{% render_field form.ar_company class="form-control" id="ar_company" readonly=True%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Product</span>
-									</div>
-									{% render_field form.ar_product class="form-control" id="ar_product" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Branch</span>
-									</div>
-									{% render_field form.ar_branch class="form-control" id="ar_branch"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Unit</span>
-									</div>
-									{% render_field form.ar_unit class="form-control disable_a_href" id="ar_unit"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Sales Executive</span>
-									</div>
-									{% render_field form.ar_sales_person class="form-control" id="ar_branch"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Operation Date</span>
-									</div>
-									{% render_field form.ar_operation_date type="Date" onchange="Amt_cal()" class="form-control" id="ar_operation_date" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Invoice Number</span>
-									</div>
-									{% render_field form.ar_invoice_num class="form-control" id="ar_invoice_num"%}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Invoice Date</span>
-									</div>
-									{% render_field form.ar_invoice_date type="date" onchange="Amt_cal()" class="form-control" id="ar_invoice_date"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Customer Name</span>
-									</div>
-									{% render_field form.ar_customer_name class="form-control" id="ar_customer_name"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Customer Department</span>
-									</div>
-									{% render_field form.ar_customer_dept class="form-control" id="ar_customer_dept"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Submission Date</span>
-									</div>
-									{% render_field form.ar_submission_date type="date" onchange="Amt_cal()" class="form-control" id="ar_submission_date" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">Service Value</span>
-									</div>
-									{% render_field form.ar_service_value class="form-control" id="ar_service_value" onchange="Amt_cal()" %}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">CGST</span>
-									</div>
-									{% render_field form.ar_cgst class="form-control" id="ar_cgst" onchange="Amt_cal()"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >SGST</span>
-									</div>
-									{% render_field form.ar_sgst class="form-control" id="ar_sgst" onchange="Amt_cal()"%}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text">IGST</span>
-									</div>
-									{% render_field form.ar_igst  class="form-control" id="ar_igst" onchange="Amt_cal()"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Invoice Sent To</span>
-									</div>
-									{% render_field form.ar_invoice_sent_to class="form-control" id="ar_invoice_sent_to"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Invoice Amount</span>
-									</div>
-									{% render_field form.ar_amount class="form-control disable_a_href" id="ar_amount" onchange="Amt_cal()"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Due From Operation Dt</span>
-									</div>
-									{% render_field form.ar_due_from_operation_date class="form-control disable_a_href" id="ar_due_from_operation_date"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Due From Invoice Dt</span>
-									</div>
-									{% render_field form.ar_due_from_invoice_date class="form-control disable_a_href" id="ar_due_from_invoice_date"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Due From Submission Dt</span>
-									</div>
-									{% render_field form.ar_due_from_submission_date class="form-control disable_a_href" id="ar_due_from_submission_date"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Payment Received Date</span>
-									</div>
-									{% render_field form.ar_payment_received_date type="Date" onchange="Amt_cal()" class="form-control" id="ar_payment_received_date"%}
-								</div>
-							</div>
-							<div class="col-3">
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Payment Received Amt</span>
-									</div>
-									{% render_field form.ar_payment_received_amount class="form-control" id="ar_payment_received_amount" onchange="Amt_cal()"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >TDS</span>
-									</div>
-									{% render_field form.ar_tds class="form-control" id="ar_tds" onchange="Amt_cal()"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Total Payment Received</span>
-									</div>
-									{% render_field form.ar_total_payment_received_amount id="ar_total_payment_received_amount" class="form-control disable_a_href" id="ar_tds"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Balance Payment</span>
-									</div>
-									{% render_field form.ar_balance_payment id="ar_balance_payment" class="form-control disable_a_href" id="ar_tds"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Rec From Operation Dt</span>
-									</div>
-									{% render_field form.ar_rec_from_operation_date class="form-control disable_a_href" id="ar_rec_from_operation_date"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Rec From Invoice Dt</span>
-									</div>
-									{% render_field form.ar_rec_from_invoice_date class="form-control disable_a_href" id="ar_rec_from_invoice_date"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Rec From Submission Dt</span>
-									</div>
-									{% render_field form.ar_rec_from_submission_date class="form-control disable_a_href" id="ar_rec_from_submission_date"%}
-								</div>
-								<div class="input-group input-group-sm mb-3">
-									<div class="input-group-prepend">
-										<span class="input-group-text" >Status</span>
-									</div>
-									{% render_field form.ar_status class="form-control" onchange="status_update()" id="ar_status" onchange="status_update()"%}
-								</div>
-								{% render_field form.ar_updated_by class="form-control" hidden="True" id="ar_updated_by"%}
-							</div>
-						</div>
-						<button onclick="random()" type="submit" class="btn btn-success "><i class="fas fa-check"></i> Submit</button>
-						<a href="{% url 'ar_list' %}" class="btn btn-danger float-right">
-							<i class="fas fa-times"></i> Cancel </a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</form>
-{% include "asset_mgt_app/ar_comments_list_WOH.html" %}
+<div class="container-fluid py-3">
+
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mb-0 text-white font-weight-bold" style="font-size: 1.35rem; letter-spacing: 0.5px;">
+                <i class="fas fa-file-invoice-dollar mr-2 text-warning"></i> Add AR Receipt / Payment
+            </h3>
+        </div>
+        <div class="d-flex align-items-center" style="gap: 8px;">
+            <a href="{% url 'ar_receipt_list' %}" class="btn btn-outline-light font-weight-bold" style="border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.88rem;">
+                <i class="fas fa-arrow-left mr-1"></i> Back to AR Receipt List
+            </a>
+        </div>
+    </div>
+
+    <form method="POST" action="{% url 'ar_insert' %}" id="arReceiptForm">
+        {% csrf_token %}
+        <input type="hidden" name="selected_invoices_json" id="selected_invoices_json" value="[]">
+
+        <!-- ══ Receipt Details Card ══ -->
+        <div class="receipt-card">
+            <div class="receipt-card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 font-weight-bold text-dark">Payment Receipt Details</h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+
+                    <!-- ── Left Column: Company & Customer ── -->
+                    <div class="col-12 col-lg-6 pr-lg-4 mb-3 mb-lg-0" style="border-right: 1px solid #f1f5f9;">
+                        <!-- Company Name -->
+                        <div class="form-group mb-3">
+                            <label class="form-label-custom" for="company_select">Company Name</label>
+                            <select id="company_select" name="company_id" class="form-control form-control-custom" required>
+                                <option value="">-- Select Company --</option>
+                                {% for comp in companies %}
+                                <option value="{{ comp.id }}">{{ comp.bvm_business }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Customer Short Name -->
+                        <div class="form-group mb-0">
+                            <label class="form-label-custom" for="customer_select">Customer Short Name</label>
+                            <select id="customer_select" name="customer_id" class="form-control form-control-custom" required>
+                                <option value="">-- Select Customer Short Name --</option>
+                                {% for cust in customers %}
+                                <option value="{{ cust.id }}" data-company-id="{{ cust.cu_business_sol_id|default:'' }}" data-name="{{ cust.cu_name }}">
+                                    {{ cust.cu_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- ── Right Column: Payment & Amounts ── -->
+                    <div class="col-12 col-lg-6 pl-lg-4">
+                        <div class="row">
+                            <!-- Payment Received Amt -->
+                            <div class="col-12 col-sm-6 mb-3">
+                                <label class="form-label-custom" for="payment_received_amt">Payment Received Amt (&#8377;)</label>
+                                <input type="number" step="0.01" min="0" class="form-control form-control-custom font-weight-bold" id="payment_received_amt" name="payment_received_amt" value="0.00" required>
+                            </div>
+
+                            <!-- Payment Recd Date -->
+                            <div class="col-12 col-sm-6 mb-3">
+                                <label class="form-label-custom" for="payment_received_date">Payment Recd Date</label>
+                                <input type="date" class="form-control form-control-custom" id="payment_received_date" name="payment_received_date" value="{{ today_str }}" required>
+                            </div>
+
+                            <!-- TDS Amount -->
+                            <div class="col-12 col-sm-4 mb-3">
+                                <label class="form-label-custom" for="tds_amount">TDS Amount (&#8377;)</label>
+                                <input type="number" step="0.01" min="0" class="form-control form-control-custom" id="tds_amount" name="tds_amount" value="0.00">
+                            </div>
+
+                            <!-- Inv Amount -->
+                            <div class="col-12 col-sm-4 mb-3">
+                                <label class="form-label-custom" for="inv_amount">Inv Amount (&#8377;)</label>
+                                <input type="text" class="form-control form-control-custom font-weight-bold" id="inv_amount" name="inv_amount" readonly value="0.00" style="color: #0f172a;">
+                            </div>
+
+                            <!-- Short & Excess -->
+                            <div class="col-12 col-sm-4 mb-3">
+                                <label class="form-label-custom" for="short_excess">Short &amp; Excess (&#8377;)</label>
+                                <input type="text" class="form-control form-control-custom font-weight-bold" id="short_excess" name="short_excess" readonly value="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ Action Buttons (Submit & Cancel Interchanged, Placed Above Selected Invoices) ══ -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <button type="submit" id="btnSubmitReceipt" class="btn btn-primary font-weight-bold" style="border-radius: 8px; padding: 0.6rem 2.2rem; font-size: 1rem;">
+                <i class="fas fa-check-circle mr-1"></i> Submit Receipt
+            </button>
+            <a href="{% url 'ar_receipt_list' %}" class="btn btn-secondary font-weight-bold" style="border-radius: 8px; padding: 0.6rem 1.8rem; font-size: 0.95rem;">
+                <i class="fas fa-times mr-1"></i> Cancel
+            </a>
+        </div>
+
+        <!-- ══ Table 1: Upper Table - Selected Invoices ══ -->
+        <div class="receipt-card">
+            <div class="receipt-card-header d-flex justify-content-between align-items-center flex-wrap" style="gap: 10px;">
+                <div>
+                    <h6 class="mb-0 font-weight-bold text-dark">
+                        Selected Invoices (<span id="selectedCountBadge">0</span>)
+                    </h6>
+                </div>
+                <div class="d-flex align-items-center" style="gap: 10px;">
+                    <button type="button" id="btnRemoveSelected" class="btn btn-outline-danger font-weight-bold" disabled style="border-radius: 8px; padding: 0.35rem 0.9rem; font-size: 0.82rem;">
+                        <i class="fas fa-trash-alt mr-1"></i> Remove Selected (<span id="removeCheckedCountBadge">0</span>)
+                    </button>
+                    <span class="font-weight-bold text-dark mr-1" style="font-size: 0.85rem;">Total Selected Amount:</span>
+                    <span class="badge badge-success px-3 py-2" style="font-size: 0.95rem; font-weight:700;" id="selectedTotalDisplay">&#8377; 0.00</span>
+                </div>
+            </div>
+            <div class="table-container-modern p-3">
+                <table id="selectedInvoicesTable" class="table modern-table w-100">
+                    <thead>
+                        <tr>
+                            <th style="width: 35px; text-align: center;">
+                                <input type="checkbox" id="checkAllSelected" class="invoice-checkbox" title="Select All">
+                            </th>
+                            <th class="text-center">Inv No</th>
+                            <th>Customer Name</th>
+                            <th class="text-right">Service Amt</th>
+                            <th class="text-right">CGST</th>
+                            <th class="text-right">SGST</th>
+                            <th class="text-right">IGST</th>
+                            <th class="text-right">Inv Amt</th>
+                            <th class="text-center">TDS %</th>
+                            <th class="text-right">TDS Amt</th>
+                            <th class="text-right">Receivable</th>
+                            <th class="text-right">Recd Amt</th>
+                            <th class="text-right">Bal</th>
+                            <th class="text-center" style="width: 60px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="selectedInvoicesTbody">
+                        <tr id="noSelectedRow">
+                            <td colspan="14" class="text-center py-4 text-muted">
+                                No invoices added yet. Select invoices from the Available list below and click "Add Selected Invoices".
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot id="selectedInvoicesTfoot" style="display: none;">
+                        <tr style="background: #f8fafc; font-weight: bold;">
+                            <td colspan="3" class="text-right">Total:</td>
+                            <td class="text-right" id="tfoot_service_amt">&#8377; 0.00</td>
+                            <td class="text-right" id="tfoot_cgst">&#8377; 0.00</td>
+                            <td class="text-right" id="tfoot_sgst">&#8377; 0.00</td>
+                            <td class="text-right" id="tfoot_igst">&#8377; 0.00</td>
+                            <td class="text-right" id="tfoot_inv_amt">&#8377; 0.00</td>
+                            <td class="text-center">-</td>
+                            <td class="text-right" id="tfoot_tds_amt">&#8377; 0.00</td>
+                            <td class="text-right" id="tfoot_receivable">&#8377; 0.00</td>
+                            <td class="text-right text-success" id="tfoot_recd_amt">&#8377; 0.00</td>
+                            <td class="text-right" id="tfoot_bal">&#8377; 0.00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- ══ Table 2: Lower Table - Available Submitted Invoices ══ -->
+        <div class="receipt-card">
+            <div class="receipt-card-header d-flex justify-content-between align-items-center flex-wrap" style="gap: 10px;">
+                <div>
+                    <h6 class="mb-0 font-weight-bold text-dark">
+                        Available Submitted Invoices (<span id="availableCountBadge">0</span>)
+                    </h6>
+                </div>
+                <div>
+                    <button type="button" id="btnAddSelected" class="btn btn-success font-weight-bold" disabled style="border-radius: 8px; padding: 0.45rem 1.2rem; font-size: 0.88rem;">
+                        <i class="fas fa-arrow-up mr-1"></i> Add Selected Invoices (<span id="checkedCountBadge">0</span>)
+                    </button>
+                </div>
+            </div>
+            <div class="table-container-modern p-3">
+                <table id="availableInvoicesTable" class="table modern-table w-100">
+                    <thead>
+                        <tr>
+                            <th style="width: 35px; text-align: center;">
+                                <input type="checkbox" id="checkAllAvailable" class="invoice-checkbox" title="Select All">
+                            </th>
+                            <th>Company</th>
+                            <th class="text-center">Product</th>
+                            <th class="text-center">Branch</th>
+                            <th class="text-center">Op Date</th>
+                            <th class="text-center">Invoice No</th>
+                            <th class="text-center">Inv Date</th>
+                            <th>Customer</th>
+                            <th>Dept</th>
+                            <th class="text-right">Service Val</th>
+                            <th class="text-right">CGST</th>
+                            <th class="text-right">SGST</th>
+                            <th class="text-right">IGST</th>
+                            <th class="text-right">Amount (INR)</th>
+                            <th class="text-center">Sub Date</th>
+                            <th>Sub To</th>
+                            <th>Sales</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="availableInvoicesTbody">
+                        <tr id="noAvailableRow">
+                            <td colspan="18" class="text-center py-4 text-muted">
+                                Please select a Customer Short Name above to view available submitted invoices.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-	$(document).ready(function() {
-        status_update()
-        document.getElementById("ar_updated_by").value ='{{user_id}}';
+$(document).ready(function() {
+    // ══════════════════════════════════════════════════════════════════════
+    // Data Store
+    // ══════════════════════════════════════════════════════════════════════
+    var allSubmittedInvoices = {{ submitted_invoices_json|safe }};
+    var selectedInvoices = [];
+
+    function fmtNum(n) {
+        var num = parseFloat(n) || 0;
+        return num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Calculations: Inv Amount, TDS, Receivable, Recd Amt, Bal, Short & Excess
+    // ══════════════════════════════════════════════════════════════════════
+    function updateCalculations() {
+        var totalServiceAmt = 0;
+        var totalCgst = 0;
+        var totalSgst = 0;
+        var totalIgst = 0;
+        var totalInvAmt = 0;
+
+        selectedInvoices.forEach(function(inv) {
+            totalServiceAmt += parseFloat(inv.service_val) || 0;
+            totalCgst += parseFloat(inv.cgst) || 0;
+            totalSgst += parseFloat(inv.sgst) || 0;
+            totalIgst += parseFloat(inv.igst) || 0;
+            totalInvAmt += parseFloat(inv.amount) || 0;
+        });
+
+        $('#inv_amount').val(totalInvAmt.toFixed(2));
+        $('#selectedTotalDisplay').html('&#8377; ' + fmtNum(totalInvAmt));
+
+        var pmtRecAmt = parseFloat($('#payment_received_amt').val()) || 0;
+        var tdsAmt = parseFloat($('#tds_amount').val()) || 0;
+        var diff = (pmtRecAmt + tdsAmt) - totalInvAmt;
+
+        var shortExcessText = '';
+        var inputEl = $('#short_excess');
+
+        if (totalInvAmt === 0 && pmtRecAmt === 0 && tdsAmt === 0) {
+            shortExcessText = '0.00';
+            inputEl.css('color', '#64748b');
+        } else if (Math.abs(diff) < 0.01) {
+            shortExcessText = '0.00 (Balanced)';
+            inputEl.css('color', '#059669');
+        } else if (diff > 0) {
+            shortExcessText = '+ ' + diff.toFixed(2) + ' (Excess)';
+            inputEl.css('color', '#059669');
+        } else {
+            shortExcessText = '- ' + Math.abs(diff).toFixed(2) + ' (Short)';
+            inputEl.css('color', '#dc2626');
+        }
+        inputEl.val(shortExcessText);
+
+        // Per-invoice allocation calculation
+        var totalTdsAmt = 0;
+        var totalReceivable = 0;
+        var totalRecdAmt = 0;
+        var totalBal = 0;
+
+        selectedInvoices.forEach(function(inv) {
+            var invAmt = parseFloat(inv.amount) || 0;
+            var sVal = parseFloat(inv.service_val) || 0;
+            var ratio = totalInvAmt > 0 ? (invAmt / totalInvAmt) : 0;
+
+            var rowTds = totalInvAmt > 0 ? (tdsAmt * ratio) : 0;
+            var rowRecd = totalInvAmt > 0 ? (pmtRecAmt * ratio) : 0;
+            var rowTdsPct = sVal > 0 ? ((rowTds / sVal) * 100) : (totalServiceAmt > 0 && tdsAmt > 0 ? ((tdsAmt / totalServiceAmt) * 100) : 0);
+            var rowReceivable = invAmt - rowTds;
+            var rowBal = rowReceivable - rowRecd;
+
+            inv.calculated_tds_pct = rowTdsPct;
+            inv.calculated_tds_amt = rowTds;
+            inv.calculated_receivable = rowReceivable;
+            inv.calculated_recd_amt = rowRecd;
+            inv.calculated_bal = rowBal;
+
+            totalTdsAmt += rowTds;
+            totalReceivable += rowReceivable;
+            totalRecdAmt += rowRecd;
+            totalBal += rowBal;
+        });
+
+        // Update footer
+        $('#tfoot_service_amt').html('&#8377; ' + fmtNum(totalServiceAmt));
+        $('#tfoot_cgst').html('&#8377; ' + fmtNum(totalCgst));
+        $('#tfoot_sgst').html('&#8377; ' + fmtNum(totalSgst));
+        $('#tfoot_igst').html('&#8377; ' + fmtNum(totalIgst));
+        $('#tfoot_inv_amt').html('&#8377; ' + fmtNum(totalInvAmt));
+        $('#tfoot_tds_amt').html('&#8377; ' + fmtNum(totalTdsAmt));
+        $('#tfoot_receivable').html('&#8377; ' + fmtNum(totalReceivable));
+        $('#tfoot_recd_amt').html('&#8377; ' + fmtNum(totalRecdAmt));
+        $('#tfoot_bal').html('&#8377; ' + fmtNum(totalBal));
+
+        $('#selected_invoices_json').val(JSON.stringify(selectedInvoices));
+    }
+
+    $('#payment_received_amt, #tds_amount').on('input change', function() {
+        updateCalculations();
+        refreshSelectedRowCalculations();
     });
-</script>
 
-<script>
-	function status_update() {
-        var ar_status=document.getElementById("ar_status").value
-        if (ar_status==6)
-            {
-                $('#ar_operation_date').removeClass('disable_a_href');
-                $('#ar_invoice_date').removeClass('disable_a_href');
-                $('#ar_submission_date').removeClass('disable_a_href');
-                $('#ar_payment_received_date').removeClass('disable_a_href');
-                $('#ar_service_value').removeClass('disable_a_href');
-                $('#ar_cgst').removeClass('disable_a_href');
-                $('#ar_sgst').removeClass('disable_a_href');
-                $('#ar_igst').removeClass('disable_a_href');
-                $('#ar_payment_received_amount').removeClass('disable_a_href');
-                $('#ar_tds').removeClass('disable_a_href');
+    function refreshSelectedRowCalculations() {
+        $('#selectedInvoicesTbody tr').each(function(idx) {
+            var inv = selectedInvoices[idx];
+            if (inv) {
+                $(this).find('.cell-tds-pct').text(inv.calculated_tds_pct.toFixed(1) + '%');
+                $(this).find('.cell-tds-amt').html('&#8377; ' + fmtNum(inv.calculated_tds_amt));
+                $(this).find('.cell-receivable').html('&#8377; ' + fmtNum(inv.calculated_receivable));
+                $(this).find('.cell-recd-amt').html('&#8377; ' + fmtNum(inv.calculated_recd_amt));
+
+                var balEl = $(this).find('.cell-bal');
+                balEl.html('&#8377; ' + fmtNum(inv.calculated_bal));
+                if (Math.abs(inv.calculated_bal) < 0.01) {
+                    balEl.css('color', '#059669');
+                } else if (inv.calculated_bal > 0) {
+                    balEl.css('color', '#d97706');
+                } else {
+                    balEl.css('color', '#059669');
+                }
             }
-        else
-            {
-                $('#ar_operation_date').addClass('disable_a_href');
-                $('#ar_invoice_date').addClass('disable_a_href');
-                $('#ar_submission_date').addClass('disable_a_href');
-                $('#ar_payment_received_date').addClass('disable_a_href');
-                $('#ar_service_value').addClass('disable_a_href');
-                $('#ar_cgst').addClass('disable_a_href');
-                $('#ar_sgst').addClass('disable_a_href');
-                $('#ar_igst').addClass('disable_a_href');
-                $('#ar_payment_received_amount').addClass('disable_a_href');
-                $('#ar_tds').addClass('disable_a_href');
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Rendering: Upper Table (Selected Invoices)
+    // Fields: inv no | customer name | service amt | cgst | sgst | igst |
+    //         inv amt | tds % | tds amt | receivable | recd amt | bal | Action
+    // ══════════════════════════════════════════════════════════════════════
+    function renderSelectedTable() {
+        var tbody = $('#selectedInvoicesTbody');
+        tbody.empty();
+
+        var count = selectedInvoices.length;
+        $('#selectedCountBadge').text(count);
+
+        if (count === 0) {
+            tbody.html('<tr id="noSelectedRow"><td colspan="14" class="text-center py-4 text-muted">No invoices added yet. Select invoices from the Available list below and click "Add Selected Invoices".</td></tr>');
+            $('#selectedInvoicesTfoot').hide();
+        } else {
+            $('#selectedInvoicesTfoot').show();
+            selectedInvoices.forEach(function(inv, idx) {
+                var balColor = (Math.abs(inv.calculated_bal || 0) < 0.01) ? '#059669' : ((inv.calculated_bal || 0) > 0 ? '#d97706' : '#059669');
+
+                var tr = $('<tr></tr>');
+                // 0. Checkbox
+                tr.append('<td class="text-center"><input type="checkbox" class="invoice-checkbox chk-selected" value="' + inv.id + '"></td>');
+                // 1. Inv No
+                tr.append('<td class="text-center col-nowrap font-weight-bold text-primary">' + (inv.inv_no || '-') + '</td>');
+                // 2. Customer Name
+                tr.append('<td><strong>' + (inv.customer_name || '-') + '</strong></td>');
+                // 3. Service Amt
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.service_val) + '</td>');
+                // 4. CGST
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.cgst) + '</td>');
+                // 5. SGST
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.sgst) + '</td>');
+                // 6. IGST
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.igst) + '</td>');
+                // 7. Inv Amt
+                tr.append('<td class="text-right col-nowrap font-weight-bold">&#8377; ' + fmtNum(inv.amount) + '</td>');
+                // 8. TDS %
+                tr.append('<td class="text-center col-nowrap cell-tds-pct">' + ((inv.calculated_tds_pct || 0).toFixed(1)) + '%</td>');
+                // 9. TDS Amt
+                tr.append('<td class="text-right col-nowrap cell-tds-amt">&#8377; ' + fmtNum(inv.calculated_tds_amt || 0) + '</td>');
+                // 10. Receivable
+                tr.append('<td class="text-right col-nowrap font-weight-bold cell-receivable">&#8377; ' + fmtNum(inv.calculated_receivable || 0) + '</td>');
+                // 11. Recd Amt
+                tr.append('<td class="text-right col-nowrap font-weight-bold text-success cell-recd-amt">&#8377; ' + fmtNum(inv.calculated_recd_amt || 0) + '</td>');
+                // 12. Bal
+                tr.append('<td class="text-right col-nowrap font-weight-bold cell-bal" style="color:' + balColor + ';">&#8377; ' + fmtNum(inv.calculated_bal || 0) + '</td>');
+                // 13. Action
+                tr.append('<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-selected" data-index="' + idx + '" title="Remove from receipt"><i class="fas fa-trash-alt"></i></button></td>');
+
+                tbody.append(tr);
+            });
+        }
+
+        updateCalculations();
+        updateSelectedControls();
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Rendering: Lower Table (Available Submitted Invoices)
+    // ══════════════════════════════════════════════════════════════════════
+    function getAvailableInvoicesForCurrentCustomer() {
+        var selectedCustId = parseInt($('#customer_select').val()) || 0;
+        var selectedCompId = parseInt($('#company_select').val()) || 0;
+
+        if (!selectedCustId) {
+            return [];
+        }
+
+        var selectedIdsSet = new Set(selectedInvoices.map(function(i) { return i.id; }));
+
+        return allSubmittedInvoices.filter(function(inv) {
+            if (selectedIdsSet.has(inv.id)) {
+                return false;
             }
+            if (inv.customer_id && inv.customer_id !== selectedCustId) {
+                return false;
+            }
+            if (selectedCompId && inv.company_id && inv.company_id !== selectedCompId) {
+                return false;
+            }
+            return true;
+        });
     }
-</script>
 
-<script>
-	function Amt_cal() {
-      var today_date=new Date()
-      var operation_dt=new Date(document.getElementById("ar_operation_date").value)
-      var invoice_dt=new Date(document.getElementById("ar_invoice_date").value)
-      var inv_sub_dt=new Date(document.getElementById("ar_submission_date").value)
-      var payment_rec_dt=new Date(document.getElementById("ar_payment_received_date").value)
-      const due_opr_dt_dif = Math.abs(today_date - operation_dt);
-      const due_opr_dt_days = Math.ceil(due_opr_dt_dif / (1000 * 60 * 60 * 24));
-      document.getElementById("ar_due_from_operation_date").value =due_opr_dt_days;
+    function renderAvailableTable() {
+        var tbody = $('#availableInvoicesTbody');
+        tbody.empty();
 
-      const due_inv_dt_dif = Math.abs(today_date - invoice_dt);
-      const due_inv_dt_days = Math.ceil(due_inv_dt_dif / (1000 * 60 * 60 * 24));
-      document.getElementById("ar_due_from_invoice_date").value =due_inv_dt_days;
+        var selectedCustId = $('#customer_select').val();
 
-      const due_inv_sub_dt_dif = Math.abs(today_date - inv_sub_dt);
-      const due_inv_sub_dt_days = Math.ceil(due_inv_sub_dt_dif / (1000 * 60 * 60 * 24));
-      document.getElementById("ar_due_from_submission_date").value =due_inv_sub_dt_days;
+        if (!selectedCustId) {
+            $('#availableCountBadge').text('0');
+            tbody.html('<tr id="noAvailableRow"><td colspan="18" class="text-center py-4 text-muted">Please select a Customer Short Name above to view available submitted invoices.</td></tr>');
+            updateAvailableControls();
+            return;
+        }
 
-      const rec_opr_dt_dif = Math.abs(payment_rec_dt - operation_dt);
-      const rec_opr_dt_days = Math.ceil(rec_opr_dt_dif / (1000 * 60 * 60 * 24));
-      document.getElementById("ar_rec_from_operation_date").value =rec_opr_dt_days;
+        var availableList = getAvailableInvoicesForCurrentCustomer();
+        $('#availableCountBadge').text(availableList.length);
 
-      const rec_inv_dt_dif = Math.abs(payment_rec_dt - invoice_dt);
-      const rec_inv_dt_days = Math.ceil(rec_inv_dt_dif / (1000 * 60 * 60 * 24));
-      document.getElementById("ar_rec_from_invoice_date").value =rec_inv_dt_days;
+        if (availableList.length === 0) {
+            tbody.html('<tr><td colspan="18" class="text-center py-4 text-muted">No pending submitted invoices found for this customer.</td></tr>');
+        } else {
+            availableList.forEach(function(inv) {
+                var tr = $('<tr></tr>');
+                tr.append('<td class="text-center"><input type="checkbox" class="invoice-checkbox chk-available" value="' + inv.id + '"></td>');
+                tr.append('<td class="font-weight-bold">' + (inv.company || '-') + '</td>');
+                tr.append('<td class="text-center">' + (inv.product || '-') + '</td>');
+                tr.append('<td class="text-center">' + (inv.branch || '-') + '</td>');
+                tr.append('<td class="text-center col-nowrap">' + (inv.op_date || '-') + '</td>');
+                tr.append('<td class="text-center col-nowrap font-weight-bold text-primary">' + (inv.inv_no || '-') + '</td>');
+                tr.append('<td class="text-center col-nowrap">' + (inv.inv_date || '-') + '</td>');
+                tr.append('<td><strong>' + (inv.customer_name || '-') + '</strong></td>');
+                tr.append('<td>' + (inv.dept || '-') + '</td>');
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.service_val) + '</td>');
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.cgst) + '</td>');
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.sgst) + '</td>');
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.igst) + '</td>');
+                tr.append('<td class="text-right col-nowrap font-weight-bold">&#8377; ' + fmtNum(inv.amount) + '</td>');
+                tr.append('<td class="text-center col-nowrap">' + (inv.sub_date || '-') + '</td>');
+                tr.append('<td>' + (inv.sub_to || '-') + '</td>');
+                tr.append('<td>' + (inv.sales || '-') + '</td>');
+                tr.append('<td class="text-center"><span class="badge-status-sub">' + (inv.status || 'Submitted') + '</span></td>');
+                tbody.append(tr);
+            });
+        }
 
-      const rec_inv_sub_dt_dif = Math.abs(payment_rec_dt - inv_sub_dt);
-      const rec_inv_sub_dt_days = Math.ceil(rec_inv_sub_dt_dif / (1000 * 60 * 60 * 24));
-      document.getElementById("ar_rec_from_submission_date").value =rec_inv_sub_dt_days;
-
-      var service_value=document.getElementById("ar_service_value").value
-      var cgst=document.getElementById("ar_cgst").value
-      var sgst=document.getElementById("ar_sgst").value
-      var igst=document.getElementById("ar_igst").value
-      var invoice_amount=parseFloat(service_value)+parseFloat(cgst)+parseFloat(sgst)+parseFloat(igst)
-      document.getElementById("ar_amount").value =invoice_amount
-
-      var invoice_amount=document.getElementById("ar_amount").value
-      var payment_received=document.getElementById("ar_payment_received_amount").value
-      var TDS_received=document.getElementById("ar_tds").value
-      var total_payment=parseFloat(payment_received)+parseFloat(TDS_received)
-      var balance_payment=parseFloat(invoice_amount)-parseFloat(total_payment)
-      document.getElementById("ar_total_payment_received_amount").value =total_payment
-      document.getElementById("ar_balance_payment").value =balance_payment
+        updateAvailableControls();
     }
+
+    function updateAvailableControls() {
+        var total = $('.chk-available').length;
+        var checked = $('.chk-available:checked').length;
+
+        $('#checkedCountBadge').text(checked);
+        $('#btnAddSelected').prop('disabled', checked === 0);
+
+        if (total > 0 && checked === total) {
+            $('#checkAllAvailable').prop('checked', true);
+        } else {
+            $('#checkAllAvailable').prop('checked', false);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Event: Dropdown Selection
+    // ══════════════════════════════════════════════════════════════════════
+    $('#company_select').on('change', function() {
+        var compId = $(this).val();
+        $('#customer_select option').each(function() {
+            var custComp = $(this).attr('data-company-id');
+            if (!compId || !custComp || custComp === compId || $(this).val() === '') {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+        renderAvailableTable();
+    });
+
+    $('#customer_select').on('change', function() {
+        var selectedOpt = $(this).find('option:selected');
+        var custCompId = selectedOpt.attr('data-company-id');
+        if (custCompId && !$('#company_select').val()) {
+            $('#company_select').val(custCompId);
+        }
+        renderAvailableTable();
+    });
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Checkbox Events on Available Table
+    // ══════════════════════════════════════════════════════════════════════
+    $('#checkAllAvailable').on('change', function() {
+        var isChecked = $(this).is(':checked');
+        $('.chk-available').prop('checked', isChecked);
+        updateAvailableControls();
+    });
+
+    $('#availableInvoicesTbody').on('change', '.chk-available', function() {
+        updateAvailableControls();
+    });
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Action: Transfer Selected Invoices from Lower to Upper Table
+    // ══════════════════════════════════════════════════════════════════════
+    $('#btnAddSelected').on('click', function() {
+        var checkedIds = [];
+        $('.chk-available:checked').each(function() {
+            checkedIds.push($(this).val());
+        });
+
+        if (checkedIds.length === 0) return;
+
+        checkedIds.forEach(function(id) {
+            var item = allSubmittedInvoices.find(function(inv) { return inv.id === id; });
+            if (item && !selectedInvoices.some(function(sel) { return sel.id === id; })) {
+                selectedInvoices.push(item);
+            }
+        });
+
+        renderSelectedTable();
+        renderAvailableTable();
+    });
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Action: Remove Invoice from Upper Table (Transfers back to Lower Table)
+    // ══════════════════════════════════════════════════════════════════════
+    function updateSelectedControls() {
+        var total = $('.chk-selected').length;
+        var checked = $('.chk-selected:checked').length;
+
+        $('#removeCheckedCountBadge').text(checked);
+        $('#btnRemoveSelected').prop('disabled', checked === 0);
+
+        if (total > 0 && checked === total) {
+            $('#checkAllSelected').prop('checked', true);
+        } else {
+            $('#checkAllSelected').prop('checked', false);
+        }
+    }
+
+    $('#checkAllSelected').on('change', function() {
+        var isChecked = $(this).is(':checked');
+        $('.chk-selected').prop('checked', isChecked);
+        updateSelectedControls();
+    });
+
+    $('#selectedInvoicesTbody').on('change', '.chk-selected', function() {
+        updateSelectedControls();
+    });
+
+    $('#btnRemoveSelected').on('click', function() {
+        var checkedIds = new Set();
+        $('.chk-selected:checked').each(function() {
+            checkedIds.add($(this).val());
+        });
+
+        if (checkedIds.size === 0) return;
+
+        selectedInvoices = selectedInvoices.filter(function(inv) {
+            return !checkedIds.has(inv.id);
+        });
+
+        renderSelectedTable();
+        renderAvailableTable();
+    });
+
+    $('#selectedInvoicesTbody').on('click', '.btn-remove-selected', function() {
+        var idx = parseInt($(this).attr('data-index'));
+        if (!isNaN(idx) && idx >= 0 && idx < selectedInvoices.length) {
+            selectedInvoices.splice(idx, 1);
+            renderSelectedTable();
+            renderAvailableTable();
+        }
+    });
+
+    // ══════════════════════════════════════════════════════════════════════
+    // Form Submission Validation
+    // ══════════════════════════════════════════════════════════════════════
+    $('#arReceiptForm').on('submit', function(e) {
+        if (!$('#company_select').val()) {
+            alert('Please select a Company Name.');
+            $('#company_select').focus();
+            e.preventDefault();
+            return false;
+        }
+
+        if (!$('#customer_select').val()) {
+            alert('Please select a Customer Short Name.');
+            $('#customer_select').focus();
+            e.preventDefault();
+            return false;
+        }
+
+        if (selectedInvoices.length === 0) {
+            alert('Please add at least one invoice to the Selected Invoices table before submitting.');
+            e.preventDefault();
+            return false;
+        }
+
+        var pmtDate = $('#payment_received_date').val();
+        if (!pmtDate) {
+            alert('Please enter a valid Payment Received Date.');
+            $('#payment_received_date').focus();
+            e.preventDefault();
+            return false;
+        }
+
+        $('#selected_invoices_json').val(JSON.stringify(selectedInvoices));
+        return true;
+    });
+
+    // Initial render
+    renderSelectedTable();
+    renderAvailableTable();
+});
 </script>
-
-<script>
-	$("#ar_branch").change(function () {
-       var url = $("#ar_add").attr("data-branches-url");
-       var branchId = $(this).val();
-       $.ajax({
-         url: url,
-         data: {
-           'branchId': branchId,
-         },
-         success: function (data) {
-             console.log(data);
-             $('#ar_unit').removeClass('disable_a_href');
-             $("#ar_unit").empty();
-             var unit_name=JSON.parse(data)["unit_name_list"];
-             var unit_id=JSON.parse(data)["unit_id"];
-             var len = (unit_name).length;
-             $('#ar_unit').empty().append("<option value='0'>--Select--</option>");
-             for( var i = 0; i<len; i++){
-                 $("#ar_unit").append("<option value='"+unit_id[i]+"'>"+unit_name[i]+"</option>");
-             }
-         }
-       });
-     });
-</script>
-
-{% endblock content %}
-
+{% endblock %}

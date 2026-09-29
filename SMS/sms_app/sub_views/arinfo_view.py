@@ -6,6 +6,7 @@ from django.db import connection
 from django.urls import reverse
 from django.utils import timezone
 from datetime import datetime, date
+import json
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -14,7 +15,7 @@ from ..forms import ArinfoaddForm
 from ..models import (
     BilingInfo, Ar_comments_Info, User_extInfo, Ar_Info,
     TransInvoiceInfo, CustomerInfo, Emailmaster, Location_info,
-    Business_Sol_info, Bvmproduct
+    Business_Sol_info, Bvmproduct, CustomerdepartmentInfo, StatusList
 )
 
 
@@ -1257,7 +1258,6 @@ def ar_export_selected_excel(request):
 
 @login_required(login_url='login_page')
 def ar_add(request, ar_id=0):
-    context = {}
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     role = None
@@ -1266,37 +1266,255 @@ def ar_add(request, ar_id=0):
     except Exception:
         pass
 
-    if request.method == "GET":
-        if ar_id == 0:
-            form = ArinfoaddForm()
-            context = {
-                'form': form,
-                'role': role,
-                'first_name': first_name,
-                'user_id': user_id,
-            }
+    if request.method == "POST":
+        company_id = request.POST.get('company_id')
+        customer_id = request.POST.get('customer_id')
+        pmt_amt = float(request.POST.get('payment_received_amt') or 0.0)
+        pmt_date_str = request.POST.get('payment_received_date') or ''
+        tds_amt = float(request.POST.get('tds_amount') or 0.0)
+        selected_invoices_raw = request.POST.get('selected_invoices_json', '[]')
+
+        try:
+            selected_invoices = json.loads(selected_invoices_raw)
+        except Exception:
+            selected_invoices = []
+
+        pmt_date = None
+        if pmt_date_str:
+            try:
+                pmt_date = datetime.strptime(pmt_date_str, '%Y-%m-%d').date()
+            except Exception:
+                pmt_date = timezone.localtime(timezone.now()).date()
         else:
-            arinfo = Ar_Info.objects.get(pk=ar_id)
-            invoice_number = arinfo.ar_invoice_num
-            arcomments_list = Ar_comments_Info.objects.filter(arc_invoice_num=invoice_number)
-            form = ArinfoaddForm(instance=arinfo)
-            context = {
-                'form': form,
-                'role': role,
-                'first_name': first_name,
-                'user_id': user_id,
-                'arcomments_list': arcomments_list,
-            }
-        return render(request, "asset_mgt_app/ar_add.html", context)
-    else:
-        if ar_id == 0:
-            form = ArinfoaddForm(request.POST)
-        else:
-            arinfo = Ar_Info.objects.get(pk=ar_id)
-            form = ArinfoaddForm(request.POST, instance=arinfo)
-        if form.is_valid():
-            form.save()
-        return redirect('/SMS/ar_list')
+            pmt_date = timezone.localtime(timezone.now()).date()
+
+        tot_inv_amt = sum(float(inv.get('amount') or 0.0) for inv in selected_invoices)
+
+        for inv in selected_invoices:
+            inv_amt = float(inv.get('amount') or 0.0)
+            if tot_inv_amt > 0:
+                ratio = inv_amt / tot_inv_amt
+                inv_pmt = round(pmt_amt * ratio, 2)
+                inv_tds = round(tds_amt * ratio, 2)
+            else:
+                inv_pmt = pmt_amt
+                inv_tds = tds_amt
+
+            source = inv.get('source')
+            db_id = inv.get('db_id')
+            inv_no = inv.get('inv_no')
+
+            ar = None
+            if source == 'ar':
+                ar = Ar_Info.objects.filter(id=db_id).first()
+            elif source == 'trans':
+                ti = TransInvoiceInfo.objects.filter(id=db_id).first()
+                if ti:
+                    # Get or create BilingInfo for invoice ref
+                    biling, _ = BilingInfo.objects.get_or_create(
+                        bill_invoice_ref=ti.ti_inv_no,
+                        defaults={
+                            'bill_invoice_date': ti.ti_inv_date or pmt_date,
+                            'bill_customer_name_id': customer_id or ti.ti_customer_id
+                        }
+                    )
+                    prod = Bvmproduct.objects.filter(bp_product__icontains='Transport').first() or Bvmproduct.objects.first()
+                    branch = Location_info.objects.filter(loc_name__icontains='MAA').first() or Location_info.objects.first()
+                    dept = CustomerdepartmentInfo.objects.first()
+
+                    raw_op = inv.get('raw_op_date')
+                    raw_sub = inv.get('raw_sub_date')
+                    op_dt = datetime.strptime(raw_op, '%Y-%m-%d').date() if raw_op else None
+                    sub_dt = datetime.strptime(raw_sub, '%Y-%m-%d').date() if raw_sub else None
+
+                    ar, _ = Ar_Info.objects.get_or_create(
+                        ar_invoice_num=biling,
+                        defaults={
+                            'ar_company_id': company_id or (ti.ti_customer.cu_business_sol_id if ti.ti_customer else 2),
+                            'ar_product': prod,
+                            'ar_branch': branch,
+                            'ar_customer_name_id': customer_id or ti.ti_customer_id,
+                            'ar_customer_dept': dept,
+                            'ar_invoice_date': ti.ti_inv_date,
+                            'ar_operation_date': op_dt,
+                            'ar_submission_date': sub_dt,
+                            'ar_service_value': inv_amt,
+                            'ar_amount': inv_amt,
+                        }
+                    )
+
+            if ar:
+                if company_id:
+                    ar.ar_company_id = company_id
+                if customer_id:
+                    ar.ar_customer_name_id = customer_id
+                ar.ar_payment_received_date = pmt_date
+                ar.ar_payment_received_amount = inv_pmt
+                ar.ar_tds = inv_tds
+                ar.ar_total_payment_received_amount = inv_pmt + inv_tds
+                ar.ar_balance_payment = (ar.ar_amount or inv_amt) - (inv_pmt + inv_tds)
+
+                if ar.ar_operation_date:
+                    ar.ar_rec_from_operation_date = (pmt_date - ar.ar_operation_date).days
+                if ar.ar_invoice_date:
+                    ar.ar_rec_from_invoice_date = (pmt_date - ar.ar_invoice_date).days
+                if ar.ar_submission_date:
+                    ar.ar_rec_from_submission_date = (pmt_date - ar.ar_submission_date).days
+
+                # Status Completed (5) if balance is <= 0 else Work In Progress (6)
+                if ar.ar_balance_payment <= 0:
+                    ar.ar_status_id = 5
+                else:
+                    ar.ar_status_id = 6
+
+                ar.save()
+
+        return redirect('/SMS/ar_receipt_list/')
+
+    # GET Request
+    companies = Business_Sol_info.objects.all().order_by('bvm_business')
+    customers = CustomerInfo.objects.all().select_related('cu_business_sol').order_by('cu_name')
+
+    woh_planning_dates = (
+        TransInvoiceInfo.objects
+        .filter(is_woh=True)
+        .values_list(
+            'ti_inv_no',
+            'ti_trip__tr_enquirynumber__en_pickupdatetime',
+            'ti_consignment__co_enquirynumber__en_pickupdatetime'
+        )
+    )
+    plan_map = {}
+    for inv_no, trip_dt, cons_dt in woh_planning_dates:
+        if inv_no:
+            dt = trip_dt or cons_dt
+            if dt:
+                d = dt.date() if hasattr(dt, 'date') else dt
+                if inv_no not in plan_map or d > plan_map[inv_no]:
+                    plan_map[inv_no] = d
+
+    dept_map = _get_dept_map()
+    sub_map = _get_submission_map()
+
+    submitted_invoices = []
+
+    # 1. Transport Master Invoices (where submitted)
+    trans_qs = (
+        TransInvoiceInfo.objects
+        .filter(is_woh=False)
+        .select_related('ti_customer', 'ti_customer__cu_business_sol', 'ti_trip', 'ti_consignment')
+    )
+    for ti in trans_qs:
+        sub_info = sub_map.get(ti.ti_inv_no)
+        sub_date = (sub_info['date'] if sub_info else None) or ti.ti_submission_date
+        sub_to = (sub_info['to'] if sub_info else '') or ti.ti_submitted_to or ''
+        if not sub_date:
+            continue
+
+        op_date = plan_map.get(ti.ti_inv_no)
+        if not op_date:
+            try:
+                if ti.ti_trip and ti.ti_trip.tr_enquirynumber and ti.ti_trip.tr_enquirynumber.en_pickupdatetime:
+                    pdt = ti.ti_trip.tr_enquirynumber.en_pickupdatetime
+                    op_date = pdt.date() if hasattr(pdt, 'date') else pdt
+                elif ti.ti_consignment and ti.ti_consignment.co_enquirynumber and ti.ti_consignment.co_enquirynumber.en_pickupdatetime:
+                    pdt = ti.ti_consignment.co_enquirynumber.en_pickupdatetime
+                    op_date = pdt.date() if hasattr(pdt, 'date') else pdt
+            except Exception:
+                op_date = None
+
+        comp_name = 'BVM Trans Solutions Pvt Ltd'
+        comp_id = 2
+        if ti.ti_customer and ti.ti_customer.cu_business_sol:
+            comp_name = ti.ti_customer.cu_business_sol.bvm_business
+            comp_id = ti.ti_customer.cu_business_sol_id
+
+        c_name = getattr(ti.ti_customer, 'cu_name', '') or ti.ti_customer_short_name or '-'
+        c_dept = dept_map.get(ti.ti_inv_no) or ti.ti_department or '-'
+        amt = float(ti.ti_total or 0.0)
+
+        submitted_invoices.append({
+            'id': f'trans_{ti.id}',
+            'source': 'trans',
+            'db_id': ti.id,
+            'inv_no': ti.ti_inv_no or '-',
+            'inv_date': ti.ti_inv_date.strftime('%d/%m/%Y') if ti.ti_inv_date else '-',
+            'raw_inv_date': ti.ti_inv_date.strftime('%Y-%m-%d') if ti.ti_inv_date else '',
+            'op_date': op_date.strftime('%d/%m/%Y') if op_date else '-',
+            'raw_op_date': op_date.strftime('%Y-%m-%d') if op_date else '',
+            'company': comp_name,
+            'company_id': comp_id,
+            'product': 'Transport',
+            'branch': ti.ti_branch or 'BVM MAA',
+            'customer_name': c_name,
+            'customer_id': ti.ti_customer_id,
+            'dept': c_dept,
+            'service_val': amt,
+            'cgst': 0.0,
+            'sgst': 0.0,
+            'igst': 0.0,
+            'amount': amt,
+            'sub_date': sub_date.strftime('%d/%m/%Y') if hasattr(sub_date, 'strftime') else str(sub_date),
+            'raw_sub_date': sub_date.strftime('%Y-%m-%d') if hasattr(sub_date, 'strftime') else str(sub_date),
+            'sub_to': sub_to or '-',
+            'sales': '',
+            'status': 'Submitted',
+        })
+
+    # 2. Existing Ar_Info submitted invoices
+    ar_qs = Ar_Info.objects.filter(ar_submission_date__isnull=False).select_related(
+        'ar_company', 'ar_customer_name', 'ar_customer_dept', 'ar_sales_person', 'ar_product', 'ar_branch', 'ar_invoice_num'
+    )
+    for ar in ar_qs:
+        inv_no_str = str(ar.ar_invoice_num) if ar.ar_invoice_num else ''
+        if any(item['inv_no'] == inv_no_str for item in submitted_invoices):
+            continue
+
+        comp_name = ar.ar_company.bvm_business if ar.ar_company else '-'
+        comp_id = ar.ar_company_id if ar.ar_company else None
+        c_name = ar.ar_customer_name.cu_name if ar.ar_customer_name else '-'
+        amt = float(ar.ar_amount or 0.0)
+
+        submitted_invoices.append({
+            'id': f'ar_{ar.id}',
+            'source': 'ar',
+            'db_id': ar.id,
+            'inv_no': inv_no_str or '-',
+            'inv_date': ar.ar_invoice_date.strftime('%d/%m/%Y') if ar.ar_invoice_date else '-',
+            'raw_inv_date': ar.ar_invoice_date.strftime('%Y-%m-%d') if ar.ar_invoice_date else '',
+            'op_date': ar.ar_operation_date.strftime('%d/%m/%Y') if ar.ar_operation_date else '-',
+            'raw_op_date': ar.ar_operation_date.strftime('%Y-%m-%d') if ar.ar_operation_date else '',
+            'company': comp_name,
+            'company_id': comp_id,
+            'product': ar.ar_product.bp_product if ar.ar_product else '-',
+            'branch': ar.ar_branch.loc_name if ar.ar_branch else '-',
+            'customer_name': c_name,
+            'customer_id': ar.ar_customer_name_id,
+            'dept': ar.ar_customer_dept.ct_customerdepartment if ar.ar_customer_dept else '-',
+            'service_val': float(ar.ar_service_value or 0.0),
+            'cgst': float(ar.ar_cgst or 0.0),
+            'sgst': float(ar.ar_sgst or 0.0),
+            'igst': float(ar.ar_igst or 0.0),
+            'amount': amt,
+            'sub_date': ar.ar_submission_date.strftime('%d/%m/%Y') if ar.ar_submission_date else '-',
+            'raw_sub_date': ar.ar_submission_date.strftime('%Y-%m-%d') if ar.ar_submission_date else '',
+            'sub_to': ar.ar_invoice_sent_to or '-',
+            'sales': ar.ar_sales_person.get_full_name() if ar.ar_sales_person else '-',
+            'status': 'Submitted',
+        })
+
+    today_str = timezone.localtime(timezone.now()).date().strftime('%Y-%m-%d')
+
+    context = {
+        'companies': companies,
+        'customers': customers,
+        'submitted_invoices_json': json.dumps(submitted_invoices),
+        'today_str': today_str,
+        'role': role,
+        'first_name': first_name,
+        'user_id': user_id,
+    }
+    return render(request, "asset_mgt_app/ar_add.html", context)
 
 
 @login_required(login_url='login_page')

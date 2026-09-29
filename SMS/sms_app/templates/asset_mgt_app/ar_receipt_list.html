@@ -1,0 +1,392 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% load static %}
+
+{% block title %}AR Receipt List | BVM Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ══ Metric Cards ══ */
+    .metric-card {
+        border-radius: 12px;
+        padding: 1rem 1.2rem;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    [data-theme="dark"] .metric-card {
+        background: #132238;
+        border-color: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    }
+    .metric-title {
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+    }
+    [data-theme="dark"] .metric-title {
+        color: #94a3b8;
+    }
+    .metric-value {
+        font-size: 1.45rem;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.1;
+    }
+    [data-theme="dark"] .metric-value {
+        color: #f8fafc;
+    }
+    .metric-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    /* ══ Product Badges ══ */
+    .badge-product-trans {
+        background: linear-gradient(135deg, #1d4ed8, #2563eb);
+        color: #ffffff !important;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 6px;
+        display: inline-block;
+    }
+    .badge-product-pack {
+        background: linear-gradient(135deg, #0f766e, #0d9488);
+        color: #ffffff !important;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 6px;
+        display: inline-block;
+    }
+    .badge-days {
+        background: rgba(100, 116, 139, 0.12);
+        color: #334155;
+        font-weight: 600;
+        font-size: 0.75rem;
+        padding: 2px 7px;
+        border-radius: 5px;
+        display: inline-block;
+    }
+
+    /* ══ Table Styling ══ */
+    #ar_receipt_table {
+        width: 100% !important;
+        border-collapse: separate !important;
+        border-spacing: 0 4px !important;
+    }
+    #ar_receipt_table thead th {
+        vertical-align: middle !important;
+        padding: 0.45rem 0.4rem !important;
+        font-size: 0.76rem !important;
+        letter-spacing: 0.3px !important;
+        white-space: nowrap !important;
+    }
+    #ar_receipt_table tbody td {
+        vertical-align: middle !important;
+        padding: 0.35rem 0.4rem !important;
+        line-height: 1.25 !important;
+        font-size: 0.8rem !important;
+    }
+    #ar_receipt_table tbody td.col-cust-name {
+        word-break: break-word;
+        min-width: 90px;
+        max-width: 180px;
+        line-height: 1.15;
+    }
+    #ar_receipt_table tbody td.col-nowrap {
+        white-space: nowrap !important;
+    }
+
+    /* ══ DataTables Controls ══ */
+    .dataTables_wrapper .dataTables_length {
+        margin-right: 15px !important;
+        margin-bottom: 0 !important;
+    }
+    .dataTables_wrapper .dataTables_length label {
+        display: flex !important;
+        align-items: center !important;
+        margin-bottom: 0 !important;
+        font-size: 0.85rem !important;
+        color: #475569 !important;
+    }
+    .dataTables_wrapper .dataTables_length select {
+        margin: 0 6px !important;
+        height: 31px !important;
+        border-radius: 6px !important;
+        font-size: 0.82rem !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+    .dataTables_wrapper .dt-buttons {
+        margin-bottom: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+    .dataTables_wrapper .dt-buttons .btn,
+    .dataTables_wrapper .dt-buttons button.dt-button {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #334155 !important;
+        font-size: 0.76rem !important;
+        font-weight: 600 !important;
+        border-radius: 6px !important;
+        padding: 4px 11px !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+        transition: all 0.15s ease !important;
+    }
+    .dataTables_wrapper .dt-buttons .btn:hover,
+    .dataTables_wrapper .dt-buttons button.dt-button:hover {
+        background: #e2e8f0 !important;
+        border-color: #94a3b8 !important;
+        color: #0f172a !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+
+    <!-- ══ Page Header ══ -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mb-0 text-white font-weight-bold" style="font-size: 1.35rem; letter-spacing: 0.5px;">
+                <i class="fas fa-money-check-alt mr-2 text-warning"></i> AR Receipt List
+            </h3>
+            <span class="text-white-50 small">Accounts Receivable - Payment Receipts Tracking</span>
+        </div>
+        <div class="d-flex align-items-center" style="gap: 8px;">
+            <a href="{% url 'ar_insert' %}" class="btn btn-primary font-weight-bold" style="border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.88rem;">
+                <i class="fas fa-plus mr-1"></i> Add AR
+            </a>
+            <a href="{% url 'ar_list' %}" class="btn btn-outline-light font-weight-bold" style="border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.88rem;">
+                <i class="fas fa-file-invoice-dollar mr-1"></i> Accounts Receivable
+            </a>
+            <a href="{% url 'home_page' %}" class="btn btn-outline-light font-weight-bold" style="border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.88rem;">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ KPI Summary Cards ══ -->
+    <div class="row mb-3">
+        <div class="col-12 col-md-3 mb-2 mb-md-0">
+            <div class="metric-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="metric-title">Total Receipts</div>
+                    <div class="metric-value">{{ metrics.total_count|default:"0" }}</div>
+                </div>
+                <div class="metric-icon" style="background: rgba(37, 99, 235, 0.1); color: #2563eb;">
+                    <i class="fas fa-receipt"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3 mb-2 mb-md-0">
+            <div class="metric-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="metric-title">Total Invoice Amount</div>
+                    <div class="metric-value" style="color: #0f172a;">&#8377; {{ metrics.total_amount|floatformat:2 }}</div>
+                </div>
+                <div class="metric-icon" style="background: rgba(15, 23, 42, 0.1); color: #0f172a;">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3 mb-2 mb-md-0">
+            <div class="metric-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="metric-title">Total Received</div>
+                    <div class="metric-value" style="color: #059669;">&#8377; {{ metrics.total_received|floatformat:2 }}</div>
+                </div>
+                <div class="metric-icon" style="background: rgba(16, 185, 129, 0.1); color: #059669;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3 mb-2 mb-md-0">
+            <div class="metric-card d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="metric-title">Total TDS</div>
+                    <div class="metric-value" style="color: #d97706;">&#8377; {{ metrics.total_tds|floatformat:2 }}</div>
+                </div>
+                <div class="metric-icon" style="background: rgba(245, 158, 11, 0.1); color: #d97706;">
+                    <i class="fas fa-percentage"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Main Table ══ -->
+    <div class="table-container-modern p-3">
+        <table id="ar_receipt_table" class="table modern-table w-100">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th class="text-center">Product</th>
+                    <th class="text-center">Branch</th>
+                    <th class="text-center">Op Date</th>
+                    <th class="text-center">Invoice No</th>
+                    <th class="text-center">Inv Date</th>
+                    <th>Customer</th>
+                    <th>Dept</th>
+                    <th class="text-right">Service Val</th>
+                    <th class="text-right">CGST</th>
+                    <th class="text-right">SGST</th>
+                    <th class="text-right">IGST</th>
+                    <th class="text-right">Amount (INR)</th>
+                    <th class="text-center">Sub Date</th>
+                    <th>Sent To</th>
+                    <th class="text-center">Due Pmt Rec Date</th>
+                    <th class="text-right">Received Amt</th>
+                    <th class="text-right">TDS</th>
+                    <th class="text-center">Rec From Op</th>
+                    <th class="text-center">Rec From Inv</th>
+                    <th class="text-center">Rec From Sub</th>
+                    <th>Sales</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <!-- 0: Company -->
+                    <td class="font-weight-bold">{{ r.company|default:"-" }}</td>
+
+                    <!-- 1: Product -->
+                    <td class="text-center">
+                        {% if "TRANS" in r.product|upper or "TRANSPORT" in r.product|upper %}
+                            <span class="badge-product-trans">{{ r.product }}</span>
+                        {% elif "PACK" in r.product|upper %}
+                            <span class="badge-product-pack">{{ r.product }}</span>
+                        {% else %}
+                            <span class="font-weight-bold">{{ r.product|default:"-" }}</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- 2: Branch -->
+                    <td class="text-center">{{ r.branch|default:"-" }}</td>
+
+                    <!-- 3: Op Date -->
+                    <td class="text-center col-nowrap">{{ r.op_date }}</td>
+
+                    <!-- 4: Invoice No -->
+                    <td class="text-center col-nowrap">
+                        <span class="font-weight-bold text-primary" style="font-size:0.75rem;">
+                            {{ r.inv_no }}
+                        </span>
+                    </td>
+
+                    <!-- 5: Inv Date -->
+                    <td class="text-center col-nowrap">{{ r.inv_date }}</td>
+
+                    <!-- 6: Customer -->
+                    <td class="col-cust-name">
+                        <span class="font-weight-bold" title="{{ r.customer }}">{{ r.customer }}</span>
+                    </td>
+
+                    <!-- 7: Dept -->
+                    <td>{{ r.dept|default:"-" }}</td>
+
+                    <!-- 8: Service Val -->
+                    <td class="text-right col-nowrap">&#8377; {{ r.service_val|floatformat:2 }}</td>
+
+                    <!-- 9: CGST -->
+                    <td class="text-right col-nowrap">&#8377; {{ r.cgst|floatformat:2 }}</td>
+
+                    <!-- 10: SGST -->
+                    <td class="text-right col-nowrap">&#8377; {{ r.sgst|floatformat:2 }}</td>
+
+                    <!-- 11: IGST -->
+                    <td class="text-right col-nowrap">&#8377; {{ r.igst|floatformat:2 }}</td>
+
+                    <!-- 12: Amount (INR) -->
+                    <td class="text-right col-nowrap font-weight-bold">&#8377; {{ r.amount|floatformat:2 }}</td>
+
+                    <!-- 13: Sub Date -->
+                    <td class="text-center col-nowrap">{{ r.sub_date }}</td>
+
+                    <!-- 14: Sent To -->
+                    <td>{{ r.inv_sent_to|default:"-" }}</td>
+
+                    <!-- 15: Due Payment Received Date -->
+                    <td class="text-center col-nowrap">{{ r.payment_received_date }}</td>
+
+                    <!-- 16: Payment Received Amount -->
+                    <td class="text-right col-nowrap font-weight-bold text-success">&#8377; {{ r.payment_received_amount|floatformat:2 }}</td>
+
+                    <!-- 17: TDS -->
+                    <td class="text-right col-nowrap">&#8377; {{ r.tds|floatformat:2 }}</td>
+
+                    <!-- 18: Receipt From Operation Date -->
+                    <td class="text-center">
+                        {% if r.rec_from_op_date != '-' and r.rec_from_op_date %}
+                            <span class="badge-days">{{ r.rec_from_op_date }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <!-- 19: Receipt From Invoice Date -->
+                    <td class="text-center">
+                        {% if r.rec_from_inv_date != '-' and r.rec_from_inv_date %}
+                            <span class="badge-days">{{ r.rec_from_inv_date }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <!-- 20: Receipt From Submission Date -->
+                    <td class="text-center">
+                        {% if r.rec_from_sub_date != '-' and r.rec_from_sub_date %}
+                            <span class="badge-days">{{ r.rec_from_sub_date }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <!-- 21: Sales -->
+                    <td>{{ r.sales|default:"-" }}</td>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    var table = $('#ar_receipt_table').DataTable({
+        scrollX: false,
+        autoWidth: false,
+        dom: '<"d-flex justify-content-between align-items-center flex-wrap mb-2"<"d-flex align-items-center flex-wrap"lB>f>rtip',
+        buttons: ['copy', 'csv', 'excel', 'print'],
+        order: [[3, 'desc']], // Sort by Op Date descending
+        columnDefs: [
+            { targets: [8, 9, 10, 11, 12, 16, 17], className: "text-right" },
+            { targets: [1, 2, 3, 4, 5, 13, 15, 18, 19, 20], className: "text-center" }
+        ],
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+        language: {
+            search: "",
+            searchPlaceholder: "Search any column...",
+            lengthMenu: "Show _MENU_ entries",
+            emptyTable: "No AR Receipt records found."
+        }
+    });
+});
+</script>
+{% endblock %}
