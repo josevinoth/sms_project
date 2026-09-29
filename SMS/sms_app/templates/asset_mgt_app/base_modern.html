@@ -32,7 +32,7 @@
     <!-- Custom CSS -->
     {% load static %}
     <link rel="stylesheet" href="{% static 'all.css' %}">
-    <link rel="stylesheet" href="{% static 'modern_css.css' %}?v=202609291116">
+    <link rel="stylesheet" href="{% static 'modern_css.css' %}?v=202609291600">
 
 
 
@@ -210,11 +210,23 @@
             $.extend(true, $.fn.dataTable.defaults, {
                 responsive: false,
                 scrollX: true,
+                autoWidth: true,
                 language: {
                     search: "",
                     searchPlaceholder: "Search records...",
                     lengthMenu: "Show _MENU_ entries"
                 }
+            });
+
+            // Auto strip Bootstrap's w-100 (!important) from DataTables scroll tables and ensure columns sync
+            $(document).on('init.dt', function (e, settings) {
+                var api = new $.fn.dataTable.Api(settings);
+                var $tblNode = $(api.table().node());
+                $tblNode.removeClass('w-100');
+                $tblNode.closest('.dataTables_scroll').find('table').removeClass('w-100');
+                setTimeout(function () {
+                    api.columns.adjust();
+                }, 50);
             });
         }
 
@@ -222,7 +234,7 @@
     });
 </script>
 
-<script src="{% static 'table-scroll-helper.js' %}?v=202608170939"></script>
+<script src="{% static 'table-scroll-helper.js' %}?v=202609291600"></script>
 
 
 
