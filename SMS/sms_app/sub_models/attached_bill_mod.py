@@ -38,6 +38,7 @@ class AttachedBillInfo(models.Model):
     ab_payable_amount = models.FloatField(default=0.0, null=True, blank=True)
     ab_bill_upload = models.FileField(upload_to=attached_bill_directory_path, null=True, blank=True)
     ab_selected_trips = models.TextField(null=True, blank=True)
+    ab_trip_costs = models.TextField(null=True, blank=True, help_text="Stores separate toll/parking costs as JSON")
 
     ab_created_at = models.DateTimeField(auto_now_add=True, null=True)
     ab_updated_at = models.DateTimeField(auto_now=True, null=True)

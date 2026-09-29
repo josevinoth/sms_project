@@ -142,12 +142,12 @@ def pk_quality_check_add(request):
                             server_items.append({
                                 'id': item.id,
                                 'item_name': f"{box.nad_type_of_req} ({box.nad_item})",
-                                'qty': box.nad_quantity,
+                                'qty': float(item.ct_na_quantity or box.nad_quantity),
                                 'l': box.nad_length,
                                 'w': box.nad_width,
                                 'h': box.nad_height,
                                 'thickness': box.nad_plywood_thickness or 'N/A',
-                                'uom': str(box.nad_uom) if box.nad_uom else 'Nos'
+                                'uom': 'Nos'
                             })
                     else:
                         box = POdimension.objects.filter(id=box_id).first()
@@ -155,12 +155,12 @@ def pk_quality_check_add(request):
                             server_items.append({
                                 'id': item.id,
                                 'item_name': f"PO Item: {box.pod_item}",
-                                'qty': box.pod_quantity,
+                                'qty': float(item.ct_na_quantity or box.pod_quantity),
                                 'l': box.pod_length,
                                 'w': box.pod_width,
                                 'h': box.pod_height,
                                 'thickness': box.pod_plywood_thickness or 'N/A',
-                                'uom': str(box.pod_uom) if box.pod_uom else 'Nos'
+                                'uom': 'Nos'
                             })
         except Exception as e:
             print('DEBUG prefill error for job', selected_job_no, e)
@@ -258,12 +258,12 @@ def get_job_details_for_qc(request):
                     items_data.append({
                         'id': item.id,
                         'item_name': f"{box.nad_type_of_req} ({box.nad_item})",
-                        'qty': box.nad_quantity,
+                        'qty': float(item.ct_na_quantity or box.nad_quantity),
                         'l': box.nad_length,
                         'w': box.nad_width,
                         'h': box.nad_height,
                         'thickness': box.nad_plywood_thickness or 'N/A',
-                        'uom': str(box.nad_uom) if box.nad_uom else 'Nos'
+                        'uom': 'Nos'
                     })
             else:
                 box = POdimension.objects.filter(id=box_id).first()
@@ -271,12 +271,12 @@ def get_job_details_for_qc(request):
                     items_data.append({
                         'id': item.id,
                         'item_name': f"PO Item: {box.pod_item}",
-                        'qty': box.pod_quantity,
+                        'qty': float(item.ct_na_quantity or box.pod_quantity),
                         'l': box.pod_length,
                         'w': box.pod_width,
                         'h': box.pod_height,
                         'thickness': box.pod_plywood_thickness or 'N/A',
-                        'uom': str(box.pod_uom) if box.pod_uom else 'Nos'
+                        'uom': 'Nos'
                     })
         
         # Check for existing QC data to allow "editing" or pre-filling
@@ -309,6 +309,7 @@ def get_job_details_for_qc(request):
         data = {
             'status': 'success',
             'po_num': po.po_num if po else '',
+            'po_date': po.po_date.strftime('%d-%m-%Y') if po and getattr(po, 'po_date', None) else '',
             'po_id': po.id if po else '',
             'assessment_id': na.id if na else '',
             'assessment_num': getattr(na, 'na_assessment_num', '') if na else '',
@@ -346,20 +347,20 @@ def pk_quality_check_pdf(request, qc_id):
             length = po_dim.pod_length
             width = po_dim.pod_width
             height = po_dim.pod_height
-            qty = po_dim.pod_quantity
+            qty = float(costing_item.ct_na_quantity or po_dim.pod_quantity) if costing_item else po_dim.pod_quantity
             item_code = po_dim.pod_item
             plywood = po_dim.pod_plywood_thickness
-            uom = str(po_dim.pod_uom) if po_dim.pod_uom else 'Nos'
+            uom = 'Nos'
             wood_types = str(po_dim.pod_wood_type) if po_dim.pod_wood_type else 'N/A'
             wood_descs = str(po_dim.pod_wood_description) if po_dim.pod_wood_description else 'N/A'
         else:
             length = na_dim.nad_length if na_dim else 0
             width = na_dim.nad_width if na_dim else 0
             height = na_dim.nad_height if na_dim else 0
-            qty = na_dim.nad_quantity if na_dim else 0
+            qty = float(costing_item.ct_na_quantity or na_dim.nad_quantity) if costing_item and na_dim else (na_dim.nad_quantity if na_dim else 0)
             item_code = na_dim.nad_item if na_dim else 'N/A'
             plywood = na_dim.nad_plywood_thickness if na_dim else 'N/A'
-            uom = str(na_dim.nad_uom) if na_dim and na_dim.nad_uom else 'Nos'
+            uom = 'Nos'
             wood_types = ", ".join([str(w) for w in na_dim.nad_wood_type.all()]) if na_dim else 'N/A'
             wood_descs = ", ".join([str(w) for w in na_dim.nad_wood_description.all()]) if na_dim else 'N/A'
 

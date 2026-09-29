@@ -265,16 +265,33 @@ def enquirynote_list(request):
             en_created_at__date__lte=date_to
         )
 
+    created_by_filter = request.GET.get('created_by', '')
+
     user_ext = User_extInfo.objects.get(user_id=user_id)
     user_role_obj = user_ext.emp_role  # This is RoleInfo object
 
     # Extract actual role name safely
     role_name = str(user_role_obj).lower()
     # Admin, Super User, and TMS Managers (BVM Trans + Manager + User role) see ALL enquiries
-    if role_name not in ["admin", "super user", "superuser"] and not is_tms_manager(user_id):
-        enquirynote_queryset = enquirynote_queryset.filter(
-            en_assignedto=user_id
-        )
+    is_admin_or_manager = role_name in ["admin", "super user", "superuser"] or is_tms_manager(user_id)
+
+    # Fetch list of users to populate the dropdown (Only show current user)
+    cs_users = User_extInfo.objects.select_related('user').filter(user_id=user_id)
+
+
+    if not is_admin_or_manager:
+        if created_by_filter and created_by_filter != 'all':
+            enquirynote_queryset = enquirynote_queryset.filter(en_assignedto=created_by_filter)
+        elif created_by_filter == 'all':
+            # Filter by branch
+            if user_ext.emp_branch_id:
+                branch_user_ids = User_extInfo.objects.filter(
+                    emp_branch_id=user_ext.emp_branch_id,
+                    user__is_active=True
+                ).values_list('user_id', flat=True)
+                enquirynote_queryset = enquirynote_queryset.filter(en_assignedto_id__in=branch_user_ids)
+        else:
+            enquirynote_queryset = enquirynote_queryset.filter(en_assignedto=user_id)
 
     enquirynote_queryset = enquirynote_queryset.order_by('-id')
 
@@ -659,6 +676,8 @@ def enquirynote_list(request):
         'vehicle_number': vehicle_number,
         'date_from': date_from,
         'date_to': date_to,
+        'created_by': created_by_filter,
+        'cs_users': cs_users,
         'vehicle_summary': vehicle_summary,
     }
     return render(request, "asset_mgt_app/enquirynote_list.html", context)

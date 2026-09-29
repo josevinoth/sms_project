@@ -216,6 +216,7 @@
                     // Populate header fields from server payload
                     $('#display_customer').val(data.customer_name || '');
                     $('#display_po').val(data.po_num || '');
+                    $('#display_po_date').val(data.po_date || '');
                     $('#qc_job_info').text((data.assessment_num ? ('Assessment: ' + data.assessment_num + ' | ') : '') + (data.po_num ? ('PO: ' + data.po_num) : ''));
                     const eqc = data.existing_qc || null;
                     if(eqc) {

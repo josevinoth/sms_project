@@ -88,6 +88,7 @@
             <th>Updated By</th>
             <th>Updated On</th>
             <th>Status</th>
+            <th>Trip</th>
             <th>Edit</th>
             <th>Delete</th>
         </tr>
@@ -123,6 +124,15 @@
                     {% else %}badge-info{% endif %}">
                     {{vehicle_allot_info.va_status}}
                 </span>
+            </td>
+            <td>
+                <a class="btn-modern btn-submit btn-sm
+                    {% if vehicle_allot_info.va_status.replacement_status != 'Vehicle Assigned' and vehicle_allot_info.va_status.replacement_status != 'Vehicle Replaced' %}disable_a_href{% endif %}"
+                   href="{% url 'tripdetail_insert' %}?vehicle_allotment_id={{ vehicle_allot_info.id }}&enquiry_num_id={{ enquiry_num_id }}"
+                   title="Business Empty / Empty Trip"
+                   style="white-space: nowrap;">
+                    <i class="fas fa-truck-loading"></i> Trip
+                </a>
             </td>
             <td>
                 <a class="btn-modern btn-highlight-cyan" href="{% url 'vehicle_allotment_update' vehicle_allot_info.id %}" title="Edit">
