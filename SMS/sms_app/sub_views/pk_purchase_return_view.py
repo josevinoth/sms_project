@@ -21,7 +21,8 @@ def pk_purchase_return_list(request):
     accepted_items = PkcostingInfo.objects.filter(
         ct_cost_type=8,
         ct_stock_status_id=4,  # Accepted/Received
-        ct_is_purchase_return=False
+        ct_is_purchase_return=False,
+        ct_job_no__isnull=True
     ).exclude(ct_na_quantity=0).order_by('-id')
 
     context = {

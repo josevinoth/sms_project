@@ -42,7 +42,7 @@
                         <td>{{ item.ct_created_at|date:"d-m-Y" }}</td>
                         <td class="font-weight-bold">
                             <span class="badge" style="background: var(--bg-dark); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); font-size: 0.85rem; padding: 5px 10px;">
-                                {{ item.ct_job_no|default:item.ct_customer_po }}
+                                {% if item.ct_job_no %}{{ item.ct_job_no }}{% elif item.ct_grn %}{{ item.ct_grn.sm_stock_purchase_number }}{% elif item.ct_stock_purchase_number %}{{ item.ct_stock_purchase_number.sm_stock_purchase_number }}{% else %}-{% endif %}
                             </span>
                         </td>
                         <td>

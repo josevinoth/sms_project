@@ -268,6 +268,25 @@
         });
 
         // Document Category Toggle
+        $jq        // Dynamic Location to Category mapping
+        $jq(document).on('change', '#gp_packing_location', function() {
+            var locationText = $jq(this).find('option:selected').text().toLowerCase();
+            if (locationText.includes('onsite')) {
+                $jq("#gp_document_category").val('Delivery Challan').trigger('change');
+                $jq('#tools_section').slideDown();
+                
+                // For onsite jobs, we can optionally remove mandatory validation from movement fields 
+                // if they are not using an external transporter.
+                $jq('#gp_transporter_name, #gp_veh_no, #gp_driver_name, #gp_driver_mobile_no').removeAttr('required');
+            } else {
+                $jq("#gp_document_category").val('Gate Pass').trigger('change');
+                $jq('#tools_section').slideUp();
+                
+                // Re-apply required
+                $jq('#gp_transporter_name, #gp_veh_no, #gp_driver_name, #gp_driver_mobile_no').prop('required', true);
+            }
+        });
+
         $jq(document).on('change', '#gp_document_category', function () {
             var category = $jq(this).val();
             if (category === 'Delivery Challan') {
@@ -356,6 +375,7 @@
         }
 
         // --- 4. Initial Triggers ---
+        $jq('#gp_packing_location').trigger('change');
         $jq('#gp_document_category').trigger('change');
 
         // Delayed check for pre-selected values

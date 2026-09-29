@@ -1,5 +1,11 @@
+
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from django.http import HttpResponse
+
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import JsonResponse
@@ -18,7 +24,7 @@ def pk_production_return_list(request):
     first_name = request.session.get('first_name')
 
     # All jobs that need return (pending submission)
-    return_needed_jobs = Packingjobs.objects.filter(pj_material_returned_flag='Yes').order_by('-id')
+    return_needed_jobs = Packingjobs.objects.filter(pj_material_returned_flag__in=['Yes', 'Needed']).order_by('-id')
 
     # Jobs already submitted but pending store acceptance (admin can still edit)
     pending_return_jobs = Packingjobs.objects.filter(pj_material_returned_flag='Pending Return').order_by('-id')
@@ -33,50 +39,41 @@ def pk_production_return_list(request):
 
 @login_required(login_url='login_page')
 def pk_production_return_detail(request, job_no):
-    """
-    Shows all material items for a given job_no so the NA user can enter how many to return.
-    Looks up by ct_job_no first, then falls back to assessment_num + customer_po from summary.
-    """
     first_name = request.session.get('first_name')
-
-    material_items = PkcostingInfo.objects.none()
-
-    # First try: filter directly by ct_job_no
     material_items = PkcostingInfo.objects.filter(
-        ct_job_no=job_no,
+        ct_job_no=job_no, 
         ct_cost_type=8,
-    ).order_by('id')
+        ct_stock_status_id=4
+    ).select_related('ct_part_code', 'ct_stock_purchase_number').order_by('ct_part_code__pc_code', 'id')
 
-    # Second try: look up via PkcostingsummaryInfo if nothing found
-    if not material_items.exists():
-        summary = PkcostingsummaryInfo.objects.filter(cs_job_no=job_no).first()
-        if summary:
-            material_items = PkcostingInfo.objects.filter(
-                ct_assessment_num=summary.cs_assessment_num,
-                ct_customer_po=summary.cs_customer_po,
-                ct_cost_type=8,
-            ).order_by('id')
+    # Group by Part Code
+    grouped_items = {}
+    for item in material_items:
+        pc = item.ct_part_code.pc_code if item.ct_part_code else 'Misc'
+        if pc not in grouped_items:
+            grouped_items[pc] = {
+                'part_code': pc,
+                'description': item.ct_stock_description,
+                'cost_type': item.ct_cost_type,
+                'grn': item.ct_grn.sm_stock_purchase_number if item.ct_grn else (item.ct_stock_purchase_number.sm_stock_purchase_number if item.ct_stock_purchase_number else ''),
+                'job_qty': item.ct_na_quantity or 1,
+                'qty_req': item.ct_quantity_req or 1,
+                'total_qty': 0,
+                'ids': [],
+                'length': item.ct_length_req or 0,
+                'width': item.ct_width_req or 0,
+                'height': item.ct_height_req or 0,
+            }
+        grouped_items[pc]['total_qty'] += float(item.ct_quantity or 0)
+        grouped_items[pc]['ids'].append(str(item.id))
 
-    # Third try: any costing record linked to this job (no cost_type filter)
-    if not material_items.exists():
-        summary = PkcostingsummaryInfo.objects.filter(cs_job_no=job_no).first()
-        if summary:
-            material_items = PkcostingInfo.objects.filter(
-                ct_assessment_num=summary.cs_assessment_num,
-                ct_customer_po=summary.cs_customer_po,
-            ).order_by('id')
-
-    # Check if job is On-Site
-    is_onsite = False
-    packing_job = Packingjobs.objects.filter(pj_job_no__iexact=job_no).first()
-    if packing_job and packing_job.pj_pack_type and 'On-Site' in packing_job.pj_pack_type:
-        is_onsite = True
-
+    for k, v in grouped_items.items():
+        v['ids_csv'] = ",".join(v['ids'])
+        
     context = {
         'first_name': first_name,
         'job_no': job_no,
-        'material_items': material_items,
-        'is_onsite': is_onsite,
+        'grouped_items': list(grouped_items.values()),
     }
     return render(request, 'asset_mgt_app/pk_production_return_detail.html', context)
 
@@ -85,10 +82,6 @@ def pk_production_return_detail(request, job_no):
 @csrf_exempt
 @login_required(login_url='login_page')
 def pk_production_return_submit(request, job_no):
-    """
-    Processes all the return quantities submitted by the NA user.
-    Creates Pending PkProductionReturn records for store acceptance.
-    """
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Invalid request'})
 
@@ -96,66 +89,67 @@ def pk_production_return_submit(request, job_no):
     errors = []
     items_processed = 0
 
+    # The frontend now submits returns by Part Code.
+    # We will get fields like return_qty_good_P104030, ids_csv_P104030
     for key, value in request.POST.items():
-        if not key.startswith('return_qty_good_') and not key.startswith('return_qty_'):
+        if not key.startswith('return_qty_good_'):
             continue
-
-        if key.startswith('return_qty_good_'):
-            raw_id = key.replace('return_qty_good_', '')
-            costing_id = raw_id.split('_split')[0]
             
-            good_qty_str = value
-            damaged_qty_str = request.POST.get(f'return_qty_damaged_{raw_id}', '0')
-        elif key.startswith('return_qty_damaged_'):
+        pc = key.replace('return_qty_good_', '')
+        base_pc = pc.split('_split')[0]
+        good_qty = float(value or 0)
+        damaged_qty = float(request.POST.get(f'return_qty_damaged_{pc}') or 0)
+        total_return = good_qty + damaged_qty
+        
+        if total_return <= 0:
             continue
-        else:
-            raw_id = key.replace('return_qty_', '')
-            costing_id = raw_id.split('_split')[0]
             
-            good_qty_str = value
-            damaged_qty_str = '0'
-
-        if request.POST.get(f'return_qty_good_{raw_id}') and not key.startswith('return_qty_good_'):
+        ids_csv = request.POST.get(f'ids_csv_{base_pc}', '')
+        if not ids_csv:
             continue
+            
+        ids = [int(x) for x in ids_csv.split(',')]
+        
+        # Distribute the total return across the associated PkcostingInfo records
+        remaining_good = good_qty
+        remaining_damaged = damaged_qty
+        
+        actual_ret_l = float(request.POST.get(f'return_l_{pc}') or 0)
+        actual_ret_w = float(request.POST.get(f'return_w_{pc}') or 0)
+        actual_ret_h = float(request.POST.get(f'return_h_{pc}') or 0)
 
-        try:
-            return_qty_good = float(good_qty_str or 0)
-            return_qty_damaged = float(damaged_qty_str or 0)
-            total_return_qty = return_qty_good + return_qty_damaged
-        except (ValueError, TypeError):
-            continue
-
-        if total_return_qty <= 0:
-            continue
-
-        try:
-            ret_l = float(request.POST.get(f'return_l_{raw_id}') or 0)
-            ret_w = float(request.POST.get(f'return_w_{raw_id}') or 0)
-            ret_h = float(request.POST.get(f'return_h_{raw_id}') or 0)
-        except (ValueError, TypeError):
-            ret_l = ret_w = ret_h = 0
-
-        try:
-            item = PkcostingInfo.objects.get(pk=costing_id)
+        for pk_id in ids:
+            if remaining_good <= 0 and remaining_damaged <= 0:
+                break
+                
+            try:
+                item = PkcostingInfo.objects.get(pk=pk_id)
+            except PkcostingInfo.DoesNotExist:
+                continue
+                
+            # Get already returned quantity for this item
+            prev_returns = PkProductionReturn.objects.filter(pr_costing_item=item).aggregate(Sum('pr_return_qty'))['pr_return_qty__sum'] or 0
+            available_to_return = float(item.ct_quantity or 0) - float(prev_returns)
+            
+            if available_to_return <= 0:
+                continue
+                
+            orig_l = float(item.ct_length_req or 0)
+            orig_w = float(item.ct_width_req or 0)
+            orig_h = float(item.ct_height_req or 0)
             rate = float(item.ct_rate or 0)
-            orig_l = float(item.ct_length or 0)
-            orig_w = float(item.ct_width or 0)
-            orig_h = float(item.ct_height or 0)
+            
             orig_vol = orig_l * orig_w * orig_h
-
-            actual_ret_l = ret_l if ret_l > 0 else orig_l
-            actual_ret_w = ret_w if ret_w > 0 else orig_w
-            actual_ret_h = ret_h if ret_h > 0 else orig_h
             ret_vol = actual_ret_l * actual_ret_w * actual_ret_h
-
-            fraction = min(ret_vol / orig_vol, 1.0) if (orig_vol > 0 and ret_vol > 0) else 1.0
-            cost_reduced_for_item = 0.0  # Do not reduce cost from costing as per user requirement
-
-            if return_qty_good > 0:
+            fraction = (ret_vol / orig_vol) if (orig_vol > 0 and ret_vol > 0) else 1.0
+            
+            # Apportion Good Qty
+            apportion_good = min(remaining_good, available_to_return)
+            if apportion_good > 0:
                 PkProductionReturn.objects.create(
                     pr_job_no=job_no,
                     pr_costing_item=item,
-                    pr_return_qty=return_qty_good,
+                    pr_return_qty=apportion_good,
                     pr_return_l=actual_ret_l,
                     pr_return_w=actual_ret_w,
                     pr_return_h=actual_ret_h,
@@ -164,17 +158,22 @@ def pk_production_return_submit(request, job_no):
                     pr_orig_h=orig_h,
                     pr_rate=rate,
                     pr_fraction=fraction,
-                    pr_cost_to_reduce=cost_reduced_for_item,
+                    pr_cost_to_reduce=apportion_good * rate * fraction,
                     pr_return_type='Good',
                     pr_status='Pending',
                     pr_created_by_id=user_id,
                 )
-
-            if return_qty_damaged > 0:
+                remaining_good -= apportion_good
+                available_to_return -= apportion_good
+                items_processed += 1
+                
+            # Apportion Damaged Qty
+            apportion_damaged = min(remaining_damaged, available_to_return)
+            if apportion_damaged > 0:
                 PkProductionReturn.objects.create(
                     pr_job_no=job_no,
                     pr_costing_item=item,
-                    pr_return_qty=return_qty_damaged,
+                    pr_return_qty=apportion_damaged,
                     pr_return_l=orig_l,
                     pr_return_w=orig_w,
                     pr_return_h=orig_h,
@@ -188,16 +187,9 @@ def pk_production_return_submit(request, job_no):
                     pr_status='Pending',
                     pr_created_by_id=user_id,
                 )
-
-            items_processed += 1
-
-        except PkcostingInfo.DoesNotExist:
-            errors.append(f"Costing item ID {costing_id} not found.")
-        except Exception as e:
-            errors.append(f"Error for item {costing_id}: {str(e)}")
-
-    if items_processed == 0 and not errors:
-        return redirect('pk_production_return_list')
+                remaining_damaged -= apportion_damaged
+                available_to_return -= apportion_damaged
+                items_processed += 1
 
     if not errors:
         try:
@@ -230,7 +222,7 @@ def pk_production_return_edit(request, job_no):
     pending_returns = PkProductionReturn.objects.filter(
         pr_job_no=job_no,
         pr_status='Pending'
-    ).select_related('pr_costing_item').order_by('id')
+    ).select_related('pr_costing_item').order_by('ct_part_code__pc_code', 'id')
 
     context = {
         'first_name': first_name,
@@ -394,3 +386,38 @@ def pk_production_return_reset(request, job_no):
         messages.error(request, f"Error resetting job {job_no}: {str(e)}")
         
     return redirect('pk_production_return_list')
+
+
+@login_required(login_url='login_page')
+def pk_production_return_pdf(request, job_no):
+    returns = PkProductionReturn.objects.filter(pr_job_no=job_no, pr_status='Accepted')
+    
+    if not returns.exists():
+        return HttpResponse('No accepted returns found for this job.')
+        
+    # Get basic job info from the first return
+    first_return = returns.first()
+    
+    # We will try to fetch the job details from Packingjobs
+    from sms_app.models import Packingjobs
+    job = Packingjobs.objects.filter(pj_job_no=job_no).first()
+    customer = job.pj_customer if job else 'N/A'
+    
+    context = {
+        'job_no': job_no,
+        'customer': customer,
+        'returns': returns,
+        'date': first_return.pr_accepted_at if first_return.pr_accepted_at else first_return.pr_created_at
+    }
+    
+    file_name = f"Production_Return_{job_no}.pdf"
+    template_path = 'asset_mgt_app/pk_production_return_pdf.html'
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+    template = get_template(template_path)
+    html = template.render(context)
+
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    if pisa_status.err:
+        return HttpResponse('We encountered an error while generating the PDF.')
+    return response
