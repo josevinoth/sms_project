@@ -204,7 +204,9 @@
                 <th>Consignee</th>
                 <th>Consignee inv no</th>
                 <th>Reference No</th>
+                {% if show_hawb %}
                 <th>HAWB No</th>
+                {% endif %}
                 {% if show_mawb %}
                 <th>MAWB No</th>
                 {% endif %}
@@ -250,20 +252,22 @@
             <tr class="{{ trip_row_class }}">
                 <td rowspan="{{ t.goods_count }}" class="text-center">{{ t.planning_date|default:"-" }}</td>
                 <td rowspan="{{ t.goods_count }}" class="text-center bold" style="color:#0369a1;">{{ t.cnote|default:"-" }}</td>
-                <td rowspan="{{ t.goods_count }}" class="text-left">{{ t.from_loc|default:"-" }}</td>
-                <td rowspan="{{ t.goods_count }}" class="text-left">{{ t.to_loc|default:"-" }}</td>
+                <td rowspan="{{ t.goods_count }}" class="text-center">{{ t.from_loc|default:"-" }}</td>
+                <td rowspan="{{ t.goods_count }}" class="text-center">{{ t.to_loc|default:"-" }}</td>
                 <td rowspan="{{ t.goods_count }}" class="text-center">{{ t.dept|default:"-" }}</td>
                 <td rowspan="{{ t.goods_count }}" class="text-center bold">{{ t.veh_no|default:"-" }}</td>
                 <td rowspan="{{ t.goods_count }}" class="text-center">{{ t.veh_type|default:"-" }}</td>
                 <td rowspan="{{ t.goods_count }}" class="text-center">{{ t.veh_category|default:"-" }}</td>
 
                 <!-- Goods line item 1 -->
-                <td class="text-left">{{ first_g.consignee|default:"-" }}</td>
-                <td class="text-left">{{ first_g.consignee_inv|default:"-" }}</td>
+                <td class="text-center">{{ first_g.consignee|default:"-" }}</td>
+                <td class="text-center">{{ first_g.consignee_inv|default:"-" }}</td>
 
-                <td rowspan="{{ t.goods_count }}" class="text-left">{{ t.ref_no|default:"-" }}</td>
+                <td rowspan="{{ t.goods_count }}" class="text-center">{{ t.ref_no|default:"-" }}</td>
 
+                {% if show_hawb %}
                 <td class="text-center">{{ first_g.hawb|default:"-" }}</td>
+                {% endif %}
                 {% if show_mawb %}
                 <td class="text-center">{{ first_g.mawb|default:"-" }}</td>
                 {% endif %}
@@ -305,9 +309,11 @@
             </tr>
             {% for g in t.goods_rows|slice:"1:" %}
             <tr class="{{ trip_row_class }}">
-                <td class="text-left">{{ g.consignee|default:"-" }}</td>
-                <td class="text-left">{{ g.consignee_inv|default:"-" }}</td>
+                <td class="text-center">{{ g.consignee|default:"-" }}</td>
+                <td class="text-center">{{ g.consignee_inv|default:"-" }}</td>
+                {% if show_hawb %}
                 <td class="text-center">{{ g.hawb|default:"-" }}</td>
+                {% endif %}
                 {% if show_mawb %}
                 <td class="text-center">{{ g.mawb|default:"-" }}</td>
                 {% endif %}
@@ -324,7 +330,7 @@
 
             <!-- Total Row -->
             <tr class="total-row">
-                <td colspan="{% if show_mawb %}13{% else %}12{% endif %}" class="text-right bold">TOTAL:</td>
+                <td colspan="{% if show_hawb and show_mawb %}13{% elif show_hawb or show_mawb %}12{% else %}11{% endif %}" class="text-right bold">TOTAL:</td>
                 <td class="text-center bold">{{ tot_qty }}</td>
                 <td class="text-right bold">{{ tot_weight|floatformat:2 }}</td>
                 {% if show_transport %}

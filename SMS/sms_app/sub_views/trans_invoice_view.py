@@ -1610,15 +1610,17 @@ def _render_ann1_pdf_bytes(invoice_no):
     show_cancellation = any(abs(t['cancellation']) > 0.001 for t in trips_data) or abs(tot_cancellation) > 0.001
     show_halting_days = (tot_halting_days > 0) or show_halting
 
-    # Check if MAWB No has any meaningful value across all trips
-    def _has_meaningful_mawb(v):
+    # Check if MAWB / HAWB No has any meaningful value across all trips
+    def _has_meaningful_val(v):
         if not v:
             return False
         return str(v).strip() not in ('', '-', '--', 'None', 'none', 'null', 'nan', 'N/A', 'n/a', 'NA', 'na')
 
-    show_mawb = any(_has_meaningful_mawb(g.get('mawb')) for t in trips_data for g in t.get('goods_rows', []))
+    show_mawb = any(_has_meaningful_val(g.get('mawb')) for t in trips_data for g in t.get('goods_rows', []))
+    show_hawb = any(_has_meaningful_val(g.get('hawb')) for t in trips_data for g in t.get('goods_rows', []))
 
-    col_count = 14  # base non-charge columns without MAWB
+    col_count = 13  # base non-charge columns without HAWB/MAWB
+    if show_hawb: col_count += 1
     if show_mawb: col_count += 1
     if show_transport: col_count += 1
     if show_toll: col_count += 1
@@ -1637,6 +1639,7 @@ def _render_ann1_pdf_bytes(invoice_no):
         'customer': customer,
         'trips_data': trips_data,
         'show_mawb': show_mawb,
+        'show_hawb': show_hawb,
         'show_transport': show_transport,
         'show_toll': show_toll,
         'show_parking': show_parking,
