@@ -1793,7 +1793,7 @@ def vehicle_allotment_replace(request, allotment_id):
 
             trips = TripdetailInfo.objects.filter(
                 tr_enquirynumber=old_va.va_enquirynumber,
-                tr_vehiclenumber=old_vehicle_num
+                tr_vehiclenumber__iexact=old_vehicle_num.strip()
             )
             for active_trip in trips:
                 active_trip.tr_vehiclenumber = new_vehicle_num

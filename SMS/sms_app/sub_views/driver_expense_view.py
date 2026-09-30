@@ -68,6 +68,92 @@ def driver_expense_add(request, expense_id=0):
             exp.de_driver_id = settlement
             exp.save()
 
+            # ------------------------------------------------------------------
+            # AUTO-GENERATE TMS PETTY CASH ENTRIES FOR EXPENSES
+            # ------------------------------------------------------------------
+            if exp.de_expense_type and exp.de_expense_type.id == 2:
+                from ..models import (
+                    TMSPettyCashInfo, Business_Sol_info, Location_info, 
+                    ExpenseCategoryInfo, CreditLedgerInfo
+                )
+                from ..sub_models.tms_expense_type_mod import TMSExpenseTypeInfo
+                from .tms_petty_cash_view import generate_tms_petty_cash_number
+                from .general_utils import get_session_branch_id
+                
+                # First, delete any previously auto-generated petty cash entries for this specific expense record 
+                # (in case the user is editing an existing driver expense)
+                TMSPettyCashInfo.objects.filter(tpc_remarks=f"Auto-generated from Driver Settlement Expense ID: {exp.id}").delete()
+                
+                # 1. Gather defaults
+                bvm_trans = Business_Sol_info.objects.filter(bvm_business__icontains='bvm trans solutions').first()
+                cash_cat = ExpenseCategoryInfo.objects.filter(exp_category_name__icontains='Cash').first()
+                
+                branch_id = get_session_branch_id(request)
+                branch_obj = Location_info.objects.filter(id=branch_id).first() if branch_id else None
+                
+                ledger = None
+                if branch_obj:
+                    branch_code = branch_obj.loc_name.split()[-1]
+                    ledger = CreditLedgerInfo.objects.filter(
+                        ledger_name__icontains='Trans Petty Cash'
+                    ).filter(ledger_name__icontains=branch_code).exclude(
+                        ledger_name__icontains='Admin'
+                    ).first()
+                    if not ledger:
+                        ledger = CreditLedgerInfo.objects.filter(
+                            ledger_name__icontains='Trans'
+                        ).filter(ledger_name__icontains=branch_code).first()
+
+                # Try to determine the vehicle from the trip number
+                vehicle_obj = None
+                trip_no = exp.trip_number or exp.de_trip_number
+                if trip_no:
+                    from ..sub_models.tripdetail_mod import TripdetailInfo
+                    trip = TripdetailInfo.objects.filter(tr_tripnumber=trip_no).first()
+                    if trip and trip.tr_vehiclenumber:
+                        from ..models import VehiclemasterInfo
+                        vehicle_obj = VehiclemasterInfo.objects.filter(vm_registrationnumber=trip.tr_vehiclenumber).first()
+
+                # Map Driver Expense fields to exact labels shown in Driver Expense form
+                expense_mapping = [
+                    (exp.de_parkingcost, 'Parking Cost'),
+                    (exp.de_loadingcost, 'Loading Cost'),
+                    (exp.de_unloadingcost, 'Unloading Cost'),
+                    (exp.de_weighmentcost, 'Weighment Cost'),
+                    (exp.de_supervisorcost, 'Supervisor Cost'),
+                    (exp.de_rtocost, 'RTO Expense'),
+                    (exp.de_battacost, 'Batta Expense'),
+                ]
+                
+                for amount, type_name in expense_mapping:
+                    if amount and float(amount) > 0.0:
+                        tms_exp_type = TMSExpenseTypeInfo.objects.filter(tms_exp_type_name__icontains=type_name).first()
+                        
+                        if not tms_exp_type:
+                            from django.db.models import Max
+                            max_id = TMSExpenseTypeInfo.objects.aggregate(Max('id'))['id__max'] or 0
+                            tms_exp_type = TMSExpenseTypeInfo.objects.create(id=max_id + 1, tms_exp_type_name=type_name)
+                            
+                        tpc = TMSPettyCashInfo(
+                            tpc_business=bvm_trans,
+                            tpc_branch=branch_obj,
+                            tpc_category=cash_cat,
+                            tpc_transaction_date=exp.de_date.date() if exp.de_date else None,
+                            tpc_expense_type=tms_exp_type,
+                            tpc_amount=float(amount),
+                            tpc_credit_ledger=ledger,
+                            tpc_trip_date=exp.trip_date,
+                            tpc_job_no=trip_no,
+                            tpc_vehicle_number=vehicle_obj,
+                            tpc_driver_name=exp.driver_name,
+                            tpc_created_by=request.user,
+                            tpc_updated_by=request.user,
+                            tpc_remarks=f"Auto-generated from Driver Settlement Expense ID: {exp.id}"
+                        )
+                        tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', branch_obj)
+                        tpc.save()
+            # ------------------------------------------------------------------
+
             # ALWAYS recalc after save
             recalc_driver_settlement(settlement)
 

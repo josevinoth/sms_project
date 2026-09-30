@@ -32,6 +32,7 @@
 
         // State lock to prevent infinite scroll loop
         var syncLock = false;
+        var $dtHeader = $container.siblings('.dataTables_scrollHead');
 
         function setAllScrollLeft(val, source) {
             if (syncLock) return;
@@ -41,9 +42,8 @@
             if (source !== 'sticky') stickyInnerEl.scrollLeft = val;
 
             // If DataTables with scrollX, sync header container as well
-            var $dtHeader = $container.siblings('.dataTables_scrollHead');
-            if ($dtHeader.length) {
-                $dtHeader.scrollLeft(val);
+            if ($dtHeader.length && source !== 'header') {
+                $dtHeader[0].scrollLeft = val;
             }
 
             syncLock = false;
@@ -57,6 +57,20 @@
         $stickyInner.on('scroll.tableScrollHelper', function () {
             setAllScrollLeft(stickyInnerEl.scrollLeft, 'sticky');
         });
+
+        if ($dtHeader.length) {
+            $dtHeader.on('scroll.tableScrollHelper', function () {
+                setAllScrollLeft(this.scrollLeft, 'header');
+            });
+            $dtHeader.on('wheel.tableScrollHelper', function (e) {
+                var evt = e.originalEvent || e;
+                var delta = evt.deltaY || evt.deltaX;
+                if (evt.shiftKey || Math.abs(evt.deltaX) > Math.abs(evt.deltaY)) {
+                    containerEl.scrollLeft += delta;
+                    e.preventDefault();
+                }
+            });
+        }
 
         // Mouse Wheel Horizontal Scroll
         $container.on('wheel.tableScrollHelper', function (e) {
@@ -72,7 +86,8 @@
         if ($.fn && $.fn.dataTable) {
             $.extend(true, $.fn.dataTable.defaults, {
                 responsive: false,
-                scrollX: true
+                scrollX: true,
+                autoWidth: true
             });
         }
 
@@ -113,18 +128,21 @@
     }
 
     function scanAndAttach() {
-        var selectors = [
-            '.dataTables_scrollBody',
-            '.table-container-modern',
-            '.table-responsive',
-            '.dataTables_wrapper',
-            '.shadow-box-table'
-        ].join(', ');
-
-        $(selectors).each(function () {
+        // Priority 1: DataTables scroll bodies (these are the true scrolling containers for DataTables)
+        $('.dataTables_scrollBody').each(function () {
             attachScrollHelper(this);
             var update = $(this).data('updateLayout');
             if (update) update();
+        });
+
+        // Priority 2: Standalone responsive tables (tables without DataTables scrollX)
+        $('.table-responsive, .shadow-box-table').each(function () {
+            // Do not attach to outer container if it wraps a DataTables scroll structure
+            if ($(this).find('.dataTables_scrollBody').length === 0 && $(this).closest('.dataTables_scroll').length === 0) {
+                attachScrollHelper(this);
+                var update = $(this).data('updateLayout');
+                if (update) update();
+            }
         });
     }
 
@@ -141,12 +159,29 @@
         }
     });
 
+    function adjustAllDtColumns() {
+        if ($.fn && $.fn.dataTable) {
+            $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+        }
+    }
+
     $(document).ready(function () {
         scanAndAttach();
+        adjustAllDtColumns();
 
         $(document).on('draw.dt init.dt xhr.dt', function () {
-            setTimeout(scanAndAttach, 100);
-            setTimeout(scanAndAttach, 300);
+            setTimeout(function () {
+                scanAndAttach();
+                adjustAllDtColumns();
+            }, 50);
+            setTimeout(function () {
+                scanAndAttach();
+                adjustAllDtColumns();
+            }, 250);
+        });
+
+        $(window).on('resize.dtAdjust', function () {
+            adjustAllDtColumns();
         });
 
         setInterval(scanAndAttach, 1000);

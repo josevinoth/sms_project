@@ -206,29 +206,98 @@ def tms_petty_cash_list(request):
     tpc_list = TMSPettyCashInfo.objects.filter(filters).select_related(
         'tpc_business', 'tpc_branch', 'tpc_vehicle_number', 'tpc_created_by', 'tpc_updated_by'
     ).order_by('-id')
-    paginator = Paginator(tpc_list, 50)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    # Dynamically add from_to_location to each object in the page
-    for tpc in page_obj.object_list:
-        tpc.from_to_location = ""
-        if tpc.tpc_job_no:
-            try:
-                trip = TripdetailInfo.objects.filter(
-                    Q(tr_consignmentnumber__co_consignmentnumber=tpc.tpc_job_no) | 
-                    Q(tr_tripnumber=tpc.tpc_job_no)
-                ).first()
-                if trip:
-                    fr = trip.tr_departedlocation.place_name if trip.tr_departedlocation else ""
-                    to = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else ""
-                    if fr or to:
-                        tpc.from_to_location = f"{fr} - {to}"
-            except Exception:
-                pass
-                
+
+    if request.GET.get('draw'):
+        draw = int(request.GET.get('draw', 1))
+        start = int(request.GET.get('start', 0))
+        length = int(request.GET.get('length', 10))
+        search_value = request.GET.get('search[value]', '').strip()
+        
+        records_total = tpc_list.count()
+        
+        if search_value:
+            search_filters = (
+                Q(tpc_number__icontains=search_value) |
+                Q(tpc_business__bvm_business__icontains=search_value) |
+                Q(tpc_branch__loc_name__icontains=search_value) |
+                Q(tpc_vehicle_number__vm_registrationnumber__icontains=search_value)
+            )
+            tpc_list = tpc_list.filter(search_filters)
+            
+        records_filtered = tpc_list.count()
+        
+        if length > 0:
+            tpc_page = tpc_list[start:start+length]
+        else:
+            tpc_page = tpc_list
+            
+        data = []
+        for i, tpc in enumerate(tpc_page):
+            from_to_location = ""
+            if tpc.tpc_job_no:
+                try:
+                    trip = TripdetailInfo.objects.filter(
+                        Q(tr_consignmentnumber__co_consignmentnumber=tpc.tpc_job_no) | 
+                        Q(tr_tripnumber=tpc.tpc_job_no)
+                    ).first()
+                    if trip:
+                        fr = trip.tr_departedlocation.place_name if trip.tr_departedlocation else ""
+                        to = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else ""
+                        if fr or to:
+                            from_to_location = f"{fr} - {to}"
+                except Exception:
+                    pass
+            
+            created_by = tpc.tpc_created_by.first_name if tpc.tpc_created_by and tpc.tpc_created_by.first_name else (tpc.tpc_created_by.username if tpc.tpc_created_by else "-")
+            updated_by = tpc.tpc_updated_by.first_name if tpc.tpc_updated_by and tpc.tpc_updated_by.first_name else (tpc.tpc_updated_by.username if tpc.tpc_updated_by else "-")
+            veh_no = tpc.tpc_vehicle_number.vm_registrationnumber if tpc.tpc_vehicle_number else ""
+            
+            edit_url = f"/SMS/petty_cash_insert/{tpc.id}/"
+            if tpc.tpc_remarks and "Auto-generated from Driver Settlement Expense ID: " in tpc.tpc_remarks:
+                try:
+                    driver_expense_id = int(tpc.tpc_remarks.split("Auto-generated from Driver Settlement Expense ID: ")[1].strip())
+                    edit_url = f"/SMS/driver_expense_add/{driver_expense_id}/"
+                except ValueError:
+                    pass
+
+            row = [
+                start + i + 1,
+                tpc.tpc_number or "",
+                tpc.tpc_transaction_date.strftime("%Y-%m-%d") if tpc.tpc_transaction_date else "",
+                tpc.tpc_business.bvm_business if tpc.tpc_business else "",
+                tpc.tpc_branch.loc_name if tpc.tpc_branch else "",
+                str(tpc.tpc_amount) if tpc.tpc_amount else "0.0",
+                from_to_location,
+                veh_no,
+                tpc.tpc_created_on.strftime("%Y-%m-%d %H:%M") if tpc.tpc_created_on else "-",
+                created_by,
+                updated_by,
+                tpc.tpc_updated_at.strftime("%Y-%m-%d %H:%M") if tpc.tpc_updated_at else "-",
+                f'''<div class="d-flex justify-content-center" style="gap: 5px;">
+                    <a href="/SMS/tms_petty_cash_voucher_print/{tpc.id}/" target="_blank" class="btn-modern py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center; background-color: #0dcaf0; color: white; border-color: #0dcaf0;" title="Print Voucher">
+                        <i class="fas fa-print"></i>
+                    </a>
+                    <a href="{edit_url}" class="btn-modern btn-submit py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;">
+                        <i class="far fa-edit"></i>
+                    </a>
+                    <form action="/SMS/tms_petty_cash_delete/{tpc.id}/" method="post" onsubmit="return confirm('Are you sure you want to delete this record?');" style="display:inline-flex;">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="{request.META.get('CSRF_COOKIE', '')}">
+                        <button type="submit" class="btn-modern btn-cancel py-1 px-2" style="min-width:auto; display:inline-flex; align-items:center;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </div>'''
+            ]
+            data.append(row)
+            
+        return JsonResponse({
+            'draw': draw,
+            'recordsTotal': records_total,
+            'recordsFiltered': records_filtered,
+            'data': data
+        })
+        
     context = {
-        'tpc_list': page_obj,
         'search_tpc_number': tpc_number,
         'search_date': search_date,
         'from_date': from_date,
@@ -238,6 +307,44 @@ def tms_petty_cash_list(request):
         'is_admin_or_supervisor': is_admin_or_supervisor,
     }
     return render(request, "asset_mgt_app/tms_petty_cash_list.html", context)
+
+
+def number_to_words(n):
+    if n == 0 or n is None: return 'Zero'
+    ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
+    tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+    def _convert(num):
+        if num < 20: return ones[num]
+        elif num < 100: return tens[num // 10] + ('' if num % 10 == 0 else ' ' + ones[num % 10])
+        elif num < 1000: return ones[num // 100] + ' Hundred' + ('' if num % 100 == 0 else ' ' + _convert(num % 100))
+        elif num < 100000: return _convert(num // 1000) + ' Thousand' + ('' if num % 1000 == 0 else ' ' + _convert(num % 1000))
+        elif num < 10000000: return _convert(num // 100000) + ' Lakh' + ('' if num % 100000 == 0 else ' ' + _convert(num % 100000))
+        else: return _convert(num // 10000000) + ' Crore' + ('' if num % 10000000 == 0 else ' ' + _convert(num % 10000000))
+    try:
+        n_int = int(n)
+        return _convert(n_int) + ' Only'
+    except:
+        return ''
+
+def tms_petty_cash_voucher_print(request, tpc_id):
+    tpc = get_object_or_404(TMSPettyCashInfo, pk=tpc_id)
+    amount_in_words = number_to_words(tpc.tpc_amount or 0)
+    
+    # Determine the 'Payment to' value based on available fields
+    payment_to = ''
+    if tpc.tpc_to_manual:
+        payment_to = tpc.tpc_to_manual
+    elif tpc.tpc_driver_name:
+        payment_to = tpc.tpc_driver_name.dm_name
+    elif tpc.tpc_to:
+        payment_to = tpc.tpc_to.first_name or tpc.tpc_to.username
+        
+    context = {
+        'tpc': tpc,
+        'amount_in_words': amount_in_words,
+        'payment_to': payment_to,
+    }
+    return render(request, 'asset_mgt_app/tms_petty_cash_voucher.html', context)
 
 def tms_petty_cash_delete(request, tpc_id):
     tpc = get_object_or_404(TMSPettyCashInfo, pk=tpc_id)
