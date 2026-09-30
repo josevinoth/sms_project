@@ -299,17 +299,5 @@ def driver_cnote_pdf(request, consignment_id):
         'Driver_number': driver_number,
     }
 
-    file_name = f"Consignment_Note_{consignment_num}.pdf"
     template_path = 'asset_mgt_app/consignement_note_pdf.html'
-
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'inline; filename={file_name}'
-
-    template = get_template(template_path)
-    html = template.render(context)
-
-    pisa_status = pisa.CreatePDF(html, dest=response)
-    if pisa_status.err:
-        return HttpResponse('Error generating PDF. Please try again.', status=500)
-
-    return response
+    return render(request, template_path, context)
