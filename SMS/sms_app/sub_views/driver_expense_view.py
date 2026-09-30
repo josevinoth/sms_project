@@ -82,7 +82,8 @@ def driver_expense_add(request, expense_id=0):
                 
                 # First, delete any previously auto-generated petty cash entries for this specific expense record 
                 # (in case the user is editing an existing driver expense)
-                TMSPettyCashInfo.objects.filter(tpc_remarks=f"Auto-generated from Driver Settlement Expense ID: {exp.id}").delete()
+                TMSPettyCashInfo.objects.filter(tpc_remarks=f"Auto-generated from Driver Settlement Expense ID: {exp.id}",
+                            tpc_receiver_signature=exp.de_receiver_signature).delete()
                 
                 # 1. Gather defaults
                 bvm_trans = Business_Sol_info.objects.filter(bvm_business__icontains='bvm trans solutions').first()
@@ -148,7 +149,8 @@ def driver_expense_add(request, expense_id=0):
                             tpc_driver_name=exp.driver_name,
                             tpc_created_by=request.user,
                             tpc_updated_by=request.user,
-                            tpc_remarks=f"Auto-generated from Driver Settlement Expense ID: {exp.id}"
+                            tpc_remarks=f"Auto-generated from Driver Settlement Expense ID: {exp.id}",
+                            tpc_receiver_signature=exp.de_receiver_signature
                         )
                         tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', branch_obj)
                         tpc.save()

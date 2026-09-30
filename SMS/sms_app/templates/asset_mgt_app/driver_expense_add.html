@@ -145,17 +145,25 @@
                                 {% endfor %}
                             </div>
                         </div>
-                        <!-- BUTTONS (LIKE DRIVER MASTER) -->
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-check"></i> Submit
-                            </button>
-                            <a href="{% url 'driver_settlement_update' settlement.id %}" class="btn btn-danger">
-                                <i class="fas fa-times"></i> Cancel
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                        
+
+
+                                                    <!-- BUTTONS (LIKE DRIVER MASTER) -->
+                          <div class="d-flex justify-content-between mt-4">
+                              <div class="d-flex" style="gap: 15px;">
+                                  <button type="submit" class="btn btn-success">
+                                      <i class="fas fa-check"></i> Submit
+                                  </button>
+                                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#signatureModal">
+                                      <i class="fas fa-signature"></i> Digital Signature
+                                  </button>
+                              </div>
+                              <a href="{% url 'driver_settlement_update' settlement.id %}" class="btn btn-danger">
+                                  <i class="fas fa-times"></i> Cancel
+                              </a>
+                          </div>
+                      </div>
+                  </div>
         <!-- ================= TRIP LIST TABLE ================= -->
         <div class="card text-white bg-info mb-3" id="trip-table-row" style="{% if form.de_expense_type.value|stringformat:'s' == '2' %}display: block;{% else %}display: none;{% endif %} max-width:100%;">
             <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #17a2b8;">
@@ -216,8 +224,38 @@
             </div>
         </div>
     </div>
+    {{ form.de_receiver_signature.as_hidden }}
 </form>
-    <script>
+    
+<!-- Signature Modal -->
+<div class="modal fade" id="signatureModal" tabindex="-1" aria-labelledby="signatureModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="signatureModalLabel">Receiver Digital Signature</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center">
+        <div style="border: 2px dashed #ccc; padding: 5px; display: inline-block; background: #fff; border-radius: 8px;">
+            <canvas id="signature-pad" width="400" height="200" style="touch-action: none;"></canvas>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <button type="button" class="btn btn-secondary" id="clear-signature">Clear</button>
+        <div>
+            <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="save-signature">Save Signature</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script>
     document.addEventListener("DOMContentLoaded", function () {
         console.log("Driver Expense Script Initializing...");
         // Safe element retrieval
@@ -422,6 +460,48 @@
         if (filterVehicleNumSelect) filterVehicleNumSelect.addEventListener("input", executeTableFilter);
         if (filterDateInput) filterDateInput.addEventListener("input", loadTrips); //  Refresh from server on date change
 
+        
+        // --- Signature Pad Initialization ---
+        var canvas = document.getElementById('signature-pad');
+        if (canvas) {
+            var signaturePad = new SignaturePad(canvas, {
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                penColor: 'rgb(0, 0, 0)',
+                minWidth: 2,
+                maxWidth: 4
+            });
+
+            $('#clear-signature').on('click', function() {
+                signaturePad.clear();
+            });
+
+            $('#save-signature').on('click', function() {
+                if (signaturePad.isEmpty()) {
+                    alert('Please provide a signature first.');
+                } else {
+                    var dataURL = signaturePad.toDataURL('image/png');
+                    $('#id_de_receiver_signature').val(dataURL);
+                    $('#signatureModal').modal('hide');
+                    
+                    var btn = $('button[data-target="#signatureModal"]');
+                    btn.removeClass('btn-primary').addClass('btn-success');
+                    btn.html('<i class="fas fa-check-circle"></i> Signature Saved');
+                }
+            });
+            
+            if ($('#id_de_receiver_signature').val()) {
+                var btn = $('button[data-target="#signatureModal"]');
+                btn.removeClass('btn-primary').addClass('btn-success');
+                btn.html('<i class="fas fa-check-circle"></i> Signature Captured');
+                signaturePad.fromDataURL($('#id_de_receiver_signature').val());
+            }
+            
+            $('#signatureModal').on('shown.bs.modal', function () {
+                if ($('#id_de_receiver_signature').val()) {
+                    signaturePad.fromDataURL($('#id_de_receiver_signature').val());
+                }
+            });
+        }
         // Select2 for main dropdown
         if (window.jQuery?.fn?.select2) {
             const s2 = (p) => ({ width: '100%', placeholder: p });

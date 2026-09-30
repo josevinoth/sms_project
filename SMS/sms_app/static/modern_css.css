@@ -685,7 +685,8 @@ a.btn-modern + a.btn-modern {
     border: 1px solid var(--border-light);
     box-shadow: 0 4px 12px var(--shadow-main);
     margin-bottom: 1.25rem;
-    overflow-x: auto; /* Ensure horizontal scroll for wide tables */
+    overflow-x: auto;
+    overflow-y: hidden; /* Ensure horizontal scroll for wide tables */
 }
 
 .modern-table {
@@ -1108,6 +1109,7 @@ table.dataTable tbody td {
     border: 1px solid var(--border-light);
     margin-bottom: 1.25rem;
     overflow-x: auto;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
 }
 
@@ -2198,6 +2200,7 @@ body, .modern-card, .form-section, .form-control-modern, .modern-table td, .tabl
 .sticky-table-scrollbar-inner {
     width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
     overflow-y: hidden;
     height: 14px;
 }

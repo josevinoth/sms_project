@@ -27,6 +27,7 @@ class Driverexpense(models.Model):
     de_total_cost=models.FloatField(default=0.0)
     de_date = models.DateTimeField(default=timezone.now, null=True, blank=True)
     trip_date = models.DateField(null=True, blank=True)
+    de_receiver_signature = models.TextField(blank=True, null=True)
 
 
     class Meta:
