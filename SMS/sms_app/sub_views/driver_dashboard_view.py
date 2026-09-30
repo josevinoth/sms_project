@@ -297,6 +297,8 @@ def driver_cnote_pdf(request, consignment_id):
         'Driver_name': driver_name,
         'Driver_lic': driver_lic,
         'Driver_number': driver_number,
+    }
+
     template_path = 'asset_mgt_app/consignement_note_pdf.html'
 
     # We need an absolute URI for the logo to work in PDF generation if needed, 
