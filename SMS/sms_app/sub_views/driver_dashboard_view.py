@@ -1,7 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
+from django.http import HttpResponse
+from django.template.loader import get_template
+from django.views.decorators.clickjacking import xframe_options_exempt
+from xhtml2pdf import pisa
 from ..sub_models.tripdetail_mod import TripdetailInfo
+from ..models import (
+    ConsignmentdetailInfo, ConsignmentgoodsInfo,
+    VehiclemasterInfo, Vehicle_allotmentInfo
+)
 from .tripdetail_add_view import (
     trip_send_loading_report_mail,
     trip_send_trip_started_mail,
@@ -203,4 +211,105 @@ def driver_dashboard(request):
 
         return redirect('driver_dashboard')
 
+
     return render(request, 'driver_app/driver_dashboard.html', {'trip': trip, 'is_closed': is_closed})
+
+
+@xframe_options_exempt
+def driver_cnote_pdf(request, consignment_id):
+    """
+    Renders the Consignment Note (C-Note) PDF for the driver.
+    Authenticated by driver session (not the main user login system).
+    """
+    trip_id = request.session.get('driver_trip_id')
+    if not trip_id:
+        return redirect('driver_login')
+
+    trip = get_object_or_404(TripdetailInfo, id=trip_id)
+
+    # Security: the consignment must belong to the driver's current trip
+    if trip.tr_consignmentnumber_id != consignment_id:
+        return HttpResponse("Access Denied: Consignment does not match your trip.", status=403)
+
+    try:
+        consignment = ConsignmentdetailInfo.objects.get(pk=consignment_id)
+    except ConsignmentdetailInfo.DoesNotExist:
+        return HttpResponse("Consignment not found.", status=404)
+
+    consignment_num = consignment.co_consignmentnumber
+    vehicle_reg_num = consignment.co_vehicelnumber
+    enquiry_id = consignment.co_enquirynumber_id
+
+    # All related goods
+    consignment_goods_list = list(ConsignmentgoodsInfo.objects.filter(
+        cg_consignmentnumber=consignment_id
+    ).order_by('id'))
+
+    # Format text fields for better word-wrap in PDF
+    for goods in consignment_goods_list:
+        if goods.cg_consignerinvoice:
+            goods.cg_consignerinvoice = goods.cg_consignerinvoice.replace('/', '/ ').replace(',', ', ')
+        if goods.cg_hawbno:
+            goods.cg_hawbno = goods.cg_hawbno.replace('/', '/ ').replace(',', ', ')
+        if goods.cg_ebillno:
+            goods.cg_ebillno = goods.cg_ebillno.replace('/', '/ ').replace(',', ', ')
+
+    vehicle_detail = None
+
+    # Try market vehicle first
+    vehicle_detail = Vehicle_allotmentInfo.objects.filter(
+        va_enquirynumber=enquiry_id,
+        va_vehiclenumber_mkt=vehicle_reg_num
+    ).last()
+
+    # Fallback to own vehicle
+    if not vehicle_detail:
+        try:
+            vehicle_master = VehiclemasterInfo.objects.get(vm_registrationnumber=vehicle_reg_num)
+            vehicle_detail = Vehicle_allotmentInfo.objects.filter(
+                va_enquirynumber=enquiry_id,
+                va_vehiclenumber=vehicle_master.id
+            ).last()
+        except VehiclemasterInfo.DoesNotExist:
+            vehicle_detail = None
+
+    vehicle_number_val = []
+    driver_name = []
+    driver_lic = []
+    driver_number = []
+
+    if vehicle_detail:
+        if vehicle_detail.va_vehiclenumber:
+            vehicle_number_val.append(vehicle_detail.va_vehiclenumber.vm_registrationnumber)
+        if vehicle_detail.va_vehiclenumber_mkt:
+            vehicle_number_val.append(vehicle_detail.va_vehiclenumber_mkt)
+        raw_name = vehicle_detail.va_drivername or ""
+        clean_name = raw_name.split('(')[0].strip()
+        driver_name.append(clean_name)
+        driver_lic.append(vehicle_detail.va_driver_lic)
+        driver_number.append(vehicle_detail.va_drivernumber)
+
+    context = {
+        'consignment_details': [consignment],
+        'consignment_goods_list': consignment_goods_list,
+        'vehicle_details': [vehicle_detail] if vehicle_detail else [],
+        'vehicle_number': vehicle_number_val,
+        'Driver_name': driver_name,
+        'Driver_lic': driver_lic,
+        'Driver_number': driver_number,
+    }
+
+    file_name = f"Consignment_Note_{consignment_num}.pdf"
+    template_path = 'asset_mgt_app/consignement_note_pdf.html'
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename={file_name}'
+
+    template = get_template(template_path)
+    html = template.render(context)
+
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    if pisa_status.err:
+        return HttpResponse('Error generating PDF. Please try again.', status=500)
+
+    return response

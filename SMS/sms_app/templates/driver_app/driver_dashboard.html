@@ -408,6 +408,38 @@
             </div>
         </div>
 
+        <!-- C-Note PDF -->
+        {% if trip.tr_consignmentnumber %}
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-file-pdf"></i> Consignment Note (C-Note)
+            </div>
+            <div class="card-body">
+                <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 15px;">
+                    C-Note: <strong style="color: #f8fafc;">{{ trip.tr_consignmentnumber.co_consignmentnumber }}</strong>
+                </p>
+                <!-- Opens PDF inside WebView — no target="_blank" (blocked by Capacitor) -->
+                <button type="button"
+                        onclick="openCNote('{% url 'driver_cnote_pdf' trip.tr_consignmentnumber.id %}')"
+                        class="action-btn btn-primary"
+                        style="border: none; cursor: pointer;">
+                    <i class="fas fa-file-pdf"></i> View C-Note PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Full-screen in-app PDF viewer overlay -->
+        <div id="cnote_overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; z-index:9999; flex-direction:column;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:rgba(255,255,255,0.05); border-bottom:1px solid rgba(255,255,255,0.1);">
+                <span style="font-weight:600; color:#00f2fe; font-size:0.95rem;"><i class="fas fa-file-pdf"></i> &nbsp;C-Note PDF</span>
+                <button onclick="closeCNote()" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:#ef4444; padding:6px 16px; border-radius:8px; font-size:0.9rem; cursor:pointer;">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+            <iframe id="cnote_frame" src="" style="flex:1; width:100%; border:none; background:#fff;" allowfullscreen></iframe>
+        </div>
+        {% endif %}
+
         <!-- POD Upload -->
         <div class="card">
             <div class="card-header">
@@ -466,6 +498,31 @@
                 }
             }
         }
+
+        function openCNote(url) {
+            const overlay = document.getElementById('cnote_overlay');
+            const frame = document.getElementById('cnote_frame');
+            frame.src = url;
+            overlay.style.display = 'flex';
+            // Prevent background scroll
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCNote() {
+            const overlay = document.getElementById('cnote_overlay');
+            const frame = document.getElementById('cnote_frame');
+            overlay.style.display = 'none';
+            frame.src = '';  // Stop loading PDF
+            document.body.style.overflow = '';
+        }
+
+        // Close overlay on Android hardware back button via Capacitor
+        document.addEventListener('ionBackButton', function() {
+            const overlay = document.getElementById('cnote_overlay');
+            if (overlay && overlay.style.display === 'flex') {
+                closeCNote();
+            }
+        });
     </script>
 </body>
 

@@ -120,8 +120,8 @@
 									</div>
 									<div class="form-group-modern">
 										<label class="form-label-modern">Vehicle Category Requested</label>
-										<input type="text" id="va_vehiclecategory_requested" class="form-control form-control-modern disable_a_href" readonly="readonly">
-										<input type="hidden" id="va_vehiclecategory_id">
+										<input type="text" id="va_vehiclecategory_requested" class="form-control form-control-modern disable_a_href" readonly="readonly" value="{{ vehicle_category_name|default:'' }}">
+										<input type="hidden" id="va_vehiclecategory_id" value="{{ vehicle_category_id|default:'' }}">
 									</div>
 								</div>
 							</div>
@@ -206,12 +206,18 @@
 									<div class="form-group-modern">
 										<label class="form-label-modern">Vendor Name <span id="vendor_required_star" style="color:red; display:none">*</span></label>
 										{% if va and not is_admin %}
-										{% render_field vehicle_allotment_form.va_vendor class="form-control form-control-modern" id="va_vendor" onchange="loadVendorBuyRate()" data-selected=vehicle_allotment_form.va_vendor.value disabled="disabled" %}
+										<select name="va_vendor" id="va_vendor" class="form-control form-control-modern" onchange="loadVendorBuyRate()" disabled="disabled">
+											<option value="">Select Vendor</option>
+											{% if va.va_vendor_id %}<option value="{{ va.va_vendor_id }}" selected>{{ va.va_vendor }}</option>{% endif %}
+										</select>
 										{% if va.va_vendor_id %}
 										<input type="hidden" name="va_vendor" value="{{ va.va_vendor_id }}">
 										{% endif %}
 										{% else %}
-										{% render_field vehicle_allotment_form.va_vendor class="form-control form-control-modern" id="va_vendor" onchange="loadVendorBuyRate()" data-selected=vehicle_allotment_form.va_vendor.value %}
+										<select name="va_vendor" id="va_vendor" class="form-control form-control-modern" onchange="loadVendorBuyRate()">
+											<option value="">Select Vendor</option>
+											{% if va.va_vendor_id %}<option value="{{ va.va_vendor_id }}" selected>{{ va.va_vendor }}</option>{% endif %}
+										</select>
 										{% endif %}
 									</div>
 									<div class="form-group-modern">
@@ -554,6 +560,8 @@ function setDateFieldValue(selector, value) {
 				.prop('disabled', false);
 			// Auto load requested vehicles for this enquiry
 			vehicle_requested();
+			// Pre-load vendor options so they are ready when user picks Market source
+			loadVendorOptions(null);
 		}
 		else if (window.location.href.includes("vehicle_allotment_update")) {
 			// Enable fields
@@ -568,6 +576,36 @@ function setDateFieldValue(selector, value) {
 			var currentVehicleType = $('#va_vehicletype').val();
 			if (currentVehicleType) {
 				fetchVehicleQuantity(currentVehicleType);
+			}
+			// Fetch vehicle category for the current vehicle type (needed for buy rate)
+			var enquiryId = "{{ enquiry_num_id }}";
+			if (enquiryId && currentVehicleType) {
+				$.ajax({
+					url: "{% url 'vehicle_requested' %}",
+					type: "GET",
+					data: { enquiry_number: enquiryId, allotment_id: "{{ vehicle_allotment_form.instance.id|default:'' }}" },
+					success: function(data) {
+						var vehicles = data.vehicles || [];
+						var match = vehicles.find(function(v) { return String(v.id) === String(currentVehicleType); });
+						if (match) {
+							$('#va_vehiclecategory_requested').val(match.category_name || "");
+							$('#va_vehiclecategory_id').val(match.category_id || "");
+						}
+						// If market vehicle source, also re-load vendor options with current selection
+						var vehicleSource = $('#va_vehiclesource').val();
+						if (vehicleSource == "3") {
+							var currentVendorId = "{{ va.va_vendor_id|default:'' }}";
+							loadVendorOptions(currentVendorId || null);
+						}
+					}
+				});
+			} else {
+				// No vehicle type but still check if market – reload vendors
+				var vehicleSource = $('#va_vehiclesource').val();
+				if (vehicleSource == "3") {
+					var currentVendorId = "{{ va.va_vendor_id|default:'' }}";
+					loadVendorOptions(currentVendorId || null);
+				}
 			}
 		}
 		else {
