@@ -297,12 +297,12 @@ def driver_cnote_pdf(request, consignment_id):
         'Driver_name': driver_name,
         'Driver_lic': driver_lic,
         'Driver_number': driver_number,
-    }
-
-    file_name = f"Consignment_Note_{consignment_num}.pdf"
     template_path = 'asset_mgt_app/consignement_note_pdf.html'
 
+    # We need an absolute URI for the logo to work in PDF generation if needed, 
+    # but let's keep the original xhtml2pdf logic.
     response = HttpResponse(content_type='application/pdf')
+    file_name = f"Consignment_Note_{consignment_num}.pdf"
     response['Content-Disposition'] = f'inline; filename={file_name}'
 
     template = get_template(template_path)
