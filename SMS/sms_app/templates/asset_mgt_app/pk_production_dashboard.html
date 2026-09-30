@@ -283,6 +283,18 @@
                                     </a>
                                 {% endif %}
                                 
+                                <a href="{% url 'export_consumption_pdf' job.cs_job_no %}" 
+                                   class="btn btn-sm btn-outline-info report-btn"
+                                   style="color:#0ea5e9; border-color:#0ea5e9; margin-top:5px;"
+                                   target="_blank">
+                                    <i class="fas fa-chart-bar mr-1"></i> Cons. PDF
+                                </a>
+                                <a href="{% url 'export_consumption_excel' job.cs_job_no %}" 
+                                   class="btn btn-sm btn-outline-success report-btn"
+                                   style="color:#10b981; border-color:#10b981; margin-top:5px;">
+                                    <i class="fas fa-file-excel mr-1"></i> Cons. Excel
+                                </a>
+                                
                                 {% if tracker.pj_production_completed_flag == 'Completed' and tracker.pj_qc_completed_flag == 'Completed' %}
                                     {% if row.is_onsite %}
                                         {# On-Site -> Delivery Challan #}

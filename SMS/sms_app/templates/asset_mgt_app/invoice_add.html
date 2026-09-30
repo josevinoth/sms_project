@@ -102,6 +102,19 @@
 
 <form method="POST" id="invoice_add" action="" data-load_customer_model-url="{% url 'load_whrate_model' %}">
 	{% csrf_token %}
+	
+	{% if invoice_form.errors %}
+	<div class="alert alert-danger" style="margin: 20px; border-radius: 10px;">
+		<strong>Please correct the following errors:</strong>
+		<ul style="margin-bottom: 0;">
+		{% for field in invoice_form %}
+			{% if field.errors %}
+				<li>{{ field.label }}: {{ field.errors|striptags }}</li>
+			{% endif %}
+		{% endfor %}
+		</ul>
+	</div>
+	{% endif %}
 <div class="container-fluid py-4 bvm-modern-layout trans-invoice-modern">
     <div class="modern-list-header mb-4" style="display: block !important; overflow: hidden;">
         <div class="row align-items-center">

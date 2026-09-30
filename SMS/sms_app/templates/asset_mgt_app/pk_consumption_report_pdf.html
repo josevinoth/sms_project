@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page { size: A4 landscape; margin: 0.5cm; }
+        body { font-family: Helvetica, sans-serif; font-size: 10px; }
+        .header { text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 10px; background-color: #808080; color: white; padding: 3px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        th, td { border: 1px solid #000; padding: 3px; text-align: center;  }
+        th { background-color: #92D050; font-weight: bold; }
+        .gray-bg { background-color: #D9D9D9; font-weight: bold; }
+        .cost-breakdown { width: 50%; float: right; }
+        .cost-breakdown th { text-align: left; }
+        .cost-breakdown td { text-align: right; }
+        .bold { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">SUMMARY</div>
+    
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+        <tr>
+            <th>CUSTOMER</th>
+            <th>PO NO</th>
+            <th>DESCRIPTION</th>
+            <th>QTY</th>
+            <th>AMOUNT</th>
+        </tr>
+        <tr>
+            <td>{{ summary.cs_customer_name }}</td>
+            <td>{{ summary.cs_customer_po }}</td>
+            <td>PLYWOOD BOX</td>
+            <td>{{ summary.cs_total_sqft }}</td>
+            <td>{{ revenue }}</td>
+        </tr>
+    </table>
+    
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+        <tr><th style="background-color: #FFC000;">DESCRIPTION</th><th style="background-color: #FFC000;">AMOUNT</th></tr>
+        <tr><td>Wood</td><td>{{ total_wood|floatformat:2 }}</td></tr>
+        <tr><td>Ply</td><td>{{ total_ply|floatformat:2 }}</td></tr>
+        <tr><td>Consumables</td><td>{{ total_cons|floatformat:2 }}</td></tr>
+        <tr><td>Manpower</td><td>{{ total_manpower|floatformat:2 }}</td></tr>
+        <tr><td>Transport</td><td>{{ total_trans|floatformat:2 }}</td></tr>
+        <tr><td>Handling</td><td>{{ total_handl|floatformat:2 }}</td></tr>
+        <tr><td class="bold" style="background-color: #FFFF00;">PROFIT</td><td class="bold" style="background-color: #FFFF00;">{{ profit|floatformat:2 }}</td></tr>
+        <tr><td class="bold" style="background-color: #FFFF00;">PROFIT %</td><td class="bold" style="background-color: #FFFF00;">{{ profit_pct|floatformat:2 }}%</td></tr>
+    </table>
+    <div style="clear:both;"></div>
+    
+    <div class="header" style="margin-top: 20px;">CONSUMPTION REPORT</div>
+    
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                <tr>
+            <th width="4%">Sr.</th>
+            <th width="6%">Item</th>
+            <th width="10%">Item Code</th>
+            <th width="26%">Description</th>
+            <th width="6%">Thick</th>
+            <th width="6%">Width</th>
+            <th width="6%">Length</th>
+            <th width="6%">COUNT</th>
+            <th width="5%">UOM</th>
+            <th width="7%">Total Cft</th>
+            <th width="8%">Unit Cost</th>
+            <th width="10%">Total Price</th>
+        </tr>
+        
+        <tr>
+            <td class="gray-bg" style="border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; text-align: left;">WOOD</td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+        </tr>
+        {% for x in wood_items %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ x.item_type }}</td>
+            <td>{{ x.item_code }}</td>
+            <td>{{ x.desc }}</td>
+            <td>{{ x.thick }}</td>
+            <td>{{ x.width }}</td>
+            <td>{{ x.length }}</td>
+            <td>{{ x.count }}</td>
+            <td>{{ x.uom }}</td>
+            <td>{{ x.total_cft }}</td>
+            <td>{{ x.rate|floatformat:2 }}</td>
+            <td>{{ x.total|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+        
+        <tr>
+            <td class="gray-bg" style="border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; text-align: left;">PLYWOOD</td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+        </tr>
+        {% for x in ply_items %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ x.item_type }}</td>
+            <td>{{ x.item_code }}</td>
+            <td>{{ x.desc }}</td>
+            <td>{{ x.thick }}</td>
+            <td>{{ x.width }}</td>
+            <td>{{ x.length }}</td>
+            <td>{{ x.count }}</td>
+            <td>{{ x.uom }}</td>
+            <td>{{ x.total_cft }}</td>
+            <td>{{ x.rate|floatformat:2 }}</td>
+            <td>{{ x.total|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+        
+        <tr>
+            <td class="gray-bg" style="border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; text-align: left;">CONSUMABLES</td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+        </tr>
+        {% for x in cons_items %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ x.item_type }}</td>
+            <td>{{ x.item_code }}</td>
+            <td>{{ x.desc }}</td>
+            <td>{{ x.thick }}</td>
+            <td>{{ x.width }}</td>
+            <td>{{ x.length }}</td>
+            <td>{{ x.count }}</td>
+            <td>{{ x.uom }}</td>
+            <td>{{ x.total_cft }}</td>
+            <td>{{ x.rate|floatformat:2 }}</td>
+            <td>{{ x.total|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+        
+        <tr>
+            <td class="gray-bg" style="border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; text-align: left;">MANPOWER</td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+        </tr>
+        {% for mp in manpower_logs %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>Manpower</td>
+            <td></td>
+            <td>{{ mp.mc_worker_type }}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>{{ mp.mc_hours_worked }}</td>
+            <td>Hrs</td>
+            <td></td>
+            <td>{{ mp.mc_rate }}</td>
+            <td>{{ mp.mc_amount }}</td>
+        </tr>
+        {% endfor %}
+        
+        <tr>
+            <td class="gray-bg" style="border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; text-align: right;">TRANSPORT</td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg" style="text-align: right;">{{ total_trans|floatformat:2 }}</td>
+        </tr>
+        <tr>
+            <td class="gray-bg" style="border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; border-right: none;"></td>
+            <td class="gray-bg" style="border-left: none; text-align: right;">HANDLING</td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg"></td>
+            <td class="gray-bg" style="text-align: right;">{{ total_handl|floatformat:2 }}</td>
+        </tr>
+    </table>
+</body>
+</html>

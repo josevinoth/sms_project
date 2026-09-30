@@ -10,7 +10,7 @@ class BilingInfo(models.Model):
     bill_customer_type=models.ForeignKey(TrbusinesstypeInfo,on_delete=models.CASCADE, default='',blank=True, null=True)
     bill_customer_GST=models.CharField(max_length=80,default = '',blank=True, null=True)
     bill_customer_code=models.CharField(max_length=60,default = '',blank=True, null=True)
-    bill_customer_address=models.TextField(max_length=200,default = '',blank=True, null=True)
+    bill_customer_address=models.TextField(max_length=1000,default = '',blank=True, null=True)
     bill_customer_short_name=models.CharField(max_length=60,default = '',blank=True, null=True)
     bill_customer_contact=models.CharField(max_length=200,default = '',blank=True, null=True)
     bill_customer_person=models.CharField(max_length=200,default = '',blank=True, null=True)

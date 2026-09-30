@@ -2,6 +2,9 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from ..sub_models.tripdetail_mod import TripdetailInfo
 from django.db.models import Q
+import os
+from django.conf import settings
+from datetime import date
 
 def driver_login(request):
     if request.method == 'POST':
@@ -42,3 +45,27 @@ def driver_logout(request):
     if 'driver_trip_id' in request.session:
         del request.session['driver_trip_id']
     return redirect('driver_login')
+
+
+def driver_download_app(request):
+    """Public page for drivers to download the BVM Driver APK."""
+    apk_path = os.path.join(settings.MEDIA_ROOT, 'apk', 'BVM_Driver.apk')
+    file_size = "—"
+    updated_on = "—"
+    version = "1.1"
+
+    if os.path.exists(apk_path):
+        size_bytes = os.path.getsize(apk_path)
+        size_mb = round(size_bytes / (1024 * 1024), 1)
+        file_size = f"{size_mb} MB"
+        mtime = os.path.getmtime(apk_path)
+        from datetime import datetime
+        updated_on = datetime.fromtimestamp(mtime).strftime("%d %b %Y")
+
+    context = {
+        'version': version,
+        'file_size': file_size,
+        'updated_on': updated_on,
+        'year': date.today().year,
+    }
+    return render(request, 'driver_app/download_app.html', context)
