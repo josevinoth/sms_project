@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.http import HttpResponse
 from django.template.loader import get_template
+from django.views.decorators.clickjacking import xframe_options_exempt
 from xhtml2pdf import pisa
 from ..sub_models.tripdetail_mod import TripdetailInfo
 from ..models import (
@@ -214,6 +215,7 @@ def driver_dashboard(request):
     return render(request, 'driver_app/driver_dashboard.html', {'trip': trip, 'is_closed': is_closed})
 
 
+@xframe_options_exempt
 def driver_cnote_pdf(request, consignment_id):
     """
     Renders the Consignment Note (C-Note) PDF for the driver.
