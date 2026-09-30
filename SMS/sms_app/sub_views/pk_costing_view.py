@@ -238,30 +238,10 @@ def costing_add(request, costing_id=0):
                             print(f"Stock batch with ID {stock_purchase_num_id} not found.")
 
                 else:
-                    # No stock purchase number provided, still save the record
-                    costing = form.save(commit=False)
-                    # Check if it was sent in POST even if not in cleaned_data
-                    if request.POST.get('ct_stock_purchase_number'):
-                        costing.ct_stock_purchase_number_id = request.POST.get('ct_stock_purchase_number')
-                    costing.save()
-                    form.save_m2m()
-                    # Extract relevant fields
-                    cost_type = costing.ct_cost_type.id
-                    stock_type = costing.ct_stock_type.id
-                    assessment_id = costing.ct_assessment_num.id
-
-                    if cost_type == 8 and stock_type == 1:
-                        total_cft = PkcostingInfo.objects.filter(
-                            ct_assessment_num=assessment_id,
-                            ct_cost_type=8,
-                            ct_stock_type=1
-                        ).aggregate(Sum('ct_sqrt_req'))['ct_sqrt_req__sum'] or 0.0
-                        print("total_cft", total_cft)
-                        request.session['ct_total_cft_display'] = round(total_cft, 2)
-                    else:
-                        request.session['ct_total_cft_display'] = 0.0
-
-                    messages.success(request, 'Record Saved Successfully')
+                    # GATE CLOSED: Stock costing (cost_type=8) MUST have a GRN selected.
+                    # Without a GRN, the record will appear as a dead/orphan entry in the Retrieval list.
+                    messages.error(request, 'Please select a Stock / GRN before saving a stock costing entry.')
+                    return redirect(request.META.get('HTTP_REFERER', '/'))
             else:
                 # If cost type is not stock-related, save the record
                 form.save()
