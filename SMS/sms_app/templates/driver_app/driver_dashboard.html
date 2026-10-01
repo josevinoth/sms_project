@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -9,6 +10,7 @@
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Outfit:wght@300;400;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
+    <script src="{% static 'pdf.min.js' %}"></script>
     <style>
         :root {
             --primary: #00f2fe;
@@ -523,8 +525,8 @@
                 return;
             }
 
-            // Configure worker
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+            // Configure worker locally
+            pdfjsLib.GlobalWorkerOptions.workerSrc = "{% static 'pdf.worker.min.js' %}";
 
             pdfjsLib.getDocument(url).promise.then(function(pdf) {
                 pdfDoc = pdf;
@@ -583,6 +585,5 @@
             }
         });
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </body>
 </html>
