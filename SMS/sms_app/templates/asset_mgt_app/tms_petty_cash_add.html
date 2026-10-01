@@ -50,6 +50,11 @@
                             <label class="form-label-modern">Voucher Date</label>
                             {% render_field form.tpc_transaction_date id="tpc_transaction_date" class="form-control form-control-modern" type="date" %}
                         </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Remarks</label>
+                            {% render_field form.tpc_remarks class="form-control form-control-modern" %}
+                        </div>
                     </div>
                 </div>
                 
@@ -250,11 +255,23 @@
                 if ($('#tpc_vehicle_source').hasClass('select2-hidden-accessible')) {
                     $('#tpc_vehicle_source').select2('enable', false);
                 }
+                
+                // Clear and disable ALL trip-related fields
+                $('#tpc_customer').val('').prop('disabled', true).trigger('change.select2');
+                $('#tpc_vehicle_number').val('').prop('disabled', true).trigger('change.select2');
+                $('#tpc_driver_name').val('').prop('disabled', true).trigger('change.select2');
+                $('#tpc_job_no').val('').prop('disabled', true);
             } else {
                 $('#tpc_vehicle_source').prop('disabled', false);
                 if ($('#tpc_vehicle_source').hasClass('select2-hidden-accessible')) {
                     $('#tpc_vehicle_source').select2('enable', true);
                 }
+                
+                // Re-enable ALL trip-related fields
+                $('#tpc_customer').prop('disabled', false).trigger('change.select2');
+                $('#tpc_vehicle_number').prop('disabled', false).trigger('change.select2');
+                $('#tpc_driver_name').prop('disabled', false).trigger('change.select2');
+                $('#tpc_job_no').prop('disabled', false);
             }
         }
         
