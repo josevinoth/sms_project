@@ -540,30 +540,25 @@
                 // Render all pages
                 for (let num = 1; num <= pdf.numPages; num++) {
                     pdf.getPage(num).then(function(page) {
-                        const viewport = page.getViewport({scale: 1.5});
-                        const outputScale = window.devicePixelRatio || 1;
+                        // Render the PDF at 3x resolution internally for ultra-crisp text
+                        const viewport = page.getViewport({scale: 3.0});
                         
                         const canvas = document.createElement('canvas');
                         canvas.style.marginBottom = "10px";
-                        canvas.style.maxWidth = "100%";
+                        // Force CSS to shrink the giant canvas down to fit the phone screen
+                        canvas.style.width = "100%";
                         canvas.style.height = "auto";
                         canvas.style.boxShadow = "0 4px 8px rgba(0,0,0,0.3)";
                         container.appendChild(canvas);
                         
                         const context = canvas.getContext('2d');
                         
-                        // Scale canvas for high-DPI (Retina) screens
-                        canvas.width = Math.floor(viewport.width * outputScale);
-                        canvas.height = Math.floor(viewport.height * outputScale);
-                        canvas.style.width = Math.floor(viewport.width) + "px";
-
-                        const transform = outputScale !== 1 
-                            ? [outputScale, 0, 0, outputScale, 0, 0] 
-                            : null;
+                        // Set actual canvas pixels to the giant 3x size
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
 
                         const renderContext = {
                             canvasContext: context,
-                            transform: transform,
                             viewport: viewport
                         };
                         page.render(renderContext);
