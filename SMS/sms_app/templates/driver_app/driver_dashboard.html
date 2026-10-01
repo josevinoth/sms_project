@@ -541,6 +541,7 @@
                 for (let num = 1; num <= pdf.numPages; num++) {
                     pdf.getPage(num).then(function(page) {
                         const viewport = page.getViewport({scale: 1.5});
+                        const outputScale = window.devicePixelRatio || 1;
                         
                         const canvas = document.createElement('canvas');
                         canvas.style.marginBottom = "10px";
@@ -550,11 +551,19 @@
                         container.appendChild(canvas);
                         
                         const context = canvas.getContext('2d');
-                        canvas.height = viewport.height;
-                        canvas.width = viewport.width;
+                        
+                        // Scale canvas for high-DPI (Retina) screens
+                        canvas.width = Math.floor(viewport.width * outputScale);
+                        canvas.height = Math.floor(viewport.height * outputScale);
+                        canvas.style.width = Math.floor(viewport.width) + "px";
+
+                        const transform = outputScale !== 1 
+                            ? [outputScale, 0, 0, outputScale, 0, 0] 
+                            : null;
 
                         const renderContext = {
                             canvasContext: context,
+                            transform: transform,
                             viewport: viewport
                         };
                         page.render(renderContext);
