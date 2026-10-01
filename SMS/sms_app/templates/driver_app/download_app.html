@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BVM Driver App - Download</title>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css">
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --dark: #0f172a;
+            --card: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            margin-bottom: 24px;
+        }
+
+        .logo img {
+            height: 55px;
+            width: auto;
+        }
+
+        .app-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 242, 254, 0.25);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            margin-bottom: 32px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: rgba(79, 172, 254, 0.1);
+            border: 1px solid rgba(79, 172, 254, 0.3);
+            color: #4facfe;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .info-item label {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .info-item span {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+
+        .download-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            color: #0f172a;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 14px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 242, 254, 0.35);
+        }
+
+        .download-btn:hover {
+            box-shadow: 0 12px 35px rgba(0, 242, 254, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .download-btn i { font-size: 1.3rem; }
+
+        .steps-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            text-align: left;
+            backdrop-filter: blur(10px);
+        }
+
+        .steps-card h3 {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 18px;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .step:last-child { margin-bottom: 0; }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .step-text {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            padding-top: 4px;
+            line-height: 1.5;
+        }
+
+        .step-text strong { color: #f8fafc; }
+
+        .footer {
+            margin-top: 24px;
+            color: #475569;
+            font-size: 0.8rem;
+        }
+
+        .warning-box {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: left;
+        }
+
+        .warning-box i { color: #f59e0b; font-size: 1rem; }
+        .warning-box span { color: #fbbf24; font-size: 0.85rem; line-height: 1.4; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Logo -->
+        <div class="logo">
+            <img src="/media/Company_Logo.png" alt="BVM Logistics">
+        </div>
+
+        <!-- App Icon -->
+        <div class="app-icon">🚛</div>
+
+        <h1>BVM Driver App</h1>
+        <p class="subtitle">Official Driver Portal for BVM Logistics</p>
+
+        <!-- Download Card -->
+        <div class="card">
+            <div class="version-badge">Version {{ version }} &nbsp;|&nbsp; Android</div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>File Size</label>
+                    <span>{{ file_size }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Updated On</label>
+                    <span>{{ updated_on }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Requires</label>
+                    <span>Android 7.0+</span>
+                </div>
+                <div class="info-item">
+                    <label>Developer</label>
+                    <span>BVM Logistics</span>
+                </div>
+            </div>
+
+            <a href="/media/apk/BVM_Driver.apk" class="download-btn" download>
+                <i class="fas fa-download"></i> Download APK
+            </a>
+        </div>
+
+        <!-- Installation Steps -->
+        <div class="steps-card">
+            <h3><i class="fas fa-info-circle"></i> &nbsp; How to Install</h3>
+
+            <div class="warning-box">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>You need to <strong>allow unknown apps</strong> before installing. This is a secure internal app.</span>
+            </div>
+
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-text">Tap <strong>Download APK</strong> above and wait for download to complete.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-text">When prompted, tap <strong>Settings → Allow from this source</strong>.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-text">Tap <strong>Install</strong> on the APK file. The app will be installed in seconds.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-text">Open <strong>BVM Driver</strong> app and enter your <strong>registered mobile number</strong> to log in.</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            &copy; {{ year }} BVM Logistics &nbsp;|&nbsp; For support contact your fleet manager
+        </div>
+    </div>
+</body>
+</html>

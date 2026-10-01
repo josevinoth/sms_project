@@ -236,8 +236,18 @@
 
         <!-- Trip Details Card -->
         <div class="card">
-            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>Trip: {{ trip.tr_tripnumber }}</span>
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span>Trip: {{ trip.tr_tripnumber }}</span>
+                    {% if trip.tr_consignmentnumber %}
+                    <button type="button" 
+                            onclick="openCNote('{% url 'driver_cnote_pdf' trip.tr_consignmentnumber.id %}')"
+                            style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: var(--dark); border: none; border-radius: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,242,254,0.3);"
+                            title="View C-Note">
+                        <i class="fas fa-file-pdf"></i>
+                    </button>
+                    {% endif %}
+                </div>
                 <span class="status-badge" style="background: rgba(240, 147, 251, 0.1); color: #f093fb; text-transform: none;">
                     {{ trip.tr_category|default:"Business Trip" }}
                 </span>
@@ -408,26 +418,9 @@
             </div>
         </div>
 
-        <!-- C-Note PDF -->
-        {% if trip.tr_consignmentnumber %}
-        <div class="card">
-            <div class="card-header">
-                <i class="fas fa-file-pdf"></i> Consignment Note (C-Note)
-            </div>
-            <div class="card-body">
-                <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 15px;">
-                    C-Note: <strong style="color: #f8fafc;">{{ trip.tr_consignmentnumber.co_consignmentnumber }}</strong>
-                </p>
-                <!-- Opens PDF inside WebView — no target="_blank" (blocked by Capacitor) -->
-                <button type="button"
-                        onclick="openCNote('{% url 'driver_cnote_pdf' trip.tr_consignmentnumber.id %}')"
-                        class="action-btn btn-primary"
-                        style="border: none; cursor: pointer;">
-                    <i class="fas fa-file-pdf"></i> View C-Note PDF
-                </button>
-            </div>
-        </div>
 
+
+        {% if trip.tr_consignmentnumber %}
         <!-- Full-screen in-app PDF viewer overlay -->
         <div id="cnote_overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; z-index:9999; flex-direction:column;">
             <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:rgba(255,255,255,0.05); border-bottom:1px solid rgba(255,255,255,0.1);">
@@ -540,18 +533,22 @@
                 // Render all pages
                 for (let num = 1; num <= pdf.numPages; num++) {
                     pdf.getPage(num).then(function(page) {
-                        const viewport = page.getViewport({scale: 1.5});
+                        // Render the PDF at 3x resolution internally for ultra-crisp text
+                        const viewport = page.getViewport({scale: 3.0});
                         
                         const canvas = document.createElement('canvas');
                         canvas.style.marginBottom = "10px";
-                        canvas.style.maxWidth = "100%";
+                        // Force CSS to shrink the giant canvas down to fit the phone screen
+                        canvas.style.width = "100%";
                         canvas.style.height = "auto";
                         canvas.style.boxShadow = "0 4px 8px rgba(0,0,0,0.3)";
                         container.appendChild(canvas);
                         
                         const context = canvas.getContext('2d');
-                        canvas.height = viewport.height;
+                        
+                        // Set actual canvas pixels to the giant 3x size
                         canvas.width = viewport.width;
+                        canvas.height = viewport.height;
 
                         const renderContext = {
                             canvasContext: context,
