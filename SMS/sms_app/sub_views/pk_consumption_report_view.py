@@ -121,7 +121,7 @@ def export_consumption_excel(request, job_no):
     ws.cell(row=3, column=1, value=str(costing_summary.cs_customer_name))
     ws.cell(row=3, column=2, value=str(costing_summary.cs_customer_po))
     ws.cell(row=3, column=3, value="PLYWOOD BOX")
-    ws.cell(row=3, column=5, value=str(costing_summary.cs_total_sqft))
+    ws.cell(row=3, column=5, value=str(getattr(costing_summary, 'cs_quantity', 300) or 300))
     
     # Cost Breakdown
     ws.cell(row=2, column=11, value="DESCRIPTION").fill = PatternFill(start_color="FFC000", end_color="FFC000", fill_type="solid")

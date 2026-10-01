@@ -505,54 +505,8 @@
             });
         });
 
-        // Modal Logic for Job Creation (Exposed globally)
-        window.openJobModal = function() {
-            console.log("Opening Job Modal...");
-            const po_id = '{{ purchaseorder_id }}' || '{{ form.instance.id }}' || '{{ po_id }}';
-            if (!po_id || po_id === 'None' || po_id === '' || po_id === '0') {
-                alert('Please save the Sales Order first before starting costing.');
-                return;
-            }
-
-            const tbody = $('#modal_job_table tbody');
-            $('#modal_job_error_alert').addClass('d-none');
-            tbody.empty().append('<tr><td colspan="3" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i> Fetching items...</td></tr>');
-            $('#jobCreationModal').modal('show');
-
-            $.ajax({
-                url: '/SMS/pk_get_po_items_for_job/',
-                method: 'GET',
-                data: { 'po_id': po_id },
-                success: function(response) {
-                    tbody.empty();
-                    if (response.success && response.items.length > 0) {
-                        response.items.forEach(function(item) {
-                            const tr = $('<tr class="align-middle">');
-                            tr.append($('<td class="font-weight-bold text-dark" style="color: #000 !important; font-weight: 700;">').text(item.item_name));
-                            tr.append($('<td class="text-dark">').html(
-                                '<div class="small font-weight-bold" style="color: #475569;">Total: ' + item.ordered_qty + '</div>' +
-                                '<div class="badge badge-primary" style="background-color: var(--accent-blue);">Rem: ' + item.remaining_qty + '</div>'
-                            ));
-                            tr.append($('<td>').append(
-                                $('<input>').attr({
-                                    'type': 'number', 'step': '0.01',
-                                    'class': 'form-control form-control-modern modal-job-qty text-center',
-                                    'data-id': item.id, 'data-max': item.remaining_qty,
-                                    'value': '0', 'min': '0', 'max': item.remaining_qty,
-                                    'style': 'height: 38px !important; border-radius: 8px;'
-                                })
-                            ));
-                            tbody.append(tr);
-                        });
-                    } else {
-                        tbody.append('<tr><td colspan="3" class="text-center py-4 text-muted">No items available for job creation.</td></tr>');
-                    }
-                },
-                error: function() {
-                    tbody.html('<tr><td colspan="3" class="text-center py-4 text-danger">Error loading items.</td></tr>');
-                }
-            });
-        };
+        // Expose openJobModal
+        window.openJobModal = openJobModal;
 
         // Confirmation logic
         $('#confirm_batch_job_btn').on('click', function () {
@@ -574,8 +528,6 @@
                 if(!hasError) alert('Please release at least one item.');
                 return;
             }
-
-            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
 
             $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
 
@@ -691,11 +643,6 @@
                                 $('#modal_search_stock_btn').click();
                             }, 200);
                         });
-                    } else {
-                        let errMsg = (resp && resp.message) ? resp.message : 'Failed to create job.';
-                        $('#modal_job_error_text').html(errMsg);
-                        $('#modal_job_error_alert').removeClass('d-none');
-                    }
                 }
             });
         });
@@ -731,13 +678,20 @@ function calculateTotal() {
 
 function openJobModal() {
     console.log("Opening Job Modal...");
-    const po_id = '{{ purchaseorder_id }}' || '{{ form.instance.id }}' || '{{ po_id }}';
+    let po_id = '{{ purchaseorder_id }}';
+    if (!po_id || po_id === 'None' || po_id === '0' || po_id === '') {
+        po_id = '{{ form.instance.id }}';
+    }
+    if (!po_id || po_id === 'None' || po_id === '0' || po_id === '') {
+        po_id = '{{ po_id }}';
+    }
     if (!po_id || po_id === 'None' || po_id === '' || po_id === '0') {
         alert('Please save the Sales Order first before starting costing.');
         return;
     }
 
     const tbody = $('#modal_job_table tbody');
+    $('#modal_job_error_alert').addClass('d-none');
     tbody.empty().append('<tr><td colspan="3" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i> Fetching items...</td></tr>');
     $('#jobCreationModal').modal('show');
 

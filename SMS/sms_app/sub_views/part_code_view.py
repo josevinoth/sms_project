@@ -17,8 +17,20 @@ def part_code_add(request, pc_id=0):
     part_code = request.session.get('pc_code', None)  # Returns None if 'pc_code' doesn't exist
     part_code_list = PkpartcodeInfo.objects.all().order_by('id')
     page_number = request.GET.get('page')
-    paginator = Paginator(part_code_list, 50)
-    page_obj = paginator.get_page(page_number)
+    per_page = request.GET.get('per_page')
+    if per_page == 'all' or page_number == 'all' or per_page == '-1':
+        paginator = Paginator(part_code_list, part_code_list.count() or 1)
+        page_obj = paginator.get_page(1)
+    elif per_page:
+        try:
+            paginator = Paginator(part_code_list, int(per_page))
+            page_obj = paginator.get_page(page_number)
+        except ValueError:
+            paginator = Paginator(part_code_list, 50)
+            page_obj = paginator.get_page(page_number)
+    else:
+        paginator = Paginator(part_code_list, 50)
+        page_obj = paginator.get_page(page_number)
 
     if request.method == "GET":
         if pc_id == 0:
@@ -65,8 +77,20 @@ def part_code_list(request):
     partcode_list = PkpartcodeInfo.objects.all().order_by('id')
 
     page_number = request.GET.get('page')
-    paginator = Paginator(partcode_list, 50)
-    page_obj = paginator.get_page(page_number)
+    per_page = request.GET.get('per_page')
+    if per_page == 'all' or page_number == 'all' or per_page == '-1':
+        paginator = Paginator(partcode_list, partcode_list.count() or 1)
+        page_obj = paginator.get_page(1)
+    elif per_page:
+        try:
+            paginator = Paginator(partcode_list, int(per_page))
+            page_obj = paginator.get_page(page_number)
+        except ValueError:
+            paginator = Paginator(partcode_list, 50)
+            page_obj = paginator.get_page(page_number)
+    else:
+        paginator = Paginator(partcode_list, 50)
+        page_obj = paginator.get_page(page_number)
 
     context = {
         'partcode_list': partcode_list,
