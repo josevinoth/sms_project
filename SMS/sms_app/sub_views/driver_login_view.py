@@ -5,6 +5,7 @@ from django.db.models import Q
 import os
 from django.conf import settings
 from datetime import date
+from django.http import FileResponse, Http404
 
 def driver_login(request):
     if request.method == 'POST':
@@ -69,3 +70,21 @@ def driver_download_app(request):
         'year': date.today().year,
     }
     return render(request, 'driver_app/download_app.html', context)
+
+
+def driver_download_apk_file(request):
+    """Direct APK file download endpoint with proper MIME type and binary streaming."""
+    apk_path = os.path.join(settings.MEDIA_ROOT, 'apk', 'BVM_Driver.apk')
+    if not os.path.exists(apk_path):
+        # Fallback check
+        alt_path = os.path.join(settings.BASE_DIR, 'media', 'apk', 'BVM_Driver.apk')
+        if os.path.exists(alt_path):
+            apk_path = alt_path
+        else:
+            raise Http404("APK file not found on server.")
+
+    response = FileResponse(open(apk_path, 'rb'), content_type='application/vnd.android.package-archive')
+    response['Content-Disposition'] = 'attachment; filename="BVM_Driver.apk"'
+    response['Content-Length'] = os.path.getsize(apk_path)
+    return response
+
