@@ -320,6 +320,19 @@
         white-space: nowrap;
     }
 
+    #enquiry_pending_report_table_wrapper .dataTables_scrollBody thead {
+        visibility: collapse;
+    }
+
+    #enquiry_pending_report_table_wrapper .dataTables_scrollBody thead tr,
+    #enquiry_pending_report_table_wrapper .dataTables_scrollBody thead th {
+        height: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        border-top-width: 0 !important;
+        border-bottom-width: 0 !important;
+        line-height: 0 !important;
+    }
 </style>
 
 {% endblock content %}
