@@ -13,8 +13,21 @@ def stock_description_add(request, sd_id=0):
     
     sd_list = Stockdescription.objects.all().order_by('id')
     page_number = request.GET.get('page')
-    paginator = Paginator(sd_list, 50)
-    page_obj = paginator.get_page(page_number)
+    per_page = request.GET.get('per_page')
+
+    if per_page == 'all' or page_number == 'all' or per_page == '-1':
+        paginator = Paginator(sd_list, sd_list.count() or 1)
+        page_obj = paginator.get_page(1)
+    elif per_page:
+        try:
+            paginator = Paginator(sd_list, int(per_page))
+            page_obj = paginator.get_page(page_number)
+        except ValueError:
+            paginator = Paginator(sd_list, 50)
+            page_obj = paginator.get_page(page_number)
+    else:
+        paginator = Paginator(sd_list, 50)
+        page_obj = paginator.get_page(page_number)
 
     if request.method == "GET":
         if sd_id == 0:
@@ -64,9 +77,22 @@ def stock_description_search(request):
         Q(stock_description__icontains=query)
     ).order_by('-id')
 
-    paginator = Paginator(sd_list, 50)
     page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    per_page = request.GET.get('per_page')
+
+    if per_page == 'all' or page_number == 'all' or per_page == '-1':
+        paginator = Paginator(sd_list, sd_list.count() or 1)
+        page_obj = paginator.get_page(1)
+    elif per_page:
+        try:
+            paginator = Paginator(sd_list, int(per_page))
+            page_obj = paginator.get_page(page_number)
+        except ValueError:
+            paginator = Paginator(sd_list, 50)
+            page_obj = paginator.get_page(page_number)
+    else:
+        paginator = Paginator(sd_list, 50)
+        page_obj = paginator.get_page(page_number)
 
     return render(request, "asset_mgt_app/stock_description_add.html", {
         'sd_list': sd_list,

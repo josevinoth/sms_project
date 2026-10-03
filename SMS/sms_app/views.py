@@ -11,7 +11,7 @@ from .sub_views.location_add_view import location_add,location_list,location_del
 from .sub_views.login_page_view import login_page,get_units_for_user
 # from .sub_views.login_page_view_new import login_page_new,home_page_new,get_units
 from .sub_views.logout_page_view import logout_page
-from .sub_views.driver_login_view import driver_login, driver_logout, driver_download_app
+from .sub_views.driver_login_view import driver_login, driver_logout, driver_download_app, driver_download_apk_file
 from .sub_views.driver_dashboard_view import driver_dashboard, driver_cnote_pdf
 from .sub_views.print_pdf_view import print_pdf
 from .sub_views.product_add_view import product_add,product_list,product_delete

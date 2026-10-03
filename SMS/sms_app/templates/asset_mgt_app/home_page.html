@@ -122,26 +122,36 @@
                             <a href="{% url 'places_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Location List</a>
                         </div>
                         <button type="button" class="collapsible"><i class="fas fa-users"></i> Customer Masters</button>
-                                            <div class="content" >
-                        <a href="{% url 'customer_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer List</a>
-                        <a href="{% url 'customer_contract_rate_dues_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Dues <span class="badge bg-danger p-2 blink">{{ customer_rate_due_count }}</span></a>
-                        <a href="{% url 'customer_contract_rate_report' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Contract Status </a>
-                        <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> CMS Misc</button>
-                        <div class="content">
-                            <a href="{% url 'email_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Email Master </a>
-                            <a href="{% url 'crcountfrom_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Credit Count Type</a>
-                            <a href="{% url 'customertype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Type</a>
-                            <a href="{% url 'customername_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Name</a>
-                            <a href="{% url 'customerdepartment_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Department</a>
-                            <a href="{% url 'gstexcepmtion_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> GST Excepmtion</a>
-                            <a href="{% url 'gstmodel_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> GST Model</a>
-                            <a href="{% url 'paymenttype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Payment Type</a>
-                            <a href="{% url 'trbusinesstype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Transport Business Type</a>
+                        <div class="content" >
+                            <a href="{% url 'customer_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer List</a>
+                            <a href="{% url 'customer_contract_rate_dues_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Dues <span class="badge bg-danger p-2 blink">{{ customer_rate_due_count }}</span></a>
+                            <a href="{% url 'customer_contract_rate_report' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Contract Status </a>
+                            <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> CMS Misc</button>
+                            <div class="content">
+                                <a href="{% url 'email_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Email Master </a>
+                                <a href="{% url 'crcountfrom_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Credit Count Type</a>
+                                <a href="{% url 'customertype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Type</a>
+                                <a href="{% url 'customername_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Name</a>
+                                <a href="{% url 'customerdepartment_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Department</a>
+                                <a href="{% url 'gstexcepmtion_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> GST Excepmtion</a>
+                                <a href="{% url 'gstmodel_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> GST Model</a>
+                                <a href="{% url 'paymenttype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Payment Type</a>
+                                <a href="{% url 'trbusinesstype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Transport Business Type</a>
+                            </div>
                         </div>
-                    </div>
                         <button type="button" class="collapsible"><i class="fas fa-handshake"></i> Vendor Masters</button>
                         <div class="content">
-                    <a id="vendor"  href="{% url 'vendor_list' %}"><i class="fas fa-user-secret"></i> Vendor Management System (VMS)</a>
+                            <a id="vendor"  href="{% url 'vendor_list' %}"><i class="fas fa-user-secret"></i> Vendor Management System (VMS)</a>
+                        </div>
+                        <button type="button" class="collapsible"><i class="fas fa-map-marker-alt"></i> Packing Masters</button>
+                        <div class="content">
+                            <a href="{% url 'stockpurchases_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock List</a>
+                            <a href="{% url 'stock_description_add' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Description</a>
+                            <a href="{% url 'part_code_add' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Part Code</a>
+                            <a href="{% url 'pk_stock_vendor_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Purchase</a>
+                            <a href="{% url 'pk_purchase_return_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Purchase Returns</a>
+                            <a href="{% url 'pk_tool_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Tools Master</a>
+
                         </div>
                         <button type="button" class="collapsible"><i class="fas fa-truck"></i> Transport & Fleet Masters</button>
                         <div class="content">
@@ -170,7 +180,7 @@
                         <div class="content">
                             <a href="{% url 'whratemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Warehouse Rate Mater</a>
                             <a href="{% url 'locationmaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Warehouse Master</a>
-<a href="{% url 'materialhandling_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Material Handling</a>
+                            <a href="{% url 'materialhandling_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Material Handling</a>
                             <a href="{% url 'packagetype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Package Type</a>
                             <a href="{% url 'currencytype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Currency Type</a>
                             <a href="{% url 'stocktype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Type</a>
@@ -192,37 +202,37 @@
                             <a href="{% url 'producttype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Product Type</a>
                         </div>
                     </div>
-<!--                    <hr class="hr_style">-->
-<!--                    <a id="customer"-->
-<!--                       href="{% url 'customer_contract_rate_due_days' %}"-->
-<!--                       class="collapsible d-flex align-items-center btn btn-primary">-->
-<!--                        <i class="fa fa-life-ring" aria-hidden="true"></i>-->
-<!--                        Customer Management System (CMS)-->
-<!--                        <span class="badge bg-danger p-2 blink ms-2">{{ total_dues }}</span>-->
-<!--                    </a>-->
-<!--                    <div class="content" >-->
-<!--                        <a href="{% url 'customer_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer List</a>-->
-<!--                        <a href="{% url 'customer_contract_rate_dues_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Dues <span class="badge bg-danger p-2 blink">{{ customer_rate_due_count }}</span></a>-->
-<!--                        <a href="{% url 'customer_contract_rate_report' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Contract Status </a>-->
-<!--                        <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> CMS Misc</button>-->
-<!--                        <div class="content">-->
-<!--                            <a href="{% url 'email_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Email Master </a>-->
-<!--                            <a href="{% url 'crcountfrom_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Credit Count Type</a>-->
-<!--                            <a href="{% url 'customertype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Type</a>-->
-<!--                            <a href="{% url 'customername_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Name</a>-->
-<!--                            <a href="{% url 'customerdepartment_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Department</a>-->
-<!--                            <a href="{% url 'gstexcepmtion_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> GST Excepmtion</a>-->
-<!--                            <a href="{% url 'gstmodel_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> GST Model</a>-->
-<!--                            <a href="{% url 'paymenttype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Payment Type</a>-->
-<!--                            <a href="{% url 'trbusinesstype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Transport Business Type</a>-->
-<!--                        </div>-->
-<!--                    </div>-->
+                    <!--                    <hr class="hr_style">-->
+                    <!--                    <a id="customer"-->
+                    <!--                       href="{% url 'customer_contract_rate_due_days' %}"-->
+                    <!--                       class="collapsible d-flex align-items-center btn btn-primary">-->
+                    <!--                        <i class="fa fa-life-ring" aria-hidden="true"></i>-->
+                    <!--                        Customer Management System (CMS)-->
+                    <!--                        <span class="badge bg-danger p-2 blink ms-2">{{ total_dues }}</span>-->
+                    <!--                    </a>-->
+                    <!--                    <div class="content" >-->
+                    <!--                        <a href="{% url 'customer_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer List</a>-->
+                    <!--                        <a href="{% url 'customer_contract_rate_dues_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Dues <span class="badge bg-danger p-2 blink">{{ customer_rate_due_count }}</span></a>-->
+                    <!--                        <a href="{% url 'customer_contract_rate_report' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Contract Status </a>-->
+                    <!--                        <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> CMS Misc</button>-->
+                    <!--                        <div class="content">-->
+                    <!--                            <a href="{% url 'email_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Email Master </a>-->
+                    <!--                            <a href="{% url 'crcountfrom_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Credit Count Type</a>-->
+                    <!--                            <a href="{% url 'customertype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Type</a>-->
+                    <!--                            <a href="{% url 'customername_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Name</a>-->
+                    <!--                            <a href="{% url 'customerdepartment_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Department</a>-->
+                    <!--                            <a href="{% url 'gstexcepmtion_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> GST Excepmtion</a>-->
+                    <!--                            <a href="{% url 'gstmodel_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> GST Model</a>-->
+                    <!--                            <a href="{% url 'paymenttype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Payment Type</a>-->
+                    <!--                            <a href="{% url 'trbusinesstype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Transport Business Type</a>-->
+                    <!--                        </div>-->
+                    <!--                    </div>-->
                     <hr class="hr_style">
                     <button type="button" id="employee_management_system" class="collapsible"><i class="fa fa-users" aria-hidden="true"></i> Employee Management System (EMS)</button>
                     <div class="content">
                         <a href="{% url 'user_list' %}"><i class="fas fa-user-friends"></i> Employees</a>
-<!--                        <a id="task" href="{% url 'task_list' %}"><i class="fa fa-tasks" aria-hidden="true"></i> Task</a>-->
-<!--                        <a id="timesheet" href="{% url 'timesheet_list' %}"><i class="fa fa-clock" aria-hidden="true"></i> Timesheet</a>-->
+                        <!--                        <a id="task" href="{% url 'task_list' %}"><i class="fa fa-tasks" aria-hidden="true"></i> Task</a>-->
+                        <!--                        <a id="timesheet" href="{% url 'timesheet_list' %}"><i class="fa fa-clock" aria-hidden="true"></i> Timesheet</a>-->
                         <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> EMS Misc</button>
                         <div class="content">
                             <a href="{% url 'designation_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Designation</a>
@@ -245,32 +255,28 @@
                     <hr class="hr_style">
                     <button id="packing" type="button" class="collapsible "><i class="fa fa-suitcase" aria-hidden="true"></i>  Packaging Management System (PMS)</button>
                     <div class="content">
-                        <a href="{% url 'pk_production_dashboard' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Production Dashboard</a>
                         <a href="{% url 'needassessment_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Need Assessment</a>
                         <a href="{% url 'pk_quotationsummary_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Quotation Summary<span class="badge bg-danger p-2 blink">{{ need_assessment_count }}</span></a>
                         <!--        <a href="{% url 'pk_quotation_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Quotation</a>-->
                         <!--        <a href="{% url 'quotes_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Quotes</a>-->
                         <a href="{% url 'purchaseorder_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Purchase Order</a>
                         <a href="{% url 'costingsummary_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Costing Summary</a>
+                        <a href="{% url 'pk_retrival_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Retrival <span class="badge bg-danger p-2 blink">{{ count_retrival }}</span></a>
+                        <a href="{% url 'pk_acceptance_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Acceptance <span class="badge bg-danger p-2 blink">{{ count_acceptance }}</span></a>
+                        <a href="{% url 'pk_production_dashboard' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Production Dashboard</a>
                         <!--        <a href="{% url 'pk_item_search_page' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Item Search</a>-->
                         <!--        <a href="{% url 'modify_dimensions_view' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Item Search Select</a>-->
                         <!--        <a href="{% url 'openingstock_list' %}"><i class="fa fa-arrow-right " aria-hidden="true"></i> Opening Stock</a>-->
-                        <a href="{% url 'stockpurchases_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock List</a>
-                        <a href="{% url 'stock_description_add' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Description</a>
-                        <a href="{% url 'part_code_add' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Part Code</a>
-<!--                        <a href="{% url 'stock_maintenance_list' %}"><i class="fa fa-arrow-right"aria-hidden="true"></i> Stock Maintenance</a>-->
-                        <a href="{% url 'pk_stock_vendor_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Purchase</a>
-                        <a href="{% url 'pk_retrival_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Retrival <span class="badge bg-danger p-2 blink">{{ count_retrival }}</span></a>
-                        <a href="{% url 'pk_acceptance_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Acceptance <span class="badge bg-danger p-2 blink">{{ count_acceptance }}</span></a>
+
+                        <!--                        <a href="{% url 'stock_maintenance_list' %}"><i class="fa fa-arrow-right"aria-hidden="true"></i> Stock Maintenance</a>-->
+
                         <a href="{% url 'pk_return_acceptance_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Return Acceptance Queue</a>
-                        <a href="{% url 'pk_purchase_return_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Purchase Returns</a>
-                        <a href="{% url 'pk_excess_stock_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Excess Stock <span class="badge bg-danger p-2 blink">{{ excess_count }}</span></a>
-                        <a href="{% url 'pk_return_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Return <span class="badge bg-danger p-2 blink">{{ count_return }}</span>
+                        <!--                        <a href="{% url 'pk_excess_stock_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Excess Stock <span class="badge bg-danger p-2 blink">{{ excess_count }}</span></a>-->
+                        <!--                        <a href="{% url 'pk_return_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Return <span class="badge bg-danger p-2 blink">{{ count_return }}</span>-->
                         </a>
                         <a href="{% url 'pk_invoice_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Invoice </a>
                         <a href="{% url 'packing_gate_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> GatePass </a>
-                        <a href="{% url 'packing_delivery_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Delivery Challan</a>
-                        <a href="{% url 'pk_tool_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Tools Master</a>
+                        <!--                        <a href="{% url 'packing_delivery_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Delivery Challan</a>-->
                         <!--        <a href="{% url 'costing_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Costing</a>-->
                         <!--        <a href="{% url 'ininspectreport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Inward Inspection Report</a>-->
                         <!--        <a href="{% url 'ouinspectreport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Outward Inspection Report</a>-->
@@ -287,8 +293,8 @@
                         <a href="{% url 'sale_enquiry_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Sales Enquiry </a>
                     </div>
                     <hr class="hr_style">
-<!--                    <a id="vendor"  href="{% url 'vendor_list' %}"><i class="fas fa-user-secret"></i> Vendor Management System (VMS)</a>-->
-<!--                    <hr class="hr_style">-->
+                    <!--                    <a id="vendor"  href="{% url 'vendor_list' %}"><i class="fas fa-user-secret"></i> Vendor Management System (VMS)</a>-->
+                    <!--                    <hr class="hr_style">-->
                     <button id="transport" type="button" class="collapsible "><i class="fa fa-truck" aria-hidden="true"></i> Transport Management System (TMS)</button>
                     <div class="content">
                         <!--        <a href="{% url 'transport_nav' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Transport </a>-->
@@ -342,29 +348,29 @@
                         <a href="{% url 'cs_kpi_dashboard' %}"><i class="fa fa-tachometer-alt" aria-hidden="true"></i> CS Dashboard</a>
                         <a href="{% url 'transport_reports' %}"><i class="fa fa-book" aria-hidden="true"></i> Reports </a>
 
-<!--                        <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> TMS Misc</button>-->
-<!--                        <div class="content">-->
-<!--                            <a href="{% url 'location_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Location Master </a>-->
-<!--                            <a href="{% url 'charge_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Charge Master </a>-->
-<!--                            <a id="fastag" href="{% url 'trans_fastag' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Fastag</a>-->
-<!--                            <a href="{% url 'bunkname_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Bunk Master </a>-->
-<!--                            <a href="{% url 'vehiclemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Master </a>-->
-<!--                            <a href="{% url 'halting_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Halting Charges Master </a>-->
-<!--                            <a href="{% url 'vehiclecategory_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Category</a>-->
-<!--                            <a href="{% url 'vehicletype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Type</a>-->
-<!--                            <a href="{% url 'movementtype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Movement Type</a>-->
-<!--                            <a href="{% url 'vhmanufacturer_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Manufacturer</a>-->
-<!--                            <a href="{% url 'vehiclemodel_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Model</a>-->
-<!--                            <a href="{% url 'ownership_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Ownership</a>-->
-<!--                            <a href="{% url 'body_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Body</a>-->
-<!--                            <a href="{% url 'axletype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Axle Type</a>-->
-<!--                            <a href="{% url 'fueltype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Fuel Type</a>-->
-<!--                            <a href="{% url 'vehiclecolour_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Colour</a>-->
-<!--                            <a href="{% url 'permittype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Permit Type</a>-->
-<!--                            <a href="{% url 'rtratemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Route Rate Master</a>-->
-<!--                            <a href="{% url 'vendorratemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vendor Rate Master</a>-->
-<!--                            <a href="{% url 'trans_customer_claims_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Claims</a>-->
-<!--                        </div>-->
+                        <!--                        <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> TMS Misc</button>-->
+                        <!--                        <div class="content">-->
+                        <!--                            <a href="{% url 'location_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Location Master </a>-->
+                        <!--                            <a href="{% url 'charge_master_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Charge Master </a>-->
+                        <!--                            <a id="fastag" href="{% url 'trans_fastag' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i>Fastag</a>-->
+                        <!--                            <a href="{% url 'bunkname_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Bunk Master </a>-->
+                        <!--                            <a href="{% url 'vehiclemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Master </a>-->
+                        <!--                            <a href="{% url 'halting_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Halting Charges Master </a>-->
+                        <!--                            <a href="{% url 'vehiclecategory_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Category</a>-->
+                        <!--                            <a href="{% url 'vehicletype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Type</a>-->
+                        <!--                            <a href="{% url 'movementtype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Movement Type</a>-->
+                        <!--                            <a href="{% url 'vhmanufacturer_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Manufacturer</a>-->
+                        <!--                            <a href="{% url 'vehiclemodel_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Model</a>-->
+                        <!--                            <a href="{% url 'ownership_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Ownership</a>-->
+                        <!--                            <a href="{% url 'body_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Body</a>-->
+                        <!--                            <a href="{% url 'axletype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Axle Type</a>-->
+                        <!--                            <a href="{% url 'fueltype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Fuel Type</a>-->
+                        <!--                            <a href="{% url 'vehiclecolour_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vehicle Colour</a>-->
+                        <!--                            <a href="{% url 'permittype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Permit Type</a>-->
+                        <!--                            <a href="{% url 'rtratemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Route Rate Master</a>-->
+                        <!--                            <a href="{% url 'vendorratemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Vendor Rate Master</a>-->
+                        <!--                            <a href="{% url 'trans_customer_claims_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Customer Claims</a>-->
+                        <!--                        </div>-->
                     </div>
                     <hr class="hr_style">
                     <button id="express_prime" type="button" class="collapsible "><i class="fas fa-shipping-fast"></i> Express(Prime)</button>
@@ -400,15 +406,15 @@
                         <button type="button" class="collapsible"><i class="fa fa-briefcase" aria-hidden="true"></i> WMS Misc</button>
                         <div class="content">
                             <a href="{% url 'bay_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Bays</a>
-<!--                            <a href="{% url 'locationmaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Warehouse Master</a>-->
+                            <!--                            <a href="{% url 'locationmaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Warehouse Master</a>-->
                             <a href="{% url 'damagereport_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Damage Report</a>
                             <a href="{% url 'damage_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Damage Type</a>
                             <a href="{% url 'unit_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Units</a>
-<!--                            <a href="{% url 'whratemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Warehouse Rate Mater</a>-->
-<!--                            <a href="{% url 'materialhandling_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Material Handling</a>-->
-<!--                            <a href="{% url 'packagetype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Package Type</a>-->
-<!--                            <a href="{% url 'currencytype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Currency Type</a>-->
-<!--                            <a href="{% url 'stocktype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Type</a>-->
+                            <!--                            <a href="{% url 'whratemaster_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Warehouse Rate Mater</a>-->
+                            <!--                            <a href="{% url 'materialhandling_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Material Handling</a>-->
+                            <!--                            <a href="{% url 'packagetype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Package Type</a>-->
+                            <!--                            <a href="{% url 'currencytype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Currency Type</a>-->
+                            <!--                            <a href="{% url 'stocktype_list' %}"><i class="fa fa-arrow-right" aria-hidden="true"></i> Stock Type</a>-->
                         </div>
                         <a href="{% url 'wms_petty_cash_list' %}"><i class="fa fa-money-bill-alt" aria-hidden="true"></i> Petty Cash </a>
                     </div>
@@ -489,19 +495,19 @@
                             <select name="branch_id" id="branch-filter" class="home-filter-control">
                                 <option value="">All Branches</option>
                                 {% for branch in branch_filter_list %}
-                                    <option value="{{ branch.id }}" {% if selected_branch_id == branch.id|stringformat:"s" %}selected{% endif %}>{{ branch.loc_name }}</option>
+                                <option value="{{ branch.id }}" {% if selected_branch_id == branch.id|stringformat:"s" %}selected{% endif %}>{{ branch.loc_name }}</option>
                                 {% endfor %}
                             </select>
                             <select name="unit_id" id="unit-filter" class="home-filter-control">
                                 <option value="">All Units</option>
                                 {% for unit in unit_filter_list %}
-                                    <option value="{{ unit.id }}" {% if selected_unit_id == unit.id|stringformat:"s" %}selected{% endif %}>{{ unit.unit_name }}</option>
+                                <option value="{{ unit.id }}" {% if selected_unit_id == unit.id|stringformat:"s" %}selected{% endif %}>{{ unit.unit_name }}</option>
                                 {% endfor %}
                             </select>
                             <select name="bay_id" id="bay-filter" class="home-filter-control">
                                 <option value="">All Bays</option>
                                 {% for bay in bay_filter_list %}
-                                    <option value="{{ bay.id }}" {% if selected_bay_id == bay.id|stringformat:"s" %}selected{% endif %}>{{ bay.bay_bayname }}</option>
+                                <option value="{{ bay.id }}" {% if selected_bay_id == bay.id|stringformat:"s" %}selected{% endif %}>{{ bay.bay_bayname }}</option>
                                 {% endfor %}
                             </select>
                             <button type="submit" class="btn btn-info btn-sm">Apply</button>
@@ -525,205 +531,205 @@
     </div>
 </div>
 
-                <script>
-                    (function () {
-                        function initHomeDashboardCharts() {
-                            if (typeof Chart === 'undefined') return;
+<script>
+    (function () {
+        function initHomeDashboardCharts() {
+            if (typeof Chart === 'undefined') return;
 
-                            var trendCanvas = document.getElementById('homeTrendChart');
-                            var donutCanvas = document.getElementById('homeTypeDonut');
-                            var weekCanvas = document.getElementById('homeWeekBar');
-                            if (!trendCanvas || !donutCanvas || !weekCanvas) return;
+            var trendCanvas = document.getElementById('homeTrendChart');
+            var donutCanvas = document.getElementById('homeTypeDonut');
+            var weekCanvas = document.getElementById('homeWeekBar');
+            if (!trendCanvas || !donutCanvas || !weekCanvas) return;
 
-                            var monthLabels = JSON.parse('{{ warehouse_month_labels_json|default:"[]"|escapejs }}');
-                            var warehouseArea = JSON.parse('{{ monthly_warehouse_area_json|default:"[]"|escapejs }}');
-                            var warehouseVolume = JSON.parse('{{ monthly_warehouse_volume_json|default:"[]"|escapejs }}');
-                            var departmentLabels = JSON.parse('{{ team_department_labels_json|default:"[]"|escapejs }}');
-                            var departmentValues = JSON.parse('{{ team_department_values_json|default:"[]"|escapejs }}');
-                            var regionMonthLabels = JSON.parse('{{ region_month_labels_json|default:"[]"|escapejs }}');
-                            var regionMonthDatasets = JSON.parse('{{ region_month_datasets_json|default:"[]"|escapejs }}');
+            var monthLabels = JSON.parse('{{ warehouse_month_labels_json|default:"[]"|escapejs }}');
+            var warehouseArea = JSON.parse('{{ monthly_warehouse_area_json|default:"[]"|escapejs }}');
+            var warehouseVolume = JSON.parse('{{ monthly_warehouse_volume_json|default:"[]"|escapejs }}');
+            var departmentLabels = JSON.parse('{{ team_department_labels_json|default:"[]"|escapejs }}');
+            var departmentValues = JSON.parse('{{ team_department_values_json|default:"[]"|escapejs }}');
+            var regionMonthLabels = JSON.parse('{{ region_month_labels_json|default:"[]"|escapejs }}');
+            var regionMonthDatasets = JSON.parse('{{ region_month_datasets_json|default:"[]"|escapejs }}');
 
-                            var teamPalette = ['#36d1ff', '#7f7dff', '#c27cff', '#5f9cff', '#22d3ee', '#a78bfa', '#f472b6', '#f59e0b', '#34d399', '#60a5fa'];
-                            var departmentColors = departmentLabels.map(function(_, index) {
-                                return teamPalette[index % teamPalette.length];
-                            });
+            var teamPalette = ['#36d1ff', '#7f7dff', '#c27cff', '#5f9cff', '#22d3ee', '#a78bfa', '#f472b6', '#f59e0b', '#34d399', '#60a5fa'];
+            var departmentColors = departmentLabels.map(function(_, index) {
+                return teamPalette[index % teamPalette.length];
+            });
 
-                            var regionColors = ['#5ed6ff', '#7f7dff', '#c27cff', '#5f9cff', '#2fb3ff', '#8bd3ff'];
-                            var regionDatasets = regionMonthDatasets.map(function(item, index) {
-                                var color = regionColors[index % regionColors.length];
-                                return {
-                                    label: item.label,
-                                    data: item.data,
-                                    backgroundColor: color,
-                                    borderColor: color,
-                                    borderRadius: 8,
-                                    maxBarThickness: 34,
-                                };
-                            });
+            var regionColors = ['#5ed6ff', '#7f7dff', '#c27cff', '#5f9cff', '#2fb3ff', '#8bd3ff'];
+            var regionDatasets = regionMonthDatasets.map(function(item, index) {
+                var color = regionColors[index % regionColors.length];
+                return {
+                    label: item.label,
+                    data: item.data,
+                    backgroundColor: color,
+                    borderColor: color,
+                    borderRadius: 8,
+                    maxBarThickness: 34,
+                };
+            });
 
-                            new Chart(trendCanvas, {
-                                type: 'line',
-                                data: {
-                                    labels: monthLabels,
-                                    datasets: [
-                                        {
-                                            label: 'Area (sq.ft)',
-                                            data: warehouseArea,
-                                            borderColor: '#36d1ff',
-                                            backgroundColor: 'rgba(54, 209, 255, 0.18)',
-                                            fill: true,
-                                            tension: 0.35,
-                                            borderWidth: 2,
-                                            pointRadius: 3,
-                                        },
-                                        {
-                                            label: 'Volume (CBM)',
-                                            data: warehouseVolume,
-                                            borderColor: '#7f7dff',
-                                            backgroundColor: 'rgba(127, 125, 255, 0.12)',
-                                            fill: true,
-                                            tension: 0.35,
-                                            borderWidth: 2,
-                                            pointRadius: 3,
-                                        }
-                                    ]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    interaction: {
-                                        mode: 'index',
-                                        intersect: false,
-                                    },
-                                    plugins: {
-                                        legend: { labels: { color: '#d9e3ff' } },
-                                        tooltip: {
-                                            callbacks: {
-                                                title: function (items) {
-                                                    return items[0].label + ' (Area: sq.ft, Volume: CBM)';
-                                                },
-                                                label: function (context) {
-                                                    var value = Number(context.parsed.y || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
-                                                    var suffix = context.dataset.label.indexOf('Area') === 0 ? ' sq.ft' : ' CBM';
-                                                    return context.dataset.label + ': ' + value + suffix;
-                                                }
-                                            }
-                                        }
-                                    },
-                                    scales: {
-                                        x: { ticks: { color: '#9fb1d9' }, grid: { color: 'rgba(255,255,255,0.08)' } },
-                                        y: { ticks: { color: '#9fb1d9' }, grid: { color: 'rgba(255,255,255,0.08)' }, beginAtZero: true }
-                                    }
-                                }
-                            });
-
-                            new Chart(donutCanvas, {
-                                type: 'doughnut',
-                                data: {
-                                    labels: departmentLabels,
-                                    datasets: [{
-                                        data: departmentValues,
-                                        backgroundColor: departmentColors,
-                                        borderColor: '#0b1537',
-                                        borderWidth: 2
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: {
-                                        legend: { position: 'bottom', labels: { color: '#d9e3ff' } },
-                                        tooltip: {
-                                            callbacks: {
-                                                label: function (context) {
-                                                    var value = Number(context.parsed || 0);
-                                                    var total = context.dataset.data.reduce(function (acc, item) {
-                                                        return acc + Number(item || 0);
-                                                    }, 0);
-                                                    var pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
-                                                    return context.label + ': ' + value + ' users (' + pct + '%)';
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-
-                            new Chart(weekCanvas, {
-                                type: 'bar',
-                                data: {
-                                    labels: regionMonthLabels,
-                                    datasets: regionDatasets
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    interaction: {
-                                        mode: 'index',
-                                        intersect: false,
-                                    },
-                                    plugins: {
-                                        legend: { display: true, labels: { color: '#d9e3ff' } },
-                                        tooltip: {
-                                            callbacks: {
-                                                title: function (items) {
-                                                    return items[0].label + ' (Volume: CBM)';
-                                                },
-                                                label: function (context) {
-                                                    var value = Number(context.parsed.y || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
-                                                    return context.dataset.label + ': ' + value + ' CBM';
-                                                }
-                                            }
-                                        }
-                                    },
-                                    scales: {
-                                        x: {
-                                            ticks: { color: '#9fb1d9' },
-                                            grid: { color: 'rgba(255,255,255,0.08)' },
-                                            stacked: true,
-                                        },
-                                        y: {
-                                            ticks: { color: '#9fb1d9' },
-                                            grid: { color: 'rgba(255,255,255,0.08)' },
-                                            beginAtZero: true,
-                                            stacked: true,
-                                        }
-                                    }
-                                }
-                            });
+            new Chart(trendCanvas, {
+                type: 'line',
+                data: {
+                    labels: monthLabels,
+                    datasets: [
+                        {
+                            label: 'Area (sq.ft)',
+                            data: warehouseArea,
+                            borderColor: '#36d1ff',
+                            backgroundColor: 'rgba(54, 209, 255, 0.18)',
+                            fill: true,
+                            tension: 0.35,
+                            borderWidth: 2,
+                            pointRadius: 3,
+                        },
+                        {
+                            label: 'Volume (CBM)',
+                            data: warehouseVolume,
+                            borderColor: '#7f7dff',
+                            backgroundColor: 'rgba(127, 125, 255, 0.12)',
+                            fill: true,
+                            tension: 0.35,
+                            borderWidth: 2,
+                            pointRadius: 3,
                         }
-
-                        if (document.readyState === 'loading') {
-                            document.addEventListener('DOMContentLoaded', initHomeDashboardCharts);
-                        } else {
-                            initHomeDashboardCharts();
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#d9e3ff' } },
+                        tooltip: {
+                            callbacks: {
+                                title: function (items) {
+                                    return items[0].label + ' (Area: sq.ft, Volume: CBM)';
+                                },
+                                label: function (context) {
+                                    var value = Number(context.parsed.y || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
+                                    var suffix = context.dataset.label.indexOf('Area') === 0 ? ' sq.ft' : ' CBM';
+                                    return context.dataset.label + ': ' + value + suffix;
+                                }
+                            }
                         }
-                    })();
-                </script>
+                    },
+                    scales: {
+                        x: { ticks: { color: '#9fb1d9' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                        y: { ticks: { color: '#9fb1d9' }, grid: { color: 'rgba(255,255,255,0.08)' }, beginAtZero: true }
+                    }
+                }
+            });
 
-                                <script>
-                                    (function () {
-                                        var form = document.getElementById('warehouse-usage-filter-form');
-                                        if (!form) return;
+            new Chart(donutCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: departmentLabels,
+                    datasets: [{
+                        data: departmentValues,
+                        backgroundColor: departmentColors,
+                        borderColor: '#0b1537',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#d9e3ff' } },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    var value = Number(context.parsed || 0);
+                                    var total = context.dataset.data.reduce(function (acc, item) {
+                                        return acc + Number(item || 0);
+                                    }, 0);
+                                    var pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                    return context.label + ': ' + value + ' users (' + pct + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
 
-                                        var branchFilter = document.getElementById('branch-filter');
-                                        var unitFilter = document.getElementById('unit-filter');
-                                        var bayFilter = document.getElementById('bay-filter');
+            new Chart(weekCanvas, {
+                type: 'bar',
+                data: {
+                    labels: regionMonthLabels,
+                    datasets: regionDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { display: true, labels: { color: '#d9e3ff' } },
+                        tooltip: {
+                            callbacks: {
+                                title: function (items) {
+                                    return items[0].label + ' (Volume: CBM)';
+                                },
+                                label: function (context) {
+                                    var value = Number(context.parsed.y || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
+                                    return context.dataset.label + ': ' + value + ' CBM';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#9fb1d9' },
+                            grid: { color: 'rgba(255,255,255,0.08)' },
+                            stacked: true,
+                        },
+                        y: {
+                            ticks: { color: '#9fb1d9' },
+                            grid: { color: 'rgba(255,255,255,0.08)' },
+                            beginAtZero: true,
+                            stacked: true,
+                        }
+                    }
+                }
+            });
+        }
 
-                                        if (branchFilter && unitFilter && bayFilter) {
-                                            branchFilter.addEventListener('change', function () {
-                                                unitFilter.value = '';
-                                                bayFilter.value = '';
-                                                form.submit();
-                                            });
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initHomeDashboardCharts);
+        } else {
+            initHomeDashboardCharts();
+        }
+    })();
+</script>
 
-                                            unitFilter.addEventListener('change', function () {
-                                                bayFilter.value = '';
-                                                form.submit();
-                                            });
-                                        }
-                                    })();
-                                </script>
+<script>
+    (function () {
+        var form = document.getElementById('warehouse-usage-filter-form');
+        if (!form) return;
+
+        var branchFilter = document.getElementById('branch-filter');
+        var unitFilter = document.getElementById('unit-filter');
+        var bayFilter = document.getElementById('bay-filter');
+
+        if (branchFilter && unitFilter && bayFilter) {
+            branchFilter.addEventListener('change', function () {
+                unitFilter.value = '';
+                bayFilter.value = '';
+                form.submit();
+            });
+
+            unitFilter.addEventListener('change', function () {
+                bayFilter.value = '';
+                form.submit();
+            });
+        }
+    })();
+</script>
 
 <script>
     var coll = document.getElementsByClassName("collapsible");

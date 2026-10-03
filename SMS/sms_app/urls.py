@@ -26,6 +26,7 @@ urlpatterns = [
     path('driver/dashboard/', views.driver_dashboard, name='driver_dashboard'),
     path('driver/cnote-pdf/<int:consignment_id>/', views.driver_cnote_pdf, name='driver_cnote_pdf'),
     path('driver/download-app/', views.driver_download_app, name='driver_download_app'),
+    path('driver/download-apk/', views.driver_download_apk_file, name='driver_download_apk_file'),
     path('home_page', views.home_page, name='home_page'),  # Home_page
     path('privacy-policy/', views.privacy_policy, name='privacy_policy'), # Privacy Policy
     path('pk_production_dashboard/', views.pk_production_dashboard, name='pk_production_dashboard'),
