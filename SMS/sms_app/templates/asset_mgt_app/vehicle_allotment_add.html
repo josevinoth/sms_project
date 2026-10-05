@@ -894,7 +894,10 @@ function loadVendorSaleRate(checkboxId, isAutoLoad) {
 </script>
 <script>
 	function loadVendorOptions(selectedVendorId = null) {
-    var enquiry_num = $('#va_enquirynumber').val();
+    var enquiry_num = $('#va_enquirynumber').val() || '{{ enquiry_num_id }}';
+    if (!enquiry_num) {
+        return;
+    }
     $.ajax({
         url: "{% url 'vendor_filter' %}",
         data: {
@@ -904,16 +907,16 @@ function loadVendorSaleRate(checkboxId, isAutoLoad) {
             const dropdown = $('#va_vendor');
             dropdown.empty();
             dropdown.append('<option value="">Select Vendor</option>');
-            response.vendor_filter.forEach(function(vendor) {
-                const isSelected = (selectedVendorId && selectedVendorId == vendor.id) ? 'selected' : '';
-                dropdown.append(`<option value="${vendor.id}" ${isSelected}>${vendor.name}</option>`);
-            });
+            if (response && response.vendor_filter) {
+                response.vendor_filter.forEach(function(vendor) {
+                    const isSelected = (selectedVendorId && selectedVendorId == vendor.id) ? 'selected' : '';
+                    dropdown.append(`<option value="${vendor.id}" ${isSelected}>${vendor.name}</option>`);
+                });
+            }
             dropdown.trigger('change.select2'); // Update Select2 UI
         },
         error: function(xhr) {
-		console.log("STATUS:", xhr.status);
-		console.log("RESPONSE:", xhr.responseText);
-		alert("Could not load vendors.");
+		console.warn("Could not load vendors:", xhr.status, xhr.responseText);
         }
     });
 }
