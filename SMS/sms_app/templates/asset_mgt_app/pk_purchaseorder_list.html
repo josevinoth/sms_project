@@ -540,7 +540,10 @@
                 }
             }
         });
-    });
+    }
+
+    fireCreateJob(false, alertEmail);
+});
 
     // Auto-search stock batches & fetch master specs when Part Code dropdown changes
     $(document).on('change', '#modal_part_code_select', function() {

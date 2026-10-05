@@ -649,6 +649,10 @@ def pk_store_po_dimension_id(request):
 
         if costing_record:
             # Only pre-fill item/itemdescription — keep pod_quantity from POdimension
+            # Pull Job Qty from Job instead of PO if editing an existing job
+            if costing_record.ct_na_quantity is not None:
+                pod_quantity = costing_record.ct_na_quantity
+                
             if costing_record.ct_item:
                 pod_item_id = str(costing_record.ct_item.id)
             if costing_record.ct_itemdescription:

@@ -258,6 +258,20 @@
     .dataTables_scrollHead table.modern-table {
         margin-bottom: 0 !important;
     }
+
+    #vendor_pending_bills_table_wrapper .dataTables_scrollBody thead {
+        visibility: collapse;
+    }
+
+    #vendor_pending_bills_table_wrapper .dataTables_scrollBody thead tr,
+    #vendor_pending_bills_table_wrapper .dataTables_scrollBody thead th {
+        height: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        border-top-width: 0 !important;
+        border-bottom-width: 0 !important;
+        line-height: 0 !important;
+    }
 </style>
 
 {% endblock content %}

@@ -44,7 +44,16 @@
                 <i class="fas fa-plus"></i> ADD NEW
             </a>
         </div>
-    </div>    <form method="POST">
+    </div>
+    
+    {% if form.instance.pk %}
+    <div class="alert alert-info py-2 px-3 shadow-sm mb-3 d-inline-flex align-items-center" style="border-radius: 8px; font-size: 0.9rem;">
+        <i class="fas fa-user-edit mr-2 text-primary"></i> 
+        Last Updated By:&nbsp;<strong>{{ form.instance.sm_updated_by.first_name|default:form.instance.sm_updated_by.username }}</strong>&nbsp;on&nbsp;{{ form.instance.sm_updated_at|date:"d-M-Y h:i A" }}
+    </div>
+    {% endif %}
+
+    <form method="POST">
         {% csrf_token %}
         <div class="modern-card" style="padding: 1rem !important;">
             <div class="row row-compact">
@@ -205,6 +214,7 @@
                         <th>Total Val (CFT/SQFT)</th>
                         <th>Rate</th>
                         <th>Total Price</th>
+                        <th>Updated By</th>
                         <th class="text-center">Actions</th>
                     </tr>
                 </thead>
@@ -226,6 +236,10 @@
                         <td class="font-weight-bold text-teal">{{ item.sm_total_cft }}</td>
                         <td>₹{{ item.sm_per_unit_cost }}</td>
                         <td class="font-weight-bold text-primary">₹{{ item.sm_total_price }}</td>
+                        <td style="font-size: 0.85rem;">
+                            <div class="font-weight-bold text-dark">{{ item.sm_updated_by.first_name|default:item.sm_updated_by.username|default:"System" }}</div>
+                            <div class="text-muted">{{ item.sm_updated_at|date:"d-M-Y H:i" }}</div>
+                        </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center" style="gap: 8px;">
                                 <a href="{% url 'stock_maintenance_edit' item.id %}" class="btn-modern btn-submit py-1 px-3" style="font-size: 0.8rem;" title="Edit">

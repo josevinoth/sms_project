@@ -1171,6 +1171,7 @@ urlpatterns = [
     path('get_part_details/', views.get_part_details, name='get_part_details'),
     path('stock_maintenance_delete/<int:pk>/', views.stock_maintenance_delete, name='stock_maintenance_delete'),
     path('stock_usage_breakdown/', views.stock_usage_breakdown, name='stock_usage_breakdown'),
+    path('stock_purchase_breakdown/', views.stock_purchase_breakdown, name='stock_purchase_breakdown'),
     path('trans-invoice/excel/<path:invoice_no>/',views.trans_invoice_excel,name='trans_invoice_excel'),
     path('trans-invoice/ann1-pdf/<path:invoice_no>/', views.trans_invoice_ann1_pdf, name='trans_invoice_ann1_pdf'),
     path('trans-invoice/upload-pdf/', views.trans_invoice_upload_pdf, name='trans_invoice_upload_pdf'),

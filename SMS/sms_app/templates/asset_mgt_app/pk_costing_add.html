@@ -10,7 +10,7 @@
 
     <!-- Page Header -->
     <div class="modern-header mb-4 d-flex justify-content-between align-items-center">
-        <h2 class="mb-0 text-white"><i class="fas fa-coins mr-2"></i> Add/Update Costing</h2>
+        <h2 class="mb-0 text-white"><i class="fas fa-coins mr-2"></i> Add/Update Indent</h2>
         <div class="d-flex gap-2" style="position: relative; z-index: 10;">
             <button type="button" class="btn-modern py-1 px-3 mr-2" data-toggle="modal" data-target="#calculatorModal" style="background: #2563eb; border: 1px solid #3b82f6; color: white; font-size: 0.85rem; font-weight: 700;">
                 <i class="fas fa-calculator mr-1"></i> Calculator
@@ -123,7 +123,7 @@
                                 </div>
                                 <div class="form-group-modern stock-info-box" style="border-left: 3px solid var(--accent-orange); padding-left: 8px;">
                                     <label class="form-label-modern" style="color: var(--accent-orange);">Stock Purchase #</label>
-                                    {% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control form-control-modern" %}
+                                    {% render_field form.ct_stock_purchase_number id="ct_stock_purchase_number" class="form-control form-control-modern disable_a_href" %}
                                 </div>
                                 <div class="form-group-modern">
                                     <label class="form-label-modern">Available Qty</label>
@@ -414,6 +414,13 @@
 <script>
 (function($) {
     $(document).ready(function () {
+        // Prevent all interaction (mouse and keyboard) for pseudo-disabled fields
+        $(document).on('mousedown keydown focus', '.disable_a_href', function(e) {
+            e.preventDefault();
+            $(this).blur();
+            return false;
+        });
+        
         const assessment_num_field = document.getElementById("ct_assessment_num");
         const customer_name_field = document.getElementById("ct_customer_name");
         const customer_new_name_field = document.getElementById("ct_customer_new_name");
@@ -448,6 +455,9 @@
             e.preventDefault();
             if (typeof search_wood === 'function') search_wood();
         });
+        
+        // Initialize UI state based on selected cost type on page load
+        if (typeof change_cost_type === 'function') change_cost_type();
     });
 })(jQuery);
 </script>
@@ -460,10 +470,38 @@
         $("#total_cft").hide();
         var jn = document.getElementById("ct_cost_type").value;
         $('#ct_item').addClass('disable_a_href');
+        $('#ct_itemdescription').addClass('disable_a_href');
         
         if (jn == 8) {
+            $('#ct_part_code').prop('disabled', false);
             $('#ct_stock_type').addClass('disable_a_href');
+            $('#search_wood').show();
             $('#ct_item').removeClass('disable_a_href');
+            var jn1 = document.getElementById("ct_stock_type").value;
+        } else {
+            if ($('#ct_part_code').val()) {
+                $('#ct_part_code').val(null).trigger('change.select2');
+            }
+            $('#ct_part_code').prop('disabled', true);
+            
+            $('#ct_stock_type').addClass('disable_a_href');
+            $('#ct_stock_description').addClass('disable_a_href');
+            $('#ct_stock_purchase_number').addClass('disable_a_href');
+            $('#search_wood').hide();
+            
+            document.getElementById("ct_stock_type").value = "";
+            document.getElementById("ct_stock_description").value = "";
+            document.getElementById("ct_stock_purchase_number").value = "";
+            
+            // Clear irrelevant fields so they don't get saved for non-packing materials
+            if (document.getElementById("ct_item")) document.getElementById("ct_item").value = "";
+            if (document.getElementById("ct_itemdescription")) document.getElementById("ct_itemdescription").value = "";
+            if (document.getElementById("ct_length_req")) document.getElementById("ct_length_req").value = "0.0";
+            if (document.getElementById("ct_width_req")) document.getElementById("ct_width_req").value = "0.0";
+            if (document.getElementById("ct_height_req")) document.getElementById("ct_height_req").value = "0.0";
+        }
+        
+        if (jn == 8) {
             var jn1 = document.getElementById("ct_stock_type").value;
             
             if (jn1 == 1) { // Wood
@@ -495,19 +533,77 @@
                 }
             }
             else if (jn1 == 2) { // Consumables
+                $('#ct_sqrt_req').removeClass('disable_a_href');
                 var quantity_per_box = parseFloat(document.getElementById("ct_quantity_req").value) || 0;
-                var total_qty = quantity_per_box * job_type_qty;
                 var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                var total_sqft = parseFloat(document.getElementById("total_sqft").value) || 0;
+                let desc = (document.getElementById("hidden_pc_stock_description") ? document.getElementById("hidden_pc_stock_description").value : "") || "";
+
+                if (desc.startsWith("Alu") || desc.startsWith("VC") || desc.startsWith("Air") || desc.startsWith("Foam")) {
+                    $('#ct_quantity_req').addClass('disable_a_href');
+                    $('#ct_sqrt_req').removeClass('disable_a_href');
+                    $('#ct_days').addClass('disable_a_href');
+                    var ct_weight_sqft = parseFloat(document.getElementById("ct_weight_sqft").value) || 0;
+                    document.getElementById("ct_sqrt_req").value = total_sqft.toFixed(2);
+                    var totalCost = rate * total_sqft * ct_weight_sqft * quantity_per_box; // Note: quantity_per_box here acts as multiplier if needed
+                    document.getElementById("ct_total_cost").value = totalCost.toFixed(2);
+                    var totalboxCost = totalCost * job_type_qty;
+                    document.getElementById("ct_totalbox_cost").value = totalboxCost.toFixed(2);
+                    
+                    var stockPurchaseElem = document.getElementById("ct_stock_purchase_number");
+                    var stockSelected = stockPurchaseElem && stockPurchaseElem.value && stockPurchaseElem.value !== "";
+                    if (!stockSelected) {
+                        document.getElementById("ct_quantity").value = Math.round(total_sqft * job_type_qty);
+                    }
+                }
+                else if (desc.includes("Belt") || desc.startsWith("Strech") || desc.startsWith("DESICCANT") || desc.startsWith("Tar")) {
+                    var ct_sqrt_req = parseFloat(document.getElementById("ct_sqrt_req").value) || 0;
+                    var totalCost = rate * ct_sqrt_req * quantity_per_box;
+                    document.getElementById("ct_total_cost").value = totalCost.toFixed(2);
+                    var totalboxCost = totalCost * job_type_qty;
+                    document.getElementById("ct_totalbox_cost").value = totalboxCost.toFixed(2);
+                    
+                    var stockPurchaseElem = document.getElementById("ct_stock_purchase_number");
+                    var stockSelected = stockPurchaseElem && stockPurchaseElem.value && stockPurchaseElem.value !== "";
+                    if (!stockSelected) {
+                        document.getElementById("ct_quantity").value = Math.round(ct_sqrt_req * job_type_qty);
+                    }
+                }
+                else {
+                    var total_qty = quantity_per_box * job_type_qty;
+                    document.getElementById("ct_sqrt_req").value = "0.00"; // Consumables are NOT CFT
+                    document.getElementById("ct_total_cost").value = (quantity_per_box * rate).toFixed(2); // Unit Cost
+                    document.getElementById("ct_totalbox_cost").value = (total_qty * rate).toFixed(2); // Total Job Cost
+                    
+                    // Total Pieces for retrieval
+                    var stockPurchaseElem = document.getElementById("ct_stock_purchase_number");
+                    var stockSelected = stockPurchaseElem && stockPurchaseElem.value && stockPurchaseElem.value !== "";
+                    if (!stockSelected) {
+                        document.getElementById("ct_quantity").value = Math.round(total_qty);
+                    }
+                }
+            }
+            else if (jn1 == 4 || jn1 == 6) { // Plywood
+                var length = parseFloat(document.getElementById("ct_length_req").value) || 0;
+                var width = parseFloat(document.getElementById("ct_width_req").value) || 0;
+                var quantity_per_box = parseFloat(document.getElementById("ct_quantity_req").value) || 1;
                 
-                document.getElementById("ct_sqrt_req").value = "0.00"; // Consumables are NOT CFT
-                document.getElementById("ct_total_cost").value = (quantity_per_box * rate).toFixed(2); // Unit Cost
-                document.getElementById("ct_totalbox_cost").value = (total_qty * rate).toFixed(2); // Total Job Cost
+                // SQFT for ONE box
+                var unit_sqft = length * width * quantity_per_box;
                 
-                // Total Pieces for retrieval
+                // Total SQFT for ALL boxes
+                var total_sqft = unit_sqft * job_type_qty;
+                
+                document.getElementById("ct_sqrt_req").value = total_sqft.toFixed(3);
+                
+                var rate = parseFloat(document.getElementById("ct_rate").value) || 0;
+                document.getElementById("ct_total_cost").value = (unit_sqft * rate).toFixed(2); // Unit Cost (one box)
+                document.getElementById("ct_totalbox_cost").value = (total_sqft * rate).toFixed(2); // Total Job Cost
+                
                 var stockPurchaseElem = document.getElementById("ct_stock_purchase_number");
                 var stockSelected = stockPurchaseElem && stockPurchaseElem.value && stockPurchaseElem.value !== "";
                 if (!stockSelected) {
-                    document.getElementById("ct_quantity").value = Math.round(total_qty);
+                    document.getElementById("ct_quantity").value = Math.round(total_sqft);
                 }
             }
         }

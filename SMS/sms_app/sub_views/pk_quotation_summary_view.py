@@ -475,19 +475,6 @@ def pk_quotationsummary_clone(request, pk_quotationsummary_id):
                     pkqt_assessment_num=quotationsummary.qs_assessment_num,
                 )
 
-                # Validate GRN requirement for Packing Material Cost items
-                missing_grn_items = quotations.filter(
-                    pkqt_cost_type_id=8
-                ).filter(Q(pkqt_stock_purchase_number__isnull=True) | Q(pkqt_stock_purchase_number=0))
-
-                if missing_grn_items.exists():
-                    item_names = ", ".join([str(q.pkqt_item) if q.pkqt_item else "Material Item" for q in missing_grn_items])
-                    messages.error(
-                        request,
-                        f"Cannot clone to Costing: Packing Material Cost item(s) [{item_names}] do not have a GRN / Stock Purchase Number assigned. Please select stock purchase records in Quotation Management first."
-                    )
-                    costing_summary.delete()
-                    return redirect(request.META.get('HTTP_REFERER', 'pk_quotationsummary_list'))
 
                 print(f"DEBUG: Found {quotations.count()} quotations for assessment {quotationsummary.qs_assessment_num}")
                 stock_status_instance = pk_stock_statusinfo.objects.get(id=1)
@@ -596,27 +583,7 @@ def pk_quotationsummary_clone_po(request, purchaseorder_id):
     current_pod_ids = po_items.values_list('id', flat=True)
     PkcostingInfo.objects.filter(ct_customer_po=po).exclude(ct_po_dimension_id__in=current_pod_ids).delete()
 
-    # Validate that all Packing Material Cost items (Cost Type 8) have a GRN stock purchase number assigned
-    all_missing_grn = []
-    for po_item in po_items:
-        missing_grn_items = PkquotationInfo.objects.filter(
-            pkqt_requirement=po_item.pod_nad,
-            pkqt_cost_type_id=8
-        ).filter(Q(pkqt_stock_purchase_number__isnull=True) | Q(pkqt_stock_purchase_number=0)).select_related('pkqt_part_code')
-        
-        for q in missing_grn_items:
-            part_code_str = q.pkqt_part_code.pc_code if q.pkqt_part_code and q.pkqt_part_code.pc_code else "N/A"
-            item_str = f"Part Code '{part_code_str}' for Item '{po_item.pod_item}'"
-            if item_str not in all_missing_grn:
-                all_missing_grn.append(item_str)
-        
-    if all_missing_grn:
-        missing_list_str = "; ".join(all_missing_grn)
-        messages.error(
-            request,
-            f"Cannot clone to Costing: {missing_list_str} do not have a GRN / Stock Purchase Number assigned. Please assign stock purchase numbers in Quotation Management first."
-        )
-        return redirect(request.META.get('HTTP_REFERER', 'pk_purchaseorder_list'))
+
 
     summary = PkcostingsummaryInfo.objects.filter(cs_customer_po=po).order_by('-id').first()
     if not summary:

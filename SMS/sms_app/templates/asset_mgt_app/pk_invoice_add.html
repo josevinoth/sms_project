@@ -1,0 +1,377 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- PMS Tracker -->
+    <div class="pms-tracker-wrapper mb-4">
+        {% include "asset_mgt_app/pms_progress_tracker.html" with current_step=current_step %}
+    </div>
+
+    <form method="POST" id="inv_form">
+        {% csrf_token %}
+        <!-- Hidden FK ids populated by JS -->
+        <input type="hidden" name="inv_assessment_num_id" id="inv_assessment_num_id" value="{{ costing.cs_assessment_num_id|default:'' }}">
+        <input type="hidden" name="inv_customer_po_id"    id="inv_customer_po_id"    value="{{ costing.cs_customer_po_id|default:'' }}">
+        <input type="hidden" name="inv_customer_name_id"  id="inv_customer_name_id"  value="{{ costing.cs_customer_name_id|default:'' }}">
+        <input type="hidden" name="inv_base_amount"       id="inv_base_amount"       value="{{ base_amount|default:'0' }}">
+        <input type="hidden" name="use_igst"              id="use_igst"              value="0">
+
+        <!-- Page Header -->
+        <div class="modern-header d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">
+                <i class="fas fa-file-invoice-dollar"></i>
+                {% if invoice %}Edit Invoice — {{ invoice.inv_number }}{% else %}New PMS Invoice{% endif %}
+            </h2>
+            <a href="{% url 'pk_invoice_list' %}" class="btn-modern btn-cancel py-2 px-4"
+               style="font-size:0.9rem;text-decoration:none;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:white!important;">
+                <i class="fas fa-arrow-left"></i> BACK
+            </a>
+        </div>
+
+        <!-- ── SECTION 1 : HEADER ───────────────────────────────────────── -->
+        <div class="modern-card" style="padding:1rem!important;">
+            <div class="row row-compact">
+
+                <!-- Customer Selection -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-users"></i> Customer</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Select Customer</label>
+                            {% if invoice %}
+                                <input type="text" class="form-control form-control-modern" value="{{ invoice.inv_customer_name }}" readonly>
+                                <input type="hidden" name="inv_customer_name_id" value="{{ invoice.inv_customer_name_id }}">
+                            {% else %}
+                                <select name="inv_customer_name_id" id="inv_customer_id" class="form-control form-control-modern select2" required>
+                                    <option value="">-- Select Customer --</option>
+                                    {% for c in customers %}
+                                    <option value="{{ c.id }}" {% if c.id|stringformat:"s" == customer_id %}selected{% endif %}>{{ c.cu_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoice No -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-hashtag"></i> Invoice No</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Invoice Number (Auto)</label>
+                            <input type="text" name="inv_number" id="inv_number"
+                                   class="form-control form-control-modern"
+                                   value="{{ invoice.inv_number|default:next_inv_no }}" readonly
+                                   style="background:#f0f4ff;font-weight:700;color:#3b4cc0;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoice Date -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-calendar-alt"></i> Invoice Date</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Date</label>
+                            <input type="date" name="inv_date" id="inv_date"
+                                   class="form-control form-control-modern" required
+                                   value="{{ invoice.inv_date|date:'Y-m-d'|default:today }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job No Display (Optional) -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-briefcase"></i> Job No</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Job Number</label>
+                            <input type="text" name="inv_job_no" id="inv_job_no" class="form-control form-control-modern"
+                                   value="{{ invoice.inv_job_no|default:'Multiple' }}">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Row 2 -->
+            <div class="row row-compact mt-2">
+
+                <!-- PO No -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-file-contract"></i> Purchase Order</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">PO Number</label>
+                            <input type="text" id="display_po" class="form-control form-control-modern"
+                                   readonly value="{{ invoice.inv_customer_po|default:po_num }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GST Rate -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-percent"></i> GST</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">GST Rate (%)</label>
+                            <input type="number" name="inv_gst_rate" id="inv_gst_rate" step="0.01"
+                                   class="form-control form-control-modern"
+                                   value="{{ invoice.inv_gst_rate|default:gst_rate }}"
+                                   oninput="recalcTotals()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GST Type -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-map-marked-alt"></i> GST Type</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Intra / Inter State</label>
+                            <select id="gst_type" class="form-control form-control-modern" onchange="setGstType()">
+                                <option value="intra">Intra-State (CGST + SGST)</option>
+                                <option value="inter">Inter-State (IGST)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Status -->
+                <div class="col-12 col-md-6 col-xl-3 col-compact">
+                    <div class="form-section h-100">
+                        <div class="form-section-title"><i class="fas fa-money-check-alt"></i> Payment</div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Payment Status</label>
+                            <select name="inv_payment_status" class="form-control form-control-modern">
+                                <option value="Pending"  {% if invoice.inv_payment_status == 'Pending'  or not invoice %}selected{% endif %}>Pending</option>
+                                <option value="Partial"  {% if invoice.inv_payment_status == 'Partial'  %}selected{% endif %}>Partial</option>
+                                <option value="Paid"     {% if invoice.inv_payment_status == 'Paid'     %}selected{% endif %}>Paid</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── SECTION 2 : LINE ITEMS ──────────────────────────────────── -->
+        <div class="table-container-modern mt-3">
+            <div class="form-section-title d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-boxes"></i> Invoice Line Items (Per Box / Pallet)</span>
+                <small class="text-muted" style="font-weight:400;">Auto-loaded from PO Dimensions</small>
+            </div>
+            <div class="table-responsive">
+                <table class="table modern-table text-center" id="items_table">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;"><input type="checkbox" id="selectAllItems" onchange="toggleAllItems(this)"></th>
+                            <th>#</th>
+                            <th>Item Number</th>
+                            <th>Description</th>
+                            <th>L × W × H</th>
+                            <th>UOM</th>
+                            <th style="width:80px;">Qty</th>
+                            <th style="width:120px;">Unit Value (₹)</th>
+                            <th style="width:120px;">Total (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="items_tbody">
+                        {% if invoice %}
+                            {% for item in items %}
+                            <tr class="modern-tr">
+                                <input type="hidden" name="item_pod_id_{{ forloop.counter }}"      value="{{ item.inv_pod_dimension_id|default:'' }}">
+                                <input type="hidden" name="item_number_{{ forloop.counter }}"      value="{{ item.inv_item_number }}">
+                                <input type="hidden" name="item_description_{{ forloop.counter }}" value="{{ item.inv_description }}">
+                                <input type="hidden" name="item_length_{{ forloop.counter }}"      value="{{ item.inv_length }}">
+                                <input type="hidden" name="item_width_{{ forloop.counter }}"       value="{{ item.inv_width }}">
+                                <input type="hidden" name="item_height_{{ forloop.counter }}"      value="{{ item.inv_height }}">
+                                <input type="hidden" name="item_uom_{{ forloop.counter }}"         value="{{ item.inv_uom }}">
+                                <td class="align-middle"><input type="checkbox" name="item_checked_{{ forloop.counter }}" class="item-checkbox" checked onchange="recalcRow(this)"></td>
+                                <td class="align-middle font-weight-bold">{{ forloop.counter }}</td>
+                                <td class="text-left font-weight-bold" style="font-size:0.82rem;">{{ item.inv_item_number }}</td>
+                                <td>{{ item.inv_description|default:"—" }}</td>
+                                <td>{{ item.inv_length }}×{{ item.inv_width }}×{{ item.inv_height }}</td>
+                                <td>{{ item.inv_uom|default:"mm" }}</td>
+                                <td>
+                                    <input type="number" name="item_qty_{{ forloop.counter }}" value="{{ item.inv_qty }}"
+                                           min="0" class="form-control form-control-sm text-center item-qty"
+                                           style="width:70px;margin:auto;" oninput="recalcRow(this)">
+                                </td>
+                                <td>
+                                    <input type="number" name="item_unit_value_{{ forloop.counter }}" value="{{ item.inv_unit_value }}"
+                                           min="0" step="0.01" class="form-control form-control-sm text-center item-uv"
+                                           style="width:110px;margin:auto;" oninput="recalcRow(this)">
+                                </td>
+                                <td class="font-weight-bold item-total">{{ item.inv_total_value|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            {% for pod in po_items %}
+                            <tr class="modern-tr">
+                                <input type="hidden" name="item_pod_id_{{ forloop.counter }}"      value="{{ pod.id }}">
+                                <input type="hidden" name="item_number_{{ forloop.counter }}"      value="{{ pod.pod_item }}">
+                                <input type="hidden" name="item_description_{{ forloop.counter }}" value="{{ pod.pod_type_of_req }}">
+                                <input type="hidden" name="item_length_{{ forloop.counter }}"      value="{{ pod.pod_length }}">
+                                <input type="hidden" name="item_width_{{ forloop.counter }}"       value="{{ pod.pod_width }}">
+                                <input type="hidden" name="item_height_{{ forloop.counter }}"      value="{{ pod.pod_height }}">
+                                <input type="hidden" name="item_uom_{{ forloop.counter }}"         value="{{ pod.pod_uom }}">
+                                <td class="align-middle"><input type="checkbox" name="item_checked_{{ forloop.counter }}" class="item-checkbox" onchange="recalcRow(this)"></td>
+                                <td class="align-middle font-weight-bold">{{ forloop.counter }}</td>
+                                <td class="text-left font-weight-bold" style="font-size:0.82rem;color:#3b4cc0;">{{ pod.pod_item }}</td>
+                                <td>{{ pod.pod_type_of_req }}</td>
+                                <td>{{ pod.pod_length }}×{{ pod.pod_width }}×{{ pod.pod_height }}</td>
+                                <td>{{ pod.pod_uom|default:"mm" }}</td>
+                                <td>
+                                    <input type="number" name="item_qty_{{ forloop.counter }}" value="{{ pod.pod_quantity }}"
+                                           min="0" class="form-control form-control-sm text-center item-qty"
+                                           style="width:70px;margin:auto;" oninput="recalcRow(this)">
+                                </td>
+                                <td>
+                                    <input type="number" name="item_unit_value_{{ forloop.counter }}" value="{{ pod.pod_value|default:0 }}"
+                                           min="0" step="0.01" class="form-control form-control-sm text-center item-uv"
+                                           style="width:110px;margin:auto;" oninput="recalcRow(this)">
+                                </td>
+                                <td class="font-weight-bold item-total">
+                                    {{ pod.pod_value|default:0 | floatformat:2 }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                        {% if not po_items and not invoice %}
+                        <tr id="empty_row">
+                            <td colspan="9" class="text-center py-4 text-muted">
+                                <i class="fas fa-info-circle"></i> Select a Customer to load pending PO items automatically.
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ── SECTION 3 : TOTALS ──────────────────────────────────────── -->
+        <div class="modern-card mt-3" style="padding:1rem!important;">
+            <div class="row justify-content-end">
+                <div class="col-md-5">
+                    <table class="table" style="font-size:0.95rem;">
+                        <tr>
+                            <td class="text-right font-weight-bold">Base Amount (₹)</td>
+                            <td class="text-right font-weight-bold" id="disp_base">0.00</td>
+                        </tr>
+                        <tr id="cgst_row">
+                            <td class="text-right">CGST (<span id="cgst_pct">9</span>%)</td>
+                            <td class="text-right" id="disp_cgst">0.00</td>
+                        </tr>
+                        <tr id="sgst_row">
+                            <td class="text-right">SGST (<span id="sgst_pct">9</span>%)</td>
+                            <td class="text-right" id="disp_sgst">0.00</td>
+                        </tr>
+                        <tr id="igst_row" style="display:none;">
+                            <td class="text-right">IGST (<span id="igst_pct">18</span>%)</td>
+                            <td class="text-right" id="disp_igst">0.00</td>
+                        </tr>
+                        <tr style="border-top:2px solid #333;">
+                            <td class="text-right font-weight-bold" style="font-size:1.1rem;">Grand Total (₹)</td>
+                            <td class="text-right font-weight-bold" id="disp_total" style="font-size:1.1rem;color:#3b4cc0;">0.00</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Remarks -->
+            <div class="form-group-modern mt-2">
+                <label class="form-label-modern"><i class="fas fa-sticky-note"></i> Remarks / Notes</label>
+                <textarea name="inv_remarks" class="form-control form-control-modern" rows="2"
+                          placeholder="Optional remarks...">{{ invoice.inv_remarks|default:'' }}</textarea>
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <a href="{% url 'pk_invoice_list' %}" class="btn-modern btn-cancel px-4 py-2" style="text-decoration:none;">
+                    <i class="fas fa-times"></i> CANCEL
+                </a>
+                <button type="submit" class="btn-modern btn-submit px-5 py-2" style="font-size:1rem;">
+                    <i class="fas fa-save"></i> SAVE INVOICE
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// ── Reload page when Customer changes ──────────────────────────────
+$('#inv_customer_id').on('change', function () {
+    var customerId = $(this).val();
+    if (!customerId) return;
+    window.location.href = "?customer_id=" + customerId;
+});
+
+// ── Checkboxes ───────────────────────────────────────────────────────
+function toggleAllItems(masterCheckbox) {
+    $('.item-checkbox').prop('checked', $(masterCheckbox).prop('checked'));
+    $('.item-checkbox').each(function() {
+        recalcRow(this);
+    });
+}
+
+// ── Recalc a single row ──────────────────────────────────────────────
+function recalcRow(input) {
+    var row = $(input).closest('tr');
+    var isChecked = row.find('.item-checkbox').is(':checked');
+    if (!isChecked) {
+        row.find('.item-total').text('0.00');
+    } else {
+        var qty = parseFloat(row.find('.item-qty').val()) || 0;
+        var uv  = parseFloat(row.find('.item-uv').val())  || 0;
+        row.find('.item-total').text((qty * uv).toFixed(2));
+    }
+    recalcTotals();
+}
+
+// ── Recalc all totals ────────────────────────────────────────────────
+function recalcTotals() {
+    var base = 0;
+    $('.item-qty').each(function (i) {
+        var row = $(this).closest('tr');
+        var isChecked = row.find('.item-checkbox').is(':checked');
+        if (isChecked) {
+            var qty = parseFloat($(this).val()) || 0;
+            var uv  = parseFloat(row.find('.item-uv').val()) || 0;
+            base += qty * uv;
+        }
+    });
+    base = Math.round(base * 100) / 100;
+    $('#inv_base_amount').val(base);
+    $('#disp_base').text(base.toFixed(2));
+
+    var gstRate  = parseFloat($('#inv_gst_rate').val()) || 0;
+    var useIgst  = ($('#use_igst').val() === '1');
+    var gstTotal = Math.round(base * gstRate / 100 * 100) / 100;
+
+    if (useIgst) {
+        $('#igst_row').show(); $('#cgst_row').hide(); $('#sgst_row').hide();
+        $('#igst_pct').text(gstRate);
+        $('#disp_igst').text(gstTotal.toFixed(2));
+    } else {
+        $('#igst_row').hide(); $('#cgst_row').show(); $('#sgst_row').show();
+        var half = Math.round(gstRate / 2 * 100) / 100;
+        var halfAmt = Math.round(gstTotal / 2 * 100) / 100;
+        $('#cgst_pct').text(half); $('#sgst_pct').text(half);
+        $('#disp_cgst').text(halfAmt.toFixed(2));
+        $('#disp_sgst').text(halfAmt.toFixed(2));
+    }
+    $('#disp_total').text((base + gstTotal).toFixed(2));
+}
+
+function setGstType() {
+    $('#use_igst').val($('#gst_type').val() === 'inter' ? '1' : '0');
+    recalcTotals();
+}
+
+// On load
+$(document).ready(function () {
+    recalcTotals();
+    {% if job_no %}$('#inv_job_no').trigger('change');{% endif %}
+});
+</script>
+{% endblock %}
