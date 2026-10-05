@@ -117,6 +117,8 @@ def driver_expense_add(request, expense_id=0):
                             vehicle_obj = VehiclemasterInfo.objects.filter(vm_registrationnumber=trip.tr_vehiclenumber).first()
                         if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_customer:
                             customer_obj = trip.tr_consignmentnumber.co_customer
+                        elif hasattr(trip, 'tr_enquirynumber') and trip.tr_enquirynumber and trip.tr_enquirynumber.en_customer:
+                            customer_obj = trip.tr_enquirynumber.en_customer
 
                 # Map Driver Expense fields to exact labels shown in Driver Expense form
                 expense_mapping = [
