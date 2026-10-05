@@ -96,6 +96,19 @@
         border-radius: 4px;
         white-space: nowrap;
     }
+
+    /* ══ Number input spinners ══ */
+    input[type="number"].row-tds-pct-input::-webkit-outer-spin-button,
+    input[type="number"].row-tds-pct-input::-webkit-inner-spin-button,
+    input[type="number"].row-recd-input::-webkit-outer-spin-button,
+    input[type="number"].row-recd-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type="number"].row-tds-pct-input,
+    input[type="number"].row-recd-input {
+        -moz-appearance: textfield;
+    }
 </style>
 {% endblock %}
 
@@ -234,17 +247,16 @@
                             <th class="text-right">SGST</th>
                             <th class="text-right">IGST</th>
                             <th class="text-right">Inv Amt</th>
-                            <th class="text-center">TDS %</th>
+                            <th class="text-center" style="min-width: 90px;">TDS %</th>
                             <th class="text-right">TDS Amt</th>
                             <th class="text-right">Receivable</th>
-                            <th class="text-right">Recd Amt</th>
+                            <th class="text-right" style="min-width: 130px;">Recd Amt</th>
                             <th class="text-right">Bal</th>
-                            <th class="text-center" style="width: 60px;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="selectedInvoicesTbody">
                         <tr id="noSelectedRow">
-                            <td colspan="14" class="text-center py-4 text-muted">
+                            <td colspan="13" class="text-center py-4 text-muted">
                                 No invoices added yet. Select invoices from the Available list below and click "Add Selected Invoices".
                             </td>
                         </tr>
@@ -262,7 +274,6 @@
                             <td class="text-right" id="tfoot_receivable">&#8377; 0.00</td>
                             <td class="text-right text-success" id="tfoot_recd_amt">&#8377; 0.00</td>
                             <td class="text-right" id="tfoot_bal">&#8377; 0.00</td>
-                            <td></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -338,10 +349,16 @@ $(document).ready(function() {
         return num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    var calculationSource = 'top'; // 'top' or 'row'
+
     // ══════════════════════════════════════════════════════════════════════
     // Calculations: Inv Amount, TDS, Receivable, Recd Amt, Bal, Short & Excess
     // ══════════════════════════════════════════════════════════════════════
-    function updateCalculations() {
+    function updateCalculations(source) {
+        if (source) {
+            calculationSource = source;
+        }
+
         var totalServiceAmt = 0;
         var totalCgst = 0;
         var totalSgst = 0;
@@ -349,24 +366,116 @@ $(document).ready(function() {
         var totalInvAmt = 0;
 
         selectedInvoices.forEach(function(inv) {
-            totalServiceAmt += parseFloat(inv.service_val) || 0;
-            totalCgst += parseFloat(inv.cgst) || 0;
-            totalSgst += parseFloat(inv.sgst) || 0;
-            totalIgst += parseFloat(inv.igst) || 0;
-            totalInvAmt += parseFloat(inv.amount) || 0;
+            var sVal = parseFloat(inv.service_val) || 0;
+            var cgst = parseFloat(inv.cgst) || 0;
+            var sgst = parseFloat(inv.sgst) || 0;
+            var igst = parseFloat(inv.igst) || 0;
+
+            // Formula 1: inv amt = ser amt + cgst + sgst + igst
+            var taxSum = cgst + sgst + igst;
+            var invAmt = (sVal > 0 || taxSum > 0) ? (Math.round((sVal + taxSum) * 100) / 100) : (parseFloat(inv.amount) || 0);
+            inv.amount = invAmt;
+
+            totalServiceAmt += sVal;
+            totalCgst += cgst;
+            totalSgst += sgst;
+            totalIgst += igst;
+            totalInvAmt += invAmt;
         });
 
         $('#inv_amount').val(totalInvAmt.toFixed(2));
         $('#selectedTotalDisplay').html('&#8377; ' + fmtNum(totalInvAmt));
 
-        var pmtRecAmt = parseFloat($('#payment_received_amt').val()) || 0;
-        var tdsAmt = parseFloat($('#tds_amount').val()) || 0;
-        var diff = (pmtRecAmt + tdsAmt) - totalInvAmt;
+        var totalTdsAmt = 0;
+        var totalReceivable = 0;
+        var totalRecdAmt = 0;
+        var totalBal = 0;
+
+        if (calculationSource === 'row') {
+            // Direct row input mode: sum row inputs into top totals
+            selectedInvoices.forEach(function(inv) {
+                var sVal = parseFloat(inv.service_val) || 0;
+                var cgst = parseFloat(inv.cgst) || 0;
+                var sgst = parseFloat(inv.sgst) || 0;
+                var igst = parseFloat(inv.igst) || 0;
+
+                // Formula 1: inv amt = ser amt + cgst + sgst + igst
+                var invAmt = (sVal > 0 || (cgst + sgst + igst) > 0) ? (Math.round((sVal + cgst + sgst + igst) * 100) / 100) : (parseFloat(inv.amount) || 0);
+                inv.amount = invAmt;
+
+                var rowTdsPct = parseFloat(inv.calculated_tds_pct) || 0;
+                var rowRecd = parseFloat(inv.calculated_recd_amt) || 0;
+
+                // Formula 2: tds amt = ser amt * tds %
+                var rowTds = Math.round((sVal * (rowTdsPct / 100)) * 100) / 100;
+
+                // Formula 3: receivable = inv amt - tds amt
+                var rowReceivable = Math.round((invAmt - rowTds) * 100) / 100;
+
+                // Formula 4: bal = receivable - recd amt
+                var rowBal = Math.round((rowReceivable - rowRecd) * 100) / 100;
+
+                inv.calculated_tds_pct = rowTdsPct;
+                inv.calculated_tds_amt = rowTds;
+                inv.calculated_receivable = rowReceivable;
+                inv.calculated_recd_amt = rowRecd;
+                inv.calculated_bal = rowBal;
+
+                totalTdsAmt += rowTds;
+                totalReceivable += rowReceivable;
+                totalRecdAmt += rowRecd;
+                totalBal += rowBal;
+            });
+
+            $('#payment_received_amt').val(totalRecdAmt.toFixed(2));
+            $('#tds_amount').val(totalTdsAmt.toFixed(2));
+        } else {
+            // Proportional mode from top cards
+            var pmtRecAmt = parseFloat($('#payment_received_amt').val()) || 0;
+            var tdsAmt = parseFloat($('#tds_amount').val()) || 0;
+
+            selectedInvoices.forEach(function(inv) {
+                var sVal = parseFloat(inv.service_val) || 0;
+                var cgst = parseFloat(inv.cgst) || 0;
+                var sgst = parseFloat(inv.sgst) || 0;
+                var igst = parseFloat(inv.igst) || 0;
+
+                // Formula 1: inv amt = ser amt + cgst + sgst + igst
+                var invAmt = (sVal > 0 || (cgst + sgst + igst) > 0) ? (Math.round((sVal + cgst + sgst + igst) * 100) / 100) : (parseFloat(inv.amount) || 0);
+                inv.amount = invAmt;
+
+                var ratio = totalInvAmt > 0 ? (invAmt / totalInvAmt) : 0;
+                var rowTds = totalInvAmt > 0 ? Math.round((tdsAmt * ratio) * 100) / 100 : 0;
+                var rowRecd = totalInvAmt > 0 ? Math.round((pmtRecAmt * ratio) * 100) / 100 : 0;
+                var rowTdsPct = sVal > 0 ? ((rowTds / sVal) * 100) : 0;
+
+                // Formula 3: receivable = inv amt - tds amt
+                var rowReceivable = Math.round((invAmt - rowTds) * 100) / 100;
+
+                // Formula 4: bal = receivable - recd amt
+                var rowBal = Math.round((rowReceivable - rowRecd) * 100) / 100;
+
+                inv.calculated_tds_pct = rowTdsPct;
+                inv.calculated_tds_amt = rowTds;
+                inv.calculated_receivable = rowReceivable;
+                inv.calculated_recd_amt = rowRecd;
+                inv.calculated_bal = rowBal;
+
+                totalTdsAmt += rowTds;
+                totalReceivable += rowReceivable;
+                totalRecdAmt += rowRecd;
+                totalBal += rowBal;
+            });
+        }
+
+        var pmtVal = parseFloat($('#payment_received_amt').val()) || 0;
+        var tdsVal = parseFloat($('#tds_amount').val()) || 0;
+        var diff = (pmtVal + tdsVal) - totalInvAmt;
 
         var shortExcessText = '';
         var inputEl = $('#short_excess');
 
-        if (totalInvAmt === 0 && pmtRecAmt === 0 && tdsAmt === 0) {
+        if (totalInvAmt === 0 && pmtVal === 0 && tdsVal === 0) {
             shortExcessText = '0.00';
             inputEl.css('color', '#64748b');
         } else if (Math.abs(diff) < 0.01) {
@@ -380,35 +489,6 @@ $(document).ready(function() {
             inputEl.css('color', '#dc2626');
         }
         inputEl.val(shortExcessText);
-
-        // Per-invoice allocation calculation
-        var totalTdsAmt = 0;
-        var totalReceivable = 0;
-        var totalRecdAmt = 0;
-        var totalBal = 0;
-
-        selectedInvoices.forEach(function(inv) {
-            var invAmt = parseFloat(inv.amount) || 0;
-            var sVal = parseFloat(inv.service_val) || 0;
-            var ratio = totalInvAmt > 0 ? (invAmt / totalInvAmt) : 0;
-
-            var rowTds = totalInvAmt > 0 ? (tdsAmt * ratio) : 0;
-            var rowRecd = totalInvAmt > 0 ? (pmtRecAmt * ratio) : 0;
-            var rowTdsPct = sVal > 0 ? ((rowTds / sVal) * 100) : (totalServiceAmt > 0 && tdsAmt > 0 ? ((tdsAmt / totalServiceAmt) * 100) : 0);
-            var rowReceivable = invAmt - rowTds;
-            var rowBal = rowReceivable - rowRecd;
-
-            inv.calculated_tds_pct = rowTdsPct;
-            inv.calculated_tds_amt = rowTds;
-            inv.calculated_receivable = rowReceivable;
-            inv.calculated_recd_amt = rowRecd;
-            inv.calculated_bal = rowBal;
-
-            totalTdsAmt += rowTds;
-            totalReceivable += rowReceivable;
-            totalRecdAmt += rowRecd;
-            totalBal += rowBal;
-        });
 
         // Update footer
         $('#tfoot_service_amt').html('&#8377; ' + fmtNum(totalServiceAmt));
@@ -424,25 +504,73 @@ $(document).ready(function() {
         $('#selected_invoices_json').val(JSON.stringify(selectedInvoices));
     }
 
+    // Top inputs event listener
     $('#payment_received_amt, #tds_amount').on('input change', function() {
-        updateCalculations();
+        updateCalculations('top');
         refreshSelectedRowCalculations();
+    });
+
+    // Row inputs event listener (delegated)
+    $('#selectedInvoicesTbody').on('input change', '.row-tds-pct-input, .row-recd-input', function() {
+        var row = $(this).closest('tr');
+        var idx = parseInt(row.find('.row-tds-pct-input, .row-recd-input').first().attr('data-index'));
+        if (isNaN(idx) || idx < 0 || idx >= selectedInvoices.length) return;
+
+        var inv = selectedInvoices[idx];
+        var pctVal = parseFloat(row.find('.row-tds-pct-input').val()) || 0;
+        var recdVal = parseFloat(row.find('.row-recd-input').val()) || 0;
+
+        inv.calculated_tds_pct = pctVal;
+        inv.calculated_recd_amt = recdVal;
+
+        var sVal = parseFloat(inv.service_val) || 0;
+        var cgst = parseFloat(inv.cgst) || 0;
+        var sgst = parseFloat(inv.sgst) || 0;
+        var igst = parseFloat(inv.igst) || 0;
+
+        // Formula 1: inv amt = ser amt + cgst + sgst + igst
+        var invAmt = (sVal > 0 || (cgst + sgst + igst) > 0) ? (Math.round((sVal + cgst + sgst + igst) * 100) / 100) : (parseFloat(inv.amount) || 0);
+        inv.amount = invAmt;
+
+        // Formula 2: tds amt = ser amt * tds %
+        var tdsAmt = Math.round((sVal * (pctVal / 100)) * 100) / 100;
+        inv.calculated_tds_amt = tdsAmt;
+
+        // Formula 3: receivable = inv amt - tds amt
+        var receivable = Math.round((invAmt - tdsAmt) * 100) / 100;
+        inv.calculated_receivable = receivable;
+
+        // Formula 4: bal = receivable - recd amt
+        var bal = Math.round((receivable - recdVal) * 100) / 100;
+        inv.calculated_bal = bal;
+
+        row.find('.cell-inv-amt').html('&#8377; ' + fmtNum(invAmt));
+        row.find('.cell-tds-amt').html('&#8377; ' + fmtNum(tdsAmt));
+        row.find('.cell-receivable').html('&#8377; ' + fmtNum(receivable));
+
+        var balEl = row.find('.cell-bal');
+        balEl.html('&#8377; ' + fmtNum(bal));
+        var balColor = (Math.abs(bal) < 0.01) ? '#059669' : (bal > 0 ? '#d97706' : '#059669');
+        balEl.css('color', balColor);
+
+        updateCalculations('row');
     });
 
     function refreshSelectedRowCalculations() {
         $('#selectedInvoicesTbody tr').each(function(idx) {
             var inv = selectedInvoices[idx];
             if (inv) {
-                $(this).find('.cell-tds-pct').text(inv.calculated_tds_pct.toFixed(1) + '%');
-                $(this).find('.cell-tds-amt').html('&#8377; ' + fmtNum(inv.calculated_tds_amt));
-                $(this).find('.cell-receivable').html('&#8377; ' + fmtNum(inv.calculated_receivable));
-                $(this).find('.cell-recd-amt').html('&#8377; ' + fmtNum(inv.calculated_recd_amt));
+                $(this).find('.cell-inv-amt').html('&#8377; ' + fmtNum(inv.amount || 0));
+                $(this).find('.row-tds-pct-input').val((inv.calculated_tds_pct || 0).toFixed(1));
+                $(this).find('.cell-tds-amt').html('&#8377; ' + fmtNum(inv.calculated_tds_amt || 0));
+                $(this).find('.cell-receivable').html('&#8377; ' + fmtNum(inv.calculated_receivable || 0));
+                $(this).find('.row-recd-input').val((inv.calculated_recd_amt || 0).toFixed(2));
 
                 var balEl = $(this).find('.cell-bal');
-                balEl.html('&#8377; ' + fmtNum(inv.calculated_bal));
-                if (Math.abs(inv.calculated_bal) < 0.01) {
+                balEl.html('&#8377; ' + fmtNum(inv.calculated_bal || 0));
+                if (Math.abs(inv.calculated_bal || 0) < 0.01) {
                     balEl.css('color', '#059669');
-                } else if (inv.calculated_bal > 0) {
+                } else if ((inv.calculated_bal || 0) > 0) {
                     balEl.css('color', '#d97706');
                 } else {
                     balEl.css('color', '#059669');
@@ -454,7 +582,7 @@ $(document).ready(function() {
     // ══════════════════════════════════════════════════════════════════════
     // Rendering: Upper Table (Selected Invoices)
     // Fields: inv no | customer name | service amt | cgst | sgst | igst |
-    //         inv amt | tds % | tds amt | receivable | recd amt | bal | Action
+    //         inv amt | tds % | tds amt | receivable | recd amt | bal
     // ══════════════════════════════════════════════════════════════════════
     function renderSelectedTable() {
         var tbody = $('#selectedInvoicesTbody');
@@ -464,12 +592,39 @@ $(document).ready(function() {
         $('#selectedCountBadge').text(count);
 
         if (count === 0) {
-            tbody.html('<tr id="noSelectedRow"><td colspan="14" class="text-center py-4 text-muted">No invoices added yet. Select invoices from the Available list below and click "Add Selected Invoices".</td></tr>');
+            tbody.html('<tr id="noSelectedRow"><td colspan="13" class="text-center py-4 text-muted">No invoices added yet. Select invoices from the Available list below and click "Add Selected Invoices".</td></tr>');
             $('#selectedInvoicesTfoot').hide();
         } else {
             $('#selectedInvoicesTfoot').show();
             selectedInvoices.forEach(function(inv, idx) {
-                var balColor = (Math.abs(inv.calculated_bal || 0) < 0.01) ? '#059669' : ((inv.calculated_bal || 0) > 0 ? '#d97706' : '#059669');
+                var sVal = parseFloat(inv.service_val) || 0;
+                var cgst = parseFloat(inv.cgst) || 0;
+                var sgst = parseFloat(inv.sgst) || 0;
+                var igst = parseFloat(inv.igst) || 0;
+
+                // Formula 1: inv amt = ser amt + cgst + sgst + igst
+                var invAmt = (sVal > 0 || (cgst + sgst + igst) > 0) ? (Math.round((sVal + cgst + sgst + igst) * 100) / 100) : (parseFloat(inv.amount) || 0);
+                inv.amount = invAmt;
+
+                var tdsPctVal = (inv.calculated_tds_pct !== undefined && inv.calculated_tds_pct !== null) ? Number(inv.calculated_tds_pct).toFixed(1) : '0.0';
+                var pctVal = parseFloat(tdsPctVal) || 0;
+
+                // Formula 2: tds amt = ser amt * tds %
+                var tdsAmt = Math.round((sVal * (pctVal / 100)) * 100) / 100;
+                inv.calculated_tds_amt = tdsAmt;
+
+                // Formula 3: receivable = inv amt - tds amt
+                var receivable = Math.round((invAmt - tdsAmt) * 100) / 100;
+                inv.calculated_receivable = receivable;
+
+                var recdVal = (inv.calculated_recd_amt !== undefined && inv.calculated_recd_amt !== null) ? Number(inv.calculated_recd_amt).toFixed(2) : '0.00';
+                var recdNum = parseFloat(recdVal) || 0;
+
+                // Formula 4: bal = receivable - recd amt
+                var bal = Math.round((receivable - recdNum) * 100) / 100;
+                inv.calculated_bal = bal;
+
+                var balColor = (Math.abs(bal) < 0.01) ? '#059669' : (bal > 0 ? '#d97706' : '#059669');
 
                 var tr = $('<tr></tr>');
                 // 0. Checkbox
@@ -479,27 +634,25 @@ $(document).ready(function() {
                 // 2. Customer Name
                 tr.append('<td><strong>' + (inv.customer_name || '-') + '</strong></td>');
                 // 3. Service Amt
-                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.service_val) + '</td>');
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(sVal) + '</td>');
                 // 4. CGST
-                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.cgst) + '</td>');
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(cgst) + '</td>');
                 // 5. SGST
-                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.sgst) + '</td>');
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(sgst) + '</td>');
                 // 6. IGST
-                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.igst) + '</td>');
-                // 7. Inv Amt
-                tr.append('<td class="text-right col-nowrap font-weight-bold">&#8377; ' + fmtNum(inv.amount) + '</td>');
-                // 8. TDS %
-                tr.append('<td class="text-center col-nowrap cell-tds-pct">' + ((inv.calculated_tds_pct || 0).toFixed(1)) + '%</td>');
-                // 9. TDS Amt
-                tr.append('<td class="text-right col-nowrap cell-tds-amt">&#8377; ' + fmtNum(inv.calculated_tds_amt || 0) + '</td>');
-                // 10. Receivable
-                tr.append('<td class="text-right col-nowrap font-weight-bold cell-receivable">&#8377; ' + fmtNum(inv.calculated_receivable || 0) + '</td>');
-                // 11. Recd Amt
-                tr.append('<td class="text-right col-nowrap font-weight-bold text-success cell-recd-amt">&#8377; ' + fmtNum(inv.calculated_recd_amt || 0) + '</td>');
-                // 12. Bal
-                tr.append('<td class="text-right col-nowrap font-weight-bold cell-bal" style="color:' + balColor + ';">&#8377; ' + fmtNum(inv.calculated_bal || 0) + '</td>');
-                // 13. Action
-                tr.append('<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remove-selected" data-index="' + idx + '" title="Remove from receipt"><i class="fas fa-trash-alt"></i></button></td>');
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(igst) + '</td>');
+                // 7. Inv Amt (Formula: ser amt + cgst + sgst + igst)
+                tr.append('<td class="text-right col-nowrap font-weight-bold cell-inv-amt">&#8377; ' + fmtNum(invAmt) + '</td>');
+                // 8. TDS % (Editable input)
+                tr.append('<td class="text-center col-nowrap cell-tds-pct"><div class="d-inline-flex align-items-center justify-content-center"><input type="number" step="0.1" min="0" max="100" class="form-control form-control-sm text-center row-tds-pct-input font-weight-bold" data-index="' + idx + '" value="' + tdsPctVal + '" style="width: 65px; padding: 2px 4px; height: 28px; font-size: 0.82rem; border-radius: 4px; border: 1px solid #cbd5e1;"><span class="ml-1 text-muted font-weight-bold" style="font-size: 0.8rem;">%</span></div></td>');
+                // 9. TDS Amt (Formula: ser amt * tds %)
+                tr.append('<td class="text-right col-nowrap cell-tds-amt">&#8377; ' + fmtNum(tdsAmt) + '</td>');
+                // 10. Receivable (Formula: inv amt - tds amt)
+                tr.append('<td class="text-right col-nowrap font-weight-bold cell-receivable">&#8377; ' + fmtNum(receivable) + '</td>');
+                // 11. Recd Amt (Editable input)
+                tr.append('<td class="text-right col-nowrap font-weight-bold text-success cell-recd-amt"><input type="number" step="0.01" min="0" class="form-control form-control-sm text-right row-recd-input font-weight-bold text-success" data-index="' + idx + '" value="' + recdVal + '" style="width: 115px; padding: 2px 6px; height: 28px; font-size: 0.82rem; border-radius: 4px; border: 1px solid #cbd5e1; display: inline-block;"></td>');
+                // 12. Bal (Formula: receivable - recd amt)
+                tr.append('<td class="text-right col-nowrap font-weight-bold cell-bal" style="color:' + balColor + ';">&#8377; ' + fmtNum(bal) + '</td>');
 
                 tbody.append(tr);
             });
@@ -565,12 +718,19 @@ $(document).ready(function() {
                 tr.append('<td class="text-center col-nowrap font-weight-bold text-primary">' + (inv.inv_no || '-') + '</td>');
                 tr.append('<td class="text-center col-nowrap">' + (inv.inv_date || '-') + '</td>');
                 tr.append('<td><strong>' + (inv.customer_name || '-') + '</strong></td>');
+                var sVal = parseFloat(inv.service_val) || 0;
+                var cgst = parseFloat(inv.cgst) || 0;
+                var sgst = parseFloat(inv.sgst) || 0;
+                var igst = parseFloat(inv.igst) || 0;
+                var computedAmt = (sVal > 0 || (cgst + sgst + igst) > 0) ? (Math.round((sVal + cgst + sgst + igst) * 100) / 100) : (parseFloat(inv.amount) || 0);
+                inv.amount = computedAmt;
+
                 tr.append('<td>' + (inv.dept || '-') + '</td>');
-                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.service_val) + '</td>');
-                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.cgst) + '</td>');
-                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.sgst) + '</td>');
-                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(inv.igst) + '</td>');
-                tr.append('<td class="text-right col-nowrap font-weight-bold">&#8377; ' + fmtNum(inv.amount) + '</td>');
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(sVal) + '</td>');
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(cgst) + '</td>');
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(sgst) + '</td>');
+                tr.append('<td class="text-right col-nowrap">&#8377; ' + fmtNum(igst) + '</td>');
+                tr.append('<td class="text-right col-nowrap font-weight-bold">&#8377; ' + fmtNum(computedAmt) + '</td>');
                 tr.append('<td class="text-center col-nowrap">' + (inv.sub_date || '-') + '</td>');
                 tr.append('<td>' + (inv.sub_to || '-') + '</td>');
                 tr.append('<td>' + (inv.sales || '-') + '</td>');
@@ -648,7 +808,11 @@ $(document).ready(function() {
         checkedIds.forEach(function(id) {
             var item = allSubmittedInvoices.find(function(inv) { return inv.id === id; });
             if (item && !selectedInvoices.some(function(sel) { return sel.id === id; })) {
-                selectedInvoices.push(item);
+                var copy = Object.assign({}, item);
+                if (typeof copy.calculated_tds_pct === 'undefined') copy.calculated_tds_pct = 0.0;
+                if (typeof copy.calculated_tds_amt === 'undefined') copy.calculated_tds_amt = 0.0;
+                if (typeof copy.calculated_recd_amt === 'undefined') copy.calculated_recd_amt = 0.0;
+                selectedInvoices.push(copy);
             }
         });
 
@@ -697,15 +861,6 @@ $(document).ready(function() {
 
         renderSelectedTable();
         renderAvailableTable();
-    });
-
-    $('#selectedInvoicesTbody').on('click', '.btn-remove-selected', function() {
-        var idx = parseInt($(this).attr('data-index'));
-        if (!isNaN(idx) && idx >= 0 && idx < selectedInvoices.length) {
-            selectedInvoices.splice(idx, 1);
-            renderSelectedTable();
-            renderAvailableTable();
-        }
     });
 
     // ══════════════════════════════════════════════════════════════════════

@@ -1291,14 +1291,39 @@ def ar_add(request, ar_id=0):
         tot_inv_amt = sum(float(inv.get('amount') or 0.0) for inv in selected_invoices)
 
         for inv in selected_invoices:
-            inv_amt = float(inv.get('amount') or 0.0)
-            if tot_inv_amt > 0:
-                ratio = inv_amt / tot_inv_amt
-                inv_pmt = round(pmt_amt * ratio, 2)
-                inv_tds = round(tds_amt * ratio, 2)
+            s_val = float(inv.get('service_val') or 0.0)
+            cgst = float(inv.get('cgst') or 0.0)
+            sgst = float(inv.get('sgst') or 0.0)
+            igst = float(inv.get('igst') or 0.0)
+
+            # Formula 1: inv amt = ser amt + cgst + sgst + igst
+            if (s_val > 0 or (cgst + sgst + igst) > 0):
+                inv_amt = round(s_val + cgst + sgst + igst, 2)
+            else:
+                inv_amt = float(inv.get('amount') or 0.0)
+
+            if 'calculated_recd_amt' in inv and inv.get('calculated_recd_amt') is not None:
+                inv_pmt = round(float(inv.get('calculated_recd_amt') or 0.0), 2)
+            elif tot_inv_amt > 0:
+                inv_pmt = round(pmt_amt * (inv_amt / tot_inv_amt), 2)
             else:
                 inv_pmt = pmt_amt
+
+            if 'calculated_tds_amt' in inv and inv.get('calculated_tds_amt') is not None:
+                inv_tds = round(float(inv.get('calculated_tds_amt') or 0.0), 2)
+            elif 'calculated_tds_pct' in inv and inv.get('calculated_tds_pct') is not None:
+                # Formula 2: tds amt = ser amt * tds %
+                pct = float(inv.get('calculated_tds_pct') or 0.0)
+                inv_tds = round(s_val * (pct / 100.0), 2)
+            elif tot_inv_amt > 0:
+                inv_tds = round(tds_amt * (inv_amt / tot_inv_amt), 2)
+            else:
                 inv_tds = tds_amt
+
+            # Formula 3: receivable = inv amt - tds amt
+            receivable = round(inv_amt - inv_tds, 2)
+            # Formula 4: bal = receivable - recd amt
+            bal_pmt = round(receivable - inv_pmt, 2)
 
             source = inv.get('source')
             db_id = inv.get('db_id')
@@ -1352,7 +1377,7 @@ def ar_add(request, ar_id=0):
                 ar.ar_payment_received_amount = inv_pmt
                 ar.ar_tds = inv_tds
                 ar.ar_total_payment_received_amount = inv_pmt + inv_tds
-                ar.ar_balance_payment = (ar.ar_amount or inv_amt) - (inv_pmt + inv_tds)
+                ar.ar_balance_payment = bal_pmt
 
                 if ar.ar_operation_date:
                     ar.ar_rec_from_operation_date = (pmt_date - ar.ar_operation_date).days

@@ -4,22 +4,22 @@
 
 {% block extra_css %}
 <style>
-    #trans_invoice_woh_list_wrapper thead th,
-    #trans_invoice_master_list_wrapper thead th,
-    #trans_invoice_woh_list_wrapper tbody td,
-    #trans_invoice_master_list_wrapper tbody td {
+    #trans_invoice_woh_list thead th,
+    #trans_invoice_master_list thead th {
         white-space: nowrap !important;
         vertical-align: middle !important;
-    }
-    #trans_invoice_woh_list_wrapper thead th,
-    #trans_invoice_master_list_wrapper thead th {
         font-size: 0.78rem !important;
         padding: 0.55rem 0.7rem !important;
     }
-    #trans_invoice_woh_list_wrapper tbody td,
-    #trans_invoice_master_list_wrapper tbody td {
+    #trans_invoice_woh_list tbody td,
+    #trans_invoice_master_list tbody td {
+        vertical-align: middle !important;
         font-size: 0.82rem !important;
         padding: 0.45rem 0.7rem !important;
+    }
+    .dataTables_scrollHeadInner,
+    .dataTables_scrollHeadInner table {
+        width: 100% !important;
     }
 </style>
 {% endblock %}
@@ -46,7 +46,7 @@
     <!-- ══ Table Container ══ -->
     <div class="table-container-modern p-4 mb-4">
         <div class="table-responsive">
-            <table id="trans_invoice_woh_list" class="table table-striped table-bordered modern-table">
+            <table id="trans_invoice_woh_list" class="table table-striped table-bordered modern-table w-100">
 
                 <thead>
                     <tr>

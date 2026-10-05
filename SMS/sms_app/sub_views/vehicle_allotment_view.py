@@ -302,6 +302,12 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
         request.session['ses_enquiry_id'] = enquiry_id
         enquiry = EnquirynoteInfo.objects.get(id=enquiry_id)  # ⬅ Fetch enquiry
 
+        env_first = Enquirynotevehicle.objects.filter(
+            env_enquirynumber_id=enquiry_id
+        ).select_related('env_vehiclecategory').first()
+        vehicle_category_name = env_first.env_vehiclecategory.vc_vehiclecategory if (env_first and env_first.env_vehiclecategory) else ""
+        vehicle_category_id = env_first.env_vehiclecategory.id if (env_first and env_first.env_vehiclecategory) else ""
+
         return render(request, "asset_mgt_app/vehicle_allotment_add.html", {
             'first_name': first_name,
             'user_id': user_id,
@@ -314,6 +320,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             'customer_name': enquiry.en_customername.cu_name if enquiry.en_customername else "",
             'from_location': enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "",
             'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
+            'vehicle_category_name': vehicle_category_name,
+            'vehicle_category_id': vehicle_category_id,
             'all_vehicletypes': VehicletypeInfo.objects.all(),
             'all_vendors': Vendor_info.objects.all(),
             'is_admin': is_admin_user(request),
@@ -337,8 +345,16 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
         # Override legacy DB values to always display live rate from Enquiry Note
         env = Enquirynotevehicle.objects.filter(
             env_enquirynumber_id=enquiry_id,
-            env_vehicletype_id=va.va_vehicletype_placed_id or va.va_vehicletype_id
-        ).first()
+            env_vehicletype_id=va.va_vehicletype_id or va.va_vehicletype_placed_id
+        ).select_related('env_vehiclecategory').first()
+        if not env:
+            env = Enquirynotevehicle.objects.filter(
+                env_enquirynumber_id=enquiry_id
+            ).select_related('env_vehiclecategory').first()
+
+        vehicle_category_name = env.env_vehiclecategory.vc_vehiclecategory if (env and env.env_vehiclecategory) else ""
+        vehicle_category_id = env.env_vehiclecategory.id if (env and env.env_vehiclecategory) else ""
+
         if env:
             form.initial['va_sale'] = env.env_sale
             form.initial['va_special_sale'] = env.env_special_sale
@@ -359,6 +375,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             'customer_name': enquiry.en_customername.cu_name if enquiry.en_customername else "",
             'from_location': enquiry.en_fromlocaion.place_name if enquiry.en_fromlocaion else "",
             'to_location': enquiry.en_tolocation.place_name if enquiry.en_tolocation else "",
+            'vehicle_category_name': vehicle_category_name,
+            'vehicle_category_id': vehicle_category_id,
             'all_vehicletypes': VehicletypeInfo.objects.all(),
             'all_vendors': Vendor_info.objects.all(),
             'is_admin': is_admin_user(request),
@@ -1314,7 +1332,7 @@ def vehicle_requested(request):
             except Exception:
                 pass
 
-        if remaining > 0:
+        if remaining > 0 or (allotment_id and str(allotment_id).strip()):
             vehicle_list.append({
                 'id': vehicle_type_id,
                 'name': vehicle_type_name,
@@ -1629,7 +1647,9 @@ def get_vendor_buy_rate(request):
     except EnquirynoteInfo.DoesNotExist:
         return JsonResponse({'standard_buy': 0, 'special_buy': 0})
 
-    rate_obj = VendorratemasterInfo1.objects.filter(
+    vehicle_category_id = request.GET.get('vehicle_category_id')
+
+    rate_filter = dict(
         vr1_vendor_id=vendor_id,
         vr1_fromlocation=enquiry.en_fromlocaion,
         vr1_tolocation=enquiry.en_tolocation,
@@ -1637,8 +1657,12 @@ def get_vendor_buy_rate(request):
         vr1_touchpoint=enquiry.en_touchpoint,
         vr1_touchpoint2=enquiry.en_touchpoint2,
         vr1_touchpoint3=enquiry.en_touchpoint3,
-        vr1_touchpoint4=enquiry.en_touchpoint4
-    ).first()
+        vr1_touchpoint4=enquiry.en_touchpoint4,
+    )
+    if vehicle_category_id and str(vehicle_category_id).strip() and str(vehicle_category_id).strip() != '0':
+        rate_filter['vr1_vehiclecategory_id'] = str(vehicle_category_id).strip()
+
+    rate_obj = VendorratemasterInfo1.objects.filter(**rate_filter).first()
 
     if not rate_obj:
         return JsonResponse({'standard_buy': 0, 'special_buy': 0})
