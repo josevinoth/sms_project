@@ -149,44 +149,17 @@
     </div>
   </div>
 </div>
-
 <script>
     $(document).ready(function () {
         $('.select2').select2({
             width: '100%',
             allowClear: true,
-            placeholder: function(){
-                $(this).data('placeholder');
+            placeholder: function () {
+                return $(this).data('placeholder') || '';
             }
         });
 
-        $('#vendor_select').on('change', function () {
-            var vendorId = $(this).val();
-            var $vehicleSelect = $('#vehicle_number');
-            $vehicleSelect.empty().append('<option value="">Select Vehicle</option>');
-            
-            var ajaxData = vendorId ? { 'vendor_id': vendorId } : { 'source_id': 2 };
-            $.ajax({
-                url: "{% url 'get_pl_vehicles_by_vendor' %}",
-                data: ajaxData,
-                success: function (data) {
-                    $.each(data, function(index, regNo) {
-                        $vehicleSelect.append('<option value="' + regNo + '">' + regNo + '</option>');
-                    });
-                    $vehicleSelect.trigger('change');
-                    $('#vendor_p_l_report_table').DataTable().ajax.reload();
-                },
-                error: function() {
-                    $vehicleSelect.trigger('change');
-                }
-            });
-        });
-        
-        $('#vehicle_number').on('change', function() {
-            $('#vendor_p_l_report_table').DataTable().ajax.reload();
-        });
-
-        $('#vendor_p_l_report_table').DataTable({
+        var table = $('#vendor_p_l_report_table').DataTable({
             serverSide: true,
             processing: true,
             ajax: {
@@ -227,6 +200,7 @@
             scrollY: "58vh",
             scrollCollapse: true,
             autoWidth: false,
+            columnDefs: [{ targets: '_all', className: 'text-nowrap' }],
             dom: "<'row mb-2'<'col-sm-12 col-md-6 d-flex align-items-center'lB><'col-sm-12 col-md-6 d-flex justify-content-end'f>>" +
                  "<'row'<'col-sm-12'tr>>" +
                  "<'row mt-2'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7 d-flex justify-content-end'p>>",
@@ -242,7 +216,44 @@
                 { extend: 'pdfHtml5', className: 'btn btn-outline-danger btn-sm mr-1', orientation: 'landscape', pageSize: 'A4', title: 'Vendor P & L (ATTACHED) Report' },
                 { extend: 'print', className: 'btn btn-outline-dark btn-sm', title: 'Vendor P & L (ATTACHED) Report' }
             ],
-            order: [[0, 'asc']]
+            order: [[0, 'asc']],
+            initComplete: function () {
+                this.api().columns.adjust();
+            },
+            drawCallback: function () {
+                this.api().columns.adjust();
+            }
+        });
+
+        // Re-align header and body on window resize
+        $(window).on('resize', function () {
+            table.columns.adjust();
+        });
+
+        // Vendor change: reload the vehicle list. The vehicle change handler reloads the table.
+        $('#vendor_select').on('change', function () {
+            var vendorId = $(this).val();
+            var $vehicleSelect = $('#vehicle_number');
+            $vehicleSelect.empty().append('<option value="">Select Vehicle</option>');
+
+            var ajaxData = vendorId ? { 'vendor_id': vendorId } : { 'source_id': 2 };
+            $.ajax({
+                url: "{% url 'get_pl_vehicles_by_vendor' %}",
+                data: ajaxData,
+                success: function (data) {
+                    $.each(data, function (index, regNo) {
+                        $vehicleSelect.append('<option value="' + regNo + '">' + regNo + '</option>');
+                    });
+                    $vehicleSelect.trigger('change');   // this reloads the table once
+                },
+                error: function () {
+                    $vehicleSelect.trigger('change');
+                }
+            });
+        });
+
+        $('#vehicle_number').on('change', function () {
+            table.ajax.reload();
         });
     });
 </script>

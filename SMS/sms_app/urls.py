@@ -1289,4 +1289,8 @@ urlpatterns = [
     path('ar_submit_selected_invoices/', views.ar_submit_selected_invoices, name='ar_submit_selected_invoices'),
     path('ar_preview_combined_pdf/', views.ar_preview_combined_pdf, name='ar_preview_combined_pdf'),
     path('ar_export_selected_excel/', views.ar_export_selected_excel, name='ar_export_selected_excel'),
+    path('vendor_rate_report/', views.vendor_rate_report, name='vendor_rate_report'),
+    path('vendor_rate_report_ajax/', views.vendor_rate_report_ajax, name='vendor_rate_report_ajax'),
+    path('customer_rate_report_ajax/', views.customer_rate_report_ajax, name='customer_rate_report_ajax'),
+    path('customer_rate_report/', views.customer_rate_report, name='customer_rate_report'),
 ]
