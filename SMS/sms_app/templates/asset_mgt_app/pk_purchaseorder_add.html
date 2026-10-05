@@ -14,7 +14,7 @@
         <div class="d-flex gap-2" style="position: relative; z-index: 10;">
             {% if form.instance.id or purchaseorder_id %}
             <button type="button" class="btn-modern btn-highlight py-1 px-4" style="font-size: 0.95rem;" id="start_costing_btn" onclick="openJobModal();">
-                <i class="fas fa-calculator mr-1"></i> START COSTING
+                <i class="fas fa-calculator mr-1"></i> START INDENT
             </button>
             {% endif %}
             <a href="{% url 'purchaseorder_list' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size: 0.9rem; text-decoration: none;">
