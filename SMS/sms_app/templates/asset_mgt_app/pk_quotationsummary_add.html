@@ -324,10 +324,6 @@
                     <td>₹{{ job.transport_cost }}</td>
                     <td><strong class="text-primary">₹{{ job.unit_cost }}</strong></td>
                 </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="9">No job costs found for this quotation.</td>
-                </tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -419,11 +415,13 @@
             }
         } else {
             $('#quotation_report_btn').addClass('disable_a_href');
-            var assessment_num = document.getElementById("qs_assessment_num").value;
-            if (assessment_num == "") {
+            var is_update = {% if form.instance.pk %}true{% else %}false{% endif %};
+            if (!is_update) {
                 $('#add_quotation').addClass('disable_a_href');
+                $('#add_quotation').attr('title', 'Please submit the quotation summary first');
             } else {
                 $('#add_quotation').removeClass('disable_a_href');
+                $('#add_quotation').removeAttr('title');
             }
         }
 

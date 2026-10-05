@@ -382,3 +382,41 @@ def stock_usage_breakdown(request):
         
     return JsonResponse({'usage': data})
 
+
+@login_required(login_url='login_page')
+def stock_purchase_breakdown(request):
+    part_id = request.GET.get('part_id')
+    
+    if not part_id:
+        return JsonResponse({'error': 'Part ID is required'}, status=400)
+    
+    sm_records = StockMaintenance.objects.filter(
+        sm_partcode_id=part_id,
+        sm_stock_type_id__in=[1, 3]
+    ).select_related('sm_vendor__spv_vendor_name').order_by('-sm_created_at')
+    
+    data = []
+    for sm in sm_records:
+        date_obj = sm.sm_invoice_date or sm.sm_created_at
+        date_full = date_obj.strftime('%Y-%m-%d %H:%M') if sm.sm_created_at else (date_obj.strftime('%Y-%m-%d') if date_obj else 'N/A')
+        
+        usage_type = 'Purchase' if sm.sm_stock_type_id == 1 else 'Return (Stock In)'
+        
+        vendor_name = 'N/A'
+        if sm.sm_vendor and sm.sm_vendor.spv_vendor_name:
+            vendor_name = sm.sm_vendor.spv_vendor_name.vend_name
+        elif sm.sm_invoice_no and sm.sm_invoice_no.lower() == 'opening stock':
+            vendor_name = 'Opening Stock'
+
+        data.append({
+            'id': sm.id,
+            'reference_num': sm.sm_stock_purchase_number or 'N/A',
+            'invoice_no': sm.sm_invoice_no or 'N/A',
+            'vendor_name': vendor_name,
+            'quantity': float(sm.sm_count or 0.0),
+            'date': date_full,
+            'type': usage_type,
+            'remarks': sm.sm_description or ''
+        })
+        
+    return JsonResponse({'purchases': data})

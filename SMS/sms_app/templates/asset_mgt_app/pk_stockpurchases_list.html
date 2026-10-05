@@ -51,7 +51,16 @@
                         </td>
                         <td><span class="badge badge-secondary">{{ item.uom }}</span></td>
                         <td>
-                            <div class="h5 mb-0 font-weight-bold text-emerald">{{ item.total_in|floatformat:"-2" }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-emerald">
+                                {% if item.total_in > 0 %}
+                                <a href="javascript:void(0);" class="text-emerald view-purchase" data-part-id="{{ item.part_id }}" data-part-code="{{ item.part_code }}" title="Click to view purchase history">
+                                    {{ item.total_in|floatformat:"-2" }}
+                                    <i class="fas fa-search-plus ml-1" style="font-size: 0.8rem;"></i>
+                                </a>
+                                {% else %}
+                                <span class="text-muted">0</span>
+                                {% endif %}
+                            </div>
                         </td>
                         <td>
                             <div class="h5 mb-0 font-weight-bold">
@@ -67,13 +76,6 @@
                         </td>
                         <td>
                             <div class="h4 mb-0 font-weight-bold text-primary">{{ item.available_balance|floatformat:"-2" }}</div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="py-5 text-muted">
-                            <i class="fas fa-box-open fa-3x mb-3 text-light"></i><br>
-                            No stock data available to summarize.
                         </td>
                     </tr>
                     {% endfor %}
@@ -121,6 +123,53 @@
                 <div id="modalEmpty" class="text-center py-5 text-muted" style="display: none;">
                     <i class="fas fa-info-circle fa-2x mb-2"></i><br>
                     No detailed usage records found.
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn-modern btn-cancel px-5 py-3" style="font-size: 1.1rem;" data-dismiss="modal">CLOSE</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Purchase Modal Modernized -->
+<div class="modal fade" id="purchaseModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;">
+                <h5 class="modal-title font-weight-bold">
+                    <i class="fas fa-truck-loading mr-2"></i> Stock In History: <span id="purchaseModalPartCode"></span>
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="purchaseModalLoading" class="text-center py-5">
+                    <div class="spinner-border text-emerald" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <div id="purchaseModalContent" style="display: none;">
+                    <div class="table-responsive">
+                        <table class="modern-table table-sm mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Ref No</th>
+                                    <th>Invoice No</th>
+                                    <th>Vendor / Remarks</th>
+                                    <th class="text-center">Qty Added</th>
+                                    <th class="text-center">Type</th>
+                                    <th class="text-right">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="purchaseTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="purchaseModalEmpty" class="text-center py-5 text-muted" style="display: none;">
+                    <i class="fas fa-info-circle fa-2x mb-2"></i><br>
+                    No detailed purchase records found.
                 </div>
             </div>
             <div class="modal-footer bg-light border-0">
@@ -232,6 +281,60 @@
                 error: function() {
                     $('#modalLoading').hide();
                     alert('Error loading usage breakdown.');
+                }
+            });
+        });
+
+        $('#stockpurchases_list').on('click', '.view-purchase', function() {
+            var partId = $(this).data('part-id');
+            var partCode = $(this).data('part-code');
+            
+            $('#purchaseModalPartCode').text(partCode);
+            $('#purchaseModal').modal('show');
+            
+            $('#purchaseModalLoading').show();
+            $('#purchaseModalContent').hide();
+            $('#purchaseModalEmpty').hide();
+            
+            $.ajax({
+                url: '{% url "stock_purchase_breakdown" %}',
+                data: { 'part_id': partId },
+                success: function(data) {
+                    $('#purchaseModalLoading').hide();
+                    if (data.purchases && data.purchases.length > 0) {
+                        var html = '';
+                        var totalModal = 0;
+                        data.purchases.forEach(function(item) {
+                            var qty = parseFloat(item.quantity || 0);
+                            
+                            var typeBadge = '<span class="badge badge-success">Purchase</span>';
+                            if (item.type !== 'Purchase') typeBadge = '<span class="badge badge-info">' + item.type + '</span>';
+                            
+                            totalModal += qty;
+                            
+                            var updateUrl = '/SMS/stock_maintenance_update/' + item.id + '/';
+                            
+                            html += '<tr class="modern-tr">' +
+                                '<td><a href="' + updateUrl + '" class="badge badge-info" title="Click to view/edit purchase">' + item.reference_num + '</a></td>' +
+                                '<td><span class="badge badge-dark">' + item.invoice_no + '</span></td>' +
+                                '<td class="text-left">' + item.vendor_name + '<br><small class="text-muted">' + (item.remarks || "") + '</small></td>' +
+                                '<td class="text-center font-weight-bold text-emerald">+' + qty + '</td>' +
+                                '<td class="text-center">' + typeBadge + '</td>' +
+                                '<td class="text-right small text-muted">' + item.date + '</td>' +
+                                '</tr>';
+                        });
+                        
+                        html += '<tr class="bg-light"><td colspan="3" class="text-right font-weight-bold">Total Stock In:</td><td class="text-center font-weight-bold text-emerald">' + totalModal.toFixed(2) + '</td><td colspan="2"></td></tr>';
+                        
+                        $('#purchaseTableBody').html(html);
+                        $('#purchaseModalContent').show();
+                    } else {
+                        $('#purchaseModalEmpty').show();
+                    }
+                },
+                error: function() {
+                    $('#purchaseModalLoading').hide();
+                    alert('Error loading purchase breakdown.');
                 }
             });
         });

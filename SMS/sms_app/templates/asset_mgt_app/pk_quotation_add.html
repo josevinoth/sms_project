@@ -345,6 +345,13 @@
 <script>
 (function($) {
     $(document).ready(function () {
+        // Prevent all interaction (mouse and keyboard) for pseudo-disabled fields
+        $(document).on('mousedown keydown focus', '.disable_a_href', function(e) {
+            e.preventDefault();
+            $(this).blur();
+            return false;
+        });
+        
         const assessment_num_field = document.getElementById("pkqt_assessment_num");
         const customer_name_field = document.getElementById("pkqt_customer_name");
         const customer_new_name_field = document.getElementById("pkqt_customer_new_name2");
@@ -431,17 +438,31 @@
         var cost_type_elem = document.getElementById("pkqt_cost_type");
         var jn = cost_type_elem ? cost_type_elem.value : '';
         $('#pkqt_item').addClass('disable_a_href');
+        $('#pkqt_itemdescription').addClass('disable_a_href');
         var part_code_elem = document.getElementById("pkqt_part_code");
         var part_code_val = part_code_elem ? part_code_elem.value : '';
         var req_label_elem = $('#req_value_label');
         
         if (jn == 8) {
             $('#pkqt_part_code').prop('disabled', false);
+            $('#search_wood').show();
         } else {
             if ($('#pkqt_part_code').val()) {
                 $('#pkqt_part_code').val(null).trigger('change.select2');
             }
             $('#pkqt_part_code').prop('disabled', true);
+            
+            $('#pkqt_stock_purchase_number').addClass('disable_a_href');
+            if (document.getElementById("pkqt_stock_purchase_number")) document.getElementById("pkqt_stock_purchase_number").value = "";
+            $('#search_wood').hide();
+            
+            // Clear irrelevant fields so they don't get saved for non-packing materials
+            if (document.getElementById("pkqt_item")) document.getElementById("pkqt_item").value = "";
+            if (document.getElementById("pkqt_itemdescription")) document.getElementById("pkqt_itemdescription").value = "";
+            if (document.getElementById("pkqt_length_req")) document.getElementById("pkqt_length_req").value = "0.0";
+            if (document.getElementById("pkqt_width_req")) document.getElementById("pkqt_width_req").value = "0.0";
+            if (document.getElementById("pkqt_height_req")) document.getElementById("pkqt_height_req").value = "0.0";
+            if (document.getElementById("pkqt_uom")) document.getElementById("pkqt_uom").value = "";
         }
         
         if (jn == 8) {
@@ -496,15 +517,16 @@
 
                 var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
                 var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
-                var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 0;
+                var quantity_req = parseFloat(document.getElementById("pkqt_quantity_req").value) || 1;
                 var rate = parseFloat(document.getElementById("pkqt_rate").value) || 0;
                 
-                // Consumables stock type - CFT volume does NOT apply
-                document.getElementById("pkqt_sqrt_req").value = "0.00";
+                // Plywood SQFT calculation
+                var sqft_req = length_req * width_req * quantity_req;
+                document.getElementById("pkqt_sqrt_req").value = sqft_req.toFixed(3);
 
-                var totalCost = rate * quantity_req;
+                var totalCost = rate * sqft_req;
                 document.getElementById("pkqt_total_cost").value = totalCost.toFixed(2);
-                var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 0;
+                var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
                 var totalboxCost = totalCost * na_quantity;
                 document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
             }
@@ -561,11 +583,7 @@
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
             var totalboxCost = totalCost * na_quantity;
             document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
-
-            var length_req = parseFloat(document.getElementById("pkqt_length_req").value) || 0;
-            var width_req = parseFloat(document.getElementById("pkqt_width_req").value) || 0;
-            var sqft_req = length_req * width_req * quantity;
-            document.getElementById("pkqt_sqrt_req").value = sqft_req.toFixed(2)
+            document.getElementById("pkqt_sqrt_req").value = "0.00";
         }
         else if (jn == 5) {
             $("#total_cft").show();
@@ -611,6 +629,7 @@
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
             var totalboxCost = totalCost * na_quantity;
             document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
+            document.getElementById("pkqt_sqrt_req").value = "0.00";
         }
         else if (jn == 7) {
             $('#pkqt_stock_type').addClass('disable_a_href');
@@ -625,9 +644,10 @@
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
             var totalboxCost = totalCost * na_quantity;
             document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
+            document.getElementById("pkqt_sqrt_req").value = "0.00";
         }
-        else if (jn == 3) {
-            // Manpower (Cost Type 3): Days/Hours enabled
+        else if (jn == 3 || jn == 9) {
+            // Labour Cost In-house (3) & On-site (9): Days/Hours enabled
             $('#pkqt_stock_type').addClass('disable_a_href');
             $('#pkqt_stock_description').addClass('disable_a_href');
             document.getElementById("pkqt_stock_type").value = ""
@@ -642,6 +662,7 @@
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
             var totalboxCost = totalCost * na_quantity;
             document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
+            document.getElementById("pkqt_sqrt_req").value = "0.00";
         }
         else {
             $('#pkqt_stock_type').addClass('disable_a_href');
@@ -657,6 +678,9 @@
             var na_quantity = parseFloat(document.getElementById("pkqt_na_quantity").value) || 1;
             var totalboxCost = totalCost * na_quantity;
             document.getElementById("pkqt_totalbox_cost").value = totalboxCost.toFixed(2)
+            if (jn != 5) {
+                document.getElementById("pkqt_sqrt_req").value = "0.00";
+            }
         }
     }
 </script>

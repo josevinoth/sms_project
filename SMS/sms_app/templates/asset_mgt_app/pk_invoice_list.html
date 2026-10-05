@@ -1,0 +1,118 @@
+{% extends "asset_mgt_app/base_modern.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Page Header -->
+    <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-file-invoice-dollar"></i> PMS Invoice Records</h2>
+        <div class="d-flex gap-3">
+            <a href="{% url 'pk_production_dashboard' %}" class="btn-modern btn-cancel py-1 px-3" style="font-size:0.9rem;text-decoration:none;">
+                <i class="fas fa-arrow-left"></i> Dashboard
+            </a>
+            <a href="{% url 'pk_invoice_add' %}" class="btn-modern btn-highlight py-1 px-3" style="font-size:0.9rem;text-decoration:none;">
+                <i class="fas fa-plus"></i> New Invoice
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="form-section text-center" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;border-radius:12px;padding:1.2rem;">
+                <div style="font-size:2rem;font-weight:700;">{{ invoice_list|length }}</div>
+                <div style="font-size:0.85rem;opacity:0.9;">Total Invoices</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-section text-center" style="background:linear-gradient(135deg,#f093fb,#f5576c);color:white;border-radius:12px;padding:1.2rem;">
+                <div style="font-size:2rem;font-weight:700;">{{ invoice_list|length }}</div>
+                <div style="font-size:0.85rem;opacity:0.9;">Pending Payment</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Table -->
+    <div class="table-container-modern">
+        <div class="table-responsive">
+            <table id="inv_list_table" class="table modern-table text-center">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Invoice No</th>
+                        <th>Date</th>
+                        <th>Job No</th>
+                        <th>Customer</th>
+                        <th>PO No</th>
+                        <th>Base (₹)</th>
+                        <th>GST%</th>
+                        <th>Total (₹)</th>
+                        <th>Payment</th>
+                        <th>Edit</th>
+                        <th>PDF</th>
+                        <th>Next →</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoice_list %}
+                    <tr class="modern-tr">
+                        <td class="font-weight-bold">{{ forloop.counter }}</td>
+                        <td class="font-weight-bold text-dark">{{ inv.inv_number }}</td>
+                        <td>{{ inv.inv_date|date:"d M Y" }}</td>
+                        <td class="font-weight-bold">{{ inv.inv_job_no|default:"—" }}</td>
+                        <td>{{ inv.inv_customer_name|default:"—" }}</td>
+                        <td>{{ inv.inv_customer_po|default:"—" }}</td>
+                        <td>{{ inv.inv_base_amount|floatformat:2 }}</td>
+                        <td>{{ inv.inv_gst_rate }}%</td>
+                        <td class="font-weight-bold">₹ {{ inv.inv_total_amount|floatformat:2 }}</td>
+                        <td>
+                            {% if inv.inv_payment_status == 'Paid' %}
+                                <span class="badge badge-success px-2 py-1"><i class="fas fa-check-circle"></i> Paid</span>
+                            {% elif inv.inv_payment_status == 'Partial' %}
+                                <span class="badge badge-warning px-2 py-1"><i class="fas fa-adjust"></i> Partial</span>
+                            {% else %}
+                                <span class="badge badge-danger px-2 py-1"><i class="fas fa-clock"></i> Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'pk_invoice_edit' inv.id %}" class="btn-modern btn-submit py-1 px-2" style="font-size:0.8rem;text-decoration:none;" title="Edit Invoice">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'pk_invoice_pdf' inv.id %}" class="btn-modern py-1 px-2" style="font-size:0.8rem;background:var(--accent-emerald);color:white;text-decoration:none;" title="Download PDF" target="_blank">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{% url 'packing_gate' %}?job_no={{ inv.inv_job_no }}" class="btn-modern py-1 px-2" style="font-size:0.8rem;background:var(--accent-blue);color:white;text-decoration:none;" title="Go to Gate Pass">
+                                <i class="fas fa-truck-moving"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="13" class="text-center py-5 text-muted">
+                            <i class="fas fa-file-invoice" style="font-size:3rem;opacity:0.3;"></i>
+                            <p class="mt-2">No invoices yet. Create your first invoice.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function () {
+    $('#inv_list_table').DataTable({
+        order: [[0, 'desc']],
+        pageLength: 25,
+        dom: "<'row mb-2'<'col-sm-6'B><'col-sm-6'f>>" +
+             "<'row'<'col-sm-12'tr>>" +
+             "<'row mt-2'<'col-sm-5'i><'col-sm-7'p>>",
+        buttons: ['copy', 'csv', 'excel', 'print']
+    });
+});
+</script>
+{% endblock %}

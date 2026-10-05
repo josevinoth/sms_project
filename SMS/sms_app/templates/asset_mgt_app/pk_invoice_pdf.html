@@ -1,0 +1,132 @@
+{% extends "asset_mgt_app/report_header_potrait.html" %}
+{% block content %}
+<style>
+    .invoice-header { text-align: center; margin-bottom: 20px; }
+    .invoice-title { color: #d92128; font-size: 24px; font-weight: bold; margin-bottom: 5px; }
+    .company-address { font-size: 12px; margin-bottom: 20px; }
+    .info-table { width: 100%; margin-bottom: 20px; border-collapse: collapse; }
+    .info-table td { padding: 5px; vertical-align: top; font-size: 13px; }
+    .info-table .label { font-weight: bold; width: 150px; }
+    
+    .item-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
+    .item-table th { background-color: #f2f2f2; border: 1px solid #ddd; padding: 8px; text-align: center; }
+    .item-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    .item-table .text-left { text-align: left; }
+    .item-table .text-right { text-align: right; }
+    
+    .total-table { width: 50%; float: right; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; }
+    .total-table td { padding: 5px; border: 1px solid #ddd; }
+    .total-table .label { font-weight: bold; text-align: right; }
+    .total-table .value { text-align: right; width: 120px; }
+    
+    .amount-words { font-weight: bold; font-size: 13px; clear: both; margin-top: 20px; }
+    .footer-notes { font-size: 11px; margin-top: 40px; }
+</style>
+
+<div>
+    <div class="invoice-header">
+        <div class="invoice-title">BVM PACK SOLUTIONS PVT LTD</div>
+        <div class="company-address">
+            No 70, Adam Nagar Road, Nagalkeni, Chromepet, Chennai - 600044<br>
+            GSTIN: 33AAFCB8599P1Z8
+        </div>
+        <h3 style="margin:0; padding:5px; background:#eee; border:1px solid #ccc;">TAX INVOICE</h3>
+    </div>
+
+    <table class="info-table">
+        <tr>
+            <td style="width: 50%;">
+                <table style="width: 100%;">
+                    <tr><td class="label">Invoice No:</td><td><b>{{ invoice.inv_number }}</b></td></tr>
+                    <tr><td class="label">Invoice Date:</td><td>{{ invoice.inv_date|date:"d-M-Y" }}</td></tr>
+                    <tr><td class="label">Job No:</td><td>{{ invoice.inv_job_no|default:"-" }}</td></tr>
+                </table>
+            </td>
+            <td style="width: 50%;">
+                <table style="width: 100%;">
+                    <tr><td class="label">Customer Name:</td><td><b>{{ invoice.inv_customer_name.cu_name|default:invoice.inv_customer_name }}</b></td></tr>
+                    <tr><td class="label">Customer PO No:</td><td>{{ invoice.inv_customer_po.po_num|default:"-" }}</td></tr>
+                    <tr><td class="label">Customer GSTIN:</td><td>{{ invoice.inv_customer_name.cu_gst|default:"-" }}</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="item-table">
+        <thead>
+            <tr>
+                <th style="width: 5%;">S.No</th>
+                <th style="width: 20%;">Item Number</th>
+                <th style="width: 25%;">Description</th>
+                <th style="width: 15%;">Dimensions (L×W×H)</th>
+                <th style="width: 10%;">Qty</th>
+                <th style="width: 10%;">Rate (₹)</th>
+                <th style="width: 15%;">Amount (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td class="text-left" style="font-size: 11px;">{{ item.inv_item_number }}</td>
+                <td class="text-left">{{ item.inv_description|default:"-" }}</td>
+                <td>{{ item.inv_length }}×{{ item.inv_width }}×{{ item.inv_height }} {{ item.inv_uom }}</td>
+                <td>{{ item.inv_qty }}</td>
+                <td class="text-right">{{ item.inv_unit_value|floatformat:2 }}</td>
+                <td class="text-right">{{ item.inv_total_value|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table class="total-table">
+        <tr>
+            <td class="label">Taxable Amount</td>
+            <td class="value">{{ invoice.inv_base_amount|floatformat:2 }}</td>
+        </tr>
+        {% if invoice.inv_igst_amount > 0 %}
+        <tr>
+            <td class="label">IGST ({{ invoice.inv_gst_rate }}%)</td>
+            <td class="value">{{ invoice.inv_igst_amount|floatformat:2 }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td class="label">CGST ({{ invoice.inv_gst_rate|add:"-50%"|default:"9" }}%)</td>
+            <td class="value">{{ invoice.inv_cgst_amount|floatformat:2 }}</td>
+        </tr>
+        <tr>
+            <td class="label">SGST ({{ invoice.inv_gst_rate|add:"-50%"|default:"9" }}%)</td>
+            <td class="value">{{ invoice.inv_sgst_amount|floatformat:2 }}</td>
+        </tr>
+        {% endif %}
+        <tr>
+            <td class="label" style="font-size: 14px;">Grand Total (₹)</td>
+            <td class="value" style="font-size: 14px; font-weight: bold;">{{ invoice.inv_total_amount|floatformat:2 }}</td>
+        </tr>
+    </table>
+
+    <div class="amount-words">
+        Amount Chargeable (in words):<br>
+        <i>{{ amount_in_words }}</i>
+    </div>
+
+    {% if invoice.inv_remarks %}
+    <div style="margin-top: 20px; font-size: 12px;">
+        <b>Remarks:</b><br>
+        {{ invoice.inv_remarks|linebreaksbr }}
+    </div>
+    {% endif %}
+
+    <div class="footer-notes">
+        <div style="float: right; text-align: center; width: 250px; margin-top: 30px;">
+            For <b>BVM PACK SOLUTIONS PVT LTD</b><br><br><br><br>
+            Authorized Signatory
+        </div>
+        <b>Terms & Conditions:</b>
+        <ul style="padding-left: 20px; margin-top: 5px;">
+            <li>Payment is due upon receipt.</li>
+            <li>Subject to Chennai Jurisdiction.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

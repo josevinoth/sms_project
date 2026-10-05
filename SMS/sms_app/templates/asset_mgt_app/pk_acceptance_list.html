@@ -17,8 +17,15 @@
         </div>
     </div>
 
-    <!-- Search Bar -->
-    <div class="mb-3 d-flex justify-content-end">
+    <!-- Search Bar + Bulk Accept -->
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <form id="bulk_accept_form" action="{% url 'pk_acceptance_accept_group' %}" method="post" class="mb-0">
+            {% csrf_token %}
+            <input type="hidden" name="ids_csv" id="bulk_ids_csv" value="">
+            <button type="submit" id="bulk_accept_btn" class="btn-modern btn-submit py-2 px-4" style="font-size: 0.9rem; background: var(--accent-orange);" disabled>
+                <i class="fas fa-check-double mr-1"></i> ACCEPT SELECTED (<span id="selected_count">0</span>)
+            </button>
+        </form>
         <input type="text" id="acceptance_search" class="form-control"
                placeholder="🔍 Search any column..."
                style="max-width:400px; border-radius:8px; border:2px solid #17a2b8; font-size:1rem;">
@@ -30,8 +37,7 @@
             <table id="pk_retrival_list" class="table modern-table text-center">
                 <thead>
                     <tr>
-                        <th>Customer Name</th>
-                        <th>Job Number</th>
+                        <th style="width: 40px;"><input type="checkbox" id="select_all" title="Select all"></th>
                         <th>Partcode</th>
                         <th>Description</th>
                         <th>Qty</th>
@@ -42,24 +48,33 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in grouped_list %}
-                    <tr class="modern-tr">
-                        <td class="font-weight-bold text-dark">{{ item.customer_name|default:"-" }}</td>
-                        <td>
-                            <span class="badge" style="background: var(--bg-dark); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); font-size: 0.85rem; padding: 5px 10px;">
-                                {{ item.job_no }}
-                            </span>
+                    {% regroup grouped_list by job_no as job_list %}
+                    {% for job in job_list %}
+                    <!-- Group Header Row -->
+                    <tr class="job-header" data-job="{{ forloop.counter }}" style="background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%);">
+                        <td class="py-2"><input type="checkbox" class="job-select" data-job="{{ forloop.counter }}" title="Select all items in this job"></td>
+                        <td colspan="7" class="text-left font-weight-bold py-2 px-3 text-white" style="font-size: 1rem; border-radius: 4px;">
+                            <i class="fas fa-folder-open mr-2"></i> JOB: {{ job.grouper }}
+                            <span class="mx-3">|</span>
+                            <i class="fas fa-building mr-2"></i> CUSTOMER: {{ job.list.0.customer_name|default:"-" }}
+                            <span class="mx-3">|</span>
+                            <i class="fas fa-list mr-1"></i> {{ job.list|length }} item{{ job.list|length|pluralize }}
                         </td>
+                    </tr>
+                    <!-- Items for this Job -->
+                    {% for item in job.list %}
+                    <tr class="modern-tr item-row" data-job="{{ forloop.parentloop.counter }}">
+                        <td><input type="checkbox" class="row-select" data-job="{{ forloop.parentloop.counter }}" value="{{ item.ids_csv }}"></td>
                         <td class="font-weight-bold">{{ item.part_code }}</td>
                         <td class="text-left">
                             <div class="small text-muted" style="max-width: 200px; white-space: normal;">{{ item.description }}</div>
                         </td>
-                        <td class="font-weight-bold text-success" style="font-size: 1.1rem;">{{ item.quantity }}</td>
+                        <td class="font-weight-bold text-success" style="font-size: 1.1rem;">{{ item.quantity|floatformat:2 }}</td>
                         <td><span class="badge badge-light border">{{ item.stock_id }}</span></td>
                         <td>{{ item.updated_at|date:"d-m-Y H:i" }}</td>
                         <td>{{ item.updated_by }}</td>
                         <td class="text-center">
-                            <form action="{% url 'pk_acceptance_accept_group' %}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to accept all grouped items?');">
+                            <form action="{% url 'pk_acceptance_accept_group' %}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to accept this item?');">
                                 {% csrf_token %}
                                 <input type="hidden" name="ids_csv" value="{{ item.ids_csv }}">
                                 <button type="submit" class="btn-modern btn-submit py-2 px-3" style="font-size: 0.85rem; background: var(--accent-orange); text-decoration: none;">
@@ -68,9 +83,10 @@
                             </form>
                         </td>
                     </tr>
+                    {% endfor %}
                     {% empty %}
                     <tr>
-                        <td colspan="9" class="text-center py-4 text-muted">No items found.</td>
+                        <td colspan="8" class="text-center py-4 text-muted">No items found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -80,10 +96,68 @@
 </div>
 
 <script>
+    function updateBulkState() {
+        var checked = document.querySelectorAll('.row-select:checked');
+        var ids = [];
+        checked.forEach(function(cb) { ids.push(cb.value); });
+        document.getElementById('bulk_ids_csv').value = ids.join(',');
+        document.getElementById('selected_count').innerText = checked.length;
+        document.getElementById('bulk_accept_btn').disabled = checked.length === 0;
+
+        // Sync job header checkboxes
+        document.querySelectorAll('.job-select').forEach(function(jcb) {
+            var rows = document.querySelectorAll('.row-select[data-job="' + jcb.dataset.job + '"]');
+            var rowsChecked = document.querySelectorAll('.row-select[data-job="' + jcb.dataset.job + '"]:checked');
+            jcb.checked = rows.length > 0 && rows.length === rowsChecked.length;
+            jcb.indeterminate = rowsChecked.length > 0 && rowsChecked.length < rows.length;
+        });
+        var all = document.querySelectorAll('.row-select');
+        var sa = document.getElementById('select_all');
+        sa.checked = all.length > 0 && checked.length === all.length;
+        sa.indeterminate = checked.length > 0 && checked.length < all.length;
+    }
+
+    document.querySelectorAll('.row-select').forEach(function(cb) {
+        cb.addEventListener('change', updateBulkState);
+    });
+
+    document.querySelectorAll('.job-select').forEach(function(jcb) {
+        jcb.addEventListener('change', function() {
+            var state = this.checked;
+            document.querySelectorAll('.row-select[data-job="' + this.dataset.job + '"]').forEach(function(cb) {
+                if (cb.closest('tr').style.display !== 'none') cb.checked = state;
+            });
+            updateBulkState();
+        });
+    });
+
+    document.getElementById('select_all').addEventListener('change', function() {
+        var state = this.checked;
+        document.querySelectorAll('.row-select').forEach(function(cb) {
+            if (cb.closest('tr').style.display !== 'none') cb.checked = state;
+        });
+        updateBulkState();
+    });
+
+    document.getElementById('bulk_accept_form').addEventListener('submit', function(e) {
+        var count = document.querySelectorAll('.row-select:checked').length;
+        if (count === 0 || !confirm('Are you sure you want to accept ' + count + ' selected item(s)?')) {
+            e.preventDefault();
+        }
+    });
+
     document.getElementById('acceptance_search').addEventListener('keyup', function() {
         var term = this.value.toLowerCase();
-        document.querySelectorAll('#pk_retrival_list tbody tr').forEach(function(row) {
-            row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+        document.querySelectorAll('#pk_retrival_list tbody tr.job-header').forEach(function(header) {
+            var job = header.dataset.job;
+            var headerMatch = header.innerText.toLowerCase().includes(term);
+            var anyVisible = false;
+            document.querySelectorAll('#pk_retrival_list tbody tr.item-row[data-job="' + job + '"]').forEach(function(row) {
+                var show = headerMatch || row.innerText.toLowerCase().includes(term);
+                row.style.display = show ? '' : 'none';
+                if (show) anyVisible = true;
+            });
+            header.style.display = anyVisible ? '' : 'none';
         });
     });
 </script>

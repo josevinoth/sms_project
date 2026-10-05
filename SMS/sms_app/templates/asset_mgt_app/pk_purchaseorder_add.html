@@ -724,8 +724,15 @@ function openJobModal() {
                 tbody.append('<tr><td colspan="3" class="text-center py-4 text-muted">No items available for job creation.</td></tr>');
             }
         },
-        error: function() {
-            tbody.html('<tr><td colspan="3" class="text-center py-4 text-danger">Error loading items.</td></tr>');
+        error: function(xhr, status, error) {
+            let errorMsg = 'Error loading items.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMsg = xhr.responseJSON.message;
+            } else if (xhr.responseText) {
+                errorMsg = xhr.status + ': ' + error;
+            }
+            console.error('AJAX Error:', errorMsg);
+            tbody.html('<tr><td colspan="3" class="text-center py-4 text-danger">' + errorMsg.replace(/\n/g, '<br>') + '</td></tr>');
         }
     });
 }

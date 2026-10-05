@@ -389,23 +389,6 @@ def pk_create_batch_job(request):
 
         po = get_object_or_404(PkpurchaseorderInfo, id=po_id)
 
-        # 0. STRICT VALIDATION: Ensure ALL packing materials in the quotation have a GRN (Stock ID) mapped
-        for entry in items:
-            pod_id = entry['id']
-            job_qty = float(entry['qty'])
-            if job_qty <= 0:
-                continue
-            
-            pod = POdimension.objects.get(id=pod_id)
-            # Check packing materials (cost_type = 8)
-            quotations = PkquotationInfo.objects.filter(pkqt_requirement=pod.pod_nad, pkqt_cost_type_id=8)
-            for q in quotations:
-                if not q.pkqt_stock_purchase_number:
-                    part_desc = q.pkqt_part_code.pc_code if q.pkqt_part_code else "Material"
-                    return JsonResponse({
-                        'success': False,
-                        'message': f"Cannot create job! Part Code '{part_desc}' (inside Item: {pod.pod_item}) is missing a GRN (Stock ID). Please map the GRN in the quotation before creating this job."
-                    }, status=400)
 
         # Validate live stock availability for material part codes (Cost Type 8)
         po_dimension_ids = [it['id'] for it in items]
@@ -616,37 +599,43 @@ def pk_create_batch_job(request):
 
 @login_required(login_url='login_page')
 def pk_get_po_items_for_job(request):
-    po_id = request.GET.get('po_id')
-    if not po_id:
-        return JsonResponse({'success': False, 'message': 'PO ID is required.'}, status=400)
-    
-    # Fetch all dimension items for this PO
-    po_items = POdimension.objects.filter(pod_po_num_id=po_id)
-    
-    items_data = []
-    for item in po_items:
-        # Calculate already jobbed quantity by summing unique job releases
-        # We group by job_no and take one representative qty (Max) to avoid double counting 
-        # multiple specifications (e.g. Wood Base + Wood Lid) for the same job.
-        jobbed_data = PkcostingInfo.objects.filter(
-            ct_po_dimension=item,
-            ct_job_no__isnull=False
-        ).exclude(ct_job_no='').values('ct_job_no').annotate(
-            job_qty=Max('ct_quantity_req')
-        ).aggregate(total=Sum('job_qty'))
+    try:
+        po_id = request.GET.get('po_id')
+        if not po_id:
+            return JsonResponse({'success': False, 'message': 'PO ID is required.'}, status=400)
         
-        already_jobbed_qty = jobbed_data['total'] or 0
-        remaining_qty = max(0, float(item.pod_quantity) - float(already_jobbed_qty))
+        # Fetch all dimension items for this PO
+        po_items = POdimension.objects.filter(pod_po_num_id=po_id)
         
-        items_data.append({
-            'id': item.id,
-            'item_name': item.pod_item,
-            'ordered_qty': item.pod_quantity,
-            'already_jobbed_qty': float(already_jobbed_qty),
-            'remaining_qty': float(remaining_qty),
-        })
-    
-    return JsonResponse({'success': True, 'items': items_data})
+        items_data = []
+        for item in po_items:
+            # Calculate already jobbed quantity by summing unique job releases
+            jobbed_data = PkcostingInfo.objects.filter(
+                ct_po_dimension=item,
+                ct_job_no__isnull=False
+            ).exclude(ct_job_no='').values('ct_job_no').annotate(
+                job_qty=Max('ct_quantity_req')
+            ).aggregate(total=Sum('job_qty'))
+            
+            already_jobbed_qty = jobbed_data['total'] or 0
+            
+            # Safely handle None or unexpected types for pod_quantity
+            pod_qty = float(item.pod_quantity) if item.pod_quantity is not None else 0.0
+            remaining_qty = max(0, pod_qty - float(already_jobbed_qty))
+            
+            items_data.append({
+                'id': item.id,
+                'item_name': item.pod_item,
+                'ordered_qty': pod_qty,
+                'already_jobbed_qty': float(already_jobbed_qty),
+                'remaining_qty': float(remaining_qty),
+            })
+        
+        return JsonResponse({'success': True, 'items': items_data})
+    except Exception as e:
+        import traceback
+        error_msg = str(e) + "\n" + traceback.format_exc()
+        return JsonResponse({'success': False, 'message': error_msg}, status=500)
 
 @login_required(login_url='login_page')
 def pk_update_quotation_partcode(request):
