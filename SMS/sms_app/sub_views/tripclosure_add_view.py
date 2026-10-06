@@ -346,6 +346,10 @@ def tripclosure_add(request, tripclosure_id=0):
             for att in raw_atts:
                 attachments_by_cat.setdefault(att.ta_category, []).append(att)
 
+            # Check if invoiced
+            from ..models import TransInvoiceInfo
+            is_invoiced = TransInvoiceInfo.objects.filter(ti_trip=trip).exists() or trip.tc_financestatus_id == 10
+
             context = {
                 'tripclosure_form': tripclosure_form,
                 'tripclosurefiles_form': tripclosurefiles_form,
@@ -361,6 +365,7 @@ def tripclosure_add(request, tripclosure_id=0):
                 'va_sale': va_sale,
                 'is_business_empty_and_cancelled': is_business_empty_and_cancelled,
                 'attachments_by_cat': attachments_by_cat,
+                'is_invoiced': is_invoiced,
             }
         return render(request, "asset_mgt_app/tripclosure_add.html", context)
     else:

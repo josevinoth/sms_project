@@ -13,6 +13,7 @@ from ..sub_models.invoice_document_mod import InvoiceDocumentInfo
 from ..sub_forms.invoice_document_form import InvoiceDocumentForm
 from ..sub_models.trip_status_mod import Tripstatusinfo
 from ..sub_models.consignmentgoods_mod import ConsignmentgoodsInfo
+from ..models import TransInvoiceInfo, User_extInfo
 
 
 def get_enquiry_special_sell(trip):
@@ -1127,6 +1128,12 @@ def invoice_documents_add(request, trip_id):
     for att in raw_atts:
         attachments_by_cat.setdefault(att.ta_category, []).append(att)
 
+    # Check if invoiced
+    is_invoiced = TransInvoiceInfo.objects.filter(ti_trip=trip).exists() or trip.tc_financestatus_id == 10
+    
+    user_ext = User_extInfo.objects.filter(user_id=request.session.get('ses_userID') or request.user.id).first()
+    user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
+
     return render(request, 'asset_mgt_app/invoice_documents_add.html', {
         'trip': trip,
         'tripclosure_form': settlement_form,
@@ -1148,6 +1155,8 @@ def invoice_documents_add(request, trip_id):
             else trip.tr_customerref or ''
         ),
         'cnote_consigner_invoice': cnote_goods.cg_consignerinvoice if cnote_goods else '',
+        'is_invoiced': is_invoiced,
+        'user_role': user_role,
         'cnote_hawb': cnote_goods.cg_hawbno if cnote_goods else '',
         'cnote_mawb': cnote_goods.cg_mawbno if cnote_goods else '',
         'attachments_by_cat': attachments_by_cat,

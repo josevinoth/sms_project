@@ -1,223 +1,315 @@
-{% extends "asset_mgt_app/base.html" %}
+{% extends "asset_mgt_app/base_modern.html" %}
 {% load widget_tweaks %}
+
 {% block content %}
-<form method="POST" action="">
+<form method="POST" action="" id="driver_expense_add_form">
     {% csrf_token %}
-    <div class="row mb-3">
+    {{ form.de_receiver_signature.as_hidden }}
+
+    <div class="row mb-3 px-3">
         <div class="col-md-4">
-            <div class="alert alert-success">
+            <div class="alert alert-success m-0" style="border-radius: 8px;">
                 <strong>Advance:</strong> ₹ {{ advance_total }}
             </div>
         </div>
         <div class="col-md-4">
-            <div class="alert alert-warning">
+            <div class="alert alert-warning m-0" style="border-radius: 8px;">
                 <strong>Expense:</strong> ₹ {{ expense_total }}
             </div>
         </div>
         <div class="col-md-4">
-            <div class="alert alert-info">
+            <div class="alert alert-info m-0" style="border-radius: 8px;">
                 <strong>Balance:</strong> ₹ <span id="live_balance">{{ current_balance }}</span>
             </div>
         </div>
     </div>
-    <div class="container-fluid">
-        <div class="card text-white bg-info mb-3" style="max-width:100%;">
-                    <div class="card-header text-center">
-                        <h4>Add / Update Driver Expense</h4>
-                    </div>
-                    <div class="card-body bg-light text-dark">
-                        <div class="row">
-                            <!-- COLUMN 1 -->
-                            <div class="col-6">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Driver Name</span>
-                                    </div>
-                                    {% render_field form.driver_name class="form-control" readonly="readonly" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Advance/Expense Type</span>
-                                    </div>
-                                    {% render_field form.de_expense_type id="de_expense_type" class="form-control" %}
-                                </div>
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Advance/Expense Date</span>
-                                    </div>
-                                    {% render_field form.de_date type="Datetime-local" class="form-control" %}
-                                </div>
-                                <div id="trip-related-fields">
-                                    <div class="input-group input-group-sm mb-3">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">Trip Date</span>
-                                        </div>
-                                        {% render_field form.trip_date id="trip_date" type="date" class="form-control" %}
-                                    </div>
-                                    <div class="input-group input-group-sm mb-3">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">Trip Number</span>
-                                        </div>
-                                        {% render_field form.trip_number id="trip_number" class="form-control" %}
-                                    </div>
-                                    <div id="trip-details-block">
-                                        <div class="input-group input-group-sm mb-3">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">Vehicle Number</span>
-                                            </div>
-                                            <input type="text" id="vehicle_number" class="form-control" readonly>
-                                        </div>
-                                        <div class="input-group input-group-sm mb-3">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">From</span>
-                                            </div>
-                                            <input type="text" id="from_location" class="form-control" readonly>
-                                        </div>
-                                        <div class="input-group input-group-sm mb-3">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">To</span>
-                                            </div>
-                                            <input type="text" id="to_location" class="form-control" readonly>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- COLUMN 2 -->
-                            <!-- COLUMN 3 -->
-                            <div class="col-6">
-                                <div class="input-group input-group-sm mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Total Cost</span>
-                                    </div>
-                                    {% render_field form.de_total_cost id="de_total_cost" class="form-control" %}
-                                </div>
-                                <div id="expense-cost-fields">
-                                    <div class="input-group input-group-sm mb-3">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">Parking Cost</span>
-                                        </div>
-                                        {% render_field form.de_parkingcost class="form-control cost-field" %}
-                                    </div>
-                                    <div class="input-group input-group-sm mb-3">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">Loading Cost</span>
-                                        </div>
-                                        {% render_field form.de_loadingcost class="form-control cost-field" %}
-                                    </div>
-                                    <div class="input-group input-group-sm mb-3">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">Unloading Cost</span>
-                                        </div>
-                                        {% render_field form.de_unloadingcost class="form-control cost-field" %}
-                                    </div>
-                                    <div class="input-group input-group-sm mb-3">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">Weighment Cost</span>
-                                        </div>
-                                        {% render_field form.de_weighmentcost class="form-control cost-field" %}
-                                    </div>
-                                    <div class="input-group input-group-sm mb-3">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">Supervisor Cost</span>
-                                        </div>
-                                        {% render_field form.de_supervisorcost class="form-control cost-field" %}
-                                    </div>
-                                    <div class="input-group input-group-sm mb-3">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">RTO Expense</span>
-                                        </div>
-                                        {% render_field form.de_rtocost class="form-control cost-field" %}
-                                    </div>
-                                    <div class="input-group input-group-sm mb-3">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">Batta Expense</span>
-                                        </div>
-                                        {% render_field form.de_battacost class="form-control cost-field" %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- MESSAGES -->
-                        <div class="row">
-                            <div class="col-12 text-center">
-                                {% for message in messages %}
-                                <span class="{{ message.tags }}">{{ message }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <!-- BUTTONS (LIKE DRIVER MASTER) -->
-                        <div class="d-flex justify-content-between mt-4">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-check"></i> Submit
-                            </button>
-                            <a href="{% url 'driver_settlement_update' settlement.id %}" class="btn btn-danger">
-                                <i class="fas fa-times"></i> Cancel
-                            </a>
-                        </div>
-                    </div>
-                </div>
-        <!-- ================= TRIP LIST TABLE ================= -->
-        <div class="card text-white bg-info mb-3" id="trip-table-row" style="{% if form.de_expense_type.value|stringformat:'s' == '2' %}display: block;{% else %}display: none;{% endif %} max-width:100%;">
-            <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #17a2b8;">
-                <h5 class="mb-0">Trip Details</h5>
-            </div>
-            <div class="card-body bg-light text-dark pt-3 pb-3">
 
-                <!-- Table Filters -->
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <div class="input-group input-group-sm">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Search Trip No.</span>
-                            </div>
-                            <input type="text" id="filter_trip_num" class="form-control" placeholder="Search...">
+    <div class="container-fluid">
+        <div class="modern-header d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0 text-white" style="font-size:1.4rem; font-weight:700; letter-spacing:1px;">
+                <i class="fas fa-wallet mr-2"></i> Add / Update Driver Expense
+            </h3>
+            <div>
+                {% if settlement.id %}
+                <a href="{% url 'driver_settlement_update' settlement.id %}" class="btn btn-highlight" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+                {% else %}
+                <a href="javascript:history.back()" class="btn btn-highlight" style="border-radius:10px; display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1.2rem; font-size:0.9rem; text-decoration:none;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="modern-card" style="border-top:none; padding: 1.5rem !important;">
+            <div class="row">
+                <!-- ========== COLUMN 1 (GENERAL INFO) ========== -->
+                <div class="col-12 col-md-4">
+                    <div class="form-section h-100 mb-0">
+                        <div class="form-section-title"><i class="fas fa-info-circle"></i> GENERAL INFO</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Driver Name</label>
+                            {% render_field form.driver_name class="form-control form-control-modern bg-light" readonly="readonly" %}
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="input-group input-group-sm">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Search Vehicle</span>
-                            </div>
-                            <input type="text" id="filter_vehicle_num" class="form-control" placeholder="Search...">
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Advance/Expense Type</label>
+                            {% render_field form.de_expense_type id="de_expense_type" class="form-control form-control-modern select2" %}
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="input-group input-group-sm">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">Date Filter</span>
-                            </div>
-                            <input type="date" id="filter_date" class="form-control">
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Advance/Expense Date</label>
+                            {% render_field form.de_date type="Datetime-local" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Remarks</label>
+                            {% render_field form.de_remarks class="form-control form-control-modern" rows="2" %}
                         </div>
                     </div>
                 </div>
-                <div class="table-responsive shadow-box-table p-3">
-                    <table class="table table-bordered table-sm text-center">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th>Select</th>
-                                <th>Trip Number</th>
-                                <th>Trip Date</th>
-                                <th>Vehicle Number</th>
-                                <th>From</th>
-                                <th>To</th>
-                                <th>Parking</th>
-                                <th>Loading</th>
-                                <th>Unloading</th>
-                                <th>Weighment</th>
-                                <th>Supervisor</th>
-                                <th>RTO</th>
-                                <th>Batta</th>
-                            </tr>
-                        </thead>
-                        <tbody id="trip-table-body">
-                        </tbody>
-                    </table>
+
+                <!-- ========== COLUMN 2 (TRIP DETAILS) ========== -->
+                <div class="col-12 col-md-4" id="trip-related-fields">
+                    <div class="form-section h-100 mb-0">
+                        <div class="form-section-title"><i class="fas fa-truck"></i> TRIP DETAILS</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Trip Date</label>
+                            {% render_field form.trip_date id="trip_date" type="date" class="form-control form-control-modern" %}
+                        </div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Trip Number</label>
+                            {% render_field form.trip_number id="trip_number" class="form-control form-control-modern select2" %}
+                        </div>
+
+                        <div id="trip-details-block">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Vehicle Number</label>
+                                <input type="text" id="vehicle_number" class="form-control form-control-modern bg-light" readonly>
+                            </div>
+
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">From</label>
+                                <input type="text" id="from_location" class="form-control form-control-modern bg-light" readonly>
+                            </div>
+
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">To</label>
+                                <input type="text" id="to_location" class="form-control form-control-modern bg-light" readonly>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- ========== COLUMN 3 (COSTS) ========== -->
+                <div class="col-12 col-md-4">
+                    <div class="form-section h-100 mb-0">
+                        <div class="form-section-title"><i class="fas fa-money-bill-wave"></i> COSTS</div>
+
+                        <div class="form-group-modern">
+                            <label class="form-label-modern font-weight-bold">Total Cost</label>
+                            {% render_field form.de_total_cost id="de_total_cost" class="form-control form-control-modern font-weight-bold text-primary" %}
+                        </div>
+
+                        <div id="expense-cost-fields">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Parking Cost</label>
+                                {% render_field form.de_parkingcost id="id_de_parkingcost" class="form-control form-control-modern cost-field" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Loading Cost</label>
+                                {% render_field form.de_loadingcost id="id_de_loadingcost" class="form-control form-control-modern cost-field" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Unloading Cost</label>
+                                {% render_field form.de_unloadingcost id="id_de_unloadingcost" class="form-control form-control-modern cost-field" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Weighment Cost</label>
+                                {% render_field form.de_weighmentcost id="id_de_weighmentcost" class="form-control form-control-modern cost-field" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Supervisor Cost</label>
+                                {% render_field form.de_supervisorcost id="id_de_supervisorcost" class="form-control form-control-modern cost-field" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">RTO Expense</label>
+                                {% render_field form.de_rtocost id="id_de_rtocost" class="form-control form-control-modern cost-field" %}
+                            </div>
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">Batta Expense</label>
+                                {% render_field form.de_battacost id="id_de_battacost" class="form-control form-control-modern cost-field" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MESSAGES -->
+            <div class="row mt-3">
+                <div class="col-12 text-center">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- ================= ACTION BUTTONS ================= -->
+            <div class="action-row mt-4 d-flex justify-content-between align-items-center">
+                <div class="d-flex" style="gap: 15px;">
+                    <button type="submit" class="btn-modern" style="background: #f59e0b; color: white; border: none; font-weight: 700; padding: 10px 24px; box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.4);">
+                        <i class="fas fa-check"></i> SUBMIT
+                    </button>
+                    <button type="button" class="btn-modern" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; font-weight: 700; padding: 10px 24px;" data-toggle="modal" data-target="#signatureModal">
+                        <i class="fas fa-signature"></i> DIGITAL SIGNATURE
+                    </button>
+                </div>
+                
+                {% if settlement.id %}
+                <a href="{% url 'driver_settlement_update' settlement.id %}" class="btn-modern" style="background: #ffffff; color: #1e293b; border: 1px solid #e2e8f0; font-weight: 700; padding: 10px 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); text-decoration:none;">
+                    <i class="fas fa-times"></i> CANCEL
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- ================= TRIP LIST TABLE ================= -->
+        <div class="modern-card mt-4" id="trip-table-row" style="padding: 1.5rem !important; {% if form.de_expense_type.value|stringformat:'s' == '2' %}display: block;{% else %}display: none;{% endif %}">
+            <div class="form-section-title mb-3"><i class="fas fa-list"></i> TRIP DETAILS LIST</div>
+            
+            <!-- Table Filters -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Search Trip No.</label>
+                        <input type="text" id="filter_trip_num" class="form-control form-control-modern" placeholder="Search...">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Search Vehicle</label>
+                        <input type="text" id="filter_vehicle_num" class="form-control form-control-modern" placeholder="Search...">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Date Filter</label>
+                        <input type="date" id="filter_date" class="form-control form-control-modern">
+                    </div>
+                </div>
+            </div>
+            
+            <style>
+                .modern-trip-table {
+                    border-collapse: separate;
+                    border-spacing: 0;
+                    width: 100%;
+                    background-color: #fff;
+                    border: 1px solid #e2e8f0;
+                }
+                .modern-trip-table thead th {
+                    background-color: #111827; /* Dark flat header matching the image */
+                    color: #ffffff;
+                    text-transform: uppercase;
+                    font-size: 0.7rem;
+                    letter-spacing: 0.05em;
+                    font-weight: 700;
+                    padding: 14px 10px;
+                    border: none;
+                    white-space: nowrap;
+                    text-align: center;
+                }
+                .modern-trip-table tbody td {
+                    padding: 12px 10px;
+                    color: #1e293b;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    border-bottom: 1px solid #f1f5f9;
+                    vertical-align: middle;
+                    text-align: center;
+                }
+                .modern-trip-table tbody tr:nth-child(even) {
+                    background-color: #f8fafc;
+                }
+                .modern-trip-table tbody tr:hover {
+                    background-color: #e2e8f0;
+                }
+                .trip-checkbox {
+                    width: 18px;
+                    height: 18px;
+                    cursor: pointer;
+                    accent-color: #10b981;
+                    border-radius: 4px;
+                }
+            </style>
+            <div class="table-responsive" style="border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+                <table class="table modern-trip-table mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Trip Number</th>
+                            <th>Trip Date</th>
+                            <th>Vehicle Number</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Parking</th>
+                            <th>Loading</th>
+                            <th>Unloading</th>
+                            <th>Weighment</th>
+                            <th>Supervisor</th>
+                            <th>RTO</th>
+                            <th>Batta</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trip-table-body">
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </form>
-    <script>
+
+<!-- Signature Modal -->
+<div class="modal fade" id="signatureModal" tabindex="-1" aria-labelledby="signatureModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+      <div class="modal-header" style="background-color: #f8f9fa; border-bottom: 1px solid #e9ecef; border-radius: 12px 12px 0 0;">
+        <h5 class="modal-title font-weight-bold" id="signatureModalLabel" style="color: #2c3e50;">Receiver Digital Signature</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center p-4">
+        <div style="border: 2px dashed #cbd5e1; padding: 10px; display: inline-block; background: #f8fafc; border-radius: 12px; transition: all 0.3s ease;" onmouseover="this.style.borderColor='#94a3b8'" onmouseout="this.style.borderColor='#cbd5e1'">
+            <canvas id="signature-pad" width="400" height="200" style="touch-action: none; cursor: crosshair;"></canvas>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-between" style="border-top: 1px solid #e9ecef; background-color: #f8f9fa; border-radius: 0 0 12px 12px;">
+        <button type="button" class="btn btn-outline-secondary" id="clear-signature" style="border-radius: 8px; padding: 8px 16px;">
+            <i class="fas fa-eraser mr-1"></i> Clear
+        </button>
+        <div>
+            <button type="button" class="btn btn-light" data-dismiss="modal" style="border-radius: 8px; padding: 8px 16px;">Cancel</button>
+            <button type="button" class="btn btn-primary" id="save-signature" style="border-radius: 8px; padding: 8px 16px; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none;">
+                <i class="fas fa-save mr-1"></i> Save Signature
+            </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script>
     document.addEventListener("DOMContentLoaded", function () {
         console.log("Driver Expense Script Initializing...");
         // Safe element retrieval
@@ -415,6 +507,12 @@
         }
         // Listeners
         if (expenseType) expenseType.addEventListener("change", () => toggleFields(true));
+        
+        // jQuery listener for select2 compatibility
+        if (window.jQuery) {
+            $('#de_expense_type').on('change', function() { toggleFields(true); });
+        }
+
         [parking, loading, unloading, weighment, supervisor, rto, batta].forEach(i => i?.addEventListener("input", calculateTotal));
         if (totalCost) totalCost.addEventListener("input", updateBalance);
         
@@ -422,6 +520,48 @@
         if (filterVehicleNumSelect) filterVehicleNumSelect.addEventListener("input", executeTableFilter);
         if (filterDateInput) filterDateInput.addEventListener("input", loadTrips); //  Refresh from server on date change
 
+        
+        // --- Signature Pad Initialization ---
+        var canvas = document.getElementById('signature-pad');
+        if (canvas) {
+            var signaturePad = new SignaturePad(canvas, {
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                penColor: 'rgb(0, 0, 0)',
+                minWidth: 2,
+                maxWidth: 4
+            });
+
+            $('#clear-signature').on('click', function() {
+                signaturePad.clear();
+            });
+
+            $('#save-signature').on('click', function() {
+                if (signaturePad.isEmpty()) {
+                    alert('Please provide a signature first.');
+                } else {
+                    var dataURL = signaturePad.toDataURL('image/png');
+                    $('#id_de_receiver_signature').val(dataURL);
+                    $('#signatureModal').modal('hide');
+                    
+                    var btn = $('button[data-target="#signatureModal"]');
+                    btn.removeClass('btn-primary').css('background', 'linear-gradient(135deg, #10b981, #059669)').css('color', 'white');
+                    btn.html('<i class="fas fa-check-circle"></i> Signature Saved');
+                }
+            });
+            
+            if ($('#id_de_receiver_signature').val()) {
+                var btn = $('button[data-target="#signatureModal"]');
+                btn.removeClass('btn-primary').css('background', 'linear-gradient(135deg, #10b981, #059669)').css('color', 'white');
+                btn.html('<i class="fas fa-check-circle"></i> Signature Captured');
+                signaturePad.fromDataURL($('#id_de_receiver_signature').val());
+            }
+            
+            $('#signatureModal').on('shown.bs.modal', function () {
+                if ($('#id_de_receiver_signature').val()) {
+                    signaturePad.fromDataURL($('#id_de_receiver_signature').val());
+                }
+            });
+        }
         // Select2 for main dropdown
         if (window.jQuery?.fn?.select2) {
             const s2 = (p) => ({ width: '100%', placeholder: p });
@@ -435,6 +575,11 @@
                     if (val) fetchTripCharges(val);
                 });
             }
+            
+            $('.select2').not(tripNumberSelect).select2({
+                theme: 'bootstrap4',
+                width: '100%'
+            });
         }
         if (tripDateField) {
             tripDateField.addEventListener("input", function() {
@@ -450,5 +595,5 @@
             fetchTripCharges(autoID);
         }
     });
-    </script>
-{% endblock content %}
+</script>
+{% endblock %}

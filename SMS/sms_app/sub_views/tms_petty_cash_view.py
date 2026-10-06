@@ -1,3 +1,4 @@
+import re
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -339,10 +340,16 @@ def tms_petty_cash_voucher_print(request, tpc_id):
     elif tpc.tpc_to:
         payment_to = tpc.tpc_to.first_name or tpc.tpc_to.username
         
+    # Clean remarks for printing
+    clean_remarks = tpc.tpc_remarks or ''
+    if 'Auto-generated' in clean_remarks:
+        clean_remarks = re.sub(r'\s*\[?Auto-generated.*', '', clean_remarks).strip()
+
     context = {
         'tpc': tpc,
         'amount_in_words': amount_in_words,
         'payment_to': payment_to,
+        'clean_remarks': clean_remarks,
     }
     return render(request, 'asset_mgt_app/tms_petty_cash_voucher.html', context)
 

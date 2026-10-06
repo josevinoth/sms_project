@@ -332,34 +332,35 @@
                         [2,  'VEHICLE TYPE',                  d.vehicle_type],
                         [3,  'NO. OF DAYS IN THE MONTH',      d.days_in_month],
                         [4,  'NO. OF WORKING DAYS',           d.working_days],
-                        [5,  'NO. OF LEAVE',                  d.leave_days],
-                        [6,  'CONTRACT AMOUNT',               d.contract_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [7,  'LEAVE PER DAY',                 d.leave_per_day.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [8,  'LEAVE AMT',                     d.leave_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [9,  'EXTRA KM',                      d.extra_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [10, 'EXTRA KM AMT',                  d.extra_km_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [11, 'TOLL COST',                   d.toll_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [12, 'ACTUAL AMT',                    d.actual_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [13, 'TOTAL TRIPS',                   d.total_trips + ' TRIPS'],
-                        [14, 'TRIP INDEX',                    d.trip_index],
-                        [15, 'BUSINESS KM',                   d.business_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [16, 'TOTAL KM',                      d.total_km + ' KM / ' + d.agreed_km + ' KM'],
-                        [17, 'EMPTY KM',                      d.empty_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [18, 'EMPTY KM BUY COST',             d.empty_km_buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [19, 'BUSINESS EMPTY KM',             d.business_empty_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [20, 'BUSINESS EMPTY KM BUY COST',    d.business_empty_km_buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [21, 'BUSINESS COST',                 d.buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [22, 'SELLING',                       d.selling.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [23, 'BUYING',                        d.buying.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [24, 'PROFIT',                        d.profit.toLocaleString('en-IN', {minimumFractionDigits:2})],
-                        [25, 'SELLING %',                     d.sell_pct + '%'],
-                        [26, 'BUYING %',                      d.buy_pct + '%'],
+                        [5,  'NO. OF HOLIDAYS (SUNDAYS)',     d.holidays],
+                        [6,  'NO. OF LEAVE',                  d.leave_days],
+                        [7,  'CONTRACT AMOUNT',               d.contract_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [8,  'LEAVE PER DAY',                 d.leave_per_day.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [9,  'LEAVE AMT',                     d.leave_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [10, 'EXTRA KM',                      d.extra_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [11, 'EXTRA KM AMT',                  d.extra_km_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [12, 'TOLL COST',                   d.toll_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [13, 'ACTUAL AMT',                    d.actual_amount.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [14, 'TOTAL TRIPS',                   d.total_trips + ' TRIPS'],
+                        [15, 'TRIP INDEX',                    d.trip_index],
+                        [16, 'BUSINESS KM',                   d.business_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [17, 'TOTAL KM',                      d.total_km + ' KM / ' + d.agreed_km + ' KM'],
+                        [18, 'EMPTY KM',                      d.empty_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [19, 'EMPTY KM BUY COST',             d.empty_km_buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [20, 'BUSINESS EMPTY KM',             d.business_empty_km.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [21, 'BUSINESS EMPTY KM BUY COST',    d.business_empty_km_buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [22, 'BUSINESS COST',                 d.buy_cost.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [23, 'SELLING',                       d.selling.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [24, 'BUYING',                        d.buying.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [25, 'PROFIT',                        d.profit.toLocaleString('en-IN', {minimumFractionDigits:2})],
+                        [26, 'SELLING %',                     d.sell_pct + '%'],
+                        [27, 'BUYING %',                      d.buy_pct + '%'],
                     ];
 
                     var html = '';
                     rows.forEach(function (r) {
                         var rowStyle = '';
-                        if (r[0] === 24) rowStyle = 'style="background:#d4edda; font-weight:700;"'; // profit row
+                        if (r[0] === 25) rowStyle = 'style="background:#d4edda; font-weight:700;"'; // profit row
                         html += '<tr ' + rowStyle + '><td class="text-center font-weight-bold">' + r[0] + '</td><td class="font-weight-bold">' + r[1] + ':</td><td>' + r[2] + '</td></tr>';
                     });
                     tbody.html(html);

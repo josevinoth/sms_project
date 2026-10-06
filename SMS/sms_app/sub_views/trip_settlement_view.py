@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.db.models import Q, Exists, OuterRef
 from .invoice_documents_view import sync_closure_files_to_invoice
 from .general_utils import is_admin_user, get_allowed_next_statuses
+from ..models import TransInvoiceInfo, User_extInfo
 
 @login_required
 def trip_settlement_view(request):
@@ -354,6 +355,12 @@ def trip_settlement_edit(request, trip_id):
         from_location = str(trip.tr_departedlocation) if trip.tr_departedlocation else ''
         to_location = str(trip.tr_reportedlocation) if trip.tr_reportedlocation else ''
 
+    # Check if invoiced
+    is_invoiced = TransInvoiceInfo.objects.filter(ti_trip=trip).exists() or trip.tc_financestatus_id == 10
+    
+    user_ext = User_extInfo.objects.filter(user_id=request.session.get('ses_userID') or request.user.id).first()
+    user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
+
     return render(request, "asset_mgt_app/trip_settlement_edit.html", {
         'trip': trip,
         'tripclosure_form': form,
@@ -366,4 +373,6 @@ def trip_settlement_edit(request, trip_id):
         'is_cancellation_billing': is_cancellation_billing,
         'from_location': from_location,
         'to_location': to_location,
+        'is_invoiced': is_invoiced,
+        'user_role': user_role,
     })

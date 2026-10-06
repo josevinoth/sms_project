@@ -103,6 +103,23 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             form = ConsignmentgoodsaddForm(instance=consignmentgoods)
             form.fields['cg_description'].queryset = Stock_type.objects.all()
 
+        # Check if linked trip is invoiced
+        is_invoiced = False
+        
+        # Import dynamically using full module path to avoid UnboundLocalError
+        from ..models import TransInvoiceInfo as TInvoiceInfo
+        from ..models import TripdetailInfo as TDetailInfo
+        
+        if selected_trip_id:
+            is_invoiced = TInvoiceInfo.objects.filter(ti_trip_id=selected_trip_id).exists() or TDetailInfo.objects.filter(id=selected_trip_id, tc_financestatus_id=10).exists()
+        elif enquiry_num_id:
+            trips = TDetailInfo.objects.filter(tr_enquirynumber_id=enquiry_num_id)
+            is_invoiced = TInvoiceInfo.objects.filter(ti_trip__in=trips).exists() or trips.filter(tc_financestatus_id=10).exists()
+            
+        from ..models import User_extInfo as UExtInfo
+        user_ext = UExtInfo.objects.filter(user_id=user_id).first()
+        user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
+
         context = {
             'form': form,
             'con_det_form': con_det_form,
@@ -116,6 +133,10 @@ def consignmentgoods_add(request, consignmentgoods_id=0):
             'customer_id': customer_id,
             'customer_code': customer_code,
             'has_invoice_or_ewaybill': has_invoice_or_ewaybill,
+            
+            'is_invoiced': is_invoiced,
+            'user_role': user_role,
+            
             'eligible_trips': eligible_trips,
             'selected_trip_id': selected_trip_id,
             'vehicle_type': consignmentdetail.co_vehicletype,

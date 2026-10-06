@@ -758,7 +758,7 @@ urlpatterns = [
     path('pk_return_list/', views.pk_return_list, name='pk_return_list'),  # List retrival
     path('pk_retrival_list/', views.pk_retrival_list, name='pk_retrival_list'),  # List retrival
     path('pk_retrival_insert/', views.pk_retrival_add, name='pk_retrival_insert'),  # Add retrival
-    path('pk_retrival_update/<int:retrival_id>', views.pk_retrival_add, name='pk_retrival_update'),  # update retrival
+    path('pk_retrival_update/<str:retrival_id>', views.pk_retrival_add, name='pk_retrival_update'),  # update retrival
     path('pk_retrival_delete/<int:retrival_id>', views.pk_retrival_delete, name='pk_retrival_delete'),
     # delete retrival
     path('pk_retrival_cancel/', views.pK_retrival_cancel, name='pk_retrival_cancel'),  # cancel retrival
@@ -1290,4 +1290,8 @@ urlpatterns = [
     path('ar_submit_selected_invoices/', views.ar_submit_selected_invoices, name='ar_submit_selected_invoices'),
     path('ar_preview_combined_pdf/', views.ar_preview_combined_pdf, name='ar_preview_combined_pdf'),
     path('ar_export_selected_excel/', views.ar_export_selected_excel, name='ar_export_selected_excel'),
+    path('vendor_rate_report/', views.vendor_rate_report, name='vendor_rate_report'),
+    path('vendor_rate_report_ajax/', views.vendor_rate_report_ajax, name='vendor_rate_report_ajax'),
+    path('customer_rate_report_ajax/', views.customer_rate_report_ajax, name='customer_rate_report_ajax'),
+    path('customer_rate_report/', views.customer_rate_report, name='customer_rate_report'),
 ]
