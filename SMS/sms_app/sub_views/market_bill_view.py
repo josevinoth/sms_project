@@ -24,11 +24,15 @@ def build_selected_trips_data(trip_ids, trip_details_dict=None, trip_mail_attach
     if not trip_ids:
         return selected_trips_data
 
-    eligible_status_ids = [7, 9]
+    eligible_status_ids = [7, 9, 10]
     from ..sub_models.trans_invoice_mod import TransInvoiceInfo
     invoiced_trip_ids = set(TransInvoiceInfo.objects.filter(ti_trip_id__isnull=False).values_list('ti_trip_id', flat=True))
     selected_trips = TripdetailInfo.objects.filter(
-        Q(id__in=trip_ids) & (Q(tc_financestatus_id__in=eligible_status_ids) | Q(id__in=invoiced_trip_ids))
+        Q(id__in=trip_ids) & (
+            Q(tc_financestatus_id__in=eligible_status_ids) |
+            Q(tr_operational_status_id=10) |
+            Q(id__in=invoiced_trip_ids)
+        )
     ).select_related('tr_enquirynumber', 'tr_consignmentnumber')
 
     for trip in selected_trips:
@@ -517,8 +521,8 @@ def get_trips_by_vendor(request):
     if not vendor_id:
         return JsonResponse({'trips': []})
 
-    # Include trips in 'Trip Settled' (id=7), 'Ready for Invoice' (id=9), or 'Invoice Completed' financial status
-    eligible_status_ids = [7, 9]
+    # Include trips in 'Trip Settled' (id=7), 'Ready for Invoice' (id=9), 'Cancellation with Billing' (id=10), or 'Invoice Completed' financial status
+    eligible_status_ids = [7, 9, 10]
     from ..sub_models.trans_invoice_mod import TransInvoiceInfo
     invoiced_trip_ids_from_db = set(TransInvoiceInfo.objects.filter(ti_trip_id__isnull=False).values_list('ti_trip_id', flat=True))
     market_ownership_id = 3
@@ -590,7 +594,9 @@ def get_trips_by_vendor(request):
         Q(tr_departeddate__gte='2026-05-01T00:00:00+05:30') | Q(tr_departeddate__isnull=True, tr_created_at__gte='2026-05-01T00:00:00+05:30'),
         tr_vehiclesource_id=market_ownership_id
     ).filter(
-        Q(tc_financestatus_id__in=eligible_status_ids) | Q(id__in=invoiced_trip_ids_from_db)
+        Q(tc_financestatus_id__in=eligible_status_ids) |
+        Q(tr_operational_status_id=10) |
+        Q(id__in=invoiced_trip_ids_from_db)
     )
     # Exclude already billed trip ids (if any)
     if billed_trip_ids:
