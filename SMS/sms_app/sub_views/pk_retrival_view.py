@@ -36,31 +36,41 @@ def _available_qty_for_stock_entry(stock_entry):
     return max(0.0, float(stock_entry.sm_count or 0.0) - retrieved_qty - vendor_returned_qty)
 
 
+
 @login_required(login_url='login_page')
-def pk_retrival_add(request, retrival_id=0):
+def pk_retrival_add(request, retrival_id='0'):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     na_assessment_num_id = request.session.get('na_assessment_id')
 
+    # Handle single or comma-separated multiple IDs
+    retrival_ids = [r_id for r_id in str(retrival_id).split(',') if r_id]
+    primary_id = int(retrival_ids[0]) if retrival_ids else 0
+
     if request.method == "GET":
-        if retrival_id == 0:
+        if primary_id == 0:
             form = PkretrivalForm()
+            total_req_qty = 0
         else:
-            retrival = PkcostingInfo.objects.get(pk=retrival_id)
+            retrival = PkcostingInfo.objects.get(pk=primary_id)
             form = PkretrivalForm(instance=retrival)
-            total_req_qty = float(retrival.ct_quantity_req or 0) * float(retrival.ct_na_quantity or 1)
+            
+            total_req_qty = 0.0
+            for r_id in retrival_ids:
+                r_obj = PkcostingInfo.objects.get(pk=int(r_id))
+                total_req_qty += float(r_obj.ct_quantity_req or 0) * float(r_obj.ct_na_quantity or 1)
             
         context = {
             'form': form,
             'first_name': first_name,
             'user_id': user_id,
             'na_assessment_num_id': na_assessment_num_id,
-            'total_req_qty': total_req_qty if retrival_id != 0 else 0,
+            'total_req_qty': total_req_qty if primary_id != 0 else 0,
         }
         return render(request, "asset_mgt_app/pk_retrival_add.html", context)
 
     else:
-        if retrival_id == 0:
+        if primary_id == 0:
             form = PkretrivalForm(request.POST)
             if form.is_valid():
                 form.save()
@@ -73,18 +83,23 @@ def pk_retrival_add(request, retrival_id=0):
                 messages.error(request, 'Record Not Updated Successfully')
                 return redirect(request.META['HTTP_REFERER'])
         else:
-            retrival = PkcostingInfo.objects.get(pk=retrival_id)
+            retrival = PkcostingInfo.objects.get(pk=primary_id)
             form = PkretrivalForm(request.POST, instance=retrival)
             if form.is_valid():
                 stock_purchase_num_id = request.POST.get('ct_stock_purchase_number')
-                # Try getting the total_req_qty (the fully multiplied amount), fallback to ct_quantity_req
-                requested_qty = request.POST.get('total_req_qty') or request.POST.get('ct_quantity_req')
-                print("Requested Qty:", requested_qty)
+                
+                requested_qty = request.POST.get('total_req_qty')
+                if not requested_qty:
+                    requested_qty = 0.0
+                    for r_id in retrival_ids:
+                        r_obj = PkcostingInfo.objects.get(pk=int(r_id))
+                        requested_qty += float(r_obj.ct_quantity_req or 0) * float(r_obj.ct_na_quantity or 1)
+                
+                print("Requested Qty (Grouped):", requested_qty)
 
                 if stock_purchase_num_id:
                     try:
                         stock_purchase_obj = StockMaintenance.objects.get(id=stock_purchase_num_id)
-                        # Use sm_stock_purchase_number (e.g. GRN/PK/1001816), NOT sm_invoice_no which can be None
                         stock_purchase_num = stock_purchase_obj.sm_stock_purchase_number or stock_purchase_obj.sm_invoice_no or f"SM-{stock_purchase_num_id}"
                         available_qty = _available_qty_for_stock_entry(stock_purchase_obj)
                         print(available_qty)
@@ -92,37 +107,44 @@ def pk_retrival_add(request, retrival_id=0):
                             messages.error(request, 'Available quantity is less than requested quantity')
                             return redirect(request.META['HTTP_REFERER'])
                         else:
-                            stock_status = retrival.ct_stock_status.id
+                            # Apply form updates (like status) to all grouped items
+                            updated_primary = form.save()
+                            stock_status = updated_primary.ct_stock_status.id
                             print("Stock Status ID:", stock_status)
     
-                            # Status 2 = Supplied, Status 4 = Received
+                            # Apply to other grouped items
+                            if len(retrival_ids) > 1:
+                                for r_id in retrival_ids[1:]:
+                                    r_obj = PkcostingInfo.objects.get(pk=int(r_id))
+                                    r_obj.ct_stock_status = updated_primary.ct_stock_status
+                                    r_obj.ct_stock_purchase_number = updated_primary.ct_stock_purchase_number
+                                    r_obj.save()
+
                             if stock_status in [2, 4]:
-                                form.save()
-                                # Create a NEW Retrieval record (Type 2) with duplicate check.
-                                # User request: original GRN number should be in the 'sm_invoice_no' field for retrievals.
-                                ref_no = stock_purchase_num # This is the original GRN number (e.g. GRN/PK/1001816)
-                                if not StockMaintenance.objects.filter(sm_stock_type_id=2, sm_invoice_no=ref_no, sm_description__endswith=f"(Costing ID: {retrival_id})").exists():
+                                ref_no = stock_purchase_num
+                                
+                                ids_str = ",".join(retrival_ids)
+                                desc_suffix = f"(Costing IDs: {ids_str})"
+                                
+                                if not StockMaintenance.objects.filter(sm_stock_type_id=2, sm_invoice_no=ref_no, sm_description__endswith=desc_suffix).exists():
                                     try:
-                                        # Use the submitted requested_qty which represents the total needed
-                                        retrival_obj = PkcostingInfo.objects.get(pk=retrival_id)
                                         actual_qty = float(requested_qty)
-                                        
                                         StockMaintenance.objects.create(
                                             sm_stock_type_id=2, # Retrieval
                                             sm_invoice_date=datetime.now().date(),
-                                            sm_invoice_no=ref_no, # Standardizing: Putting original GRN here (No RET prefix)
-                                            sm_description=f"Retrieved for Assessment {retrival_obj.ct_assessment_num.na_assessment_num if retrival_obj.ct_assessment_num else 'N/A'} (Costing ID: {retrival_id})",
+                                            sm_invoice_no=ref_no,
+                                            sm_description=f"Retrieved for Assessment {updated_primary.ct_assessment_num.na_assessment_num if updated_primary.ct_assessment_num else 'N/A'} {desc_suffix}",
                                             sm_partcode=stock_purchase_obj.sm_partcode,
                                             sm_count=actual_qty,
                                             sm_uom=stock_purchase_obj.sm_uom,
                                             sm_updated_by_id=user_id
                                         )
-                                        messages.success(request, 'Stock Successfully Retrieved & Supplied')
+                                        messages.success(request, 'Stock Successfully Retrieved & Supplied for all grouped items.')
                                     except Exception as e:
                                         print(f"Error creating retrieval record: {e}")
                                         messages.warning(request, 'Stock supplied but retrieval transaction log failed.')
                                 else:
-                                    messages.success(request, 'Stock Successfully Retrieved & Supplied')
+                                    messages.success(request, 'Stock Successfully Retrieved & Supplied for all grouped items.')
                             else:
                                 messages.success(request, 'Stock Not Retrieved')
                     except StockMaintenance.DoesNotExist:
@@ -151,7 +173,13 @@ def pk_retrival_list(request):
     for item in retrival_queryset:
         job_no = item.ct_job_no
         part_code_id = item.ct_part_code_id
-        stock_id = item.ct_stock_purchase_number.sm_stock_purchase_number if item.ct_stock_purchase_number else (item.ct_stock_purchase_number.sm_invoice_no if item.ct_stock_purchase_number else 'None')
+        try:
+            if item.ct_stock_purchase_number:
+                stock_id = item.ct_stock_purchase_number.sm_stock_purchase_number or item.ct_stock_purchase_number.sm_invoice_no or 'None'
+            else:
+                stock_id = 'None'
+        except Exception:
+            stock_id = 'None'
         key = f"{job_no}_{part_code_id}_{stock_id}"
         
         if key not in grouped_retrival:

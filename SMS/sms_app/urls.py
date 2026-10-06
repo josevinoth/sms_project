@@ -758,7 +758,7 @@ urlpatterns = [
     path('pk_return_list/', views.pk_return_list, name='pk_return_list'),  # List retrival
     path('pk_retrival_list/', views.pk_retrival_list, name='pk_retrival_list'),  # List retrival
     path('pk_retrival_insert/', views.pk_retrival_add, name='pk_retrival_insert'),  # Add retrival
-    path('pk_retrival_update/<int:retrival_id>', views.pk_retrival_add, name='pk_retrival_update'),  # update retrival
+    path('pk_retrival_update/<str:retrival_id>', views.pk_retrival_add, name='pk_retrival_update'),  # update retrival
     path('pk_retrival_delete/<int:retrival_id>', views.pk_retrival_delete, name='pk_retrival_delete'),
     # delete retrival
     path('pk_retrival_cancel/', views.pK_retrival_cancel, name='pk_retrival_cancel'),  # cancel retrival
