@@ -111,6 +111,18 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
             # Build (env, can_delete) tuples for the template using inline logic
             enquirynotevehicle_list_with_flags = _build_env_delete_flags(enquiry_num_id, enquirynotevehicle_list)
 
+            # Check if any trip under this enquiry is invoiced
+            from ..models import TransInvoiceInfo, TripdetailInfo
+            trips = TripdetailInfo.objects.filter(tr_enquirynumber=enquirynote)
+            is_invoiced = TransInvoiceInfo.objects.filter(ti_trip__in=trips).exists()
+            if not is_invoiced:
+                is_invoiced = trips.filter(tc_financestatus_id=10).exists()
+
+            # Fetch user role
+            from ..models import User_extInfo
+            user_ext = User_extInfo.objects.filter(user_id=user_id).first()
+            user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
+
             context = {
                 'user_id': user_id,
                 'form': form,
@@ -119,6 +131,8 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
                 'enquirynotevehicle_list': enquirynotevehicle_list,
                 'enquirynotevehicle_list_with_flags': enquirynotevehicle_list_with_flags,
                 'enquiry_num_id': enquiry_num_id,
+                'is_invoiced': is_invoiced,
+                'user_role': user_role,
             }
         return render(request, "asset_mgt_app/enquirynote_add.html", context)
     else:

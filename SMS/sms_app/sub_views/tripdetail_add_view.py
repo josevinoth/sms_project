@@ -444,6 +444,8 @@ def tripdetail_add(request, tripdetail_id=0):
             user_ext = User_extInfo.objects.filter(user_id=user_id).first()
             user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
             is_invoiced = TransInvoiceInfo.objects.filter(ti_trip=trip_instance).exists()
+            if not is_invoiced and trip_instance.tc_financestatus_id == 10:
+                is_invoiced = True
 
             # Gating flags for workflow controls
             has_dock_out = bool(trip_instance.tr_dock_out_time)

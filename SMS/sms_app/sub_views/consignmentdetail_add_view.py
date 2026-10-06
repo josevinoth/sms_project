@@ -11,7 +11,7 @@ from xhtml2pdf import pisa
 from ..forms import ConsignmentdetailaddForm, ConsignmentgoodsaddForm
 from ..models import VehiclemasterInfo, User_extInfo, Location_info, Vehicle_allotmentInfo, ConsignmentgoodsInfo, \
     ConsignmentdetailInfo, CustomerInfo, EnquirynoteInfo, MyUser, DeletionLog, TripdetailInfo, OwnershipInfo, \
-    VehicletypeInfo, Trip_category_info
+    VehicletypeInfo, Trip_category_info, TransInvoiceInfo
 from django.urls import reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from datetime import datetime
@@ -197,6 +197,17 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             eligible_filter
         ).distinct()
 
+        # Check if linked trip is invoiced
+        is_invoiced = False
+        if selected_trip_id:
+            is_invoiced = TransInvoiceInfo.objects.filter(ti_trip_id=selected_trip_id).exists() or TripdetailInfo.objects.filter(id=selected_trip_id, tc_financestatus_id=10).exists()
+        elif enquiry_num_id:
+            trips = TripdetailInfo.objects.filter(tr_enquirynumber_id=enquiry_num_id)
+            is_invoiced = TransInvoiceInfo.objects.filter(ti_trip__in=trips).exists() or trips.filter(tc_financestatus_id=10).exists()
+            
+        user_ext = User_extInfo.objects.filter(user_id=user_id).first()
+        user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
+
         context = {
             'first_name': first_name,
             'user_id': user_id,
@@ -213,6 +224,10 @@ def consignmentdetail_add(request, consignmentdetail_id=0):
             'vehicle_type': vehicle_type,
             'user_branch': user_branch,
             'has_invoice_or_ewaybill': has_invoice_or_ewaybill,  # ✅ Add this flag
+            
+            'is_invoiced': is_invoiced,
+            'user_role': user_role,
+            
             'existing_cancellation_charge': existing_cancellation_charge,
             'eligible_trips': eligible_trips,
             'selected_trip_id': selected_trip_id,

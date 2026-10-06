@@ -469,5 +469,25 @@
             updateAddTpBtn();
         });
     });
+
+    {% if is_invoiced and user_role == 'User' %}
+    $(document).ready(function() {
+        // Disable all inputs, selects, and textareas in the form
+        $('form').find('input, select, textarea, button[type="submit"]').prop('disabled', true);
+        
+        // Remove or hide action buttons like "ADD VEHICLE DETAILS" and Add Touch Point
+        $('#btn_add_touchpoint, #add_tp_btn_container').hide();
+        $('.remove-tp-btn').hide();
+        $('a[data-toggle="modal"]').hide();
+        $('button[type="submit"], input[type="submit"], button.btn-submit').hide();
+
+        // Still allow back buttons
+        $('a.btn-cancel').prop('disabled', false).show();
+        
+        // Render a visual warning/banner if one doesn't exist
+        var banner = '<div class="alert alert-warning text-center fw-bold" style="background-color: #d1e7dd; border-color: #badbcc; color: #0f5132; margin-bottom: 20px;">Invoice Completed. This Enquiry is Read-Only.</div>';
+        $('form').prepend(banner);
+    });
+    {% endif %}
 </script>
 {% endblock extra_js %}

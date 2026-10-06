@@ -341,7 +341,7 @@
             <table id="enquirynote_list" class="table modern-table" style="width:100%">
                 <thead>
                 <tr>
-                    <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="ID"></th>
+                    <th style="display: none;"><input type="text" class="form-control filter-input-modern filter-input" placeholder="ID"></th>
                     <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Created On"></th>
                     <th></th>
                     <th><input type="text" class="form-control filter-input-modern filter-input" placeholder="Enquiry Number"></th>
@@ -364,7 +364,7 @@
                     <th></th>
                 </tr>
                 <tr>
-                    <th>ID</th>
+                    <th style="display: none;">ID</th>
                     <th>Created On</th>
                     <th class="text-center">Edit</th>
                     <th style="min-width:180px; width:220px; white-space:normal; word-break:break-word;">Enquiry Number</th>
@@ -390,7 +390,7 @@
                 <tbody>
                 {% for data in enquiry_data %}
                 <tr>
-                    <td class="font-weight-bold">{{ data.enquiry.id }}</td>
+                    <td class="font-weight-bold" style="display: none;">{{ data.enquiry.id }}</td>
                     <td>
                         {{ data.enquiry.en_created_at|date:"d-m-Y" }}<br>
                         <span class="small text-muted font-weight-bold">{{ data.enquiry.en_created_at|date:"h:i A" }}</span>

@@ -308,6 +308,13 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
         vehicle_category_name = env_first.env_vehiclecategory.vc_vehiclecategory if (env_first and env_first.env_vehiclecategory) else ""
         vehicle_category_id = env_first.env_vehiclecategory.id if (env_first and env_first.env_vehiclecategory) else ""
 
+        # Check if any trip under this enquiry is invoiced
+        from ..models import TransInvoiceInfo, TripdetailInfo, User_extInfo
+        trips = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry)
+        is_invoiced = TransInvoiceInfo.objects.filter(ti_trip__in=trips).exists() or trips.filter(tc_financestatus_id=10).exists()
+        user_ext = User_extInfo.objects.filter(user_id=user_id).first()
+        user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
+
         return render(request, "asset_mgt_app/vehicle_allotment_add.html", {
             'first_name': first_name,
             'user_id': user_id,
@@ -325,6 +332,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             'all_vehicletypes': VehicletypeInfo.objects.all(),
             'all_vendors': Vendor_info.objects.all(),
             'is_admin': is_admin_user(request),
+            'is_invoiced': is_invoiced,
+            'user_role': user_role,
         })
 
     # ---------- UPDATE MODE (GET) ----------
@@ -362,6 +371,13 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             va.va_sale = env.env_sale
             va.va_special_sale = env.env_special_sale
             
+        # Check if any trip under this enquiry is invoiced
+        from ..models import TransInvoiceInfo, TripdetailInfo, User_extInfo
+        trips = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry)
+        is_invoiced = TransInvoiceInfo.objects.filter(ti_trip__in=trips).exists() or trips.filter(tc_financestatus_id=10).exists()
+        user_ext = User_extInfo.objects.filter(user_id=user_id).first()
+        user_role = user_ext.emp_role.role_name if user_ext and user_ext.emp_role else "User"
+
         return render(request, "asset_mgt_app/vehicle_allotment_add.html", {
             'first_name': first_name,
             'user_id': user_id,
@@ -380,6 +396,8 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             'all_vehicletypes': VehicletypeInfo.objects.all(),
             'all_vendors': Vendor_info.objects.all(),
             'is_admin': is_admin_user(request),
+            'is_invoiced': is_invoiced,
+            'user_role': user_role,
         })
 
     # ---------- POST SAVE (ADD + UPDATE) ----------

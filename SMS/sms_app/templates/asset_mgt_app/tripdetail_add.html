@@ -1422,8 +1422,15 @@ document.addEventListener("DOMContentLoaded", function () {
 		// Hide save/submit buttons, but allow navigation buttons like 'BACK TO LIST'
 		$('.btn-submit:contains("ADD"), .btn-submit:contains("SAVE"), button[type="submit"]').addClass('disable_a_href').prop('disabled', true).hide();
 		
+		// Hide edit/action buttons in form like add touch point, delete attachments, edit consignment
+		$('a.btn-info, a.btn-danger, button.btn-danger, .btn-consignment').addClass('disable_a_href').hide();
+        $('.btn-submit:contains("CONSIGNMENT")').addClass('disable_a_href').hide();
+
+		// Keep cancel / back buttons enabled
+		$('a.btn-cancel').removeClass('disable_a_href').prop('disabled', false).show();
+		
 		// Optional: Add a notice for the user
-		$('.modern-header').after('<div class="alert alert-info mt-3"><i class="fas fa-info-circle mr-2"></i> This trip has an associated invoice. The details are read-only.</div>');
+		$('.modern-header').after('<div class="alert alert-warning text-center fw-bold mt-3" style="background-color: #d1e7dd; border-color: #badbcc; color: #0f5132;"><i class="fas fa-file-invoice mr-2"></i> Invoice Completed. This Trip is Read-Only.</div>');
 	});
 </script>
 {% endif %}
