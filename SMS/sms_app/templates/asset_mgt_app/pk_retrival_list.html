@@ -64,7 +64,7 @@
                         <td>{{ item.updated_at|date:"d-m-Y H:i" }}</td>
                         <td>{{ item.updated_by }}</td>
                         <td class="text-center">
-                            <a class="btn-modern btn-submit py-2 px-3" style="font-size: 0.85rem; text-decoration: none;" href="{% url 'pk_retrival_update' item.id %}" title="Edit Retrieval">
+                            <a class="btn-modern btn-submit py-2 px-3" style="font-size: 0.85rem; text-decoration: none;" href="{% url 'pk_retrival_update' item.ids_csv %}" title="Edit Retrieval">
                                 <i class="far fa-edit"></i> EDIT
                             </a>
                         </td>
