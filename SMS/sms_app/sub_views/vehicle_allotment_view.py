@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils import timezone
 
 from django.contrib.auth.decorators import login_required
@@ -309,7 +309,6 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
         vehicle_category_id = env_first.env_vehiclecategory.id if (env_first and env_first.env_vehiclecategory) else ""
 
         # Check if any trip under this enquiry is invoiced
-        from ..models import TransInvoiceInfo, TripdetailInfo, User_extInfo
         trips = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry)
         is_invoiced = TransInvoiceInfo.objects.filter(ti_trip__in=trips).exists() or trips.filter(tc_financestatus_id=10).exists()
         user_ext = User_extInfo.objects.filter(user_id=user_id).first()
@@ -372,7 +371,6 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             va.va_special_sale = env.env_special_sale
             
         # Check if any trip under this enquiry is invoiced
-        from ..models import TransInvoiceInfo, TripdetailInfo, User_extInfo
         trips = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry)
         is_invoiced = TransInvoiceInfo.objects.filter(ti_trip__in=trips).exists() or trips.filter(tc_financestatus_id=10).exists()
         user_ext = User_extInfo.objects.filter(user_id=user_id).first()
@@ -563,9 +561,6 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
                         break
 
             # 🚫 DOUBLE-SUBMISSION / RACE CONDITION GUARD (Last 15 seconds check)
-            from datetime import timedelta
-            from django.utils import timezone
-
             fifteen_sec_ago = timezone.now() - timedelta(seconds=15)
             recent_duplicate = Vehicle_allotmentInfo.objects.filter(
                 va_enquirynumber_id=enquiry_id,
@@ -763,7 +758,6 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             sync_allotment_rate_to_trips(obj)
 
             # Touch the parent enquiry's updated timestamp
-            from django.utils import timezone
             en_user = request.user if (request.user and request.user.is_authenticated) else None
             EnquirynoteInfo.objects.filter(id=enquiry_id).update(
                 en_updatedon=timezone.now(),
@@ -800,7 +794,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             else:
                 messages.success(request, "Vehicle Allotment Updated Successfully")
 
-            return redirect('vehicle_allotment_insert', enquiry_id=orig_enquiry_id)
+            return redirect('vehicle_allotment_update', vehicle_allotment_id=vehicle_allotment_id)
 
     # fallback return
     return redirect('enquirynote_list')
