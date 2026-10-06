@@ -82,7 +82,7 @@ def driver_expense_add(request, expense_id=0):
                 
                 # First, delete any previously auto-generated petty cash entries for this specific expense record 
                 # (in case the user is editing an existing driver expense)
-                TMSPettyCashInfo.objects.filter(tpc_remarks=f"Auto-generated from Driver Settlement Expense ID: {exp.id}").delete()
+                TMSPettyCashInfo.objects.filter(tpc_remarks__contains=f"[Auto-generated from Driver Settlement Expense ID: {exp.id}]").delete()
                 
                 # 1. Gather defaults
                 bvm_trans = Business_Sol_info.objects.filter(bvm_business__icontains='bvm trans solutions').first()
@@ -104,15 +104,21 @@ def driver_expense_add(request, expense_id=0):
                             ledger_name__icontains='Trans'
                         ).filter(ledger_name__icontains=branch_code).first()
 
-                # Try to determine the vehicle from the trip number
+                # Try to determine the vehicle and customer from the trip number
                 vehicle_obj = None
+                customer_obj = None
                 trip_no = exp.trip_number or exp.de_trip_number
                 if trip_no:
                     from ..sub_models.tripdetail_mod import TripdetailInfo
                     trip = TripdetailInfo.objects.filter(tr_tripnumber=trip_no).first()
-                    if trip and trip.tr_vehiclenumber:
-                        from ..models import VehiclemasterInfo
-                        vehicle_obj = VehiclemasterInfo.objects.filter(vm_registrationnumber=trip.tr_vehiclenumber).first()
+                    if trip:
+                        if trip.tr_vehiclenumber:
+                            from ..models import VehiclemasterInfo
+                            vehicle_obj = VehiclemasterInfo.objects.filter(vm_registrationnumber=trip.tr_vehiclenumber).first()
+                        if trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_customer:
+                            customer_obj = trip.tr_consignmentnumber.co_customer
+                        elif hasattr(trip, 'tr_enquirynumber') and trip.tr_enquirynumber and trip.tr_enquirynumber.en_customer:
+                            customer_obj = trip.tr_enquirynumber.en_customer
 
                 # Map Driver Expense fields to exact labels shown in Driver Expense form
                 expense_mapping = [
@@ -148,7 +154,9 @@ def driver_expense_add(request, expense_id=0):
                             tpc_driver_name=exp.driver_name,
                             tpc_created_by=request.user,
                             tpc_updated_by=request.user,
-                            tpc_remarks=f"Auto-generated from Driver Settlement Expense ID: {exp.id}"
+                            tpc_remarks=f"{exp.de_remarks or ''} [Auto-generated from Driver Settlement Expense ID: {exp.id}]",
+                            tpc_receiver_signature=exp.de_receiver_signature,
+                            tpc_customer=customer_obj
                         )
                         tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', branch_obj)
                         tpc.save()

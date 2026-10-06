@@ -211,5 +211,5 @@ from .sub_views.wms_petty_cash_view import wms_petty_cash_add, wms_petty_cash_de
 from .sub_views.pms_petty_cash_view import pms_petty_cash_add, pms_petty_cash_delete, pms_petty_cash_list, generate_pms_petty_cash_number, get_pms_job_details, pms_petty_cash_export_tally, get_pms_customers_by_unit, get_pms_jobs_by_customer
 from .sub_views.pk_manpower_view import add_manpower_consumption, get_manpower_consumption_logs, delete_manpower_consumption
 from .sub_views.cs_kpi_dashboard_view import cs_kpi_dashboard, get_cs_kpi_dashboard_data
-
 from .sub_views.pk_consumption_report_view import export_consumption_excel, export_consumption_pdf
+from .sub_views.transport_reports_view import vendor_rate_report, customer_rate_report, vendor_rate_report_ajax, customer_rate_report_ajax

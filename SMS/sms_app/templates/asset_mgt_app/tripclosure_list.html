@@ -71,8 +71,8 @@
     </div>
 
     <!-- ══ Table Container ══ -->
-    <div class="table-container-modern p-4">
-        <table id="tripclosure_list" class="table table-striped table-bordered modern-table w-100">
+    <div class="table-container-modern table-responsive p-4">
+        <table id="tripclosure_list" class="table table-striped table-bordered modern-table text-nowrap" style="width: 100% !important;">
             <thead>
                 <tr>
                     <th>Created On</th>
@@ -108,7 +108,7 @@
         $('#tripclosure_list').DataTable({
             processing: true,
             serverSide: true,
-            scrollX: true,
+            scrollX: false,
             ajax: {
                 url: "{% url 'tripclosure_list_ajax' %}",
                 data: function (d) {

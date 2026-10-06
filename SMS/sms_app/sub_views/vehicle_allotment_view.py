@@ -296,7 +296,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
 
     # ---------- ADD MODE (GET) ----------
     if request.method == "GET" and vehicle_allotment_id == 0:
-        form = VehicleallotmentForm()
+        form = VehicleallotmentForm(initial={'va_enquirynumber': enquiry_id})
 
         # Store enquiry ID in session for POST usage
         request.session['ses_enquiry_id'] = enquiry_id
@@ -1494,11 +1494,26 @@ def get_vendor_sale_rate(request):
 @login_required(login_url='login_page')
 def vendor_filter(request):
     enquiry_num = request.GET.get('enquiry_num')
+    if not enquiry_num or not str(enquiry_num).strip().isdigit():
+        return JsonResponse({'vendor_filter': []})
 
     try:
-        enquiry = EnquirynoteInfo.objects.get(id=enquiry_num)
-        from_location = enquiry.en_fromlocaion
-        to_location = enquiry.en_tolocation
+        from_location = None
+        to_location = None
+
+        try:
+            enquiry = EnquirynoteInfo.objects.get(id=enquiry_num)
+            from_location = enquiry.en_fromlocaion
+            to_location = enquiry.en_tolocation
+        except EnquirynoteInfo.DoesNotExist:
+            from ..models import PrimeEnquirynoteInfo
+            prime_enquiry = PrimeEnquirynoteInfo.objects.filter(id=enquiry_num).first()
+            if prime_enquiry:
+                from_location = prime_enquiry.pen_fromlocaion
+                to_location = prime_enquiry.pen_tolocation
+
+        if not from_location or not to_location:
+            return JsonResponse({'vendor_filter': []})
 
         vendors = VendorratemasterInfo1.objects.filter(
             vr1_fromlocation=from_location,
@@ -1519,10 +1534,9 @@ def vendor_filter(request):
 
         return JsonResponse({'vendor_filter': vendor_list})
 
-    except EnquirynoteInfo.DoesNotExist:
-        return JsonResponse({'vendor_filter': [], 'error': 'Invalid Enquiry Number'}, status=400)
-    except EnquirynoteInfo.DoesNotExist:
-        return JsonResponse({'vendor_filter': [], 'error': 'Invalid Enquiry Number'}, status=400)
+    except Exception as e:
+        print(f"Error in vendor_filter: {e}")
+        return JsonResponse({'vendor_filter': []})
 
 
 @login_required(login_url='login_page')

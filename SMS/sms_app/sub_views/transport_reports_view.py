@@ -234,12 +234,34 @@ def calculate_own_vehicle_fuel_and_salary(trips_list, date_from=None, date_to=No
         for m, y in distinct_months:
             month_year_q |= Q(resolved_date__month=m, resolved_date__year=y)
 
-        all_trips_in_months = TripdetailInfo.objects.annotate(
+        # PRE-FILTER using an indexed field (tr_created_at) with a wide buffer
+        import datetime
+        min_date = None
+        max_date = None
+        for m, y in distinct_months:
+            d_start = datetime.date(y, m, 1)
+            # handle december rollover
+            next_month = (m % 12) + 1
+            next_year = y + (1 if m == 12 else 0)
+            d_end = datetime.date(next_year, next_month, 1) - datetime.timedelta(days=1)
+            if not min_date or d_start < min_date: min_date = d_start
+            if not max_date or d_end > max_date: max_date = d_end
+
+        all_trips_in_months = TripdetailInfo.objects.filter(
+            tr_category_id__in=[1, 2, 3],
+            tr_vehiclesource_id=1  # Only count own vehicle trips for salary calculation
+        )
+        if min_date and max_date:
+            min_created = min_date - datetime.timedelta(days=31)
+            max_created = max_date + datetime.timedelta(days=31)
+            all_trips_in_months = all_trips_in_months.filter(
+                tr_created_at__gte=min_created,
+                tr_created_at__lte=max_created
+            )
+
+        all_trips_in_months = all_trips_in_months.annotate(
             resolved_date=Coalesce('tr_departeddate_pickup', 'tr_loading_time', 'tr_departeddate', 'tr_created_at')
-        ).filter(
-            month_year_q,
-            tr_category_id__in=[1, 2, 3]
-        ).only('tr_driver_master_id', 'tr_drivername', 'tr_drivernumber')
+        ).filter(month_year_q).only('tr_driver_master_id', 'tr_drivername', 'tr_drivernumber')
 
         for mt in all_trips_in_months:
             mt_date = mt.resolved_date
@@ -544,8 +566,8 @@ def get_trip_pl_data(trip, inv, trip_expenses, va_info, ab_bill, mb_bill, prorat
     profit_pct = (profit / total_selling * 100) if total_selling > 0 else 0
 
     # Date Logic
-    dates = [trip.tr_departeddate_pickup, trip.tr_loading_time, trip.tr_departeddate, trip.tr_created_at]
-    trip_date = next((d for d in dates if d), None)
+    # strictly look vehicle started date and time in loading point
+    trip_date = trip.tr_departeddate
     display_date = _fmt_dt(trip_date, date_only=True)
 
     return total_selling, total_buying, profit, profit_pct, display_date
@@ -2732,7 +2754,11 @@ def vendor_p_l_mkt_report_ajax_view(request):
     trip_num_to_pk = {t.tr_tripnumber: t.id for t in trips_list if t.tr_tripnumber}
     all_query_ids = [str(t.id) for t in trips_list] + [t.tr_tripnumber for t in trips_list if t.tr_tripnumber]
 
-    expenses = Driverexpense.objects.filter(trip_number__in=all_query_ids)
+    expenses = []
+    chunk_size = 900
+    for i in range(0, len(all_query_ids), chunk_size):
+        chunk = all_query_ids[i:i+chunk_size]
+        expenses.extend(list(Driverexpense.objects.filter(trip_number__in=chunk).defer('de_receiver_signature', 'de_remarks')))
 
     allotment_map = {}
     for a in allotments:
@@ -3143,6 +3169,23 @@ def vendor_p_l_attached_report_ajax_view(request):
         )
     )
 
+    # PRE-FILTER using an indexed field (tr_created_at) with a wide buffer
+    # This prevents the database from performing a full table scan to evaluate the complex resolved_date annotation
+    from datetime import datetime, timedelta
+    try:
+        if date_from and date_to:
+            dt_start = datetime.strptime(date_from, "%Y-%m-%d") - timedelta(days=90)
+            dt_end = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=90)
+            trips = trips.filter(tr_created_at__range=[dt_start, dt_end])
+        elif date_from:
+            dt_start = datetime.strptime(date_from, "%Y-%m-%d") - timedelta(days=90)
+            trips = trips.filter(tr_created_at__gte=dt_start)
+        elif date_to:
+            dt_end = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=90)
+            trips = trips.filter(tr_created_at__lte=dt_end)
+    except Exception:
+        pass
+
     if date_from and date_to:
         trips = trips.filter(resolved_date__date__range=[date_from, date_to])
     elif date_from:
@@ -3216,15 +3259,23 @@ def vendor_p_l_attached_report_ajax_view(request):
     all_trip_enquiries = [t.tr_enquirynumber_id for t in all_trips]
 
     va_map = {}
-    for va in Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=all_trip_enquiries).select_related('va_vendor', 'va_vehiclenumber'):
-        eq_id = va.va_enquirynumber_id
-        v_no = va.va_vehiclenumber.vm_registrationnumber.replace(" ", "").upper() if va.va_vehiclenumber else ""
-        if v_no:
-            va_map[(eq_id, v_no)] = va
-        if eq_id not in va_map or va.va_vendor:
-            va_map[eq_id] = va
+    
+    chunk_size = 900
+    for i in range(0, len(all_trip_enquiries), chunk_size):
+        chunk = all_trip_enquiries[i:i+chunk_size]
+        for va in Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=chunk).select_related('va_vendor', 'va_vehiclenumber'):
+            eq_id = va.va_enquirynumber_id
+            v_no = va.va_vehiclenumber.vm_registrationnumber.replace(" ", "").upper() if va.va_vehiclenumber else ""
+            if v_no:
+                va_map[(eq_id, v_no)] = va
+            if eq_id not in va_map or va.va_vendor:
+                va_map[eq_id] = va
 
-    inv_map = {inv.ti_trip_id: inv for inv in TransInvoiceInfo.objects.filter(ti_trip_id__in=all_trip_ids)}
+    inv_map = {}
+    for i in range(0, len(all_trip_ids), chunk_size):
+        chunk = all_trip_ids[i:i+chunk_size]
+        for inv in TransInvoiceInfo.objects.filter(ti_trip_id__in=chunk):
+            inv_map[inv.ti_trip_id] = inv
 
     trip_id_to_pk = {t.id: t.id for t in all_trips}
     trip_num_to_pk = {str(t.tr_tripnumber).strip(): t.id for t in all_trips if t.tr_tripnumber}
@@ -3238,7 +3289,12 @@ def vendor_p_l_attached_report_ajax_view(request):
     all_query_ids = list(set(all_query_ids))
 
     driver_expense_map = {}
-    expenses = Driverexpense.objects.filter(trip_number__in=all_query_ids)
+    expenses = []
+    chunk_size = 900
+    for i in range(0, len(all_query_ids), chunk_size):
+        chunk = all_query_ids[i:i+chunk_size]
+        expenses.extend(list(Driverexpense.objects.filter(trip_number__in=chunk).select_related('de_expense_type').defer('de_receiver_signature', 'de_remarks')))
+        
     for exp in expenses:
         t_id = None
         s_key = str(exp.trip_number).strip() if exp.trip_number else ""
@@ -3251,8 +3307,19 @@ def vendor_p_l_attached_report_ajax_view(request):
         if t_id and t_id in trip_id_to_pk:
             driver_expense_map.setdefault(t_id, []).append(exp)
 
+    # VENDOR BILLS
+    from datetime import datetime, timedelta
+    try:
+        dt_from = datetime.strptime(date_from, "%Y-%m-%d") - timedelta(days=90)
+        dt_to = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=90)
+        market_bills = MarketBillInfo.objects.filter(mb_created_at__range=(dt_from, dt_to))
+        attached_bills = AttachedBillInfo.objects.filter(ab_bill_date__range=(dt_from, dt_to))
+    except Exception:
+        market_bills = MarketBillInfo.objects.all()
+        attached_bills = AttachedBillInfo.objects.all()
+
     bill_no_map = {}
-    all_market_bills = MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips')
+    all_market_bills = market_bills.only('mb_bill_no', 'mb_selected_trips')
     for b in all_market_bills:
         if b.mb_selected_trips:
             ids = [tid.strip() for tid in b.mb_selected_trips.split(',') if tid.strip()]
@@ -3263,7 +3330,7 @@ def vendor_p_l_attached_report_ajax_view(request):
                     bill_no_map[tid] = b.mb_bill_no
 
     attached_bill_map = {}
-    ab_bills = AttachedBillInfo.objects.all().only(
+    ab_bills = attached_bills.only(
         'ab_bill_no', 'ab_selected_trips', 'ab_buy_cost', 'ab_total_km_run',
         'ab_from_date', 'ab_to_date', 'ab_vehicle_number_id', 'ab_toll_cost'
     ).select_related('ab_vehicle_number')
@@ -4333,11 +4400,11 @@ def own_vehicle_pl_report_view(request):
         # -------------------------------
         # PREFETCH EXPENSES
         # -------------------------------
-        expenses = (
-            Driverexpense.objects
-            .filter(trip_number__in=all_query_ids)
-            .select_related('de_expense_type')
-        )
+        expenses = []
+        chunk_size = 900
+        for i in range(0, len(all_query_ids), chunk_size):
+            chunk = all_query_ids[i:i+chunk_size]
+            expenses.extend(list(Driverexpense.objects.filter(trip_number__in=chunk).select_related('de_expense_type').defer('de_receiver_signature', 'de_remarks')))
 
         expense_map = {}
         for e in expenses:
@@ -5056,12 +5123,15 @@ def halting_report_ajax_view(request):
     # --- PRE-FETCH Logic ---
     trip_id_to_pk = {t.id: t.id for t in page_trips}
     trip_num_to_pk = {str(t.tr_tripnumber).strip().upper(): t.id for t in page_trips if t.tr_tripnumber}
-    all_query_ids = [str(t.id) for t in page_trips] + [str(t.tr_tripnumber).strip() for t in page_trips if
-                                                       t.tr_tripnumber]
-
-    expenses = Driverexpense.objects.filter(trip_number__in=all_query_ids).select_related('de_expense_type').only(
-        'trip_number', 'de_expense_type__expense_type', 'de_total_cost'
-    )
+    all_query_ids = [str(t.id) for t in page_trips] + [str(t.tr_tripnumber).strip() for t in page_trips if t.tr_tripnumber]
+    all_query_ids = list(set(all_query_ids))
+    expenses = []
+    chunk_size = 900
+    for i in range(0, len(all_query_ids), chunk_size):
+        chunk = all_query_ids[i:i+chunk_size]
+        expenses.extend(list(Driverexpense.objects.filter(trip_number__in=chunk).select_related('de_expense_type').only(
+            'trip_number', 'de_expense_type', 'de_total_cost'
+        )))
     expense_map = {}
     for e in expenses:
         t_id = None
@@ -7104,6 +7174,23 @@ def location_pl_report_view(request):
         elif branch_id == '2':  # MAA
             trips = trips.filter(tr_enquirynumber__en_customername__cu_name__icontains='MAA')
 
+    # PRE-FILTER using an indexed field (tr_created_at) with a wide buffer
+    # This prevents the database from performing a full table scan to evaluate the complex resolved_date annotation
+    from datetime import datetime, timedelta
+    try:
+        if date_from and date_to:
+            dt_start = datetime.strptime(date_from, "%Y-%m-%d") - timedelta(days=90)
+            dt_end = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=90)
+            trips = trips.filter(tr_created_at__range=[dt_start, dt_end])
+        elif date_from:
+            dt_start = datetime.strptime(date_from, "%Y-%m-%d") - timedelta(days=90)
+            trips = trips.filter(tr_created_at__gte=dt_start)
+        elif date_to:
+            dt_end = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=90)
+            trips = trips.filter(tr_created_at__lte=dt_end)
+    except Exception:
+        pass
+
     if date_from and date_to:
         trips = trips.filter(resolved_date__date__range=[date_from, date_to])
     elif date_from:
@@ -7115,17 +7202,24 @@ def location_pl_report_view(request):
     trip_ids = [t.id for t in trips_list]
     trip_enquiries = [t.tr_enquirynumber_id for t in trips_list]
 
-    invoices = TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_ids)
+    chunk_size = 900
+    invoices = []
+    for i in range(0, len(trip_ids), chunk_size):
+        invoices.extend(list(TransInvoiceInfo.objects.filter(ti_trip_id__in=trip_ids[i:i+chunk_size])))
     invoice_obj_map = {i.ti_trip_id: i for i in invoices}
 
     trip_id_to_pk = {t.id: t.id for t in trips_list}
     trip_num_to_pk = {str(t.tr_tripnumber).strip().upper(): t.id for t in trips_list if t.tr_tripnumber}
     # Collect all possible search strings (IDs and Trip Numbers - including raw and upper for robust matching)
-    all_query_ids = [str(t.id) for t in trips_list] + [str(t.tr_tripnumber).strip() for t in trips_list if
-                                                       t.tr_tripnumber] + \
-                    [str(t.tr_tripnumber).strip().upper() for t in trips_list if t.tr_tripnumber]
+    all_query_ids = [str(t.id) for t in trips_list] + [str(t.tr_tripnumber).strip() for t in trips_list if t.tr_tripnumber] + [str(t.tr_tripnumber).strip().upper() for t in trips_list if t.tr_tripnumber]
+    all_query_ids = list(set(all_query_ids))
 
-    expenses = Driverexpense.objects.filter(trip_number__in=all_query_ids).select_related('de_expense_type')
+    expenses = []
+    chunk_size = 900
+    for i in range(0, len(all_query_ids), chunk_size):
+        chunk = all_query_ids[i:i+chunk_size]
+        expenses.extend(list(Driverexpense.objects.filter(trip_number__in=chunk).select_related('de_expense_type').defer('de_receiver_signature', 'de_remarks')))
+        
     expense_map = {}
     for e in expenses:
         t_id = None
@@ -7138,7 +7232,18 @@ def location_pl_report_view(request):
             expense_map.setdefault(t_id, []).append(e)
 
     # VENDOR BILLS (MARKET & ATTACHED)
-    all_bills = MarketBillInfo.objects.all().only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost', 'mb_trip_details')
+    # Filter bills to a generous date window around the report period to avoid fetching the entire database
+    from datetime import datetime, timedelta
+    try:
+        dt_from = datetime.strptime(date_from, "%Y-%m-%d") - timedelta(days=90)
+        dt_to = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=90)
+        market_bills = MarketBillInfo.objects.filter(mb_created_at__range=(dt_from, dt_to))
+        attached_bills = AttachedBillInfo.objects.filter(ab_bill_date__range=(dt_from, dt_to))
+    except Exception:
+        market_bills = MarketBillInfo.objects.all()
+        attached_bills = AttachedBillInfo.objects.all()
+
+    all_bills = market_bills.only('mb_bill_no', 'mb_selected_trips', 'mb_total_cost', 'mb_trip_details')
     bill_no_map = {}
     for b in all_bills:
         if b.mb_selected_trips:
@@ -7150,8 +7255,7 @@ def location_pl_report_view(request):
                     pass
 
     attached_bill_map = {}
-    all_attached_bills = AttachedBillInfo.objects.all().only('ab_bill_no', 'ab_selected_trips', 'ab_buy_cost',
-                                                             'ab_total_km_run')
+    all_attached_bills = attached_bills.only('ab_bill_no', 'ab_selected_trips', 'ab_buy_cost', 'ab_total_km_run')
     for b in all_attached_bills:
         if b.ab_selected_trips:
             ids = [tid.strip() for tid in b.ab_selected_trips.split(',') if tid.strip()]
@@ -7162,11 +7266,12 @@ def location_pl_report_view(request):
                     attached_bill_map[tid] = b
 
     # ALLOTMENTS & RATES
-    va_map = {
-        va.va_enquirynumber_id: va
-        for va in
-        Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=trip_enquiries).select_related('va_vendor')
-    }
+    va_map = {}
+    chunk_size = 900
+    for i in range(0, len(trip_enquiries), chunk_size):
+        chunk = trip_enquiries[i:i+chunk_size]
+        for va in Vehicle_allotmentInfo.objects.filter(va_enquirynumber_id__in=chunk).select_related('va_vendor'):
+            va_map[va.va_enquirynumber_id] = va
 
     vendor_ids = set(a.va_vendor_id for a in va_map.values() if a.va_vendor_id)
     rates = VendorratemasterInfo1.objects.filter(vr1_vendor_id__in=vendor_ids).values(
@@ -7178,11 +7283,12 @@ def location_pl_report_view(request):
     }
 
     veh_nos = [t.tr_vehiclenumber for t in trips_list if t.tr_vehiclenumber]
-    veh_vendor_map = {
-        v.vm_registrationnumber.strip(): v.vm_vendor
-        for v in VehiclemasterInfo.objects.filter(vm_registrationnumber__in=veh_nos).select_related('vm_vendor')
-        if v.vm_registrationnumber
-    }
+    veh_vendor_map = {}
+    for i in range(0, len(veh_nos), chunk_size):
+        chunk = veh_nos[i:i+chunk_size]
+        for v in VehiclemasterInfo.objects.filter(vm_registrationnumber__in=chunk).select_related('vm_vendor'):
+            if v.vm_registrationnumber:
+                veh_vendor_map[v.vm_registrationnumber.strip()] = v.vm_vendor
 
     own_rev = 0.0
     att_rev = 0.0
@@ -8240,7 +8346,8 @@ def transport_mis(request):
         .distinct()
     )
 
-    branches = Location_info.objects.all()
+    from django.db.models import Q
+    branches = Location_info.objects.filter(loc_name__in=['BVM MAA', 'BVM BLR'])
     vehicle_sources = OwnershipInfo.objects.all()
 
     if selected_branch:
@@ -9032,3 +9139,127 @@ def trip_status_count_report_ajax_view(request):
         "data": data,
     })
 
+
+
+
+# ---------- New Rate Reports ----------
+from django.http import JsonResponse
+
+@login_required(login_url='login_page')
+def vendor_rate_report(request):
+    from ..sub_models.location_info_mod import Location_info
+    from ..sub_models.vendor_info_mod import Vendor_info
+    
+    first_name = request.session.get('first_name')
+    from django.db.models import Q
+    branches = Location_info.objects.filter(loc_name__in=['BVM MAA', 'BVM BLR'])
+    vendors = Vendor_info.objects.all()
+    
+    context = {
+        'first_name': first_name,
+        'branches': branches,
+        'vendors': vendors,
+    }
+    return render(request, "asset_mgt_app/vendor_rate_report.html", context)
+
+@login_required(login_url='login_page')
+def vendor_rate_report_ajax(request):
+    from ..sub_models.vendorratemaster1_mod import VendorratemasterInfo1
+    
+    # Using select_related to fix N+1 query issue
+    records = VendorratemasterInfo1.objects.select_related(
+        'vr1_vendor', 'vr1_vehicletype', 'vr1_vehiclecategory', 'vr1_fromlocation', 'vr1_tolocation'
+    ).all()
+    
+    if request.method == 'POST':
+        from_date = request.POST.get('from_date')
+        to_date = request.POST.get('to_date')
+        branch_id = request.POST.get('branch')
+        vendor_id = request.POST.get('vendor')
+        
+        if from_date and to_date:
+            records = records.filter(vr1_created_at__range=[from_date, to_date])
+        if branch_id:
+            records = records.filter(vr1_vendor__vend_branch_id=branch_id)
+        if vendor_id:
+            records = records.filter(vr1_vendor_id=vendor_id)
+            
+    data = []
+    for i, item in enumerate(records, 1):
+        data.append({
+            "s_no": i,
+            "vendor_name": item.vr1_vendor.vend_name if item.vr1_vendor else '',
+            "vehicle_type": item.vr1_vehicletype.vt_vehicletype if item.vr1_vehicletype else '',
+            "vehicle_category": item.vr1_vehiclecategory.vc_vehiclecategory if item.vr1_vehiclecategory else '',
+            "from_location": item.vr1_fromlocation.place_name if item.vr1_fromlocation else '',
+            "to_location": item.vr1_tolocation.place_name if item.vr1_tolocation else '',
+            "trip_cost": item.vr1_rate if item.vr1_rate else '',
+            "valid_from": item.vr1_validity_from.strftime('%d-%m-%Y') if item.vr1_validity_from else '',
+            "valid_to": item.vr1_validity_to.strftime('%d-%m-%Y') if item.vr1_validity_to else '',
+        })
+        
+    return JsonResponse({"data": data})
+
+@login_required(login_url='login_page')
+def customer_rate_report(request):
+    from ..sub_models.location_info_mod import Location_info
+    from ..sub_models.customer_mod import CustomerInfo
+    
+    first_name = request.session.get('first_name')
+    from django.db.models import Q
+    branches = Location_info.objects.filter(loc_name__in=['BVM MAA', 'BVM BLR'])
+    customers = CustomerInfo.objects.all()
+        
+    context = {
+        'first_name': first_name,
+        'branches': branches,
+        'customers': customers,
+    }
+    return render(request, "asset_mgt_app/customer_rate_report.html", context)
+
+@login_required(login_url='login_page')
+def customer_rate_report_ajax(request):
+    from ..sub_models.rtratemaster_mod import RtratemasterInfo
+    
+    # Using select_related to fix N+1 query issue
+    records = RtratemasterInfo.objects.select_related(
+        'ro_customer', 'ro_vehicletype', 'ro_vehiclecategory', 'ro_fromlocation', 'ro_tolocation'
+    ).all()
+    
+    if request.method == 'POST':
+        from_date = request.POST.get('from_date')
+        to_date = request.POST.get('to_date')
+        customer_id = request.POST.get('customer')
+        
+        if from_date and to_date:
+            records = records.filter(ro_created_at__range=[from_date, to_date])
+        if customer_id:
+            records = records.filter(ro_customer_id=customer_id)
+            
+        branch_id = request.POST.get('branch')
+        if branch_id:
+            from ..sub_models.location_info_mod import Location_info
+            try:
+                branch_obj = Location_info.objects.get(id=branch_id)
+                if 'BLR' in branch_obj.loc_name.upper():
+                    records = records.filter(ro_customer__cu_name__icontains='BLR')
+                elif 'MAA' in branch_obj.loc_name.upper():
+                    records = records.filter(ro_customer__cu_name__icontains='MAA')
+            except Exception as e:
+                pass
+            
+    data = []
+    for i, item in enumerate(records, 1):
+        data.append({
+            "s_no": i,
+            "customer_name": item.ro_customer.cu_name if item.ro_customer else '',
+            "vehicle_type": item.ro_vehicletype.vt_vehicletype if item.ro_vehicletype else '',
+            "vehicle_category": item.ro_vehiclecategory.vc_vehiclecategory if item.ro_vehiclecategory else '',
+            "from_location": item.ro_fromlocation.place_name if item.ro_fromlocation else '',
+            "to_location": item.ro_tolocation.place_name if item.ro_tolocation else '',
+            "trip_cost": item.ro_rate if item.ro_rate else '',
+            "valid_from": item.ro_validity_from.strftime('%d-%m-%Y') if item.ro_validity_from else '',
+            "valid_to": item.ro_validity_to.strftime('%d-%m-%Y') if item.ro_validity_to else '',
+        })
+        
+    return JsonResponse({"data": data})

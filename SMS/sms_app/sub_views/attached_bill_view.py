@@ -363,9 +363,13 @@ def get_attached_vehicle_details(request):
                 # Exclude ALL Sundays from Leave Days count
                 leave_days_count = sum(1 for d in leave_dates_set if d.weekday() != 6)
                 data['leave_days'] = leave_days_count
+                
+                # Calculate holidays (idle Sundays)
+                data['holidays'] = sum(1 for d in leave_dates_set if d.weekday() == 6)
         else:
             data['total_km_run'] = 0
             data['leave_days'] = 0
+            data['holidays'] = 0
 
     except Exception as e:
         data['error'] = str(e)
@@ -640,6 +644,13 @@ def attached_bill_summary(request, id):
         billed_trip_dates = {d for d in all_trip_dates if from_date <= d <= to_date}
         display_working_days = len(billed_trip_dates)
 
+        if bill.ab_holidays is not None and bill.ab_holidays > 0:
+            holiday_sundays = bill.ab_holidays
+        else:
+            total_sundays = sum(1 for d in range(days_in_month) if (from_date + timedelta(days=d)).weekday() == 6)
+            working_sundays = sum(1 for d in billed_trip_dates if d.weekday() == 6)
+            holiday_sundays = max(0, total_sundays - working_sundays)
+
         # Compute actual empty KM (category 2 or 3) matching Total KM run period
         km_filters = Q(tr_vehiclenumber=vehicle.vm_registrationnumber)
         km_filters &= (
@@ -667,6 +678,11 @@ def attached_bill_summary(request, id):
                             actual_business_empty_km += diff
     else:
         display_working_days = max(0, days_in_month - leave_days)
+        holiday_sundays = 0
+        if bill.ab_holidays is not None and bill.ab_holidays > 0:
+            holiday_sundays = bill.ab_holidays
+        elif from_date and to_date:
+            holiday_sundays = sum(1 for d in range(days_in_month) if (from_date + timedelta(days=d)).weekday() == 6)
 
     # --- Fetch selected trips ONLY ---
     selected_trip_numbers = [t.strip() for t in (bill.ab_selected_trips or '').split(',') if t.strip()]
@@ -806,6 +822,7 @@ def attached_bill_summary(request, id):
         'vehicle_type': str(vehicle.vm_vehicletype) if vehicle and vehicle.vm_vehicletype else '',
         'days_in_month': days_in_month,
         'working_days':  display_working_days,
+        'holidays':      holiday_sundays,
         'leave_days':    leave_days,
         'contract_amount': round(contract_amount, 2),
         'toll_cost':       round(toll_cost, 2),
@@ -893,36 +910,37 @@ def attached_bill_summary_excel(request, id):
         [2,  'VEHICLE TYPE',                  data.get('vehicle_type', '')],
         [3,  'NO. OF DAYS IN THE MONTH',      data.get('days_in_month', 0)],
         [4,  'NO. OF WORKING DAYS',           data.get('working_days', 0)],
-        [5,  'NO. OF LEAVE',                  data.get('leave_days', 0)],
-        [6,  'CONTRACT AMOUNT',               format_num(data.get('contract_amount', 0))],
-        [7,  'LEAVE PER DAY',                 format_num(data.get('leave_per_day', 0))],
-        [8,  'LEAVE AMT',                     format_num(data.get('leave_amount', 0))],
-        [9,  'EXTRA KM',                      format_num(data.get('extra_km', 0))],
-        [10, 'EXTRA KM AMT',                  format_num(data.get('extra_km_amount', 0))],
-        [11, 'TOLL COST',                     format_num(data.get('toll_cost', 0))],
-        [12, 'ACTUAL AMT',                    format_num(data.get('actual_amount', 0))],
-        [13, 'TOTAL TRIPS',                   str(data.get('total_trips', 0)) + ' TRIPS'],
-        [14, 'TRIP INDEX',                    data.get('trip_index', '')],
-        [15, 'BUSINESS KM',                   format_num(data.get('business_km', 0))],
-        [16, 'TOTAL KM',                      f"{data.get('total_km', 0)} KM / {data.get('agreed_km', 0)} KM"],
-        [17, 'EMPTY KM',                      format_num(data.get('empty_km', 0))],
-        [18, 'EMPTY KM BUY COST',             format_num(data.get('empty_km_buy_cost', 0))],
-        [19, 'BUSINESS EMPTY KM',             format_num(data.get('business_empty_km', 0))],
-        [20, 'BUSINESS EMPTY KM BUY COST',    format_num(data.get('business_empty_km_buy_cost', 0))],
-        [21, 'BUSINESS COST',                 format_num(data.get('buy_cost', 0))],
-        [22, 'SELLING',                       format_num(data.get('selling', 0))],
-        [23, 'BUYING',                        format_num(data.get('buying', 0))],
-        [24, 'PROFIT',                        format_num(data.get('profit', 0))],
-        [25, 'SELLING %',                     f"{data.get('sell_pct', 0)}%"],
-        [26, 'BUYING %',                      f"{data.get('buy_pct', 0)}%"],
+        [5,  'NO. OF HOLIDAYS (SUNDAYS)',     data.get('holidays', 0)],
+        [6,  'NO. OF LEAVE',                  data.get('leave_days', 0)],
+        [7,  'CONTRACT AMOUNT',               format_num(data.get('contract_amount', 0))],
+        [8,  'LEAVE PER DAY',                 format_num(data.get('leave_per_day', 0))],
+        [9,  'LEAVE AMT',                     format_num(data.get('leave_amount', 0))],
+        [10, 'EXTRA KM',                      format_num(data.get('extra_km', 0))],
+        [11, 'EXTRA KM AMT',                  format_num(data.get('extra_km_amount', 0))],
+        [12, 'TOLL COST',                     format_num(data.get('toll_cost', 0))],
+        [13, 'ACTUAL AMT',                    format_num(data.get('actual_amount', 0))],
+        [14, 'TOTAL TRIPS',                   str(data.get('total_trips', 0)) + ' TRIPS'],
+        [15, 'TRIP INDEX',                    data.get('trip_index', '')],
+        [16, 'BUSINESS KM',                   format_num(data.get('business_km', 0))],
+        [17, 'TOTAL KM',                      f"{data.get('total_km', 0)} KM / {data.get('agreed_km', 0)} KM"],
+        [18, 'EMPTY KM',                      format_num(data.get('empty_km', 0))],
+        [19, 'EMPTY KM BUY COST',             format_num(data.get('empty_km_buy_cost', 0))],
+        [20, 'BUSINESS EMPTY KM',             format_num(data.get('business_empty_km', 0))],
+        [21, 'BUSINESS EMPTY KM BUY COST',    format_num(data.get('business_empty_km_buy_cost', 0))],
+        [22, 'BUSINESS COST',                 format_num(data.get('buy_cost', 0))],
+        [23, 'SELLING',                       format_num(data.get('selling', 0))],
+        [24, 'BUYING',                        format_num(data.get('buying', 0))],
+        [25, 'PROFIT',                        format_num(data.get('profit', 0))],
+        [26, 'SELLING %',                     f"{data.get('sell_pct', 0)}%"],
+        [27, 'BUYING %',                      f"{data.get('buy_pct', 0)}%"],
     ]
 
     for row_data in rows:
         ws.append(row_data)
 
-    # Style Profit row (row 24 maps to data row 26 in Excel since 1 for header + 1 for col names = 2)
+    # Style Profit row (row 25 maps to data row 27 in Excel since 1 for header + 1 for col names = 2)
     for col in ['A', 'B', 'C']:
-        cell = ws[col + '26']
+        cell = ws[col + '27']
         cell.fill = PatternFill("solid", fgColor="D4EDDA")
         cell.font = Font(bold=True)
     
