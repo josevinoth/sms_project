@@ -297,12 +297,28 @@ def tripdetail_add(request, tripdetail_id=0):
                 ).values_list('tr_vehiclenumber', flat=True)
             )
 
+            # Find vehicles that ALREADY have an active/existing Business trip for this enquiry
+            # Category 1 = Business trip
+            assigned_business_vehicles = set(
+                TripdetailInfo.objects.filter(
+                    tr_enquirynumber=enquiry_num_id,
+                    tr_category_id=1
+                ).exclude(
+                    tc_cancellation_check=True
+                ).exclude(
+                    tc_financestatus_id__in=[10, 11]
+                ).values_list('tr_vehiclenumber', flat=True)
+            )
+
             allotted_vehicle_list = []
             allotted_vehicle_map = {}
             for va_item in allotted_vas:
                 reg_num = va_item.va_vehiclenumber_mkt if va_item.va_vehiclesource_id == 3 else (va_item.va_vehiclenumber.vm_registrationnumber if va_item.va_vehiclenumber else '')
+                # Exclude vehicle if it was cancelled or already has an active Business trip
                 if reg_num and reg_num not in allotted_vehicle_map:
                     if reg_num in cancelled_vehicles and reg_num != selected_vehicle_number:
+                        continue
+                    if reg_num in assigned_business_vehicles and reg_num != selected_vehicle_number:
                         continue
 
                     item_info = {
@@ -595,31 +611,28 @@ def tripdetail_add(request, tripdetail_id=0):
                     'status_selected': request.POST.get('tc_financestatus') or 12,
                 })
 
-            # Prevent multiple active business trips for the same vehicle (check by vehicle number)
+            # o. Prevent multiple active business trips for the same vehicle (backend check)
             trip_category_id = post_data.get('tr_category')
             if str(trip_category_id) == '1' and vehicle_number:
-                active_business_trip = TripdetailInfo.objects.filter(
-                    tr_vehiclenumber__iexact=str(vehicle_number).strip(),
+                existing_business_trip = TripdetailInfo.objects.filter(
+                    tr_enquirynumber=enquiry_num_id,
+                    tr_vehiclenumber=vehicle_number,
                     tr_category_id=1
-                ).exclude(
-                    tc_cancellation_check=True
-                ).exclude(
-                    Q(tc_financestatus_id__in=[2, 3, 4, 5, 7, 9, 10, 11]) |
-                    Q(tc_financestatus__status__icontains='Closed') |
-                    Q(tr_operational_status_id__in=[2, 3, 4, 5, 7, 9, 10, 11])
-                ).first()
+                ).exclude(tc_cancellation_check=True).exists()
 
-                if active_business_trip:
-                    messages.error(
-                        request,
-                        f"Vehicle {vehicle_number} already has an active Business trip "
-                        f"(Trip No: {active_business_trip.tr_tripnumber or active_business_trip.id}). "
-                        f"Please complete/close it before creating a new one."
-                    )
-                    referrer = request.META.get('HTTP_REFERER')
-                    if referrer:
-                        return redirect(referrer)
-                    return redirect(f"{reverse('tripdetail_insert')}?enq_id={enquiry_num_id}")
+                if existing_business_trip:
+                    messages.error(request, 'This vehicle already has an active Business trip for this enquiry.')
+                    return render(request, "asset_mgt_app/tripdetail_add.html", {
+                        'first_name': first_name,
+                        'user_id': user_id,
+                        'trip_det_form': trip_det_form,
+                        'tripclosurefiles_form': tripclosurefiles_form,
+                        'enquiry_num_id': enquiry_num_id,
+                        'status_list': status_list,
+                        'consignment_list': consignment_list,
+                        'tripdetail_list': TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num_id),
+                        'status_selected': request.POST.get('tc_financestatus') or 12,
+                    })
 
             if vehicle_allotment_id:
                 va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
@@ -881,29 +894,18 @@ def tripdetail_add(request, tripdetail_id=0):
             tripclosurefiles_form = TripclosurefilesForm(post_data, request.FILES, instance=tripclosure_files)
             enquiry_num = tripdetail.tr_enquirynumber.id
 
-            # Prevent multiple active business trips for the same vehicle (check by vehicle number)
+            # o. Prevent multiple active business trips for the same vehicle (backend check)
             trip_category_id = post_data.get('tr_category')
             vehicle_number = post_data.get('tr_vehiclenumber') or tripdetail.tr_vehiclenumber
             if str(trip_category_id) == '1' and vehicle_number:
-                active_business_trip = TripdetailInfo.objects.filter(
-                    tr_vehiclenumber__iexact=str(vehicle_number).strip(),
+                existing_business_trip = TripdetailInfo.objects.filter(
+                    tr_enquirynumber=enquiry_num,
+                    tr_vehiclenumber=vehicle_number,
                     tr_category_id=1
-                ).exclude(
-                    pk=tripdetail.id
-                ).exclude(
-                    tc_cancellation_check=True
-                ).exclude(
-                    Q(tc_financestatus_id__in=[2, 3, 4, 5, 7, 9, 10, 11]) |
-                    Q(tc_financestatus__status__icontains='Closed') |
-                    Q(tr_operational_status_id__in=[2, 3, 4, 5, 7, 9, 10, 11])
-                ).first()
+                ).exclude(pk=tripdetail.id).exclude(tc_cancellation_check=True).exists()
 
-                if active_business_trip:
-                    messages.error(
-                        request,
-                        f"Vehicle {vehicle_number} already has an active Business trip "
-                        f"(Trip No: {active_business_trip.tr_tripnumber or active_business_trip.id})."
-                    )
+                if existing_business_trip:
+                    messages.error(request, 'This vehicle already has an active Business trip for this enquiry.')
                     return redirect('tripdetail_update', tripdetail_id=tripdetail.id)
 
             if trip_det_form.is_valid():
