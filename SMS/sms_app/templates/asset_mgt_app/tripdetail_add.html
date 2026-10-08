@@ -525,36 +525,21 @@ document.addEventListener("DOMContentLoaded", function () {
 		if (info.driver_number) $('#tr_drivernumber').val(info.driver_number);
 		if (info.driver_lic) $('#tr_driver_lic').val(info.driver_lic);
 
-		// Fetch last trip's closing KM, reported date & location
+		// Fetch last trip's closing KM & reported date
 		fetch('/SMS/get_last_reported_km/?vehicle=' + encodeURIComponent(vehicleNum) + '&enquiry_id={{ enquiry_num_id }}')
 			.then(res => res.json())
 			.then(data => {
-				if (data.reported_km !== null && data.reported_km !== undefined) {
+				if (data.reported_km && !$('#tr_departedkm').val()) {
 					$('#tr_departedkm').val(data.reported_km);
-					$('#tr_reportedkm_pickup').val(data.reported_km);
-				} else {
-					$('#tr_departedkm').val('');
-					$('#tr_reportedkm_pickup').val('');
-				}
-				if (data.reported_date) {
-					$('#tr_departeddate_pickup').val(data.reported_date).trigger('change');
-				}
-				if (data.reported_location_id) {
-					$('#tr_departedlocation').val(data.reported_location_id).trigger('change');
-					if (!data.is_market) {
-						$('#tr_departedlocation').css({
-							'pointer-events': 'none',
-							'background-color': '#e9ecef'
-						}).attr('readonly', 'readonly');
-					} else {
-						$('#tr_departedlocation').css({
-							'pointer-events': '',
-							'background-color': ''
-						}).removeAttr('readonly');
+					if (!$('#tr_reportedkm_pickup').val()) {
+						$('#tr_reportedkm_pickup').val(data.reported_km);
 					}
 				}
+				if (data.reported_date && !$('#tr_departeddate_pickup').val()) {
+					$('#tr_departeddate_pickup').val(data.reported_date).trigger('change');
+				}
 			})
-			.catch(err => console.error('Error fetching closing KM/Date/Location:', err));
+			.catch(err => console.error('Error fetching closing KM/Date:', err));
 	}
 </script>
 <script>
