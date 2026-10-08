@@ -410,6 +410,40 @@
         $('#ppc_bill_attachment').on('change', function() {
             $('#ppc_bill_attachment-clear').val('');
         });
+
+        // ================= FETCH LEDGER BALANCE =================
+        function updateLedgerBalance() {
+            var ledgerId = $('#ppc_credit_ledger').val();
+            var $balanceDisplay = $('#ledger_balance_display');
+            
+            if (ledgerId) {
+                $.ajax({
+                    url: "/SMS/get_ledger_balance/", 
+                    data: { 'ledger_id': ledgerId },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            $balanceDisplay.text('Balance: ₹ ' + parseFloat(response.balance).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                        } else {
+                            $balanceDisplay.text('');
+                        }
+                    },
+                    error: function() {
+                        $balanceDisplay.text('');
+                    }
+                });
+            } else {
+                $balanceDisplay.text('');
+            }
+        }
+
+        $('#ppc_credit_ledger').change(function() {
+            updateLedgerBalance();
+        });
+
+        // Initialize on load if a ledger is pre-selected
+        if ($('#ppc_credit_ledger').val()) {
+            updateLedgerBalance();
+        }
     });
 
         // Real-time calculation for GST Amount and Total Amount
