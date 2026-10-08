@@ -134,6 +134,11 @@
                             </div>
 
                         <div class="form-group-modern">
+                                <label class="form-label-modern">Non Movement Days</label>
+                                {% render_field form.ab_non_movement_days class="form-control form-control-modern disable_a_href" readonly="readonly" %}
+                            </div>
+
+                        <div class="form-group-modern">
                                 <label class="form-label-modern">Leave amount</label>
                                 {% render_field form.ab_leave_amount class="form-control form-control-modern disable_a_href" readonly="readonly" %}
                             </div>
@@ -424,6 +429,11 @@
                         }
                     }
 
+                    // Auto-fill non movement days
+                    if (!isInitialLoad && data.non_movement_days !== undefined) {
+                        $('#id_ab_non_movement_days').val(data.non_movement_days);
+                    }
+
                     // Populate Trips Table FIRST, then calculate amounts so rows exist in DOM
                     tbody.empty();
 
@@ -491,6 +501,7 @@
             $('#id_ab_total_km_run').val('0');
             $('#id_ab_leave_days').val('0');
             $('#id_ab_holidays').val('0');
+            $('#id_ab_non_movement_days').val('0');
             window.isLeaveDaysManuallyChanged = false;
             window.isHolidaysManuallyChanged = false;
             calculateAmounts();

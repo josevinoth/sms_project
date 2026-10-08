@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Voucher - {{ ppc.ppc_number }}</title>
+
+    <style>
+        @page {
+            size: A5 landscape;
+            margin: 8mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #222;
+        }
+
+        /* Outer frame */
+        .voucher-container {
+            width: 950px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 22px 30px 18px;
+            border: 2px solid #555;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* =========================
+           HEADER
+           ========================= */
+
+        .header {
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 50px;
+            min-height: 110px;
+        }
+
+        /* Logo container */
+        .logo-section {
+            flex: 1;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            overflow: visible;
+        }
+
+        .logo {
+            width: 115px !important;
+            height: auto !important;
+            max-width: none !important;
+            max-height: none !important;
+            transform: scale(1.5);
+            transform-origin: left center;
+        }
+
+        /* Company information */
+        .company-info {
+            flex: 3;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .company-info h1 {
+            margin: 0;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 24px;
+            font-weight: bold;
+            color: #222;
+            white-space: nowrap;
+        }
+
+        .company-info p {
+            margin: 6px 0 0;
+            font-size: 14px;
+            font-weight: bold;
+            white-space: nowrap;
+            color: #222;
+        }
+
+        /* =========================
+           VOUCHER TITLE
+           ========================= */
+
+        .voucher-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin: 6px 0 22px;
+        }
+
+        /* =========================
+           ROWS
+           ========================= */
+
+        .row {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 14px;
+            font-size: 17px;
+        }
+
+        .field {
+            display: flex;
+            align-items: baseline;
+        }
+
+        .label {
+            white-space: nowrap;
+            margin-right: 4px;
+            font-weight: bold;
+        }
+
+        .value {
+            flex-grow: 1;
+            border-bottom: 2px dotted #444;
+            padding: 0 6px;
+            min-height: 22px;
+            line-height: 22px;
+        }
+
+        .grow {
+            flex: 1 1 0;
+        }
+
+        .half {
+            flex: 1 1 50%;
+        }
+
+        .gap {
+            margin-left: 8px;
+        }
+
+        /* =========================
+           NARRATION
+           ========================= */
+
+        .narration-value {
+            flex-grow: 1;
+            padding: 0 6px;
+            margin-left: 0px;
+            min-height: 22px;
+            line-height: 22px;
+            background-image: radial-gradient(circle at 1px 1px, #444 1px, transparent 1px);
+            background-size: 4px 22px;
+            background-position: 0 20px;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+
+        /* =========================
+           SIGNATURES
+           ========================= */
+
+        .signatures {
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 34px;
+            font-size: 17px;
+        }
+
+        .signature-box {
+            width: 19%;
+            text-align: center;
+        }
+
+        .signature-space {
+            height: 46px;
+            position: relative;
+            margin-bottom: 4px;
+        }
+
+        .signature-space.dotted {
+            border-bottom: 2px dotted #444;
+        }
+
+        .prepared-name {
+            position: absolute;
+            bottom: 2px;
+            left: 0;
+            width: 100%;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .signature-img {
+            max-height: 44px;
+            max-width: 100%;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* =========================
+           PRINT
+           ========================= */
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 15mm;
+            }
+            body {
+                padding: 0;
+                background: #fff;
+            }
+            .voucher-container {
+                box-shadow: none !important;
+                border: 2px solid #555 !important;
+                width: 950px !important;
+                max-width: none !important;
+                margin: 0 !important;
+            }
+        }
+    </style>
+</head>
+
+<body onload="window.print()">
+
+<div class="voucher-container">
+
+    <!-- =========================
+         HEADER
+         ========================= -->
+
+    <div class="header" style="position: relative; width: 100%; min-height: 150px; border-bottom: 2px solid #333; margin-bottom: 15px;">
+        <div style="position: absolute; left: 0; top: 0; bottom: 0; display: flex; align-items: center;">
+            <img src="/media/logo4.0.png" alt="BVM Logo" style="height: 150px; width: 250px; object-fit: contain;">
+        </div>
+        <div style="position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;">
+            <h1 style="margin: 0; font-family: 'Times New Roman', Times, serif; font-size: 24px; font-weight: bold; color: #222; white-space: nowrap;">BVM PACK SOLUTIONS PRIVATE LIMITED</h1>
+            {% if 'BLR' in ppc.ppc_branch.loc_name or 'blr' in ppc.ppc_branch.loc_name|lower or 'BLR' in ppc.ppc_number %}
+                <p style="margin: 6px 0 0; font-size: 14px; font-weight: bold; white-space: normal; text-align: center; color: #222;">
+                    No. 42/9 &amp; 42/10, Ground Floor, New Airport Road, Adjacent to ITC Factory,<br>Meenakunte Village, Jala Hobli, Bangalore – 562 157
+                </p>
+            {% else %}
+                <p style="margin: 6px 0 0; font-size: 14px; font-weight: bold; white-space: nowrap; color: #222;">No. 70, Adam Nagar Road, Nagalkeni, Chrompet, Chennai - 600 044.</p>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <!-- =========================
+         PAYMENT VOUCHER
+         ========================= -->
+
+    <div class="voucher-title">
+        PAYMENT VOUCHER
+    </div>
+
+
+    <!-- =========================
+         NO / DATE
+         ========================= -->
+
+    <div class="row" style="justify-content: space-between;">
+
+        <div class="field" style="width: 45%;">
+
+            <span class="label">
+                No.
+            </span>
+
+            <span class="value">
+                {{ ppc.ppc_number|default_if_none:"" }}
+            </span>
+
+        </div>
+
+
+        <div class="field" style="width: 40%;">
+
+            <span class="label">
+                Date :
+            </span>
+
+            <span class="value">
+                {{ ppc.ppc_transaction_date|date:"d-m-Y" }}
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         AMOUNT
+         ========================= -->
+
+    <div class="row">
+
+        <div class="field" style="width: 100%;">
+
+            <span class="label">
+                Amount Rs.
+            </span>
+
+            <span class="value" style="flex: 0 0 25%;">
+                {{ ppc.ppc_total_amount|floatformat:2|default:ppc.ppc_bill_amount|default:"0.00" }}
+            </span>
+
+            <span class="label gap">
+                (Rs.
+            </span>
+
+            <span class="value">
+                {{ amount_in_words }}
+            </span>
+
+            <span class="label">
+                )
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         HEAD OF ACCOUNTS
+         ========================= -->
+
+    <div class="row">
+
+        <div class="field grow">
+
+            <span class="label">
+                Head of Accounts
+            </span>
+
+            <span class="value">
+                {{ ppc.ppc_expense_type.pms_exp_type_name|default_if_none:"" }}
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         PAYMENT TO
+         ========================= -->
+
+    <div class="row">
+
+        <div class="field grow">
+
+            <span class="label">
+                Payment to
+            </span>
+
+            <span class="value">
+                {{ payment_to }}
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         JOB NO / UNIT
+         ========================= -->
+
+    <div class="row">
+
+        <div class="field half">
+
+            <span class="label">
+                for Job No
+            </span>
+
+            <span class="value">
+                {{ ppc.ppc_job_no|default:"N/A" }}
+            </span>
+
+        </div>
+
+
+        <div class="field half gap">
+
+            <span class="label">
+                Unit
+            </span>
+
+            <span class="value">
+                {{ ppc.ppc_unit|default:"N/A" }}
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         JOB DATE / CUSTOMER
+         ========================= -->
+
+    <div class="row">
+
+        <div class="field half">
+
+            <span class="label">
+                Job Date
+            </span>
+
+            <span class="value">
+                {{ ppc.ppc_transaction_date|date:"d-m-Y"|default:"N/A" }}
+            </span>
+
+        </div>
+
+
+        <div class="field half gap">
+
+            <span class="label">
+                Customer
+            </span>
+
+            <span class="value">
+                {{ ppc.ppc_customer.cu_name|default:"N/A" }}
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         NARRATION
+         ========================= -->
+
+    <div class="row">
+
+        <div class="field grow">
+
+            <span class="label">
+                Narration
+            </span>
+
+            <span class="narration-value">&nbsp;{{ clean_remarks }}</span>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         SIGNATURES
+         ========================= -->
+
+    <div class="signatures">
+
+
+        <!-- PREPARED -->
+
+        <div class="signature-box">
+
+            <div class="signature-space">
+
+                <span class="prepared-name">
+                    {{ ppc.ppc_created_by.first_name|default_if_none:ppc.ppc_created_by.username }}
+                </span>
+
+            </div>
+
+            Prepared
+
+        </div>
+
+
+        <!-- CHECKED -->
+
+        <div class="signature-box">
+
+            <div class="signature-space"></div>
+
+            Checked
+
+        </div>
+
+
+        <!-- VERIFIED -->
+
+        <div class="signature-box">
+
+            <div class="signature-space"></div>
+
+            Verified
+
+        </div>
+
+
+        <!-- APPROVED -->
+
+        <div class="signature-box">
+
+            <div class="signature-space"></div>
+
+            Approved
+
+        </div>
+
+
+        <!-- RECEIVER -->
+
+        <div class="signature-box">
+
+            <div class="signature-space dotted">
+
+                {% if ppc.ppc_receiver_signature %}
+
+                    <img src="{{ ppc.ppc_receiver_signature }}"
+                         class="signature-img"
+                         alt="Signature">
+
+                {% endif %}
+
+            </div>
+
+            Receiver's Signature
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

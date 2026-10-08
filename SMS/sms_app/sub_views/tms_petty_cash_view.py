@@ -565,9 +565,16 @@ def get_ledger_balance(request):
     
     from django.db.models import Sum
     from ..models import iou_info
+    from ..sub_models.pms_petty_cash_mod import PMSPettyCashInfo
+    from ..sub_models.wms_petty_cash_mod import WMSPettyCashInfo
     
     total_iou = iou_info.objects.filter(iou_credit_ledger_id=ledger_id).aggregate(Sum('amount'))['amount__sum'] or 0.0
-    total_spent = TMSPettyCashInfo.objects.filter(tpc_credit_ledger_id=ledger_id).aggregate(Sum('tpc_amount'))['tpc_amount__sum'] or 0.0
+    
+    total_tms_spent = TMSPettyCashInfo.objects.filter(tpc_credit_ledger_id=ledger_id).aggregate(Sum('tpc_amount'))['tpc_amount__sum'] or 0.0
+    total_pms_spent = PMSPettyCashInfo.objects.filter(ppc_credit_ledger_id=ledger_id).aggregate(Sum('ppc_amount'))['ppc_amount__sum'] or 0.0
+    total_wms_spent = WMSPettyCashInfo.objects.filter(wpc_credit_ledger_id=ledger_id).aggregate(Sum('wpc_total_amount'))['wpc_total_amount__sum'] or 0.0
+    
+    total_spent = total_tms_spent + total_pms_spent + total_wms_spent
     balance = total_iou - total_spent
     
     return JsonResponse({

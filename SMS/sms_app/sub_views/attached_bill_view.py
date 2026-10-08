@@ -366,10 +366,14 @@ def get_attached_vehicle_details(request):
                 
                 # Calculate holidays (idle Sundays)
                 data['holidays'] = sum(1 for d in leave_dates_set if d.weekday() == 6)
+
+                # Total Non-Movement Days (idle days including Sundays)
+                data['non_movement_days'] = len(leave_dates_set)
         else:
             data['total_km_run'] = 0
             data['leave_days'] = 0
             data['holidays'] = 0
+            data['non_movement_days'] = 0
 
     except Exception as e:
         data['error'] = str(e)
