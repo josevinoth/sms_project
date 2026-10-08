@@ -77,7 +77,7 @@
 		<div class="modern-card legacy-form-card mb-3">
 					<div class="modern-header mb-0">
 						<div class="d-flex align-items-center justify-content-between flex-wrap">
-							<h2 class="mb-0 text-white"><i class="fas fa-truck-loading mr-2"></i> {% if va %}Edit{% else %}Add{% endif %} Vehicle Allotment</h2>
+							<h2 class="mb-0 text-white"><i class="fas fa-truck-loading mr-2"></i> Add Vehicle Allotment</h2>
 							<div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
 							<a href="{% url 'vehicle_allotment_insert' enquiry_num_id %}" class="btn-modern btn-highlight-cyan m-0">
 								<i class="fas fa-plus"></i> Add
@@ -206,7 +206,7 @@
 									<div class="form-group-modern">
 										<label class="form-label-modern">Vendor Name <span id="vendor_required_star" style="color:red; display:none">*</span></label>
 										{% if va and not is_admin %}
-										<select name="va_vendor" id="va_vendor" class="form-control form-control-modern" onchange="loadVendorBuyRate()" disabled="disabled">
+										<select name="va_vendor" id="va_vendor" class="form-control form-control-modern" onchange="loadVendorBuyRate(false, true)" disabled="disabled">
 											<option value="">Select Vendor</option>
 											{% if va.va_vendor_id %}<option value="{{ va.va_vendor_id }}" selected>{{ va.va_vendor }}</option>{% endif %}
 										</select>
@@ -214,7 +214,7 @@
 										<input type="hidden" name="va_vendor" value="{{ va.va_vendor_id }}">
 										{% endif %}
 										{% else %}
-										<select name="va_vendor" id="va_vendor" class="form-control form-control-modern" onchange="loadVendorBuyRate()">
+										<select name="va_vendor" id="va_vendor" class="form-control form-control-modern" onchange="loadVendorBuyRate(false, true)">
 											<option value="">Select Vendor</option>
 											{% if va.va_vendor_id %}<option value="{{ va.va_vendor_id }}" selected>{{ va.va_vendor }}</option>{% endif %}
 										</select>
@@ -320,9 +320,9 @@
 						<div class="form-actions d-flex justify-content-between align-items-center flex-wrap">
 							<div>
 								<button type="submit" class="btn-modern btn-submit" id="vehicle_allotment_submit_id"><i
-										class="fas fa-check"></i> {% if va %}Update{% else %}Submit{% endif %}</button>
+										class="fas fa-check"></i> Submit</button>
 								<button type="submit" class="btn-modern btn-highlight-cyan" id="vehicle_allotment_submit_email_id"
-									name="submit_and_email" value="1"><i class="fas fa-envelope"></i> {% if va %}Update & Email{% else %}Submit & Email{% endif %}</button>
+									name="submit_and_email" value="1"><i class="fas fa-envelope"></i> Submit & Email</button>
 							</div>
 							<a href="{% url 'enquirynote_list' %}" class="btn-modern btn-cancel">
 								<i class="fas fa-times"></i> Cancel
@@ -701,7 +701,7 @@ function setDateFieldValue(selector, value) {
 	});
 </script>
 <script>
-function loadVendorBuyRate(isAutoLoad=false) {
+function loadVendorBuyRate(isAutoLoad=false, forceOverwrite=false) {
     var vehicleSource = $('#va_vehiclesource').val();
     if (vehicleSource != 3) {
         if (!isAutoLoad) {
@@ -728,13 +728,22 @@ function loadVendorBuyRate(isAutoLoad=false) {
         },
         success: function(data) {
             if (data.standard_buy > 0 || !isAutoLoad) {
-                if (!isAutoLoad || !$("#va_standardbuy").val() || $("#va_standardbuy").val() === "0" || $("#va_standardbuy").val() === "0.0") {
-                    var stdBuy = data.standard_buy || "";
-                    var spcBuy = data.special_buy || "";
-                    if (!isAutoLoad || stdBuy) $("#va_standardbuy").val(stdBuy);
-                    if (!isAutoLoad || spcBuy) $("#va_specialbuy").val(spcBuy);
-                    calculateProfit();
+                // If it's an auto-load, never overwrite existing values. 
+                // If it's a manual trigger, only overwrite if empty or if forceOverwrite is passed.
+                var currentStd = $("#va_standardbuy").val();
+                var currentSpc = $("#va_specialbuy").val();
+                
+                var stdBuy = data.standard_buy || "";
+                var spcBuy = data.special_buy || "";
+                
+                if (forceOverwrite || !currentStd || currentStd === "0" || currentStd === "0.0") {
+                    $("#va_standardbuy").val(stdBuy);
                 }
+                // Never forcefully overwrite Special Buy if user has already typed a value
+                if (!currentSpc || currentSpc === "0" || currentSpc === "0.0") {
+                    $("#va_specialbuy").val(spcBuy);
+                }
+                calculateProfit();
             }
         }
     });
@@ -746,10 +755,10 @@ $(document).ready(function() {
     $('.vehicle-check').on('change', function() {
         $('.vehicle-check').not(this).prop('checked', false);
         if ($(this).is(':checked')) {
-            loadVendorBuyRate(); // Buy Rate uses checkbox
+            loadVendorBuyRate(false, true); // Buy Rate uses checkbox
         } else {
             $('#va_standardbuy').val('');
-            $('#va_specialbuy').val('');
+            // Do not clear special buy if unchecked to prevent data loss
             calculateProfit();
         }
     });
@@ -758,14 +767,14 @@ $(document).ready(function() {
     $('#va_vehicletype').on('change', function() {
         loadEnquirySellRate(false);
         if ($('#chk_requested').is(':checked')) {
-            loadVendorBuyRate();
+            loadVendorBuyRate(false, true);
         }
     });
 
     // Re-fetch buy when vehicle placed changes (if checkbox is checked)
     $('#va_vehicletype_placed').on('change', function() {
         if ($('#chk_placed').is(':checked')) {
-            loadVendorBuyRate();
+            loadVendorBuyRate(false, true);
         }
     });
 });

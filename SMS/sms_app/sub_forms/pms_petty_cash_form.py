@@ -9,6 +9,7 @@ class PMSPettyCashForm(forms.ModelForm):
         widgets = {
             'ppc_transaction_date': forms.DateInput(attrs={'type': 'date'}),
             'ppc_remarks': forms.Textarea(attrs={'rows': 2}),
+            'ppc_bill_attachment': forms.FileInput(attrs={'class': 'form-control form-control-modern', 'style': 'height: 34px; padding: 3px 6px; font-size: 0.85rem;'}),
         }
 
     def __init__(self, *args, **kwargs):

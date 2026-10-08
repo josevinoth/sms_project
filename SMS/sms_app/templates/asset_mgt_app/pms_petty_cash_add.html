@@ -154,19 +154,50 @@
 
                         <div class="form-group-modern">
                             <label class="form-label-modern">Bill Attachment</label>
-                            {% render_field form.ppc_bill_attachment id="ppc_bill_attachment" class="form-control form-control-modern" style="padding: 3px;" %}
+                            <div class="custom-file-upload-wrapper">
+                                <input type="file" name="ppc_bill_attachment" id="ppc_bill_attachment" class="form-control form-control-modern" style="height: 34px; padding: 3px 6px; font-size: 0.85rem;" accept="image/*,.pdf">
+                            </div>
                             {% if form.instance.ppc_bill_attachment %}
-                                <div class="mt-2">
-                                    <a href="{{ form.instance.ppc_bill_attachment.url }}" target="_blank" class="badge badge-info" style="font-size: 0.85rem;"><i class="fas fa-eye"></i> View Current File</a>
+                            <div id="ppc_attachment_preview" class="border rounded p-2 mt-2" style="background:#f8fafc; border-color:#e2e8f0 !important;">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <span class="text-truncate small font-weight-bold d-flex align-items-center" style="max-width:75%; font-size:0.8rem; color:#334155;" title="{{ bill_filename|default:form.instance.ppc_bill_attachment.name }}">
+                                        <i class="far fa-file-alt text-primary mr-1" style="font-size: 0.95rem;"></i>
+                                        <span class="text-truncate">{{ bill_filename|default:form.instance.ppc_bill_attachment.name }}</span>
+                                    </span>
+                                    <span class="d-flex align-items-center" style="gap: 10px;">
+                                        <a href="{{ form.instance.ppc_bill_attachment.url }}" target="_blank" class="text-primary" title="View attachment" style="font-size:0.9rem; text-decoration:none;">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a role="button" class="text-danger" id="delete_ppc_attachment_btn" title="Remove attachment" style="cursor:pointer; font-size:0.9rem;">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    </span>
                                 </div>
+                                <input type="hidden" name="ppc_bill_attachment-clear" id="ppc_bill_attachment-clear" value="">
+                            </div>
                             {% endif %}
                         </div>
                     </div>
                 </div>
-            </div> <!-- End row -->
-        </div> <!-- End modern-card -->
+            <input type="hidden" name="ppc_receiver_signature" id="id_ppc_receiver_signature" value="{{ form.instance.ppc_receiver_signature|default_if_none:'' }}">
 
-                <!-- ========== JOB DETAILS TABLE (PMS) ========== -->
+            <!-- ================= ACTION BUTTONS ================= -->
+            <div class="action-row mt-4 d-flex justify-content-between">
+                <div class="d-flex" style="gap: 15px;">
+                    <button type="submit" class="btn-modern btn-highlight">
+                        <i class="fas fa-check"></i> Submit
+                    </button>
+                    <button type="button" class="btn-modern" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;" data-toggle="modal" data-target="#signatureModal">
+                        <i class="fas fa-signature"></i> Digital Signature
+                    </button>
+                </div>
+                <a href="{% url 'pms_petty_cash_list' %}" class="btn-modern btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </div>
+
+        <!-- ========== JOB DETAILS TABLE (PMS) ========== -->
         <div id="job_details_container" class="mt-4" style="display:none;">
             <div class="modern-header d-flex justify-content-between align-items-center mb-0" style="border-radius: 14px 14px 0 0; padding: 0.6rem 1.2rem;">
                 <h5 class="mb-0 text-white" style="font-size: 1.05rem; font-weight: 700; letter-spacing: 0.5px;">
@@ -209,18 +240,38 @@
                 </div>
             </div>
         </div>
-
-        <!-- Bottom Action Bar -->
-        <div class="bottom-action-bar mt-4">
-            <button type="submit" class="btn btn-warning font-weight-bold px-5 py-2" style="border-radius:25px; color:#fff;">
-                <i class="fas fa-check mr-2"></i> SUBMIT
-            </button>
-            <a href="{% url 'pms_petty_cash_list' %}" class="btn btn-outline-secondary font-weight-bold px-5 py-2" style="border-radius:25px;">
-                <i class="fas fa-times mr-2"></i> CANCEL
-            </a>
-        </div>
     </div>
 </form>
+
+<!-- ================= DIGITAL SIGNATURE MODAL ================= -->
+<div class="modal fade" id="signatureModal" tabindex="-1" role="dialog" aria-labelledby="signatureModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+      <div class="modal-header" style="background-color: #f8f9fa; border-bottom: 1px solid #e9ecef; border-radius: 12px 12px 0 0;">
+        <h5 class="modal-title font-weight-bold" id="signatureModalLabel" style="color: #2c3e50;">Receiver Digital Signature</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center p-4">
+        <div style="border: 2px dashed #cbd5e1; padding: 10px; display: inline-block; background: #f8fafc; border-radius: 12px;">
+            <canvas id="signature-pad" width="400" height="200" style="touch-action: none; cursor: crosshair;"></canvas>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-between" style="border-top: 1px solid #e9ecef; background-color: #f8f9fa; border-radius: 0 0 12px 12px;">
+        <button type="button" class="btn btn-outline-secondary" id="clear-signature" style="border-radius: 8px; padding: 8px 16px;">
+            <i class="fas fa-eraser mr-1"></i> Clear
+        </button>
+        <div>
+            <button type="button" class="btn btn-light" data-dismiss="modal" style="border-radius: 8px; padding: 8px 16px;">Cancel</button>
+            <button type="button" class="btn btn-primary" id="save-signature" style="border-radius: 8px; padding: 8px 16px; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none;">
+                <i class="fas fa-save mr-1"></i> Save Signature
+            </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
 
@@ -346,6 +397,19 @@
         if ($('#ppc_job_no').val()) {
             $('#ppc_job_no').trigger('change');
         }
+
+        // Attachment remove / change handlers matching invoice documents page
+        $('#delete_ppc_attachment_btn').on('click', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to remove this attachment?')) {
+                $('#ppc_bill_attachment-clear').val('on');
+                $('#ppc_attachment_preview').slideUp(200);
+            }
+        });
+
+        $('#ppc_bill_attachment').on('change', function() {
+            $('#ppc_bill_attachment-clear').val('');
+        });
     });
 
         // Real-time calculation for GST Amount and Total Amount
@@ -365,5 +429,54 @@
         });
 
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var canvas = document.getElementById('signature-pad');
+        if (!canvas) return;
+        var signaturePad = new SignaturePad(canvas, {
+            backgroundColor: 'rgba(255, 255, 255, 0)',
+            penColor: 'rgb(0, 0, 0)',
+            minWidth: 2,
+            maxWidth: 4
+        });
+
+        $('#clear-signature').on('click', function() {
+            signaturePad.clear();
+        });
+
+        $('#save-signature').on('click', function() {
+            if (signaturePad.isEmpty()) {
+                alert('Please provide a signature first.');
+            } else {
+                var dataURL = signaturePad.toDataURL('image/png');
+                $('#id_ppc_receiver_signature').val(dataURL);
+                $('#signatureModal').modal('hide');
+                
+                var btn = $('button[data-target="#signatureModal"]');
+                btn.removeClass('btn-modern').addClass('btn-modern btn-success');
+                btn.html('<i class="fas fa-check-circle"></i> Signature Saved');
+            }
+        });
+        
+        if ($('#id_ppc_receiver_signature').val()) {
+            var btn = $('button[data-target="#signatureModal"]');
+            btn.removeClass('btn-modern').addClass('btn-modern btn-success');
+            btn.html('<i class="fas fa-check-circle"></i> Signature Captured');
+            
+            // Load the saved signature onto the canvas
+            signaturePad.fromDataURL($('#id_ppc_receiver_signature').val());
+        }
+        
+        // Ensure canvas renders correctly when modal opens
+        $('#signatureModal').on('shown.bs.modal', function () {
+            if ($('#id_ppc_receiver_signature').val()) {
+                signaturePad.fromDataURL($('#id_ppc_receiver_signature').val());
+            }
+        });
+    });
+</script>
 {% endblock %}
+
 

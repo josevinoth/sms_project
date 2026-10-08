@@ -38,4 +38,9 @@ class DriverExpenseForm(forms.ModelForm):
         self.fields['trip_number'].empty_label = "--Select Trip--"
 
         self.fields['de_expense_type'].empty_label = "--Select--"
+        if 'de_credit_ledger' in self.fields:
+            self.fields['de_credit_ledger'].empty_label = "-- Select Credit Ledger --"
+            self.fields['de_credit_ledger'].queryset = self.fields['de_credit_ledger'].queryset.filter(
+                ledger_name__icontains='Trans'
+            ).exclude(ledger_name__icontains='Admin')
 

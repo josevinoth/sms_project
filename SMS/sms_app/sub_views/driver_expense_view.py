@@ -82,7 +82,10 @@ def driver_expense_add(request, expense_id=0):
                 
                 # First, delete any previously auto-generated petty cash entries for this specific expense record 
                 # (in case the user is editing an existing driver expense)
-                TMSPettyCashInfo.objects.filter(tpc_remarks__contains=f"[Auto-generated from Driver Settlement Expense ID: {exp.id}]").delete()
+                TMSPettyCashInfo.objects.filter(
+                    Q(tpc_source_driver_expense_id=exp.id) | 
+                    Q(tpc_remarks__contains=f"[Auto-generated from Driver Settlement Expense ID: {exp.id}]")
+                ).delete()
                 
                 # 1. Gather defaults
                 bvm_trans = Business_Sol_info.objects.filter(bvm_business__icontains='bvm trans solutions').first()
@@ -154,9 +157,10 @@ def driver_expense_add(request, expense_id=0):
                             tpc_driver_name=exp.driver_name,
                             tpc_created_by=request.user,
                             tpc_updated_by=request.user,
-                            tpc_remarks=f"{exp.de_remarks or ''} [Auto-generated from Driver Settlement Expense ID: {exp.id}]",
+                            tpc_remarks=exp.de_remarks,
                             tpc_receiver_signature=exp.de_receiver_signature,
-                            tpc_customer=customer_obj
+                            tpc_customer=customer_obj,
+                            tpc_source_driver_expense_id=exp.id
                         )
                         tpc.tpc_number = generate_tms_petty_cash_number(TMSPettyCashInfo, 'tpc_number', branch_obj)
                         tpc.save()
@@ -171,9 +175,58 @@ def driver_expense_add(request, expense_id=0):
     # ================= 4️⃣ GET =================
     else:
         if expense:
+            if not expense.de_credit_ledger:
+                from .general_utils import get_session_branch_id
+                from ..models import Location_info
+                from ..sub_models.credit_ledger_mod import CreditLedgerInfo
+                branch_id = get_session_branch_id(request)
+                if branch_id:
+                    branch_obj = Location_info.objects.filter(id=branch_id).first()
+                    if branch_obj:
+                        branch_code = branch_obj.loc_name.split()[-1]
+                        ledger = CreditLedgerInfo.objects.filter(
+                            ledger_name__icontains='Trans Petty Cash'
+                        ).filter(
+                            ledger_name__icontains=branch_code
+                        ).exclude(
+                            ledger_name__icontains='Admin'
+                        ).first()
+                        if not ledger:
+                            ledger = CreditLedgerInfo.objects.filter(
+                                ledger_name__icontains='Trans'
+                            ).filter(
+                                ledger_name__icontains=branch_code
+                            ).first()
+                        if ledger:
+                            expense.de_credit_ledger = ledger
             form = DriverExpenseForm(instance=expense,settlement=settlement)
         else:
             initial_data = {'driver_name': settlement.driver}
+            
+            # Default Credit Ledger based on branch name
+            from .general_utils import get_session_branch_id
+            from ..models import Location_info
+            from ..sub_models.credit_ledger_mod import CreditLedgerInfo
+            branch_id = get_session_branch_id(request)
+            if branch_id:
+                branch_obj = Location_info.objects.filter(id=branch_id).first()
+                if branch_obj:
+                    branch_code = branch_obj.loc_name.split()[-1]
+                    ledger = CreditLedgerInfo.objects.filter(
+                        ledger_name__icontains='Trans Petty Cash'
+                    ).filter(
+                        ledger_name__icontains=branch_code
+                    ).exclude(
+                        ledger_name__icontains='Admin'
+                    ).first()
+                    if not ledger:
+                        ledger = CreditLedgerInfo.objects.filter(
+                            ledger_name__icontains='Trans'
+                        ).filter(
+                            ledger_name__icontains=branch_code
+                        ).first()
+                    if ledger:
+                        initial_data['de_credit_ledger'] = ledger.id
             
             trip_id = request.GET.get('trip_id')
             if trip_id:

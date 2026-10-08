@@ -254,7 +254,9 @@ def tms_petty_cash_list(request):
             veh_no = tpc.tpc_vehicle_number.vm_registrationnumber if tpc.tpc_vehicle_number else ""
             
             edit_url = f"/SMS/petty_cash_insert/{tpc.id}/"
-            if tpc.tpc_remarks and "Auto-generated from Driver Settlement Expense ID: " in tpc.tpc_remarks:
+            if tpc.tpc_source_driver_expense_id:
+                edit_url = f"/SMS/driver_expense_add/{tpc.tpc_source_driver_expense_id}/"
+            elif tpc.tpc_remarks and "Auto-generated from Driver Settlement Expense ID: " in tpc.tpc_remarks:
                 try:
                     driver_expense_id = int(tpc.tpc_remarks.split("Auto-generated from Driver Settlement Expense ID: ")[1].strip())
                     edit_url = f"/SMS/driver_expense_add/{driver_expense_id}/"

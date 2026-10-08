@@ -6,6 +6,7 @@ from .driversettlement_mod import driver_settlement_info
 from .expense_category_mod import ExpenseCategoryInfo
 from .expensetype_mod import Expense_type
 from .tripdetail_mod import TripdetailInfo
+from .credit_ledger_mod import CreditLedgerInfo
 
 
 class Driverexpense(models.Model):
@@ -17,6 +18,7 @@ class Driverexpense(models.Model):
     de_trip_number = models.CharField(max_length=50,blank=True, null=True )
     trip_number = models.CharField(max_length=50,blank=True, null=True )
     de_expense_type = models.ForeignKey( Expense_type,on_delete=models.CASCADE,blank=True,null=True)
+    de_credit_ledger = models.ForeignKey(CreditLedgerInfo, on_delete=models.SET_NULL, null=True, blank=True)
     de_parkingcost = models.FloatField(default=0.0)
     de_loadingcost = models.FloatField(default=0.0)
     de_unloadingcost = models.FloatField(default=0.0)
