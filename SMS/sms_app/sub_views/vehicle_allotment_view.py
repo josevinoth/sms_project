@@ -542,12 +542,33 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             
             # 🛑 Prevent vehicle from being allotted if it's already active anywhere else
             active_allotments = allotments_to_check.exclude(va_status_id__in=[2, 3, 4, 5])
-            if active_allotments.exists():
-                busy_enq = active_allotments.first().va_enquirynumber
-                busy_enq_str = busy_enq.en_enquirynumber if busy_enq else "Another Enquiry"
+            is_really_busy = False
+            busy_enq_str = "Another Enquiry"
+            
+            _reg_no = obj.va_vehiclenumber.vm_registrationnumber if (vehicle_source in [1, 2] and obj.va_vehiclenumber) else (obj.va_vehiclenumber_mkt if vehicle_source == 3 else None)
+            _reg_no_clean = str(_reg_no).strip() if _reg_no else ""
+
+            for a in active_allotments:
+                trips = TripdetailInfo.objects.filter(tr_enquirynumber=a.va_enquirynumber, tr_vehiclenumber__iexact=_reg_no_clean)
+                if not trips.exists():
+                    is_really_busy = True
+                    busy_enq_str = a.va_enquirynumber.en_enquirynumber if a.va_enquirynumber else "Another Enquiry"
+                    break
+                has_active = False
+                for t in trips:
+                    status_id = t.tr_operational_status_id if t.tr_operational_status_id else 1
+                    if status_id in [1, 12]:
+                        has_active = True
+                        break
+                if has_active:
+                    is_really_busy = True
+                    busy_enq_str = a.va_enquirynumber.en_enquirynumber if a.va_enquirynumber else "Another Enquiry"
+                    break
+
+            if is_really_busy:
                 messages.error(
                     request,
-                    f"This vehicle is already actively allotted to '{busy_enq_str}'. It cannot be allotted again until the previous allotment is closed."
+                    f"This vehicle has been previously allotted in {busy_enq_str} if you want to allot you can add as replaced vehicle."
                 )
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
@@ -735,12 +756,33 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
             
             # 🛑 Prevent vehicle from being allotted if it's already active anywhere else
             active_allotments = allotments_to_check.exclude(va_status_id__in=[2, 3, 4, 5])
-            if active_allotments.exists():
-                busy_enq = active_allotments.first().va_enquirynumber
-                busy_enq_str = busy_enq.en_enquirynumber if busy_enq else "Another Enquiry"
+            is_really_busy = False
+            busy_enq_str = "Another Enquiry"
+            
+            _reg_no = obj.va_vehiclenumber.vm_registrationnumber if (vehicle_source in [1, 2] and obj.va_vehiclenumber) else (obj.va_vehiclenumber_mkt if vehicle_source == 3 else None)
+            _reg_no_clean = str(_reg_no).strip() if _reg_no else ""
+
+            for a in active_allotments:
+                trips = TripdetailInfo.objects.filter(tr_enquirynumber=a.va_enquirynumber, tr_vehiclenumber__iexact=_reg_no_clean)
+                if not trips.exists():
+                    is_really_busy = True
+                    busy_enq_str = a.va_enquirynumber.en_enquirynumber if a.va_enquirynumber else "Another Enquiry"
+                    break
+                has_active = False
+                for t in trips:
+                    status_id = t.tr_operational_status_id if t.tr_operational_status_id else 1
+                    if status_id in [1, 12]:
+                        has_active = True
+                        break
+                if has_active:
+                    is_really_busy = True
+                    busy_enq_str = a.va_enquirynumber.en_enquirynumber if a.va_enquirynumber else "Another Enquiry"
+                    break
+
+            if is_really_busy:
                 messages.error(
                     request,
-                    f"This vehicle is already actively allotted to '{busy_enq_str}'. It cannot be allotted again until the previous allotment is closed."
+                    f"This vehicle has been previously allotted in {busy_enq_str} if you want to allot you can add as replaced vehicle."
                 )
                 referer = request.META.get('HTTP_REFERER')
                 return redirect(referer if referer else request.path)
@@ -1234,8 +1276,9 @@ def load_vehicle_number(request):
         key = (a.va_enquirynumber_id, (a.va_vehiclenumber.vm_registrationnumber or '').strip().upper())
         
         if key in trip_map:
-            # If any trip is active (not Closed, Settled, Cancelled, etc), then it's busy
-            has_active_trip = any(s not in [2, 3, 7, 10, 11] for s in trip_map[key])
+            # If any trip is actively running (1 = Trip Started, 12 = Work In Progress)
+            # Other statuses like Closed (2), Settled (7), Ready for Invoice (9) mean vehicle is free
+            has_active_trip = any(s in [1, 12] for s in trip_map[key])
             if has_active_trip:
                 busy_vehicle_ids.add(a.va_vehiclenumber_id)
         else:
