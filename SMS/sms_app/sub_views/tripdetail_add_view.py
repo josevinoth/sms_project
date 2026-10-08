@@ -1400,9 +1400,13 @@ def trip_email(request):
     from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
     reported_dt = format_email_date(trip.tr_departeddate_pickup)
     consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
+    val = str(trip.tr_consignmentnumber.co_smart_lock_number).strip() if (trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_smart_lock_number) else ""
+    smart_lock_no = "" if val.lower() in ("", "none", "null") else val
+    smart_lock_row = f'<tr><td style="padding: 8px; border: 1px solid #ddd;"><b>SMART LOCK NO.</b></td><td style="padding: 8px; border: 1px solid #ddd;">{smart_lock_no}</td></tr>' if smart_lock_no else ""
     started_dt = format_email_date(trip.tr_departeddate)
     to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else "N/A"
     unloading_reported_dt = format_email_date(trip.tr_reporteddate)
+    unloading_started_dt = format_email_date(trip.tr_reporteddate_pickup or trip.tr_reporteddate)
 
     # New Fields Requested
     vehicle_number = trip.tr_vehiclenumber or "N/A"
@@ -1451,6 +1455,7 @@ def trip_email(request):
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>From Location</b></td><td style="padding: 8px; border: 1px solid #ddd;">{from_location}</td></tr>
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Reported Date & Time</b></td><td style="padding: 8px; border: 1px solid #ddd;">{reported_dt}</td></tr>
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Consignment Number</b></td><td style="padding: 8px; border: 1px solid #ddd;">{consignment}</td></tr>
+                {smart_lock_row}
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Started Date & Time</b></td><td style="padding: 8px; border: 1px solid #ddd;">{started_dt}</td></tr>
             </tbody>
         </table>
@@ -1499,7 +1504,7 @@ def trip_email(request):
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Consignment #</b></td><td style="padding: 8px; border: 1px solid #ddd;">{consignment}</td></tr>
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Started Date</b></td><td style="padding: 8px; border: 1px solid #ddd;">{started_dt}</td></tr>
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>To Location</b></td><td style="padding: 8px; border: 1px solid #ddd;">{to_location}</td></tr>
-                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Closed Date & Time</b></td><td style="padding: 8px; border: 1px solid #ddd;">{unloading_reported_dt}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Closed Date & Time</b></td><td style="padding: 8px; border: 1px solid #ddd;">{unloading_started_dt}</td></tr>
                 <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>Status</b></td><td style="padding: 8px; border: 1px solid #ddd;">Trip Closed</td></tr>
             </tbody>
         </table>
@@ -1976,6 +1981,13 @@ def trip_send_trip_started_mail(request):
     from_location = trip.tr_departedlocation.place_name if trip.tr_departedlocation else "N/A"
     reported_dt = format_email_date(trip.tr_departeddate_pickup)
     consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
+    val = str(trip.tr_consignmentnumber.co_smart_lock_number).strip() if (trip.tr_consignmentnumber and trip.tr_consignmentnumber.co_smart_lock_number) else ""
+    smart_lock_no = "" if val.lower() in ("", "none", "null") else val
+    smart_lock_row = f"""                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><b>SMART LOCK NO.</b></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{smart_lock_no}</td>
+                </tr>
+""" if smart_lock_no else ""
     started_dt = format_email_date(trip.tr_departeddate)
     vehicle_number = trip.tr_vehiclenumber or "N/A"
 
@@ -2013,7 +2025,7 @@ def trip_send_trip_started_mail(request):
                     <td style="padding: 8px; border: 1px solid #ddd;"><b>Consignment Number</b></td>
                     <td style="padding: 8px; border: 1px solid #ddd;">{consignment}</td>
                 </tr>
-                <tr>
+{smart_lock_row}                <tr>
                     <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Started Date & Time</b></td>
                     <td style="padding: 8px; border: 1px solid #ddd;">{started_dt}</td>
                 </tr>
@@ -2148,7 +2160,7 @@ def trip_send_trip_closed_mail(request):
     to_location = trip.tr_reportedlocation.place_name if trip.tr_reportedlocation else "N/A"
     consignment = trip.tr_consignmentnumber.co_consignmentnumber if trip.tr_consignmentnumber else "N/A"
     started_dt = format_email_date(trip.tr_departeddate) or "N/A"
-    reported_dt = format_email_date(trip.tr_reporteddate) or "N/A"
+    closed_dt = format_email_date(trip.tr_reporteddate_pickup or trip.tr_reporteddate) or "N/A"
 
     # POD Status Logic - Check both file attachment and signature
     pod_status = "POD Received" if (trip.tc_pod_attachment or trip.td_pod) else "POD Not Received"
@@ -2193,7 +2205,7 @@ def trip_send_trip_closed_mail(request):
                 </tr>
                 <tr>
                     <td style="padding: 8px; border: 1px solid #ddd;"><b>Vehicle Closed Date & Time</b></td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">{reported_dt}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">{closed_dt}</td>
                 </tr>
                 <tr>
                     <td style="padding: 8px; border: 1px solid #ddd;"><b>POD Status</b></td>

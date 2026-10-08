@@ -16,10 +16,13 @@
         vertical-align: middle !important;
         font-size: 0.82rem !important;
         padding: 0.45rem 0.7rem !important;
+        white-space: nowrap !important;
     }
-    .dataTables_scrollHeadInner,
-    .dataTables_scrollHeadInner table {
-        width: 100% !important;
+    .filter-input {
+        min-width: 90px;
+        font-size: 0.75rem !important;
+        padding: 0.25rem 0.4rem !important;
+        height: auto !important;
     }
 </style>
 {% endblock %}
@@ -45,8 +48,7 @@
 
     <!-- ══ Table Container ══ -->
     <div class="table-container-modern p-4 mb-4">
-        <div class="table-responsive">
-            <table id="trans_invoice_woh_list" class="table table-striped table-bordered modern-table w-100">
+        <table id="trans_invoice_woh_list" class="table table-striped table-bordered modern-table w-100">
 
                 <thead>
                     <tr>
@@ -217,7 +219,6 @@
 
 
             </table>
-        </div>
     </div>
 
     <!-- ================= MASTER LIST ================= -->
@@ -232,7 +233,16 @@
         var wohTable = new DataTable('#trans_invoice_woh_list', {
             order: [[1, 'desc']],
             dom: 'lBfrtip',
-            scrollX: true
+            scrollX: true,
+            autoWidth: false
+        });
+
+        setTimeout(function () {
+            wohTable.columns.adjust().draw(false);
+        }, 150);
+
+        $(window).on('resize', function () {
+            wohTable.columns.adjust();
         });
 
         // ================= REMOVE BTN =================
