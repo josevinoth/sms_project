@@ -143,30 +143,53 @@ def tripdetail_add(request, tripdetail_id=0):
 
             selected_vehicle_number = None
             initial_data = {'tr_high_value': 2}
+            va = None
             if vehicle_allotment_id:
                 try:
                     va = Vehicle_allotmentInfo.objects.get(pk=vehicle_allotment_id)
-                    # Choose correct vehicle registration string
-                    selected_vehicle_number = va.va_vehiclenumber_mkt if va.va_vehiclesource_id == 3 else (va.va_vehiclenumber.vm_registrationnumber if va.va_vehiclenumber else '')
-
-                    initial_data.update({
-                        'tr_vehiclenumber': selected_vehicle_number,
-                        'tr_drivername': va.va_drivername,
-                        'tr_driver_master_id': va.va_driver_master_id,
-                        'tr_vehicletype': va.va_vehicletype,
-                        'tr_vehiclesource': va.va_vehiclesource,
-                        'tr_vehicletype_placed': va.va_vehicletype_placed,
-                        'tr_drivernumber': va.va_drivernumber,
-                        'tr_driver_lic': va.va_driver_lic,
-                        'tr_category': 1 if va.va_vehiclesource_id == 3 else 2,
-                    })
+                    # If this allotment was replaced (status 2 = Vehicle Replaced), resolve to the active replacement allotment
+                    if va.va_status_id == 2:
+                        replacement_va = va.replacement_chain.order_by('-id').first()
+                        if not replacement_va:
+                            replacement_va = Vehicle_allotmentInfo.objects.filter(
+                                va_enquirynumber=va.va_enquirynumber,
+                                va_status_id=1
+                            ).last()
+                        if replacement_va:
+                            va = replacement_va
+                            vehicle_allotment_id = va.id
                 except Vehicle_allotmentInfo.DoesNotExist:
-                    pass
+                    va = None
+
+            # If vehicle_allotment_id is missing or not provided, pick the active allotment for this enquiry
+            if not va and enquiry_num_id:
+                va = Vehicle_allotmentInfo.objects.filter(
+                    va_enquirynumber=enquiry_num_id,
+                    va_status_id=1
+                ).last()
+                if va:
+                    vehicle_allotment_id = va.id
+
+            if va:
+                # Choose correct vehicle registration string
+                selected_vehicle_number = va.va_vehiclenumber_mkt if va.va_vehiclesource_id == 3 else (va.va_vehiclenumber.vm_registrationnumber if va.va_vehiclenumber else '')
+
+                initial_data.update({
+                    'tr_vehiclenumber': selected_vehicle_number,
+                    'tr_drivername': va.va_drivername,
+                    'tr_driver_master_id': va.va_driver_master_id,
+                    'tr_vehicletype': va.va_vehicletype,
+                    'tr_vehiclesource': va.va_vehiclesource,
+                    'tr_vehicletype_placed': va.va_vehicletype_placed,
+                    'tr_drivernumber': va.va_drivernumber,
+                    'tr_driver_lic': va.va_driver_lic,
+                    'tr_category': 1 if va.va_vehiclesource_id == 3 else 2,
+                })
 
             # Fetch latest reported KM for this vehicle from its last completed trip (only for Own / Attached, skip Market)
             search_vehicle_num = selected_vehicle_number
             is_market_vehicle = False
-            if vehicle_allotment_id:
+            if va:
                 try:
                     is_market_vehicle = (va.va_vehiclesource_id == 3)
                 except Exception:
@@ -174,11 +197,27 @@ def tripdetail_add(request, tripdetail_id=0):
 
             last_trip_km = None
             if search_vehicle_num and not is_market_vehicle:
-                last_trip_km = TripdetailInfo.objects.filter(
-                    tr_vehiclenumber=search_vehicle_num
-                ).filter(
-                    Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False)
-                ).order_by('-id').first()
+                # 1. Check if THIS vehicle completed an empty trip in this enquiry
+                if enquiry_num_id:
+                    last_trip_km = TripdetailInfo.objects.filter(
+                        tr_enquirynumber_id=enquiry_num_id,
+                        tr_vehiclenumber=search_vehicle_num,
+                        tr_category_id__in=[2, 3]
+                    ).filter(
+                        Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False)
+                    ).exclude(
+                        tr_remarks__icontains="Vehicle replaced from"
+                    ).order_by('-id').first()
+
+                # 2. Otherwise find this vehicle's last completed trip anywhere
+                if not last_trip_km:
+                    last_trip_km = TripdetailInfo.objects.filter(
+                        tr_vehiclenumber=search_vehicle_num
+                    ).filter(
+                        Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False)
+                    ).exclude(
+                        tr_remarks__icontains="Vehicle replaced from"
+                    ).order_by('-id').first()
 
             if last_trip_km and not is_market_vehicle:
                 latest_km = last_trip_km.tr_reportedkm or last_trip_km.tr_reportedkm_delivery
@@ -187,17 +226,35 @@ def tripdetail_add(request, tripdetail_id=0):
                     initial_data['tr_departedkm'] = latest_km
 
             trip_det_form = TripdetailaddForm(initial=initial_data)
-            if vehicle_allotment_id and va.va_vehiclesource_id != 3:
+            if va and va.va_vehiclesource_id != 3:
                 trip_det_form.fields['tr_category'].widget.attrs['readonly'] = True
 
             # Ensure departed location matches the vehicle's last reported location
             location_locked = False
-            if vehicle_allotment_id and selected_vehicle_number and va.va_vehiclesource_id != 3:
-                last_trip_loc = TripdetailInfo.objects.filter(
-                    tr_vehiclenumber=search_vehicle_num
-                ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
+            if search_vehicle_num and not is_market_vehicle:
+                # 1. Check if THIS vehicle already has a trip with reported location in this enquiry
+                last_trip_loc = None
+                if enquiry_num_id:
+                    last_trip_loc = TripdetailInfo.objects.filter(
+                        tr_enquirynumber_id=enquiry_num_id,
+                        tr_vehiclenumber=search_vehicle_num
+                    ).exclude(
+                        tr_reportedlocation__isnull=True
+                    ).exclude(
+                        tr_remarks__icontains="Vehicle replaced from"
+                    ).order_by('-id').first()
 
-                if last_trip_loc:
+                # 2. Otherwise check vehicle's last reported location anywhere in the system
+                if not last_trip_loc:
+                    last_trip_loc = TripdetailInfo.objects.filter(
+                        tr_vehiclenumber=search_vehicle_num
+                    ).exclude(
+                        tr_reportedlocation__isnull=True
+                    ).exclude(
+                        tr_remarks__icontains="Vehicle replaced from"
+                    ).order_by('-id').first()
+
+                if last_trip_loc and last_trip_loc.tr_reportedlocation:
                     trip_det_form.fields['tr_departedlocation'].initial = last_trip_loc.tr_reportedlocation
                     trip_det_form.fields['tr_departedlocation'].widget.attrs.update({
                         'style': 'pointer-events: none; background-color: #e9ecef;',
@@ -206,18 +263,6 @@ def tripdetail_add(request, tripdetail_id=0):
                         'readonly': 'readonly'
                     })
                     location_locked = True
-                else:
-                    previous_trip = TripdetailInfo.objects.filter(
-                        tr_enquirynumber_id=enquiry_num_id
-                    ).order_by('-tr_created_at').first()
-                    if previous_trip and previous_trip.tr_reportedlocation:
-                        trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
-            else:
-                previous_trip = TripdetailInfo.objects.filter(
-                    tr_enquirynumber_id=enquiry_num_id
-                ).order_by('-tr_created_at').first()
-                if previous_trip and previous_trip.tr_reportedlocation:
-                    trip_det_form.fields['tr_departedlocation'].initial = previous_trip.tr_reportedlocation
 
             tripclosurefiles_form = TripclosurefilesForm()
             trip_list = TripdetailInfo.objects.select_related(
@@ -614,7 +659,11 @@ def tripdetail_add(request, tripdetail_id=0):
                 if vehicle_number and str(v_source_id) != "3":
                     last_trip_for_loc = TripdetailInfo.objects.filter(
                         tr_vehiclenumber=vehicle_number
-                    ).exclude(tr_reportedlocation__isnull=True).order_by('-tr_created_at').first()
+                    ).exclude(
+                        tr_reportedlocation__isnull=True
+                    ).exclude(
+                        tr_remarks__icontains="Vehicle replaced from"
+                    ).order_by('-id').first()
 
                     if last_trip_for_loc:
                         departed_loc_id = request.POST.get('tr_departedlocation')
@@ -1698,12 +1747,18 @@ def get_last_reported_km(request):
                 # Market vehicle -> do not auto-populate
                 return JsonResponse({
                     "reported_km": None,
-                    "reported_date": None
+                    "reported_date": None,
+                    "reported_location_id": None,
+                    "reported_location_name": None,
+                    "is_market": True
                 })
         elif v_obj and getattr(v_obj, 'vm_ownership_id', None) == 3:
             return JsonResponse({
                 "reported_km": None,
-                "reported_date": None
+                "reported_date": None,
+                "reported_location_id": None,
+                "reported_location_name": None,
+                "is_market": True
             })
 
     last_trip = None
@@ -1713,6 +1768,7 @@ def get_last_reported_km(request):
                 TripdetailInfo.objects
                 .filter(tr_enquirynumber_id=enquiry_id, tr_vehiclenumber=vehicle, tr_category_id__in=[2, 3])
                 .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
+                .exclude(tr_remarks__icontains="Vehicle replaced from")
                 .order_by('-id')
                 .first()
             )
@@ -1722,6 +1778,28 @@ def get_last_reported_km(request):
                 TripdetailInfo.objects
                 .filter(tr_vehiclenumber=vehicle)
                 .filter(Q(tr_reportedkm__isnull=False) | Q(tr_reportedkm_delivery__isnull=False))
+                .exclude(tr_remarks__icontains="Vehicle replaced from")
+                .order_by('-id')
+                .first()
+            )
+
+    last_trip_loc = None
+    if vehicle:
+        if enquiry_id:
+            last_trip_loc = (
+                TripdetailInfo.objects
+                .filter(tr_enquirynumber_id=enquiry_id, tr_vehiclenumber=vehicle)
+                .exclude(tr_reportedlocation__isnull=True)
+                .exclude(tr_remarks__icontains="Vehicle replaced from")
+                .order_by('-id')
+                .first()
+            )
+        if not last_trip_loc:
+            last_trip_loc = (
+                TripdetailInfo.objects
+                .filter(tr_vehiclenumber=vehicle)
+                .exclude(tr_reportedlocation__isnull=True)
+                .exclude(tr_remarks__icontains="Vehicle replaced from")
                 .order_by('-id')
                 .first()
             )
@@ -1732,10 +1810,15 @@ def get_last_reported_km(request):
         reported_dt_str = local_dt.strftime('%Y-%m-%dT%H:%M')
 
     latest_km = (last_trip.tr_reportedkm or last_trip.tr_reportedkm_delivery) if last_trip else None
+    loc_id = last_trip_loc.tr_reportedlocation_id if last_trip_loc else None
+    loc_name = last_trip_loc.tr_reportedlocation.place_name if (last_trip_loc and last_trip_loc.tr_reportedlocation) else None
 
     return JsonResponse({
         "reported_km": latest_km,
-        "reported_date": reported_dt_str
+        "reported_date": reported_dt_str,
+        "reported_location_id": loc_id,
+        "reported_location_name": loc_name,
+        "is_market": False
     })
 
 

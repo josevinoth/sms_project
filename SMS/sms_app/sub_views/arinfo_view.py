@@ -259,10 +259,10 @@ def ar_list(request):
     # Pre-build submission tracking map via raw SQL (without model changes)
     sub_map = _get_submission_map()
 
-    # Fetch Transport Master Invoices (auto-fetched submitted invoices)
+    # Fetch Transport Master Invoices with invoice date from October 1, 2026 onwards
     trans_qs = (
         TransInvoiceInfo.objects
-        .filter(is_woh=False)
+        .filter(is_woh=False, ti_inv_date__gte=date(2026, 10, 1))
         .select_related(
             'ti_customer', 'ti_customer__cu_business_sol',
             'ti_trip', 'ti_trip__tr_enquirynumber',

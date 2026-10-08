@@ -1847,9 +1847,18 @@ def vehicle_allotment_replace(request, allotment_id):
             old_vehicle_num = str(old_va.va_vehiclenumber) if old_va.va_vehiclenumber else (old_va.va_vehiclenumber_mkt or '')
             new_vehicle_num = str(new_va.va_vehiclenumber) if new_va.va_vehiclenumber else (new_va.va_vehiclenumber_mkt or '')
 
+            # Only reassign active, non-closed Business trips.
+            # NEVER modify Empty trips (categories 2 and 3) or already closed/settled trips,
+            # as those were physically executed by the old vehicle.
             trips = TripdetailInfo.objects.filter(
                 tr_enquirynumber=old_va.va_enquirynumber,
                 tr_vehiclenumber__iexact=old_vehicle_num.strip()
+            ).exclude(
+                Q(tc_financestatus_id__in=[2, 3, 4, 5, 7, 9, 10, 11]) |
+                Q(tc_financestatus__status__icontains='Closed') |
+                Q(tr_operational_status_id__in=[2, 3, 4, 5, 7, 9, 10, 11]) |
+                Q(tr_category_id__in=[2, 3]) |
+                Q(tr_category__category__icontains='Empty')
             )
             for active_trip in trips:
                 active_trip.tr_vehiclenumber = new_vehicle_num
@@ -2001,6 +2010,8 @@ def vehicle_allotment_driver_replace(request, allotment_id):
                     tr_enquirynumber=old_va.va_enquirynumber,
                     tr_vehiclenumber=vehicle_num,
                     tc_financestatus_id__in=[1, 8]  # Open or Awaiting Approval
+                ).exclude(
+                    tr_category_id__in=[2, 3]
                 ).first()
 
                 if active_trip:
