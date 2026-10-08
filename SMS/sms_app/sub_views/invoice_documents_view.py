@@ -29,11 +29,11 @@ def get_enquiry_special_sell(trip):
     vt_placed_id = getattr(trip, 'tr_vehicletype_placed_id', None)
     vt_req_id = getattr(trip, 'tr_vehicletype_id', None)
 
-    # 1. Match by enquiry + vehicle type placed
-    if vt_placed_id:
+    # 1. Match by enquiry + vehicle type requested
+    if vt_req_id:
         env_obj = Enquirynotevehicle.objects.filter(
             env_enquirynumber=enquiry,
-            env_vehicletype_id=vt_placed_id
+            env_vehicletype_id=vt_req_id
         ).first()
         if env_obj:
             if env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
@@ -41,11 +41,11 @@ def get_enquiry_special_sell(trip):
             if env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
                 return float(env_obj.env_sale)
 
-    # 2. Match by enquiry + vehicle type requested
-    if vt_req_id:
+    # 2. Match by enquiry + vehicle type placed
+    if vt_placed_id:
         env_obj = Enquirynotevehicle.objects.filter(
             env_enquirynumber=enquiry,
-            env_vehicletype_id=vt_req_id
+            env_vehicletype_id=vt_placed_id
         ).first()
         if env_obj:
             if env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
@@ -78,17 +78,17 @@ def get_enquiry_standard_sell(trip):
         enquiry = trip.tr_enquirynumber
         vt_placed_id = getattr(trip, 'tr_vehicletype_placed_id', None)
         vt_req_id = getattr(trip, 'tr_vehicletype_id', None)
-        if vt_placed_id:
-            env_obj = Enquirynotevehicle.objects.filter(
-                env_enquirynumber=enquiry,
-                env_vehicletype_id=vt_placed_id
-            ).first()
-            if env_obj and env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
-                return float(env_obj.env_sale)
         if vt_req_id:
             env_obj = Enquirynotevehicle.objects.filter(
                 env_enquirynumber=enquiry,
                 env_vehicletype_id=vt_req_id
+            ).first()
+            if env_obj and env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
+                return float(env_obj.env_sale)
+        if vt_placed_id:
+            env_obj = Enquirynotevehicle.objects.filter(
+                env_enquirynumber=enquiry,
+                env_vehicletype_id=vt_placed_id
             ).first()
             if env_obj and env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
                 return float(env_obj.env_sale)

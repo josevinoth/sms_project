@@ -1,4 +1,4 @@
-﻿from django.db import models
+from django.db import models
 from .credit_ledger_mod import CreditLedgerInfo
 from .customer_mod import CustomerInfo
 from .wms_expense_type_mod import WMSExpenseTypeInfo
@@ -48,6 +48,7 @@ class WMSPettyCashInfo(models.Model):
     wpc_gst_amount = models.FloatField(blank=True, null=True, default=0.0)
     wpc_total_amount = models.FloatField(blank=True, null=True, default=0.0)
     wpc_bill_attachment = models.FileField(upload_to=wms_petty_cash_file_path, blank=True, null=True)
+    wpc_receiver_signature = models.TextField(blank=True, null=True)
 
     # Audit Fields
     wpc_created_on = models.DateTimeField(null=True, auto_now_add=True)

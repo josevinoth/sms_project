@@ -183,7 +183,7 @@ def enquirynote_add(request, enquirynote_id=0, enquirynotevehicle_id=0):
                     
                     allotments = Vehicle_allotmentInfo.objects.filter(va_enquirynumber=updated_enquiry)
                     for allotment in allotments:
-                        vt_id = allotment.va_vehicletype_placed_id or allotment.va_vehicletype_id
+                        vt_id = allotment.va_vehicletype_id or allotment.va_vehicletype_placed_id
                         env_obj = Enquirynotevehicle.objects.filter(
                             env_enquirynumber=updated_enquiry,
                             env_vehicletype_id=vt_id

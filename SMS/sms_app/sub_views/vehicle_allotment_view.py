@@ -48,7 +48,7 @@ def sync_allotment_rate_to_trips(allotment_obj):
     vt_req_id = allotment_obj.va_vehicletype_id
     enquiry_id = allotment_obj.va_enquirynumber_id
 
-    for vt_id in filter(None, [vt_placed_id, vt_req_id]):
+    for vt_id in filter(None, [vt_req_id, vt_placed_id]):
         env_obj = Enquirynotevehicle.objects.filter(
             env_enquirynumber_id=enquiry_id,
             env_vehicletype_id=vt_id
@@ -629,7 +629,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
 
             # Rate Approval check now uses the parent Enquirynotevehicle rates
             enquiry_obj = obj.va_enquirynumber
-            vt_id = obj.va_vehicletype_placed_id or obj.va_vehicletype_id
+            vt_id = obj.va_vehicletype_id or obj.va_vehicletype_placed_id
             if enquiry_obj and vt_id:
                 enq_veh = Enquirynotevehicle.objects.filter(
                     env_enquirynumber=enquiry_obj,
@@ -799,7 +799,7 @@ def vehicle_allotment_add(request, enquiry_id=None, vehicle_allotment_id=0):
 
             # Rate Approval check now uses the parent Enquirynotevehicle rates
             enquiry_obj = obj.va_enquirynumber
-            vt_id = obj.va_vehicletype_placed_id or obj.va_vehicletype_id
+            vt_id = obj.va_vehicletype_id or obj.va_vehicletype_placed_id
             if enquiry_obj and vt_id:
                 enq_veh = Enquirynotevehicle.objects.filter(
                     env_enquirynumber=enquiry_obj,

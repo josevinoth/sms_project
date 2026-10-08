@@ -44,10 +44,10 @@ def get_allotment_sale_rate(trip):
     from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
 
     # 1. Primary: Check Enquirynotevehicle by Enquiry + Vehicle Type
-    if vt_placed_id:
+    if vt_req_id:
         env_obj = Enquirynotevehicle.objects.filter(
             env_enquirynumber=enquiry,
-            env_vehicletype_id=vt_placed_id
+            env_vehicletype_id=vt_req_id
         ).first()
         if env_obj:
             if env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
@@ -55,10 +55,10 @@ def get_allotment_sale_rate(trip):
             if env_obj.env_sale is not None and float(env_obj.env_sale) > 0:
                 return float(env_obj.env_sale)
 
-    if vt_req_id:
+    if vt_placed_id:
         env_obj = Enquirynotevehicle.objects.filter(
             env_enquirynumber=enquiry,
-            env_vehicletype_id=vt_req_id
+            env_vehicletype_id=vt_placed_id
         ).first()
         if env_obj:
             if env_obj.env_special_sale is not None and float(env_obj.env_special_sale) > 0:
@@ -104,7 +104,7 @@ def get_allotment_sale_rate(trip):
     # 3. Fallback: Query Route Rate Master (RtratemasterInfo)
     from_loc_id = getattr(trip, 'tr_departedlocation_id', None) or getattr(enquiry, 'en_fromlocaion_id', None)
     to_loc_id = getattr(trip, 'tr_reportedlocation_id', None) or getattr(enquiry, 'en_tolocation_id', None)
-    vt_id = vt_placed_id or vt_req_id or getattr(enquiry, 'en_vehicledetails_id', None)
+    vt_id = vt_req_id or vt_placed_id or getattr(enquiry, 'en_vehicledetails_id', None)
     customer = getattr(enquiry, 'en_customername', None)
     dept = getattr(enquiry, 'en_customerdepartment', None)
 
@@ -163,6 +163,8 @@ def tripclosure_enquiry(request, enquiry_id, trip_num):
 
         # If trip_id is provided, redirect to update
         if trip_id:
+            if trip_detail.tc_financestatus_id in [9, 10]:
+                return redirect('invoice_documents_add', trip_id=trip_id)
             return redirect('tripclosure_update', tripclosure_id=trip_id)
         else:
             messages.error(request, "Trip not found.")

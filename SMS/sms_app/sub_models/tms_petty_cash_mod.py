@@ -31,6 +31,7 @@ class TMSPettyCashInfo(models.Model):
     tpc_driver_name = models.ForeignKey(DrivermasterInfo, on_delete=models.CASCADE, blank=True, null=True)
     tpc_remarks = models.TextField(max_length=300, blank=True, null=True)
     tpc_receiver_signature = models.TextField(blank=True, null=True)
+    tpc_source_driver_expense_id = models.IntegerField(null=True, blank=True)
 
 
     tpc_created_on = models.DateTimeField(null=True, auto_now_add=True)
