@@ -698,39 +698,31 @@ def tripclosure_delete(request, tripclosure_id):
 @login_required(login_url='login_page')
 def transport_calculate_trip_charges(request):
     # Retrieve parameters from the AJAX request
-    from_location_id = request.GET.get('from_location')
-    to_location_id = request.GET.get('to_location')
     vehicle_type_id = request.GET.get('vehicle_type')
-
     enquiry_number_id = request.GET.get('enquirynumber')
     trip_category_id = request.GET.get('trip_category')
 
-    enquiry_number = EnquirynoteInfo.objects.get(pk=enquiry_number_id).en_enquirynumber
-    customer_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_customername
-    customer_department_id = EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_customerdepartment
-    # vehicle_category_id=EnquirynoteInfo.objects.get(en_enquirynumber=enquiry_number).en_vehiclecategory
-
     if trip_category_id == '1':
-        # Retrieve RoRateInfo with department, then fallback without department
-        rate_obj = RtratemasterInfo.objects.filter(
-            ro_fromlocation=from_location_id,
-            ro_tolocation=to_location_id,
-            ro_vehicletype=vehicle_type_id,
-            ro_customer=customer_id,
-            ro_customerdepartment=customer_department_id,
-        ).first()
-        if not rate_obj:
-            rate_obj = RtratemasterInfo.objects.filter(
-                ro_fromlocation=from_location_id,
-                ro_tolocation=to_location_id,
-                ro_vehicletype=vehicle_type_id,
-                ro_customer=customer_id,
+        from ..sub_models.enquirynote_vehicle_mod import Enquirynotevehicle
+        
+        try:
+            # Check for the matching vehicle type in the enquiry
+            env_obj = Enquirynotevehicle.objects.filter(
+                env_enquirynumber_id=enquiry_number_id,
+                env_vehicletype_id=vehicle_type_id
             ).first()
-
-        if rate_obj and rate_obj.ro_rate:
-            return JsonResponse({'ro_rate': rate_obj.ro_rate})
-        else:
+            
+            if env_obj:
+                # Requirement: "only enquiry rate what is in special sell"
+                ro_rate = env_obj.env_special_sale if env_obj.env_special_sale else (env_obj.env_sale if env_obj.env_sale else 0)
+                return JsonResponse({'ro_rate': ro_rate})
+            
+            # Fallback if no specific vehicle was found in the enquiry
             return JsonResponse({'ro_rate': 0})
+            
+        except Exception as e:
+            return JsonResponse({'ro_rate': 0})
+            
     else:
         # Return 100 if trip_category is not 1
         return JsonResponse({'ro_rate': 100})

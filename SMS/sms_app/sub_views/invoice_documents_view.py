@@ -1023,7 +1023,7 @@ def invoice_documents_add(request, trip_id):
         calculated_actual_sell = (
             float(trip.tc_tripcost)
             if getattr(trip, 'tc_tripcost', None) is not None and float(trip.tc_tripcost) > 0
-            else get_enquiry_standard_sell(trip)
+            else get_enquiry_special_sell(trip)
         )
         
         # Override the model instance values purely for display purposes
