@@ -1136,9 +1136,9 @@ def vehicle_allotment_delete(request, vehicle_allotment_id):
     # 🚫 Check if any trips exist for this enquiry and vehicle
     trips = TripdetailInfo.objects.filter(tr_enquirynumber=enquiry_num)
     if veh_reg:
-        v_trips = trips.filter(tr_vehiclenumber__iexact=veh_reg)
-        if v_trips.exists():
-            trips = v_trips
+        trips = trips.filter(tr_vehiclenumber__iexact=veh_reg)
+    else:
+        trips = trips.filter(Q(tr_vehiclenumber__isnull=True) | Q(tr_vehiclenumber=''))
 
     if trips.exists():
         existing_trip = trips.first()
