@@ -295,7 +295,6 @@
         });
 
         $('#ppc_to').select2({
-            
             width: '100%',
             placeholder: '--Select--',
             allowClear: true,
@@ -312,23 +311,20 @@
                 }
             }
         });
-
-        // To Person Manual Logic - not really needed if we use tags: true, but keeping it for compatibility
-        function checkManualPerson() {
-            var selectedVal = $("#ppc_to").val();
-            if (selectedVal === "Other") {
-                $("#manual_person_div").slideDown();
-            } else {
-                $("#manual_person_div").slideUp();
-                $("#ppc_to_manual").val("");
+        
+        // If there's a manual value saved in the backend, add it as a tag option and select it
+        var manualPerson = $('#ppc_to_manual').val();
+        if (manualPerson && manualPerson.trim() !== '') {
+            if ($('#ppc_to').find("option[value='" + manualPerson + "']").length) {
+                $('#ppc_to').val(manualPerson).trigger('change');
+            } else { 
+                var newOption = new Option(manualPerson, manualPerson, true, true);
+                $('#ppc_to').append(newOption).trigger('change');
             }
         }
 
-        $("#ppc_to").on("change", function () {
-            checkManualPerson();
-        });
-
-        checkManualPerson();
+        // We use select2 tags now, so manual person div can be hidden
+        $("#manual_person_div").hide();
 
         // ================= CASCADE 2: CUSTOMER -> JOB NO DROPDOWN =================
         $('#ppc_customer').change(function() {
