@@ -1920,13 +1920,54 @@ def vehicle_allotment_replace(request, allotment_id):
                         'message': f"🚫 Cannot complete replacement: Selected driver license expired on {new_driver_lic_expiry}! Please select a driver with a valid license."
                     })
 
-                # Validate vehicle registration format for market vehicles (Temporarily commented out)
-                # if str(new_vehicle_source_id) == '3' or new_vehicle_mkt:
-                #     if not validate_vehicle_number_format(new_vehicle_mkt):
-                #         return JsonResponse({
-                #             'success': False,
-                #             'message': f"Invalid vehicle number format '{new_vehicle_mkt}'. Format must strictly follow e.g. TN22AB4916 (First 2 letters, next 2 digits, optional 1-2 letters, and final 4 digits)."
-                #         })
+                # 🛑 Prevent vehicle from being replaced if it's already active anywhere else
+                allotments_to_check = Vehicle_allotmentInfo.objects.none()
+                _reg_no = None
+
+                if str(new_vehicle_source_id) in ['1', '2'] and new_vehicle_id:
+                    allotments_to_check = Vehicle_allotmentInfo.objects.filter(va_vehiclenumber_id=new_vehicle_id)
+                    try:
+                        vm = VehiclemasterInfo.objects.get(pk=new_vehicle_id)
+                        _reg_no = vm.vm_registrationnumber
+                    except VehiclemasterInfo.DoesNotExist:
+                        pass
+                elif str(new_vehicle_source_id) == '3' and new_vehicle_mkt:
+                    allotments_to_check = Vehicle_allotmentInfo.objects.filter(
+                        va_vehiclenumber_mkt__iexact=new_vehicle_mkt)
+                    _reg_no = new_vehicle_mkt
+
+                allotments_to_check = allotments_to_check.filter(
+                    Q(va_created_at__date__gte='2026-08-01') | Q(va_enquirynumber__en_created_at__date__gte='2026-08-01')
+                )
+
+                active_allotments = allotments_to_check.exclude(va_status_id__in=[2, 3, 4, 5])
+                is_really_busy = False
+                busy_enq_str = "Another Enquiry"
+
+                _reg_no_clean = str(_reg_no).strip() if _reg_no else ""
+
+                for a in active_allotments:
+                    trips = TripdetailInfo.objects.filter(tr_enquirynumber=a.va_enquirynumber, tr_vehiclenumber__iexact=_reg_no_clean)
+                    if not trips.exists():
+                        is_really_busy = True
+                        busy_enq_str = a.va_enquirynumber.en_enquirynumber if a.va_enquirynumber else "Another Enquiry"
+                        break
+                    has_active = False
+                    for t in trips:
+                        status_id = t.tr_operational_status_id if t.tr_operational_status_id else 1
+                        if status_id in [1, 12]:
+                            has_active = True
+                            break
+                    if has_active:
+                        is_really_busy = True
+                        busy_enq_str = a.va_enquirynumber.en_enquirynumber if a.va_enquirynumber else "Another Enquiry"
+                        break
+
+                if is_really_busy:
+                    return JsonResponse({
+                        'success': False,
+                        'message': f"🚫 Cannot complete replacement: This vehicle has been previously allotted in {busy_enq_str} and is currently active."
+                    })
 
                 # Step 1: Create New Allotment
                 new_va = Vehicle_allotmentInfo.objects.create(
