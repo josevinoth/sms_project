@@ -49,6 +49,7 @@ class PMSPettyCashInfo(models.Model):
     ppc_gst_amount = models.FloatField(blank=True, null=True, default=0.0)
     ppc_total_amount = models.FloatField(blank=True, null=True, default=0.0)
     ppc_bill_attachment = models.FileField(upload_to=pms_petty_cash_file_path, blank=True, null=True)
+    ppc_receiver_signature = models.TextField(blank=True, null=True)
 
     # Audit Fields
     ppc_created_on = models.DateTimeField(null=True, auto_now_add=True)

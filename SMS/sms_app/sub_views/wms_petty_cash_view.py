@@ -1,3 +1,4 @@
+import re
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -136,9 +137,15 @@ def wms_petty_cash_add(request, wpc_id=0):
 
         if form.is_valid():
             saved_wpc = form.save(commit=False)
+            if post_data.get('wpc_bill_attachment-clear') in ['on', '1', 'true']:
+                saved_wpc.wpc_bill_attachment = None
+            expected_branch_code = "BLR" if (saved_wpc.wpc_branch and ("BLR" in saved_wpc.wpc_branch.loc_name.upper() or "BANGALORE" in saved_wpc.wpc_branch.loc_name.upper())) else "MAA"
             if wpc_id == 0:
                 saved_wpc.wpc_number = generate_wms_petty_cash_number(WMSPettyCashInfo, 'wpc_number', saved_wpc.wpc_branch)
                 saved_wpc.wpc_created_by = request.user
+            else:
+                if not saved_wpc.wpc_number or not saved_wpc.wpc_number.startswith(f"{expected_branch_code}-WH-"):
+                    saved_wpc.wpc_number = generate_wms_petty_cash_number(WMSPettyCashInfo, 'wpc_number', saved_wpc.wpc_branch)
             saved_wpc.wpc_updated_by = request.user
             saved_wpc.save()
             messages.success(request, "WMS Petty Cash saved successfully.")
@@ -146,9 +153,15 @@ def wms_petty_cash_add(request, wpc_id=0):
         else:
             messages.error(request, "Please correct the errors below.")
 
+    import os
+    bill_filename = ""
+    if form.instance and form.instance.wpc_bill_attachment:
+        bill_filename = os.path.basename(form.instance.wpc_bill_attachment.name)
+
     context = {
         'form': form,
         'wpc_id': wpc_id,
+        'bill_filename': bill_filename,
     }
     return render(request, "asset_mgt_app/wms_petty_cash_add.html", context)
 
@@ -226,6 +239,50 @@ def wms_petty_cash_delete(request, wpc_id):
     wpc.delete()
     messages.success(request, "WMS Petty Cash deleted successfully.")
     return redirect('wms_petty_cash_list')
+
+
+def number_to_words(n):
+    if n == 0 or n is None: return 'Zero'
+    ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
+    tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+    def _convert(num):
+        if num < 20: return ones[num]
+        elif num < 100: return tens[num // 10] + ('' if num % 10 == 0 else ' ' + ones[num % 10])
+        elif num < 1000: return ones[num // 100] + ' Hundred' + ('' if num % 100 == 0 else ' ' + _convert(num % 100))
+        elif num < 100000: return _convert(num // 1000) + ' Thousand' + ('' if num % 1000 == 0 else ' ' + _convert(num % 1000))
+        elif num < 10000000: return _convert(num // 100000) + ' Lakh' + ('' if num % 100000 == 0 else ' ' + _convert(num % 100000))
+        else: return _convert(num // 10000000) + ' Crore' + ('' if num % 10000000 == 0 else ' ' + _convert(num % 10000000))
+    try:
+        n_int = int(n)
+        return _convert(n_int) + ' Only'
+    except:
+        return ''
+
+
+def wms_petty_cash_voucher_print(request, wpc_id):
+    wpc = get_object_or_404(WMSPettyCashInfo, pk=wpc_id)
+    total_val = wpc.wpc_total_amount if (wpc.wpc_total_amount and wpc.wpc_total_amount > 0) else (wpc.wpc_bill_amount or 0)
+    amount_in_words = number_to_words(total_val)
+
+    # Determine the 'Payment to' value based on available fields
+    payment_to = ''
+    if wpc.wpc_to_manual:
+        payment_to = wpc.wpc_to_manual
+    elif wpc.wpc_to:
+        payment_to = wpc.wpc_to.first_name or wpc.wpc_to.username
+
+    # Clean remarks for printing
+    clean_remarks = wpc.wpc_remarks or ''
+    if 'Auto-generated' in clean_remarks:
+        clean_remarks = re.sub(r'\s*\[?Auto-generated.*', '', clean_remarks).strip()
+
+    context = {
+        'wpc': wpc,
+        'amount_in_words': amount_in_words,
+        'payment_to': payment_to,
+        'clean_remarks': clean_remarks,
+    }
+    return render(request, 'asset_mgt_app/wms_petty_cash_voucher.html', context)
 
 
 def get_wms_customers_by_unit(request):

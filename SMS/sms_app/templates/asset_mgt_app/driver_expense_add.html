@@ -65,6 +65,12 @@
                         </div>
 
                         <div class="form-group-modern">
+                            <label class="form-label-modern">Credit Ledger</label>
+                            {% render_field form.de_credit_ledger id="id_de_credit_ledger" class="form-control form-control-modern select2" %}
+                            <span id="ledger_balance_display" class="text-success font-weight-bold" style="font-size: 0.9rem; margin-top: 6px; display: block;"></span>
+                        </div>
+
+                        <div class="form-group-modern">
                             <label class="form-label-modern">Remarks</label>
                             {% render_field form.de_remarks class="form-control form-control-modern" rows="2" %}
                         </div>
@@ -593,6 +599,36 @@
             tripNumberSelect.value = autoID;
             if (window.jQuery?.fn?.select2) $(tripNumberSelect).trigger('change.select2');
             fetchTripCharges(autoID);
+        }
+
+        // Fetch Credit Ledger balance on change
+        if (window.jQuery) {
+            $('#id_de_credit_ledger').change(function() {
+                var ledgerId = $(this).val();
+                if (ledgerId) {
+                    $.ajax({
+                        url: "{% url 'get_ledger_balance' %}",
+                        data: { 'ledger_id': ledgerId },
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                $('#ledger_balance_display').text("Total Balance: " + response.balance);
+                            } else {
+                                $('#ledger_balance_display').text("");
+                            }
+                        },
+                        error: function() {
+                            $('#ledger_balance_display').text("");
+                        }
+                    });
+                } else {
+                    $('#ledger_balance_display').text("");
+                }
+            });
+            
+            // Trigger check on load if initial value exists
+            if ($('#id_de_credit_ledger').val()) {
+                $('#id_de_credit_ledger').trigger('change');
+            }
         }
     });
 </script>

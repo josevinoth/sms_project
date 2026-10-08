@@ -252,7 +252,13 @@
         </div>
         <div style="position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;">
             <h1 style="margin: 0; font-family: 'Times New Roman', Times, serif; font-size: 24px; font-weight: bold; color: #222; white-space: nowrap;">BVM TRANS SOLUTIONS PRIVATE LIMITED</h1>
-            <p style="margin: 6px 0 0; font-size: 14px; font-weight: bold; white-space: nowrap; color: #222;">No. 70, Adam Nagar Road, Nagalkeni, Chrompet, Chennai - 600 044.</p>
+            {% if 'BLR' in tpc.tpc_branch.loc_name or 'blr' in tpc.tpc_branch.loc_name|lower or 'B_' in tpc.tpc_number %}
+                <p style="margin: 6px 0 0; font-size: 14px; font-weight: bold; white-space: normal; text-align: center; color: #222;">
+                    No. 42/9 &amp; 42/10, Ground Floor, New Airport Road, Adjacent to ITC Factory,<br>Meenakunte Village, Jala Hobli, Bangalore – 562 157
+                </p>
+            {% else %}
+                <p style="margin: 6px 0 0; font-size: 14px; font-weight: bold; white-space: nowrap; color: #222;">No. 70, Adam Nagar Road, Nagalkeni, Chrompet, Chennai - 600 044.</p>
+            {% endif %}
         </div>
     </div>
 
