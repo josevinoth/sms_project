@@ -27,6 +27,9 @@ class StockMaintenanceForm(forms.ModelForm):
                 attrs={'type': 'date', 'class': 'form-control'},
                 format='%Y-%m-%d'
             ),
+            'sm_invoice_no': forms.TextInput(
+                attrs={'readonly': 'readonly'}
+            ),
         }
 
     def __init__(self, *args, **kwargs):

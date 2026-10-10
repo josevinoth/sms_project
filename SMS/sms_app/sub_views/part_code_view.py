@@ -15,7 +15,7 @@ def part_code_add(request, pc_id=0):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
     part_code = request.session.get('pc_code', None)  # Returns None if 'pc_code' doesn't exist
-    part_code_list = PkpartcodeInfo.objects.all().order_by('id')
+    part_code_list = PkpartcodeInfo.objects.all().order_by('-id')
     page_number = request.GET.get('page')
     per_page = request.GET.get('per_page')
     if per_page == 'all' or page_number == 'all' or per_page == '-1':
@@ -74,7 +74,7 @@ def part_code_add(request, pc_id=0):
 def part_code_list(request):
     first_name = request.session.get('first_name')
     user_id = request.session.get('ses_userID')
-    partcode_list = PkpartcodeInfo.objects.all().order_by('id')
+    partcode_list = PkpartcodeInfo.objects.all().order_by('-id')
 
     page_number = request.GET.get('page')
     per_page = request.GET.get('per_page')

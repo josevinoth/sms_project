@@ -109,7 +109,13 @@ def stock_maintenance_add(request):
     # Clear sticky data if explicitly requested (e.g., from List page)
     if request.GET.get('new') == '1':
         if 'sticky_stock_data' in request.session:
-            del request.session['sticky_stock_data']
+            inv_no = request.session['sticky_stock_data'].get('sm_invoice_no')
+            inv_date = request.session['sticky_stock_data'].get('sm_invoice_date')
+            request.session['sticky_stock_data'] = {}
+            if inv_no:
+                request.session['sticky_stock_data']['sm_invoice_no'] = inv_no
+            if inv_date:
+                request.session['sticky_stock_data']['sm_invoice_date'] = inv_date
 
     if request.method == 'POST':
         form = StockMaintenanceForm(request.POST)
@@ -282,6 +288,8 @@ def stock_maintenance_edit(request, pk):
                 obj.sm_updated_by = MyUser.objects.get(pk=request.user.pk)
 
             obj.save()
+            if obj.sm_vendor:
+                return redirect('/SMS/pk_stock_vendor_update/' + str(obj.sm_vendor.id))
             return redirect('stock_maintenance_list')
     else:
         form = StockMaintenanceForm(instance=item)
@@ -294,11 +302,16 @@ def stock_maintenance_edit(request, pk):
     else:
         totals = get_stock_totals()
 
-    return render(request, 'asset_mgt_app/stock_maintenance_add.html', {
+    context = {
         'form': form,
         'items': items,
         'totals': totals
-    })
+    }
+    if item.sm_vendor:
+        context['is_vendor_flow'] = True
+        context['vendor_id'] = item.sm_vendor.id
+
+    return render(request, 'asset_mgt_app/stock_maintenance_add.html', context)
 
 
 @login_required
